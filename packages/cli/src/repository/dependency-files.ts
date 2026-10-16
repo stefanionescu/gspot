@@ -2,12 +2,12 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isToolingPath } from '#cli/repository/selectors.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
+import { readText, readCachedText } from '#cli/system/files/reads.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Files, type ReadCache } from '#cli/types/system/files.ts';
 import { packageJsonSchema, selectDependencyFileParser } from '#cli/parsers/dependency-files.ts';
@@ -15,23 +15,18 @@ import type { PackageJson, DependencyFile, InstalledDependency } from '#cli/type
 
 /**
  * Read supported project manifests for dependency and runtime detection.
- * @param root the repository root.
- * @param files the tracked files.
  * @param reads the run's cached source reads.
+ * @param files the tracked files.
  * @returns one project manifest per supported source file.
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity -- reason: Package declarations accept strings and package-manager records; this reader validates both forms together.
-export async function readDependencyFiles(
-    root: string,
-    files: TrackedFile[],
-    reads?: ReadCache,
-): Promise<DependencyFile[]> {
+export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const manifests: DependencyFile[] = [];
     for (const file of files.filter((file) => file.kind === 'source' && !isToolingPath(file.path))) {
         try {
             const parse = selectDependencyFileParser(file.path);
             if (parse === undefined) continue;
-            const text = readText(root, file.path, reads);
+            const text = readCachedText(reads, file.path);
             if (text === undefined) throw new Error(`Manifest is missing: ${file.path}`);
             manifests.push(await parse(file.path, text));
         } catch (error) {

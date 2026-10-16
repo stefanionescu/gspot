@@ -6,8 +6,8 @@ import { join, dirname, basename } from 'node:path';
 import parseExpression from 'spdx-expression-parse';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
@@ -88,7 +88,7 @@ async function scanLicenses(input: CheckInput) {
         if (basename(manifest) === 'package.json') {
             const project = parseJsonFile(
                 manifest,
-                readSource(input.root, manifest, input.reads).toString('utf8'),
+                readCachedBytes(input.reads, manifest).toString('utf8'),
                 packageJsonSchema,
             );
             if (

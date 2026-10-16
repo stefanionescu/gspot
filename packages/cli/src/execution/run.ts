@@ -62,11 +62,10 @@ async function refreshAfterFixes(session: Session): Promise<void> {
     const scopes = Object.entries(scope).map(([path, { configurations }]) => ({ path, configurations }));
     session.reads = createReadCache(session.root);
     const selected = new Map(session.scopes.map((selection) => [selection.scope.path, selection.selected]));
-    session.repository = await readRepository(session.root, {
+    session.repository = await readRepository(session.reads, {
         declarations: fileDeclarations(selected),
         scopeEntries: scopes,
         manifests: session.manifests,
-        reads: session.reads,
     });
     session.packageManifests = session.repository.dependencyFiles;
     session.inspections.clear();

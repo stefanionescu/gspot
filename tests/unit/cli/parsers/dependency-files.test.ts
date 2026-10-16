@@ -12,13 +12,12 @@ test('Python dependency groups with includes keep every dependency', async () =>
     await createFileTree(sandbox.path, {
         'pyproject.toml': '[dependency-groups]\ntest = ["pytest>=8"]\ndev = [{include-group = "test"}, "ruff>=1"]\n',
     });
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
-    const packageManifests = await readDependencyFiles(sandbox.path, repository.files);
+    const packageManifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(packageManifests[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
 });
 
@@ -26,13 +25,12 @@ test('a pytest table counts as a pytest dependency', async () => {
     await using sandbox = await testdir();
     const source = '[tool.pytest.ini_options]\ntestpaths = ["tests"]\n';
     await createFileTree(sandbox.path, { 'pyproject.toml': source, 'source.py': 'print("authored")\n' });
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
-    const manifests = await readDependencyFiles(sandbox.path, repository.files);
+    const manifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(manifests[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
 });
 
@@ -40,12 +38,14 @@ test.each([...INVALID_PYTHON_DEPENDENCIES])('an invalid $name in $path names the
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: source });
     const files = [buildTrackedFile(path)];
-    expect(readDependencyFiles(sandbox.path, files)).rejects.toThrow(`Cannot inspect manifest ${path}`);
+    expect(readDependencyFiles(createReadCache(sandbox.path), files)).rejects.toThrow(
+        `Cannot inspect manifest ${path}`,
+    );
 });
 
 test.each(INVALID_DEPENDENCY_FILES)('invalid %s content %s is a dependency file error', async (path, content) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
     const files = [buildTrackedFile(path)];
-    expect(readDependencyFiles(sandbox.path, files)).rejects.toThrow(path);
+    expect(readDependencyFiles(createReadCache(sandbox.path), files)).rejects.toThrow(path);
 });

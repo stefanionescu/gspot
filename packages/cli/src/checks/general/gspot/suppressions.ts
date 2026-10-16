@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { coveredBy } from '#cli/repository/select.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { toolName } from '#cli/configurations/tool-pins.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { REASON_ABOVE } from '#cli/config/checks/general/gspot.ts';
 import { isReasonAccepted } from '#cli/settings/errors/reasons.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
@@ -76,7 +76,7 @@ export async function suppressions(input: CheckInput): Promise<Finding[]> {
             (file) => file.kind === 'source' && file.tags.includes('text') && scopeOf(file.path, scopes).path === scope,
         )) {
             const forms = suppressionSyntaxes(selection, file);
-            const source = readSource(input.root, file.path, input.reads).toString('utf8');
+            const source = readCachedBytes(input.reads, file.path).toString('utf8');
             const comments = await parseComments(file.path, source);
             found.push(
                 ...comments.flatMap((comment, index) => {

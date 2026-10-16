@@ -3,7 +3,7 @@ import { gzipSync } from 'node:zlib';
 import { join, isAbsolute } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { BYTES_PER_KB } from '#cli/config/units.ts';
-import { readSource } from '#cli/system/files/reads.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
@@ -38,7 +38,7 @@ function sitemapUrls(folder: string, files: ReadonlySet<string>): string[] {
     const read = (file: string): void => {
         if (visited.has(file)) return;
         visited.add(file);
-        for (const match of readSource(folder, file).toString('utf8').matchAll(SITEMAP_LOCATION)) {
+        for (const match of readBytes(folder, file).toString('utf8').matchAll(SITEMAP_LOCATION)) {
             const url = match.groups?.['url'];
             if (url === undefined) continue;
             if (new URL(url).pathname.endsWith('.xml')) {
@@ -169,7 +169,7 @@ export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
         const result = await runCheckTool(input, [...command, ...batch], { cwd: build.cwd });
         if (![0, 1].includes(result.code)) throw new Error(`HTML validation failed: ${result.stderr}`);
         const files = htmlValidationReportSchema.parse(
-            JSON.parse(readSource(reports.path, HTML_REPORT_FILE).toString('utf8')),
+            JSON.parse(readBytes(reports.path, HTML_REPORT_FILE).toString('utf8')),
         );
         if (result.code === 1 && files.every((file) => file.messages.length === 0))
             throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
@@ -241,7 +241,7 @@ export async function siteSize(input: CheckInput): Promise<Finding[]> {
         const isCounted = pathMatcher(limit.paths);
         const bytes = files
             .filter((entry) => isCounted(repositoryPath(input, build, join(build.folder, entry))))
-            .reduce((sum, path) => sum + gzipSync(readSource(build.folder, path)).length, 0);
+            .reduce((sum, path) => sum + gzipSync(readBytes(build.folder, path)).length, 0);
         const weight = Math.ceil(bytes / BYTES_PER_KB);
         return weight <= limit.kilobytes
             ? []

@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { PYTHON_SOURCES } from '#cli/parsers/python.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { TYPED_DECLARATION } from '#tests/config/typescript.ts';
-import { readPython, deletePythonTrees } from '#cli/parsers/python.ts';
 import { parseCached, createReadCache } from '#cli/system/files/cache.ts';
 
 test('parses are cached per run and copied trees outlive the cache', async () => {
@@ -46,19 +46,11 @@ test('a second visit with the same files returns the same value, in the same pat
             { path: 'second.py', kind: 'source' },
         ],
     };
-    const held = await Promise.all([
-        parseCached(input, readPython, deletePythonTrees, resources),
-        parseCached(input, readPython, deletePythonTrees, resources),
-    ]);
+    const held = await Promise.all([parseCached(input, PYTHON_SOURCES), parseCached(input, PYTHON_SOURCES)]);
     const python = held[0];
     const concurrent = held[1];
     expect(concurrent).toBe(python);
-    const reversed = await parseCached(
-        { ...input, files: input.files.toReversed() },
-        readPython,
-        deletePythonTrees,
-        resources,
-    );
+    const reversed = await parseCached({ ...input, files: input.files.toReversed() }, PYTHON_SOURCES);
     expect(reversed).not.toBe(python);
     expect(python.modules.map(({ path }) => path)).toStrictEqual(['first.py', 'second.py']);
     expect(reversed.modules.map(({ path }) => path)).toStrictEqual(['second.py', 'first.py']);

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { resolve, relative } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { readSource } from '#cli/system/files/reads.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
@@ -17,7 +17,7 @@ function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]
     if (held !== undefined) return held;
     let source: Buffer;
     try {
-        source = readSource(root, path);
+        source = readBytes(root, path);
     } catch (error) {
         throw new GspotError('output', `Cannot read reported source file ${path}.`, { cause: error });
     }

@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { findLockfile } from '#cli/repository/classify.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD, BINARY_BUN_LOCKFILE } from '#cli/config/checks/general/dependencies.ts';
 
@@ -11,7 +11,7 @@ function urlMessage(url: URL, hosts: Set<string>): string | undefined {
 }
 
 function fileFindings(input: CheckInput, path: string, hosts: Set<string>): Finding[] {
-    const lines = readSource(input.root, path, input.reads).toString('utf8').split('\n');
+    const lines = readCachedBytes(input.reads, path).toString('utf8').split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
     const isNpm = findLockfile(path)?.client === 'npm';
     return lines.flatMap((text, index) =>

@@ -3,9 +3,9 @@ import ts from 'typescript';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { checkInput } from '#cli/execution/built-in.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { allChecks } from '#cli/configurations/manifests.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
@@ -109,7 +109,7 @@ export function nextConfig(input: CheckInput): Finding[] {
     return sourcePaths(input)
         .filter((path) => NEXT_CONFIG.test(path))
         .flatMap((path) => {
-            const text = readSource(input.root, path, input.reads).toString('utf8');
+            const text = readCachedBytes(input.reads, path).toString('utf8');
             return nextSettingsFindings(input, path, text);
         });
 }

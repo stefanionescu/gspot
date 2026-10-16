@@ -6,10 +6,10 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/parsers/output.ts';
 import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
@@ -59,7 +59,7 @@ function knownPaths(input: CheckInput): Set<string> {
     const ignored = input.repositoryFiles
         .filter((file) => posix.basename(file.path) === '.gitignore')
         .flatMap((file) =>
-            readSource(input.root, file.path, input.reads)
+            readCachedBytes(input.reads, file.path)
                 .toString('utf8')
                 .split('\n')
                 .map((line) => line.trim())
@@ -80,7 +80,7 @@ function knownPaths(input: CheckInput): Set<string> {
 
 function miseTasks(input: CheckInput, file: string): string[] {
     try {
-        return parseMiseTasks(readSource(input.root, file, input.reads).toString('utf8'));
+        return parseMiseTasks(readCachedBytes(input.reads, file).toString('utf8'));
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
         throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
@@ -89,11 +89,7 @@ function miseTasks(input: CheckInput, file: string): string[] {
 
 function packageScripts(input: CheckInput, file: string): string[] | undefined {
     try {
-        const manifest = parseJsonFile(
-            file,
-            readSource(input.root, file, input.reads).toString('utf8'),
-            packageJsonSchema,
-        );
+        const manifest = parseJsonFile(file, readCachedBytes(input.reads, file).toString('utf8'), packageJsonSchema);
         return manifest.scripts === undefined ? [] : Object.keys(manifest.scripts);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
@@ -243,7 +239,7 @@ export function missingPaths(input: CheckInput): Finding[] {
     return [...projects].flatMap(([scope, sources]) => {
         const index: PathIndex = { known, tasks: taskSources(input, scope) };
         return sources.flatMap((file) => {
-            const text = readSource(input.root, file.path, input.reads).toString('utf8');
+            const text = readCachedBytes(input.reads, file.path).toString('utf8');
             return proseLines(text).flatMap((prose) => lineFindings(input, file.path, prose, index));
         });
     });

@@ -45,11 +45,10 @@ test('generated Gradle and Maven launchers are classified generated and never se
         ),
     ).not.toContain('bash');
     await writeFile(join(sandbox.path, '.gitattributes'), 'mvnw linguist-vendored\n');
-    const declared = await readRepository(sandbox.path, {
+    const declared = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(declared.files.find(({ path }) => path === 'mvnw')).toMatchObject({
         kind: 'vendored',
@@ -98,11 +97,10 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
     const declarations = [
         { paths: ['src/a.ts', 'generated/declared.ts'], configuration: 'example', kind: 'generated' as const },
     ];
-    const declared = await readRepository(sandbox.path, {
+    const declared = await readRepository(createReadCache(sandbox.path), {
         declarations: declarations,
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(declared.files.find((file) => file.path === 'src/a.ts')).toMatchObject({
         kind: 'generated',
@@ -112,11 +110,10 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
         kind: 'vendored',
         kindSource: '.gitattributes',
     });
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const files = new Map(repository.files.map((file) => [file.path, file]));
     expect(files.get('generated/x.ts')?.kindSource).toBe('.gitattributes');
@@ -133,11 +130,10 @@ test('an @generated marker in a comment line makes a file generated, and the bar
         'marked.py': '# @generated\nA = 1\n',
         'named.ts': 'export const MARKERS = [/@generated\\b/u];\n',
     });
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const kinds = Object.fromEntries(repository.files.map((file) => [file.path, file.kind]));
     expect(kinds).toStrictEqual({ 'marked.py': 'generated', 'marked.ts': 'generated', 'named.ts': 'source' });
@@ -148,11 +144,10 @@ test('a license text is vendored, and a source file named like one stays source'
     const licenses = LICENSE_FILES;
     const sources = LICENSE_LIKE_SOURCES;
     await createFileTree(sandbox.path, Object.fromEntries([...licenses, ...sources].map((path) => [path, 'x\n'])));
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const kinds = Object.fromEntries(repository.files.map((file) => [file.path, file.kind]));
     expect(kinds).toStrictEqual({
@@ -165,11 +160,10 @@ test('a folder without Git does not read Git attributes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     await mkdir(join(sandbox.path, '.gitattributes'));
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(repository.files.map(({ path, kind }) => ({ path, kind }))).toStrictEqual([
         { path: 'source.ts', kind: 'source' },
@@ -184,11 +178,10 @@ test('Git attributes follow Git order and are not decoded from the working tree'
         'source.ts': 'export {};\n',
     });
     await writeFile(join(sandbox.path, '.gitattributes'), Buffer.from([0xff, 0x0a]));
-    const awaitedRepository = await readRepository(sandbox.path, {
+    const awaitedRepository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(awaitedRepository.attributes.get('source.ts')).toMatchObject({
         'linguist-generated': 'set',
@@ -200,11 +193,10 @@ test('every generated header format marks a file generated outside .gspot', asyn
     const paths = ['tool.js', 'tool.py', 'tool.sql', 'tool.md', 'tool.html'];
     const files = Object.fromEntries(paths.map((path) => [path, `${headerFor(path)}content\n`]));
     await createFileTree(sandbox.path, files);
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(repository.files.map(({ path, kind, kindSource }) => ({ path, kind, kindSource }))).toStrictEqual(
         paths
@@ -222,19 +214,17 @@ test('Git attribute reads honor later and nested overrides', async () => {
     await createFileTree(sandbox.path, ATTRIBUTE_FILES);
     gitOutput(sandbox.path, ['init', '--quiet']);
     gitOutput(sandbox.path, ['add', '.']);
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(Object.fromEntries(repository.files.map(({ path, kind }) => [path, kind]))).toStrictEqual(ATTRIBUTE_KINDS);
     await createFileTree(sandbox.path, { '.gitattributes': '', 'nested/.gitattributes': '' });
-    const corrected = await readRepository(sandbox.path, {
+    const corrected = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(Object.fromEntries(corrected.files.map(({ path, kind }) => [path, kind]))).toStrictEqual(
         CLEARED_ATTRIBUTE_KINDS,
@@ -252,11 +242,10 @@ test('Git info attributes override tracked declarations until removed', async ()
     await createFileTree(sandbox.path, {
         '.git/info/attributes': '*.ts -linguist-generated\ncontrol.ts linguist-vendored\n',
     });
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(Object.fromEntries(repository.files.map(({ path, kind }) => [path, kind]))).toStrictEqual({
         '.gitattributes': 'source',
@@ -264,11 +253,10 @@ test('Git info attributes override tracked declarations until removed', async ()
         'control.ts': 'vendored',
     });
     await unlink(join(sandbox.path, '.git/info/attributes'));
-    const corrected = await readRepository(sandbox.path, {
+    const corrected = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(Object.fromEntries(corrected.files.map(({ path, kind }) => [path, kind]))).toStrictEqual({
         '.gitattributes': 'source',

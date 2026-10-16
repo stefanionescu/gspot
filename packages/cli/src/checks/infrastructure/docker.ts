@@ -6,13 +6,13 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { readText, readSource } from '#cli/system/files/reads.ts';
 import { runCommandGroups } from '#cli/execution/command/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
+import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
 import type { ComposeFiles, ComposeService, ComposeDocuments } from '#cli/types/checks/infrastructure.ts';
 
@@ -72,7 +72,7 @@ function composeDocuments(input: CheckInput): ComposeDocuments {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
             try {
                 const document = composeSchema.parse(
-                    parse(readSource(input.root, path, input.reads).toString('utf8'), { merge: true }),
+                    parse(readCachedBytes(input.reads, path).toString('utf8'), { merge: true }),
                 );
                 const entries = document.services === undefined ? [] : Object.entries(document.services);
                 return entries.map(([name, service]) => ({ name, path, service }));
@@ -234,7 +234,7 @@ export function dockerignore(input: CheckInput): Finding[] {
             const ignore = paths
                 .values()
                 .flatMap((path) => {
-                    const text = readText(input.root, path, input.reads);
+                    const text = readCachedText(input.reads, path);
                     return text === undefined ? [] : [{ path, text }];
                 })
                 .next().value;

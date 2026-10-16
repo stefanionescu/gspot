@@ -4,9 +4,9 @@ import { join, posix, basename } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { hasIniSection } from '#cli/repository/tooling.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
 import { pythonProjectCommand } from '#cli/tools/python/project.ts';
@@ -19,7 +19,7 @@ import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli
 function importLinterFile(input: CheckInput): string | undefined {
     for (const file of IMPORT_LINTER_FILES) {
         const path = posix.join(input.selection.scope.path, file);
-        const text = readText(input.root, path, input.reads);
+        const text = readCachedText(input.reads, path);
         if (text === undefined) continue;
         const declared =
             file === PYPROJECT_TOML

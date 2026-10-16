@@ -1,5 +1,5 @@
 import { parseBashScript } from '#cli/parsers/bash.ts';
-import { readSource } from '#cli/system/files/reads.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { type ScriptFile } from '#cli/types/checks/language.ts';
@@ -11,7 +11,7 @@ import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 const SCRIPT_MEMO = { create: () => new Map<string, Promise<ScriptFile[]>>() };
 
 async function readScript(input: CheckInput, file: TrackedFile): Promise<ScriptFile> {
-    const text = readSource(input.root, file.path, input.reads).toString('utf8');
+    const text = readCachedBytes(input.reads, file.path).toString('utf8');
     const syntax = await parseBashScript(text, input);
     const references = new Map<string, number[]>();
     for (const call of syntax.calls) {

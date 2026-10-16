@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { MESSAGE_FILE_SUFFIX } from '#cli/config/checks/library.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
@@ -38,10 +38,7 @@ export function translationsMessages(input: CheckInput): Finding[] {
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${directory}/`) && path.endsWith(MESSAGE_FILE_SUFFIX));
     const messagesByPath = new Map(
-        files.map((path) => [
-            path,
-            flattenMessages(JSON.parse(readSource(input.root, path, input.reads).toString('utf8'))),
-        ]),
+        files.map((path) => [path, flattenMessages(JSON.parse(readCachedBytes(input.reads, path).toString('utf8')))]),
     );
     const baseline = [...messagesByPath].find(([path]) => posix.basename(path) === `${base}${MESSAGE_FILE_SUFFIX}`);
     if (baseline === undefined)

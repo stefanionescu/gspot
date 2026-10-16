@@ -102,8 +102,8 @@ export function scopeIgnorePatterns(patterns: string[], scope: string): string[]
  *
  * @returns unique repository-relative patterns.
  */
-export function generatedIgnores(session: Pick<Session, 'root' | 'reads' | 'repository' | 'scopes'>): string[] {
-    const { root, reads, repository, scopes } = session;
+export function generatedIgnores(session: Pick<Session, 'reads' | 'repository' | 'scopes'>): string[] {
+    const { reads, repository, scopes } = session;
     const declarations = fileDeclarations(new Map(scopes.map(({ scope, selected }) => [scope.path, selected])));
     const tracked = repository.index.length === 0 ? repository.files : repository.index;
     return [
@@ -115,9 +115,8 @@ export function generatedIgnores(session: Pick<Session, 'root' | 'reads' | 'repo
                 ),
             ),
             ...readGeneratedPatterns(
-                root,
-                tracked.map(({ path }) => path),
                 reads,
+                tracked.map(({ path }) => path),
             ),
             ...declarations.flatMap(({ paths }) => paths),
         ]),
@@ -152,7 +151,7 @@ export function selectedIgnorePaths(scopes: ScopeSelection[]): string[] {
  *
  * @returns the ordered generated ignore patterns.
  */
-export function gitignorePatterns(session: Pick<Session, 'root' | 'reads' | 'repository' | 'scopes'>): string[] {
+export function gitignorePatterns(session: Pick<Session, 'reads' | 'repository' | 'scopes'>): string[] {
     const paths = selectedIgnorePaths(session.scopes);
     const folders = new Set(paths.filter((path) => path.endsWith('/')).map((path) => `**/${path.slice(0, -1)}/**`));
     return [...new Set([...generatedIgnores(session).filter((pattern) => !folders.has(pattern)), ...paths])];

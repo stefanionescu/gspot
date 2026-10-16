@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
+import { findDocstring, PYTHON_SOURCES } from '#cli/parsers/python.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
-import { readPython, findDocstring, deletePythonTrees } from '#cli/parsers/python.ts';
 
 /**
  * Report Python docstrings that only repeat a name or placeholder.
@@ -10,7 +10,7 @@ import { readPython, findDocstring, deletePythonTrees } from '#cli/parsers/pytho
  * @returns the findings for that check.
  */
 export async function pythonPlaceholderDocstrings(input: CheckInput): Promise<Finding[]> {
-    const parsed = await parseCached(input, readPython, deletePythonTrees, input.resources);
+    const parsed = await parseCached(input, PYTHON_SOURCES);
     const { functions } = parsed;
     return functions.flatMap((definition) => {
         const text = findDocstring(definition.node);

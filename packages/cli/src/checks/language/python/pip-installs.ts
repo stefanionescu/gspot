@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { readSource } from '#cli/system/files/reads.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/language/python.ts';
@@ -34,7 +34,7 @@ export function pythonPipInstalls(input: CheckInput): Finding[] {
     const installs = files
         .filter((file) => INSTALL_EXTENSIONS.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
-            readSource(input.root, file.path, input.reads)
+            readCachedBytes(input.reads, file.path)
                 .toString('utf8')
                 .split('\n')
                 .flatMap((text, index): Finding[] =>

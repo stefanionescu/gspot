@@ -14,11 +14,10 @@ import { FORMAT_FILE_CASES, SCOPE_FORMAT_CASES, SCOPE_FORMAT_FILES } from '#test
 
 test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', async ({ files, expected }) => {
     await using sandbox = await testdir(files);
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const draft: SettingsDraft = {
         configurations: ['format'],
@@ -32,7 +31,7 @@ test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', a
         draft,
         repository,
         manifests,
-        await readDependencyFiles(sandbox.path, repository.files),
+        await readDependencyFiles(createReadCache(sandbox.path), repository.files),
     );
     const text = initSettingsText(draft, repository, manifests, formats);
     const session = await openSession(sandbox.path, {
@@ -49,11 +48,10 @@ test.each([...SCOPE_FORMAT_CASES])(
     'init reads the format settings of each scope with $name',
     async ({ template, expected }) => {
         await using sandbox = await testdir(SCOPE_FORMAT_FILES);
-        const repository = await readRepository(sandbox.path, {
+        const repository = await readRepository(createReadCache(sandbox.path), {
             declarations: [],
             scopeEntries: [],
             manifests: configurationManifests(),
-            reads: createReadCache(sandbox.path),
         });
         const draft: SettingsDraft = {
             configurations: ['format'],
@@ -74,7 +72,7 @@ test.each([...SCOPE_FORMAT_CASES])(
             draft,
             repository,
             manifests,
-            await readDependencyFiles(sandbox.path, repository.files),
+            await readDependencyFiles(createReadCache(sandbox.path), repository.files),
         );
         const text = initSettingsText(draft, repository, manifests, formats);
         const session = await openSession(sandbox.path, {

@@ -12,9 +12,9 @@ import { walkSqlTree } from '#cli/parsers/sql/postgres.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { readText, readSource } from '#cli/system/files/reads.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
+import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { toolFindings, toolOutputDetail } from '#cli/execution/command/output.ts';
 import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/checks/platform.ts';
@@ -64,7 +64,7 @@ function firstError(input: CheckInput, folder: string, stderr: string): Finding 
  */
 function readConfigToml(input: CheckInput): Parsed<SupabaseConfiguration> | undefined {
     const local = posix.join(input.selection.scope.path, SUPABASE_CONFIG_TOML);
-    const text = readText(input.root, local, input.reads);
+    const text = readCachedText(input.reads, local);
     if (text === undefined) return undefined;
     try {
         return { value: supabaseProjectSchema.parse(parse(text)) };
@@ -226,7 +226,7 @@ export function supabaseServiceRoleKey(input: CheckInput): Finding[] {
             extensions.some((extension) => file.path.endsWith(extension)),
     );
     return files.flatMap((file) =>
-        readSource(input.root, file.path, input.reads)
+        readCachedBytes(input.reads, file.path)
             .toString('utf8')
             .split('\n')
             .flatMap((text, index): Finding[] => {

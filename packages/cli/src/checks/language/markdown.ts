@@ -2,11 +2,11 @@ import { visit } from 'unist-util-visit';
 import { parseAllDocuments } from 'yaml';
 import { findingAt } from '#cli/checks/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { TomlError, parse as parseToml } from 'smol-toml';
 import { JSONC_OPTIONS } from '#cli/config/parsers/json.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { ParseCache, GrammarName } from '#cli/types/parsers/tree-sitter.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
@@ -133,7 +133,7 @@ export async function markdownFences(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const file of input.files) {
         input.cancelSignal?.throwIfAborted();
-        const text = readSource(input.root, file.path, input.reads).toString('utf8');
+        const text = readCachedBytes(input.reads, file.path).toString('utf8');
         const syntaxFindings = await fenceSyntaxErrors(text, input);
         input.cancelSignal?.throwIfAborted();
         findings.push(

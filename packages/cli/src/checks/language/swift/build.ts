@@ -1,9 +1,9 @@
 import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import { type Files } from '#cli/types/system/files.ts';
 import { targetInScope } from '#cli/repository/scopes.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
@@ -171,7 +171,7 @@ export function swiftlintConfigurationFiles(input: CheckInput): string[] {
             directory = posix.dirname(directory)
         ) {
             const path = posix.join(directory, SWIFTLINT_CONFIG_FILE);
-            if (!paths.includes(path) && readText(input.root, path, input.reads) !== undefined) paths.push(path);
+            if (!paths.includes(path) && readCachedText(input.reads, path) !== undefined) paths.push(path);
         }
     }
     return [...new Set(paths)].toSorted((a, b) => a.localeCompare(b));

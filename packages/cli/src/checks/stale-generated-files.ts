@@ -1,12 +1,12 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { type GeneratedPath } from '#cli/types/configurations.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
+import { readBytes, readCachedBytes } from '#cli/system/files/reads.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
 import { GENERATED_SCAN_EXCLUSIONS } from '#cli/config/checks/stale-generated-files.ts';
@@ -15,7 +15,7 @@ import { substitute, perFileCommands, substituteValue } from '#cli/execution/com
 function missingOutputs(input: CheckInput, targets: GeneratedPath[], commandText: string): Finding[] {
     const entry = targets.find((target) => {
         try {
-            readSource(input.root, target.path, input.reads);
+            readCachedBytes(input.reads, target.path);
             return false;
         } catch (error) {
             if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return true;
@@ -40,9 +40,9 @@ function copiedFiles(root: string, scope: string, patterns: string[], targets: G
     return new Map([
         ...listMatchingPaths(cwd, [...patterns, ...excluded]).map((path): [string, Buffer] => [
             posix.join(scope, path),
-            readSource(cwd, path),
+            readBytes(cwd, path),
         ]),
-        ...targets.map((entry): [string, Buffer] => [entry.path, readSource(root, entry.path)]),
+        ...targets.map((entry): [string, Buffer] => [entry.path, readBytes(root, entry.path)]),
     ]);
 }
 

@@ -45,11 +45,10 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
 test('pre-commit is found from its configuration file', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.pre-commit-config.yaml': 'repos: []\n' });
-    const { files } = await readRepository(sandbox.path, {
+    const { files } = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     expect(readTooling(sandbox.path, files, []).hooks).toStrictEqual([
         { kind: 'pre-commit', path: '.pre-commit-config.yaml', files: [] },

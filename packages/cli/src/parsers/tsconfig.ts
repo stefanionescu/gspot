@@ -1,12 +1,13 @@
 // Reads TypeScript project files and compiler options.
+// Reads TypeScript project files and compiler options.
 import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
@@ -150,7 +151,7 @@ function readCompilerFile(root: string, path: string, reads: ReadCache): string 
             if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }
-        return readText(root, local, reads);
+        return readCachedText(reads, local);
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
         throw error;

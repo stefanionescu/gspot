@@ -6,11 +6,11 @@ import { VALE_ALERT } from '#tests/config/prose.ts';
 import * as processes from '#cli/system/processes.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
@@ -56,7 +56,7 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
     });
     const session = await openSession(directory.path);
     const paths = ['first.mts', 'second.cts'];
-    const original = paths.map((path) => readSource(session.root, path, session.reads).toString('utf8'));
+    const original = paths.map((path) => readCachedBytes(session.reads, path).toString('utf8'));
     for (const path of paths) await Bun.write(join(session.root, path), '// Changed after the run read it.\n');
 
     using resources = new DisposableStack();

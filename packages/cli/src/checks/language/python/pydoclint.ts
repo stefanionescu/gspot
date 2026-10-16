@@ -3,9 +3,9 @@ import { posix } from 'node:path';
 import { parse } from 'smol-toml';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
-import { readText, readSource } from '#cli/system/files/reads.ts';
 import { runCommandGroups } from '#cli/execution/command/check.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
+import { readText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/python.ts';
@@ -22,11 +22,7 @@ import {
 } from '#cli/config/checks/language/python.ts';
 
 async function sourceStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
-    const module = await parsePythonModule(
-        path,
-        readSource(session.root, path, session.reads).toString('utf8'),
-        session,
-    );
+    const module = await parsePythonModule(path, readCachedBytes(session.reads, path).toString('utf8'), session);
     try {
         for (const node of module.tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
             const docstring = findDocstring(node);

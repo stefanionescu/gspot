@@ -1,8 +1,9 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
 import { isDocstring } from '#cli/parsers/python.ts';
+import { parseCached } from '#cli/system/files/cache.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
-import { conventionSources } from '#cli/checks/general/structure/conventions.ts';
+import { CONVENTION_SOURCES } from '#cli/checks/general/structure/conventions.ts';
 import type { IsSubstantial, CountedLanguage } from '#cli/types/checks/general.ts';
 
 import {
@@ -186,7 +187,7 @@ function swiftFunctionName(node: Node): string {
  * @returns findings with the original statement counts and locations.
  */
 async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
-    const parsed = await conventionSources(input);
+    const parsed = await parseCached(input, CONVENTION_SOURCES);
     const files: Finding[] = [];
     const functions = parsed.flatMap((source) => {
         const limit = input.selection.view.limit('min_function_statements', source.language);

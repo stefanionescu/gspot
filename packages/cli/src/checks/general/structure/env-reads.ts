@@ -1,8 +1,9 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
+import { parseCached } from '#cli/system/files/cache.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
-import { conventionSources } from '#cli/checks/general/structure/conventions.ts';
+import { CONVENTION_SOURCES } from '#cli/checks/general/structure/conventions.ts';
 
 import type {
     EnvironmentKind,
@@ -118,7 +119,7 @@ export async function envReads(input: CheckInput): Promise<Finding[]> {
     const readerPaths = input.selection.view.roles['environment_readers'];
     if (readerPaths.length === 0) return [];
     const isReader = pathMatcher(readerPaths);
-    const parsed = await conventionSources(input);
+    const parsed = await parseCached(input, CONVENTION_SOURCES);
     const owned = new Set(
         parsed
             .filter((source) => source.language === 'bash' && isReader(source.path))

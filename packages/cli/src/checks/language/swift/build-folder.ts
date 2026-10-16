@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { hashContent } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { readSource } from '#cli/system/files/reads.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
@@ -42,7 +42,7 @@ function readBuildSources(root: string, paths: string[]): Map<string, FileCopy> 
     const wantedFiles = new Map<string, FileCopy>();
     for (const file of paths) {
         const mode = statSync(source.realPath(file)).mode & MODE_BITS;
-        wantedFiles.set(`${BUILD_SOURCE_DIRECTORY}/${file}`, { bytes: readSource(root, file), mode });
+        wantedFiles.set(`${BUILD_SOURCE_DIRECTORY}/${file}`, { bytes: readBytes(root, file), mode });
     }
     return wantedFiles;
 }

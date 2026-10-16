@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { parsePbxproj } from '#cli/parsers/xcode.ts';
 import { PBXPROJ } from '#cli/config/parsers/xcode.ts';
-import { readSource } from '#cli/system/files/reads.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
@@ -21,7 +21,7 @@ function projectFolder(projectFile: string): string {
 export function xcodeFilesWithoutTarget(input: CheckInput): Finding[] {
     const projects = sourcePaths(input, [PBXPROJ]).map((path) => ({
         path,
-        ...parsePbxproj(readSource(input.root, path, input.reads).toString('utf8'), projectFolder(path)),
+        ...parsePbxproj(readCachedBytes(input.reads, path).toString('utf8'), projectFolder(path)),
     }));
     if (projects.length === 0) return [];
     const references = projects.flatMap((project) =>

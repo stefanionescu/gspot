@@ -75,14 +75,13 @@ async function readSessionRepository(
         ['', ...Object.keys(settings.scope)].map((path) => [path, selectForScope(settings, path, manifests)]),
     );
     const declarations = fileDeclarations(selected);
-    const repository = await readRepository(root, {
+    const repository = await readRepository(reads, {
         declarations,
         scopeEntries: Object.entries(settings.scope).map(([path, scope]) => ({
             path,
             configurations: scope.configurations,
         })),
         manifests,
-        reads,
     });
     // Init has not written gspot.toml yet, so add it to the file list.
     if (!repository.files.some((file) => file.path === SETTINGS_FILE)) {

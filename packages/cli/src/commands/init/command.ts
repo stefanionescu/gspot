@@ -146,12 +146,7 @@ function registerInit(program: Command): void {
  */
 async function planInit(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = configurationManifests();
-    const repo = await readRepository(root, {
-        declarations: [],
-        scopeEntries: [],
-        manifests,
-        reads: createReadCache(root),
-    });
+    const repo = await readRepository(createReadCache(root), { declarations: [], scopeEntries: [], manifests });
     const packageManifests = repo.dependencyFiles;
     const scopes = repo.scopes;
     const inputs = { root, repo, packageManifests, scopes, manifests };

@@ -6,7 +6,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { parseIndexEntries } from '#cli/parsers/git.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
-import { decodeUtf8, readSource } from '#cli/system/files/reads.ts';
+import { readBytes, decodeUtf8 } from '#cli/system/files/reads.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/system/locations.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { GIT_LOCALE, WORK_TREE_ARGUMENTS } from '#cli/config/system/git.ts';
@@ -70,7 +70,7 @@ function directoryContents(root: string, directory: string, inherited: PathIgnor
     if (entries.some((entry) => entry.name === GITIGNORE_FILE && entry.isFile())) {
         rules.push({
             base: directory,
-            matcher: ignore().add(readSource(root, `${directory}${GITIGNORE_FILE}`).toString('utf8')),
+            matcher: ignore().add(readBytes(root, `${directory}${GITIGNORE_FILE}`).toString('utf8')),
         });
     }
     return { entries, rules };

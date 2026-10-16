@@ -1,7 +1,6 @@
 import { Query, type Node } from 'web-tree-sitter';
-import { readSource } from '#cli/system/files/reads.ts';
-import { parseCached } from '#cli/system/files/cache.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';
@@ -43,11 +42,7 @@ async function readConventionSources(
         for (const file of input.files.filter((entry) => entry.kind === 'source' && !isInGspotFolder(entry.path))) {
             const language = sourceLanguage(file);
             if (language === undefined || !input.selection.view.configurations.includes(language)) continue;
-            const tree = await parseSource(
-                language,
-                readSource(input.root, file.path, input.reads).toString('utf8'),
-                input,
-            );
+            const tree = await parseSource(language, readCachedBytes(input.reads, file.path).toString('utf8'), input);
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
             sources.push(source);
             captureSource(source);
@@ -67,11 +62,5 @@ function disposeConventionSources(sources: ConventionSource[]): void {
     for (const source of sources) source.tree.delete();
 }
 
-/**
- * Share convention captures until both structure checks finish.
- * @param input the check context and syntax tree resources.
- * @returns the captured convention sources.
- */
-export function conventionSources(input: CheckInput): Promise<ConventionSource[]> {
-    return parseCached(input, readConventionSources, disposeConventionSources, input.resources);
-}
+/** One identity shares parsed conventions across their checks. */
+export const CONVENTION_SOURCES = { read: readConventionSources, dispose: disposeConventionSources };

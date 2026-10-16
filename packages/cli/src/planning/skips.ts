@@ -1,5 +1,5 @@
 import ignore from 'ignore';
-import { readText } from '#cli/system/files/reads.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning.ts';
 import { missingBuild } from '#cli/configurations/tool-pins.ts';
 import { coversScope, projectDependencies } from '#cli/repository/scopes.ts';
@@ -52,7 +52,7 @@ function toolIgnore(session: Session, check: PlannedCheck): ToolIgnore | undefin
     const argument = check.check.command?.indexOf(TOOL_IGNORE_ARGUMENT) ?? -1;
     const file = argument < 0 ? undefined : check.check.command?.[argument + 1];
     if (file === undefined) return undefined;
-    const matcher = ignore().add(readText(session.root, file, session.reads) ?? '');
+    const matcher = ignore().add(readCachedText(session.reads, file) ?? '');
     return { file, matches: matcher.ignores.bind(matcher) };
 }
 

@@ -1,6 +1,6 @@
 import { join, posix } from 'node:path';
-import { readSource } from '#cli/system/files/reads.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { GIT_FOLDER } from '#cli/config/repository/tracked.ts';
 import { copyIntoScratch } from '#cli/execution/copy/scratch.ts';
@@ -79,7 +79,7 @@ export async function actionlint(session: Session, planned: PlannedCheck): Promi
         ),
     );
     for (const file of inputs.values()) {
-        const source = readSource(session.root, file.path, session.reads).toString('utf8');
+        const source = readCachedBytes(session.reads, file.path).toString('utf8');
         const prepared = actionlintSource(source);
         if (prepared !== source) replacements.set(file.path, prepared);
     }

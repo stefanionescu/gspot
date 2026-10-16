@@ -4,8 +4,8 @@ import { readGitText } from '#cli/system/git.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
@@ -101,7 +101,7 @@ export function envExamples(input: CheckInput): Finding[] {
         );
     const known = new Set(
         examples.flatMap((file) => {
-            const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
+            const lines = readCachedBytes(input.reads, file.path).toString('utf8').split('\n');
             return lines.flatMap((line) => {
                 const key = ENV_KEY_LINE.exec(line.trim())?.groups?.['key'];
                 return key === undefined ? [] : [key];
@@ -123,7 +123,7 @@ export function envExamples(input: CheckInput): Finding[] {
         (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),
     );
     return candidates.flatMap((file) => {
-        const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
+        const lines = readCachedBytes(input.reads, file.path).toString('utf8').split('\n');
         const seen = new Set<string>();
         return lines.flatMap((line, index) => {
             const findings: Finding[] = [];

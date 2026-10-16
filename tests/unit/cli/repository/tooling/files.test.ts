@@ -17,11 +17,10 @@ test('tool discovery finds nested tool files and skips .gspot and vendored folde
         '.gspot/package.json': 'unowned malformed output',
         'nested/.gspot/package.json': 'unowned nested output',
     });
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const discovered = readTooling(sandbox.path, repository.files, []);
     expect(discovered.toolFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);

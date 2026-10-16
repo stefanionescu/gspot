@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { isCovered } from '#cli/repository/select.ts';
-import { readSource } from '#cli/system/files/reads.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { scopeOf, isInScope } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { namingDefaults } from '#cli/configurations/manifests.ts';
@@ -75,7 +75,7 @@ async function declaredNames(input: CheckInput): Promise<FileNames[]> {
         for (const { file, language } of sourceFiles(scopeInput)) {
             const identifiers = await identifiersOf(
                 file.path,
-                readSource(input.root, file.path, input.reads).toString('utf8'),
+                readCachedBytes(input.reads, file.path).toString('utf8'),
                 language,
                 scopeInput,
             );
@@ -158,7 +158,7 @@ export async function namingIdentifiers(input: CheckInput): Promise<Finding[]> {
     const settings = readNamingSettings(input);
     const findings: Finding[] = [];
     for (const { file, language } of sourceFiles(input)) {
-        const text = readSource(input.root, file.path, input.reads).toString('utf8');
+        const text = readCachedBytes(input.reads, file.path).toString('utf8');
         const identifiers = await identifiersOf(file.path, text, language, input);
         findings.push(...findingsFor(input, settings, identifiers));
     }

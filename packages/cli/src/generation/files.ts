@@ -4,10 +4,10 @@ import { npmProject } from '#cli/generation/npm.ts';
 import { buildPathKey } from '#cli/system/paths.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
 import { pythonProject } from '#cli/generation/python.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
@@ -91,7 +91,7 @@ function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], 
         settingsFile: { settings },
         reads,
     } = session;
-    const text = readText(repository.root, GITATTRIBUTES_FILE, reads) ?? '';
+    const text = readCachedText(reads, GITATTRIBUTES_FILE) ?? '';
     const span = findBlockSpan(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
     const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
     if (repository.hasGit) {

@@ -45,11 +45,10 @@ test.each([...CI_PREFERENCE_CASES])(
 
 test('the gspot.toml text keeps root and scope configurations', async () => {
     await using sandbox = await testdir();
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const text = initSettingsText(
         {
@@ -78,11 +77,10 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
 
 test('template settings stay beside the commit scopes init adds', async () => {
     await using sandbox = await testdir();
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const text = initSettingsText(
         {
@@ -112,11 +110,10 @@ test('template settings stay beside the commit scopes init adds', async () => {
 
 test('initialization honors disabled integrations and preserves template format settings', async () => {
     await using sandbox = await testdir();
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const text = initSettingsText(
         {
@@ -150,11 +147,10 @@ test('initialization honors disabled integrations and preserves template format 
 
 test('a template keeps its comments and gspot.toml records which template it copied', async () => {
     await using sandbox = await testdir();
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const template = parseTemplate(
         `# Rule owner
@@ -186,11 +182,10 @@ instruction_files = ["TEAM.md"]
 test.each([...SDK_DESTINATIONS])('init picks the Xcode destination for SDK $sdk', async ({ sdk, destination }) => {
     const source = BUILD_SETTINGS_PBXPROJ.replace('SDKROOT=macosx', `SDKROOT=${sdk}`);
     await using sandbox = await testdir({ 'App.xcodeproj/project.pbxproj': source });
-    const repository = await readRepository(sandbox.path, {
+    const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopeEntries: [],
         manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
     });
     const text = initSettingsText(
         { configurations: ['swift', 'xcode'], scopes: [], hooks: false, ci: 'none', rules: false },
@@ -214,11 +209,10 @@ test.each([...TEMPLATE_SWIFT_CHOICES])(
             'Unused.xcodeproj/project.pbxproj': 'not native plist syntax',
             'Chosen.xcodeproj/project.pbxproj': BUILD_SETTINGS_PBXPROJ,
         });
-        const repository = await readRepository(sandbox.path, {
+        const repository = await readRepository(createReadCache(sandbox.path), {
             declarations: [],
             scopeEntries: [],
             manifests: configurationManifests(),
-            reads: createReadCache(sandbox.path),
         });
         const text = initSettingsText(
             {

@@ -6,22 +6,9 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
 
-// Use this run's resolved root when it belongs to the requested repository.
-function realRoot(root: string, reads?: ReadCache): string {
-    return reads?.root === root ? root : realpathSync(root);
-}
-
-/**
- * Reads a bounded prefix, closing the descriptor even when reading fails.
- * @param root the repository root.
- * @param path the root-relative file.
- * @param limit the maximum byte count.
- * @param reads the resolved root for this session.
- * @returns the bytes read.
- */
-export function readPrefix(root: string, path: string, limit: number, reads?: ReadCache): Buffer {
+// Close the descriptor even when a bounded read fails.
+function readFilePrefix(source: string, limit: number): Buffer {
     const buffer = Buffer.alloc(limit);
-    const source = readContainedPath(realRoot(root, reads), path);
     const descriptor = openSync(source, 'r');
     let offset = 0;
     try {
@@ -37,32 +24,50 @@ export function readPrefix(root: string, path: string, limit: number, reads?: Re
 }
 
 /**
- * Reads a file under root. Uses the run's cache only when the cache belongs to this root, so scratch copies always come from disk.
- * @param root the directory to read.
- * @param path the source path relative to that directory.
- * @param reads optional bytes cached for this repository and run.
+ * Read a bounded prefix using the run's resolved root and any held source bytes.
+ * @param reads the run's source reads.
+ * @param path the root-relative path.
+ * @param limit the maximum byte count.
+ * @returns the bytes read.
+ */
+function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer {
+    const held = reads.sources.get(path);
+    return held === undefined ? readFilePrefix(readContainedPath(reads.root, path), limit) : held.subarray(0, limit);
+}
+
+/**
+ * Read contained file bytes directly from disk.
+ * @param root the source folder.
+ * @param path the root-relative path.
  * @returns the file bytes.
  */
-export function readSource(root: string, path: string, reads?: ReadCache): Buffer {
-    const read = reads?.root === root ? reads.sources : undefined;
-    const held = read?.get(path);
+function readBytes(root: string, path: string): Buffer {
+    return readFileSync(readContainedPath(realpathSync(root), path));
+}
+
+/**
+ * Read contained file bytes once per run.
+ * @param reads the run's source reads.
+ * @param path the root-relative path.
+ * @returns the first bytes read during this run.
+ */
+function readCachedBytes(reads: ReadCache, path: string): Buffer {
+    const held = reads.sources.get(path);
     if (held !== undefined) return held;
-    const bytes = readFileSync(readContainedPath(realRoot(root, reads), path));
-    read?.set(path, bytes);
+    const bytes = readFileSync(readContainedPath(reads.root, path));
+    reads.sources.set(path, bytes);
     return bytes;
 }
 
 /**
- * Read text when the file exists, following links only within the repository.
- * @param root the repository root.
- * @param path the repository-relative file.
- * @param reads optional bytes cached for this repository and run.
- * @returns the text, or undefined when the file does not exist.
- * @throws for bytes outside Unicode UTF-8 text.
+ * Read UTF-8 text from disk, or return undefined for a missing file.
+ * @param root the source folder.
+ * @param path the root-relative path.
+ * @returns the file text.
  */
-export function readText(root: string, path: string, reads?: ReadCache): string | undefined {
+function readText(root: string, path: string): string | undefined {
     try {
-        const text = decodeUtf8(readSource(root, path, reads));
+        const text = decodeUtf8(readBytes(root, path));
         if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
         return text;
     } catch (error) {
@@ -72,12 +77,29 @@ export function readText(root: string, path: string, reads?: ReadCache): string 
 }
 
 /**
- * Read a written source path while refusing links outside the root's real path.
- * @param root the resolved directory.
- * @param path the root-relative source.
+ * Read UTF-8 text through the run cache, or return undefined for a missing file.
+ * @param reads the run's source reads.
+ * @param path the root-relative path.
+ * @returns the cached file text.
+ */
+function readCachedText(reads: ReadCache, path: string): string | undefined {
+    try {
+        const text = decodeUtf8(readCachedBytes(reads, path));
+        if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
+        return text;
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
+        throw error;
+    }
+}
+
+/**
+ * Resolve a source path while refusing links outside the root.
+ * @param root the resolved source folder.
+ * @param path the root-relative path.
  * @returns the contained path.
  */
-export function readContainedPath(root: string, path: string): string {
+function readContainedPath(root: string, path: string): string {
     const target = realpathSync(join(root, ...splitSystemPath(path)));
     if (!isInside(relative(root, target))) throw new Error(`Source link leaves the repository: ${path}`);
     return target;
@@ -85,11 +107,11 @@ export function readContainedPath(root: string, path: string): string {
 
 /**
  * Decode UTF-8 bytes as text.
- *
  * @param bytes the bytes.
- *
- * @returns the text, or undefined when the bytes lack UTF-8 encoding.
+ * @returns the text, or undefined for invalid UTF-8.
  */
-export function decodeUtf8(bytes: Uint8Array): string | undefined {
+function decodeUtf8(bytes: Uint8Array): string | undefined {
     return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }
+
+export { readText, readBytes, decodeUtf8, readCachedText, readCachedBytes, readCachedPrefix, readContainedPath };

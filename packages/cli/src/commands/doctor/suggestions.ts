@@ -1,10 +1,10 @@
 import { emitAll } from '#cli/generation/files.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { type Session } from '#cli/types/planning.ts';
-import { readPrefix } from '#cli/system/files/reads.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
+import { readCachedPrefix } from '#cli/system/files/reads.ts';
 import { type Generated } from '#cli/types/generation/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
@@ -121,9 +121,7 @@ function unownedToolFiles(session: Session, tooling: Tooling, tools: Set<string>
         )
         .filter(
             (config) =>
-                !hasGeneratedHeader(
-                    readPrefix(session.root, config.path, HEADER_BYTES, session.reads).toString('utf8'),
-                ),
+                !hasGeneratedHeader(readCachedPrefix(session.reads, config.path, HEADER_BYTES).toString('utf8')),
         )
         .flatMap((config) =>
             session.manifests

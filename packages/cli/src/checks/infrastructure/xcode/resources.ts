@@ -3,8 +3,8 @@ import { camelCase } from 'scule';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { safeParseJson } from '#cli/parsers/json.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
@@ -61,7 +61,7 @@ export function xcodeAssets(input: CheckInput): Finding[] {
     return sourcePaths(input, [ASSET_CONTENTS])
         .filter((path) => path.includes(XCASSETS_FOLDER))
         .flatMap((path) => {
-            const read = safeParseJson(readSource(input.root, path, input.reads).toString('utf8'), assetContentsSchema);
+            const read = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), assetContentsSchema);
             const at = { file: path, line: 1 };
             if ('error' in read) return [findingAt(input, at, 'syntax', read.error)];
             if (!path.endsWith(IMAGE_SET)) return [];
@@ -83,7 +83,7 @@ export function xcodeAssets(input: CheckInput): Finding[] {
  */
 export function xcodeUnusedAssets(input: CheckInput): Finding[] {
     const sourceTexts = sourcePaths(input, ASSET_REFERENCE_ENDINGS).map((path) =>
-        readSource(input.root, path, input.reads).toString('utf8'),
+        readCachedBytes(input.reads, path).toString('utf8'),
     );
     return sourcePaths(input, [ASSET_CONTENTS])
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
@@ -113,7 +113,7 @@ export function xcodeUnusedAssets(input: CheckInput): Finding[] {
  */
 export function xcstrings(input: CheckInput): Finding[] {
     return sourcePaths(input, [XCSTRINGS_SUFFIX]).flatMap((path) => {
-        const read = safeParseJson(readSource(input.root, path, input.reads).toString('utf8'), stringsFileSchema);
+        const read = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), stringsFileSchema);
         const at = { file: path, line: 1 };
         if ('error' in read) return [findingAt(input, at, 'syntax', read.error)];
         const strings = read.value;

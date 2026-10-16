@@ -1,8 +1,8 @@
 // Reads grammars and shares source parses within a run.
 import { readFileSync } from 'node:fs';
 import { findWasmPath } from '#cli/system/assets.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { TSX_EXTENSION, LANGUAGE_GRAMMARS, GRAMMAR_FILE_EXTENSION } from '#cli/config/parsers/tree-sitter.ts';
@@ -76,7 +76,7 @@ export async function parseSource(name: GrammarName, text: string, cache?: Parse
  */
 export async function visitParsedSources(input: ParsedSourceInput, visit: (source: SourceTree) => void): Promise<void> {
     for (const file of input.files) {
-        const text = readSource(input.root, file.path, input.reads).toString('utf8');
+        const text = readCachedBytes(input.reads, file.path).toString('utf8');
         const tree = await parseSource(file.grammar, text, input);
         try {
             visit({ path: file.path, text, rootNode: tree.rootNode });

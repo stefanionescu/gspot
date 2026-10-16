@@ -1,8 +1,8 @@
 // Reads Python modules, declarations, and imports.
 // Reads Python modules, declarations, and imports.
 import type { Node } from 'web-tree-sitter';
-import { readSource } from '#cli/system/files/reads.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import type { ParseCache, SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import { PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/python.ts';
 import type { PythonFiles, PythonModule, PythonFunction } from '#cli/types/parsers/python.ts';
@@ -33,7 +33,7 @@ function listFunctions(module: PythonModule): PythonFunction[] {
  * @param siblings the statements in the same file or function body.
  * @returns whether the string expression supplies a docstring.
  */
-export function isDocstring(node: Node, siblings: Node[]): boolean {
+function isDocstring(node: Node, siblings: Node[]): boolean {
     return (
         node.type === 'expression_statement' &&
         node.namedChildren[0]?.type === 'string' &&
@@ -46,12 +46,12 @@ export function isDocstring(node: Node, siblings: Node[]): boolean {
  * @param input the selected files and source reads.
  * @returns parsed modules with trees to dispose of after use.
  */
-export async function readPython(input: SourceInput): Promise<PythonFiles> {
+async function readPython(input: SourceInput): Promise<PythonFiles> {
     const modules: PythonModule[] = [];
     try {
         for (const file of input.files) {
             if (file.kind !== 'source' || !file.path.endsWith(PYTHON_EXTENSION)) continue;
-            const text = readSource(input.root, file.path, input.reads).toString('utf8');
+            const text = readCachedBytes(input.reads, file.path).toString('utf8');
             modules.push(await parsePythonModule(file.path, text, input));
         }
         return { modules, functions: modules.flatMap((module) => listFunctions(module)) };
@@ -68,7 +68,7 @@ export async function readPython(input: SourceInput): Promise<PythonFiles> {
  * @param cache the source reads and tree cleanup for this run.
  * @returns a parsed module whose caller disposes its tree.
  */
-export async function parsePythonModule(path: string, text: string, cache?: ParseCache): Promise<PythonModule> {
+async function parsePythonModule(path: string, text: string, cache?: ParseCache): Promise<PythonModule> {
     const tree = await parseSource('python', text, cache);
     const statements = tree.rootNode.namedChildren.filter((child) => child.type !== 'comment');
     return {
@@ -86,7 +86,7 @@ export async function parsePythonModule(path: string, text: string, cache?: Pars
  * @param definition the function definition.
  * @returns the text inside the quotes.
  */
-export function findDocstring(definition: Node): string | undefined {
+function findDocstring(definition: Node): string | undefined {
     const siblings = definition.childForFieldName('body')?.namedChildren ?? [];
     const first = siblings.find((child) => child.type !== 'comment');
     if (first === undefined || !isDocstring(first, siblings)) return undefined;
@@ -98,6 +98,11 @@ export function findDocstring(definition: Node): string | undefined {
  * Release the trees held by parsed Python modules.
  * @param parsed the modules whose readers have finished.
  */
-export function deletePythonTrees(parsed: PythonFiles): void {
+function deletePythonTrees(parsed: PythonFiles): void {
     for (const source of parsed.modules) source.tree.delete();
 }
+
+/** Each run shares Python source trees through this reader identity. */
+const PYTHON_SOURCES = { read: readPython, dispose: deletePythonTrees };
+
+export { isDocstring, findDocstring, PYTHON_SOURCES, parsePythonModule };

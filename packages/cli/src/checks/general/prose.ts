@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { findingAt } from '#cli/checks/finding.ts';
 import { hasValePackages } from '#cli/install/vale.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { VALE_CONFIG } from '#cli/config/system/locations.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
@@ -84,7 +84,7 @@ async function pathAlerts(input: CheckInput, routes: ProseRoute[]): Promise<Vale
 }
 
 async function stdinAlerts(input: CheckInput, route: ProseRoute): Promise<ValeAlert[]> {
-    const text = readSource(input.root, route.path, input.reads).toString('utf8');
+    const text = readCachedBytes(input.reads, route.path).toString('utf8');
     const result = await runCheckTool(
         input,
         [...valeCommand(input), `--ext=${route.extension}`, `--path=${join(input.root, route.path)}${route.extension}`],

@@ -3,7 +3,7 @@
 
 import { posix } from 'node:path';
 import { tagEntry } from '#cli/repository/tags.ts';
-import { readSource } from '#cli/system/files/reads.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
@@ -79,7 +79,7 @@ function fileOrigin(path: string, prefix: Buffer): FileClassification | undefine
 function sourceKind(root: string, entry: FileEntry, prefix: Buffer): FileClassification {
     if (entry.symlink || !entry.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
-    const text = readSource(root, entry.path).toString('utf8');
+    const text = readBytes(root, entry.path).toString('utf8');
     const span = findBlockSpan(text, { path: entry.path, style: 'markdown' });
     if (span === undefined || `${text.slice(0, span.start)}${text.slice(span.end)}`.trim() !== '') return SOURCE_KIND;
     return { kind: 'generated', source: 'gspot' };

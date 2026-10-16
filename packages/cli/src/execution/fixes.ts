@@ -1,6 +1,6 @@
 import { createTwoFilesPatch } from 'diff';
 import { openFiles } from '#cli/system/files/open.ts';
-import { readSource } from '#cli/system/files/reads.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
@@ -152,7 +152,7 @@ function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefin
     const contents = new Map<string, Buffer | undefined>();
     for (const path of paths) {
         try {
-            contents.set(path, readSource(root, path));
+            contents.set(path, readBytes(root, path));
         } catch (error) {
             if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
             contents.set(path, undefined);

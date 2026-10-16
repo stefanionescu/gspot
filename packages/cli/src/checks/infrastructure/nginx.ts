@@ -1,8 +1,8 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { mkdtempSync, writeFileSync } from 'node:fs';
-import { readSource } from '#cli/system/files/reads.ts';
 import { findQuotedEnd } from '#cli/parsers/comments.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
@@ -57,7 +57,7 @@ function copyNginxFiles(input: CheckInput, path: string, work: string): Map<stri
     for (const entry of pending) {
         if (configurations.has(entry.target)) continue;
         const source = join(directory, `${String(configurations.size)}.conf`);
-        const bytes = readSource(input.root, entry.path, input.reads);
+        const bytes = readCachedBytes(input.reads, entry.path);
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         configurations.set(entry.target, { ...entry, source, text });

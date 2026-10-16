@@ -1,4 +1,4 @@
-import { readSource } from '#cli/system/files/reads.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
@@ -19,7 +19,7 @@ import {
  */
 export function xcconfig(input: CheckInput): Finding[] {
     return sourcePaths(input, [XCCONFIG_SUFFIX]).flatMap((path) =>
-        readSource(input.root, path, input.reads)
+        readCachedBytes(input.reads, path)
             .toString('utf8')
             .split('\n')
             .flatMap((raw, index): Finding[] => {
@@ -50,7 +50,7 @@ export function xcconfig(input: CheckInput): Finding[] {
 export function xcodeEntitlements(input: CheckInput): Finding[] {
     const allowed = new Set(input.selection.view.options('xcode').allowed_entitlements);
     return sourcePaths(input, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
-        const text = readSource(input.root, path, input.reads).toString('utf8');
+        const text = readCachedBytes(input.reads, path).toString('utf8');
         return text
             .matchAll(PLIST_KEY)
             .filter((match) => !allowed.has(match.groups?.['name'] ?? ''))
@@ -74,7 +74,7 @@ export function xcodeEntitlements(input: CheckInput): Finding[] {
  */
 export function xcodeAppTransportSecurity(input: CheckInput): Finding[] {
     return sourcePaths(input, [PLIST_SUFFIX]).flatMap((path): Finding[] => {
-        const text = readSource(input.root, path, input.reads).toString('utf8');
+        const text = readCachedBytes(input.reads, path).toString('utf8');
         const found = ARBITRARY_LOADS.exec(text);
         if (found === null) return [];
         const line = text.slice(0, found.index).split('\n').length;

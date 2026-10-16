@@ -45,8 +45,9 @@ test('tsconfig reads share one read cache per run and keep folders apart', async
     const initial = readTsconfig(reads.root, path, reads)!;
     expect(initial.options.strict).toBe(true);
     expect(readTsconfig(reads.root, path, reads)).toBe(initial);
-    expect(readTsconfig(second.path, join(second.path, 'tsconfig.json'), reads)?.options.strict).toBe(false);
-    expect(() => readTsconfig(second.path, path, reads)).toThrow('is not a safe repository-relative path');
+    const secondReads = createReadCache(second.path);
+    expect(readTsconfig(second.path, join(second.path, 'tsconfig.json'), secondReads)?.options.strict).toBe(false);
+    expect(() => readTsconfig(second.path, path, secondReads)).toThrow('is not a safe repository-relative path');
     await writeFile(join(first.path, 'base.json'), '{"compilerOptions":{"strict":false}}');
     expect(readTsconfig(reads.root, path, reads)).toBe(initial);
     const next = createReadCache(first.path);

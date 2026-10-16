@@ -42,9 +42,17 @@ export type MemoKey<Value extends object> = Readonly<{ create: () => Value }>;
 export type ReadCache = {
     root: string;
     sources: Map<string, Buffer>;
-    memo: Map<MemoKey<object>, object>;
-    parsed: Map<string, Promise<unknown>>;
+    memo: Map<object, object>;
 };
 
 /** A temporary folder that removes itself when disposed. */
 export type ScratchFolder = Disposable & { path: string };
+
+/** Inputs whose parsed values belong to the run and its cleanup stack. */
+export type CachedParseInput = { reads: ReadCache; resources: DisposableStack; files: { path: string }[] };
+
+/** A stable key owns one reader, its result type, and its cleanup operation. */
+export type ParseKey<Input, Value extends object> = Readonly<{
+    read: (input: Input) => Promise<Value>;
+    dispose: (value: Value) => void;
+}>;

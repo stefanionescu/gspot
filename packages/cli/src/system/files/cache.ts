@@ -1,8 +1,6 @@
 // Caches source bytes and computed values for one run.
-
 import { realpathSync } from 'node:fs';
-import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';
-import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
+import { type MemoKey, type ParseKey, type ReadCache, type CachedParseInput } from '#cli/types/system/files.ts';
 
 /**
  * Reuse one value produced by a stable key during this run.
@@ -46,39 +44,41 @@ export function getCachedMapValue<Key, Value>(
  * @returns the session-owned read cache.
  */
 export function createReadCache(root: string): ReadCache {
-    return { root: realpathSync(root), sources: new Map(), memo: new Map(), parsed: new Map() };
+    return { root: realpathSync(root), sources: new Map(), memo: new Map() };
 }
 
 /**
- * Parse selected files once per run and release them with the run.
- * @param input the selected paths and source reads.
- * @param read the source parser.
- * @param dispose the operation that releases the parsed values.
- * @param resources the resources released at the end of the run.
- * @returns the parsed value, valid until disposing of the cleanup stack.
+ * Parse selected files once per stable reader key and ordered path list.
+ * @param input the selected paths, run cache, and cleanup stack.
+ * @param key the reader and its disposer.
+ * @returns the parsed value for the lifetime of the input resources.
  */
-export async function parseCached<Value, Input extends SourceInput>(
+export async function parseCached<Input extends CachedParseInput, Value extends object>(
     input: Input,
-    read: (input: Input) => Promise<Value>,
-    dispose: (value: Value) => void,
-    resources: DisposableStack,
+    key: ParseKey<Input, Value>,
 ): Promise<Value> {
-    const key = JSON.stringify([read.name, input.root, input.files.map((file) => file.path)]);
-    let pending = input.reads.parsed.get(key);
+    // This stable key owns both the reader's result type and its per-path-list entries.
+    let entries = input.reads.memo.get(key) as Map<string, Promise<Value>> | undefined;
+    if (entries === undefined) {
+        entries = new Map();
+        input.reads.memo.set(key, entries);
+    }
+    const paths = JSON.stringify(input.files.map((file) => file.path));
+    let pending = entries.get(paths);
     if (pending === undefined) {
-        pending = read(input);
-        input.reads.parsed.set(key, pending);
+        pending = key.read(input);
+        entries.set(paths, pending);
         try {
-            // Each reader's name identifies its cached return type.
-            const value = (await pending) as Value;
-            resources.defer(() => {
-                input.reads.parsed.delete(key);
-                dispose(value);
+            const value = await pending;
+            const values = entries;
+            input.resources.defer(() => {
+                values.delete(paths);
+                key.dispose(value);
             });
         } catch (error) {
-            input.reads.parsed.delete(key);
+            entries.delete(paths);
             throw error;
         }
     }
-    return (await pending) as Value;
+    return pending;
 }

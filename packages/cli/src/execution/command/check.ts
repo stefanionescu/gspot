@@ -1,12 +1,12 @@
 import { join, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import { checkInput } from '#cli/execution/built-in.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { RAN_STATUSES } from '#cli/config/execution/run.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { coverageArguments } from '#cli/planning/checks.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
 import { copyIntoScratch } from '#cli/execution/copy/scratch.ts';
@@ -88,7 +88,7 @@ function missingToolFile(
     const missing = [...paths, ...commandToolFiles(session, planned, command)].find((path) =>
         path.startsWith(`${DOT_GSPOT}/`)
             ? files.read(path) === undefined
-            : readText(session.root, path, session.reads) === undefined,
+            : readCachedText(session.reads, path) === undefined,
     );
     if (missing === undefined) return undefined;
     return {

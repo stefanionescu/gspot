@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { coveredBy } from '#cli/repository/select.ts';
-import { readSource } from '#cli/system/files/reads.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
@@ -14,7 +14,7 @@ const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() }
 async function parseMigrations(input: CheckInput, paths: string[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const path of paths) {
-        const original = readSource(input.root, path, input.reads).toString('utf8');
+        const original = readCachedBytes(input.reads, path).toString('utf8');
         const text = original.split(MIGRATION_DOWN, 1)[0] ?? '';
         const name = posix.basename(path);
         const parsed = await parseSqlFile(text, input.reads);

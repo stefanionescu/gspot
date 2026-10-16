@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { FILENAME_TAGS } from '#cli/config/repository/inventory.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { ASSET_FOLDER, TEXT_SUFFIXES, GIT_FILE_MODES } from '#cli/config/checks/framework/site.ts';
@@ -24,7 +24,7 @@ export function unusedAssets(input: CheckInput): Finding[] {
         .values()
         .filter((path) => TEXT_SUFFIXES.has(posix.extname(path)))
         .flatMap((path) => {
-            const text = readText(input.root, path, input.reads);
+            const text = readCachedText(input.reads, path);
             return text === undefined ? [] : [{ path, text }];
         })
         .toArray();
