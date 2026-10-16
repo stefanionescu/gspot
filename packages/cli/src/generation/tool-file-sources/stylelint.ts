@@ -5,10 +5,10 @@ import type { SchemaShape } from '#cli/types/objects.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { projectDependencies } from '#cli/repository/scopes.ts';
 import { VUE_STYLELINT_OVERRIDE } from '#cli/config/planning.ts';
+import type { EmitInputs } from '#cli/types/generation/files.ts';
 import { stylelintComponents } from '#cli/planning/needed-tools.ts';
 import type { RuleNamesFile } from '#cli/types/generation/eslint.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import type { EmitInputs, ToolFileSource } from '#cli/types/generation/files.ts';
 
 import {
     TAILWIND_AT_RULES,
@@ -80,7 +80,7 @@ export const ruleNamesFileSchema = z.strictObject({
 export function stylelintToolFile(
     { selection, packageManifests }: Pick<EmitInputs, 'selection'> & Pick<Session, 'packageManifests'>,
     level: Level,
-): ToolFileSource {
+): string {
     const { rulesOff, configurations } = selection.view;
     const options = selection.view.options('tools.stylelint');
     const isAll = level === 'all';
@@ -122,5 +122,5 @@ export function stylelintToolFile(
         ...(overrides.length === 0 ? {} : { overrides }),
     };
 
-    return { content: `${JSON.stringify(document, null, JSON_INDENT)}\n`, document: document };
+    return `${JSON.stringify(document, null, JSON_INDENT)}\n`;
 }

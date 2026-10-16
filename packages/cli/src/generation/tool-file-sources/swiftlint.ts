@@ -1,7 +1,6 @@
 import { stringify } from 'yaml';
 import type { Level } from '#cli/types/configurations.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { ToolFileSource } from '#cli/types/generation/files.ts';
 
 import {
     SWIFTLINT_OPT_IN,
@@ -31,7 +30,7 @@ function pair(count: unknown) {
 export function swiftlintToolFile(
     { settings, format, limit, rulesOff }: Pick<ScopeView, 'settings' | 'format' | 'limit' | 'rulesOff'>,
     level: Level,
-): ToolFileSource {
+): string {
     const isAll = level === 'all';
     const off = [...rulesOff('swift/swiftlint'), ...(isAll ? [] : SWIFTLINT_RECOMMENDED_OFF)];
     const offSet = new Set(off);
@@ -63,14 +62,12 @@ export function swiftlintToolFile(
         analyzer_rules: SWIFTLINT_ANALYZER.filter((rule) => !offSet.has(rule)),
     };
 
-    return {
-        content:
-            Object.entries(document)
-                .flatMap(([rule, value]) => [
-                    ...(rule === 'identifier_name' || rule === 'disabled_rules' ? [SWIFTLINT_COMMENTS[rule]] : []),
-                    stringify({ [rule]: value }).trimEnd(),
-                ])
-                .join('\n') + '\n',
-        document: document,
-    };
+    return (
+        Object.entries(document)
+            .flatMap(([rule, value]) => [
+                ...(rule === 'identifier_name' || rule === 'disabled_rules' ? [SWIFTLINT_COMMENTS[rule]] : []),
+                stringify({ [rule]: value }).trimEnd(),
+            ])
+            .join('\n') + '\n'
+    );
 }

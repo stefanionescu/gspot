@@ -18,14 +18,8 @@ function staleFilesText(drift: StaleFile[]): string {
     const noun = drift.length === 1 ? 'file' : 'files';
     const lines = [`${String(drift.length)} generated ${noun} need updating:`, ''];
     for (const entry of drift) {
-        const rules = (entry.rules ?? []).flatMap((rule) => {
-            const at = rule.path === '' ? 'root' : rule.path;
-            return (['added', 'removed', 'changed'] as const)
-                .filter((change) => rule[change].length > 0)
-                .map((change) => `    ${at}: ${change} ${rule[change].join(', ')}`);
-        });
         const differences = (entry.diff ?? '').split('\n').map((line) => `    ${line}`);
-        lines.push(`  ${entry.path}  ${entry.kind}`, ...rules);
+        lines.push(`  ${entry.path}  ${entry.kind}`);
         if ((entry.diff ?? '') !== '') lines.push(...differences);
     }
     lines.push(

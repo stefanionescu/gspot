@@ -88,7 +88,6 @@ target = ".gspot/config/ruff.toml"
 tool = "ruff"
 pointer = { path = "ruff.toml", body = 'extend = "{target}"' }
 per_scope = true
-rule_keys = ["lint.select", "lint.ignore", "lint.per-file-ignores"]
 
 [[tool_file]]
 target = ".gspot/config/basedpyrightconfig.json"

@@ -143,8 +143,8 @@ test('Semgrep rule packs in the configuration folder become tool files read by t
         ['semgrep/second.yml', '.gspot/config/semgrep/second.yml'],
     ]);
     expect(manifest.toolFiles.slice(1)).toMatchObject([
-        { tool: ['semgrep'], rule_keys: ['rules'], per_scope: true, when: { configuration: 'security' } },
-        { tool: ['semgrep'], rule_keys: ['rules'], per_scope: true, when: { configuration: 'security' } },
+        { tool: ['semgrep'], per_scope: true, when: { configuration: 'security' } },
+        { tool: ['semgrep'], per_scope: true, when: { configuration: 'security' } },
     ]);
     expect(() => buildManifest('example', { tables: 'tool_file = "invalid"\n' })).toThrow('tool_file');
 });

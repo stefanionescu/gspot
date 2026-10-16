@@ -98,7 +98,6 @@ export const TOOL_VERSIONS_FILE = 'dist/tool-versions.json';
 export const SEMGREP_FOLDER = 'semgrep/';
 export const SEMGREP_TOOL_FILE = {
     tool: 'semgrep',
-    rule_keys: ['rules'],
     per_scope: true,
     when: { configuration: 'security' },
 } as const;

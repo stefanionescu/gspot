@@ -1,6 +1,5 @@
 import type { Level } from '#cli/types/configurations.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { ToolFileSource } from '#cli/types/generation/files.ts';
 
 import {
     SQL_FILE_EXTENSIONS,
@@ -22,7 +21,7 @@ import {
 export function sqlfluffToolFile(
     { settings, format, rulesOff }: Pick<ScopeView, 'settings' | 'format' | 'rulesOff'>,
     level: Level,
-): ToolFileSource {
+): string {
     const isAll = level === 'all';
 
     const off = [...rulesOff('sql/sqlfluff'), ...(isAll ? [] : SQLFLUFF_RECOMMENDED_OFF)];
@@ -42,29 +41,25 @@ export function sqlfluffToolFile(
         'sqlfluff:rules': SQLFLUFF_CAPITALISATION,
     };
 
-    return {
-        content:
-            [
-                ...Object.entries({
-                    sqlfluff: document.sqlfluff,
-                    'sqlfluff:indentation': document['sqlfluff:indentation'],
-                }).map(
-                    ([name, section]) =>
-                        `[${name}]\n${Object.entries(section)
-                            .filter(([, value]) => !Array.isArray(value) || value.length > 0)
-                            .map(
-                                ([key, value]) => `${key} = ${Array.isArray(value) ? value.join(', ') : String(value)}`,
-                            )
-                            .join('\n')}\n`,
-                ),
-                ...Object.entries(document['sqlfluff:rules']).map(
-                    ([rule, options]) =>
-                        `[sqlfluff:rules:${rule}]\n${Object.entries(options)
-                            .map(([key, value]) => `${key} = ${value}`)
-                            .join('\n')}\n`,
-                ),
-                '',
-            ].join('\n') + '\n',
-        document: document,
-    };
+    return (
+        [
+            ...Object.entries({
+                sqlfluff: document.sqlfluff,
+                'sqlfluff:indentation': document['sqlfluff:indentation'],
+            }).map(
+                ([name, section]) =>
+                    `[${name}]\n${Object.entries(section)
+                        .filter(([, value]) => !Array.isArray(value) || value.length > 0)
+                        .map(([key, value]) => `${key} = ${Array.isArray(value) ? value.join(', ') : String(value)}`)
+                        .join('\n')}\n`,
+            ),
+            ...Object.entries(document['sqlfluff:rules']).map(
+                ([rule, options]) =>
+                    `[sqlfluff:rules:${rule}]\n${Object.entries(options)
+                        .map(([key, value]) => `${key} = ${value}`)
+                        .join('\n')}\n`,
+            ),
+            '',
+        ].join('\n') + '\n'
+    );
 }

@@ -71,7 +71,6 @@ tool = "taplo"
 target = ".gspot/config/yamllint.yml"
 tool = "yamllint"
 per_scope = true
-rule_keys = ["rules"]
 
 [[tool_file]]
 target = ".gspot/config/v8r.yml"

@@ -265,7 +265,6 @@ target = ".gspot/config/eslint.config.mjs"
 required_tools = ["@eslint/js", "@gspothq/eslint-plugin", "eslint-plugin-sonarjs", "eslint-plugin-unicorn", "eslint-plugin-security", "eslint-plugin-barrel-files", "eslint-plugin-perfectionist", "eslint-plugin-n", "eslint-plugin-jsdoc", "eslint-plugin-regexp", "eslint-plugin-import-x", "eslint-import-resolver-typescript", "eslint-plugin-boundaries", "eslint-plugin-package-json", "eslint-config-prettier", "globals", "picomatch"]
 scope_fragments = true
 tool = "eslint"
-rule_keys = ["rules"]
 
 [tool_file.pointer]
 path = "eslint.config.mjs"

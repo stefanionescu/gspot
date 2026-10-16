@@ -28,5 +28,4 @@ export type StaleFile = {
     path: string;
     kind: 'changed' | 'missing' | 'stray' | 'conflict';
     diff?: string;
-    rules?: { path: string; added: string[]; removed: string[]; changed: string[] }[];
 };

@@ -6,7 +6,7 @@ import { PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
 import { projectBuildSettings } from '#cli/parsers/xcode.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { SWIFT_TOOLS_VERSION } from '#cli/config/generation/tool-file-sources.ts';
-import type { EmitInputs, ToolFileSource, SwiftVersionInput } from '#cli/types/generation/files.ts';
+import type { EmitInputs, SwiftVersionInput } from '#cli/types/generation/files.ts';
 
 import {
     SWIFTFORMAT_OFF,
@@ -38,7 +38,7 @@ function readSwiftVersion(input: SwiftVersionInput, projectPath: string): string
 export function swiftformatToolFile(
     { selection, root, reads }: Pick<EmitInputs, 'selection'> & Pick<Session, 'root' | 'reads'>,
     level: Level,
-): ToolFileSource {
+): string {
     const { format, rulesOff } = selection.view;
     const isAll = level === 'all';
     const version = readSwiftVersion(
@@ -65,21 +65,19 @@ export function swiftformatToolFile(
         comments: SWIFTFORMAT_OFF,
     };
 
-    return {
-        content:
-            [
-                ...Object.entries(document.options).map(([option, value]) => `--${option} ${String(value)}`),
-                '',
-                ...document.enable.map((rule) => `--enable ${rule}`),
-                '',
-                ...document.disable.flatMap((rule) => [
-                    ...Object.entries(document.comments)
-                        .filter(([name]) => name === rule)
-                        .map(([, reason]) => reason),
-                    `--disable ${rule}`,
-                ]),
-                '',
-            ].join('\n') + '\n',
-        document: document,
-    };
+    return (
+        [
+            ...Object.entries(document.options).map(([option, value]) => `--${option} ${String(value)}`),
+            '',
+            ...document.enable.map((rule) => `--enable ${rule}`),
+            '',
+            ...document.disable.flatMap((rule) => [
+                ...Object.entries(document.comments)
+                    .filter(([name]) => name === rule)
+                    .map(([, reason]) => reason),
+                `--disable ${rule}`,
+            ]),
+            '',
+        ].join('\n') + '\n'
+    );
 }

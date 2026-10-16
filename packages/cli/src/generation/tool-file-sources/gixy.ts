@@ -1,5 +1,4 @@
 import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { ToolFileSource } from '#cli/types/generation/files.ts';
 
 /**
  * Write the gixy configuration from selected settings.
@@ -9,10 +8,7 @@ import type { ToolFileSource } from '#cli/types/generation/files.ts';
  *
  * @returns the generated configuration text.
  */
-export function gixyToolFile({ rulesOff }: Pick<ScopeView, 'rulesOff'>): ToolFileSource {
+export function gixyToolFile({ rulesOff }: Pick<ScopeView, 'rulesOff'>): string {
     const off = rulesOff('nginx/gixy');
-    return {
-        content: off.length === 0 ? '' : `skips = ${off.join(',')}\n`,
-        document: off.length === 0 ? {} : { skips: off },
-    };
+    return off.length === 0 ? '' : `skips = ${off.join(',')}\n`;
 }

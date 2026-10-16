@@ -49,7 +49,6 @@ system = true
 target = ".gspot/config/hadolint.yml"
 tool = "hadolint"
 per_scope = true
-rule_keys = ["ignored"]
 
 [[tool_file]]
 target = ".gspot/config/trivy.yml"

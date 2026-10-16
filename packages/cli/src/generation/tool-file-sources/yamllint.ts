@@ -1,6 +1,5 @@
 import { stringify } from 'yaml';
 import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { ToolFileSource } from '#cli/types/generation/files.ts';
 
 import {
     YAMLLINT_RULES,
@@ -17,7 +16,7 @@ import {
  *
  * @returns the generated configuration text.
  */
-export function yamllintToolFile({ settings, rulesOff }: Pick<ScopeView, 'settings' | 'rulesOff'>): ToolFileSource {
+export function yamllintToolFile({ settings, rulesOff }: Pick<ScopeView, 'settings' | 'rulesOff'>): string {
     const rules: Record<string, unknown> = {
         ...Object.fromEntries(YAMLLINT_RULES.map((rule) => [rule, {}])),
         ...YAMLLINT_RULE_OPTIONS,
@@ -28,5 +27,5 @@ export function yamllintToolFile({ settings, rulesOff }: Pick<ScopeView, 'settin
         rules[rule] = { ...(rules[rule] as Record<string, unknown>), ...chosen };
     Object.assign(rules, Object.fromEntries(rulesOff('files/yamllint').map((name) => [name, 'disable'])));
     const document = { rules };
-    return { content: stringify(document, YAMLLINT_YAML_OPTIONS).trimEnd(), document: document };
+    return stringify(document, YAMLLINT_YAML_OPTIONS).trimEnd();
 }

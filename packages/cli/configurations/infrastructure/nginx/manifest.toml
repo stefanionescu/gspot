@@ -24,7 +24,6 @@ system = true
 [[tool_file]]
 target = ".gspot/config/gixy.cfg"
 tool = "gixy"
-rule_keys = ["skips"]
 
 [[check]]
 name = "gixy"

@@ -90,7 +90,6 @@ export type ParsedManifest = {
         tool: string[];
         check: string[];
         required_tools: string[];
-        rule_keys?: string[] | undefined;
         pointer?:
             | {
                   path: string;

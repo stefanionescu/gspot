@@ -33,7 +33,6 @@ shared = false
 [[tool_file]]
 target = ".gspot/config/vale.ini"
 tool = "vale"
-rule_keys = ["*.rules", "*.BasedOnStyles"]
 
 [[tool_file]]
 target = ".gspot/config/vale/styles/gspot/acronyms.yml"

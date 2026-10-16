@@ -13,7 +13,6 @@ import type {
     ManagedKeys,
     PendingWrite,
     OwnershipState,
-    CapturedLintRules,
 } from '#cli/types/ownership.ts';
 
 const hashSchema = z.string().regex(SHA256_HEX);
@@ -66,16 +65,9 @@ const ownedFileSchema = z.strictObject({
         .optional(),
 } satisfies SchemaShape<OwnedFile>);
 
-export const capturedLintRulesSchema = z.record(
-    z.string(),
-    z.record(z.string(), z.json()),
-) satisfies z.ZodType<CapturedLintRules>;
-
 export const ownershipStateSchema = z.strictObject({
     version: z.literal(OWNERSHIP_LOG_VERSION),
     files: z.array(ownedFileSchema),
-    // Rule values from the last apply that completed every managed write.
-    lintRules: z.record(pathSchema, capturedLintRulesSchema).optional(),
     // The tool-project folders gspot installed whole, by kind.
     installed: z.array(z.enum(TOOL_FOLDER_KINDS)).optional(),
     pending: z

@@ -3,9 +3,9 @@ import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { dirname, basename, relative } from 'node:path/posix';
 import type { ScopeView } from '#cli/types/settings/values.ts';
+import type { ProseInputs, ValeIniInputs } from '#cli/types/generation/files.ts';
 import { STYLES_DIRECTORY, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { VALE_PACKAGES, PROSE_FORMATS, VALE_RULE_EXTENSION } from '#cli/config/tools/vale.ts';
-import type { ProseInputs, ValeIniInputs, ToolFileSource } from '#cli/types/generation/files.ts';
 
 import {
     ACRONYMS,
@@ -97,11 +97,7 @@ export function acronymsStyle({ prose }: { prose: ProseInputs }): string {
  *
  * @returns the generated configuration text.
  */
-export function valeIniToolFile({
-    targetPath = '.gspot/config/vale.ini',
-    isAll,
-    prose,
-}: ValeIniInputs): ToolFileSource {
+export function valeIniToolFile({ targetPath = '.gspot/config/vale.ini', isAll, prose }: ValeIniInputs): string {
     const rules: Record<string, string> = isAll
         ? Object.fromEntries(Object.keys(VALE_OFF_RULES).map((rule) => [rule, 'NO']))
         : Object.fromEntries(
@@ -150,7 +146,7 @@ export function valeIniToolFile({
         ...markupRules,
         '',
     );
-    return { content: `${lines.join('\n')}\n`, document: { '*': rules } };
+    return `${lines.join('\n')}\n`;
 }
 
 /**

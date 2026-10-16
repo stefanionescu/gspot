@@ -30,7 +30,6 @@ shared = false
 target = ".gspot/config/squawk.toml"
 tool = "squawk"
 per_scope = true
-rule_keys = ["excluded_rules"]
 
 [[check]]
 name = "squawk"

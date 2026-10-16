@@ -29,7 +29,6 @@ target = ".gspot/config/html-validate-built.json"
 per_scope = true
 tool = "html-validate"
 check = "site/html-validate"
-rule_keys = ["rules"]
 
 [[tool_file]]
 target = ".gspot/config/purgecss.config.mjs"

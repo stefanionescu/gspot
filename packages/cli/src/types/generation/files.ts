@@ -1,4 +1,5 @@
 import type { Session } from '#cli/types/planning.ts';
+import type { FileEdit } from '#cli/types/ownership.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
 import type { FileCopy } from '#cli/types/system/safe-folder.ts';
@@ -6,7 +7,6 @@ import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
-import type { FileEdit, CapturedLintRules } from '#cli/types/ownership.ts';
 import type { Manifest, ToolDeclaration, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 /** Applicable checks and their required tools at one generation boundary. */
@@ -20,7 +20,6 @@ type SemgrepRule = Record<string, unknown> & { id: string; paths?: { include: st
 export type EmitConsumers = { repository: ToolFileConsumers; scope: ToolFileConsumers };
 
 export type GeneratedFile = {
-    capturedRules?: CapturedLintRules;
     path: string;
     content: string;
     executable?: boolean;
@@ -105,10 +104,7 @@ export type SwiftVersionInput = { root: string; scope: string; reads: ReadCache 
 export type WholeToolFile = Extract<ToolFileDeclaration, { fragment: false }>;
 
 /** A tool file producer selected by its declared target name. */
-export type ToolFileBuilder = (input: EmitInputs & { targetPath: string }) => ToolFileSource;
-
-/** Emitted text and the configuration data that supplied its rule values. */
-export type ToolFileSource = { content: string; document?: unknown };
+export type ToolFileBuilder = (input: EmitInputs & { targetPath: string }) => string;
 
 /** A selected tool and the generated destinations that can replace package fields. */
 export type PackageRedirectInputs = {

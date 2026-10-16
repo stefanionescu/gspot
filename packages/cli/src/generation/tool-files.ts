@@ -1,9 +1,8 @@
 // The selected tool files in one scope, with the pointers that lead tools to them.
-import { parse as parseYaml } from 'yaml';
+
 import { join, dirname } from 'node:path/posix';
 import { headerFor } from '#cli/generation/headers.ts';
 import { targetInScope } from '#cli/repository/scopes.ts';
-import { collectRules } from '#cli/generation/rule-capture.ts';
 import { prettierPlugins } from '#cli/planning/needed-tools.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { emitTarget } from '#cli/generation/tool-file-builders.ts';
@@ -65,16 +64,11 @@ function emitToolFile(
     fragmentPaths: ReadonlySet<string>,
 ): void {
     const { manifest } = context;
-    const paths = toolFile.rule_keys;
-    const emitted = emitTarget(`${manifest.dir}/${toolFile.source}`, target, context);
-    const file: GeneratedFile = { path: target, content: emitted.content, kind: 'tool_file' };
-    if (paths !== undefined) {
-        const content = emitted.content;
-        let document: unknown = emitted.document;
-        if (document === undefined)
-            document = content.trimStart().startsWith('{') ? JSON.parse(content) : parseYaml(content);
-        file.capturedRules = collectRules(paths, document);
-    }
+    const file: GeneratedFile = {
+        path: target,
+        content: emitTarget(`${manifest.dir}/${toolFile.source}`, target, context),
+        kind: 'tool_file',
+    };
     generated.files.push(
         file,
         ...pointerFiles(context, toolFile, target).filter(

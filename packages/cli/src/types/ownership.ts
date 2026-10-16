@@ -31,11 +31,9 @@ export type PendingWrite = {
     after?: Identity | undefined;
     entry?: OwnedFile | undefined;
 };
-export type CapturedLintRules = Record<string, Record<string, JsonValue>>;
 export type OwnershipState = {
     version: 1;
     files: OwnedFile[];
-    lintRules?: Record<string, CapturedLintRules> | undefined;
     installed?: Array<'npm' | 'python' | 'vale'> | undefined;
     pending?: PendingWrite[] | undefined;
 };

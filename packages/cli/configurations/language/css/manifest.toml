@@ -75,7 +75,6 @@ npm = "postcss-html"
 [[tool_file]]
 target = ".gspot/config/stylelint.json"
 tool = "stylelint"
-rule_keys = ["rules"]
 per_scope = true
 pointer = { path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n" }
 

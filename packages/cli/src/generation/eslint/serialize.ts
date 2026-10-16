@@ -140,25 +140,6 @@ export function eslintErrorRules(rules: Record<string, unknown>): Record<string,
 }
 
 /**
- * Preserve each rule's ordered declarations and exact file selectors before serialization.
- *
- * @param blocks the configuration blocks in their emitted order.
- *
- * @returns the rules table consumed by the managed generation baseline.
- */
-export function eslintRuleSettings(blocks: EslintSettingsBlock[]): { rules: Record<string, unknown[]> } {
-    const rules: Record<string, unknown[]> = {};
-    for (const block of blocks) {
-        const { rules: entries, ...selectors } = block;
-        for (const [name, setting] of entries === undefined ? [] : Object.entries(entries)) {
-            rules[name] ??= [];
-            rules[name].push({ ...selectors, setting });
-        }
-    }
-    return { rules };
-}
-
-/**
  * Serialize selector expressions for emitted ESLint blocks.
  *
  * @param runtimes the JavaScript runtime selections.

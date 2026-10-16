@@ -46,7 +46,6 @@ system = true
 [[tool_file]]
 target = ".gspot/config/shellcheckrc"
 tool = "shellcheck"
-rule_keys = ["enable", "disable"]
 per_scope = true
 
 [[check]]

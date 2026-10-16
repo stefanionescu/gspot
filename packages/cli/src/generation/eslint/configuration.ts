@@ -1,21 +1,16 @@
 // The parts of the ESLint configuration that the settings and the emitted scope decide.
+// The parts of the ESLint configuration that the settings and the emitted scope decide.
 import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
 import { eslintInputs } from '#cli/generation/eslint/inputs.ts';
 import { appliedBlocks } from '#cli/generation/eslint/blocks.ts';
+import type { ScopeSourceInputs } from '#cli/types/generation/files.ts';
 import { ESLINT_RULE_LEVELS_FILE } from '#cli/config/generation/eslint.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
-import type { ToolFileSource, ScopeSourceInputs } from '#cli/types/generation/files.ts';
 import { codeBlocks, fileBlocks, eslintPlugins } from '#cli/generation/eslint/defaults.ts';
-
-import {
-    emitBlocks,
-    eslintImports,
-    eslintRuleSettings,
-    selectorDefinitions,
-} from '#cli/generation/eslint/serialize.ts';
+import { emitBlocks, eslintImports, selectorDefinitions } from '#cli/generation/eslint/serialize.ts';
 
 /**
  * Write ESLint settings for every selected scope.
@@ -26,7 +21,7 @@ import {
  *
  * @returns the generated configuration text.
  */
-export function eslintConfiguration({ session, selection }: ScopeSourceInputs): ToolFileSource {
+export function eslintConfiguration({ session, selection }: ScopeSourceInputs): string {
     const pluginLevels = (
         z.record(z.string(), z.enum(LEVELS).or(z.literal('none'))) satisfies z.ZodType<
             Record<string, (typeof LEVELS)[number] | 'none'>
@@ -69,11 +64,5 @@ export function eslintConfiguration({ session, selection }: ScopeSourceInputs): 
         ),
         '\n];\n',
     );
-    return {
-        content: output.join('').trimStart(),
-        document: eslintRuleSettings([
-            ...eslintModule.blocks,
-            ...(config.extra === undefined ? [] : [config.extra.entries]),
-        ]),
-    };
+    return output.join('').trimStart();
 }

@@ -85,7 +85,6 @@ shared = true
 [[tool_file]]
 target = ".gspot/config/commitlint.config.cjs"
 tool = "commitlint"
-rule_keys = ["rules"]
 
 [[check]]
 name = "commitlint"

@@ -43,7 +43,6 @@ shared = true
 target = ".gspot/config/sqlfluff.cfg"
 tool = "sqlfluff"
 per_scope = true
-rule_keys = ["sqlfluff.exclude_rules", "sqlfluff:rules"]
 
 [[check]]
 name = "sqlfluff"

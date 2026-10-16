@@ -1,6 +1,5 @@
 import type { Level } from '#cli/types/configurations.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { ToolFileSource } from '#cli/types/generation/files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 
 import {
@@ -24,7 +23,7 @@ import {
 export function htmlValidateToolFile(
     { rulesOff }: Pick<ScopeView, 'rulesOff'>,
     { level, targetPath }: { level: Level; targetPath: string },
-): ToolFileSource {
+): string {
     const isAll = level === 'all';
     const isBuilt = targetPath.endsWith('html-validate-built.json');
     const rules: Record<string, unknown> = { ...HTML_RULES, ...(isBuilt ? HTML_BUILT_OVERRIDES : {}) };
@@ -37,5 +36,5 @@ export function htmlValidateToolFile(
         extends: HTML_VALIDATE_EXTENDS,
         rules,
     };
-    return { content: JSON.stringify(document, null, JSON_INDENT) + '\n', document: document };
+    return JSON.stringify(document, null, JSON_INDENT) + '\n';
 }

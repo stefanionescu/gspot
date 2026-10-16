@@ -1,7 +1,6 @@
 import { stringify } from 'yaml';
 import type { Level } from '#cli/types/configurations.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { ToolFileSource } from '#cli/types/generation/files.ts';
 import { HADOLINT_RECOMMENDED_OFF, HADOLINT_FAILURE_THRESHOLD } from '#cli/config/generation/tool-file-sources.ts';
 
 /**
@@ -17,7 +16,7 @@ import { HADOLINT_RECOMMENDED_OFF, HADOLINT_FAILURE_THRESHOLD } from '#cli/confi
 export function hadolintToolFile(
     { settings, rulesOff }: Pick<ScopeView, 'settings' | 'rulesOff'>,
     level: Level,
-): ToolFileSource {
+): string {
     const isAll = level === 'all';
     const off = [...rulesOff('docker/hadolint'), ...(isAll ? [] : HADOLINT_RECOMMENDED_OFF)];
     const registries = settings['tools.hadolint.trusted_registries'] as string[];
@@ -26,5 +25,5 @@ export function hadolintToolFile(
         ...(off.length > 0 ? { ignored: off } : {}),
         ...(registries.length > 0 ? { trustedRegistries: registries } : {}),
     };
-    return { content: stringify(document).trimEnd(), document: document };
+    return stringify(document).trimEnd();
 }

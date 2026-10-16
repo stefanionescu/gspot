@@ -2,8 +2,8 @@ import { relative } from 'node:path/posix';
 import { stringify } from '@decimalturn/toml-patch';
 import type { Session } from '#cli/types/planning.ts';
 import { pythonInputs } from '#cli/generation/python.ts';
+import type { EmitInputs } from '#cli/types/generation/files.ts';
 import { TOOL_EMIT_FORMAT } from '#cli/config/generation/tool-file-sources.ts';
-import type { EmitInputs, ToolFileSource } from '#cli/types/generation/files.ts';
 import { RUFF_ISORT, RUFF_IGNORED_RULES } from '#cli/config/generation/python.ts';
 
 /**
@@ -16,7 +16,7 @@ import { RUFF_ISORT, RUFF_IGNORED_RULES } from '#cli/config/generation/python.ts
 export function ruffToolFile(
     input: Pick<EmitInputs, 'selection' | 'scopes'> &
         Pick<Session, 'root' | 'installedRoot' | 'settingsFile' | 'reads' | 'repository'>,
-): ToolFileSource {
+): string {
     const { settings, format, limit, ignoresFor, rulesOff } = input.selection.view;
     const { pythonScopePath, pythonExcludes, ruffRules } = pythonInputs(input, input.selection);
     const scope = input.selection.scope.path;
@@ -56,5 +56,5 @@ export function ruffToolFile(
         },
     };
 
-    return { content: `${stringify(document, TOOL_EMIT_FORMAT).trimEnd()}\n`, document: document };
+    return `${stringify(document, TOOL_EMIT_FORMAT).trimEnd()}\n`;
 }

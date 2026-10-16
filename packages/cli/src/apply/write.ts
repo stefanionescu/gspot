@@ -1,4 +1,3 @@
-import { isDeepStrictEqual } from 'node:util';
 import type { Session } from '#cli/types/planning.ts';
 import { CONFLICT_MARKERS } from '#cli/config/apply.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
@@ -153,13 +152,5 @@ export function writeGeneratedFiles(
     const hasDrift = staleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
     if (dependenciesChanged || hasDrift) report.notes.push('Tool dependencies need installation. Run: gspot install');
     writeVersionPin(log);
-    const rules = Object.fromEntries(
-        generated.files.flatMap((file) => (file.capturedRules === undefined ? [] : [[file.path, file.capturedRules]])),
-    );
-    if (!isDeepStrictEqual(log.state.lintRules === undefined ? {} : log.state.lintRules, rules)) {
-        if (Object.keys(rules).length === 0) delete log.state.lintRules;
-        else log.state.lintRules = rules;
-        log.save();
-    }
     return report;
 }

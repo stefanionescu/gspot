@@ -52,7 +52,6 @@ shared = false
 target = ".gspot/config/markdownlint.jsonc"
 tool = "markdownlint-cli2"
 per_scope = true
-rule_keys = [""]
 
 [[tool_file]]
 source = "markdownlint-cli2.mjs"

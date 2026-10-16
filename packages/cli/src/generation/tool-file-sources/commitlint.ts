@@ -1,5 +1,5 @@
+import type { EmitInputs } from '#cli/types/generation/files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import type { EmitInputs, ToolFileSource } from '#cli/types/generation/files.ts';
 import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/tool-file-sources.ts';
 
 /**
@@ -11,7 +11,7 @@ import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generat
  *
  * @returns the generated configuration text.
  */
-export function commitlintToolFile({ selection, scopes }: Pick<EmitInputs, 'selection' | 'scopes'>): ToolFileSource {
+export function commitlintToolFile({ selection, scopes }: Pick<EmitInputs, 'selection' | 'scopes'>): string {
     const { settings, rulesOff } = selection.view;
     const types = settings['tools.commitlint.types'] as string[];
     const named = settings['tools.commitlint.scopes'] as string[];
@@ -34,5 +34,5 @@ export function commitlintToolFile({ selection, scopes }: Pick<EmitInputs, 'sele
     const serialized = JSON.stringify(document, null, JSON_INDENT)
         .replaceAll('\u2028', String.raw`\u2028`)
         .replaceAll('\u2029', String.raw`\u2029`);
-    return { content: `module.exports = ${serialized};`, document: document };
+    return `module.exports = ${serialized};`;
 }

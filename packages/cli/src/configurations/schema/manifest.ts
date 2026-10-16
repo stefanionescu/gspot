@@ -89,7 +89,6 @@ const toolFileSchema = z
         check: consumerNamesSchema,
         // Companion tools needed only when an applicable check consumes this configuration.
         required_tools: z.array(z.string().min(1)).default([]),
-        rule_keys: z.array(z.string()).optional(),
         pointer: pointerSchema.optional(),
         fragment: z.boolean().default(false),
         scope_fragments: z.boolean().default(false),

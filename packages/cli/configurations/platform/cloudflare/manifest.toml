@@ -28,7 +28,6 @@ npm = "wrangler"
 source = "semgrep/cloudflare.yml"
 target = ".gspot/config/semgrep/cloudflare.yml"
 tool = "semgrep"
-rule_keys = ["rules"]
 per_scope = true
 when = { configuration = "security" }
 level = "all"

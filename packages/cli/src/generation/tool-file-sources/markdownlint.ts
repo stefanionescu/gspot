@@ -1,6 +1,5 @@
 import type { Level } from '#cli/types/configurations.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { ToolFileSource } from '#cli/types/generation/files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { MARKDOWNLINT_RULES } from '#cli/config/generation/tool-file-sources.ts';
 
@@ -18,7 +17,7 @@ import { MARKDOWNLINT_RULES } from '#cli/config/generation/tool-file-sources.ts'
 export function markdownlintToolFile(
     { format, settings, rulesOff }: Pick<ScopeView, 'format' | 'settings' | 'rulesOff'>,
     level: Level,
-): ToolFileSource {
+): string {
     const isAll = level === 'all';
     const document: Record<string, boolean | Record<string, unknown>> = {
         ...MARKDOWNLINT_RULES,
@@ -32,5 +31,5 @@ export function markdownlintToolFile(
         if (document[rule] !== false)
             document[rule] = { ...(typeof document[rule] === 'object' ? document[rule] : {}), ...chosen };
     Object.assign(document, Object.fromEntries(rulesOff('markdown/markdownlint').map((rule) => [rule, false])));
-    return { content: JSON.stringify(document, null, JSON_INDENT), document: document };
+    return JSON.stringify(document, null, JSON_INDENT);
 }

@@ -27,7 +27,6 @@ shared = false
 target = ".gspot/config/html-validate-source.json"
 tool = "html-validate"
 check = "html/validate"
-rule_keys = ["rules"]
 
 [[check]]
 name = "validate"
