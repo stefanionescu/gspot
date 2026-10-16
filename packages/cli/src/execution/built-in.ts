@@ -50,7 +50,7 @@ export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope'
         selections: session.scopes,
         manifests: session.manifests,
         inspections: session.inspections,
-        ...(session.miseBinPaths === undefined ? {} : { miseBinPaths: session.miseBinPaths }),
+        miseBinPaths: session.miseBinPaths,
         scopeEntries: session.repository.scopes,
         attributes: session.repository.attributes,
         index: session.repository.index,
@@ -58,7 +58,7 @@ export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope'
         reads: session.reads,
         resources: session.resources,
         repositoryFiles: session.repository.files,
-        ...(session.installedRoot === undefined ? {} : { installedRoot: session.installedRoot }),
+        installedRoot: session.installedRoot,
         ...(session.cancelSignal === undefined ? {} : { cancelSignal: session.cancelSignal }),
     };
     return input;

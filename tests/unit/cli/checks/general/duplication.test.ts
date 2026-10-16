@@ -27,7 +27,7 @@ test.each([1, 0])('jscpd output is kept in the error when exit %i writes no repo
         return Promise.resolve(processResult({ code, stdout: 'The scanner could not write its report.\n' }));
     });
     const failed = await executeRun(session, buildRunOptions({ only: ['duplication/jscpd'] }));
-    expect(directories.length).toBeGreaterThan(0);
+    expect(directories.length, JSON.stringify(failed.report)).toBeGreaterThan(0);
     expect(failed.report.exitCode).toBe(2);
     expect(failed.report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'error', findings: [] }]);
     expect(failed.report.checks[0]!.note).toBe(
@@ -73,10 +73,10 @@ for (const mode of ['relative', 'absolute', 'namespaced'])
             return processResult();
         });
         const result = await executeRun(session, buildRunOptions({ only: ['duplication/jscpd'] }));
-        expect(result.report.checks[0]!.findings).toStrictEqual([
+        expect(result.report.checks[0]!.findings, JSON.stringify(result.report)).toStrictEqual([
             {
                 check: 'duplication/jscpd',
-                help: 'Move the shared block into one function both callers use, or raise limits.duplication.percent with a reason.',
+                help: 'Move the shared block into one function both callers use.',
                 file: 'scripts/café.sh',
                 line: 3,
                 rule: 'clone',

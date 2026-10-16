@@ -35,7 +35,7 @@ test.each([...UNREADABLE_RESOURCES])(
         expect(directory.isDirectory()).toBe(true);
         await rm(target, { recursive: true });
         files.write(path, { bytes: Buffer.from('{'), mode }, undefined);
-        const malformed = await executeRun(session, options);
+        const malformed = await executeRun(await openSession(session.root), options);
         expect(malformed.report.exitCode).toBe(1);
         expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'syntax' }]);
     },
@@ -74,7 +74,7 @@ test('a denied asset existence read is an execution error and a genuinely missin
         expect(failed.report.checks[0]?.findings).toStrictEqual([]);
     }
     await rm(target);
-    const missing = await executeRun(session, options);
+    const missing = await executeRun(await openSession(session.root), options);
     expect(missing.report.exitCode).toBe(1);
     expect(missing.report.checks[0]?.findings).toMatchObject([{ file: assetManifest, line: 1, rule: 'missing-image' }]);
 });
@@ -96,7 +96,7 @@ test.each(['logo-mark', 'logo_mark', 'Logo Mark', 'Logo MarkImage', 'logo-markCo
         expect(referenced.report.exitCode).toBe(0);
         expect(referenced.report.checks[0]?.findings).toStrictEqual([]);
         await writeFile(join(sandbox.path, 'App/Home.swift'), 'let logo = Image(.differentLogo)\n');
-        const orphan = await executeRun(session, options);
+        const orphan = await executeRun(await openSession(session.root), options);
         expect(orphan.report.exitCode).toBe(1);
         expect(orphan.report.checks[0]?.findings).toMatchObject([
             { file: path, rule: 'unused-asset', message: `No source names the asset ${name}.` },

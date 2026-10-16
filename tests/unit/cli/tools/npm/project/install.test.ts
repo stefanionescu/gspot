@@ -178,19 +178,17 @@ test.each([false, true])(
             };
         });
         const diagnostic = await rejection(
-            frozen
-                ? installNpmTools(session, owner, [], [])
-                : prepareNpmLockfile(
-                      { path: '.gspot/package.json', content: manifest, kind: 'tool_file' },
-                      owner,
-                      session,
-                      undefined,
-                      [],
-                  ),
+            prepareNpmLockfile(
+                { path: '.gspot/package.json', content: manifest, kind: 'tool_file' },
+                owner,
+                session,
+                undefined,
+                [],
+            ),
         );
         expect(diagnostic).toBe(
             frozen
-                ? 'The npm lockfile includes registry credentials. Existing files were preserved.'
+                ? 'The npm lockfile includes repository registry credentials. Existing files were preserved. Remove credentials from the registry URL and run: gspot install'
                 : 'The package manager included registry credentials in its lockfile. Existing files were preserved.',
         );
         expect(diagnostic).not.toContain(token);

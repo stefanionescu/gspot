@@ -139,7 +139,7 @@ function routeGroups(files: TrackedFile[]): ProseRouteGroup[] {
  * @returns the findings.
  */
 export async function vale(input: CheckInput): Promise<Finding[]> {
-    if (!hasValePackages(input.installedRoot ?? input.root, input.settingsFile.settings.level))
+    if (!hasValePackages(input.installedRoot, input.settingsFile.settings.level))
         throw new Error('The Vale packages are not installed. Run: gspot install');
     const groups = routeGroups(input.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];

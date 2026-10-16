@@ -29,7 +29,7 @@ test('fix preserves discovered project scopes when checking each project task', 
     expect(session.repository.scopes.map(({ path }) => path)).toContain('app');
     const options = buildRunOptions({ only: ['docs/missing-paths'] });
     const plain = await executeRun(session, options);
-    const fixed = await executeRun(session, { ...options, fix: true });
+    const fixed = await executeRun(await openSession(session.root), { ...options, fix: true });
     expect(plain.report.exitCode).toBe(0);
     expect(fixed.report.exitCode, JSON.stringify(fixed.report.checks)).toBe(0);
     expect(fixed.report.checks.map(({ scope, status, findings }) => ({ scope, status, findings }))).toStrictEqual(
@@ -117,7 +117,7 @@ format = "none"
         expect(failed.report.checks.flatMap((check) => check.findings)).toContainEqual(
             containing({ file: 'query.sql', line: 1 }),
         );
-        const corrected = await executeRun(session, { ...options, fix: true });
+        const corrected = await executeRun(await openSession(session.root), { ...options, fix: true });
         expect(corrected.report.exitCode).toBe(0);
         expect(
             corrected.report.checks.map(({ check, status, findings }) => ({ check, status, findings })),

@@ -113,7 +113,7 @@ async function runInScratch(run: CommandRun, scratchCopyFolder: string | undefin
     if (created === undefined) {
         let selectedEnvironment = environment;
         if (root !== undefined) {
-            scratchSession = { ...session, root, installedRoot: session.installedRoot ?? session.root };
+            scratchSession = { ...session, root };
             selectedEnvironment = commandEnvironment(scratchSession, planned, options);
         }
         prepared = prepareCommand(scratchSession, planned, command, selectedEnvironment, toolPath);
@@ -173,7 +173,7 @@ export async function prepareInScratch(
         cancelSignal: session.cancelSignal,
     });
     try {
-        const scratchSession = { ...session, root: copy.path, installedRoot: session.installedRoot ?? session.root };
+        const scratchSession = { ...session, root: copy.path };
         return {
             copy,
             session: scratchSession,

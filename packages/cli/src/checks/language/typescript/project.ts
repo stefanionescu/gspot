@@ -184,7 +184,7 @@ export async function runTsc(session: Session, planned: PlannedCheck, metadataRo
         const generatedPath = join(metadataRoot, TOOL_FILE_DIRECTORY, planned.scope.scope.path, TSCONFIG_FILE);
         writeTsconfig({
             root: session.root,
-            typeRootsFolder: session.installedRoot ?? session.root,
+            typeRootsFolder: session.installedRoot,
             reads: session.reads,
             target: toPosix(relative(session.root, generatedPath)),
             scope: planned.scope.scope.path,

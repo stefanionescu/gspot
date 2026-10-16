@@ -83,7 +83,7 @@ export async function svelteCheck(input: CheckInput): Promise<Finding[]> {
     );
     const config = writeTsconfig({
         root: input.root,
-        typeRootsFolder: input.installedRoot ?? input.root,
+        typeRootsFolder: input.installedRoot,
         reads: input.reads,
         target: toPosix(relative(input.root, target)),
         scope: input.selection.scope.path,

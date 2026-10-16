@@ -46,7 +46,7 @@ export function pythonInputs(
     session: Pick<Session, 'root' | 'installedRoot' | 'settingsFile' | 'reads' | 'repository' | 'scopes'>,
     selection: ScopeSelection,
 ): PythonInputs {
-    const root = session.installedRoot ?? session.root;
+    const root = session.installedRoot;
     const { settings } = session.settingsFile;
     const base = posix.relative(posix.join(TOOL_FILE_DIRECTORY, selection.scope.path), '.');
     const exclusions = generatedIgnores(session);

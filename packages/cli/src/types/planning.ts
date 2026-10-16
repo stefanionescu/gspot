@@ -17,10 +17,10 @@ export type Session = {
     root: string;
     uvPath: string;
     inspections: Map<string, ToolInspection>;
-    miseBinPaths?: string[];
+    miseBinPaths: string[];
     startRunner: StartRunner;
     /** The verified working installation for a revision copy. */
-    installedRoot?: string;
+    installedRoot: string;
     reads: ReadCache;
     resources: DisposableStack;
     npmClient: () => NpmClient | undefined;

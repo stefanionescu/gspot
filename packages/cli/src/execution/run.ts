@@ -182,12 +182,10 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     using resources = new DisposableStack();
     const session: Session = {
         ...opened,
-        reads: createReadCache(opened.root),
         repository: opened.repository,
         resources,
         ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
     };
-    session.inspections.clear();
     const started = new Date();
     const { executables, fixes } = await replanAfterFixes(session, options);
     const planned = executables.map(({ check }) => check);

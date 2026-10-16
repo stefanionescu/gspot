@@ -113,7 +113,7 @@ async function readSessionRepository(
 export async function openSession(
     rootPath: string,
     settingsFile = readSettings(rootPath),
-    { installedRoot = rootPath }: Pick<Session, 'installedRoot'> = {},
+    { installedRoot = rootPath }: { installedRoot?: string } = {},
 ): Promise<Session> {
     const reads = createReadCache(rootPath);
     const root = reads.root;

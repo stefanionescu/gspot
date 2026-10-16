@@ -82,12 +82,12 @@ export type CheckInput = {
     /** Inventory-owned source paths of this project's declared workspace dependencies. */
     dependencyFiles: () => string[];
     index: Repository['index'];
-    installedRoot?: string;
+    installedRoot: string;
     settingsFile: SettingsFile;
     selection: ScopeSelection;
     manifests: Map<string, Manifest>;
     inspections: ToolSearch['inspections'];
-    miseBinPaths?: string[];
+    miseBinPaths: string[];
     scopeEntries: ScopeEntry[];
     attributes: Repository['attributes'];
     hasGit: boolean;

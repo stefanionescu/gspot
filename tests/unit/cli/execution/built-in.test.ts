@@ -12,7 +12,7 @@ import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { HEADERS_FILE, SOURCE_EDITS, SCOPE_FINDINGS } from '#tests/config/execution.ts';
 
 test.each([...SOURCE_EDITS])(
-    '$language built-in checks read source edited between two runs of one session',
+    '$language built-in checks read source edited between sessions',
     async ({ language, path, sample, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -28,7 +28,7 @@ test.each([...SOURCE_EDITS])(
             expect(check.findings).toContainEqual(containing({ file: path, line: 1 }));
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(sample);
         await Bun.write(join(sandbox.path, path), corrected);
-        const accepted = await executeRun(session, options);
+        const accepted = await executeRun(await openSession(session.root), options);
         expect(accepted.report.exitCode, JSON.stringify(accepted.report)).toBe(0);
         expect(accepted.report.checks).toMatchObject([
             { status: 'passed', findings: [] },

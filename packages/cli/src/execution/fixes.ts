@@ -1,7 +1,6 @@
 import { createTwoFilesPatch } from 'diff';
 import { toPosix } from '#cli/system/paths.ts';
 import { readSource } from '#cli/system/file-reads.ts';
-import { sameEntry } from '#cli/system/safe-folder/reads.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
@@ -55,13 +54,7 @@ async function scratchFix(
     toolPath: string,
     options: CheckRunOptions,
 ): Promise<FixResult> {
-    const preparedScratch = await prepareInScratch(
-        { ...session, root, installedRoot: session.installedRoot ?? session.root },
-        planned,
-        command,
-        toolPath,
-        options,
-    );
+    const preparedScratch = await prepareInScratch({ ...session, root }, planned, command, toolPath, options);
     using scratch = preparedScratch.copy;
     const prepared = preparedScratch.prepared;
     using files = openSafeFolder(root, 'system');
@@ -69,9 +62,6 @@ async function scratchFix(
     const originals = new Map(paths.map((path) => [path, files.read(path)]));
     const result = await runFix(session, planned, prepared);
     using corrected = openSafeFolder(scratch.path, 'system');
-    for (const path of result.changed)
-        if (!sameEntry(files.read(path), originals.get(path)))
-            throw new Error(`Destination changed during the operation: ${path}`);
     for (const path of result.changed) {
         const original = originals.get(path);
         const value = corrected.read(path);

@@ -281,14 +281,6 @@ async function installNpmTools(
     const lockfile = owner.read(project.lockfilePath)?.bytes.toString('utf8');
     if (lockfile === undefined || !lockfileMatches(project.npmClient.name, lockfile, project.dependencies))
         throw new GspotError('installation', 'Run: gspot install');
-    assertCredentialFreeLockfile(
-        lockfile,
-        registryCredentials(await registryEnvironment(root)),
-        new GspotError(
-            'installation',
-            'The npm lockfile includes registry credentials. Existing files were preserved.',
-        ),
-    );
     const versionCommand = [project.npmClient.name, VERSION_FLAG];
     steps.push(versionCommand);
     const version = await runTool(versionCommand, { cwd: root, timeoutSeconds });

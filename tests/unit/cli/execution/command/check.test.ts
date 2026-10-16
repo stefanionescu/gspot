@@ -126,18 +126,18 @@ name = "project/checker"\noutput = { format = "none" }\nstage = "commit"\npaths 
     const options = buildRunOptions({ stage: 'commit', only: ['project/checker'] });
     const executed = await executeRun(session, options);
     expect(executed.report.exitCode).toBe(0);
-    const repeated = await executeRun(session, options);
+    const repeated = await executeRun(await openSession(session.root), options);
     expect(repeated.report.checks[0]!.status).toBe('passed');
     await writeFile(executable, FAILING_SCRIPT);
-    const changed = await executeRun(session, options);
+    const changed = await executeRun(await openSession(session.root), options);
     expect(changed.report.exitCode).toBe(1);
     expect(changed.report.checks[0]!.status).toBe('failed');
     await chmod(executable, 0o644);
-    const unexecutable = await executeRun(session, options);
+    const unexecutable = await executeRun(await openSession(session.root), options);
     expect(unexecutable.report.exitCode).toBe(2);
     await chmod(executable, 0o755);
     await writeFile(executable, PASSING_SCRIPT);
-    const restored = await executeRun(session, options);
+    const restored = await executeRun(await openSession(session.root), options);
     expect(restored.report.exitCode).toBe(0);
 });
 
