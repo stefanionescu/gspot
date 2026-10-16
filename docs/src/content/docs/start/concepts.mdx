@@ -57,32 +57,6 @@ A generated file holds output that gspot writes from your settings. See [Generat
 
 The counts cover every shipped configuration. Your repository runs only its selected and applicable checks.
 
-At level `all`, gspot also checks names, file structure, and wording. This `src/utils.ts` file passes at
-`recommended` and reports four findings at `all`:
-
-```typescript
-import type { Order } from './orders.js';
-import { calculateTotal } from './orders.js';
-
-/**
- * Calculate the order total if needed.
- * @param order the order
- * @returns the total
- */
-export function ensureOrderTotal(order: Order): number {
-    return calculateTotal(order);
-}
-```
-
-The findings identify these problems:
-
-- `gspot/no-trivial-files`: the forwarding file.
-- `naming/identifiers`: the banned name `ensureOrderTotal`.
-- `naming/paths`: the banned file name `utils`.
-- `prose/vale`: the words `if needed`.
-
-Import `calculateTotal` directly in the caller and delete `utils.ts`.
-
 To change the level and install any extra tools:
 
 ```shell
