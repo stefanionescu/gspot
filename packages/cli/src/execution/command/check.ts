@@ -4,9 +4,9 @@ import { emptyResult } from '#cli/execution/report.ts';
 import { checkInput } from '#cli/execution/built-in.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { RAN_STATUSES } from '#cli/config/execution/run.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { coverageArguments } from '#cli/planning/checks.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
 import { copyIntoScratch } from '#cli/execution/copy/scratch.ts';
@@ -86,9 +86,7 @@ function missingToolFile(
     if (paths === undefined) return undefined;
     using files = openFiles(session.root);
     const missing = [...paths, ...commandToolFiles(session, planned, command)].find((path) =>
-        path.startsWith(`${DOT_GSPOT}/`)
-            ? files.read(path) === undefined
-            : readCachedText(session.reads, path) === undefined,
+        isInGspotFolder(path) ? files.read(path) === undefined : readCachedText(session.reads, path) === undefined,
     );
     if (missing === undefined) return undefined;
     return {

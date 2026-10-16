@@ -2,15 +2,28 @@
 
 import { posix } from 'node:path';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: Scope discovery and dependency selection share these hoisted calculations within the repository module.
-import { isInScope } from '#cli/repository/scopes.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
 import { readText, readCachedText } from '#cli/system/files/reads.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { packageJsonSchema, selectDependencyFileParser } from '#cli/parsers/dependency-files.ts';
 import { type PackageJson, type DependencyMap, type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+
+// Keep each parser failure tied to the dependency file that caused it.
+async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<DependencyFile | undefined> {
+    try {
+        const parse = selectDependencyFileParser(file.path);
+        if (parse === undefined) return undefined;
+        const text = readCachedText(reads, file.path);
+        if (text === undefined) throw new Error(`Manifest is missing: ${file.path}`);
+        return await parse(file.path, text);
+    } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`Cannot inspect manifest ${file.path}: ${detail}`, { cause: error });
+    }
+}
 
 /**
  * Read supported project manifests for dependency and runtime detection.
@@ -18,22 +31,13 @@ import { type PackageJson, type DependencyMap, type DependencyFile } from '#cli/
  * @param files the tracked files.
  * @returns one project manifest per supported source file.
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity -- reason: Package declarations accept strings and package-manager records; this reader validates both forms together.
 export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
-    const manifests: DependencyFile[] = [];
+    const dependencies: DependencyFile[] = [];
     for (const file of files.filter((file) => file.kind === 'source' && !isInstalledToolPath(file.path))) {
-        try {
-            const parse = selectDependencyFileParser(file.path);
-            if (parse === undefined) continue;
-            const text = readCachedText(reads, file.path);
-            if (text === undefined) throw new Error(`Manifest is missing: ${file.path}`);
-            manifests.push(await parse(file.path, text));
-        } catch (error) {
-            const detail = error instanceof Error ? error.message : String(error);
-            throw new Error(`Cannot inspect manifest ${file.path}: ${detail}`, { cause: error });
-        }
+        const dependencyFile = await readDependencyFile(reads, file);
+        if (dependencyFile !== undefined) dependencies.push(dependencyFile);
     }
-    return manifests;
+    return dependencies;
 }
 
 /**
@@ -58,7 +62,7 @@ export function isToolOnlyPackage(dependencyFile: DependencyFile, npmNames: Read
     if (dependencyFile.kind !== 'package.json') return false;
     const names = Object.keys(dependencyFile.installed);
     if (names.length === 0) return false;
-    return names.every((name) => npmNames.has(name) || new Set<string | undefined>(HOOK_PACKAGES).has(name));
+    return names.every((name) => npmNames.has(name) || HOOK_PACKAGES.has(name));
 }
 
 /**
@@ -69,11 +73,11 @@ export function isToolOnlyPackage(dependencyFile: DependencyFile, npmNames: Read
  */
 export function getProjectDependencies(dependencyFiles: DependencyFile[], scope: string): DependencyMap {
     const owner = dependencyFiles
-        .filter(
-            (manifest) =>
-                manifest.kind === 'package.json' &&
-                isInScope(scope, manifest.path === 'package.json' ? '' : posix.dirname(manifest.path)),
-        )
+        .filter((manifest) => {
+            if (manifest.kind !== 'package.json') return false;
+            const folder = manifest.path === PACKAGE_JSON ? '' : posix.dirname(manifest.path);
+            return folder === '' || scope === folder || scope.startsWith(`${folder}/`);
+        })
         .toSorted((first, second) => second.path.length - first.path.length)[0];
     if (owner === undefined) return {};
     return owner.dependencies;

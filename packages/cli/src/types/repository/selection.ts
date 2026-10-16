@@ -1,3 +1,5 @@
+import type { Manifest } from '#cli/types/configurations.ts';
+import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { GROUP_LABELS } from '#cli/config/configurations.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
 
@@ -31,3 +33,10 @@ export type ConfigurationSuggestion = { configuration: string; evidence: string;
 
 /** Repository evidence with an optional count for extension matches. */
 export type DetectionEvidence = { evidence: string; count?: number };
+
+/** Configuration selection and scope values for repository file coverage. */
+export type FileCoverageOptions = {
+    selected: Manifest[];
+    scope: string;
+    view: Pick<ScopeView, 'test_files' | 'settings'>;
+};

@@ -36,7 +36,7 @@ import {
  */
 function readAttributes(root: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
-    const result = runGitBlocking(root, [...CHECK_ATTRIBUTES_ARGUMENTS], {
+    const result = runGitBlocking(root, CHECK_ATTRIBUTES_ARGUMENTS, {
         stdin: paths.join('\0') + '\0',
     });
     if (result.code !== 0) throw new Error(`Git could not read the attributes: ${result.stderr.trim()}`);
@@ -59,7 +59,7 @@ export async function readRepository(
     const root = reads.root;
     const hasGit = isGitRepository(root);
     const index = hasGit ? await readIndexEntries(root) : [];
-    const entries = await listTrackedFiles(root, index, hasGit);
+    const entries = await listTrackedFiles(root, index, { hasGit: hasGit });
     using directory = openFiles(root);
     const files: TrackedFile[] = [];
     const attributes = hasGit
@@ -124,7 +124,7 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
                             Object.entries(mergeAttributes(rule.attributes, {})).some(
                                 ([name, value]) =>
                                     (name === GENERATED_ATTRIBUTE || name === VENDORED_ATTRIBUTE) &&
-                                    new Set<string>(SET_VALUES).has(value),
+                                    SET_VALUES.has(value),
                             ),
                         )
                         .map((rule) => rule.pattern);
@@ -141,7 +141,7 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
  */
 export function findRoot(start: string): string {
     const folder = realpathSync(start);
-    const top = runGitBlocking(folder, [...GIT_TOP_LEVEL_ARGUMENTS]);
+    const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS);
     const gitRoot = top.code === 0 ? resolve(trimGitLine(top.stdout)) : undefined;
     if (gitRoot === undefined && !isOutsideGit(runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
         throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);

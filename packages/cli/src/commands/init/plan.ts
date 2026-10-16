@@ -2,6 +2,7 @@
 import { colors } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { listSubmodulePaths } from '#cli/repository/tracked.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
@@ -166,7 +167,7 @@ export function buildInitPlan(
             { path: SETTINGS_FILE, note: `your settings, ${String(settingsText.split('\n').length)} lines` },
             { path: `${DOT_GSPOT}/`, note: 'generated files and version pin' },
             ...[...generated.files, ...generated.blocks]
-                .filter(({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && !change.some((row) => row.path === path))
+                .filter(({ path }) => !isInGspotFolder(path) && !change.some((row) => row.path === path))
                 .map(({ path }) => ({
                     path,
                     note: Object.hasOwn(CI_FILE_NOTES, path)

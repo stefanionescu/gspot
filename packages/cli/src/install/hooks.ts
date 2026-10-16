@@ -52,7 +52,7 @@ function otherHooksNote(hooks: ExistingTools['hooks'], runner: StartRunner): str
  */
 function planHooks({ settings, repository, runner }: HookContext): HookPlan {
     if (!repository.hasGit) return { note: '' };
-    const path = `${readGitPrefix(repository.root, true)}${HOOKS_DIRECTORY}`;
+    const path = `${readGitPrefix(repository.root)}${HOOKS_DIRECTORY}`;
     if (settings.hooks?.enabled !== true)
         return readGitSetting(repository.root, HOOKS_PATH_SETTING) === path
             ? { command: UNSET_HOOKS_PATH, note: 'disabled hooks: unset core.hooksPath' }

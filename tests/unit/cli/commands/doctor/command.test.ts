@@ -51,7 +51,7 @@ dependencies = ["pytest==8.4.2"]
     await createFileTree(sandbox.path, {
         'gspot.toml': settingsText([]),
         '.gspot/pyproject.toml': python,
-        'nested/.gspot/package.json': '{"dependencies":{"react":"19.1.1"}}',
+        '.gspot/package.json': '{"dependencies":{"react":"19.1.1"}}',
     });
     const privateOnly = await doctorCommand(sandbox.path);
     const detected = (privateOnly.json as DoctorReport).suggestions.detected.map(({ configuration }) => configuration);

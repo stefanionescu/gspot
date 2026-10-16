@@ -4,6 +4,7 @@ import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import type { Files } from '#cli/types/system/files.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { ToolAvailability } from '#cli/types/tools/run.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
@@ -49,7 +50,7 @@ function searchDirectories(root: string, options: LocateOptions): string[] {
 // Whether a candidate exists: a managed path must resolve through the root boundary, read other candidates directly from disk.
 function candidateExists(files: Files, root: string, path: string): boolean {
     const local = convertToPosixPath(relative(root, path));
-    if (!local.startsWith(`${DOT_GSPOT}/`)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
+    if (!isInGspotFolder(local)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
         files.realPath(local);
         return true;

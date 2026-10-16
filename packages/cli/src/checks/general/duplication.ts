@@ -66,14 +66,11 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
     const owned = [
         ...new Set(
             sourceConfigurations(input.selection.selected).flatMap((manifest) =>
-                listCoveredFiles(
-                    manifest.files,
-                    input.selection.selected,
-                    input.files,
-                    input.selection.scope.path,
-                    input.selection.view.test_files,
-                    input.selection.view.settings,
-                )
+                listCoveredFiles(manifest.files, input.files, {
+                    selected: input.selection.selected,
+                    scope: input.selection.scope.path,
+                    view: input.selection.view,
+                })
                     .filter((file) => file.kind === 'source')
                     .map((file) => file.path),
             ),

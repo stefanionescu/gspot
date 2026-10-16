@@ -1,13 +1,13 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { isCovered } from '#cli/repository/coverage.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { buildFileMatcher } from '#cli/repository/coverage.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { findScope, isInScope } from '#cli/repository/scopes.ts';
 import { namingDefaults } from '#cli/configurations/manifests.ts';
 import { nameFindings } from '#cli/checks/general/naming/names.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
-import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import type { FileNames, Identifier, NamingSource, NamingSettings } from '#cli/types/checks/general.ts';
 import { identifiersOf, fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 
@@ -16,16 +16,13 @@ function sourceFiles(input: CheckInput): NamingSource[] {
         .filter((manifest) => manifest.configuration.group === 'language')
         .map((manifest) => ({
             manifest,
-            filenames: buildFilenameMatcher(manifest.files.filenames),
-            paths: buildPathMatcher(manifest.files.paths),
+            matches: buildFileMatcher(manifest.files),
         }));
     return input.files
         .filter((file) => file.kind === 'source')
         .map((file) => ({
             file,
-            language: languages.find(({ manifest, filenames, paths }) =>
-                isCovered(manifest.files, file, filenames, paths),
-            )?.manifest.configuration.name,
+            language: languages.find(({ matches }) => matches(file))?.manifest.configuration.name,
         }))
         .filter((entry): entry is NamingSource => entry.language !== undefined);
 }

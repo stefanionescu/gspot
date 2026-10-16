@@ -58,39 +58,37 @@ function listWorkspaceFolders(root: string): string[] {
  */
 function listWorkspaceDependencyFiles(root: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
     const cache = getCachedValue(reads, WORKSPACE_FILES_MEMO);
-    const project = files
+    const manifestPath = files
         .map((file) => file.path)
-        .filter(
-            (path) => basename(path) === 'package.json' && isInScope(scope, posix.relative('.', posix.dirname(path))),
-        )
+        .filter((path) => basename(path) === PACKAGE_JSON && isInScope(scope, posix.relative('.', posix.dirname(path))))
         .toSorted((left, right) => right.length - left.length)[0];
-    if (project === undefined) return [];
-    const key = JSON.stringify([root, project]);
+    if (manifestPath === undefined) return [];
+    const key = JSON.stringify([root, manifestPath]);
     const held = cache.get(key);
     if (held !== undefined) return held;
-    const projectFolder = posix.relative('.', posix.dirname(project));
-    const ordered = [...new Set([projectFolder, ...listWorkspaceFolders(root)])].toSorted(
+    const projectRoot = posix.relative('.', posix.dirname(manifestPath));
+    const ordered = [...new Set([projectRoot, ...listWorkspaceFolders(root)])].toSorted(
         (left, right) => right.length - left.length,
     );
-    const packages = new Map(ordered.map((path) => [path, readPackageJson(root, posix.join(path, 'package.json'))]));
-    const pending = [projectFolder];
+    const packages = new Map(ordered.map((path) => [path, readPackageJson(root, posix.join(path, PACKAGE_JSON))]));
+    const pending = [projectRoot];
     for (const folder of pending) {
         const manifest = packages.get(folder);
         if (manifest === undefined)
-            throw new Error(`Workspace manifest is missing: ${posix.join(folder, 'package.json')}`);
+            throw new Error(`Workspace manifest is missing: ${posix.join(folder, PACKAGE_JSON)}`);
         const names = Object.keys({
             ...manifest.dependencies,
             ...manifest.devDependencies,
             ...manifest.peerDependencies,
             ...manifest.optionalDependencies,
         });
-        const project = readTsconfigProject(root, folder, [], reads);
+        const typescriptProject = readTsconfigProject(root, folder, [], reads);
         const sources =
-            project === undefined
+            typescriptProject === undefined
                 ? []
                 : listSourceFiles(root, folder, reads, {
-                      ...project.config,
-                      fileNames: project.config.fileNames.filter((file) =>
+                      ...typescriptProject.config,
+                      fileNames: typescriptProject.config.fileNames.filter((file) =>
                           isInScope(convertToPosixPath(relative(root, file)), folder),
                       ),
                   }).flatMap(
@@ -104,7 +102,7 @@ function listWorkspaceDependencyFiles(root: string, scope: string, files: Tracke
         pending.push(...[...new Set([...sources, ...dependencies])].filter((path) => !pending.includes(path)));
     }
     const visited = new Set(pending);
-    visited.delete(projectFolder);
+    visited.delete(projectRoot);
     const selected = files
         .filter((file) => {
             const owner = ordered.find((entry) => isInScope(file.path, entry));

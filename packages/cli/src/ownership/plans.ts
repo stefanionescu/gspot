@@ -8,11 +8,11 @@ import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { planKeyChanges } from '#cli/ownership/managed-keys.ts';
-import { hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import type { Files, FileCopy } from '#cli/types/system/files.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
+import { isInGspotFolder, hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-blocks.ts';
 import type { Writer, FileEdit, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
@@ -42,7 +42,7 @@ function removeBlock(path: string, current: FileCopy): FileCopy | undefined {
  */
 export function isOwned(path: string, disk: Files): boolean {
     if (!isInside(path)) return false;
-    if (path.startsWith(`${DOT_GSPOT}/`)) return true;
+    if (isInGspotFolder(path)) return true;
     const file = disk.readKeepingLinks(path);
     if (file !== undefined && file.isLink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;
     const attributesFile = disk.read(GITATTRIBUTES_FILE);

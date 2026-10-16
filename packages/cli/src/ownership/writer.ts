@@ -1,9 +1,9 @@
+// Write each changed regular file under the writer lock.
 import { WRITER_LOCK_FILE } from '#cli/config/ownership.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { openFiles, removeEmptyFolders } from '#cli/system/files/open.ts';
 
-// Write each changed regular file under the writer lock.
 function writeBatch(writer: Writer, plans: WritePlan[]): void {
     for (const { path, before, after } of plans) {
         if (after === undefined) {

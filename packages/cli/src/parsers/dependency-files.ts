@@ -16,6 +16,7 @@ import type {
     DependencyFileParser,
 } from '#cli/types/parsers/dependency-files.ts';
 import {
+    PIPFILE,
     GIT_SUFFIX,
     PACKAGE_JSON,
     PACKAGE_SWIFT,
@@ -23,6 +24,7 @@ import {
     PYPROJECT_TOML,
     RUNTIME_COMMAND,
     REQUIREMENT_NAME,
+    REQUIREMENTS_FILE,
     LINE_CONTINUATION,
     SWIFT_PACKAGE_URL,
     JAVASCRIPT_RUNTIMES,
@@ -104,7 +106,7 @@ const readers: Record<string, DependencyFileParser> = {
     [PACKAGE_JSON]: parsePackageJson,
     [PYPROJECT_TOML]: parsePyproject,
     [PACKAGE_SWIFT]: parseSwiftPackage,
-    Pipfile: parsePipfile,
+    [PIPFILE]: parsePipfile,
 };
 
 function detectPackageRuntimes(path: string, manifest: PackageJson): Record<string, string> {
@@ -275,7 +277,7 @@ export function normalizePythonIdentity(identity: string): string {
  */
 export function selectDependencyFileParser(path: string): DependencyFileParser | undefined {
     const base = posix.basename(path);
-    return base.startsWith('requirements') && base.endsWith('.txt') ? parseRequirements : readers[base];
+    return REQUIREMENTS_FILE.test(path) ? parseRequirements : readers[base];
 }
 
 export const packageJsonSchema = z.looseObject({

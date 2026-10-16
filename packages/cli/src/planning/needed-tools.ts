@@ -172,14 +172,11 @@ export function licenseProjects(
                     !selection.selected.some(
                         (manifest) =>
                             manifest.configuration.name === LICENSES_CONFIGURATION &&
-                            listCoveredFiles(
-                                check.files ?? manifest.files,
-                                selection.selected,
-                                [file],
-                                selection.scope.path,
-                                selection.view.test_files,
-                                selection.view.settings,
-                            ).length > 0,
+                            listCoveredFiles(check.files ?? manifest.files, [file], {
+                                selected: selection.selected,
+                                scope: selection.scope.path,
+                                view: selection.view,
+                            }).length > 0,
                     )
                 )
                     return [];

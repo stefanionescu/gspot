@@ -29,6 +29,7 @@ import {
     COMMIT_DIFF_ARGUMENTS,
     SHALLOW_FILE_ARGUMENTS,
     ROOT_COMMITS_ARGUMENTS,
+    MISSING_PUSH_REVISION_MESSAGE,
 } from '#cli/config/repository/revisions.ts';
 
 // Whether a pre-push field pair holds two object ids of the same hash length.
@@ -60,7 +61,7 @@ async function readPeeledCommits(
         ),
     ];
     if (hashes.length === 0) return new Map();
-    const responses = await readGitLines(root, [...PEEL_ARGUMENTS], {
+    const responses = await readGitLines(root, PEEL_ARGUMENTS, {
         cancelSignal,
         stdin: hashes.map((hash) => `${hash}${PEEL_SUFFIX}`).join('\n') + '\n',
     });
@@ -75,7 +76,7 @@ async function readPeeledCommits(
 
 // The commits a shallow clone's history stops at.
 async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): Promise<Set<string>> {
-    const path = await readGitText(root, [...SHALLOW_FILE_ARGUMENTS], { cancelSignal });
+    const path = await readGitText(root, SHALLOW_FILE_ARGUMENTS, { cancelSignal });
     const text = await readFile(resolve(root, path.trim()), 'utf8');
     return new Set(text.trim().split('\n'));
 }
@@ -85,7 +86,7 @@ async function readComparison(context: PushSearch, hash: string, remoteHash: str
     const { root, cancelSignal } = context;
     if (!ABSENT_HASH.test(remoteHash)) {
         if (!context.commits.has(remoteHash))
-            throw new GspotError('git', `Cannot find pushed object ${remoteHash}. Fetch the remote again.`);
+            throw new GspotError('git', MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', remoteHash));
         const previous = context.commits.get(remoteHash);
         if (previous === undefined)
             return { base: await readPushBase(root, cancelSignal), changed: undefined, range: [hash] };
@@ -143,7 +144,7 @@ async function selectLine(context: PushSearch, result: PushSelection, line: Push
         return;
     }
     if (!context.commits.has(line.localHash))
-        throw new GspotError('git', `Cannot find pushed object ${line.localHash}. Fetch the remote again.`);
+        throw new GspotError('git', MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', line.localHash));
     const commit = context.commits.get(line.localHash);
     if (commit === undefined) {
         result.skipped.push({ ref: line.localRef, hash: line.localHash, reason: 'non-commit object' });
@@ -171,7 +172,7 @@ export async function selectPush(
         .filter((row) => row.trim() !== '')
         .map((line) => parseLine(line));
     const shallow = await isShallow(root, { cancelSignal });
-    const remotes = remote === undefined ? [] : await readGitLines(root, [...REMOTE_ARGUMENTS], { cancelSignal });
+    const remotes = remote === undefined ? [] : await readGitLines(root, REMOTE_ARGUMENTS, { cancelSignal });
     const context: PushSearch = {
         root,
         cancelSignal,
@@ -193,7 +194,7 @@ export async function selectPush(
 export async function readPushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
     const compared = await readDefaultRef(root, cancelSignal);
     if (compared !== '') return readMergeBase(root, compared, cancelSignal);
-    const roots = await readGitLines(root, [...ROOT_COMMITS_ARGUMENTS], { cancelSignal });
+    const roots = await readGitLines(root, ROOT_COMMITS_ARGUMENTS, { cancelSignal });
     return roots.at(-1) as string;
 }
 
@@ -212,7 +213,7 @@ export async function readPushedCommits(
     if (commits !== undefined) return commits;
     if ((await readHead(root, cancelSignal)) === undefined) return [];
     const base = await readPushBase(root, cancelSignal);
-    const listed = await runGit(root, ['rev-list', `${base}..HEAD`, '--'], {
+    const listed = await runGit(root, [...REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {
         cancelSignal,
     });
     if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };

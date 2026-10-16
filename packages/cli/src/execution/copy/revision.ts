@@ -12,11 +12,12 @@ import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { writeScratchFiles } from '#cli/execution/copy/scratch.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
+import { GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
+import { runGit, readGitText, trimGitLine } from '#cli/system/git.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 import { join, posix, dirname, resolve, basename, relative } from 'node:path';
 import type { ScratchFile, DependencyCopy } from '#cli/types/execution/copy.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
-import { runGit, readGitText, trimGitLine, gitTopLevel } from '#cli/system/git.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, existsSync, realpathSync } from 'node:fs';
 import { visitGitBlobs, listRevisionEntries } from '#cli/repository/revisions/tree-entries.ts';
 import { DOT_GSPOT, VALE_CONFIG, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -284,7 +285,7 @@ export async function copyRevision<Result>(
     action: (scratch: string, tree: string) => Promise<Result>,
     cancelSignal?: AbortSignal,
 ): Promise<Result> {
-    const toplevel = await gitTopLevel(root, { cancelSignal });
+    const toplevel = trimGitLine(await readGitText(root, GIT_TOP_LEVEL_ARGUMENTS, { cancelSignal }));
     const directory = relative(realpathSync(toplevel), realpathSync(root));
     const entries = await listRevisionEntries(toplevel, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');

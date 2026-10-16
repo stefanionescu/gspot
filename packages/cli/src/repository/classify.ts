@@ -18,7 +18,6 @@ import {
     type Tagged,
     type FileEntry,
     type TrackedFile,
-    type ContentPrefix,
     type FileDeclaration,
     type FileClassification,
     type ClassificationInputs,
@@ -68,10 +67,10 @@ function findDeclaredKind(path: string, rules: ClassificationInputs): FileClassi
 
 function findAttributeKind(attributes: Record<string, string> | undefined): FileClassification | undefined {
     if (attributes === undefined) return undefined;
-    if (new Set<string | undefined>(SET_VALUES).has(attributes[GENERATED_ATTRIBUTE]))
-        return { kind: 'generated', origin: GITATTRIBUTES_FILE };
-    if (new Set<string | undefined>(SET_VALUES).has(attributes[VENDORED_ATTRIBUTE]))
-        return { kind: 'vendored', origin: GITATTRIBUTES_FILE };
+    const generated = attributes[GENERATED_ATTRIBUTE];
+    if (generated !== undefined && SET_VALUES.has(generated)) return { kind: 'generated', origin: GITATTRIBUTES_FILE };
+    const vendored = attributes[VENDORED_ATTRIBUTE];
+    if (vendored !== undefined && SET_VALUES.has(vendored)) return { kind: 'vendored', origin: GITATTRIBUTES_FILE };
     const isBinary = attributes[TEXT_ATTRIBUTE] === 'unset' || attributes[FILTER_ATTRIBUTE] === LFS_FILTER;
     return isBinary ? { kind: 'binary', origin: GITATTRIBUTES_FILE } : undefined;
 }
@@ -79,14 +78,14 @@ function findAttributeKind(attributes: Record<string, string> | undefined): File
 // License texts belong to another party. A code file whose name looks like a license stays source.
 function isLicenseFile(path: string): boolean {
     const name = posix.basename(path);
-    const tags = (EXTENSION_TAGS as Readonly<Record<string, readonly string[]>>)[extractExtension(name)] ?? [];
+    const tags = EXTENSION_TAGS[extractExtension(name)] ?? [];
     return (LICENSE_FILE.test(name) || NOTICE_FILE.test(name)) && tags.every((tag) => LICENSE_TAGS.has(tag));
 }
 
 // Tool paths and banners identify generated files; downloaded Vale styles belong to another party.
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
-    if (isValePackageFile(path)) return { kind: 'vendored', origin: 'gspot' };
-    if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', origin: 'gspot' };
+    if (path.startsWith(`${VALE_PACKAGE_DIRECTORY}/`)) return { kind: 'vendored', origin: 'gspot' };
+    if (isInGspotFolder(path)) return { kind: 'generated', origin: 'gspot' };
     if (GENERATED_BUILD_WRAPPERS.has(posix.basename(path))) return { kind: 'generated', origin: 'build wrapper' };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     if (hasGeneratedHeader(start) || GENERATED_BANNERS.some((banner) => banner.test(start)))
@@ -102,15 +101,6 @@ function classifyManagedDocument(root: string, entry: FileEntry, prefix: Buffer)
     const span = findBlockSpan(text, { path: entry.path, style: 'markdown' });
     if (span === undefined || `${text.slice(0, span.start)}${text.slice(span.end)}`.trim() !== '') return SOURCE_KIND;
     return { kind: 'generated', origin: 'gspot' };
-}
-
-/**
- * Whether a path identifies a Vale package file: under the styles folder and not the gspot style or accepted-word files.
- * @param path the file, relative to the root.
- * @returns true for a package file.
- */
-function isValePackageFile(path: string): boolean {
-    return path.startsWith(`${VALE_PACKAGE_DIRECTORY}/`);
 }
 
 /**
@@ -141,30 +131,21 @@ function classifyKind(
         path
             .split('/')
             .slice(0, -1)
-            .some((segment) => new Set<string | undefined>(VENDORED_FOLDERS).has(segment))
+            .some((segment) => VENDORED_FOLDERS.has(segment))
     )
         return { kind: 'vendored', origin: 'directory' };
     return classifyManagedDocument(root, entry, prefix);
 }
 
-function sniff(buffer: Buffer): ContentPrefix {
-    if (buffer.includes(0)) return { isBinary: true, firstLine: '' };
-    const text = buffer.toString('utf8');
-    const newline = text.indexOf('\n');
-    return { isBinary: false, firstLine: newline === -1 ? text : text.slice(0, newline) };
-}
-
 function listShebangTags(firstLine: string): string[] {
     const interpreter = parseShebang(firstLine);
     if (interpreter === undefined) return [];
-    const shebang =
-        (SHEBANG_INTERPRETERS as Readonly<Record<string, string>>)[interpreter] ??
-        (SHEBANG_INTERPRETERS as Readonly<Record<string, string>>)[stripTrailingVersion(interpreter)];
+    const shebang = SHEBANG_INTERPRETERS[interpreter] ?? SHEBANG_INTERPRETERS[stripTrailingVersion(interpreter)];
     if (shebang === undefined) return [];
-    const dialect = (INTERPRETER_DIALECTS as Readonly<Record<string, string>>)[interpreter] ?? DEFAULT_DIALECT;
+    const dialect = INTERPRETER_DIALECTS[interpreter] ?? DEFAULT_DIALECT;
     const runtime = JAVASCRIPT_RUNTIMES.find((name) => name === interpreter);
     return [
-        ...((SHEBANG_TAGS as Readonly<Record<string, readonly string[]>>)[shebang] ?? []),
+        ...(SHEBANG_TAGS[shebang] ?? []),
         `${SHEBANG_TAG}${shebang}`,
         ...(shebang === 'shell' ? [dialect] : []),
         ...(runtime === undefined ? [] : [`${RUNTIME_TAG}${runtime}`]),
@@ -229,7 +210,7 @@ function findLockfile(path: string): Lockfile | undefined {
 function classifyFile(root: string, entry: FileEntry, prefix: Buffer, rules: ClassificationInputs): TrackedFile {
     const tagged = tagFile(entry, prefix);
     const verdict = classifyKind({ root, entry, prefix, isBinary: tagged.binary }, rules);
-    const file: TrackedFile = {
+    return {
         path: entry.path,
         kind: verdict.kind,
         kindSource: verdict.origin,
@@ -237,7 +218,6 @@ function classifyFile(root: string, entry: FileEntry, prefix: Buffer, rules: Cla
         executable: entry.executable,
         size: entry.size,
     };
-    return file;
 }
 
 /**
@@ -257,15 +237,14 @@ function tagFile(entry: FileEntry, prefix: Buffer): Tagged {
         [entry.executable, 'executable'],
     ];
     const tags = new Set<string>([
-        ...((EXTENSION_TAGS as Readonly<Record<string, readonly string[]>>)[extension] ?? []),
-        ...((FILENAME_TAGS as Readonly<Record<string, readonly string[]>>)[base] ?? []),
+        ...(EXTENSION_TAGS[extension] ?? []),
+        ...(FILENAME_TAGS[base] ?? []),
         ...flags.filter(([isSet]) => isSet).map(([, tag]) => tag),
     ]);
-    if (new Set<string | undefined>(BINARY_EXTENSIONS).has(extension))
-        return { tags: [BINARY_TAG, ...tags], binary: true };
-    const sniffed = sniff(prefix);
-    if (sniffed.isBinary) return { tags: [BINARY_TAG, ...tags], binary: true };
-    return tagTextFile(tags, sniffed.firstLine);
+    if (BINARY_EXTENSIONS.has(extension) || prefix.includes(0)) return { tags: [BINARY_TAG, ...tags], binary: true };
+    const text = prefix.toString('utf8');
+    const newline = text.indexOf('\n');
+    return tagTextFile(tags, newline === -1 ? text : text.slice(0, newline));
 }
 
 /**
@@ -309,7 +288,7 @@ function listFileDeclarations(selected: Map<string, Manifest[]>): FileDeclaratio
  * @returns whether a .gspot folder contains the file.
  */
 function isInGspotFolder(path: string): boolean {
-    return path.split('/').some((part) => part.toLowerCase() === DOT_GSPOT);
+    return path.startsWith(`${DOT_GSPOT}/`);
 }
 
 /**

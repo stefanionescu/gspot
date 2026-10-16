@@ -1,10 +1,11 @@
 // Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
+// Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { toolFileName } from '#cli/configurations/manifests.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { DOT_GSPOT, SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { classifyFile, isInGspotFolder } from '#cli/repository/classify.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import { isInScope, joinScope, isOutsideChildren } from '#cli/repository/scopes.ts';
@@ -29,14 +30,11 @@ function scopeCoveredFiles(context: PlanInputs, entry: PlanEntry, scopePath: str
     const matches =
         owners === undefined
             ? applicationInputs
-            : listCoveredFiles(
-                  owners,
-                  scope.selected,
-                  applicationInputs,
-                  scopePath,
-                  scope.view.test_files,
-                  scope.view.settings,
-              );
+            : listCoveredFiles(owners, applicationInputs, {
+                  selected: scope.selected,
+                  scope: scopePath,
+                  view: scope.view,
+              });
     if (narrowed(context, entry, withoutIgnored(matches, check, scope).files).length === 0) return [];
     return check.runs === 'scope' ? candidates : candidates.filter((file) => file.kind !== 'binary');
 }
@@ -48,14 +46,11 @@ function coveredFiles(context: PlanInputs, entry: PlanEntry, scopePath: string):
     if (check.runs !== 'files') return scopeCoveredFiles(context, entry, scopePath);
     if (!manifest)
         return session.repository.files.filter((file) => buildPathMatcher(check.files?.paths ?? [])(file.path));
-    return listCoveredFiles(
-        check.files ?? manifest.files,
-        scope.selected,
-        session.repository.files,
-        scopePath,
-        scope.view.test_files,
-        scope.view.settings,
-    );
+    return listCoveredFiles(check.files ?? manifest.files, session.repository.files, {
+        selected: scope.selected,
+        scope: scopePath,
+        view: scope.view,
+    });
 }
 
 // Check-specific settings ignores apply to live files and deleted project triggers alike.
@@ -79,7 +74,7 @@ function withoutIgnored(
 function narrowed(context: PlanInputs, entry: PlanEntry, files: TrackedFile[]): TrackedFile[] {
     const { narrow } = context;
     if (!narrow) return files;
-    const isTouched = narrow.has(SETTINGS_FILE) || narrow.values().some((path) => path.startsWith(`${DOT_GSPOT}/`));
+    const isTouched = narrow.has(SETTINGS_FILE) || narrow.values().some((path) => isInGspotFolder(path));
     if (isTouched) return files;
     const inNarrowed = files.filter((file) => narrow.has(file.path));
     if (inNarrowed.length === 0) return [];
@@ -107,7 +102,7 @@ function missingTriggers(context: PlanInputs, entry: PlanEntry, scopePath: strin
         return classifyFile(session.root, raw, prefix, { declarations: [], attributes: session.repository.attributes });
     });
     return withoutIgnored(
-        listCoveredFiles(owners, scope.selected, missing, scopePath, scope.view.test_files, scope.view.settings),
+        listCoveredFiles(owners, missing, { selected: scope.selected, scope: scopePath, view: scope.view }),
         check,
         scope,
     ).files.map((file) => file.path);

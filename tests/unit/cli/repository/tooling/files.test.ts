@@ -8,14 +8,14 @@ import { LINKED_RULE_FOLDERS } from '#tests/config/tooling.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readLintJobs, hasIniSection, readExistingTools } from '#cli/repository/existing-tools.ts';
 
-test('tool discovery finds nested tool files and skips .gspot and vendored folders', async () => {
+test('tool discovery finds nested tool files and skips root .gspot and vendored folders', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'src/.prettierrc.json': '{"semi":false}',
         'vendor/.prettierrc.json': '{"semi":true}',
         '.gspot/.prettierrc.json': '{"tabWidth":8}',
         '.gspot/package.json': 'unowned malformed output',
-        'nested/.gspot/package.json': 'unowned nested output',
+        'nested/.gspot/package.json': '{}',
     });
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],

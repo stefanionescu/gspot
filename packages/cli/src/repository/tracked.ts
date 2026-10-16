@@ -3,16 +3,15 @@ import ignore from 'ignore';
 import { isInside } from '#cli/system/paths.ts';
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { runGitForBytes } from '#cli/system/git.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { parseIndexEntries } from '#cli/parsers/git.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
 import { readBytes, decodeUtf8 } from '#cli/system/files/reads.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/system/locations.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
-import { GIT_LOCALE, WORK_TREE_ARGUMENTS } from '#cli/config/system/git.ts';
 import { EXECUTABLE_BITS, EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { ENTRY_MODES, GITLINK_MODE } from '#cli/config/repository/revisions.ts';
-import { isOutsideGit, runGitBlocking, runGitForBytes } from '#cli/system/git.ts';
 import type { FileEntry, PathIgnore, PendingDirectory, DirectoryContents } from '#cli/types/repository/inventory.ts';
 
 import {
@@ -110,16 +109,15 @@ function walkPaths(root: string): string[] {
 // Share Git listing failure classification while each caller owns its output format and non-Git behavior.
 async function listGitFiles(
     root: string,
-    gitArguments: string[],
+    gitArguments: readonly string[],
     cancelSignal?: AbortSignal,
-): Promise<string | undefined> {
+): Promise<string> {
     const listed = await runGitForBytes(root, gitArguments, { cancelSignal });
     if (listed.code === 0) {
         const text = decodeUtf8(listed.stdout);
         if (text === undefined) throw new GspotError('git', 'Revision paths must be valid UTF-8.');
         return text;
     }
-    if (isOutsideGit(runGitBlocking(root, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE }))) return undefined;
     throw new GspotError(
         'git',
         `Git ls-files failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`,
@@ -127,14 +125,14 @@ async function listGitFiles(
 }
 
 /**
- * Read the index once for paths, executable bits, and gitlinks. A non-Git directory has none.
+ * Read a Git index once for paths, executable bits, and gitlinks.
  * @param root the repository root.
  * @param cancelSignal command cancellation.
  * @returns validated entries, retaining stages of conflicted working files.
  */
 export async function readIndexEntries(root: string, cancelSignal?: AbortSignal): Promise<GitIndexEntry[]> {
-    const listed = await listGitFiles(root, [...INDEX_FILES_ARGUMENTS], cancelSignal);
-    return listed === undefined ? [] : parseIndexEntries(listed);
+    const listed = await listGitFiles(root, INDEX_FILES_ARGUMENTS, cancelSignal);
+    return parseIndexEntries(listed);
 }
 
 /**
@@ -149,19 +147,21 @@ export function listSubmodulePaths(entries: GitIndexEntry[]): string[] {
 }
 
 /**
- * Tracked and new files, root-relative posix, sorted. Without Git, walk files through their gitignore rules.
+ * List tracked and new files as sorted, root-relative paths.
+ * Outside Git, walk files according to the ignore rules.
+ *
  * @param root the repository root.
- * @param indexEntries the repository-owned index.
- * @param hasGit whether the directory belongs to a Git repository.
+ * @param index the repository-owned index.
+ * @param options the repository state.
+ * @param options.hasGit whether the directory belongs to a Git repository.
  * @returns the entries with size, executable bit, and symlink flag.
  */
 export async function listTrackedFiles(
     root: string,
-    indexEntries: GitIndexEntry[],
-    hasGit = true,
+    index: GitIndexEntry[],
+    { hasGit }: { hasGit: boolean },
 ): Promise<FileEntry[]> {
-    const index = indexEntries;
-    const listed = hasGit ? await listGitFiles(root, [...UNTRACKED_FILES_ARGUMENTS]) : undefined;
+    const listed = hasGit ? await listGitFiles(root, UNTRACKED_FILES_ARGUMENTS) : undefined;
     const paths =
         listed === undefined
             ? walkPaths(root)

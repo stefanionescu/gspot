@@ -98,7 +98,7 @@ test.each(runtimeDetectionRows())('$name decides runtime detection within its pr
         'package.json': JSON.stringify({ engines: { [entry.runtime]: '>=1' } }),
         'api/package.json': JSON.stringify(entry.package),
         'api/entry.js': entry.source,
-        'api/.gspot/package.json': JSON.stringify('toolProjectManifest' in entry ? entry.toolProjectManifest : {}),
+        '.gspot/package.json': JSON.stringify('toolProjectManifest' in entry ? entry.toolProjectManifest : {}),
     });
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],

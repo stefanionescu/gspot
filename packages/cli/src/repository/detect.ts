@@ -1,5 +1,4 @@
-// Detects configurations from repository files and dependencies.
-// The detection table: what the tree proposes at init and in doctor. Detection never selects.
+// Proposes configurations from repository files and dependencies; it never selects them.
 import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';

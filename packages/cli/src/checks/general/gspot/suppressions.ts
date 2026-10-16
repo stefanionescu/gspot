@@ -31,14 +31,11 @@ function suppressionSyntaxes(selection: ScopeSelection, file: TrackedFile): Supp
     const readers = new Set(
         selected.flatMap((manifest) =>
             manifest.checks.flatMap((check) =>
-                listCoveredFiles(
-                    check.files ?? manifest.files,
-                    selected,
-                    [file],
-                    selection.scope.path,
-                    selection.view.test_files,
-                    selection.view.settings,
-                ).length === 0
+                listCoveredFiles(check.files ?? manifest.files, [file], {
+                    selected: selected,
+                    scope: selection.scope.path,
+                    view: selection.view,
+                }).length === 0
                     ? []
                     : [toolName(check)],
             ),
@@ -62,12 +59,17 @@ function suppressionSyntaxes(selection: ScopeSelection, file: TrackedFile): Supp
     }));
 }
 
+function hasAcceptedReason(form: SuppressionSyntax, text: string, preceding: string | undefined): boolean {
+    const reason = form.reason.exec(text)?.groups?.['reason']?.trim() ?? preceding;
+    return isReasonAccepted(reason);
+}
+
 /**
  * Report forbidden suppressions and missing or invalid required reasons.
  * @param input the check input with the read suppression comments.
  * @returns the findings.
  */
-export async function suppressions(input: CheckInput): Promise<Finding[]> {
+async function suppressions(input: CheckInput): Promise<Finding[]> {
     const scopes = input.selections.map((selection) => selection.scope);
     const selections = new Map(input.selections.map((selection) => [selection.scope.path, selection]));
     const found: Finding[] = [];
@@ -83,7 +85,7 @@ export async function suppressions(input: CheckInput): Promise<Finding[]> {
                 ...comments.flatMap((comment, index) => {
                     const preceding = reasonAbove(comments[index - 1], comment);
                     const text = stripCommentEnd(comment.text);
-                    // eslint-disable-next-line complexity -- reason: Suppression syntax varies by tool; this callback keeps each matched comment and its reason together.
+
                     return forms.flatMap((form): Finding[] => {
                         const marker = comment.standalone ? form.marker : form.inlineMarker;
                         if (!marker.test(text)) return [];
@@ -97,8 +99,7 @@ export async function suppressions(input: CheckInput): Promise<Finding[]> {
                                     `${form.tool} suppression is not allowed; fix the finding or configure an explicit ignore.`,
                                 ),
                             ];
-                        const reason = form.reason.exec(text)?.groups?.['reason']?.trim() ?? preceding;
-                        if (isReasonAccepted(reason)) return [];
+                        if (hasAcceptedReason(form, text, preceding)) return [];
                         return [
                             findingAt(
                                 input,
@@ -114,3 +115,5 @@ export async function suppressions(input: CheckInput): Promise<Finding[]> {
     }
     return found;
 }
+
+export { suppressions };

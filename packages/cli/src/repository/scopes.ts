@@ -6,7 +6,6 @@ import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: Scope discovery and dependency selection share these hoisted calculations within the repository module.
 import { isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';

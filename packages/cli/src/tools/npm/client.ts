@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path';
 import { detectPackageManager } from 'nypm';
 import { GspotError } from '#cli/system/errors.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
@@ -43,7 +43,7 @@ export async function selectNpmClient(root: string, trackedPaths: string[]): Pro
     const candidates = [
         PACKAGE_JSON,
         ...trackedPaths
-            .filter((path) => path.endsWith('/package.json') && !path.startsWith(`${DOT_GSPOT}/`))
+            .filter((path) => path.endsWith('/package.json') && !isInGspotFolder(path))
             .toSorted((left, right) => left.localeCompare(right))
             .slice(0, 1),
     ];

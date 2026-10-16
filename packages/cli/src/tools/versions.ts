@@ -5,7 +5,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { installedPackage } from '#cli/tools/npm/packages.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
@@ -18,8 +18,7 @@ import type { ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts
 function versionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, 'package.json');
-        if (files !== undefined && !convertToPosixPath(relative(root, manifest)).startsWith(`${DOT_GSPOT}/`))
-            return undefined;
+        if (files !== undefined && !isInGspotFolder(convertToPosixPath(relative(root, manifest)))) return undefined;
         const parsed = installedPackage(files, root, manifest);
         if (parsed?.name === name) return parsed.version;
     }
@@ -37,7 +36,7 @@ function versionAbove(files: Files | undefined, root: string, start: string, nam
  */
 function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    using files = convertToPosixPath(relative(root, path)).startsWith(`${DOT_GSPOT}/`) ? openFiles(root) : undefined;
+    using files = isInGspotFolder(convertToPosixPath(relative(root, path))) ? openFiles(root) : undefined;
     const folder = dirname(
         files === undefined ? realpathSync(path) : files.realPath(convertToPosixPath(relative(root, path))),
     );

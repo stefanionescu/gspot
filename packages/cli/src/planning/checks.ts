@@ -172,14 +172,11 @@ export function coveredInputs(session: Session, check: PlannedCheck): TrackedFil
     const files = check.files.filter((file) => isOutsideChildren(file.path, children));
     return owners === undefined
         ? []
-        : listCoveredFiles(
-              owners,
-              check.scope.selected,
-              files,
-              check.scope.scope.path,
-              check.scope.view.test_files,
-              check.scope.view.settings,
-          );
+        : listCoveredFiles(owners, files, {
+              selected: check.scope.selected,
+              scope: check.scope.scope.path,
+              view: check.scope.view,
+          });
 }
 
 /**

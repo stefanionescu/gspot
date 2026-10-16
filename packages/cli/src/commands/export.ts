@@ -1,9 +1,9 @@
 import { realpathSync } from 'node:fs';
-import { isRecord } from '#cli/system/values.ts';
 import { isOwned } from '#cli/ownership/plans.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
+import { isGitRepository } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -37,7 +37,7 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
     try {
         parent = realpathSync(parentPath);
     } catch (error) {
-        if (isRecord(error) && error['code'] === 'ENOENT')
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT')
             throw new GspotError('files', `The folder ${parentPath} does not exist.`);
         throw error;
     }
@@ -47,13 +47,13 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
     using disk = openFiles(root);
     if (path === SETTINGS_FILE || isOwned(path, disk))
         throw new GspotError('template', `gspot writes ${path} itself. Choose another file name.`);
-    const index = await readIndexEntries(root);
+    const index = isGitRepository(root) ? await readIndexEntries(root) : [];
     const tracked = new Set(index.map((entry) => entry.path));
     const checks = template.tables.command_check ?? [];
     const warnings = checks.flatMap((entry) => {
         const check = entry.name;
-        const [executable] = entry.command;
-        return executable !== undefined && (executable.startsWith('./') || tracked.has(executable))
+        const executable = entry.command[0] as string;
+        return executable.startsWith('./') || tracked.has(executable)
             ? [`command_check ${check} uses ${executable}; add that file in the destination repository.`]
             : [];
     });

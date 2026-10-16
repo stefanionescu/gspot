@@ -96,14 +96,11 @@ export function pointerPaths(
         scope,
     );
     const matches = buildPathMatcher(pointer.directories);
-    const owned = listCoveredFiles(
-        manifest.files,
-        selection.selected,
-        files,
-        '',
-        selection.view.test_files,
-        selection.view.settings,
-    ).filter((file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)));
+    const owned = listCoveredFiles(manifest.files, files, {
+        selected: selection.selected,
+        scope: '',
+        view: selection.view,
+    }).filter((file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)));
     const directories = new Set(
         owned.flatMap(({ path }) =>
             [...includeParentFolders([extractParentFolder(path)])]

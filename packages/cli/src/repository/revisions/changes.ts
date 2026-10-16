@@ -17,7 +17,7 @@ import {
 
 // The remote branch references, as pairs of the ref name and the branch it points to.
 async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
-    const lines = await readGitLines(root, [...REMOTE_HEADS_ARGUMENTS], {
+    const lines = await readGitLines(root, REMOTE_HEADS_ARGUMENTS, {
         cancelSignal,
     });
     return lines.flatMap((line) => {
@@ -32,7 +32,7 @@ async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promis
  * @returns the selected branch or an empty string when absent.
  */
 export async function readDefaultRef(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const head = await readGitText(root, [...HEAD_NAME_ARGUMENTS], { cancelSignal });
+    const head = await readGitText(root, HEAD_NAME_ARGUMENTS, { cancelSignal });
     const upstreamText = await readGitText(root, [...UPSTREAM_ARGUMENTS, head.trim()], {
         cancelSignal,
     });
@@ -64,7 +64,7 @@ export async function readMergeBase(root: string, compared: string, cancelSignal
  * @returns the staged paths, sorted, and the unstaged count.
  */
 export async function readStagedPaths(root: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
-    const cached = await readGitPaths(root, [...STAGED_DIFF_ARGUMENTS], {
+    const cached = await readGitPaths(root, STAGED_DIFF_ARGUMENTS, {
         cancelSignal,
     });
     const staged = cached.toSorted((a, b) => a.localeCompare(b));

@@ -11,6 +11,7 @@ import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { collectPins } from '#cli/configurations/tool-pins.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
@@ -77,7 +78,7 @@ function attributesBlock(files: Generated['files'], authored: string): string {
               .filter((line) => !line.endsWith(` ${LF_ATTRIBUTES}`))
               .join('\n')
         : GIT_ATTRIBUTES_BLOCK;
-    const outside = files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
+    const outside = files.map(({ path }) => path).filter((path) => !isInGspotFolder(path));
     const lineEndings = inheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
     const lines = outside
         .toSorted((left, right) => left.localeCompare(right))
@@ -108,7 +109,7 @@ function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], 
     const block = buildAgentsBlock({
         generatedPaths: [...generated.files, ...generated.fileEdits]
             .map(({ path }) => path)
-            .filter((path) => !path.startsWith(`${DOT_GSPOT}/`)),
+            .filter((path) => !isInGspotFolder(path)),
         startCommand: session.startRunner.command,
         files: rules,
         level: settings.level,

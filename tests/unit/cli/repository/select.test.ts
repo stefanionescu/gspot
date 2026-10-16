@@ -5,9 +5,8 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import { DECLARATION_FILES, GENERATED_SELECTIONS } from '#tests/config/repository.ts';
-import { isCovered, selectForScope, listCoveredFiles } from '#cli/repository/coverage.ts';
+import { selectForScope, buildFileMatcher, listCoveredFiles } from '#cli/repository/coverage.ts';
 
 import {
     JEST_CASES,
@@ -22,69 +21,26 @@ const manifests = configurationManifests();
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
     const bash = manifests.get('bash')!;
-    expect(
-        isCovered(
-            bash.files,
-            buildTrackedFile('scripts/build.sh'),
-            buildFilenameMatcher(bash.files.filenames),
-            buildPathMatcher(bash.files.paths),
-        ),
-    ).toBe(true);
-    expect(
-        isCovered(
-            bash.files,
-            buildTrackedFile('.gspot/hooks/pre-commit', ['text', 'shebang:shell']),
-            buildFilenameMatcher(bash.files.filenames),
-            buildPathMatcher(bash.files.paths),
-        ),
-    ).toBe(true);
-    expect(
-        isCovered(
-            bash.files,
-            buildTrackedFile('README.md'),
-            buildFilenameMatcher(bash.files.filenames),
-            buildPathMatcher(bash.files.paths),
-        ),
-    ).toBe(false);
+    expect(buildFileMatcher(bash.files)(buildTrackedFile('scripts/build.sh'))).toBe(true);
+    expect(buildFileMatcher(bash.files)(buildTrackedFile('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(
+        true,
+    );
+    expect(buildFileMatcher(bash.files)(buildTrackedFile('README.md'))).toBe(false);
     const filenames = { ...bash.files, extensions: [], filenames: ['_headers'], tags: [] };
-    expect(
-        isCovered(
-            filenames,
-            buildTrackedFile('public/_headers'),
-            buildFilenameMatcher(filenames.filenames),
-            buildPathMatcher(filenames.paths),
-        ),
-    ).toBe(true);
+    expect(buildFileMatcher(filenames)(buildTrackedFile('public/_headers'))).toBe(true);
     const paths = { ...bash.files, extensions: [], tags: [], paths: ['infra/**'] };
-    expect(
-        isCovered(
-            paths,
-            buildTrackedFile('infra/config.txt'),
-            buildFilenameMatcher(paths.filenames),
-            buildPathMatcher(paths.paths),
-        ),
-    ).toBe(true);
-    expect(
-        isCovered(
-            paths,
-            buildTrackedFile('docs/config.txt'),
-            buildFilenameMatcher(paths.filenames),
-            buildPathMatcher(paths.paths),
-        ),
-    ).toBe(false);
+    expect(buildFileMatcher(paths)(buildTrackedFile('infra/config.txt'))).toBe(true);
+    expect(buildFileMatcher(paths)(buildTrackedFile('docs/config.txt'))).toBe(false);
 });
 
 test('a configuration that covers the language files gets them', () => {
     const selected = selectConfigurations(['bash'], manifests);
     const structure = manifests.get('structure')!;
-    const owned = listCoveredFiles(
-        structure.files,
-        selected,
-        [buildTrackedFile('a.sh'), buildTrackedFile('README.md')],
-        '',
-        [],
-        {},
-    );
+    const owned = listCoveredFiles(structure.files, [buildTrackedFile('a.sh'), buildTrackedFile('README.md')], {
+        selected: selected,
+        scope: '',
+        view: { test_files: [], settings: {} },
+    });
     expect(owned.map((entry) => entry.path)).toStrictEqual(['a.sh']);
 });
 
@@ -105,14 +61,11 @@ test.each([
         buildTrackedFile('src/index.ts'),
     ];
     expect(
-        listCoveredFiles(
-            manifests.get('format')!.files,
-            selectConfigurations(configurations, manifests),
-            files,
-            '',
-            [],
-            {},
-        ).map((entry) => entry.path),
+        listCoveredFiles(manifests.get('format')!.files, files, {
+            selected: selectConfigurations(configurations, manifests),
+            scope: '',
+            view: { test_files: [], settings: {} },
+        }).map((entry) => entry.path),
     ).toStrictEqual([...expected]);
 });
 
@@ -122,11 +75,27 @@ test.each(MIGRATION_CASES)(
         const selected = selectConfigurations(['postgres'], manifests);
         const files = MIGRATION_PATHS.map((path) => buildTrackedFile(path));
         const table = manifests.get('postgres')!.files;
-        const owned = listCoveredFiles(table, selected, files, scope, [], {});
+        const owned = listCoveredFiles(table, files, {
+            selected: selected,
+            scope: scope,
+            view: { test_files: [], settings: {} },
+        });
         expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
         expect(owned[0]).toBe(files.find((file) => file.path === expected[0]));
-        expect(listCoveredFiles({ ...table, kinds: ['binary'] }, selected, files, scope, [], {})).toStrictEqual([]);
-        expect(listCoveredFiles({ ...table, paths: [] }, selected, files, scope, [], {})).toStrictEqual([]);
+        expect(
+            listCoveredFiles({ ...table, kinds: ['binary'] }, files, {
+                selected: selected,
+                scope: scope,
+                view: { test_files: [], settings: {} },
+            }),
+        ).toStrictEqual([]);
+        expect(
+            listCoveredFiles({ ...table, paths: [] }, files, {
+                selected: selected,
+                scope: scope,
+                view: { test_files: [], settings: {} },
+            }),
+        ).toStrictEqual([]);
         expect(files.map((file) => file.path)).toStrictEqual([...MIGRATION_PATHS]);
     },
 );
@@ -134,7 +103,11 @@ test.each(MIGRATION_CASES)(
 test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope"', ({ scope, tests, expected }) => {
     const selected = selectConfigurations(['jest'], manifests);
     const files = JEST_PATHS.map((path) => buildTrackedFile(path));
-    const owned = listCoveredFiles(manifests.get('jest')!.files, selected, files, scope, [...tests], {});
+    const owned = listCoveredFiles(manifests.get('jest')!.files, files, {
+        selected: selected,
+        scope: scope,
+        view: { test_files: [...tests], settings: {} },
+    });
     expect(owned.map(({ path }) => path)).toStrictEqual([...expected]);
     for (const file of owned) expect(files).toContain(file);
     expect(files.map(({ path }) => path)).toStrictEqual([...JEST_PATHS]);

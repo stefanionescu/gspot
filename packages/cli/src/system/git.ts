@@ -99,8 +99,7 @@ let sourceMetadata: { metadata: string[]; source?: GitSource } | undefined;
  * @param explicit the environment overrides for this command.
  * @returns the environment for the requested Git command.
  */
-// eslint-disable-next-line complexity -- reason: Git environment isolation combines source-repository identity and command overrides; splitting it adds one-caller wrappers.
-export function buildGitEnvironment(
+function buildGitEnvironment(
     root: string,
     argv: readonly string[],
     explicit: Record<string, string | undefined>,
@@ -123,7 +122,8 @@ export function buildGitEnvironment(
     const { metadata } = sourceMetadata;
     if (!metadata.some((name) => readEnvironmentVariable(name) !== undefined)) return { env: explicit };
     const isolated = Object.fromEntries(metadata.map((name) => [name, undefined]));
-    if (argv[0] === GIT_EXECUTABLE && argv[1] === GIT_CLONE_COMMAND) return { env: { ...isolated, ...explicit } };
+    if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((part, index) => argv[index] === part))
+        return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
         Object.entries(explicit).filter(([name]) => !metadata.includes(environmentKey(name))),
     );
@@ -137,7 +137,7 @@ export function buildGitEnvironment(
  * @param inspection the work-tree probe result.
  * @returns true when Git reports that no repository exists.
  */
-export function isOutsideGit(inspection: SpawnResult): boolean {
+function isOutsideGit(inspection: SpawnResult): boolean {
     return inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
 }
 
@@ -148,7 +148,7 @@ export function isOutsideGit(inspection: SpawnResult): boolean {
  * @param options the other spawn options, such as the environment.
  * @returns what Git printed and how it exited.
  */
-export function runGitBlocking(
+function runGitBlocking(
     root: string,
     argv: readonly string[],
     options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
@@ -166,7 +166,7 @@ export function runGitBlocking(
  * @param output the declared output format.
  * @returns what Git printed and how it exited.
  */
-export async function runGit(
+async function runGit(
     root: string,
     argv: readonly string[],
     options: GitOptions,
@@ -186,11 +186,7 @@ export async function runGit(
  * @param options spawn settings for standard input and optional cancellation.
  * @returns the bytes Git printed and how it exited.
  */
-export async function runGitForBytes(
-    root: string,
-    argv: readonly string[],
-    options: GitOptions,
-): Promise<ByteSpawnResult> {
+async function runGitForBytes(root: string, argv: readonly string[], options: GitOptions): Promise<ByteSpawnResult> {
     const chunks: Buffer[] = [];
     const result = await runGit(root, argv, options, async (output) => {
         for await (const chunk of output) chunks.push(chunk);
@@ -204,7 +200,7 @@ export async function runGitForBytes(
  * @param key the configuration key.
  * @returns the exact value, or undefined for an unset key.
  */
-export function readGitSetting(root: string, key: string): string | undefined {
+function readGitSetting(root: string, key: string): string | undefined {
     const result = runGitBlocking(root, [...GIT_SETTING_ARGUMENTS, key]);
     if (result.code === 0) return result.stdout.slice(0, -1);
     if (result.code === 1 && result.stdout === '' && result.stderr === '') return undefined;
@@ -218,7 +214,7 @@ export function readGitSetting(root: string, key: string): string | undefined {
  * @param root the repository root.
  * @returns the absolute path.
  */
-export function readHooksFolder(root: string): string {
+function readHooksFolder(root: string): string {
     const result = runGitBlocking(root, GIT_HOOKS_ARGUMENTS);
     if (result.code !== 0) throw new Error(`Cannot read the Git hooks folder: ${result.stderr.trim()}`);
     return resolve(root, trimGitLine(result.stdout));
@@ -231,7 +227,7 @@ export function readHooksFolder(root: string): string {
  * @param options cancellation and input.
  * @returns the standard output as printed.
  */
-export async function readGitText(root: string, argv: readonly string[], options: GitOptions): Promise<string> {
+async function readGitText(root: string, argv: readonly string[], options: GitOptions): Promise<string> {
     const result = await runGit(root, argv, options);
     if (result.code !== 0)
         throw new GspotError(
@@ -248,7 +244,7 @@ export async function readGitText(root: string, argv: readonly string[], options
  * @param options cancellation and input.
  * @returns the lines, in order.
  */
-export async function readGitLines(root: string, argv: readonly string[], options: GitOptions): Promise<string[]> {
+async function readGitLines(root: string, argv: readonly string[], options: GitOptions): Promise<string[]> {
     const text = await readGitText(root, argv, options);
     return text.split('\n').filter((line) => line !== '');
 }
@@ -260,7 +256,7 @@ export async function readGitLines(root: string, argv: readonly string[], option
  * @param options cancellation and input.
  * @returns the paths, in order.
  */
-export async function readGitPaths(root: string, argv: readonly string[], options: GitOptions): Promise<string[]> {
+async function readGitPaths(root: string, argv: readonly string[], options: GitOptions): Promise<string[]> {
     const text = await readGitText(root, argv, options);
     return text.split('\0').filter((path) => path !== '');
 }
@@ -271,7 +267,7 @@ export async function readGitPaths(root: string, argv: readonly string[], option
  * @param options cancellation and input.
  * @returns true for a shallow repository.
  */
-export async function isShallow(root: string, options: GitOptions): Promise<boolean> {
+async function isShallow(root: string, options: GitOptions): Promise<boolean> {
     const answer = await readGitText(root, GIT_SHALLOW_ARGUMENTS, options);
     return answer.trim() === 'true';
 }
@@ -279,13 +275,11 @@ export async function isShallow(root: string, options: GitOptions): Promise<bool
 /**
  * The path from Git's top level to the project root, with a trailing slash.
  * @param root the repository directory.
- * @param hasGit whether the directory belongs to a Git repository.
  * @returns the repository-relative prefix for this directory.
  */
-export function readGitPrefix(root: string, hasGit: boolean): string {
-    if (!hasGit) return '';
+function readGitPrefix(root: string): string {
     const result = runGitBlocking(root, GIT_PREFIX_ARGUMENTS);
-    if (result.code !== 0) throw new GspotError('git', `Cannot find the hook directory: ${result.stderr.trim()}`);
+    if (result.code !== 0) throw new GspotError('git', `Cannot read the Git path prefix: ${result.stderr.trim()}`);
     return trimGitLine(result.stdout);
 }
 
@@ -294,18 +288,8 @@ export function readGitPrefix(root: string, hasGit: boolean): string {
  * @param text Git's printed value.
  * @returns the value without its final newline.
  */
-export function trimGitLine(text: string): string {
+function trimGitLine(text: string): string {
     return text.replace(TRAILING_NEWLINE, '');
-}
-
-/**
- * Find the working tree's top-level folder through Git.
- * @param root the working directory.
- * @param options cancellation and input.
- * @returns the top-level folder.
- */
-export async function gitTopLevel(root: string, options: GitOptions): Promise<string> {
-    return trimGitLine(await readGitText(root, [...GIT_TOP_LEVEL_ARGUMENTS], options));
 }
 
 /**
@@ -314,7 +298,7 @@ export async function gitTopLevel(root: string, options: GitOptions): Promise<st
  * @returns whether Git confirms a work tree.
  * @throws when Git cannot establish the repository state.
  */
-export function isGitRepository(root: string): boolean {
+function isGitRepository(root: string): boolean {
     const inspection = runGitBlocking(root, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
     if (isOutsideGit(inspection)) return false;
@@ -322,3 +306,20 @@ export function isGitRepository(root: string): boolean {
         `Git work-tree discovery failed in ${root} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
     );
 }
+
+export {
+    runGit,
+    isShallow,
+    readGitText,
+    trimGitLine,
+    isOutsideGit,
+    readGitLines,
+    readGitPaths,
+    readGitPrefix,
+    runGitBlocking,
+    runGitForBytes,
+    readGitSetting,
+    readHooksFolder,
+    isGitRepository,
+    buildGitEnvironment,
+};

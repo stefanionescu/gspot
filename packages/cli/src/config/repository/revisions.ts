@@ -48,3 +48,5 @@ export const TREE_SUFFIX = '^{tree}';
 export const REMOTE_ARGUMENTS = ['remote'] as const;
 
 export const GIT_ENTRY_MODES = ['100644', '100755', '120000', '160000'] as const;
+
+export const MISSING_PUSH_REVISION_MESSAGE = 'Cannot find pushed object {hash}. Fetch the remote again.';

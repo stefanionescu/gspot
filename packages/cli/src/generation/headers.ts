@@ -1,7 +1,8 @@
 // Formats generated-file headers and JSON documents.
+// Formats generated-file headers and JSON documents.
 import { isRecord } from '#cli/system/values.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import type { JsonFormat } from '#cli/types/generation/formatting.ts';
 
 import {
@@ -98,7 +99,7 @@ export function hashCommentHeader(): string {
  * @returns the comment block ending in a newline, or ''.
  */
 export function headerFor(path: string): string {
-    if (path.startsWith(`${DOT_GSPOT}/`)) return '';
+    if (isInGspotFolder(path)) return '';
     const extension = extractExtension(path);
     if (JSON_EXTENSIONS.has(extension)) return '';
     if (SLASH_COMMENT_EXTENSIONS.has(extension)) return commented([GENERATED_HEADER_TEXT], '//');

@@ -43,14 +43,11 @@ function migrationPaths(input: CheckInput): string[] {
         manifest.checks
             .filter((check) => check.name === 'postgres/squawk')
             .flatMap((check) =>
-                listCoveredFiles(
-                    check.files ?? manifest.files,
-                    input.selection.selected,
-                    input.files,
-                    input.selection.scope.path,
-                    input.selection.view.test_files,
-                    input.selection.view.settings,
-                ),
+                listCoveredFiles(check.files ?? manifest.files, input.files, {
+                    selected: input.selection.selected,
+                    scope: input.selection.scope.path,
+                    view: input.selection.view,
+                }),
             ),
     );
     return migrations

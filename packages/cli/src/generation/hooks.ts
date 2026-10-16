@@ -64,7 +64,7 @@ export function hookLine(name: HookName, runner: StartRunner): string {
  */
 export function hookFiles(root: string, settings: Settings, runner: StartRunner): GeneratedFile[] {
     if (settings.hooks?.enabled !== true) return [];
-    const prefix = readGitPrefix(root, isGitRepository(root));
+    const prefix = isGitRepository(root) ? readGitPrefix(root) : '';
     return (Object.keys(HOOK_ARGS) as HookName[]).map((name) => ({
         path: `${HOOKS_DIRECTORY}/${name}`,
         content: hookScript(name, runner, prefix),

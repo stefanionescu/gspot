@@ -68,7 +68,6 @@ export type FoundToolFile = {
 };
 
 /** Content evidence for classifying a tracked file prefix. */
-export type ContentPrefix = { isBinary: boolean; firstLine: string };
 /** Directory entries together with inherited and locally authored ignore rules. */
 export type DirectoryContents = { entries: Dirent[]; ignores: PathIgnore[] };
 /** A directory waiting for a read with its inherited ignore rules. */

@@ -16,7 +16,7 @@ export const GENERATED_BANNERS = [
 /** Gradle and Maven generate these launchers for their build distributions. */
 export const GENERATED_BUILD_WRAPPERS = new Set(['gradlew', 'gradlew.bat', 'mvnw', 'mvnw.cmd']);
 
-export const VENDORED_FOLDERS = [
+export const VENDORED_FOLDERS: ReadonlySet<string> = new Set([
     'vendor',
     'third_party',
     'third-party',
@@ -24,7 +24,7 @@ export const VENDORED_FOLDERS = [
     'Pods',
     'Carthage',
     '.build',
-] as const;
+]);
 
 /** License filenames accepted by the repository inventory and README checks. */
 export const LICENSE_FILE = /^(?:LICEN[CS]E|COPYING)(?:$|[.-])/iu;
@@ -37,7 +37,7 @@ export const LICENSE_TAGS = new Set(['text', 'markdown']);
 
 export const BANNER_BYTES = 1024;
 
-export const EXTENSION_TAGS = {
+export const EXTENSION_TAGS: Readonly<Record<string, readonly string[]>> = {
     '.sh': ['shell', 'bash', 'text'],
     '.bash': ['shell', 'bash', 'text'],
     '.zsh': ['shell', 'zsh', 'text'],
@@ -85,9 +85,9 @@ export const EXTENSION_TAGS = {
     '.env': ['dotenv', 'text'],
     '.conf': ['text'],
     '.webmanifest': ['json', 'text'],
-} as const;
+} as const satisfies Readonly<Record<string, readonly string[]>>;
 
-export const SHEBANG_INTERPRETERS = {
+export const SHEBANG_INTERPRETERS: Readonly<Record<string, string>> = {
     bash: 'shell',
     bats: 'shell',
     sh: 'shell',
@@ -100,12 +100,17 @@ export const SHEBANG_INTERPRETERS = {
     bun: 'node',
     deno: 'node',
     tsx: 'node',
-} as const;
+} as const satisfies Readonly<Record<string, string>>;
 
 /** Shell shebangs that replace the default Bash extension tag. */
-export const INTERPRETER_DIALECTS = { sh: 'sh', dash: 'sh', zsh: 'zsh', bats: 'bats' } as const;
+export const INTERPRETER_DIALECTS: Readonly<Record<string, string>> = {
+    sh: 'sh',
+    dash: 'sh',
+    zsh: 'zsh',
+    bats: 'bats',
+} as const satisfies Readonly<Record<string, string>>;
 
-export const BINARY_EXTENSIONS = [
+export const BINARY_EXTENSIONS: ReadonlySet<string> = new Set([
     '.png',
     '.jpg',
     '.jpeg',
@@ -161,9 +166,9 @@ export const BINARY_EXTENSIONS = [
     '.cer',
     '.der',
     '.mobileprovision',
-] as const;
+]);
 
-export const FILENAME_TAGS = {
+export const FILENAME_TAGS: Readonly<Record<string, readonly string[]>> = {
     Dockerfile: ['dockerfile', 'text'],
     Makefile: ['makefile', 'text'],
     '.gitignore': ['text'],
@@ -177,13 +182,13 @@ export const FILENAME_TAGS = {
     LICENSE: ['text'],
     'LICENSE.md': ['markdown', 'text'],
     CODEOWNERS: ['text'],
-} as const;
+} as const satisfies Readonly<Record<string, readonly string[]>>;
 
-export const SHEBANG_TAGS = {
+export const SHEBANG_TAGS: Readonly<Record<string, readonly string[]>> = {
     shell: ['shell', 'executable', 'text'],
     python: ['python', 'executable', 'text'],
     node: ['javascript', 'node', 'executable', 'text'],
-} as const;
+} as const satisfies Readonly<Record<string, readonly string[]>>;
 
 /** Ordinary source content after higher-priority inventory classifications. */
 export const SOURCE_KIND = { kind: 'source', origin: 'default' } as const;
@@ -203,7 +208,7 @@ export const GENERATED_ATTRIBUTE = 'linguist-generated';
 export const VENDORED_ATTRIBUTE = 'linguist-vendored';
 export const TEXT_ATTRIBUTE = 'text';
 export const FILTER_ATTRIBUTE = 'filter';
-export const SET_VALUES = ['set', 'true'] as const;
+export const SET_VALUES: ReadonlySet<string> = new Set(['set', 'true']);
 export const LFS_FILTER = 'lfs';
 export const MARKDOWN_EXTENSION = '.md';
 export const ATTRIBUTE_SET = 'set';

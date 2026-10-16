@@ -1,4 +1,5 @@
 // Selects scope configurations and the files their tables cover.
+// Selects scope configurations and the files their tables cover.
 import { posix } from 'node:path';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
@@ -6,8 +7,8 @@ import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { selectConfigurations, sourceConfigurations } from '#cli/configurations/select.ts';
 import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
-import type { FileMatch, ConfigurationSelection } from '#cli/types/repository/selection.ts';
 import { escapeGlob, buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
+import type { FileMatch, FileCoverageOptions, ConfigurationSelection } from '#cli/types/repository/selection.ts';
 
 // The owners with the file types of the selected Prettier or ESLint plugins, when the table takes them.
 function addPluginExtensions(owners: FileMatch, selected: Manifest[]): FileMatch {
@@ -21,57 +22,44 @@ function addPluginExtensions(owners: FileMatch, selected: Manifest[]): FileMatch
     return { ...owners, extensions: [...owners.extensions, ...extensions] };
 }
 
-// Build both pattern matchers once for a configuration's file table.
-function fileMatchers(table: FileMatch) {
-    return { table, filenames: buildFilenameMatcher(table.filenames), paths: buildPathMatcher(table.paths) };
-}
-
 /**
- * True when the file patterns match this file, by extension, filename at any depth, tag, or path glob.
- * @param owners the file patterns.
- * @param file the file.
- * @param filenames the prebuilt filename matcher.
- * @param paths the prebuilt path matcher.
- * @returns whether the patterns cover the file.
+ * Build one matcher for the extensions, filenames, tags, and paths of a files table.
+ * @param table the file patterns.
+ * @returns the predicate for one tracked file.
  */
-export function isCovered(
-    owners: FileMatch,
-    file: TrackedFile,
-    filenames: (path: string) => boolean,
-    paths: (path: string) => boolean,
-): boolean {
-    if (owners.extensions.includes(extractExtension(file.path))) return true;
-    if (filenames(file.path)) return true;
-    if (owners.tags.some((tag) => file.tags.includes(tag))) return true;
-    return paths(file.path);
+export function buildFileMatcher(table: FileMatch): (file: TrackedFile) => boolean {
+    const filenames = buildFilenameMatcher(table.filenames);
+    const paths = buildPathMatcher(table.paths);
+    return (file) =>
+        table.extensions.includes(extractExtension(file.path)) ||
+        filenames(file.path) ||
+        table.tags.some((tag) => file.tags.includes(tag)) ||
+        paths(file.path);
 }
 
 /**
  * The files selected by file patterns for one scope and its `kinds` and `languages` constraints.
  * @param table the file patterns.
- * @param selected manifests that declare languages and Prettier plugins.
  * @param files the tracked files.
- * @param scope the scope path.
- * @param testFiles the configured repository-relative test paths.
- * @param settings the settings for the scope, with repository-relative path values.
+ * @param options the selected configurations, scope, and settings view.
+ * @param options.selected manifests that declare languages and Prettier plugins.
+ * @param options.scope the scope path.
+ * @param options.view settings and repository-relative test paths for the scope.
  * @returns the files owned.
  */
 export function listCoveredFiles(
     table: FileMatch,
-    selected: Manifest[],
     files: TrackedFile[],
-    scope: string,
-    testFiles: string[],
-    settings: Record<string, unknown>,
+    { selected, scope, view }: FileCoverageOptions,
 ): TrackedFile[] {
     const ownsTests = table.paths.includes(TEST_FILES_PLACEHOLDER);
-    const tests = buildPathMatcher(testFiles);
+    const tests = buildPathMatcher(view.test_files);
     const defaults: FileMatch[] = [];
     const settingPatterns = table.paths.flatMap((path) => {
         if (path === TEST_FILES_PLACEHOLDER) return [];
         const name = [...path.matchAll(SETTING_PLACEHOLDER)][0]?.groups?.['name'];
         if (name === undefined) return [];
-        const value = settings[name];
+        const value = view.settings[name];
         if (typeof value === 'string') return [path.replace(SETTING_PLACEHOLDER, () => escapeGlob(value))];
         defaults.push(
             ...selected
@@ -91,19 +79,15 @@ export function listCoveredFiles(
         selected,
     );
     const candidates = files.filter((file) => isInScope(file.path, scope) && owners.kinds.includes(file.kind));
-    const filenames = buildFilenameMatcher(owners.filenames);
-    const paths = buildPathMatcher(owners.paths);
-    const defaultMatchers = defaults.map((table) => fileMatchers(table));
-    const languages = (owners.languages ? sourceConfigurations(selected) : []).map(({ files }) => fileMatchers(files));
+    const matches = [
+        owners,
+        ...defaults,
+        ...(owners.languages ? sourceConfigurations(selected).map(({ files }) => files) : []),
+    ].map((table) => buildFileMatcher(table));
     return candidates.filter((file) => {
         const scopeFile = { ...file, path: posix.relative(scope, file.path) };
         return (
-            (ownsTests && tests(file.path)) ||
-            settingMatches(file.path) ||
-            isCovered(owners, scopeFile, filenames, paths) ||
-            [...defaultMatchers, ...languages].some((match) =>
-                isCovered(match.table, scopeFile, match.filenames, match.paths),
-            )
+            (ownsTests && tests(file.path)) || settingMatches(file.path) || matches.some((match) => match(scopeFile))
         );
     });
 }

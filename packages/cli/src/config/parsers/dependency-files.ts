@@ -44,3 +44,5 @@ export const PYTHON_NAME_SEPARATORS = /[._-]+/gu;
 export const PYTHON_IDENTITY_NAME = /^[^@]+(?=@)/u;
 
 export const NPM_CLIENT_HASH_SUFFIX = '+sha';
+
+export const PIPFILE = 'Pipfile';

@@ -1,10 +1,10 @@
+// Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
 import { GspotError } from '#cli/system/errors.ts';
 import { SOURCE_GROUPS } from '#cli/config/configurations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { type Manifest, type SelectionWalk } from '#cli/types/configurations.ts';
 import { unknownConfigurationMessage } from '#cli/configurations/unknown-names.ts';
 
-// Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
 function visit(walk: SelectionWalk, configurationName: string): void {
     if (walk.seen.has(configurationName)) return;
     walk.seen.add(configurationName);

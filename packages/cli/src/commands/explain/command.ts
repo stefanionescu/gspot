@@ -209,14 +209,11 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
     const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as ScopeSelection;
     const configurations = selection.selected.filter(
         (manifest) =>
-            listCoveredFiles(
-                manifest.files,
-                selection.selected,
-                [file],
-                selection.scope.path,
-                selection.view.test_files,
-                selection.view.settings,
-            ).length > 0,
+            listCoveredFiles(manifest.files, [file], {
+                selected: selection.selected,
+                scope: selection.scope.path,
+                view: selection.view,
+            }).length > 0,
     );
     const report: PathExplanation = {
         path,

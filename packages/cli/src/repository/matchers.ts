@@ -1,27 +1,9 @@
 // Compiles repository path and filename selectors.
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import type { PathExpressions } from '#cli/types/repository/inventory.ts';
 import { GLOB_EXCLUDE, TRAILING_SLASH, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();
-
-/**
- * Compile shared path selectors for the CLI and generated tool files.
- * @param patterns the selectors, a leading ! for an exclusion.
- * @returns the inclusions and exclusions, directories expanded.
- */
-function pathExpressions(patterns: string[]): PathExpressions {
-    const expanded = includeFolderContents(patterns);
-    return {
-        includes: expanded
-            .filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE))
-            .map((pattern) => picomatch.makeRe(pattern, { dot: true }).source),
-        excludes: expanded
-            .filter((pattern) => pattern.startsWith(GLOB_EXCLUDE))
-            .map((pattern) => picomatch.makeRe(pattern.slice(1), { dot: true }).source),
-    };
-}
 
 /**
  * A picomatch matcher over root-relative posix paths, cached by pattern list.
@@ -32,9 +14,13 @@ export function buildPathMatcher(patterns: string[]): (path: string) => boolean 
     const key = JSON.stringify(patterns);
     const cached = matcherCache.get(key);
     if (cached) return cached;
-    const expressions = pathExpressions(patterns);
-    const includes = expressions.includes.map((source) => new RegExp(source, 's'));
-    const excludes = expressions.excludes.map((source) => new RegExp(source, 's'));
+    const expanded = includeFolderContents(patterns);
+    const includes = expanded
+        .filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE))
+        .map((pattern) => new RegExp(picomatch.makeRe(pattern, { dot: true }).source, 's'));
+    const excludes = expanded
+        .filter((pattern) => pattern.startsWith(GLOB_EXCLUDE))
+        .map((pattern) => new RegExp(picomatch.makeRe(pattern.slice(1), { dot: true }).source, 's'));
     const isMatch = (path: string): boolean =>
         includes.some((pattern) => pattern.test(path)) && !excludes.some((pattern) => pattern.test(path));
     matcherCache.set(key, isMatch);

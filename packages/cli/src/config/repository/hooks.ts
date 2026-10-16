@@ -7,7 +7,7 @@ export const LEFTHOOK_PREFIXES = ['', '.', '.config/'] as const;
 export const LEFTHOOK_EXTENSIONS = ['yml', 'yaml', 'toml', 'json', 'jsonc'] as const;
 
 /** Hook managers can own tooling-only packages without gspot installing them. */
-export const HOOK_PACKAGES = ['husky', 'lefthook', 'lint-staged'] as const;
+export const HOOK_PACKAGES: ReadonlySet<string> = new Set(['husky', 'lefthook', 'lint-staged']);
 
 export const MISE_HOOK_DIRECTORY = '.mise/tasks/hook';
 

@@ -52,7 +52,7 @@ export async function visitGitBlobs(
     if (blobs.length === 0) return;
     const result = await runGit(
         root,
-        [...BLOBS_ARGUMENTS],
+        BLOBS_ARGUMENTS,
         {
             stdin: blobs.join('\n') + '\n',
             cancelSignal,
@@ -93,11 +93,11 @@ export async function readBlobs(root: string, requested: string[], cancelSignal?
  */
 export async function readHead(root: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
     const options = { cancelSignal };
-    const head = await runGit(root, [...HEAD_ARGUMENTS], options);
+    const head = await runGit(root, HEAD_ARGUMENTS, options);
     if (head.code === 0) return head.stdout.trim();
     const failure = new GspotError('git', 'Cannot read committed Git history. Restore HEAD and check again.');
     if (head.code !== 1) throw failure;
-    const symbolic = await runGit(root, [...SYMBOLIC_HEAD_ARGUMENTS], options);
+    const symbolic = await runGit(root, SYMBOLIC_HEAD_ARGUMENTS, options);
     if (symbolic.code !== 0) throw failure;
     return undefined;
 }

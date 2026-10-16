@@ -36,12 +36,12 @@ export const MISE_FILES = [
 export const TASK_AFTER_RUN = 2;
 
 export const RUNNER_NAMES = [...NPM_CLIENTS, 'mise'] as const;
-export const INI_EXTENSIONS = ['.ini', '.cfg'] as const;
+export const INI_EXTENSIONS: ReadonlySet<string> = new Set(['.ini', '.cfg']);
 
 export const GITLAB_CI_FILE = '.gitlab-ci.yml';
 export const GITHUB_WORKFLOWS_FOLDER = '.github/workflows/';
 export const GITLAB_CI_FOLDER = '.gitlab/ci/';
-export const YAML_EXTENSIONS = ['.yml', '.yaml'] as const;
+export const YAML_EXTENSIONS: readonly string[] = ['.yml', '.yaml'];
 
 export const COMMAND_SEPARATORS = /[\s;&|]+/u;
 export const RUN_WORD = 'run';

@@ -18,6 +18,7 @@ import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { join, extname, dirname, basename, relative } from 'node:path';
+import { MARKDOWN_EXTENSION } from '#cli/config/repository/inventory.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
@@ -141,13 +142,6 @@ function listLintCommands(path: string, document: unknown): string[] {
     });
 }
 
-function hasSection(root: string, path: string, replace: NonNullable<ToolDeclaration['replace']>[number]): boolean {
-    const source = readText(root, path);
-    if (source === undefined) return false;
-    if (replace.table === undefined && replace.key === undefined) return true;
-    return hasToolSection(source, path, replace);
-}
-
 // The tool files one replace row finds among tracked files.
 function findReplacedToolFiles(
     root: string,
@@ -165,7 +159,11 @@ function findReplacedToolFiles(
         candidates.add(replace.file);
     return [...candidates]
         .filter((candidate) => matches(candidate))
-        .filter((path) => hasSection(root, path, replace))
+        .filter((path) => {
+            const source = readText(root, path);
+            if (source === undefined) return false;
+            return (replace.table === undefined && replace.key === undefined) || hasToolSection(source, path, replace);
+        })
         .map((path) => ({
             tool,
             path,
@@ -177,7 +175,7 @@ function findReplacedToolFiles(
 
 function parseSharedFile(text: string, extension: string, path: string): unknown {
     if (extension === '.json') return parseJsonFile(path, text);
-    if (extension === '.yaml' || extension === '.yml') return parseYaml(text) as unknown;
+    if (YAML_EXTENSIONS.includes(extension)) return parseYaml(text) as unknown;
     if (extension === '.toml') return parseToml(text);
     throw new Error(`${path}: shared configuration format is unsupported.`);
 }
@@ -189,16 +187,14 @@ function parseSharedFile(text: string, extension: string, path: string): unknown
  * @param selector the key or table that the tool owns.
  * @returns whether that section exists.
  */
-// eslint-disable-next-line complexity -- reason: Tool sections use different syntax by format; this reader keeps each format and its selector together.
 function hasToolSection(
     text: string,
     path: string,
     selector: Pick<NonNullable<ToolDeclaration['replace']>[number], 'key' | 'table'>,
 ): boolean {
     const extension = extname(path);
-    if (selector.table !== undefined && new Set<string | undefined>(INI_EXTENSIONS).has(extension))
-        return hasIniSection(text, selector.table);
-    const parts = selector.key === undefined ? (selector.table?.split('.') ?? []) : [selector.key];
+    if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) return hasIniSection(text, selector.table);
+    const parts = selector.key === undefined ? (selector.table as string).split('.') : [selector.key];
     let value = parseSharedFile(text, extension, path);
     for (const part of parts) {
         if (!isRecord(value) || !Object.hasOwn(value, part)) return false;
@@ -286,16 +282,17 @@ export function readExistingTools(
     reads?: ReadCache,
 ): ExistingTools {
     const paths = new Set(files.map((file) => file.path));
-    const npmNames = npmToolNames(configurationManifests(reads).values());
+    const manifests = configurationManifests(reads);
+    const npmNames = npmToolNames(manifests.values());
     const lintOnlyManifests = packageManifests
         .filter((fact) => fact.kind === 'package.json' && isToolOnlyPackage(fact, npmNames))
         .map((fact) => fact.path)
-        .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));
+        .toSorted((a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON));
 
     const inventory = new Set(
         files.filter((file) => file.kind === 'source' && !isInGspotFolder(file.path)).map((file) => file.path),
     );
-    const configurations = [...configurationManifests(reads).values()].flatMap((manifest) =>
+    const configurations = [...manifests.values()].flatMap((manifest) =>
         manifest.tools.flatMap((tool) =>
             (tool.replace ?? []).flatMap((replace) => findReplacedToolFiles(root, inventory, tool.name, replace)),
         ),
@@ -323,7 +320,7 @@ export function readExistingTools(
         rulesDirectories: RULES_DIRECTORIES.filter(
             (name) =>
                 lstatSync(join(root, name), { throwIfNoEntry: false })?.isSymbolicLink() === true ||
-                listFolder(root, name).some((entry) => entry.endsWith('.md')),
+                listFolder(root, name).some((entry) => entry.endsWith(MARKDOWN_EXTENSION)),
         ),
         lintFolders: LINT_DIRECTORIES.filter((name) => listFolder(root, name).length > 0),
         lintOnlyManifests,
