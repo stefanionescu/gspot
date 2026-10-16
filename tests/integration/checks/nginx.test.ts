@@ -46,9 +46,10 @@ test.skipIf(!isLinux)(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const report = JSON.parse(corrected.stdout) as RunReport;
         expect(report.checks).toMatchObject([
+            { check: 'nginx/config-test', scope: '', status: 'skipped', fileCount: 0 },
             { check: 'nginx/config-test', scope: 'proxy', status: 'passed', fileCount: 3 },
         ]);
-        expect(report.checks[0]!.files?.toSorted()).toStrictEqual([
+        expect(report.checks[1]!.files?.toSorted()).toStrictEqual([
             'proxy/conf.d/server.conf',
             'proxy/nginx.conf',
             'proxy/tls#local.conf',
@@ -63,7 +64,8 @@ test.skipIf(!isLinux)(
         const unavailable = await spawnGspot(sandbox.path, command);
         expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
         expect((JSON.parse(unavailable.stdout) as RunReport).checks).toMatchObject([
-            { check: 'nginx/config-test', status: 'error' },
+            { check: 'nginx/config-test', scope: '', status: 'skipped', fileCount: 0 },
+            { check: 'nginx/config-test', scope: 'proxy', status: 'error' },
         ]);
         await Bun.write(
             join(sandbox.path, 'gspot.toml'),
