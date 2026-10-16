@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { MALFORMED_TSCONFIGS, STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
-import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
+import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/checks/language/typescript/compiler.ts';
 
 test.each(MALFORMED_TSCONFIGS)(
     'a malformed tsconfig.json fails with its path and reason: %s',

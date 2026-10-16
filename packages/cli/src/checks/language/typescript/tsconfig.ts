@@ -4,11 +4,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/repository/inventory.ts';
-import { selectRequiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
-import { projectChecked } from '#cli/checks/language/typescript/compiler.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { TSCONFIG_FILE, TSCONFIG_NAME } from '#cli/config/parsers/tsconfig.ts';
+import { projectChecked, selectRequiredTsconfigOptions } from '#cli/checks/language/typescript/compiler.ts';
 
 /**
  * One finding per required option a scope's tsconfig leaves off.
