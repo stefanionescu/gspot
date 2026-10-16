@@ -6,7 +6,7 @@ import type { Migration } from '#cli/types/checks/database.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { memoized, readSource } from '#cli/system/file-reads.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
-import { MIGRATION_DOWN, DOWN_MIGRATION_SUFFIX, POSTGRES_CONFIGURATION } from '#cli/config/checks/database.ts';
+import { MIGRATION_DOWN, DOWN_MIGRATION_SUFFIX } from '#cli/config/checks/database.ts';
 
 const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
 
@@ -38,22 +38,20 @@ async function parseMigrations(input: CheckInput, paths: string[]): Promise<Migr
  * @returns root-relative migration paths without parsing their SQL.
  */
 function migrationPaths(input: CheckInput): string[] {
-    const folder = input.selection.view.options('postgres').migrations_folder;
-    const migrations =
-        folder === undefined
-            ? input.selection.selected.flatMap((manifest) =>
-                  manifest.configuration.name === POSTGRES_CONFIGURATION
-                      ? coveredBy(
-                            manifest.files,
-                            input.selection.selected,
-                            input.files,
-                            input.selection.scope.path,
-                            input.selection.view.test_files,
-                            input.selection.view.settings,
-                        )
-                      : [],
-              )
-            : input.files.filter((file) => file.path.startsWith(`${folder}/`));
+    const migrations = input.selection.selected.flatMap((manifest) =>
+        manifest.checks
+            .filter((check) => check.name === 'postgres/squawk')
+            .flatMap((check) =>
+                coveredBy(
+                    check.files ?? manifest.files,
+                    input.selection.selected,
+                    input.files,
+                    input.selection.scope.path,
+                    input.selection.view.test_files,
+                    input.selection.view.settings,
+                ),
+            ),
+    );
     return migrations
         .filter((file) => file.path.endsWith(SQL_EXTENSION) && !file.path.endsWith(DOWN_MIGRATION_SUFFIX))
         .map((file) => file.path);

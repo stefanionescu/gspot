@@ -3,9 +3,8 @@ import { posix } from 'node:path';
 import { extensionOf } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
-import { settingFilePatterns } from '#cli/repository/setting-paths.ts';
-import { pathMatcher, filenameMatcher } from '#cli/repository/selectors.ts';
 import type { TrackedFile, FileDeclaration } from '#cli/types/repository/inventory.ts';
+import { literalGlob, pathMatcher, filenameMatcher } from '#cli/repository/selectors.ts';
 import { selectConfigurations, sourceConfigurations } from '#cli/configurations/select.ts';
 import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { FileMatch, ConfigurationSelection } from '#cli/types/repository/selection.ts';
@@ -67,15 +66,27 @@ export function coveredBy(
 ): TrackedFile[] {
     const ownsTests = table.paths.includes(TEST_FILES_PLACEHOLDER);
     const tests = pathMatcher(testFiles);
-    const settingPaths = table.paths.filter(
-        (path) => [...path.matchAll(SETTING_PLACEHOLDER)].length > 0 && path !== TEST_FILES_PLACEHOLDER,
-    );
-    const { paths: settingPatterns, defaults } = settingFilePatterns(settingPaths, selected, settings);
+    const defaults: FileMatch[] = [];
+    const settingPatterns = table.paths.flatMap((path) => {
+        if (path === TEST_FILES_PLACEHOLDER) return [];
+        const name = [...path.matchAll(SETTING_PLACEHOLDER)][0]?.groups?.['name'];
+        if (name === undefined) return [];
+        const value = settings[name];
+        if (typeof value === 'string') return [path.replace(SETTING_PLACEHOLDER, () => literalGlob(value))];
+        defaults.push(
+            ...selected
+                .filter((manifest) => manifest.configuration.name === name.split('.', 1)[0])
+                .map((manifest) => manifest.files),
+        );
+        return [];
+    });
     const settingMatches = pathMatcher(settingPatterns);
     const owners = addPluginExtensions(
         {
             ...table,
-            paths: table.paths.filter((path) => path !== TEST_FILES_PLACEHOLDER && !settingPaths.includes(path)),
+            paths: table.paths.filter(
+                (path) => path !== TEST_FILES_PLACEHOLDER && [...path.matchAll(SETTING_PLACEHOLDER)].length === 0,
+            ),
         },
         selected,
     );
@@ -84,24 +95,16 @@ export function coveredBy(
     const paths = pathMatcher(owners.paths);
     const defaultMatchers = defaults.map((table) => fileMatchers(table));
     const languages = (owners.languages ? sourceConfigurations(selected) : []).map(({ files }) => fileMatchers(files));
-    // eslint-disable-next-line complexity -- reason: One selection predicate combines configuration files, languages, settings paths, and test ownership without changing precedence.
     return candidates.filter((file) => {
         const scopeFile = { ...file, path: posix.relative(scope, file.path) };
-        const selectedBySetting =
+        return (
+            (ownsTests && tests(file.path)) ||
             settingMatches(file.path) ||
-            defaultMatchers.some((defaultMatch) =>
-                isCovered(defaultMatch.table, scopeFile, defaultMatch.filenames, defaultMatch.paths),
-            ) ||
-            (owners.paths.length > 0 && paths(scopeFile.path)) ||
-            (ownsTests && tests(file.path));
-        return settingPaths.length > 0
-            ? selectedBySetting &&
-                  (owners.extensions.length === 0 || owners.extensions.includes(extensionOf(file.path)))
-            : (ownsTests && tests(file.path)) ||
-                  isCovered(owners, scopeFile, filenames, paths) ||
-                  languages.some((language) =>
-                      isCovered(language.table, scopeFile, language.filenames, language.paths),
-                  );
+            isCovered(owners, scopeFile, filenames, paths) ||
+            [...defaultMatchers, ...languages].some((match) =>
+                isCovered(match.table, scopeFile, match.filenames, match.paths),
+            )
+        );
     });
 }
 

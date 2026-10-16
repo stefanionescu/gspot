@@ -13,5 +13,3 @@ export const MIGRATION_DOWN = /^[\t ]*--[\t ]*migrate:down\b/mu;
 export const SCHEMA_PART_INDEX = -2;
 
 export const DOWN_MIGRATION_SUFFIX = '.down.sql';
-
-export const POSTGRES_CONFIGURATION = 'postgres';

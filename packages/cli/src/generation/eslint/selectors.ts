@@ -115,11 +115,7 @@ export function fragmentSelectorGroups(
             },
         );
         if (isAll) {
-            const routeFiles = scope.selected.flatMap((manifest) => manifest.route_files);
-            const routePatterns = [routeFiles]
-                .filter((names) => names.length > 0)
-                .map((names) => posix.join(prefix, `**/{${names.join(',')}}.{js,jsx,ts,tsx}`));
-            const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*'), ...routePatterns] : [];
+            const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];
             applied.push(
                 ...REEXPORT_SELECTORS.map((selector) => ({
                     selector,

@@ -14,7 +14,6 @@ import { namingDefaultsSchema } from '#cli/configurations/schema/naming.ts';
 
 import type {
     Manifest,
-    ParsedManifest,
     ToolDeclaration,
     CheckDeclaration,
     ConfigurationCheck,
@@ -68,21 +67,6 @@ function discoveredToolFilesAt(dir: string, toolFiles: unknown): unknown {
     if (!Array.isArray(toolFiles)) return toolFiles;
     const declarations: unknown[] = toolFiles;
     return [...declarations, ...discovered];
-}
-
-// Each framework naming allowance receives the same route-name list.
-function applyRouteNames(overrides: NonNullable<ParsedManifest['naming']>['override'], names: string[]): void {
-    for (const entry of overrides)
-        if (entry.categories?.includes('files') === true)
-            entry.allowed_names = [...names, ...(entry.allowed_names ?? [])];
-}
-
-// Framework route names supply naming allowances and rule-file exclusions.
-function applyRouteDefaults(declared: ParsedManifest): void {
-    if (declared.route_files.length === 0) return;
-    const routePattern = `**/{${declared.route_files.join(',')}}.{js,jsx,ts,tsx}`;
-    for (const entry of declared.eslint.rules_off) entry.files ??= [routePattern];
-    applyRouteNames(declared.naming?.override ?? [], declared.route_files);
 }
 
 // The shared build supplies versions once for declarations and their installers.
@@ -144,7 +128,6 @@ function parseManifest(text: string, dir: string): ManifestDeclaration {
             ...new Set(result.error.issues.flatMap((issue) => issueLines(issue))),
         ]);
     const declared = result.data;
-    applyRouteDefaults(declared);
     // A check's ID joins the configuration name and its own name.
     return {
         ...declared,

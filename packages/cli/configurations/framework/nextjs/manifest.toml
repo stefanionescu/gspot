@@ -1,11 +1,10 @@
-route_files = ["page", "layout", "template", "default", "loading", "error", "not-found", "global-error", "route", "middleware", "proxy"]
 allowed_words = ["Next.js"]
 generated = ["next-env.d.ts"]
 
 [[naming.override]]
 paths = ["**/app/**", "**/pages/**"]
 categories = ["files"]
-allowed_names = ["instrumentation", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
+allowed_names = ["page", "layout", "template", "default", "loading", "error", "not-found", "global-error", "route", "middleware", "proxy", "instrumentation", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
 reason = "Next.js names these files."
 
 [[naming.override]]
@@ -74,6 +73,7 @@ package = "eslint-plugin-react-refresh"
 source = "configs.next"
 
 [[eslint.rules_off]]
+files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
 rules = ["gspot/no-trivial-files"]
 reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
 

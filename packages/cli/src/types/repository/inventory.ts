@@ -54,7 +54,6 @@ export type Tooling = {
 };
 
 export type ScopeEntry = {
-    name: string;
     path: string;
     configurations: string[];
     source: 'root' | typeof SETTINGS_FILE | 'project';

@@ -124,15 +124,6 @@ export function targetInScope(
 }
 
 /**
- * Name a project or settings scope from its repository-relative folder.
- * @param scope the path, configuration selection, and source.
- * @returns the named scope entry.
- */
-export function buildScope(scope: Omit<ScopeEntry, 'name'>): ScopeEntry {
-    return { name: posix.basename(scope.path), ...scope };
-}
-
-/**
  * Find project scopes for initialization and execution. Omit the root and lint-only packages.
  * @param files the repository inventory.
  * @param packageManifests the parsed package manifests.
@@ -162,7 +153,7 @@ export function findScopes(
     }
     return [...folders]
         .toSorted((left, right) => left.localeCompare(right))
-        .map((path) => buildScope({ path, configurations: [], source: 'project' }));
+        .map((path): ScopeEntry => ({ path, configurations: [], source: 'project' }));
 }
 
 /**

@@ -56,7 +56,6 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
             configurations: [...INIT_CONFIGURATIONS],
             scopes: [
                 {
-                    name: 'site',
                     source: 'project',
                     path: 'apps/site',
                     configurations: INIT_CONFIGURATIONS.slice(0, 12),

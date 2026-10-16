@@ -31,6 +31,3 @@ export type ConfigurationSuggestion = { configuration: string; evidence: string;
 
 /** Repository evidence with an optional count for extension matches. */
 export type DetectionEvidence = { evidence: string; count?: number };
-
-/** Resolved setting patterns and the selected configuration defaults for absent values. */
-export type SettingFilePatterns = { paths: string[]; defaults: FileMatch[] };

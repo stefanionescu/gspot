@@ -18,11 +18,7 @@ import {
 export function purgecssToolFile({ options }: Pick<ScopeView, 'options'>): string {
     const standard = [
         String(PURGECSS_PSEUDO_CLASS_PATTERN),
-        ...options('tools.purgecss').safelist.map((word) =>
-            JSON.stringify(word, null, JSON_INDENT)
-                .replaceAll('\u2028', String.raw`\u2028`)
-                .replaceAll('\u2029', String.raw`\u2029`),
-        ),
+        ...options('tools.purgecss').safelist.map((word) => JSON.stringify(word, null, JSON_INDENT)),
     ];
     return `export const defaultExtractor = (content) => (content.match(${String(PURGECSS_EXTRACTOR)}) ?? []).map((token) => { let end = token.length; while (end > 0 && token[end - 1] === ${JSON.stringify(PURGECSS_TOKEN_END)}) end--; return token.slice(0, end); }).filter((token) => token !== '');\nexport const safelist = { standard: [${standard.join(', ')}] };\n`;
 }

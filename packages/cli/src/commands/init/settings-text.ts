@@ -145,7 +145,7 @@ function draftSettings(selection: InitSelection, answers: InitAnswers): Settings
     const scopes = selection.scopes.filter((scope) => scope.path !== '');
     const commitScopes =
         scopes.length > 0 && selection.selectedIds.has('commits')
-            ? (detectedDefaults({ scopes: scopes.map((scope) => scope.name) }).get(
+            ? (detectedDefaults({ scopes: scopes.map((scope) => posix.basename(scope.path)) }).get(
                   'tools.commitlint.scopes',
               ) as string[])
             : undefined;

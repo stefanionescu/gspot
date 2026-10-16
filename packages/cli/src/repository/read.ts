@@ -2,6 +2,7 @@
 import { posix } from 'node:path';
 import { runGitBlocking } from '#cli/system/git.ts';
 import { classifyFile } from '#cli/repository/kind.ts';
+import { findScopes } from '#cli/repository/scopes.ts';
 import { swiftSourceTags } from '#cli/parsers/swift.ts';
 import { blockSpan } from '#cli/system/managed-blocks.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
@@ -11,7 +12,6 @@ import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { isGitRepository } from '#cli/repository/find-root.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
-import { buildScope, findScopes } from '#cli/repository/scopes.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
@@ -107,8 +107,8 @@ export async function readRepository(
         { ...ROOT_SCOPE, configurations: [] },
         ...scopeEntries
             .filter((entry) => directory.stat(entry.path)?.isDirectory() === true)
-            .map((entry) =>
-                buildScope({
+            .map(
+                (entry): ScopeEntry => ({
                     path: entry.path,
                     configurations: entry.configurations,
                     source: SETTINGS_FILE,

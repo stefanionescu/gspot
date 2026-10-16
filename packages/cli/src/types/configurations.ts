@@ -30,7 +30,6 @@ export type SelectionWalk = {
 /** manifest.toml as the schema accepts it. */
 export type ParsedManifest = {
     defaults: Record<string, JsonValue>;
-    route_files: string[];
     eslint: {
         presets: Record<string, { package: string; source: string }>;
         all_level_rules: EslintAllRules;
@@ -98,7 +97,6 @@ export type ParsedManifest = {
                   body?: string | undefined;
               }
             | undefined;
-        scope_fragments: boolean;
         per_scope: boolean;
         when?: { configuration: string } | undefined;
     } & ({ fragment: true } | { fragment: false; source: string }))[];

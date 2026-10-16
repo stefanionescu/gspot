@@ -220,9 +220,6 @@ export function eslintInputs(
             session.repository.files.flatMap((file) =>
                 file.kind === 'source' && file.path.endsWith(extension) ? [file.path] : [],
             ),
-        json: (value, indent = JSON_INDENT) =>
-            JSON.stringify(value, null, indent)
-                .replaceAll('\u{2028}', String.raw`\u2028`)
-                .replaceAll('\u{2029}', String.raw`\u2029`),
+        json: (value, indent = JSON_INDENT) => JSON.stringify(value, null, indent),
     };
 }

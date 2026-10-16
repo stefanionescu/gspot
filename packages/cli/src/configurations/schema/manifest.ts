@@ -91,7 +91,6 @@ const toolFileSchema = z
         required_tools: z.array(z.string().min(1)).default([]),
         pointer: pointerSchema.optional(),
         fragment: z.boolean().default(false),
-        scope_fragments: z.boolean().default(false),
         per_scope: z.boolean().default(false),
         when: conditionSchema.pick({ configuration: true }).optional(),
     } satisfies SchemaShape<
@@ -226,7 +225,6 @@ export const eslintPresetSchema = z.strictObject({
 // The shape of a configuration manifest.toml after validation.
 export const manifestSchema = z
     .strictObject({
-        route_files: optionalStringList,
         defaults: z.record(z.string().min(1), z.json()).default({}),
         eslint: z
             .strictObject({

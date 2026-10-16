@@ -75,14 +75,9 @@ function emittedFragments(
     fragments: Fragment[],
     inputs: EslintFragmentInputs,
     scopes: ScopeSelection[],
-    target: ToolFileDeclaration,
 ): string[] {
     const emitted: string[] = [];
     for (const { manifest } of fragments) {
-        if (!target.scope_fragments) {
-            emitted.push(emitFragment(manifest, inputs));
-            continue;
-        }
         for (const selection of scopes.filter((entry) => entry.selected.includes(manifest))) {
             const scope = selection.scope.path;
             const children = nestedScopes(
@@ -176,27 +171,16 @@ export function fragmentInputs(
             .filter((toolFile) => toolFile.fragment && toolFile.target === target.target)
             .map((toolFile) => ({ manifest, toolFile })),
     );
-    const config = target.scope_fragments ? inputs.eslint() : undefined;
-    const eslintFiles =
-        config === undefined
-            ? inputs.eslintFiles
-            : filePatterns({
-                  components: fragments.map(({ manifest }) => manifest),
-                  tests: config.testFiles,
-                  scripts: config.scriptFiles,
-                  nodeFiles: config.nodeFiles,
-              });
+    const config = inputs.eslint();
+    const eslintFiles = filePatterns({
+        components: fragments.map(({ manifest }) => manifest),
+        tests: config.testFiles,
+        scripts: config.scriptFiles,
+        nodeFiles: config.nodeFiles,
+    });
     const eslintFragmentBlocks: EslintFragmentInputs['eslintFragmentBlocks'] = [];
-    const emitted = emittedFragments(
-        session,
-        fragments,
-        { ...inputs, eslintFragmentBlocks, eslintFiles },
-        scopes,
-        target,
-    );
-    const parsed = target.scope_fragments
-        ? emitted.map((fragment) => typescriptImports(fragment))
-        : emitted.map((body) => ({ body, imports: [] }));
+    const emitted = emittedFragments(session, fragments, { ...inputs, eslintFragmentBlocks, eslintFiles }, scopes);
+    const parsed = emitted.map((fragment) => typescriptImports(fragment));
     const imports = parsed.flatMap(({ imports }) => imports);
     const bodies = parsed.map(({ body }) => body);
     return {

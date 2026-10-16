@@ -31,8 +31,6 @@ export function commitlintToolFile({ selection, scopes }: Pick<EmitInputs, 'sele
         if (rules[name]?.[0] !== 0) rules[name] = [COMMITLINT_ERROR_SEVERITY, ...value];
     for (const name of rulesOff('commits/commitlint')) rules[name] = [0];
     const document = { rules };
-    const serialized = JSON.stringify(document, null, JSON_INDENT)
-        .replaceAll('\u2028', String.raw`\u2028`)
-        .replaceAll('\u2029', String.raw`\u2029`);
+    const serialized = JSON.stringify(document, null, JSON_INDENT);
     return `module.exports = ${serialized};`;
 }
