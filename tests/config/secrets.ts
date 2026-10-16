@@ -5,7 +5,7 @@ config.$env("CUSTOM");
 $readEnv("DOLLAR");
 otherconfig.$env("UNDECLARED"); process.env.MISSING;
 `,
-    'reader.py': `read_env("PYTHON"); read_env("PYTHON"); os.environ["MISSING"]; os.getenv("OTHER");
+    'reader.py': `import os; read_env("PYTHON"); read_env("PYTHON"); os.environ["MISSING"]; os.getenv("OTHER");
 os.environ.get("OTHER");
 `,
     'notes.txt': 'Bun.env.TEXT; $readEnv("TEXT");\n',

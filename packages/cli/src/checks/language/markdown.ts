@@ -55,7 +55,7 @@ function yamlSyntaxError(body: string): FenceSyntaxError | undefined {
 async function treeSyntaxError(
     grammar: GrammarName,
     body: string,
-    cache?: ParseCache,
+    cache: ParseCache,
 ): Promise<FenceSyntaxError | undefined> {
     const tree = await parseSource(grammar, body, cache);
     try {
@@ -91,7 +91,7 @@ function codeFences(text: string): FencedBlock[] {
  * @param cache the existing run-owned grammar cache, when checking repository files.
  * @returns one syntax finding per invalid example, with aliases sharing the same outcome.
  */
-async function fenceSyntaxErrors(text: string, cache?: ParseCache): Promise<FenceSyntaxError[]> {
+async function fenceSyntaxErrors(text: string, cache: ParseCache): Promise<FenceSyntaxError[]> {
     const readers: Record<
         FenceParser,
         (body: string) => FenceSyntaxError | undefined | Promise<FenceSyntaxError | undefined>
@@ -108,7 +108,7 @@ async function fenceSyntaxErrors(text: string, cache?: ParseCache): Promise<Fenc
     };
     const findings: FenceSyntaxError[] = [];
     for (const fence of codeFences(text)) {
-        const parser = Object.entries(FENCE_PARSERS).find(([language]) => language === fence.language)?.[1];
+        const parser = FENCE_PARSERS[fence.language];
         if (typeof parser !== 'string' || fence.body.trim() === '') continue;
         // Omitted code and placeholder values keep their lines without becoming syntax errors.
         const omitted = parser === 'bash' ? OMITTED_BASH_LINE : '';
@@ -132,7 +132,6 @@ async function fenceSyntaxErrors(text: string, cache?: ParseCache): Promise<Fenc
 export async function markdownFences(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const file of input.files) {
-        input.cancelSignal?.throwIfAborted();
         const text = readCachedBytes(input.reads, file.path).toString('utf8');
         const syntaxFindings = await fenceSyntaxErrors(text, input);
         input.cancelSignal?.throwIfAborted();

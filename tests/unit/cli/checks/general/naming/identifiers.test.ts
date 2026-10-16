@@ -21,7 +21,10 @@ function namesInCategory(found: Identifier[], category: string): string[] {
 }
 
 test('TypeScript declarations are collected by category; object literal keys are not', async () => {
-    const found = await identifiersOf('src/a.ts', TYPESCRIPT_EXTRACTOR_SOURCE, 'typescript');
+    using resources = new DisposableStack();
+    const context = { reads: createReadCache(process.cwd()), resources };
+
+    const { identifiers: found } = await identifiersOf('src/a.ts', TYPESCRIPT_EXTRACTOR_SOURCE, 'typescript', context);
     expect(
         Object.fromEntries(
             Object.keys(EXPECTED_TYPESCRIPT_NAMES).map((category) => [category, namesInCategory(found, category)]),
@@ -36,21 +39,28 @@ test('TypeScript declarations are collected by category; object literal keys are
 });
 
 test('a name bound from another module through require or await import is skipped, and nothing else', async () => {
+    using resources = new DisposableStack();
+    const context = { reads: createReadCache(process.cwd()), resources };
+
     const source = [
         "const { existsSync } = require('node:fs');",
         "const { default: lazyWidget } = await import('./widget.js');",
         'const loadedRecord = await loadRecord();',
         'const eagerTotal = computeTotal();',
     ].join('\n');
-    const found = await identifiersOf('src/bind.ts', source, 'typescript');
+    const { identifiers: found } = await identifiersOf('src/bind.ts', source, 'typescript', context);
     expect(found.map((entry) => entry.name)).toStrictEqual(['loadedRecord', 'eagerTotal']);
 });
 
 test('Bash functions and variables are collected', async () => {
-    const found = await identifiersOf(
+    using resources = new DisposableStack();
+    const context = { reads: createReadCache(process.cwd()), resources };
+
+    const { identifiers: found } = await identifiersOf(
         'scripts/run.sh',
         'readonly ROOT=1\nlocal count\nbuild_all() {\n  TARGET=x\n}\n',
         'bash',
+        context,
     );
     expect(found.map((entry) => `${entry.category}:${entry.name}`)).toStrictEqual([
         'variables:ROOT',
@@ -61,7 +71,10 @@ test('Bash functions and variables are collected', async () => {
 });
 
 test('Python declarations are collected by category, dunder names included, self left out', async () => {
-    const found = await identifiersOf('shop/orders.py', PYTHON_EXTRACTOR_SOURCE, 'python');
+    using resources = new DisposableStack();
+    const context = { reads: createReadCache(process.cwd()), resources };
+
+    const { identifiers: found } = await identifiersOf('shop/orders.py', PYTHON_EXTRACTOR_SOURCE, 'python', context);
     expect(
         Object.fromEntries(
             Object.keys(EXPECTED_PYTHON_NAMES).map((category) => [category, namesInCategory(found, category)]),
@@ -72,7 +85,10 @@ test('Python declarations are collected by category, dunder names included, self
 });
 
 test('Swift declarations are collected by category', async () => {
-    const found = await identifiersOf('Sources/User.swift', SWIFT_EXTRACTOR_SOURCE, 'swift');
+    using resources = new DisposableStack();
+    const context = { reads: createReadCache(process.cwd()), resources };
+
+    const { identifiers: found } = await identifiersOf('Sources/User.swift', SWIFT_EXTRACTOR_SOURCE, 'swift', context);
     expect(
         Object.fromEntries(
             Object.keys(EXPECTED_SWIFT_NAMES).map((category) => [category, namesInCategory(found, category)]),
@@ -85,17 +101,24 @@ test('Swift declarations are collected by category', async () => {
 test.each([...SOURCE_ORDER_CASES])(
     '$language declarations arrive in document order, including names on the same line',
     async ({ file, source, language, expected }) => {
-        const found = await identifiersOf(file, source, language);
+        using resources = new DisposableStack();
+        const context = { reads: createReadCache(process.cwd()), resources };
+
+        const { identifiers: found } = await identifiersOf(file, source, language, context);
         expect(found.map(({ name }) => name)).toStrictEqual([...expected]);
         expect(found.every((identifier) => identifier.file === file && identifier.language === language)).toBe(true);
     },
 );
 
 test('JavaScript destructured and arrow parameters are declarations; object keys are not', async () => {
-    const found = await identifiersOf(
+    using resources = new DisposableStack();
+    const context = { reads: createReadCache(process.cwd()), resources };
+
+    const { identifiers: found } = await identifiersOf(
         'source.js',
         'function loadValue({ account: localAccount }, [firstValue], ...remainingValues) {}\nconst readValue = inputValue => inputValue;\n',
         'javascript',
+        context,
     );
     expect(found.map(({ name, category }) => ({ name, category }))).toStrictEqual([
         { name: 'loadValue', category: 'functions' },
@@ -110,7 +133,10 @@ test('JavaScript destructured and arrow parameters are declarations; object keys
 test.each([...NAME_POSITION_CASES])(
     '$language names keep their line and column; discarded names such as _ are left out',
     async ({ file, language, source, expected }) => {
-        const found = await identifiersOf(file, source, language);
+        using resources = new DisposableStack();
+        const context = { reads: createReadCache(process.cwd()), resources };
+
+        const { identifiers: found } = await identifiersOf(file, source, language, context);
         expect(found.map(({ name, category, line, column }) => ({ name, category, line, column }))).toStrictEqual([
             ...expected,
         ]);

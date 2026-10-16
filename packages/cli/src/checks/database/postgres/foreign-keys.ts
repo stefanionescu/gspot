@@ -11,7 +11,9 @@ import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
  * @returns the findings.
  */
 export async function postgresForeignKeyIndexes(input: CheckInput): Promise<Finding[]> {
-    const schema = buildSchema(await readMigrations(input));
+    const { migrations, findings: syntax } = await readMigrations(input);
+    if (syntax.length > 0) return syntax;
+    const schema = buildSchema(migrations);
     return schema.foreignKeys
         .filter((key) => schema.indexed.get(key.table)?.has(key.column) !== true)
         .map((key) =>

@@ -6,7 +6,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { applyFixers } from '#cli/execution/fixes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { SCRATCH_FAILURES } from '#tests/config/execution.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { rejection, textContaining } from '#tests/setup/matchers.ts';
 import { waitForExit, waitForFile } from '#tests/setup/processes.ts';
 import { planFixer, buildFixerSettings } from '#tests/setup/fixer.ts';
@@ -27,7 +26,7 @@ import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
             `await Bun.write('café settings.txt', 'scratch corrected'); await Bun.write('source.txt', await Bun.file(process.env['SANDBOX_SETTINGS']).text()); await Bun.write(${JSON.stringify(trace)}, process.cwd())`,
         );
         planned.check.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
-        const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: true });
+        const result = await applyFixers(session, [planned], { isDryRun: true });
         expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
         expect(result.diffs).toStrictEqual([textContaining('+scratch corrected')]);
         const executionRoot = await readFile(trace, 'utf8');
@@ -60,7 +59,7 @@ import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
             );
             planned.check.run_in_copy = true;
             planned.check.exit_codes = [3];
-            const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: preview });
+            const result = await applyFixers(session, [planned], { isDryRun: preview });
             expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
             expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
             expect(await readFile(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
@@ -91,21 +90,15 @@ import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
         );
         planned.check.run_in_copy = true;
         expect(
-            await rejection(
-                applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
-                    ({ results }) => results[0]!,
-                ),
-            ),
+            await rejection(applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!)),
         ).toContain('Destination changed during the operation: z-last.txt');
-        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('isolated correction');
         expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
         expect(await pathExists(await readFile(trace, 'utf8'))).toBe(false);
         const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
         corrected.check.run_in_copy = true;
         expect(
-            await applyFixers(session, [corrected], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
-                ({ results }) => results[0]!,
-            ),
+            await applyFixers(session, [corrected], { isDryRun: false }).then(({ results }) => results[0]!),
         ).toMatchObject({
             status: 'changed',
             changed: ['source.txt'],
@@ -123,7 +116,7 @@ import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
         const temporary = join(sandbox.path, 'scratch');
         await mkdir(temporary);
         using _temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-        const report = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: true });
+        const report = await applyFixers(session, [planned], { isDryRun: true });
         expect(report.results).toMatchObject([{ status: 'failed' }]);
         expect(await readdir(temporary)).toStrictEqual([]);
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
@@ -148,9 +141,7 @@ import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
             const temporary = join(sandbox.path, 'scratch');
             await mkdir(temporary);
             using _temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-            expect(
-                await rejection(applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: true })),
-            ).toContain(diagnostic);
+            expect(await rejection(applyFixers(session, [planned], { isDryRun: true }))).toContain(diagnostic);
             expect(await readdir(temporary)).toStrictEqual([]);
             // The copy row replaces the source with a directory before the run.
             if (operation === 'copy') {
@@ -177,7 +168,6 @@ import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
             );
             planned.check.run_in_copy = isolated;
             const execution = applyFixers({ ...session, cancelSignal: controller.signal }, [planned], {
-                checks: BUILT_IN_CHECKS,
                 isDryRun: false,
             }).then(({ results }) => results[0]!);
             try {
@@ -199,7 +189,7 @@ import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
             const corrected = await applyFixers(
                 session,
                 [planFixer(session, "await Bun.write('source.txt', 'corrected')")],
-                { checks: BUILT_IN_CHECKS, isDryRun: false },
+                { isDryRun: false },
             ).then(({ results }) => results[0]!);
             expect(corrected.status).toBe('changed');
             expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');

@@ -1,4 +1,4 @@
-// The dependency checks of a Python project: deptry over the declared imports, and one owner of the dependencies.
+// Runs deptry over the imports declared by a Python project.
 
 import { z } from 'zod';
 import { parse } from 'smol-toml';

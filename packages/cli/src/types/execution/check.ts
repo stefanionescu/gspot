@@ -24,9 +24,12 @@ type RunReportOptions = PlanOptions & {
 type CheckStatus = (typeof CHECK_STATUSES)[number];
 
 /** Execution callbacks, keyed by the declared check ID. */
-export type BuiltInChecks = Record<
+export type CheckImplementations = Record<
     string,
-    { run: RunnableCheck['run']; fix?: BuiltInFix } & Pick<CheckRunOptions, 'arguments' | 'configurationFiles'>
+    ({ check: BuiltInCheck; run?: never } | { run: RunnableCheck['run']; check?: never }) & { fix?: BuiltInFix } & Pick<
+            CheckRunOptions,
+            'arguments' | 'toolFiles'
+        >
 >;
 
 export type FixResult = { check: string; changed: string[] } & (
@@ -41,8 +44,8 @@ export type FixReport = { results: FixResult[]; changed: string[]; diffs: string
 export type RunnableCheck = {
     check: PlannedCheck;
     arguments?: CheckRunOptions['arguments'];
-    configurationFiles?: CheckRunOptions['configurationFiles'];
-    run: (session: Session, planned: PlannedCheck, options?: CheckRunOptions) => Promise<CheckResult>;
+    toolFiles?: CheckRunOptions['toolFiles'];
+    run: (session: Session, planned: PlannedCheck, options?: CheckRunOptions) => CheckResult | Promise<CheckResult>;
 };
 
 /** Selected staged paths and optional command or scratch root supplied by a check. */
@@ -51,7 +54,7 @@ export type CheckRunOptions = {
     command?: string[];
     scratchRoot?: string;
     arguments?: ((input: CheckInput) => string[]) | undefined;
-    configurationFiles?: ((input: CheckInput) => string[]) | undefined;
+    toolFiles?: ((input: CheckInput) => string[]) | undefined;
 };
 
 export type RunState = {
@@ -63,7 +66,6 @@ export type RunState = {
 
 export type RunOptions = RunReportOptions & {
     push?: PushInput | undefined;
-    checks: BuiltInChecks;
     fix: boolean;
     cancelSignal?: AbortSignal;
 };
@@ -84,7 +86,7 @@ export type CheckInput = {
     index: Repository['index'];
     installedRoot: string;
     settingsFile: SettingsFile;
-    selection: ScopeSelection;
+    scope: ScopeSelection;
     manifests: Map<string, Manifest>;
     inspections: ToolSearch['inspections'];
     miseBinPaths: string[];
@@ -156,7 +158,7 @@ export type ReplannedFixResult = { executables: RunnableCheck[]; fixes: FixRepor
 /** Findings retained after settings ignores and the matches credited to their written entries. */
 
 /** A preview fixes a disposable copy and reports differences. */
-export type FixOptions = { isDryRun: boolean; checks: BuiltInChecks };
+export type FixOptions = { isDryRun: boolean };
 
 export type ReproduceOptions = {
     push?: PushInput;

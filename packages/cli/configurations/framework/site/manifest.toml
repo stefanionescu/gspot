@@ -50,6 +50,7 @@ help = "Fix the template or the content that writes the markup the rule names."
 level = "recommended"
 name = "html-validate"
 needs = ["build"]
+output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
 runs = "scope"
 stage = "push"
 summary = "Validates every built page with html-validate."

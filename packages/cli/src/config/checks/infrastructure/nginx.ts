@@ -19,7 +19,14 @@ export const HOST_PATTERNS = new Map([
     ['server', /^([A-Za-z][\w.-]*)/u],
 ]);
 
-export const NGINX_ESCAPES = { t: '\t', r: '\r', n: '\n', '"': '"', "'": "'", '\\': '\\' } as const;
+export const NGINX_ESCAPES: Readonly<Record<string, string>> = {
+    t: '\t',
+    r: '\r',
+    n: '\n',
+    '"': '"',
+    "'": "'",
+    '\\': '\\',
+} as const;
 
 export const WORD_START_STOPS = /[\s"'{};#\\]/u;
 
@@ -62,3 +69,6 @@ export const NGINX_TEST_COMMAND = ['nginx', '-T'] as const;
 
 export const QUOTED_ARGUMENT = /^(["'])([\s\S]*)\1$/u;
 export const ESCAPED_CHARACTER = /\\([trn"'\\])/gu;
+
+export const NGINX_KEY_FILE = 'key.pem';
+export const NGINX_CERTIFICATE_FILE = 'certificate.pem';

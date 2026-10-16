@@ -12,7 +12,7 @@ import type { FileNames, Identifier, NamingSource, NamingSettings } from '#cli/t
 import { identifiersOf, fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 
 function sourceFiles(input: CheckInput): NamingSource[] {
-    const languages = input.selection.selected
+    const languages = input.scope.selected
         .filter((manifest) => manifest.configuration.group === 'language')
         .map((manifest) => ({
             manifest,
@@ -28,7 +28,7 @@ function sourceFiles(input: CheckInput): NamingSource[] {
 }
 
 function findingsFor(input: CheckInput, settings: NamingSettings, identifiers: Identifier[]): Finding[] {
-    const isTestFile = buildPathMatcher(input.selection.view.test_files);
+    const isTestFile = buildPathMatcher(input.scope.view.test_files);
     return identifiers.flatMap((identifier) =>
         nameFindings(identifier, {
             check: input.check,
@@ -60,22 +60,34 @@ function pathIdentifiers(input: CheckInput): Identifier[] {
  * @param input the repository for this scope and syntax tree resources.
  * @returns declared names and the existing path-name projection for every readable source.
  */
-async function declaredNames(input: CheckInput): Promise<FileNames[]> {
+async function declaredNames(input: CheckInput): Promise<{ files: FileNames[]; findings: Finding[] }> {
     const files: FileNames[] = [];
+    const findings: Finding[] = [];
     for (const selection of input.selections) {
         const scopeInput = {
             ...input,
-            selection,
+            scope: selection,
             files: input.files.filter((file) => findScope(file.path, input.scopeEntries).path === selection.scope.path),
         };
         const paths = pathIdentifiers(scopeInput);
         for (const { file, language } of sourceFiles(scopeInput)) {
-            const identifiers = await identifiersOf(
+            const { identifiers, error } = await identifiersOf(
                 file.path,
                 readCachedBytes(input.reads, file.path).toString('utf8'),
                 language,
                 scopeInput,
             );
+            if (error !== undefined) {
+                findings.push(
+                    findingAt(
+                        scopeInput,
+                        { file: file.path, line: error.line, column: error.column },
+                        'syntax',
+                        error.text,
+                    ),
+                );
+                continue;
+            }
             const declarations = identifiers.map((identifier) => identifier.name);
             files.push({
                 path: file.path,
@@ -95,7 +107,7 @@ async function declaredNames(input: CheckInput): Promise<FileNames[]> {
             });
         }
     }
-    return files;
+    return { files, findings };
 }
 
 /**
@@ -104,12 +116,13 @@ async function declaredNames(input: CheckInput): Promise<FileNames[]> {
  * @returns findings for allowed names without matching declarations.
  */
 export async function namingSettings(input: CheckInput): Promise<Finding[]> {
-    const files = await declaredNames({ ...input, files: input.repositoryFiles });
+    const { files, findings } = await declaredNames({ ...input, files: input.repositoryFiles });
+    if (findings.length > 0) return findings;
     const directories = input.selections
         .flatMap((selection) =>
             pathIdentifiers({
                 ...input,
-                selection,
+                scope: selection,
                 files: input.repositoryFiles.filter(
                     (file) => findScope(file.path, input.scopeEntries).path === selection.scope.path,
                 ),
@@ -156,7 +169,13 @@ export async function namingIdentifiers(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const { file, language } of sourceFiles(input)) {
         const text = readCachedBytes(input.reads, file.path).toString('utf8');
-        const identifiers = await identifiersOf(file.path, text, language, input);
+        const { identifiers, error } = await identifiersOf(file.path, text, language, input);
+        if (error !== undefined) {
+            findings.push(
+                findingAt(input, { file: file.path, line: error.line, column: error.column }, 'syntax', error.text),
+            );
+            continue;
+        }
         findings.push(...findingsFor(input, settings, identifiers));
     }
     return findings;

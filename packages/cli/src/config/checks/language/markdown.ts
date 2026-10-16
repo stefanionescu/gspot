@@ -1,10 +1,22 @@
+export const FENCE_PARSER_NAMES = [
+    'json',
+    'jsonc',
+    'toml',
+    'yaml',
+    'bash',
+    'typescript',
+    'tsx',
+    'javascript',
+    'python',
+] as const;
+
 export const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
 
 export const ELLIPSIS_ARGUMENTS = '(...)';
 
 export const ANGLE_PLACEHOLDER = /<[A-Z][A-Z0-9_-]*>/gu;
 
-export const FENCE_PARSERS = {
+export const FENCE_PARSERS: Readonly<Record<string, (typeof FENCE_PARSER_NAMES)[number]>> = {
     json: 'json',
     jsonc: 'jsonc',
     toml: 'toml',

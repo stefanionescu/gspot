@@ -2,7 +2,7 @@ export const INERT_SCRIPT_TYPES = new Set(['application/ld+json', 'application/j
 
 export const URL_ATTRIBUTES = new Set(['href', 'xlink:href', 'src', 'action', 'formaction', 'data', 'background']);
 
-export const DOCUMENT_URL_ATTRIBUTES = {
+export const DOCUMENT_URL_ATTRIBUTES: Readonly<Record<string, readonly string[]>> = {
     a: ['href', 'xlink:href'],
     area: ['href'],
     iframe: ['src'],

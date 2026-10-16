@@ -9,17 +9,24 @@ import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift/package.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkInput, runBuiltInCheck } from '#cli/execution/built-in.ts';
-import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
+
+import {
+    type Finding,
+    type CheckInput,
+    type RunnableCheck,
+    type CheckImplementations,
+} from '#cli/types/execution/check.ts';
 
 /**
  * Keep compiler state in a test-owned folder and restore the cache boundary when the test ends.
  * @returns the disposable temporary directory and boundary spy.
  */
-export async function isolateCompilerCache(): Promise<AsyncDisposableStack> {
+async function isolateCompilerCache(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
     const cache = resources.use(await testdir());
     resources.use(spyOn(environment, 'readCacheFolder').mockReturnValue(cache.path));
@@ -36,7 +43,7 @@ export async function isolateCompilerCache(): Promise<AsyncDisposableStack> {
  * @param options.resources the resources owned by this check.
  * @returns the check input.
  */
-export function buildCheckInput(
+function buildCheckInput(
     session: Session,
     checkId: string,
     options: { scope?: string; paths?: string[]; resources?: DisposableStack } = {},
@@ -66,7 +73,7 @@ export function buildCheckInput(
  * @param files the test's source and authored settings overrides.
  * @returns the opened input and session, with their preparation resources.
  */
-export async function swiftBuildInput(
+async function swiftBuildInput(
     sandbox: TestdirResult,
     checkId: string,
     files: DirectoryJSON = {},
@@ -89,9 +96,9 @@ export async function swiftBuildInput(
 }
 
 /** Open the sandbox and run the selected built-in check with its actual input. */
-export async function checkFindings(
+async function checkFindings(
     root: string,
-    checkId: keyof typeof CHECK_FUNCTIONS,
+    checkId: string,
     options: { scope?: string; paths?: string[]; resources?: DisposableStack } = {},
 ): Promise<readonly Finding[]> {
     using resources = new DisposableStack();
@@ -99,13 +106,29 @@ export async function checkFindings(
     resources.use(session.resources);
     const input = buildCheckInput(session, checkId, { ...options, resources: options.resources ?? resources });
     const planned = session.configuredChecks.find(
-        (entry) => entry.check.name === checkId && entry.scope.scope.path === input.selection.scope.path,
+        (entry) => entry.check.name === checkId && entry.scope.scope.path === input.scope.scope.path,
     );
     if (planned === undefined)
-        throw new Error(`The sandbox does not plan ${checkId} in ${input.selection.scope.path || 'the root'}.`);
-    const result = await runBuiltInCheck(CHECK_FUNCTIONS[checkId])(
+        throw new Error(`The sandbox does not plan ${checkId} in ${input.scope.scope.path || 'the root'}.`);
+    const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
+    const implementation = implementations[checkId];
+    const run = selectCheckRunner(input, implementation);
+    const result = await run(
         { ...session, resources: options.resources ?? resources },
         { ...planned, files: input.files },
     );
     return result.findings;
 }
+
+/** Select the implementation used by the planned check, including generated-file checks. */
+function selectCheckRunner(
+    input: CheckInput,
+    implementation: CheckImplementations[string] | undefined,
+): RunnableCheck['run'] {
+    if (input.check.generator_outputs !== undefined) return runBuiltInCheck(checkStaleGeneratorOutputs);
+    if (implementation?.check === undefined)
+        return (implementation as Extract<CheckImplementations[string], { run: unknown }>).run;
+    return runBuiltInCheck(implementation.check);
+}
+
+export { checkFindings, buildCheckInput, swiftBuildInput, isolateCompilerCache };

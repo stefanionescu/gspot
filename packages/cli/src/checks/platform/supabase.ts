@@ -31,7 +31,6 @@ import {
     DENO_LINT_COMMAND,
     DENO_CHECK_COMMAND,
     ADMIN_KEY_EXTENSIONS,
-    FUNCTION_ENTRY_FILES,
     SUPABASE_CONFIG_TOML,
 } from '#cli/config/checks/platform/supabase.ts';
 
@@ -63,7 +62,7 @@ function firstError(input: CheckInput, folder: string, stderr: string): Finding 
  * @returns the parsed configuration or its diagnostic.
  */
 function readConfigToml(input: CheckInput): Parsed<SupabaseConfiguration> | undefined {
-    const local = posix.join(input.selection.scope.path, SUPABASE_CONFIG_TOML);
+    const local = posix.join(input.scope.scope.path, SUPABASE_CONFIG_TOML);
     const text = readCachedText(input.reads, local);
     if (text === undefined) return undefined;
     try {
@@ -108,15 +107,21 @@ const denoLintReportSchema = z.object({
  * @param input the check input.
  * @returns the folder paths, repository-relative.
  */
-function functionFolders(input: CheckInput): string[] {
-    const base = input.selection.view.options('supabase').functions_folder;
-    const folders = input.files
-        .map((file) => file.path)
-        .filter((path) => path.startsWith(`${base}/`) && FUNCTION_ENTRY.test(path))
-        .map((path) => path.slice(0, path.lastIndexOf('/')))
-        .filter((folder) => folder.split('/').length === base.split('/').length + 1)
-        .filter((folder) => !posix.basename(folder).startsWith(SHARED_PREFIX));
-    return [...new Set(folders)];
+function listFunctionEntries(input: CheckInput): string[] {
+    const base = input.scope.view.options('supabase').functions_folder;
+    const entries = new Map<string, string>();
+    for (const { path } of input.files) {
+        const folder = posix.dirname(path);
+        if (
+            !path.startsWith(base + '/') ||
+            !FUNCTION_ENTRY.test(path) ||
+            folder.split('/').length !== base.split('/').length + 1 ||
+            posix.basename(folder).startsWith(SHARED_PREFIX)
+        )
+            continue;
+        if (!entries.has(folder)) entries.set(folder, path);
+    }
+    return [...entries.values()];
 }
 
 /**
@@ -126,10 +131,11 @@ function functionFolders(input: CheckInput): string[] {
  */
 export async function supabaseStoragePolicies(input: CheckInput): Promise<Finding[]> {
     const read = readConfigToml(input);
-    const at = { file: posix.join(input.selection.scope.path, SUPABASE_CONFIG_TOML), line: 1 };
+    const at = { file: posix.join(input.scope.scope.path, SUPABASE_CONFIG_TOML), line: 1 };
     if (read === undefined || 'error' in read) return []; // supabase/project-file reports project syntax errors.
     const { value: config } = read;
-    const migrations = await readMigrations(input);
+    const { migrations, findings: syntax } = await readMigrations(input);
+    if (syntax.length > 0) return syntax;
     const policed = new Set<string>();
     const policies = migrations
         .flatMap((migration) => migration.statements)
@@ -165,9 +171,10 @@ export async function supabaseStoragePolicies(input: CheckInput): Promise<Findin
  */
 export async function supabaseDenoLint(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
-    for (const folder of functionFolders(input)) {
+    for (const entry of listFunctionEntries(input)) {
+        const folder = posix.dirname(entry);
         const argv = [...DENO_LINT_COMMAND, ...denoConfigArguments(input.root, folder), join(input.root, folder)];
-        const result = await runCheckTool(input, argv, { cwd: join(input.root, input.selection.scope.path) });
+        const result = await runCheckTool(input, argv, { cwd: join(input.root, input.scope.scope.path) });
         let report: DenoLintReport;
         try {
             report = denoLintReportSchema.parse(JSON.parse(result.stdout));
@@ -202,13 +209,10 @@ export async function supabaseDenoLint(input: CheckInput): Promise<Finding[]> {
  */
 export async function supabaseDenoCheck(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
-    for (const folder of functionFolders(input)) {
-        const entry = FUNCTION_ENTRY_FILES.map((name) => join(input.root, folder, name)).find(
-            (path) => statSync(path, { throwIfNoEntry: false }) !== undefined,
-        );
-        if (entry === undefined) continue;
-        const argv = [...DENO_CHECK_COMMAND, ...denoConfigArguments(input.root, folder), entry];
-        const result = await runCheckTool(input, argv, { cwd: join(input.root, input.selection.scope.path) });
+    for (const entry of listFunctionEntries(input)) {
+        const folder = posix.dirname(entry);
+        const argv = [...DENO_CHECK_COMMAND, ...denoConfigArguments(input.root, folder), join(input.root, entry)];
+        const result = await runCheckTool(input, argv, { cwd: join(input.root, input.scope.scope.path) });
         if (result.code !== 0) findings.push(firstError(input, folder, result.stderr));
     }
     return findings;
@@ -220,8 +224,8 @@ export async function supabaseDenoCheck(input: CheckInput): Promise<Finding[]> {
  * @returns the findings.
  */
 export function supabaseServiceRoleKey(input: CheckInput): Finding[] {
-    const folder = input.selection.view.options('supabase').functions_folder;
-    const tests = input.selection.view.test_files;
+    const folder = input.scope.view.options('supabase').functions_folder;
+    const tests = input.scope.view.test_files;
     const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);
     const extensions = [...listTaggedExtensions(...ADMIN_KEY_TAGS), ...ADMIN_KEY_EXTENSIONS];
     const files = input.files.filter(

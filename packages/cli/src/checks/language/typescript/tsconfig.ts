@@ -17,13 +17,13 @@ import { projectChecked, selectRequiredTsconfigOptions } from '#cli/checks/langu
 export function typescriptTsconfig(input: CheckInput): Finding[] {
     const project = readTsconfigProject(
         input.root,
-        input.selection.scope.path,
+        input.scope.scope.path,
         input.files.filter((file) => file.tags.includes(TYPESCRIPT_TAG)).map((file) => file.path),
         input.reads,
     );
     const scopeTsconfig =
         project === undefined
-            ? joinScope(input.selection.scope.path, TSCONFIG_FILE)
+            ? joinScope(input.scope.scope.path, TSCONFIG_FILE)
             : convertToPosixPath(relative(input.root, project.path));
     const candidates = new Set([
         scopeTsconfig,
@@ -34,20 +34,19 @@ export function typescriptTsconfig(input: CheckInput): Finding[] {
                 return TSCONFIG_NAME.test(name);
             }),
     ]);
-    const required = selectRequiredTsconfigOptions(input.settingsFile.settings.level, input.selection.selected);
+    const required = selectRequiredTsconfigOptions(input.settingsFile.settings.level, input.scope.selected);
     const projects = [...candidates].flatMap((path) => {
         const parsed = readTsconfig(input.root, join(input.root, path), input.reads);
         return parsed === undefined ? [] : [{ path, parsed }];
     });
     const unchecked = projects.filter(
         ({ path }) =>
-            !projectChecked(
-                input.reads,
-                input.check.name,
-                join(input.root, path),
-                input.selection.scope.path,
-                required,
-            ),
+            !projectChecked(input.reads, {
+                check: input.check.name,
+                path: join(input.root, path),
+                scope: input.scope.scope.path,
+                required: required,
+            }),
     );
     if (projects.length > 0 && unchecked.length === 0)
         throw new GspotError('skip', 'An ancestor compiler check covers this project.');

@@ -65,11 +65,11 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
     const work = workFolder.path;
     const owned = [
         ...new Set(
-            filterSourceConfigurations(input.selection.selected).flatMap((manifest) =>
+            filterSourceConfigurations(input.scope.selected).flatMap((manifest) =>
                 listCoveredFiles(manifest.files, input.files, {
-                    selected: input.selection.selected,
-                    scope: input.selection.scope.path,
-                    view: input.selection.view,
+                    selected: input.scope.selected,
+                    scope: input.scope.scope.path,
+                    view: input.scope.view,
                 })
                     .filter((file) => file.kind === 'source')
                     .map((file) => file.path),
@@ -90,7 +90,7 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
     const path = join(work, JSCPD_REPORT_FILE);
     if (statSync(path, { throwIfNoEntry: false }) === undefined)
         throw new Error(`The jscpd command wrote no report: ${toolOutputDetail(result)}`);
-    const limit = input.selection.view.options('limits').duplicate_percent;
+    const limit = input.scope.view.options('limits').duplicate_percent;
     const report = cloneReportSchema.parse(JSON.parse(readBytes(work, JSCPD_REPORT_FILE).toString('utf8')));
     const share = report.statistics.total.percentage;
     if (share <= limit) return [];

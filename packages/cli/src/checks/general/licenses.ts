@@ -42,7 +42,7 @@ function isAllowed(license: string, allow: Set<string>): boolean {
 function assertInstalled(input: CheckInput, name: string, start: string): void {
     if (statSync(join(start, name), { throwIfNoEntry: false })?.isDirectory() !== true)
         throw new Error(
-            `Install the project dependencies first: ${name} is missing in ${input.selection.scope.path === '' ? 'the root' : input.selection.scope.path}.`,
+            `Install the project dependencies first: ${name} is missing in ${input.scope.scope.path === '' ? 'the root' : input.scope.scope.path}.`,
         );
 }
 
@@ -103,9 +103,9 @@ async function scanLicenses(input: CheckInput) {
                 : { scan: pythonLicenses, packageKey: normalizePythonIdentity };
         const selected = {
             ...input,
-            selection,
+            scope: selection,
         };
-        const configuration = selected.selection.view.options('licenses');
+        const configuration = selected.scope.view.options('licenses');
         const packages = await scanner.scan(selected, join(input.root, dirname(manifest)));
         if (packages.length === 0)
             throw new Error(

@@ -38,24 +38,28 @@ import {
     OPTIONAL_GENERATED_PATHS,
 } from '#cli/config/checks/general/docs.ts';
 
-// eslint-disable-next-line complexity, sonarjs/cognitive-complexity -- reason: This index combines tracked, ignored, generated, and declared paths; splitting it creates one-caller index wrappers.
+function listGeneratorPaths(input: CheckInput): string[] {
+    const paths: string[] = [];
+    const generatorOutputs = input.scope.selected.flatMap((manifest) =>
+        manifest.checks.flatMap((check) => check.generator_outputs ?? []),
+    );
+    for (const output of generatorOutputs) {
+        if (output.kind === 'pattern') continue;
+        const path = output.path.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
+            const value = input.scope.view.settings[name];
+            return typeof value === 'string' ? value : '';
+        });
+        if (path !== '') paths.push(path);
+    }
+    return paths;
+}
+
 function knownPaths(input: CheckInput): Set<string> {
     const known = includeParentFolders(input.repositoryFiles.map((file) => file.path));
     for (const path of includeParentFolders([...input.generatedPaths()])) known.add(path);
     for (const path of includeParentFolders([...OPTIONAL_GENERATED_PATHS])) known.add(path);
-    for (const manifest of input.selection.selected)
-        for (const toolFile of manifest.toolFiles) known.add(toolFile.target);
-    const outputs = input.selection.selected.flatMap((manifest) =>
-        manifest.checks.flatMap((check) => check.generator_outputs ?? []),
-    );
-    for (const output of outputs) {
-        if (output.kind === 'pattern') continue;
-        const path = output.path.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-            const value = input.selection.view.settings[name];
-            return typeof value === 'string' ? value : '';
-        });
-        if (path !== '') known.add(path);
-    }
+    for (const toolFile of input.scope.selected.flatMap((manifest) => manifest.toolFiles)) known.add(toolFile.target);
+    for (const path of listGeneratorPaths(input)) known.add(path);
     const ignored = input.repositoryFiles
         .filter((file) => posix.basename(file.path) === '.gitignore')
         .flatMap((file) =>
@@ -73,7 +77,7 @@ function knownPaths(input: CheckInput): Set<string> {
         );
     for (const path of includeParentFolders(ignored)) known.add(path);
     // Check names resemble paths. A reference to postgres/migration-order identifies that check.
-    for (const manifest of input.manifests.values()) for (const check of manifest.checks) known.add(check.name);
+    for (const check of input.manifests.values().flatMap((manifest) => manifest.checks)) known.add(check.name);
     for (const check of Object.values(input.settingsFile.settings.check)) known.add(check.name);
     return known;
 }
@@ -98,7 +102,7 @@ function packageScripts(input: CheckInput, file: string): string[] | undefined {
 }
 
 function isMissing(token: string, file: string, index: PathIndex): boolean {
-    const clean = cleanPathToken(token);
+    const clean = token.replace(LEADING_DOT_SLASH, '').replace(TRAILING_SLASH, '');
     const relative = posix.normalize(posix.join(posix.dirname(file), clean));
     if (index.known.has(relative)) return false;
     if (token.startsWith('./') || token.startsWith('../')) return true;
@@ -172,12 +176,6 @@ function taskSources(input: CheckInput, scope: string): TaskSources {
     };
 }
 
-function withoutPunctuation(token: string): string {
-    let end = token.length;
-    while (end > 0 && TRAILING_PUNCTUATION.includes(token.charAt(end - 1))) end -= 1;
-    return token.slice(0, end);
-}
-
 /**
  * Prose and untitled command bodies, with their numbers.
  * @param text the Markdown text.
@@ -206,7 +204,11 @@ function proseLines(text: string): NumberedLine[] {
 function pathTokens(line: string): string[] {
     return line
         .split(TOKEN_SEPARATORS)
-        .map((token) => withoutPunctuation(token))
+        .map((token) => {
+            let end = token.length;
+            while (end > 0 && TRAILING_PUNCTUATION.includes(token.charAt(end - 1))) end -= 1;
+            return token.slice(0, end);
+        })
         .map((token) => {
             const marker = EMPHASIS_MARKERS.find((marker) => token.startsWith(marker));
             if (marker !== undefined && token.endsWith(marker)) return token.slice(marker.length, -marker.length);
@@ -216,15 +218,6 @@ function pathTokens(line: string): string[] {
             (token) =>
                 token.includes('/') && PATH_CHARS.test(token) && PATH_TOKEN_SKIPS.every((skip) => !skip.test(token)),
         );
-}
-
-/**
- * Remove an optional current-directory prefix and a trailing directory slash from a prose path token.
- * @param token the authored token.
- * @returns the path used for repository comparisons.
- */
-function cleanPathToken(token: string): string {
-    return token.replace(LEADING_DOT_SLASH, '').replace(TRAILING_SLASH, '');
 }
 
 /**
@@ -252,18 +245,18 @@ export function missingPaths(input: CheckInput): Finding[] {
  */
 export function requiredFiles(input: CheckInput): Finding[] {
     const findings: Finding[] = [];
-    const readme = joinScope(input.selection.scope.path, README_FILE);
+    const readme = joinScope(input.scope.scope.path, README_FILE);
     if (statSync(join(input.root, readme), { throwIfNoEntry: false }) === undefined)
         findings.push(
             findingAt(
                 input,
                 { file: readme },
                 'missing-readme',
-                `The scope ${input.selection.scope.path === '' ? 'root' : input.selection.scope.path} has no README.md.`,
+                `The scope ${input.scope.scope.path === '' ? 'root' : input.scope.scope.path} has no README.md.`,
             ),
         );
     if (
-        input.selection.scope.path === '' &&
+        input.scope.scope.path === '' &&
         !readdirSync(input.root).some((name) => LICENSE_FILE.test(name) && statSync(join(input.root, name)).isFile())
     )
         findings.push(findingAt(input, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'));

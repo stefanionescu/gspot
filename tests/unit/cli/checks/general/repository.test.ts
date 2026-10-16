@@ -9,8 +9,8 @@ import { createSandbox } from '#tests/setup/sandbox.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { BASH_REPOSITORY } from '#tests/config/bash/sandbox.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { TRACKED_PATTERNS, LARGE_FILE_SETTINGS, LARGE_FILE_ATTRIBUTES } from '#tests/config/repository.ts';
 
 test("tracked-files follows each scope's configurations: env files, dependency folders and build output are reported", async () => {
@@ -25,7 +25,7 @@ test("tracked-files follows each scope's configurations: env files, dependency f
     const staged = git(sandbox.path, ['add', '-f', '.']);
     expect(staged.code, staged.stderr).toBe(0);
     const input = buildCheckInput(await openSession(sandbox.path), 'repository/tracked-files', { paths: [] });
-    const found = CHECK_FUNCTIONS['repository/tracked-files']({
+    const found = CHECK_IMPLEMENTATIONS['repository/tracked-files'].check({
         ...input,
         index: [...input.index, ...input.index, ...indexOnly.map((path) => ({ ...input.index[0]!, path }))],
     });

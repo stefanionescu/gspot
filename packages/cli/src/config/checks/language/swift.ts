@@ -30,7 +30,7 @@ export const SWIFTLINT_CONFIG_FILE = '.swiftlint.yml';
 
 export const MACOS_PRIVATE_REPLACEMENT = '$<before>/$<folder>/';
 
-export const BUILD_LEVELS = ['error'] as const;
+export const BUILD_LEVELS: ReadonlySet<string> = new Set(['error']);
 
 export const SWIFTLINT_YML = 'swiftlint.yml';
 
@@ -40,7 +40,7 @@ export const SWIFTLINT_CONFIG_FLAG = '--config';
 
 export const COMPILER_LOG_FLAG = '--compiler-log-path';
 
-export const REPORTED_LEVELS = ['error', 'warning'] as const;
+export const REPORTED_LEVELS: ReadonlySet<string> = new Set(['error', 'warning']);
 
 export const PERIPHERY_YML = 'periphery.yml';
 

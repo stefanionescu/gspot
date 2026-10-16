@@ -5,7 +5,7 @@ import { pathExists } from '#tests/setup/files.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { processResult } from '#tests/setup/processes.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildPlan, scopeBuildFolder } from '#cli/checks/language/swift/build-folder.ts';
 import { checkFindings, buildCheckInput, swiftBuildInput } from '#tests/setup/check-input.ts';
@@ -38,7 +38,7 @@ test('Swift build side effects stay in the source copy and do not become later i
             return processResult();
         }),
     );
-    expect(await CHECK_FUNCTIONS['swift/build'](initial)).toStrictEqual([]);
+    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(initial)).toStrictEqual([]);
     expect(await checkFindings(sandbox.path, 'swift/build')).toStrictEqual([]);
     expect(sources).toStrictEqual(['let value = 1\n', 'let value = 1\n']);
     expect(artifacts).toStrictEqual([
@@ -73,7 +73,7 @@ test('Periphery build side effects stay in its source copy and findings name ori
             return processResult({ code: 1, stdout: `${cwd}/Main.swift:1:5: warning: Property unused is unused` });
         }),
     );
-    expect(await CHECK_FUNCTIONS['swift/periphery'](input)).toMatchObject([
+    expect(await CHECK_IMPLEMENTATIONS['swift/periphery'].check(input)).toMatchObject([
         { file: 'Main.swift', line: 1, column: 5, rule: 'unused' },
     ]);
     expect(sources).toStrictEqual(['let unused = 1\n']);
@@ -103,7 +103,10 @@ test('concurrent Swift compilation and Periphery keep separate source and build 
     );
     try {
         expect(
-            await Promise.all([CHECK_FUNCTIONS['swift/build'](compile), CHECK_FUNCTIONS['swift/periphery'](periphery)]),
+            await Promise.all([
+                CHECK_IMPLEMENTATIONS['swift/build'].check(compile),
+                CHECK_IMPLEMENTATIONS['swift/periphery'].check(periphery),
+            ]),
         ).toStrictEqual([[], []]);
         expect(new Set(directories).size).toBe(2);
         const compilePlan = buildPlan(compile);

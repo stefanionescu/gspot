@@ -103,13 +103,13 @@ function openBuildCache(folder: string): Files {
  * @param purpose the tool whose outputs stay separate.
  * @returns the build folder.
  */
-export function scopeBuildFolder(input: Pick<CheckInput, 'root' | 'selection'>, purpose: SwiftBuildPurpose): string {
+export function scopeBuildFolder(input: Pick<CheckInput, 'root' | 'scope'>, purpose: SwiftBuildPurpose): string {
     return join(
         buildFolder(input.root),
         SWIFT_BUILD_FOLDER,
-        input.selection.scope.path === ''
+        input.scope.scope.path === ''
             ? ROOT_BUILD_FOLDER
-            : `${SCOPE_FOLDER_PREFIX}${Buffer.from(input.selection.scope.path).toString('hex')}`,
+            : `${SCOPE_FOLDER_PREFIX}${Buffer.from(input.scope.scope.path).toString('hex')}`,
         purpose,
     );
 }
@@ -118,17 +118,18 @@ export function scopeBuildFolder(input: Pick<CheckInput, 'root' | 'selection'>, 
  * The build of one scope: the command, the folder it runs in, and where its log goes.
  * @param input the check input.
  * @param purpose the tool whose command uses a separate cache.
+ * @param purpose.purpose the tool whose build needs its own cache.
  * @returns the plan.
  */
 export function buildPlan(
     input: CheckInput,
-    purpose: Exclude<SwiftBuildPurpose, 'periphery'> = 'compile',
+    { purpose = 'compile' }: { purpose?: Exclude<SwiftBuildPurpose, 'periphery'> } = {},
 ): SwiftBuildPlan {
     const folder = scopeBuildFolder(input, purpose);
     const log = join(folder, BUILD_LOG);
-    const { project, scheme, destination } = input.selection.view.options('xcode');
+    const { project, scheme, destination } = input.scope.view.options('xcode');
     if (project === undefined) {
-        if (!input.repositoryFiles.some(({ path }) => path === posix.join(input.selection.scope.path, PACKAGE_SWIFT)))
+        if (!input.repositoryFiles.some(({ path }) => path === posix.join(input.scope.scope.path, PACKAGE_SWIFT)))
             throw new GspotError('skip', 'Set xcode.project or add Package.swift in this scope.');
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {
@@ -144,7 +145,7 @@ export function buildPlan(
         XCODEBUILD_PROGRAM,
         ...XCODE_COMMANDS[purpose],
         container,
-        posix.relative(input.selection.scope.path, project),
+        posix.relative(input.scope.scope.path, project),
         XCODE_SCHEME_FLAG,
         scheme,
         XCODE_DESTINATION_FLAG,

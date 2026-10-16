@@ -18,7 +18,7 @@ import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli
 
 function importLinterFile(input: CheckInput): string | undefined {
     for (const file of IMPORT_LINTER_FILES) {
-        const path = posix.join(input.selection.scope.path, file);
+        const path = posix.join(input.scope.scope.path, file);
         const text = readCachedText(input.reads, path);
         if (text === undefined) continue;
         const declared =
@@ -50,11 +50,11 @@ export async function importLinter(input: CheckInput): Promise<Finding[]> {
     if (configuration === undefined) throw new GspotError('skip', 'This scope has no import-linter configuration.');
     const result = await runCheckTool(
         input,
-        buildUvRunCommand(input.selection, join(input.root, input.selection.scope.path), [
+        buildUvRunCommand(input.scope, join(input.root, input.scope.scope.path), [
             ...LINT_IMPORTS_COMMAND,
             basename(configuration),
         ]),
-        { cwd: join(input.root, input.selection.scope.path) },
+        { cwd: join(input.root, input.scope.scope.path) },
     );
     const lines = stripVTControlCharacters(result.stdout).split('\n');
     const broken = lines.slice(lines.findIndex((line) => line.trim() === 'Contracts')).flatMap((line) => {

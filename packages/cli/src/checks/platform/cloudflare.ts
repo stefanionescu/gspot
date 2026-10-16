@@ -1,6 +1,7 @@
+import { findingAt } from '#cli/checks/finding.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
+import { listSourcePaths } from '#cli/repository/coverage.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import type { HeaderBlock, HeaderBlocks } from '#cli/types/checks/platform.ts';
 
@@ -85,7 +86,7 @@ function redirectFindings(text: string): NumberedLine[] {
  * @returns the findings.
  */
 export function cloudflareRedirects(input: CheckInput): Finding[] {
-    return sourcePaths(input, [REDIRECTS_FILE]).flatMap((path) =>
+    return listSourcePaths(input.files, [REDIRECTS_FILE]).flatMap((path) =>
         redirectFindings(readCachedBytes(input.reads, path).toString('utf8')).map((entry) =>
             findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
@@ -97,7 +98,7 @@ export function cloudflareRedirects(input: CheckInput): Finding[] {
  * @returns the findings.
  */
 export function cloudflareHeaders(input: CheckInput): Finding[] {
-    return sourcePaths(input, ['_headers']).flatMap((path) =>
+    return listSourcePaths(input.files, ['_headers']).flatMap((path) =>
         parseHeadersFile(readCachedBytes(input.reads, path).toString('utf8')).findings.map((entry) =>
             findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
@@ -110,7 +111,7 @@ export function cloudflareHeaders(input: CheckInput): Finding[] {
  * @returns the findings.
  */
 export function cloudflareSecurityHeaders(input: CheckInput): Finding[] {
-    return sourcePaths(input, ['_headers']).flatMap((path) => {
+    return listSourcePaths(input.files, ['_headers']).flatMap((path) => {
         const { blocks } = parseHeadersFile(readCachedBytes(input.reads, path).toString('utf8'));
         const held = new Map(
             blocks

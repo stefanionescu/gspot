@@ -1,12 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
+import { buildRunOptions } from '#tests/setup/run-gspot.ts';
+import { type CheckInput } from '#cli/types/execution/check.ts';
 import { MARKDOWN_FENCE_CASES } from '#tests/config/markdown.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 
 test.each([...MARKDOWN_FENCE_CASES])(
@@ -30,12 +32,15 @@ test('markdown/fences reports a Bash syntax error in a fence, passes after the f
     let selected: CheckInput = buildCheckInput(await openSession(sandbox.path), 'markdown/fences', {
         paths: ['a.md'],
     });
-    const found = await CHECK_FUNCTIONS['markdown/fences'](selected);
+    const found = await CHECK_IMPLEMENTATIONS['markdown/fences'].check(selected);
     expect(found).toMatchObject([{ check: 'markdown/fences', file: 'a.md', line: 2, rule: 'syntax', fixable: false }]);
     expect(found[0]!.message).toContain('Syntax error');
     await writeFile(join(sandbox.path, 'a.md'), '```bash\nprintf "%s\\n" "Hello"\n```\n');
     selected = buildCheckInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] });
-    expect(await CHECK_FUNCTIONS['markdown/fences'](selected)).toStrictEqual([]);
-    selected.cancelSignal = AbortSignal.abort();
-    expect(CHECK_FUNCTIONS['markdown/fences'](selected)).rejects.toBe(selected.cancelSignal.reason);
+    expect(await CHECK_IMPLEMENTATIONS['markdown/fences'].check(selected)).toStrictEqual([]);
+    const cancelled = await executeRun(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['markdown/fences'], cancelSignal: AbortSignal.abort() }),
+    );
+    expect(cancelled.report.checks).toMatchObject([{ status: 'error', note: 'The check was canceled.' }]);
 });

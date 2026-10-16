@@ -1,6 +1,7 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { convertToSystemPath } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { extractToolFileName } from '#cli/planning/files.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
@@ -72,7 +73,9 @@ function existingFileArguments(root: string, part: string): string[] | undefined
 
 function allToolFiles(session: CommandSource, planned: SubstitutionCheck): ToolFileDeclaration[] {
     // A check's own targets come first because toolFilePath selects the first matching target.
-    const own = planned.manifest?.toolFiles ?? [];
+    const own = planned.scope.selected
+        .filter((manifest) => manifest.checks.some((check) => check.name === planned.check.name))
+        .flatMap((manifest) => manifest.toolFiles);
     const every = session.manifests
         .values()
         .flatMap((manifest) => manifest.toolFiles)
@@ -167,7 +170,11 @@ export function commandToolFiles(
  *
  * @returns repository-relative paths for the scratch copy.
  */
-export function scratchFiles(session: CommandSource, planned: SubstitutionCheck, command: string[]): string[] {
+export function scratchFiles(
+    session: CommandSource,
+    planned: SubstitutionCheck & Pick<PlannedCheck, 'manifest'>,
+    command: string[],
+): string[] {
     const scope = planned.scope.scope.path;
     const owned = (planned.manifest?.toolFiles ?? [])
         .filter((config) => !config.fragment)

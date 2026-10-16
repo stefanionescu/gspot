@@ -1,5 +1,3 @@
-// Selects positional repository paths and refuses unknown check IDs.
-// Checking one tree: the working tree, or a copy of the index or of a pushed commit.
 import { resolve, relative } from 'node:path';
 import { executeRun } from '#cli/execution/run.ts';
 import { hookStatus } from '#cli/install/hooks.ts';
@@ -10,16 +8,17 @@ import { openSession } from '#cli/commands/session.ts';
 import { warn, colors } from '#cli/system/terminal.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { runText } from '#cli/commands/check/report.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
+import { type CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
-import type { Session, StageFilter } from '#cli/types/planning.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
-import type { RunReport, FixReport, RunOptions } from '#cli/types/execution/check.ts';
+import { type Session, type StageFilter } from '#cli/types/planning.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
-import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
+import { type RunReport, type FixReport, type RunOptions } from '#cli/types/execution/check.ts';
+import { type RunFilters, type CheckOptions, type RevisionSource } from '#cli/types/commands/check.ts';
+// Selects positional repository paths and refuses unknown check IDs.
+// Checking one tree: the working tree, or a copy of the index or of a pushed commit.
 
 function buildRunOptions(
     options: CheckOptions,
@@ -32,7 +31,6 @@ function buildRunOptions(
     const changedCommits = changed?.commits;
     const comparison = buildComparison(revision, changed);
     return {
-        checks: BUILT_IN_CHECKS,
         ...stripUndefined({
             stage,
             fix: options.fix,

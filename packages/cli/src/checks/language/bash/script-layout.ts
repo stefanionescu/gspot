@@ -37,7 +37,19 @@ function entryFindings(file: ScriptFile, code: NumberedLine[], report: ScriptRep
     if (last?.text !== MAIN_CALL) report(last?.number ?? 1, 'main-call', `An executable ends with ${MAIN_CALL}.`);
 }
 
-function libraryLineFindings(line: NumberedLine, file: ScriptFile, isDeclarative: boolean, report: ScriptReport): void {
+function isDeclarativeLine(text: string): boolean {
+    return (
+        SOURCE_STATEMENT.test(text) ||
+        text.startsWith(READONLY_WORD) ||
+        TOP_LEVEL_ASSIGNMENT.test(withoutDeclaration(text))
+    );
+}
+
+function libraryLineFindings(
+    line: NumberedLine,
+    file: ScriptFile,
+    { isConfigOwner, report }: { isConfigOwner: boolean; report: ScriptReport },
+): void {
     if (line.text.startsWith(SET_COMMAND)) {
         report(line.number, 'library-options', 'A sourced library does not change shell options.');
         return;
@@ -51,7 +63,7 @@ function libraryLineFindings(line: NumberedLine, file: ScriptFile, isDeclarative
         report(line.number, 'library-exit', 'A sourced library does not exit.');
         return;
     }
-    if (isDeclarative) return;
+    if (isConfigOwner || isDeclarativeLine(line.text)) return;
     report(
         line.number,
         'library-flow',
@@ -59,7 +71,11 @@ function libraryLineFindings(line: NumberedLine, file: ScriptFile, isDeclarative
     );
 }
 
-function libraryFindings(file: ScriptFile, code: NumberedLine[], isConfigOwner: boolean, report: ScriptReport): void {
+function libraryFindings(
+    file: ScriptFile,
+    code: NumberedLine[],
+    { isConfigOwner, report }: { isConfigOwner: boolean; report: ScriptReport },
+): void {
     const last = code.at(-1);
     if (last?.text === MAIN_CALL) {
         report(
@@ -71,17 +87,10 @@ function libraryFindings(file: ScriptFile, code: NumberedLine[], isConfigOwner: 
     }
     if (file.functions.some((entry) => entry.name === MAIN_FUNCTION))
         report(1, 'library-main', 'A sourced library defines no main.');
-    for (const line of code) {
-        const isDeclarative =
-            isConfigOwner ||
-            SOURCE_STATEMENT.test(line.text) ||
-            line.text.startsWith(READONLY_WORD) ||
-            TOP_LEVEL_ASSIGNMENT.test(withoutDeclaration(line.text));
-        libraryLineFindings(line, file, isDeclarative, report);
-    }
+    for (const line of code) libraryLineFindings(line, file, { isConfigOwner, report });
 }
 
-function fileFindings(input: CheckInput, file: ScriptFile, isConfigOwner: boolean): Finding[] {
+function fileFindings(input: CheckInput, file: ScriptFile, { isConfigOwner }: { isConfigOwner: boolean }): Finding[] {
     const findings: Finding[] = [];
     const report: ScriptReport = (line, rule, text) => {
         findings.push(findingAt(input, { file: file.path, line }, rule, text));
@@ -92,7 +101,7 @@ function fileFindings(input: CheckInput, file: ScriptFile, isConfigOwner: boolea
     if (file.isExecutable) {
         strictModeFindings(code, report);
         entryFindings(file, code, report);
-    } else libraryFindings(file, code, isConfigOwner, report);
+    } else libraryFindings(file, code, { isConfigOwner, report });
     for (const temporary of file.temporaryPaths)
         if (temporary.cleanupLines.length === 0)
             report(temporary.line, 'mktemp-trap', `The temporary path ${temporary.name} needs a trap that removes it.`);
@@ -118,9 +127,9 @@ function withoutDeclaration(code: string): string {
  * @returns the findings.
  */
 export async function bashScriptLayout(input: CheckInput): Promise<Finding[]> {
-    const isOwner = buildPathMatcher(input.selection.view.roles.environment_readers);
+    const isOwner = buildPathMatcher(input.scope.view.roles.environment_readers);
     const index = await readScripts(input);
     return index
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))
-        .flatMap((file) => fileFindings(input, file, isOwner(file.path)));
+        .flatMap((file) => fileFindings(input, file, { isConfigOwner: isOwner(file.path) }));
 }

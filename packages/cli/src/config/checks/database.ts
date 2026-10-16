@@ -1,4 +1,4 @@
-export const CONSTRAINT_SUFFIXES = {
+export const CONSTRAINT_SUFFIXES: Readonly<Record<string, string>> = {
     CONSTR_PRIMARY: 'pkey',
     CONSTR_UNIQUE: 'key',
     CONSTR_FOREIGN: 'fkey',

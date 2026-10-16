@@ -1,5 +1,7 @@
+import { z } from 'zod';
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
+import { safeParseJson } from '#cli/parsers/json.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { MESSAGE_FILE_SUFFIX } from '#cli/config/checks/library.ts';
@@ -30,16 +32,21 @@ function translationMessage(text: string): string | undefined {
  * @param input the check input.
  * @returns the findings.
  */
-export function translationsMessages(input: CheckInput): Finding[] {
-    const options = input.selection.view.options('translations');
+function translationsMessages(input: CheckInput): Finding[] {
+    const options = input.scope.view.options('translations');
     const directory = options.messages_folder as string;
     const base = options.base_locale;
     const files = input.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${directory}/`) && path.endsWith(MESSAGE_FILE_SUFFIX));
-    const messagesByPath = new Map(
-        files.map((path) => [path, flattenMessages(JSON.parse(readCachedBytes(input.reads, path).toString('utf8')))]),
-    );
+    const messagesByPath = new Map<string, Map<string, string>>();
+    const findings: Finding[] = [];
+    for (const path of files) {
+        const parsed = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), messagesSchema);
+        if ('error' in parsed) findings.push(findingAt(input, { file: path, line: 1 }, 'syntax', parsed.error));
+        else messagesByPath.set(path, flattenMessages(parsed.value));
+    }
+    if (findings.length > 0) return findings;
     const baseline = [...messagesByPath].find(([path]) => posix.basename(path) === `${base}${MESSAGE_FILE_SUFFIX}`);
     if (baseline === undefined)
         return [
@@ -76,3 +83,7 @@ export function translationsMessages(input: CheckInput): Finding[] {
         })
         .toArray();
 }
+
+const messagesSchema = z.record(z.string(), z.unknown()) satisfies z.ZodType<Record<string, unknown>>;
+
+export { translationsMessages };

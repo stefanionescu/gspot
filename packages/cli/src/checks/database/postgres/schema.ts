@@ -33,7 +33,7 @@ function constraintName(node: Constraint, table: string, kind: string, keys: str
     const declared = node.conname ?? '';
     if (declared !== '') return declared;
     const tableName = table.slice(table.indexOf('.') + 1);
-    const suffix = Object.entries(CONSTRAINT_SUFFIXES).find(([name]) => name === kind)?.[1];
+    const suffix = CONSTRAINT_SUFFIXES[kind];
     return [tableName, ...(kind === 'CONSTR_PRIMARY' ? [] : keys), suffix].join('_');
 }
 

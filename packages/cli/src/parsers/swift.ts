@@ -1,8 +1,11 @@
 // Identifies Swift imports, tests, and package targets.
 import { posix } from 'node:path';
+import type { Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { SWIFT_TEST_TAG } from '#cli/config/repository/inventory.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
+import { SWIFT_ENV_READ } from '#cli/config/checks/general/structure.ts';
+import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 
 import {
     SWIFT_TYPE_NODE,
@@ -51,4 +54,16 @@ export async function detectSwiftTags(path: string, text: string): Promise<strin
     } finally {
         tree.delete();
     }
+}
+
+/**
+ * Read Swift process environment access from navigation expressions.
+ * @param root the parsed Swift source.
+ * @returns the environment reads and their source positions.
+ */
+export function readSwiftEnvironment(root: Node): EnvironmentRead[] {
+    return root
+        .descendantsOfType('navigation_expression')
+        .filter((node) => node.text.replaceAll(/\s+/gu, '') === SWIFT_ENV_READ)
+        .map((node) => ({ key: undefined, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }));
 }

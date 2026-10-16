@@ -2,10 +2,11 @@ import { z } from 'zod';
 import { camelCase } from 'scule';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { safeParseJson } from '#cli/parsers/json.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
+import { listSourcePaths } from '#cli/repository/coverage.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
 import {
@@ -58,7 +59,7 @@ const assetContentsSchema = z.object({
  * @returns the findings.
  */
 export function xcodeAssets(input: CheckInput): Finding[] {
-    return sourcePaths(input, [ASSET_CONTENTS])
+    return listSourcePaths(input.files, [ASSET_CONTENTS])
         .filter((path) => path.includes(XCASSETS_FOLDER))
         .flatMap((path) => {
             const read = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), assetContentsSchema);
@@ -82,10 +83,10 @@ export function xcodeAssets(input: CheckInput): Finding[] {
  * @returns the findings.
  */
 export function xcodeUnusedAssets(input: CheckInput): Finding[] {
-    const sourceTexts = sourcePaths(input, ASSET_REFERENCE_ENDINGS).map((path) =>
+    const sourceTexts = listSourcePaths(input.files, ASSET_REFERENCE_ENDINGS).map((path) =>
         readCachedBytes(input.reads, path).toString('utf8'),
     );
-    return sourcePaths(input, [ASSET_CONTENTS])
+    return listSourcePaths(input.files, [ASSET_CONTENTS])
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
         .filter((path) => {
             const name = assetSetName(path);
@@ -112,7 +113,7 @@ export function xcodeUnusedAssets(input: CheckInput): Finding[] {
  * @returns the findings.
  */
 export function xcstrings(input: CheckInput): Finding[] {
-    return sourcePaths(input, [XCSTRINGS_SUFFIX]).flatMap((path) => {
+    return listSourcePaths(input.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
         const read = safeParseJson(readCachedBytes(input.reads, path).toString('utf8'), stringsFileSchema);
         const at = { file: path, line: 1 };
         if ('error' in read) return [findingAt(input, at, 'syntax', read.error)];

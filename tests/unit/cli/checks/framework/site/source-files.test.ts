@@ -6,7 +6,7 @@ import { unlink, readFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { copyRevision } from '#cli/execution/copy/revision.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 
 test("an asset in a scope's assets folder counts as used when a file outside the scope links to it", async () => {
@@ -58,7 +58,7 @@ test('a site without Git keeps its local references and reports an unused asset'
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'site/unused-assets');
     expect(input.index).toStrictEqual([]);
-    expect(CHECK_FUNCTIONS['site/unused-assets'](input)).toMatchObject([
+    expect(CHECK_IMPLEMENTATIONS['site/unused-assets'].check(input)).toMatchObject([
         { file: 'assets/unused.svg', rule: 'dead-asset' },
     ]);
 });
@@ -89,7 +89,7 @@ test('an unstaged deletion removes the reference without failing the asset check
     await unlink(join(sandbox.path, 'README.md'));
     const input = buildCheckInput(await openSession(sandbox.path), 'site/unused-assets', { scope: 'docs' });
     expect(input.index.map((entry) => entry.path)).toContain('README.md');
-    expect(CHECK_FUNCTIONS['site/unused-assets'](input)).toMatchObject([
+    expect(CHECK_IMPLEMENTATIONS['site/unused-assets'].check(input)).toMatchObject([
         { file: 'docs/assets/logo.svg', rule: 'dead-asset' },
     ]);
 });

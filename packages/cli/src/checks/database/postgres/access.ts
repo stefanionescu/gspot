@@ -24,9 +24,7 @@ function isLooseDefiner(statement: SqlStatementView): boolean {
 function statementFindings(
     input: CheckInput,
     migrations: Migration[],
-    rule: string,
-    diagnostic: string,
-    isWrong: (statement: SqlStatementView) => boolean,
+    { rule, message, isWrong }: { rule: string; message: string; isWrong: (statement: SqlStatementView) => boolean },
 ): Finding[] {
     return migrations.flatMap((migration) =>
         migration.statements
@@ -36,7 +34,7 @@ function statementFindings(
                     input,
                     { file: migration.path, ...computePosition(migration.text, statement.start) },
                     rule,
-                    diagnostic,
+                    message,
                 ),
             ),
     );
@@ -48,8 +46,10 @@ function statementFindings(
  * @returns the findings.
  */
 export async function postgresRowLevelSecurity(input: CheckInput): Promise<Finding[]> {
-    const schema = buildSchema(await readMigrations(input));
-    const schemas = new Set(input.selection.view.options('postgres')['client_schemas']);
+    const { migrations, findings: syntax } = await readMigrations(input);
+    if (syntax.length > 0) return syntax;
+    const schema = buildSchema(migrations);
+    const schemas = new Set(input.scope.view.options('postgres')['client_schemas']);
     return schema.tables
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))) && !schema.secured.has(table))
@@ -70,22 +70,25 @@ export async function postgresRowLevelSecurity(input: CheckInput): Promise<Findi
  * @returns the findings.
  */
 export async function postgresGrants(input: CheckInput): Promise<Finding[]> {
-    const migrations = await readMigrations(input);
+    const { migrations, findings: syntax } = await readMigrations(input);
+    if (syntax.length > 0) return syntax;
     const frozen = selectFrozenMigrations(
         migrations.map(({ path }) => path),
-        input.selection.view.options('postgres').frozen_through,
+        input.scope.view.options('postgres').frozen_through,
     );
     return statementFindings(
         input,
         migrations.filter(({ path }) => !frozen.has(path)),
-        'grant-all',
-        'GRANT ALL gives every privilege, present and future; name the privileges.',
-        (statement: SqlStatementView): boolean => {
-            return (
-                statement.kind === 'GrantStmt' &&
-                statement.fields.is_grant === true &&
-                statement.fields.privileges === undefined
-            );
+        {
+            rule: 'grant-all',
+            message: 'GRANT ALL gives every privilege, present and future; name the privileges.',
+            isWrong: (statement: SqlStatementView): boolean => {
+                return (
+                    statement.kind === 'GrantStmt' &&
+                    statement.fields.is_grant === true &&
+                    statement.fields.privileges === undefined
+                );
+            },
         },
     );
 }
@@ -98,5 +101,11 @@ export async function postgresGrants(input: CheckInput): Promise<Finding[]> {
 export async function postgresDefinerSearchPath(input: CheckInput): Promise<Finding[]> {
     const diagnostic =
         'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.';
-    return statementFindings(input, await readMigrations(input), 'definer-search-path', diagnostic, isLooseDefiner);
+    const { migrations, findings: syntax } = await readMigrations(input);
+    if (syntax.length > 0) return syntax;
+    return statementFindings(input, migrations, {
+        rule: 'definer-search-path',
+        message: diagnostic,
+        isWrong: isLooseDefiner,
+    });
 }

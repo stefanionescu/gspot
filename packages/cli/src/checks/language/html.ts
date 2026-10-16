@@ -1,6 +1,6 @@
 import { decodeHTMLAttribute } from 'entities';
-import { findingAt } from '#cli/checks/finding.ts';
 import { listElementAttributes } from '#cli/parsers/html.ts';
+import { nodePlace, findingAt } from '#cli/checks/finding.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import type { SourceTree, MarkupAttribute } from '#cli/types/parsers/tree-sitter.ts';
@@ -17,8 +17,8 @@ import {
 // Script and active-document contexts can execute data URLs. Image and text resources remain inert.
 function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: string): boolean {
     if (attribute.element === 'script') return !INERT_SCRIPT_TYPES.has(scriptType);
-    const attributes = Object.entries(DOCUMENT_URL_ATTRIBUTES).find(([name]) => name === attribute.element)?.[1];
-    if (attributes === undefined || !new Set<string>(attributes).has(attribute.name)) return false;
+    const attributes = DOCUMENT_URL_ATTRIBUTES[attribute.element];
+    if (attributes?.includes(attribute.name) !== true) return false;
     const mediaType = url.pathname.split(',', 1)[0]?.split(';', 1)[0]?.trim().toLowerCase() ?? '';
     return ACTIVE_DOCUMENT_TYPES.has(mediaType);
 }
@@ -45,11 +45,7 @@ function inlineFindings(input: CheckInput, source: SourceTree): Finding[] {
             return [
                 findingAt(
                     input,
-                    {
-                        file: source.path,
-                        line: element.startPosition.row + 1,
-                        column: element.startPosition.column + 1,
-                    },
+                    nodePlace(source.path, element),
                     'inline-script',
                     'Move executable inline script to a script file.',
                 ),
@@ -62,11 +58,7 @@ function attributeFindings(input: CheckInput, source: SourceTree): Finding[] {
         const attributes = listElementAttributes(element);
         const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
         return attributes.flatMap((attribute) => {
-            const position = {
-                file: source.path,
-                line: attribute.node.startPosition.row + 1,
-                column: attribute.node.startPosition.column + 1,
-            };
+            const position = nodePlace(source.path, attribute.node);
             if (EVENT_ATTRIBUTE.test(attribute.name))
                 return [
                     findingAt(
@@ -96,7 +88,7 @@ function attributeFindings(input: CheckInput, source: SourceTree): Finding[] {
  * @param input the check input.
  * @returns the findings.
  */
-export async function htmlScripts(input: CheckInput): Promise<Finding[]> {
+async function htmlScripts(input: CheckInput): Promise<Finding[]> {
     const files = input.files.map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: Finding[] = [];
     await visitParsedSources({ ...input, files }, (source) =>
@@ -104,3 +96,5 @@ export async function htmlScripts(input: CheckInput): Promise<Finding[]> {
     );
     return findings;
 }
+
+export { htmlScripts };

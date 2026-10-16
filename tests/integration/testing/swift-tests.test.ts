@@ -77,7 +77,9 @@ lines = 100
             );
         } finally {
             await rm(
-                buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), 'coverage').folder,
+                buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), {
+                    purpose: 'coverage',
+                }).folder,
                 { recursive: true, force: true },
             );
         }

@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import type { Finding } from '#cli/types/execution/check.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
+import { type Finding } from '#cli/types/execution/check.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { DOC_TASK_FILES, DOC_TASK_SCOPES, DOC_TASK_FINDINGS, DOC_FENCE_PATH_CASES } from '#tests/config/docs.ts';
 
@@ -161,7 +161,9 @@ test.each([
     await Bun.write(join(sandbox.path, path), text);
     session.reads = createReadCache(sandbox.path);
     const selected = buildCheckInput(session, 'docs/missing-paths', { paths: ['a.md'] });
-    expect(() => CHECK_FUNCTIONS['docs/missing-paths'](selected)).toThrow(`Cannot read task definitions from ${path}.`);
+    expect(() => CHECK_IMPLEMENTATIONS['docs/missing-paths'].check(selected)).toThrow(
+        `Cannot read task definitions from ${path}.`,
+    );
 });
 
 test('documented tasks are checked against their task tool and the nearest scope that defines them', async () => {
@@ -184,7 +186,7 @@ test('a document in a child scope does not read unrelated or shadowed package sc
     await createFileTree(sandbox.path, { 'package.json': '{broken', 'sibling/package.json': '{broken' });
 
     expect(
-        CHECK_FUNCTIONS['docs/missing-paths'](
+        CHECK_IMPLEMENTATIONS['docs/missing-paths'].check(
             buildCheckInput(session, 'docs/missing-paths', { paths: ['app/nested/guide.md'] }),
         ),
     ).toStrictEqual([]);
@@ -203,7 +205,9 @@ test.each([
     await Bun.write(join(sandbox.path, path), text);
     session.reads = createReadCache(sandbox.path);
     const input = buildCheckInput(session, 'docs/missing-paths', { paths: ['app/nested/guide.md'] });
-    expect(() => CHECK_FUNCTIONS['docs/missing-paths'](input)).toThrow(`Cannot read task definitions from ${path}.`);
+    expect(() => CHECK_IMPLEMENTATIONS['docs/missing-paths'].check(input)).toThrow(
+        `Cannot read task definitions from ${path}.`,
+    );
 });
 
 test.each([...DOC_FENCE_PATH_CASES])(

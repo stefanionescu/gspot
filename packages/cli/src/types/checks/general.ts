@@ -1,6 +1,7 @@
 import type { Node, Tree } from 'web-tree-sitter';
+import type { SqlFile } from '#cli/types/parsers/sql.ts';
 import type { NamingCase } from '#cli/types/settings/tables.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
 import type { CheckInput, FindingPlace } from '#cli/types/execution/check.ts';
 import type { ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/general/naming.ts';
@@ -151,6 +152,7 @@ export type EnvironmentScope = Map<string, EnvironmentKind>;
 export type EnvironmentNames = Map<number, EnvironmentScope>;
 
 export type SuppressionSyntax = {
+    covers: (file: TrackedFile) => boolean;
     tool: string;
     marker: RegExp;
     inlineMarker: RegExp;
@@ -181,3 +183,6 @@ export type ParsedLicenses = { allowed: string[]; allowed_package: AllowedPackag
 export type ParsedSecrets = { env_examples: string[]; reader_functions: string[] };
 
 export type ParsedSpelling = { locale: (typeof SPELLING_LOCALES)[number] };
+
+/** Native declarations or the located SQL syntax failure that prevented extraction. */
+export type IdentifierRead = { identifiers: Identifier[]; error: SqlFile['error'] };

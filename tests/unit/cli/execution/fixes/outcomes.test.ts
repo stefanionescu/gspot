@@ -10,7 +10,6 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { textContaining } from '#tests/setup/matchers.ts';
 import { FIXER_OUTCOMES } from '#tests/config/execution.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { planFixer, buildFixerSettings } from '#tests/setup/fixer.ts';
 
@@ -23,7 +22,7 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %s', async (c
     planned.check.crash_pattern = '^Fatal:';
     const {
         results: [failed],
-    } = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false });
+    } = await applyFixers(session, [planned], { isDryRun: false });
     expect(failed).toMatchObject({
         status: 'failed',
         changed: [],
@@ -33,7 +32,7 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %s', async (c
     corrected.check.crash_pattern = planned.check.crash_pattern;
     const {
         results: [correctedResult],
-    } = await applyFixers(session, [corrected], { checks: BUILT_IN_CHECKS, isDryRun: false });
+    } = await applyFixers(session, [corrected], { isDryRun: false });
     expect(correctedResult).toMatchObject({
         status: 'changed',
         changed: ['source.txt'],
@@ -50,7 +49,7 @@ test.each([...FIXER_OUTCOMES])(
         if (exitCodes !== undefined) planned.check.exit_codes = [...exitCodes];
         const {
             results: [result],
-        } = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false });
+        } = await applyFixers(session, [planned], { isDryRun: false });
         expect(result).toMatchObject({ status });
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
         expect(result!.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
@@ -66,7 +65,7 @@ test('compares bytes that decode to the same replacement character', async () =>
     const planned = planFixer(session, "await Bun.write('source.txt', new Uint8Array([0xfe]))");
     const {
         results: [result],
-    } = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false });
+    } = await applyFixers(session, [planned], { isDryRun: false });
     expect(result!.status).toBe('changed');
     expect(result!.changed).toStrictEqual(['source.txt']);
     expect(await readFile(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
@@ -79,7 +78,7 @@ test('counts deletion of an empty file as a change', async () => {
     const planned = planFixer(session, "require('node:fs').unlinkSync('source.txt')");
     const {
         results: [result],
-    } = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false });
+    } = await applyFixers(session, [planned], { isDryRun: false });
     expect(result!.status).toBe('changed');
     expect(result!.changed).toStrictEqual(['source.txt']);
     expect(await pathExists(join(sandbox.path, 'source.txt'))).toBe(false);
@@ -91,13 +90,12 @@ test('distinguishes a skipped fix from a missing tool', async () => {
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "await Bun.write('source.txt', 'wrong')");
     const skipped = await applyFixers(session, [{ ...planned, skip: { cause: 'flag', note: 'Not selected.' } }], {
-        checks: BUILT_IN_CHECKS,
         isDryRun: false,
     }).then(({ results }) => results[0]!);
     const failed = await applyFixers(
         session,
         [{ ...planned, check: { ...planned.check, fix: [join(sandbox.path, 'absent-tool')] } }],
-        { checks: BUILT_IN_CHECKS, isDryRun: false },
+        { isDryRun: false },
     ).then(({ results }) => results[0]!);
     expect(skipped.status).toBe('skipped');
     expect(failed).toMatchObject({
@@ -115,7 +113,7 @@ test('runs the fixer program when it differs from the check program', async () =
     const result = await applyFixers(
         session,
         [{ ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {}, kind: 'program' } }],
-        { checks: BUILT_IN_CHECKS, isDryRun: false },
+        { isDryRun: false },
     ).then(({ results }) => results[0]!);
     expect(result.status).toBe('changed');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
@@ -151,9 +149,7 @@ test('a failed version check blocks a check and its fix without changing source 
     const checked = await runCheckCommand(session, planned);
     expect(checked.status).toBe('error');
     expect(checked.note).toContain('exited 7');
-    const fixed = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
-        ({ results }) => results[0]!,
-    );
+    const fixed = await applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
     expect(fixed.status).toBe('failed');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
 });

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { findingAt } from '#cli/checks/finding.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { hasValePackages } from '#cli/install/vale.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
@@ -140,7 +141,7 @@ function routeGroups(files: TrackedFile[]): ProseRouteGroup[] {
  */
 export async function vale(input: CheckInput): Promise<Finding[]> {
     if (!hasValePackages(input.installedRoot, input.settingsFile.settings.level))
-        throw new Error('The Vale packages are not installed. Run: gspot install');
+        throw new GspotError('tool', 'The Vale packages are not installed. Run: gspot install');
     const groups = routeGroups(input.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];
     for (const group of groups) {

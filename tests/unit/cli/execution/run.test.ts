@@ -8,34 +8,31 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 
 {
-    test('a built-in check that throws becomes an error, and the other checks keep their results', async () => {
+    test('a check with malformed JSON reports an error, and the other checks keep their results', async () => {
         const reporter = [process.execPath, '-e', 'console.log("source.txt"); process.exitCode = 1;'];
         const entries = ['broken', 'kept'].map(
             (name) =>
-                `[[command_check]]\nname = "sandbox/${name}"\ncommand = ${JSON.stringify(reporter)}\npaths = ["source.txt"]\nstage = "commit"\n[command_check.output]\nformat = "lines"\n`,
+                `[[command_check]]\nname = "sandbox/${name}"\ncommand = ${JSON.stringify(reporter)}\npaths = ["source.txt"]\nstage = "commit"\n[command_check.output]\nformat = "${name === 'broken' ? 'json' : 'lines'}"\n`,
         );
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': settingsText([], { tables: entries.join('') }),
             'source.txt': 'input\n',
         });
-        const checks = {
-            ...BUILT_IN_CHECKS,
-            'sandbox/broken': {
-                run: () => Promise.reject(new Error('The runner broke')),
-            },
-        };
         const outcome = await executeRun(
             await openSession(sandbox.path),
-            buildRunOptions({ checks, only: ['sandbox/broken', 'sandbox/kept'] }),
+            buildRunOptions({ only: ['sandbox/broken', 'sandbox/kept'] }),
         );
         expect(outcome.report.exitCode).toBe(2);
         expect(outcome.report.checks).toMatchObject([
-            { check: 'sandbox/broken', status: 'error', note: textContaining('The runner broke') },
+            {
+                check: 'sandbox/broken',
+                status: 'error',
+                note: textContaining('JSON returned invalid structured findings.'),
+            },
             { check: 'sandbox/kept', status: 'failed', findings: [{ message: 'source.txt' }] },
         ]);
     });

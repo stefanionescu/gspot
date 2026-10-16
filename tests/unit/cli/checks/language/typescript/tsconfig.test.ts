@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { ROOT_PORT_SOURCE, CHILD_PORT_SOURCE, STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 
@@ -16,7 +16,7 @@ import { ROOT_PORT_SOURCE, CHILD_PORT_SOURCE, STRICT_TSCONFIG_TEXT } from '#test
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': TSCONFIG_OPTIONS_POLICY, 'tsconfig.json': '{' });
         const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
-        expect(() => CHECK_FUNCTIONS['typescript/tsconfig'](input)).toThrow(
+        expect(() => CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input)).toThrow(
             `Cannot read TypeScript configuration ${join(sandbox.path, 'tsconfig.json')}`,
         );
         await writeFile(join(sandbox.path, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
@@ -31,7 +31,7 @@ import { ROOT_PORT_SOURCE, CHILD_PORT_SOURCE, STRICT_TSCONFIG_TEXT } from '#test
         });
         const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
         // TypeScript prints the inherited path with forward slashes on every platform.
-        expect(() => CHECK_FUNCTIONS['typescript/tsconfig'](input)).toThrow(
+        expect(() => CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input)).toThrow(
             `Cannot read file '${convertToPosixPath(join(sandbox.path, 'missing.json'))}'`,
         );
         await writeFile(join(sandbox.path, 'missing.json'), STRICT_TSCONFIG_TEXT);
@@ -42,7 +42,7 @@ import { ROOT_PORT_SOURCE, CHILD_PORT_SOURCE, STRICT_TSCONFIG_TEXT } from '#test
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': TSCONFIG_OPTIONS_POLICY });
         expect(
-            CHECK_FUNCTIONS['typescript/tsconfig'](
+            CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(
                 buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'),
             ),
         ).toStrictEqual([]);
@@ -78,13 +78,13 @@ import { ROOT_PORT_SOURCE, CHILD_PORT_SOURCE, STRICT_TSCONFIG_TEXT } from '#test
             [`node_modules/@example/config/${filename}`]: '{"compilerOptions":{"strict":true}}',
         });
         const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
-        const inherited = CHECK_FUNCTIONS['typescript/tsconfig'](input);
+        const inherited = CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input);
         expect(inherited.filter((finding) => finding.rule === 'strict')).toStrictEqual([]);
         await writeFile(
             join(sandbox.path, 'apps/web/tsconfig.json'),
             '{"extends":"@example/config","compilerOptions":{"strict":false}}',
         );
-        expect(CHECK_FUNCTIONS['typescript/tsconfig'](input)).toStrictEqual(inherited);
+        expect(CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input)).toStrictEqual(inherited);
         const overridden = await checkFindings(sandbox.path, 'typescript/tsconfig');
         expect(
             overridden
@@ -170,29 +170,31 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
     const session = await openSession(sandbox.path);
 
     expect(
-        CHECK_FUNCTIONS['typescript/tsconfig'](
+        CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(
             buildCheckInput(session, 'typescript/tsconfig', { scope: 'app', paths: ['app/source.ts'] }),
         ),
     ).toMatchObject([{ file: 'tsconfig.json', rule: 'strict' }]);
-    expect(() => CHECK_FUNCTIONS['typescript/tsconfig'](buildCheckInput(session, 'typescript/tsconfig'))).toThrow(
-        expect.objectContaining({
-            name: 'GspotError',
-            code: 'skip',
-            errors: ['An ancestor compiler check covers this project.'],
-            message: 'An ancestor compiler check covers this project.',
-        }),
-    );
-    const reopened = await openSession(sandbox.path);
-    expect(CHECK_FUNCTIONS['typescript/tsconfig'](buildCheckInput(reopened, 'typescript/tsconfig'))).toMatchObject([
-        { file: 'tsconfig.json', rule: 'strict' },
-    ]);
     expect(() =>
-        CHECK_FUNCTIONS['typescript/tsconfig'](buildCheckInput(reopened, 'typescript/tsconfig', { scope: 'app' })),
+        CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(buildCheckInput(session, 'typescript/tsconfig')),
     ).toThrow(
         expect.objectContaining({
             name: 'GspotError',
             code: 'skip',
-            errors: ['An ancestor compiler check covers this project.'],
+            message: 'An ancestor compiler check covers this project.',
+        }),
+    );
+    const reopened = await openSession(sandbox.path);
+    expect(
+        CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(buildCheckInput(reopened, 'typescript/tsconfig')),
+    ).toMatchObject([{ file: 'tsconfig.json', rule: 'strict' }]);
+    expect(() =>
+        CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(
+            buildCheckInput(reopened, 'typescript/tsconfig', { scope: 'app' }),
+        ),
+    ).toThrow(
+        expect.objectContaining({
+            name: 'GspotError',
+            code: 'skip',
             message: 'An ancestor compiler check covers this project.',
         }),
     );

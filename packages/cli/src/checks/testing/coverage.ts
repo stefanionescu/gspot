@@ -68,10 +68,10 @@ async function xcodeCoverage(input: CheckInput, plan: SwiftBuildPlan, cwd: strin
  * @returns coverage for source targets.
  */
 async function measureCoverage(input: CheckInput): Promise<CoverageReport> {
-    const plan = buildPlan(input, 'coverage');
+    const plan = buildPlan(input, { purpose: 'coverage' });
     const prepared = prepareBuild(input, plan.folder);
     using files = prepared.files;
-    const cwd = join(prepared.source, input.selection.scope.path);
+    const cwd = join(prepared.source, input.scope.scope.path);
     files.removeTree(COVERAGE_BUNDLE);
     return plan.argv[0] === SWIFT_PROGRAM
         ? await packageCoverage(input, plan, files, cwd)
@@ -155,16 +155,13 @@ function coverageShortfalls(
  * @returns the findings.
  */
 async function swiftTestsCoverage(input: CheckInput): Promise<Finding[]> {
-    if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
-    const settings = input.selection.view.options('coverage');
+    const settings = input.scope.view.options('coverage');
     const report = await measureCoverage(input);
     return coverageShortfalls(report, settings).map((text) =>
         findingAt(
             input,
             {
-                file:
-                    input.selection.view.options('xcode').project ??
-                    posix.join(input.selection.scope.path, PACKAGE_SWIFT),
+                file: input.scope.view.options('xcode').project ?? posix.join(input.scope.scope.path, PACKAGE_SWIFT),
                 line: 1,
             },
             'coverage',

@@ -9,8 +9,8 @@ import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 
 import {
     MIXED_REPORT,
@@ -170,7 +170,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
         );
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult()));
         const planned = planRun(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        expect(await BUILT_IN_CHECKS['docker/compose'].run(session, planned)).toMatchObject({
+        expect(await CHECK_IMPLEMENTATIONS['docker/compose'].run(session, planned)).toMatchObject({
             status: 'passed',
             findings: [],
         });

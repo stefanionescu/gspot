@@ -6,22 +6,16 @@ import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { type GeneratedPath } from '#cli/types/configurations.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
-import { readBytes, readCachedBytes } from '#cli/system/files/reads.ts';
+import type { Substitutions } from '#cli/types/execution/command.ts';
+import { commandSubstitutions } from '#cli/execution/command/check.ts';
+import { readBytes, readCachedText } from '#cli/system/files/reads.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
-import { GENERATED_SCAN_EXCLUSIONS } from '#cli/config/checks/stale-generated-files.ts';
+import { GENERATOR_SCAN_EXCLUSIONS } from '#cli/config/checks/stale-generated-files.ts';
 import { substitute, perFileCommands, substituteValue } from '#cli/execution/command/placeholders.ts';
 
 function missingOutputs(input: CheckInput, targets: GeneratedPath[], commandText: string): Finding[] {
-    const entry = targets.find((target) => {
-        try {
-            readCachedBytes(input.reads, target.path);
-            return false;
-        } catch (error) {
-            if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return true;
-            throw error;
-        }
-    });
+    const entry = targets.find((target) => readCachedText(input.reads, target.path) === undefined);
     if (entry === undefined) return [];
     return [
         findingAt(
@@ -36,7 +30,7 @@ function missingOutputs(input: CheckInput, targets: GeneratedPath[], commandText
 // Both snapshots use the same traversal and source containment boundary.
 function copiedFiles(root: string, scope: string, patterns: string[], targets: GeneratedPath[]): Map<string, Buffer> {
     const cwd = join(root, scope);
-    const excluded = [...GENERATED_SCAN_EXCLUSIONS, DOT_GSPOT].map((name) => `!**/${name}/**`);
+    const excluded = [...GENERATOR_SCAN_EXCLUSIONS, DOT_GSPOT].map((name) => `!**/${name}/**`);
     return new Map([
         ...listMatchingPaths(cwd, [...patterns, ...excluded]).map((path): [string, Buffer] => [
             posix.join(scope, path),
@@ -46,42 +40,43 @@ function copiedFiles(root: string, scope: string, patterns: string[], targets: G
     ]);
 }
 
-function generatedInputs(input: CheckInput) {
-    const planned = {
-        check: input.check,
-        scope: input.selection,
-        files: input.files,
-        manifest: input.selection.selected.find((manifest) => manifest.checks.includes(input.check)),
-    };
-    const values = {
-        root: input.root,
-        scope: input.selection.scope.path,
-        files: [],
-        indent: input.selection.view.format.indent_style === 'space' ? input.selection.view.format.indent_width : 0,
-    };
+function buildGeneratorInputs(input: CheckInput):
+    | {
+          planned: CheckInput;
+          values: Substitutions;
+          commandText: string;
+          declaration: string[];
+          patterns: string[];
+          targets: GeneratedPath[];
+          selected: string[];
+      }
+    | undefined {
+    const planned = input;
+    const values = commandSubstitutions(input, input, join(input.root, input.scope.scope.path));
     const declaration = input.check.command ?? [];
     const command = substitute(input, planned, declaration, values);
+    if (command.length === 0) return undefined;
 
     const declared = (input.check.generator_outputs ?? []).flatMap((entry): GeneratedPath[] => {
         const { kind, path: original } = entry;
         let path = substituteValue(input, planned, original, values);
-        if (kind === 'pattern' && original.includes('{setting:') && input.selection.scope.path !== '') {
+        if (kind === 'pattern' && original.includes('{setting:') && input.scope.scope.path !== '') {
             const prefix = path.startsWith('**/') ? '**/' : '';
             const scopePath = path.slice(prefix.length);
-            if (scopePath.startsWith(`${input.selection.scope.path}/`))
-                path = `${prefix}${scopePath.slice(input.selection.scope.path.length + 1)}`;
+            if (scopePath.startsWith(`${input.scope.scope.path}/`))
+                path = `${prefix}${scopePath.slice(input.scope.scope.path.length + 1)}`;
         }
         return path === '' ? [] : [{ kind, path }];
     });
 
+    if (declared.length === 0) return undefined;
     const targets = declared.filter((entry) => entry.kind !== 'pattern');
     const patterns = declared.filter((entry) => entry.kind === 'pattern').map((entry) => entry.path);
     const isMatched = buildPathMatcher(patterns);
     const selected = input.files
-        .map((file) => posix.relative(input.selection.scope.path, file.path))
+        .map((file) => posix.relative(input.scope.scope.path, file.path))
         .filter((path) => isMatched(path));
 
-    if (command.length === 0 || declared.length === 0) return undefined;
     if (targets.length === 0 && selected.length === 0) return undefined;
     const commandText = command.filter((part) => typeof part === 'string').join(' ');
     return { planned, values, commandText, declaration, patterns, targets, selected };
@@ -92,8 +87,8 @@ function generatedInputs(input: CheckInput) {
  * @param input the selected generator and project scope.
  * @returns located missing or stale generated paths.
  */
-export async function staleGeneratedFiles(input: CheckInput): Promise<Finding[]> {
-    const inputs = generatedInputs(input);
+export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Finding[]> {
+    const inputs = buildGeneratorInputs(input);
     if (inputs === undefined) return [];
     const { planned, values, commandText, declaration, patterns, targets, selected } = inputs;
     const missing = missingOutputs(input, targets, commandText);
@@ -104,8 +99,8 @@ export async function staleGeneratedFiles(input: CheckInput): Promise<Finding[]>
             targets.map((entry) => entry.path),
         ),
     );
-    const cwd = join(folder.path, input.selection.scope.path);
-    const before = copiedFiles(folder.path, input.selection.scope.path, patterns, targets);
+    const cwd = join(folder.path, input.scope.scope.path);
+    const before = copiedFiles(folder.path, input.scope.scope.path, patterns, targets);
     const argv = substitute({ ...input, root: folder.path }, planned, declaration, {
         ...values,
         root: folder.path,
@@ -120,7 +115,7 @@ export async function staleGeneratedFiles(input: CheckInput): Promise<Finding[]>
             );
         stdout = result.stdout;
     }
-    const after = copiedFiles(folder.path, input.selection.scope.path, patterns, targets);
+    const after = copiedFiles(folder.path, input.scope.scope.path, patterns, targets);
     const trimmed = new Set(targets.filter((entry) => entry.kind === 'stdout').map((entry) => entry.path));
     for (const path of trimmed) after.set(path, Buffer.from(stdout.trim()));
     return [...new Set([...before.keys(), ...after.keys()])]

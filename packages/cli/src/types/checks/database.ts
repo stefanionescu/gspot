@@ -1,5 +1,6 @@
 import type { AlterTableCmd } from '@pgsql/types';
-import type { SqlNodeFields, SqlStatementView } from '#cli/types/parsers/sql.ts';
+import type { Finding } from '#cli/types/execution/check.ts';
+import { type SqlFile, type SqlNodeFields, type SqlStatementView } from '#cli/types/parsers/sql.ts';
 
 /** The declaration position of a fact, so a finding points at it. */
 type Declared = { path: string; offset: number; text: string };
@@ -20,6 +21,7 @@ export type SchemaAlterations = Partial<
 
 /** One parsed migration file. */
 export type Migration = {
+    error?: NonNullable<SqlFile['error']>;
     path: string;
     name: string;
     /** The leading version digits, after any V prefix; empty when the name has none. */
@@ -50,3 +52,6 @@ export type ParsedPostgres = {
     frozen_through: string;
     migrations_folder?: string | undefined;
 };
+
+/** Parsed migrations and located source syntax failures for the invoking check. */
+export type MigrationRead = { migrations: Migration[]; findings: Finding[] };

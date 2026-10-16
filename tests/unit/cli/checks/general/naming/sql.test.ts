@@ -1,9 +1,10 @@
 import { test, expect } from 'bun:test';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/sql.ts';
 import { SQL_DECLARATIONS, QUALIFIED_FUNCTION_DECLARATION } from '#tests/config/sql.ts';
 
 test('every SQL name comes with its category and line', async () => {
-    const found = await sqlIdentifiers('schema.sql', SQL_DECLARATIONS);
+    const { identifiers: found } = await sqlIdentifiers('schema.sql', SQL_DECLARATIONS, createReadCache(process.cwd()));
     expect(found.map((entry) => [entry.category, entry.name, entry.line])).toStrictEqual([
         ['schemas', 'app', 2],
         ['tables', 'user_accounts', 4],
@@ -22,7 +23,7 @@ test('every SQL name comes with its category and line', async () => {
 
 test('psql variables are not names, and quoted names keep their positions', async () => {
     const source = '\\set table accounts\nCREATE TABLE :table ("createdAt" int);\nCREATE TABLE :"id" (id int);';
-    const identifiers = await sqlIdentifiers('schema.sql', source);
+    const { identifiers } = await sqlIdentifiers('schema.sql', source, createReadCache(process.cwd()));
     expect(identifiers.map(({ name, line, column }) => ({ name, line, column }))).toStrictEqual([
         { name: 'createdAt', line: 2, column: 23 },
         { name: 'id', line: 3, column: 21 },
@@ -30,7 +31,11 @@ test('psql variables are not names, and quoted names keep their positions', asyn
 });
 
 test('SQL declared names retain exact source positions', async () => {
-    const found = await sqlIdentifiers('schema.sql', 'CREATE TABLE user_accounts (display_name text);');
+    const { identifiers: found } = await sqlIdentifiers(
+        'schema.sql',
+        'CREATE TABLE user_accounts (display_name text);',
+        createReadCache(process.cwd()),
+    );
     expect(found.map(({ name, line, column }) => ({ name, line, column }))).toStrictEqual([
         { name: 'user_accounts', line: 1, column: 14 },
         { name: 'display_name', line: 1, column: 29 },
@@ -38,7 +43,11 @@ test('SQL declared names retain exact source positions', async () => {
 });
 
 test('qualified SQL function and parameter names use their own declaration positions', async () => {
-    const found = await sqlIdentifiers('schema.sql', QUALIFIED_FUNCTION_DECLARATION);
+    const { identifiers: found } = await sqlIdentifiers(
+        'schema.sql',
+        QUALIFIED_FUNCTION_DECLARATION,
+        createReadCache(process.cwd()),
+    );
     expect(found.map(({ category, name, line, column }) => ({ category, name, line, column }))).toStrictEqual([
         { category: 'functions', name: 'same', line: 1, column: 22 },
         { category: 'parameters', name: 'same', line: 1, column: 39 },

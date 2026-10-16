@@ -31,7 +31,7 @@ test.each(['default', 'platform=macOS'])(
         });
         const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
-            const { argv } = buildPlan(input, purpose);
+            const { argv } = buildPlan(input, { purpose: purpose });
             expect(argv[argv.indexOf('-destination') + 1]).toBe(
                 destination === 'default'
                     ? configurationTableSchemas.xcode.unwrap().shape.destination.parse(undefined)
@@ -50,7 +50,7 @@ test.each([...SWIFT_PROJECT_SELECTION_CASES])(
         await createFileTree(sandbox.path, { ...files, 'gspot.toml': settingsText(['swift'], { tables }) });
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'swift/build', { scope });
-        expect(input.selection.view.options('xcode').project).toBe(project);
+        expect(input.scope.view.options('xcode').project).toBe(project);
         const plan = buildPlan(input);
         const container = project.endsWith('.xcworkspace') ? '-workspace' : '-project';
         expect(plan.argv[plan.argv.indexOf(container) + 1]).toBe(argument);
@@ -70,7 +70,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         });
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, check);
-        expect(() => buildPlan(input, purpose)).toThrow(
+        expect(() => buildPlan(input, { purpose: purpose })).toThrow(
             new GspotError('skip', 'Set xcode.project or add Package.swift in this scope.'),
         );
         using _executables = mockPinnedExecutables(
@@ -86,7 +86,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
             'Package.swift': '// swift-tools-version: 6.0\nimport PackageDescription\n',
         });
         const packageInput = buildCheckInput(await openSession(sandbox.path), 'swift/build');
-        const plan = buildPlan(packageInput, purpose);
+        const plan = buildPlan(packageInput, { purpose: purpose });
         expect(plan.argv[0]).toBe('swift');
         expect(plan.argv).toContain('--scratch-path');
         if (purpose === 'coverage') expect(plan.argv).toContain('--enable-code-coverage');

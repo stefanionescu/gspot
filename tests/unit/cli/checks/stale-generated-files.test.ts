@@ -18,7 +18,7 @@ import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { staleGeneratedFiles } from '#cli/checks/stale-generator-outputs.ts';
+import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
 import { GENERATOR_CASES, GENERATOR_SCRIPT } from '#tests/config/generated-files.ts';
 
 import {
@@ -51,14 +51,14 @@ test.each([...GENERATOR_CASES])(
     async (row) => {
         await using sandbox = await testdir();
         const input = await writeGeneratorProject(sandbox.path, row);
-        expect(staleGeneratedFiles(input)).rejects.toThrow('Generation failed');
+        expect(checkStaleGeneratorOutputs(input)).rejects.toThrow('Generation failed');
         await Bun.write(join(sandbox.path, 'schema.txt'), 'changed');
-        const findings = await staleGeneratedFiles(input);
+        const findings = await checkStaleGeneratorOutputs(input);
         expect(findings.map(({ check, file, rule }) => ({ check, file, rule }))).toEqual([
             { check: row.check, file: row.output, rule: 'stale' },
         ]);
         await Bun.write(join(sandbox.path, 'schema.txt'), 'dirty');
-        expect(await staleGeneratedFiles(input)).toEqual([]);
+        expect(await checkStaleGeneratorOutputs(input)).toEqual([]);
         expect(await readFile(join(sandbox.path, row.output), 'utf8')).toBe('dirty');
         expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('Keep project notes\n');
         expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('Keep untracked notes\n');
@@ -77,7 +77,7 @@ test('a missing OpenAPI document is reported before generation', async () => {
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'openapi/stale-document');
     const run = resources.use(spyOn(processes, 'spawnProcess'));
-    expect(await staleGeneratedFiles(input)).toMatchObject([
+    expect(await checkStaleGeneratorOutputs(input)).toMatchObject([
         {
             file: 'openapi.json',
             rule: 'missing',
@@ -117,7 +117,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
         }),
     );
     expect(
-        await staleGeneratedFiles(buildCheckInput(session, 'cloudflare/stale-types', { scope: 'workers/api' })),
+        await checkStaleGeneratorOutputs(buildCheckInput(session, 'cloudflare/stale-types', { scope: 'workers/api' })),
     ).toStrictEqual([]);
     expect(directories).toHaveLength(1);
     expect(directories[0]).not.toBe(join(sandbox.path, 'workers/api'));

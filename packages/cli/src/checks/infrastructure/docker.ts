@@ -52,9 +52,9 @@ function composeGroups(files: TrackedFile[]): ComposeFiles[] {
 
 // Compose declares paths. Native YAML owns service, image, and build metadata.
 /**
- * Read Compose declarations and resolve their local build contexts.
- * @param input the selected Compose files and source reads.
- * @returns the service declarations and their build contexts.
+ * Parse selected Compose projects and keep their service, image, and build declarations.
+ * @param input the Compose paths, selected manifests, and cached file reads.
+ * @returns the declarations and Dockerfile build contexts.
  */
 function composeDocuments(input: CheckInput): ComposeDocuments {
     const patterns = input.manifests
@@ -107,7 +107,7 @@ function composeDocuments(input: CheckInput): ComposeDocuments {
 async function scanImage(input: CheckInput, image: string, path: string): Promise<Finding[]> {
     const result = await runCheckTool(
         input,
-        [...TRIVY_IMAGE_COMMAND, join(input.root, TOOL_FILE_DIRECTORY, input.selection.scope.path, TRIVY_YML), image],
+        [...TRIVY_IMAGE_COMMAND, join(input.root, TOOL_FILE_DIRECTORY, input.scope.scope.path, TRIVY_YML), image],
         { cwd: input.root },
     );
     if (result.code !== 0 && result.code !== TRIVY_EXIT) {
@@ -202,9 +202,9 @@ const composeSchema = z.object({
 } satisfies SchemaShape<{ services?: Record<string, ComposeService> | undefined }>);
 
 /**
- * Scan each literal service image once and attribute its findings to every declaring Compose file.
- * @param input the check input.
- * @returns the findings.
+ * Scan each literal service image once and attribute findings to its Compose declarations.
+ * @param input the Compose file paths, image settings, and tool execution services.
+ * @returns the image diagnostics at each declaring Compose file.
  */
 export async function trivyImage(input: CheckInput): Promise<Finding[]> {
     const scanned = new Map<string, Finding[]>();

@@ -1,5 +1,3 @@
-// Selects scope configurations and the files their tables cover.
-// Selects scope configurations and the files their tables cover.
 import { posix } from 'node:path';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
@@ -130,4 +128,25 @@ export function selectForScope(
         for (const configuration of table.configurations) choices.add(configuration);
     }
     return selectConfigurations([...choices, ...automatic], manifests);
+}
+
+/**
+ * Select source paths by extension or whole file name.
+ * @param files the classified repository files.
+ * @param endings the file extensions to select.
+ * @returns the selected source paths.
+ */
+export function listSourcePaths(files: TrackedFile[], endings?: readonly string[]): string[] {
+    return files
+        .filter(
+            (file) =>
+                file.kind === 'source' &&
+                (endings === undefined ||
+                    endings.some((ending) =>
+                        ending.startsWith('.')
+                            ? file.path.endsWith(ending)
+                            : file.path === ending || file.path.endsWith(`/${ending}`),
+                    )),
+        )
+        .map((file) => file.path);
 }

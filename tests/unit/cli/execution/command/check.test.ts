@@ -14,8 +14,8 @@ import { useEnvironment } from '#tests/setup/environment.ts';
 import { chmod, symlink, writeFile } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
 import { runCheckCommand, commandEnvironment } from '#cli/execution/command/check.ts';
 
@@ -41,7 +41,7 @@ test('a check command runs with a tool file that is a link inside the repository
         output: { format: 'lines', file_type: 'path' },
     };
     planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
-    const result = await runCheckCommand(session, planned, BUILT_IN_CHECKS['swift/swiftlint']);
+    const result = await runCheckCommand(session, planned, CHECK_IMPLEMENTATIONS['swift/swiftlint']);
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
 });

@@ -15,8 +15,7 @@ import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/language/pyt
 export function pythonPipInstalls(input: CheckInput): Finding[] {
     if (
         !(input.check.files?.filenames ?? []).some(
-            (file) =>
-                statSync(join(input.root, input.selection.scope.path, file), { throwIfNoEntry: false }) !== undefined,
+            (file) => statSync(join(input.root, input.scope.scope.path, file), { throwIfNoEntry: false }) !== undefined,
         )
     )
         throw new GspotError('skip', 'Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');

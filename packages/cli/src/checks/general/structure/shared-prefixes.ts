@@ -12,7 +12,6 @@ import { directoryTree, structureSources, isDependencyFolder } from '#cli/checks
 // A selected configuration declares <name>.<kind>.<ext> file names, such as NestJS, so these do not count as a shared prefix.
 function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);
-    // A selected configuration declares <name>.<kind>.<ext> file names, such as NestJS, so these do not count as a shared prefix.
     if (extension.endsWith('x') || !listTaggedExtensions('javascript', 'typescript').includes(extension)) return false;
     const parts = extractStem(name).replace(SPEC_SUFFIX, '').split('.');
     const kind = parts.at(-1);
@@ -35,15 +34,15 @@ function prefixOf(stem: string): string {
  * @returns the findings.
  */
 export function sharedPrefixes(input: CheckInput): Finding[] {
-    const limit = input.selection.view.options('limits').prefix_collisions;
-    const prefixes = new Set(input.selection.selected.flatMap((manifest) => manifest.shared_prefixes.prefixes));
-    const kinds = new Set(input.selection.selected.flatMap((manifest) => manifest.shared_prefixes.kinds));
+    const limit = input.scope.view.options('limits').prefix_collisions;
+    const prefixes = new Set(input.scope.selected.flatMap((manifest) => manifest.shared_prefixes.prefixes));
+    const kinds = new Set(input.scope.selected.flatMap((manifest) => manifest.shared_prefixes.kinds));
     const tree = directoryTree(input.files);
     const seen = new Set<string>();
     const files = structureSources(input).filter((file) => {
         const directory = extractParentFolder(file.path);
         return (
-            !HOOK_DIRECTORIES.some((hook) => isInScope(directory, posix.join(input.selection.scope.path, hook))) &&
+            !HOOK_DIRECTORIES.some((hook) => isInScope(directory, posix.join(input.scope.scope.path, hook))) &&
             !isDependencyFolder(directory)
         );
     });

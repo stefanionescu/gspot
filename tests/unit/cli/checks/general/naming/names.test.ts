@@ -24,7 +24,7 @@ test('a number word such as base64 counts as one word; repeated, extra, banned a
     );
     const view = buildScopeView(known, settings, selected, '');
     const effective = readNamingSettings({
-        selection: { view: view, scope: { path: '' }, selected: selected },
+        scope: { view: view, scope: { path: '' }, selected: selected },
         settingsFile: { settings: settings },
         reads: createReadCache(process.cwd()),
     });

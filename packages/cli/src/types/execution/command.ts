@@ -81,7 +81,6 @@ export type OutputCheck = Pick<PlannedCheck, 'check' | 'tool' | 'manifest'>;
 export type CommandSource = Pick<Session, 'root' | 'reads' | 'manifests' | 'settingsFile' | 'generatedPaths'>;
 
 export type SubstitutionCheck = Pick<PlannedCheck, 'check' | 'scope' | 'files'> & {
-    manifest?: PlannedCheck['manifest'];
     messageFile?: PlannedCheck['messageFile'];
 };
 

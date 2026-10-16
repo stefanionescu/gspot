@@ -1,10 +1,18 @@
-// Reads Python modules, declarations, and imports.
-import type { Node } from 'web-tree-sitter';
+import { type Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
+import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import type { ParseCache, SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import { PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/python.ts';
 import type { PythonFiles, PythonModule, PythonFunction } from '#cli/types/parsers/python.ts';
+import type { EnvironmentKind, EnvironmentNames, EnvironmentScope } from '#cli/types/checks/general.ts';
+
+import {
+    OS_MODULE,
+    PYTHON_SCOPE_NODES,
+    PYTHON_IMPORT_NODES,
+    OS_ENVIRONMENT_MEMBERS,
+} from '#cli/config/checks/general/structure.ts';
 
 /**
  * Every function of a module, nested ones included.
@@ -104,4 +112,162 @@ function deletePythonTrees(parsed: PythonFiles): void {
 /** Each run shares Python source trees through this reader identity. */
 const PYTHON_SOURCES = { read: readPython, dispose: deletePythonTrees };
 
-export { isDocstring, findDocstring, PYTHON_SOURCES, parsePythonModule };
+// Bindings inside a function or class belong to that lexical scope.
+function bindingScope(node: Node): Node {
+    let scope = node.parent ?? node;
+    while (scope.parent !== null && !PYTHON_SCOPE_NODES.has(scope.type)) scope = scope.parent;
+    return scope;
+}
+
+// Import aliases retain the actual module or member identity.
+function importName(node: Node) {
+    if (node.type !== 'aliased_import') return { name: node.text, target: node.text };
+    return { name: node.childForFieldName('alias')?.text, target: node.childForFieldName('name')?.text };
+}
+
+// Native parameters declare names rather than the names used by their default expressions.
+function bindingNames(node: Node): string[] {
+    if (node.type === 'parameters')
+        return node.namedChildren.flatMap((parameter) => {
+            const name =
+                parameter.type === 'identifier'
+                    ? parameter.text
+                    : (parameter.childForFieldName('name')?.text ??
+                      parameter.namedChildren.find((child) => child.type === 'identifier')?.text);
+            return name === undefined ? [] : [name];
+        });
+    const declaration = node.childForFieldName('left') ?? node.childForFieldName('name');
+    if (declaration === null) return [];
+    return declaration.type === 'identifier'
+        ? [declaration.text]
+        : declaration.descendantsOfType('identifier').map((identifier) => identifier.text);
+}
+
+// Only os imports supply environment objects or getters.
+function importNames(node: Node): EnvironmentScope {
+    const entries: EnvironmentScope = new Map();
+    let members: Record<string, EnvironmentKind> = {};
+    if (node.type === 'import_statement') members = { [OS_MODULE]: OS_MODULE };
+    else if (node.childForFieldName('module_name')?.text === OS_MODULE) members = OS_ENVIRONMENT_MEMBERS;
+    for (const item of node.childrenForFieldName('name')) {
+        const { name, target } = importName(item);
+        if (name !== undefined && target !== undefined) entries.set(name, members[target]);
+    }
+    return entries;
+}
+
+// Calculate import identities and lexical declarations once for each source.
+function pythonNames(root: Node): EnvironmentNames {
+    const entries: EnvironmentNames = new Map();
+    const nodes = [
+        ...root.descendantsOfType([...PYTHON_IMPORT_NODES]),
+        ...root.descendantsOfType([
+            'assignment',
+            'for_statement',
+            'function_definition',
+            'class_definition',
+            'parameters',
+        ]),
+    ];
+    for (const node of nodes) {
+        const scope = bindingScope(node).id;
+        const names = entries.get(scope) ?? new Map<string, EnvironmentKind>();
+        const declared = PYTHON_IMPORT_NODES.has(node.type)
+            ? importNames(node)
+            : new Map<string, EnvironmentKind>(bindingNames(node).map((name) => [name, undefined]));
+        for (const [name, kind] of declared) names.set(name, kind);
+        entries.set(scope, names);
+    }
+    return entries;
+}
+
+// Resolve lexical imports before applying the environment read rule.
+function environmentKind(node: Node, name: string, entries: EnvironmentNames): EnvironmentKind {
+    for (
+        let scope: Node | null = bindingScope(node);
+        scope !== null;
+        scope = scope.parent === null ? null : bindingScope(scope)
+    ) {
+        const names = entries.get(scope.id);
+        if (names?.has(name) === true) return names.get(name);
+    }
+    return undefined;
+}
+
+// Native reads name an object or call target, never the text inside a string.
+function readReceiver(node: Node): Node | null {
+    if (node.type === 'attribute') return node.childForFieldName('object');
+    if (node.type === 'call') {
+        const called = node.childForFieldName('function');
+        return called?.type === 'attribute' ? called.childForFieldName('object') : (called ?? null);
+    }
+    return node;
+}
+
+// Find Python os environment objects and calls.
+function pythonEnvironment(node: Node, entries: EnvironmentNames, environment: Set<number>): boolean {
+    const receiver = readReceiver(node);
+    if (receiver?.type !== 'identifier') return false;
+    const kind = environmentKind(node, receiver.text, entries);
+    if (kind === OS_MODULE) return environment.has(node.id);
+    if (kind === 'getenv') return node.type === 'call';
+    return kind === 'environ';
+}
+
+function isEnvironmentRead(
+    node: Node,
+    readers: readonly string[],
+    entries: EnvironmentNames,
+    environment: Set<number>,
+): boolean {
+    if (node.type === 'call' && readers.includes(node.childForFieldName('function')?.text ?? '')) return true;
+    if (node.type === 'identifier' && node.parent?.type !== 'subscript') return false;
+    return pythonEnvironment(node, entries, environment);
+}
+
+function expandEnvironmentExpression(node: Node): Node {
+    const parent = node.parent;
+    const expression =
+        parent?.type === 'attribute' && parent.childForFieldName('attribute')?.text === 'get' ? parent : node;
+    const container = expression.parent;
+    return container !== null && (container.type === 'subscript' || container.type === 'call') ? container : expression;
+}
+
+function readEnvironmentLiteral(node: Node): Node | null | undefined {
+    const expression = expandEnvironmentExpression(node);
+    if (expression.type === 'subscript') return expression.childForFieldName('subscript');
+    if (expression.type === 'call') return expression.childForFieldName('arguments')?.namedChildren[0];
+    return undefined;
+}
+
+/**
+ * Read Python environment access and configured reader calls through lexical import aliases.
+ * @param root the parsed Python source.
+ * @param readers the configured environment reader functions.
+ * @returns the environment reads and their source positions.
+ */
+function readPythonEnvironment(root: Node, readers: readonly string[]): EnvironmentRead[] {
+    const entries = pythonNames(root);
+    const nodes = root.descendantsOfType(['attribute', 'call', 'identifier']);
+    const environment = new Set(
+        nodes
+            .filter((node) =>
+                node.type === 'attribute'
+                    ? node.childForFieldName('attribute')?.text === 'environ'
+                    : node.type === 'call' &&
+                      node.childForFieldName('function')?.childForFieldName('attribute')?.text === 'getenv',
+            )
+            .map((node) => node.id),
+    );
+    return nodes.flatMap((node) => {
+        if (!isEnvironmentRead(node, readers, entries, environment)) return [];
+        const literal = readEnvironmentLiteral(node);
+        const key =
+            literal?.type === 'string'
+                ? literal.namedChildren.find((child) => child.type === 'string_content')?.text
+                : undefined;
+        return [{ key, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }];
+    });
+}
+
+export { isDocstring, findDocstring, PYTHON_SOURCES, parsePythonModule, readPythonEnvironment };

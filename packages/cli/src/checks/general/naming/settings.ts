@@ -91,8 +91,8 @@ function compileTerms(terms: string[], origin: Pick<Term, 'source' | 'group' | '
  */
 function readNamingSettings(
     input: Pick<CheckInput, 'reads'> & {
-        selection: Pick<CheckInput['selection'], 'view' | 'selected'> & {
-            scope: Pick<CheckInput['selection']['scope'], 'path'>;
+        scope: Pick<CheckInput['scope'], 'view' | 'selected'> & {
+            scope: Pick<CheckInput['scope']['scope'], 'path'>;
         };
         settingsFile: Pick<CheckInput['settingsFile'], 'settings'>;
     },
@@ -101,7 +101,7 @@ function readNamingSettings(
         view,
         selected: manifests,
         scope: { path: scope },
-    } = input.selection;
+    } = input.scope;
     const settings = input.settingsFile.settings;
     const reads = input.reads;
     const shipped = readNamingDefaults(reads);

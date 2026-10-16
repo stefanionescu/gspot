@@ -1,16 +1,18 @@
 // Check Next.js options and generate its types before type checking.
 import ts from 'typescript';
 import { join } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { checkInput } from '#cli/execution/built-in.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { listSourcePaths } from '#cli/repository/coverage.ts';
 import { readTsconfigProject } from '#cli/parsers/tsconfig.ts';
-import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
 import { listChecksById } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import type { ConfigurationCheck } from '#cli/types/configurations.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
 import { runTsc, restoreCommandPaths } from '#cli/checks/language/typescript/compiler.ts';
@@ -106,8 +108,8 @@ function inspectNextOptions(input: Pick<CheckInput, 'check'>, path: string, text
  * @param input the check input.
  * @returns the findings.
  */
-export function nextConfig(input: CheckInput): Finding[] {
-    return sourcePaths(input)
+function nextConfig(input: CheckInput): Finding[] {
+    return listSourcePaths(input.files)
         .filter((path) => NEXT_CONFIG.test(path))
         .flatMap((path) => {
             const text = readCachedBytes(input.reads, path).toString('utf8');
@@ -121,7 +123,7 @@ export function nextConfig(input: CheckInput): Finding[] {
  * @param planned the Next.js compiler check.
  * @returns the compiler findings and execution status.
  */
-export async function nextjsTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+async function nextjsTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     using scratchFolder = await copyIntoScratch(checkCopyInputs(checkInput(session, planned)));
     const root = scratchFolder.path;
@@ -133,8 +135,7 @@ export async function nextjsTsc(session: Session, planned: PlannedCheck): Promis
     });
     const output = `${generated.stdout}${generated.stderr}`;
     if (generated.code !== 0) throw new Error(`The next typegen command failed: ${failureSummary(output)}`);
-    const compiler = listChecksById(session.manifests.values()).get(TYPESCRIPT_TSC_CHECK);
-    if (compiler === undefined) throw new Error('The Next.js compiler check requires typescript/tsc.');
+    const compiler = listChecksById(session.manifests.values()).get(TYPESCRIPT_TSC_CHECK) as ConfigurationCheck;
     const result = await runTsc(
         scratchSession,
         {
@@ -153,3 +154,5 @@ export async function nextjsTsc(session: Session, planned: PlannedCheck): Promis
     result.duration = performance.now() - started;
     return restoreCommandPaths(result, root, session.root);
 }
+
+export { nextjsTsc, nextConfig };

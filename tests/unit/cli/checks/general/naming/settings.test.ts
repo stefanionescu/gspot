@@ -35,7 +35,7 @@ test('category limits inherit root and scope language settings while explicit ca
     for (const { scope, characters, functions, words } of SCOPE_LIMITS) {
         const view = buildScopeView(known, settings, selected, scope);
         const effective = readNamingSettings({
-            selection: { view: view, scope: { path: scope }, selected: selected },
+            scope: { view: view, scope: { path: scope }, selected: selected },
             settingsFile: { settings: settings },
             reads: createReadCache(process.cwd()),
         });
@@ -60,7 +60,7 @@ test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the ne
     );
     const view = buildScopeView(known, settings, selected, '');
     const effective = readNamingSettings({
-        selection: { view: view, scope: { path: '' }, selected: selected },
+        scope: { view: view, scope: { path: '' }, selected: selected },
         settingsFile: { settings: settings },
         reads: createReadCache(process.cwd()),
     });
@@ -107,7 +107,7 @@ test.each([...LINTER_CHECKED_CATEGORIES])(
             createReadCache(process.cwd()),
         );
         const effective = readNamingSettings({
-            selection: { view: buildScopeView(known, settings, selected, ''), scope: { path: '' }, selected: selected },
+            scope: { view: buildScopeView(known, settings, selected, ''), scope: { path: '' }, selected: selected },
             settingsFile: { settings: settings },
             reads: createReadCache(process.cwd()),
         });
@@ -139,7 +139,7 @@ test("a framework's naming rules come after the shipped ones and before the repo
     const settings = parseSettings(text, undefined, createReadCache(process.cwd()));
     const selected = selectConfigurations(['naming', 'typescript', 'express'], manifests);
     const effective = readNamingSettings({
-        selection: {
+        scope: {
             view: buildScopeView(buildKnownSettings(selected), settings, selected, ''),
             scope: { path: '' },
             selected,

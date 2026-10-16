@@ -1,5 +1,7 @@
+import { findingAt } from '#cli/checks/finding.ts';
+import { computePosition } from '#cli/system/text.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
+import { listSourcePaths } from '#cli/repository/coverage.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 
 import {
@@ -18,7 +20,7 @@ import {
  * @returns the findings.
  */
 export function xcconfig(input: CheckInput): Finding[] {
-    return sourcePaths(input, [XCCONFIG_SUFFIX]).flatMap((path) =>
+    return listSourcePaths(input.files, [XCCONFIG_SUFFIX]).flatMap((path) =>
         readCachedBytes(input.reads, path)
             .toString('utf8')
             .split('\n')
@@ -48,14 +50,14 @@ export function xcconfig(input: CheckInput): Finding[] {
  * @returns the findings.
  */
 export function xcodeEntitlements(input: CheckInput): Finding[] {
-    const allowed = new Set(input.selection.view.options('xcode').allowed_entitlements);
-    return sourcePaths(input, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
+    const allowed = new Set(input.scope.view.options('xcode').allowed_entitlements);
+    return listSourcePaths(input.files, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
         const text = readCachedBytes(input.reads, path).toString('utf8');
         return text
             .matchAll(PLIST_KEY)
             .filter((match) => !allowed.has(match.groups?.['name'] ?? ''))
             .map((match) => {
-                const line = text.slice(0, match.index).split('\n').length;
+                const line = computePosition(text, match.index).line;
                 return findingAt(
                     input,
                     { file: path, line },
@@ -73,11 +75,11 @@ export function xcodeEntitlements(input: CheckInput): Finding[] {
  * @returns the findings.
  */
 export function xcodeAppTransportSecurity(input: CheckInput): Finding[] {
-    return sourcePaths(input, [PLIST_SUFFIX]).flatMap((path): Finding[] => {
+    return listSourcePaths(input.files, [PLIST_SUFFIX]).flatMap((path): Finding[] => {
         const text = readCachedBytes(input.reads, path).toString('utf8');
         const found = ARBITRARY_LOADS.exec(text);
         if (found === null) return [];
-        const line = text.slice(0, found.index).split('\n').length;
+        const line = computePosition(text, found.index).line;
         return [
             findingAt(
                 input,

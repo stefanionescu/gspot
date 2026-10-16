@@ -1,5 +1,6 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { findQuotedEnd } from '#cli/parsers/comments.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
@@ -19,6 +20,7 @@ import {
     ESCAPE_LENGTH,
     HOST_PATTERNS,
     NGINX_ESCAPES,
+    NGINX_KEY_FILE,
     ERROR_LOCATION,
     OPENSSL_PROGRAM,
     QUOTED_ARGUMENT,
@@ -32,6 +34,7 @@ import {
     NGINX_TEST_COMMAND,
     DOCKER_RUN_ARGUMENTS,
     CERTIFICATE_ARGUMENTS,
+    NGINX_CERTIFICATE_FILE,
     CERTIFICATE_DIRECTIVES,
     OPENSSL_CERTIFICATE_FLAG,
 } from '#cli/config/checks/infrastructure/nginx.ts';
@@ -67,7 +70,7 @@ function copyNginxFiles(input: CheckInput, path: string, work: string): Map<stri
 }
 
 function syntaxOutcome(
-    check: string,
+    input: CheckInput,
     path: string,
     configurations: Map<string, Mount>,
     diagnostic: string,
@@ -76,7 +79,7 @@ function syntaxOutcome(
     const { file: target = '', line = '1' } = location === undefined ? {} : location;
     const file = configurations.get(target)?.path ?? path;
     return {
-        findings: [{ check, file, line: Number(line), rule: 'syntax', message: diagnostic, fixable: false }],
+        findings: [findingAt(input, { file, line: Number(line) }, 'syntax', diagnostic)],
         files: configurations.has(target) ? [file] : [],
     };
 }
@@ -85,8 +88,8 @@ async function testNginxFile(input: CheckInput, path: string, work: string, imag
     const configurations = copyNginxFiles(input, path, work);
     const mounts = {
         configs: [...configurations.values()],
-        certificate: join(work, 'certificate.pem'),
-        key: join(work, 'key.pem'),
+        certificate: join(work, NGINX_CERTIFICATE_FILE),
+        key: join(work, NGINX_KEY_FILE),
     };
     const argv = testArguments([...configurations.values()].map((entry) => entry.text).join('\n'), mounts, image);
     const result = await runCheckTool(input, ['docker', ...argv], { cwd: input.root });
@@ -107,7 +110,7 @@ async function testNginxFile(input: CheckInput, path: string, work: string, imag
     const diagnostic = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
     if (result.code !== 1 || diagnostic === undefined)
         throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
-    return syntaxOutcome(input.check.name, path, configurations, diagnostic);
+    return syntaxOutcome(input, path, configurations, diagnostic);
 }
 
 // The index past an escape pair or a braced variable that starts at at, or `-1` when neither starts there.
@@ -142,7 +145,7 @@ function wordEnd(text: string, at: number): number {
 function nginxComment(text: string, at: number): DirectiveScan {
     const end = text.indexOf('\n', at);
     const stop = end === -1 ? text.length : end;
-    return { token: text.slice(at, stop), end: stop };
+    return { token: undefined, end: stop };
 }
 
 // The comment, punctuation, quoted argument, or bare word at at; skip a character that starts none.
@@ -215,7 +218,6 @@ function parseDirectives(text: string): [string, ...string[]][] {
     const found: [string, ...string[]][] = [];
     let directive: string[] = [];
     for (const token of tokenize(text)) {
-        if (token.startsWith('#')) continue;
         switch (token) {
             case '}': {
                 directive = [];
@@ -232,11 +234,7 @@ function parseDirectives(text: string): [string, ...string[]][] {
                 directive.push(
                     token
                         .replace(QUOTED_ARGUMENT, '$2')
-                        .replaceAll(
-                            ESCAPED_CHARACTER,
-                            (_, escaped: string) =>
-                                Object.entries(NGINX_ESCAPES).find(([name]) => name === escaped)?.[1] ?? escaped,
-                        ),
+                        .replaceAll(ESCAPED_CHARACTER, (_, escaped: string) => NGINX_ESCAPES[escaped] ?? escaped),
                 );
             }
         }
@@ -250,7 +248,7 @@ function parseDirectives(text: string): [string, ...string[]][] {
  * @returns one finding for each file nginx refuses.
  */
 export async function nginxConfigTest(input: CheckInput): Promise<CheckOutcome> {
-    const image = input.selection.view.options('tools.nginx')['image'];
+    const image = input.scope.view.options('tools.nginx')['image'];
     const paths = input.files
         .map((file) => file.path)
         .filter((path) => path === NGINX_CONF || path.endsWith(`/${NGINX_CONF}`));
@@ -263,9 +261,9 @@ export async function nginxConfigTest(input: CheckInput): Promise<CheckOutcome> 
             OPENSSL_PROGRAM,
             ...CERTIFICATE_ARGUMENTS,
             OPENSSL_KEY_FLAG,
-            join(work, 'key.pem'),
+            join(work, NGINX_KEY_FILE),
             OPENSSL_CERTIFICATE_FLAG,
-            join(work, 'certificate.pem'),
+            join(work, NGINX_CERTIFICATE_FILE),
         ],
         { cwd: work },
     );

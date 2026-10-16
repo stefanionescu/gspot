@@ -190,7 +190,7 @@ async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
     const parsed = await parseCached(input, CONVENTION_SOURCES);
     const files: Finding[] = [];
     const functions = parsed.flatMap((source) => {
-        const limit = input.selection.view.limit('min_function_statements', source.language);
+        const limit = input.scope.view.limit('min_function_statements', source.language);
         const findings = (source.captures.get('function') ?? []).flatMap((node) => {
             const body = functionBody(node, source.language);
             const count = executableStatements(body, source.language);

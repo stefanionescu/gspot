@@ -35,13 +35,13 @@ function captureSource(source: ConventionSource): void {
  * @returns observations whose syntax trees stay available until their readers finish.
  */
 async function readConventionSources(
-    input: Omit<SourceInput, 'files'> & Pick<CheckInput, 'files' | 'selection'>,
+    input: Omit<SourceInput, 'files'> & Pick<CheckInput, 'files' | 'scope'>,
 ): Promise<ConventionSource[]> {
     const sources: ConventionSource[] = [];
     try {
         for (const file of input.files.filter((entry) => entry.kind === 'source' && !isInGspotFolder(entry.path))) {
             const language = sourceLanguage(file);
-            if (language === undefined || !input.selection.view.configurations.includes(language)) continue;
+            if (language === undefined || !input.scope.view.configurations.includes(language)) continue;
             const tree = await parseSource(language, readCachedBytes(input.reads, file.path).toString('utf8'), input);
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
             sources.push(source);

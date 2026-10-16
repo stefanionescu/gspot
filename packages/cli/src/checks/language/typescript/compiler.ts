@@ -137,18 +137,16 @@ function restoreCommandPaths(result: CheckResult, scratch: string, root: string)
 /**
  * Share ancestor checks without suppressing another invocation for the same scope.
  * @param reads the run cache.
- * @param check the compiler or option check identity.
- * @param path the project path.
- * @param scope the invoking scope.
- * @param required the compiler flags for one scope.
+ * @param check the project check identity.
+ * @param check.check the compiler or option check identifier.
+ * @param check.path the tsconfig location that identifies a compiled project.
+ * @param check.scope the invoking scope.
+ * @param check.required the compiler flags for this invocation.
  * @returns whether another scope already checks this project with these flags.
  */
 function projectChecked(
     reads: ReadCache,
-    check: string,
-    path: string,
-    scope: string,
-    required: Record<string, boolean>,
+    { check, path, scope, required }: { check: string; path: string; scope: string; required: Record<string, boolean> },
 ): boolean {
     const checked = getCachedValue(reads, CHECKED_PROJECTS);
     const key = JSON.stringify([
@@ -178,7 +176,14 @@ async function runTsc(
 ): Promise<CheckResult> {
     const required = checkedTsconfigOptions(session.settingsFile.settings.level, planned.scope);
     const target = project === undefined ? join(session.root, planned.scope.scope.path, TSCONFIG_FILE) : project.path;
-    if (projectChecked(session.reads, planned.check.name, target, planned.scope.scope.path, required))
+    if (
+        projectChecked(session.reads, {
+            check: planned.check.name,
+            path: target,
+            scope: planned.scope.scope.path,
+            required: required,
+        })
+    )
         return { ...emptyResult(planned), status: 'skipped', note: 'An ancestor compiler check covers this project.' };
     const command: string[] = [];
     if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {

@@ -316,7 +316,7 @@ may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", 
 [[architecture.module]]
 name = "execution"
 paths = ["packages/cli/src/execution/**"]
-may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply"]
+may_import = ["cli-config", "cli-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "install", "apply", "checks"]
 
 [[architecture.module]]
 name = "checks"

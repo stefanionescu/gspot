@@ -1,10 +1,10 @@
 import { computePosition } from '#cli/system/text.ts';
 import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import type { SqlNamed, Identifier } from '#cli/types/checks/general.ts';
 // eslint-disable-next-line import-x/no-cycle -- reason: These modules import hoisted functions and read no values during initialization.
 import { createIdentifier } from '#cli/checks/general/naming/identifiers.ts';
 import type { SqlFile, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
+import { type SqlNamed, type Identifier, type IdentifierRead } from '#cli/types/checks/general.ts';
 import { parseSqlFile, listNameParts, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
 import {
@@ -137,13 +137,19 @@ function findIdentifierOffset(entry: SqlNamed, parsed: SqlFile, source: string, 
     return found;
 }
 
-function statementIdentifiers(
-    file: string,
-    source: string,
-    statement: SqlStatementView,
-    parsed: SqlFile,
-    lexicalSource: string,
-): Identifier[] {
+function statementIdentifiers({
+    file,
+    source,
+    statement,
+    parsed,
+    lexicalSource,
+}: {
+    file: string;
+    source: string;
+    statement: SqlStatementView;
+    parsed: SqlFile;
+    lexicalSource: string;
+}): Identifier[] {
     const named =
         statement.kind === 'CreateFunctionStmt'
             ? functionNames(statement, lexicalSource)
@@ -179,19 +185,25 @@ function statementIdentifiers(
  * @param reads optional execution reads shared by SQL checks.
  * @returns the identifiers.
  */
-export async function sqlIdentifiers(file: string, source: string, reads?: ReadCache): Promise<Identifier[]> {
+export async function sqlIdentifiers(file: string, source: string, reads: ReadCache): Promise<IdentifierRead> {
     const parsed = await parseSqlFile(source, reads);
-    if (parsed.error !== undefined)
-        throw new Error(
-            `${file}:${String(parsed.error.line)}:${String(parsed.error.column)}: SQL parse failed: ${parsed.error.text}`,
-        );
+    if (parsed.error !== undefined) return { identifiers: [], error: parsed.error };
     // eslint-disable-next-line unicorn/prefer-spread -- reason: SQL offsets count UTF-16 code units, including each surrogate half.
     const characters = parsed.source.split('');
     for (const token of listSqlTokens(parsed.source))
         if (token.kind === 'line-comment' || token.kind === 'block-comment')
             characters.fill(' ', token.start, token.end);
     const lexicalSource = characters.join('');
-    return parsed.statements.flatMap((statement) =>
-        statementIdentifiers(file, source, statement, parsed, lexicalSource),
-    );
+    return {
+        identifiers: parsed.statements.flatMap((statement) =>
+            statementIdentifiers({
+                file: file,
+                source: source,
+                statement: statement,
+                parsed: parsed,
+                lexicalSource: lexicalSource,
+            }),
+        ),
+        error: undefined,
+    };
 }

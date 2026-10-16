@@ -5,6 +5,7 @@ import { applyFixers } from '#cli/execution/fixes.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { findTool } from '#cli/execution/command/tool.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
+import { runBuiltInCheck } from '#cli/execution/built-in.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { IgnoreEntry } from '#cli/types/settings/file.ts';
@@ -13,19 +14,22 @@ import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
 import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/run.ts';
+import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
 import { emptyResult, reproduceLine, buildRunReport } from '#cli/execution/report.ts';
 
-import type {
-    Finding,
-    RunState,
-    IgnoreUse,
-    RunOptions,
-    RunOutcome,
-    CheckResult,
-    RunnableCheck,
-    ReplannedFixResult,
+import {
+    type Finding,
+    type RunState,
+    type IgnoreUse,
+    type RunOptions,
+    type RunOutcome,
+    type CheckResult,
+    type RunnableCheck,
+    type ReplannedFixResult,
+    type CheckImplementations,
 } from '#cli/types/execution/check.ts';
 
 /**
@@ -45,13 +49,17 @@ function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
 // The plan and, for each planned check, the function that runs it.
 function planChecks(session: Session, options: RunOptions): RunnableCheck[] {
     const planned = planRun(session, options);
+    const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
     return planned.map((check) => {
-        const builtIn = options.checks[check.check.name];
+        const builtIn = implementations[check.check.name];
+        let run = builtIn?.run ?? runCheckCommand;
+        if (builtIn?.check !== undefined) run = runBuiltInCheck(builtIn.check);
+        if (check.check.generator_outputs !== undefined) run = runBuiltInCheck(checkStaleGeneratorOutputs);
         return {
             check,
-            run: builtIn?.run ?? runCheckCommand,
+            run,
             arguments: builtIn?.arguments,
-            configurationFiles: builtIn?.configurationFiles,
+            configurationFiles: builtIn?.toolFiles,
         };
     });
 }
@@ -105,7 +113,7 @@ async function runOne(pass: RunState, executable: RunnableCheck): Promise<CheckR
     try {
         return await run(session, planned, {
             arguments: executable.arguments,
-            configurationFiles: executable.configurationFiles,
+            toolFiles: executable.toolFiles,
             ...(staged === undefined ? {} : { staged }),
         });
     } catch (error) {
@@ -162,7 +170,7 @@ async function replanAfterFixes(session: Session, options: RunOptions): Promise<
     const fixes = await applyFixers(
         session,
         executables.map(({ check }) => check),
-        { isDryRun: options.isDryRun, checks: options.checks },
+        { isDryRun: options.isDryRun },
     );
     if (options.isDryRun) return { executables, fixes };
     await refreshAfterFixes(session);
@@ -177,7 +185,7 @@ async function replanAfterFixes(session: Session, options: RunOptions): Promise<
  *
  * @returns the report, the plan, and the fix report when --fix ran.
  */
-export async function executeRun(opened: Session, options: RunOptions): Promise<RunOutcome> {
+async function executeRun(opened: Session, options: RunOptions): Promise<RunOutcome> {
     using resources = new DisposableStack();
     const session: Session = {
         ...opened,
@@ -209,3 +217,5 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     });
     return fixes ? { report, planned, fixes } : { report, planned };
 }
+
+export { executeRun };

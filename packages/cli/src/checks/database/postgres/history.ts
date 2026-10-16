@@ -11,29 +11,25 @@ import { readBlobs, listHeadEntries } from '#cli/repository/revisions/tree-entri
 const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
 async function readCommittedMigrations(input: CheckInput, paths: string[]): Promise<Map<string, string>> {
-    if (!input.hasGit) return new Map();
-    const committed = await listHeadEntries(input.root, input.cancelSignal);
-    const selected = new Set(paths);
-    const entries = committed.filter(
-        (entry) => selected.has(entry.path) && entry.mode !== SYMLINK_MODE && entry.mode !== GITLINK_MODE,
-    );
-    const blobs = await readBlobs(
-        input.root,
-        entries.map((entry) => entry.hash),
-        input.cancelSignal,
-    );
-    return new Map(
-        entries.map((entry, index) => {
-            const content = blobs[index] as Buffer;
-            return [entry.path, content.toString('utf8')];
-        }),
-    );
-}
-
-function committedMigrationTexts(input: CheckInput, paths: string[]): Promise<Map<string, string>> {
-    return getCachedMapValue(input.reads, COMMITTED_MIGRATIONS_MEMO, JSON.stringify(paths), () =>
-        readCommittedMigrations(input, paths),
-    );
+    return getCachedMapValue(input.reads, COMMITTED_MIGRATIONS_MEMO, JSON.stringify(paths), async () => {
+        if (!input.hasGit) return new Map<string, string>();
+        const committed = await listHeadEntries(input.root, input.cancelSignal);
+        const selected = new Set(paths);
+        const entries = committed.filter(
+            (entry) => selected.has(entry.path) && entry.mode !== SYMLINK_MODE && entry.mode !== GITLINK_MODE,
+        );
+        const blobs = await readBlobs(
+            input.root,
+            entries.map((entry) => entry.hash),
+            input.cancelSignal,
+        );
+        return new Map(
+            entries.map((entry, index) => {
+                const content = blobs[index] as Buffer;
+                return [entry.path, content.toString('utf8')];
+            }),
+        );
+    });
 }
 
 /**
@@ -41,8 +37,9 @@ function committedMigrationTexts(input: CheckInput, paths: string[]): Promise<Ma
  * @param input the check input.
  * @returns the findings.
  */
-export async function postgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
-    const migrations = await readMigrations(input);
+async function postgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
+    const { migrations, findings: syntax } = await readMigrations(input);
+    if (syntax.length > 0) return syntax;
     const findings: Finding[] = [];
     const seen = new Map<string, string>();
     for (const migration of migrations) {
@@ -67,7 +64,7 @@ export async function postgresMigrationOrder(input: CheckInput): Promise<Finding
             );
         seen.set(migration.version, migration.name);
     }
-    const texts = await committedMigrationTexts(
+    const texts = await readCommittedMigrations(
         input,
         migrations.map((migration) => migration.path),
     );
@@ -99,11 +96,12 @@ export async function postgresMigrationOrder(input: CheckInput): Promise<Finding
  * @param input the check input.
  * @returns the findings.
  */
-export async function postgresEditedMigrations(input: CheckInput): Promise<Finding[]> {
-    const through = input.selection.view.options('postgres')['frozen_through'];
+async function postgresEditedMigrations(input: CheckInput): Promise<Finding[]> {
+    const through = input.scope.view.options('postgres')['frozen_through'];
     if (through === FROZEN_NONE) return [];
-    const migrations = await readMigrations(input);
-    const texts = await committedMigrationTexts(
+    const { migrations, findings: syntax } = await readMigrations(input);
+    if (syntax.length > 0) return syntax;
+    const texts = await readCommittedMigrations(
         input,
         migrations.map((migration) => migration.path),
     );
@@ -126,3 +124,5 @@ export async function postgresEditedMigrations(input: CheckInput): Promise<Findi
             ];
         });
 }
+
+export { postgresMigrationOrder, postgresEditedMigrations };

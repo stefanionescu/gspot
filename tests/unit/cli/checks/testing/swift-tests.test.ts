@@ -133,7 +133,9 @@ test.each([
             expect(await pathExists(join(sandbox.path, 'viewed.txt'))).toBe(false);
             await writeFile(join(sandbox.path, 'gspot.toml'), XCTEST_SETTINGS);
             const viewed = join(
-                buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), 'coverage').folder,
+                buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), {
+                    purpose: 'coverage',
+                }).folder,
                 'source/viewed.txt',
             );
             // The build folder keeps the coverage view after the run produces it.
@@ -173,10 +175,9 @@ test.each([
             'node_modules/.bin/xcrun',
             `${SHEBANG}console.log(JSON.stringify({targets:[{name:'Example',lineCoverage:1}]}));\n`,
         );
-        const cache = buildPlan(
-            buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'),
-            'coverage',
-        ).folder;
+        const cache = buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), {
+            purpose: 'coverage',
+        }).folder;
         await writeFile(join(outside.path, 'authored.txt'), 'preserved');
         await mkdir(cache, { recursive: true });
         const bundle = join(cache, 'coverage.xcresult');

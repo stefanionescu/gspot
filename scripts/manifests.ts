@@ -2,12 +2,17 @@ import { posix } from 'node:path';
 import { listAssets } from '#cli/system/assets.ts';
 import { isBelowFloor } from '#cli/tools/versions.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import type { CheckContradiction } from './types/manifests.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
-import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
+import { type CheckContradiction } from './types/manifests.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
+import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { listChecksById, listDeclaredTools, buildManifestError } from '#cli/configurations/manifests.ts';
-import type { Manifest, PinRequirement, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
+import {
+    type Manifest,
+    type PinRequirement,
+    type ToolDeclaration,
+    type CheckDeclaration,
+} from '#cli/types/configurations.ts';
 import {
     RULES_FOLDER,
     EACH_PLACEHOLDER,
@@ -213,7 +218,7 @@ function assertRuleFiles(manifest: Manifest): void {
  * @param check the declared check
  */
 function assertCheckDeclaration(manifest: Manifest, check: CheckDeclaration): void {
-    if (check.command === undefined && !(check.name in BUILT_IN_CHECKS))
+    if (check.command === undefined && check.generator_outputs === undefined && !(check.name in CHECK_IMPLEMENTATIONS))
         throw buildManifestError(manifest.configuration.name, [
             `The check ${check.name} names no command, and gspot has no built-in check by that name.`,
         ]);

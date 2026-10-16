@@ -4,13 +4,13 @@ import { getToolName } from '#cli/configurations/tools.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { REASON_ABOVE } from '#cli/config/checks/general/gspot.ts';
-import type { SourceComment } from '#cli/types/parsers/comments.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import type { SuppressionSyntax } from '#cli/types/checks/general.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { type SourceComment } from '#cli/types/parsers/comments.ts';
+import { type ScopeSelection } from '#cli/types/settings/values.ts';
+import { type SuppressionSyntax } from '#cli/types/checks/general.ts';
+import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
-import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
+import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
 function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
@@ -26,37 +26,34 @@ function reasonAbove(previous: SourceComment | undefined, comment: SourceComment
 }
 
 // Only tools whose checks claim this source contribute suppression syntax.
-function suppressionSyntaxes(selection: ScopeSelection, file: TrackedFile): SuppressionSyntax[] {
-    const { selected } = selection;
-    const readers = new Set(
-        selected.flatMap((manifest) =>
-            manifest.checks.flatMap((check) =>
-                listCoveredFiles(check.files ?? manifest.files, [file], {
-                    selected: selected,
-                    scope: selection.scope.path,
-                    view: selection.view,
-                }).length === 0
-                    ? []
-                    : [getToolName(check)],
-            ),
-        ),
+function suppressionSyntaxes(selection: ScopeSelection): SuppressionSyntax[] {
+    const selected = selection.selected;
+    const checks = selected.flatMap((manifest) =>
+        manifest.checks.map((check) => ({ check, files: check.files ?? manifest.files })),
     );
     const definitions = new Map(
         selected.flatMap((manifest) =>
             manifest.tools.flatMap((tool) =>
-                tool.suppression === undefined || !readers.has(tool.name)
-                    ? []
-                    : [[tool.name, tool.suppression] as const],
+                tool.suppression === undefined ? [] : [[tool.name, tool.suppression] as const],
             ),
         ),
     );
-    return [...definitions].map(([tool, definition]) => ({
-        tool,
-        marker: new RegExp(definition.marker, 'u'),
-        inlineMarker: new RegExp(definition.inline_marker ?? definition.marker, 'u'),
-        reason: new RegExp(definition.reason, 'u'),
-        forbidden: definition.forbidden === true,
-    }));
+    return [...definitions].map(([tool, definition]) => {
+        const readers = checks.filter(({ check }) => getToolName(check) === tool);
+        return {
+            tool,
+            covers: (file: TrackedFile) =>
+                readers.some(
+                    ({ files }) =>
+                        listCoveredFiles(files, [file], { selected, scope: selection.scope.path, view: selection.view })
+                            .length > 0,
+                ),
+            marker: new RegExp(definition.marker, 'u'),
+            inlineMarker: new RegExp(definition.inline_marker ?? definition.marker, 'u'),
+            reason: new RegExp(definition.reason, 'u'),
+            forbidden: definition.forbidden === true,
+        };
+    });
 }
 
 function hasAcceptedReason(form: SuppressionSyntax, text: string, preceding: string | undefined): boolean {
@@ -74,18 +71,18 @@ async function suppressions(input: CheckInput): Promise<Finding[]> {
     const selections = new Map(input.selections.map((selection) => [selection.scope.path, selection]));
     const found: Finding[] = [];
     for (const [scope, selection] of selections) {
+        const syntaxes = suppressionSyntaxes(selection);
         for (const file of input.files.filter(
             (file) =>
                 file.kind === 'source' && file.tags.includes('text') && findScope(file.path, scopes).path === scope,
         )) {
-            const forms = suppressionSyntaxes(selection, file);
+            const forms = syntaxes.filter((form) => form.covers(file));
             const source = readCachedBytes(input.reads, file.path).toString('utf8');
             const comments = await parseComments(file.path, source);
             found.push(
                 ...comments.flatMap((comment, index) => {
                     const preceding = reasonAbove(comments[index - 1], comment);
                     const text = stripCommentEnd(comment.text);
-
                     return forms.flatMap((form): Finding[] => {
                         const marker = comment.standalone ? form.marker : form.inlineMarker;
                         if (!marker.test(text)) return [];

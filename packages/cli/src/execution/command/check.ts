@@ -82,7 +82,7 @@ function missingToolFile(
     base: CheckResult,
     options: CheckRunOptions,
 ): CheckResult | undefined {
-    const paths = options.configurationFiles?.(checkInput(session, planned));
+    const paths = options.toolFiles?.(checkInput(session, planned));
     if (paths === undefined) return undefined;
     using files = openFiles(session.root);
     const missing = [...paths, ...commandToolFiles(session, planned, command)].find((path) =>
@@ -165,7 +165,7 @@ export async function prepareInScratch(
         root: session.root,
         paths: [
             ...scratchFiles(session, planned, command),
-            ...(options.configurationFiles?.(checkInput(session, planned)) ?? []),
+            ...(options.toolFiles?.(checkInput(session, planned)) ?? []),
         ],
         dependencies: [],
         cancelSignal: session.cancelSignal,

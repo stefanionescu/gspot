@@ -4,6 +4,7 @@ import { convertToSpaces } from '#cli/system/text.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { ParseCache } from '#cli/types/parsers/tree-sitter.ts';
+import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import type { ScriptSyntax, TemporaryPath, CleanupContext, TemporaryTargets } from '#cli/types/parsers/bash.ts';
 
 import {
@@ -320,4 +321,22 @@ export function listCodeLines(lines: string[]): NumberedLine[] {
         const code = line.trim();
         return code === '' ? [] : [{ number: index + 1, text: code }];
     });
+}
+
+/**
+ * Read expansions of environment names declared by the scope's reader scripts.
+ * @param root the parsed Bash source.
+ * @param owned the variables declared by environment readers.
+ * @returns the environment reads and their source positions.
+ */
+export function readBashEnvironment(root: Node, owned: ReadonlySet<string>): EnvironmentRead[] {
+    return root.descendantsOfType(['simple_expansion', 'expansion']).flatMap((expansion) =>
+        expansion.namedChildren
+            .filter((node) => node.type === 'variable_name' && owned.has(node.text))
+            .map((node) => ({
+                key: node.text,
+                line: node.startPosition.row + 1,
+                column: node.startPosition.column + 1,
+            })),
+    );
 }

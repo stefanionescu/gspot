@@ -11,8 +11,8 @@ import { processResult } from '#tests/setup/processes.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 
 test('Vale gets the timeout setting, and its alerts become findings with file, line and column', async () => {
@@ -34,7 +34,7 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     const result = await executeRun(session, buildRunOptions({ only: ['prose/vale'] }));
     expect(run.mock.calls).toHaveLength(1);
     const [command, options] = run.mock.calls[0]!;
-    expect(options.timeoutSeconds).toBe(1000);
+    expect(options.timeoutSeconds).toBe(1);
     expect(options.cwd).toBe(join(directory.path, '.gspot/config'));
     expect(command).toContain(join(directory.path, '.gspot/config/vale.ini'));
     expect(command).toContain(join(directory.path, path));
@@ -70,7 +70,7 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
             return Promise.resolve(processResult({ stdout: JSON.stringify({ 'source.mts.ts': [VALE_ALERT] }) }));
         }),
     );
-    const findings = await CHECK_FUNCTIONS['prose/vale'](buildCheckInput(session, 'prose/vale', { paths }));
+    const findings = await CHECK_IMPLEMENTATIONS['prose/vale'].check(buildCheckInput(session, 'prose/vale', { paths }));
     expect(run.mock.calls.map(([command]) => command.includes('--ext=.ts'))).toStrictEqual(paths.map(() => true));
     expect(scanned).toStrictEqual(original);
     expect(nativePaths).toStrictEqual(paths.map((path) => `--path=${join(directory.path, path)}.ts`));

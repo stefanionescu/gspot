@@ -5,13 +5,21 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import type { PreparedCommand } from '#cli/types/execution/command.ts';
 import { findTool, runPlannedTool } from '#cli/execution/command/tool.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/run.ts';
 import { hasToolError, toolOutputDetail } from '#cli/execution/command/output.ts';
 import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/scratch.ts';
 import { prepareCommand, prepareInScratch, commandEnvironment } from '#cli/execution/command/check.ts';
-import type { FixReport, FixResult, FixOptions, BuiltInChecks, CheckRunOptions } from '#cli/types/execution/check.ts';
+
+import {
+    type FixReport,
+    type FixResult,
+    type FixOptions,
+    type CheckRunOptions,
+    type CheckImplementations,
+} from '#cli/types/execution/check.ts';
 
 function fixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     // A code the check declares for findings means findings remain after the fix.
@@ -119,23 +127,19 @@ async function runCommandFix(
 }
 
 // Canceled and inactive fixes stay outside both publication and executable preparation.
-async function runFixer(
-    session: Session,
-    planned: PlannedCheck,
-    root: string,
-    checks: BuiltInChecks,
-): Promise<FixResult> {
+async function runFixer(session: Session, planned: PlannedCheck, root: string): Promise<FixResult> {
     const check = planned.check.name;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'failed', changed: [], note: 'The fix was canceled.' };
     if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
-    const builtIn = checks[check];
+    const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
+    const builtIn = implementations[check];
     if (builtIn === undefined) return runCommandFix(session, planned, root, {});
     return builtIn.fix === undefined
         ? runCommandFix(session, planned, root, {
               arguments: builtIn.arguments,
-              configurationFiles: builtIn.configurationFiles,
+              toolFiles: builtIn.toolFiles,
           })
         : builtIn.fix(planned, root);
 }
@@ -189,17 +193,10 @@ function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string
  * @param checks the selected fixers.
  * @param root the source or scratch root.
  * @param paths the selected paths.
- * @param checksByName check implementations.
  *
  * @returns cumulative results for each fixer.
  */
-async function fixerPasses(
-    session: Session,
-    checks: PlannedCheck[],
-    root: string,
-    paths: string[],
-    checksByName: BuiltInChecks,
-) {
+async function fixerPasses(session: Session, checks: PlannedCheck[], root: string, paths: string[]) {
     const results = new Map<number, FixResult>();
     let firstBefore: Map<string, Buffer | undefined> | undefined;
     let after = new Map<string, Buffer | undefined>();
@@ -208,7 +205,7 @@ async function fixerPasses(
         const before = contentsOf(root, paths);
         firstBefore ??= before;
         for (const { check, index } of pending)
-            results.set(index, mergedResult(results.get(index), await runFixer(session, check, root, checksByName)));
+            results.set(index, mergedResult(results.get(index), await runFixer(session, check, root)));
         after = contentsOf(root, paths);
         const changed = new Set(changedPaths(before, after));
         pending = checks.flatMap((check, index) => {
@@ -229,10 +226,11 @@ async function fixerPasses(
  *
  * @returns the fix results, changed paths, and dry-run diffs.
  */
-export async function applyFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {
-    const { isDryRun, checks: checksByName } = options;
+async function applyFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {
+    const { isDryRun } = options;
+    const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
     const checks = planned.filter(
-        (check) => check.check.fix !== undefined || checksByName[check.check.name]?.fix !== undefined,
+        (check) => check.check.fix !== undefined || implementations[check.check.name]?.fix !== undefined,
     );
     const paths = [
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
@@ -247,7 +245,7 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], opt
           )
         : undefined;
     const root = scratch?.path ?? session.root;
-    const { before, after, results } = await fixerPasses(session, checks, root, paths, checksByName);
+    const { before, after, results } = await fixerPasses(session, checks, root, paths);
     const changed = changedPaths(before, after);
     const diffs = isDryRun
         ? changed.map((path) =>
@@ -264,3 +262,5 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], opt
         : [];
     return { results, changed, diffs };
 }
+
+export { applyFixers };

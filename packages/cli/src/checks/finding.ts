@@ -1,5 +1,4 @@
-// Builds one finding for a check gspot runs itself.
-
+import type { Node } from 'web-tree-sitter';
 import type { Finding, CheckInput, FindingPlace } from '#cli/types/execution/check.ts';
 
 /**
@@ -14,37 +13,25 @@ import type { Finding, CheckInput, FindingPlace } from '#cli/types/execution/che
 export function findingAt(
     input: Pick<CheckInput, 'check'>,
     at: FindingPlace,
-    rule: string | undefined,
+    rule: string,
     message: string,
     options: Partial<Pick<Finding, 'help' | 'fixable'>> = {},
 ): Finding {
     return {
         check: input.check.name,
         ...at,
-        ...(rule === undefined ? {} : { rule }),
+        rule,
         message,
         fixable: false,
         ...options,
     };
 }
-
 /**
- * Select source paths by extension or whole file name.
- * @param input the selected check and repository files.
- * @param endings the file extensions to select.
- * @returns the selected source paths.
+ * Locate a syntax node in the original source file.
+ * @param file the original source path.
+ * @param node the parsed syntax node.
+ * @returns the file and one-based node position.
  */
-export function sourcePaths(input: CheckInput, endings?: readonly string[]): string[] {
-    return input.files
-        .filter(
-            (file) =>
-                file.kind === 'source' &&
-                (endings === undefined ||
-                    endings.some((ending) =>
-                        ending.startsWith('.')
-                            ? file.path.endsWith(ending)
-                            : file.path === ending || file.path.endsWith(`/${ending}`),
-                    )),
-        )
-        .map((file) => file.path);
+export function nodePlace(file: string, node: Node): FindingPlace {
+    return { file, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
 }

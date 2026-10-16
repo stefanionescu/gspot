@@ -6,7 +6,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 
 import {
@@ -115,7 +115,7 @@ test('a scope with env reads and no example env file is skipped with a note', as
         scope: 'app',
         paths: ['.env.example', 'app/source.ts'],
     });
-    expect(() => CHECK_FUNCTIONS['secrets/env-examples'](input)).toThrow('secrets.env_examples');
+    expect(CHECK_IMPLEMENTATIONS['secrets/env-examples'].check(input)).rejects.toThrow('secrets.env_examples');
     const checked = await checkReport(sandbox.path, [
         'check',
         'app/source.ts',

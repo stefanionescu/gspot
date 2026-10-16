@@ -4,10 +4,10 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { containing } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { type Finding } from '#cli/types/execution/check.ts';
 import { planRun, coveredInputs } from '#cli/planning/checks.ts';
-import { checkInput, runBuiltInCheck } from '#cli/execution/built-in.ts';
 import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { HEADERS_FILE, SOURCE_EDITS, SCOPE_FINDINGS } from '#tests/config/execution.ts';
 
@@ -69,19 +69,6 @@ test("a built-in check sees its scope's files, and a once-per-repository check a
     expect(
         scopeInput.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['apps/web/fixture.bin', 'apps/web/jest.config.json', 'apps/web/value.test.js']);
-    const owned = await executeRun(
-        session,
-        buildRunOptions({
-            only: ['jest/coverage'],
-            checks: {
-                'jest/coverage': {
-                    run: runBuiltInCheck(() => Promise.resolve({ findings: [], files: ['apps/web/value.test.js'] })),
-                },
-            },
-        }),
-    );
-    expect(owned.report.exitCode).toBe(0);
-    expect(owned.report.checks).toMatchObject([{ status: 'passed', files: ['apps/web/value.test.js'] }]);
 });
 
 test.each([...SCOPE_FINDINGS])("each check in a scope reads only that scope's files: $check", async (entry) => {

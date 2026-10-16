@@ -7,7 +7,7 @@ import * as processes from '#cli/system/processes.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { swiftBuildInput } from '#tests/setup/check-input.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { buildPlan } from '#cli/checks/language/swift/build-folder.ts';
 
 test('analysis refuses an incomplete compiler log after a failed build', async () => {
@@ -24,7 +24,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
             .mockResolvedValue(processResult()),
     );
 
-    expect(await rejection(CHECK_FUNCTIONS['swift/swiftlint-analyze'](input))).toMatch(/build exited 7/u);
+    expect(await rejection(CHECK_IMPLEMENTATIONS['swift/swiftlint-analyze'].check(input))).toMatch(/build exited 7/u);
 });
 
 test('a silent failed SwiftLint analyzer reports its exit code', async () => {
@@ -40,7 +40,7 @@ test('a silent failed SwiftLint analyzer reports its exit code', async () => {
             .mockResolvedValueOnce(processResult())
             .mockResolvedValue(processResult({ code: 7 })),
     );
-    expect(await rejection(CHECK_FUNCTIONS['swift/swiftlint-analyze'](input))).toBe(
+    expect(await rejection(CHECK_IMPLEMENTATIONS['swift/swiftlint-analyze'].check(input))).toBe(
         'The swiftlint command failed (exit 7): The tool printed no diagnostic.',
     );
 });
@@ -54,7 +54,7 @@ test('manual analysis clears its own compiler state without consuming the increm
     await using _preparation = prepared.resources;
     const input = prepared.input;
     const compile = buildPlan(input);
-    const analyzer = buildPlan(input, 'analyze');
+    const analyzer = buildPlan(input, { purpose: 'analyze' });
     const compilerState = join(compile.folder, 'package', 'state');
     const analyzerState = join(analyzer.scratch!, 'state');
     await mkdir(join(compile.folder, 'package'), { recursive: true });
@@ -68,8 +68,8 @@ test('manual analysis clears its own compiler state without consuming the increm
             .mockResolvedValue(processResult()),
     );
 
-    expect(await CHECK_FUNCTIONS['swift/build'](input)).toStrictEqual([]);
-    expect(await CHECK_FUNCTIONS['swift/swiftlint-analyze'](input)).toStrictEqual([]);
+    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(input)).toStrictEqual([]);
+    expect(await CHECK_IMPLEMENTATIONS['swift/swiftlint-analyze'].check(input)).toStrictEqual([]);
     expect(await readFile(compilerState, 'utf8')).toBe('incremental');
     expect(await pathExists(analyzerState)).toBe(false);
     expect(await readFile(analyzer.log, 'utf8')).toContain('complete compiler log');

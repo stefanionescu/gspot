@@ -6,15 +6,15 @@ import { planRun } from '#cli/planning/checks.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
-import { checkInput } from '#cli/execution/built-in.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { type CommandPart } from '#cli/types/execution/command.ts';
 import { WORKSPACE_SCOPE_CASES } from '#tests/config/execution.ts';
+import { checkInput, runBuiltInCheck } from '#cli/execution/built-in.ts';
 import { swiftlintConfigurationFiles } from '#cli/checks/language/swift/build.ts';
+import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
 import { prepareCommand, commandEnvironment } from '#cli/execution/command/check.ts';
 import { substitute, scratchFiles, perFileCommands } from '#cli/execution/command/placeholders.ts';
 
@@ -44,9 +44,10 @@ import { substitute, scratchFiles, perFileCommands } from '#cli/execution/comman
         expect(() =>
             prepareCommand(session, planned, ['prefix{setting:openapi.generate_command}'], environment),
         ).toThrow('List setting openapi.generate_command must occupy a whole command argument.');
-        input.selection.view.settings['openapi.generate_command'] = [];
+        input.scope.view.settings['openapi.generate_command'] = [];
         expect(prepareCommand(session, planned, input.check.command!, environment).commands[0]?.argv).toStrictEqual([]);
-        expect(await CHECK_FUNCTIONS['supabase/stale-types'](input)).toStrictEqual([]);
+        const checked = await runBuiltInCheck(checkStaleGeneratorOutputs)(session, planned);
+        expect(checked.findings).toStrictEqual([]);
     });
 }
 {

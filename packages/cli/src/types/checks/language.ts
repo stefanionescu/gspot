@@ -1,7 +1,7 @@
 import type { ScriptSyntax } from '#cli/types/parsers/bash.ts';
 import { type Files, type ReadCache } from '#cli/types/system/files.ts';
-import type { FENCE_PARSERS } from '#cli/config/checks/language/markdown.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
+import type { FENCE_PARSER_NAMES } from '#cli/config/checks/language/markdown.ts';
 
 /** How an analysis reports one finding in one file. */
 export type ScriptReport = (line: number, rule: string, text: string) => void;
@@ -40,7 +40,7 @@ export type SwiftBuildPurpose = 'compile' | 'analyze' | 'coverage' | 'periphery'
 /** Prepared source copy and its locked root, disposed by the native consumer. */
 export type PreparedSwiftBuild = { files: Files; source: string };
 
-export type FenceParser = (typeof FENCE_PARSERS)[keyof typeof FENCE_PARSERS];
+export type FenceParser = (typeof FENCE_PARSER_NAMES)[number];
 
 /** The body and opening line of a language-tagged Markdown code fence. */
 export type FencedBlock = { line: number; language: string; body: string };

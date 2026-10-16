@@ -7,8 +7,8 @@ import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { MIGRATION_FILE, TEAMS_MIGRATION } from '#tests/config/postgres.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
@@ -17,7 +17,7 @@ import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
     const POSTGRES_HISTORY_POLICY = settingsText(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' });
 
     test('migration history reports changed committed SQL and an earlier new version, then passes after fixes', async () => {
-        const frozenCheck = CHECK_FUNCTIONS['postgres/edited-migrations'];
+        const frozenCheck = CHECK_IMPLEMENTATIONS['postgres/edited-migrations'].check;
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': POSTGRES_HISTORY_POLICY,
@@ -88,9 +88,9 @@ import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
         };
         for (const selected of session.scopes) {
             const scopeInput = buildCheckInput(session, 'postgres/migration-order', { scope: selected.scope.path });
-            const migrations = await readMigrations(scopeInput);
+            const { migrations } = await readMigrations(scopeInput);
             expect(migrations.map((migration) => migration.path)).toStrictEqual([expected[selected.scope.path]!]);
-            expect(await CHECK_FUNCTIONS['postgres/migration-order'](scopeInput)).toStrictEqual([]);
+            expect(await CHECK_IMPLEMENTATIONS['postgres/migration-order'].check(scopeInput)).toStrictEqual([]);
         }
     });
 
@@ -108,10 +108,10 @@ import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
         });
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'postgres/migration-order');
-        const migrations = await readMigrations(input);
+        const { migrations } = await readMigrations(input);
         expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10', '11']);
         expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
-        expect(await CHECK_FUNCTIONS['postgres/migration-order'](input)).toMatchObject([
+        expect(await CHECK_IMPLEMENTATIONS['postgres/migration-order'].check(input)).toMatchObject([
             { file: `migrations/${prefix}8_earlier.sql`, rule: 'order' },
         ]);
         await Bun.write(join(sandbox.path, `migrations/${prefix}10_secure.sql`), 'SELECT 10;');
@@ -143,18 +143,22 @@ import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
             return nativeRun(argv, options, output);
         });
         expect(
-            await CHECK_FUNCTIONS['postgres/migration-order'](buildCheckInput(session, 'postgres/migration-order')),
+            await CHECK_IMPLEMENTATIONS['postgres/migration-order'].check(
+                buildCheckInput(session, 'postgres/migration-order'),
+            ),
         ).toStrictEqual([]);
         expect(
-            await CHECK_FUNCTIONS['postgres/edited-migrations'](buildCheckInput(session, 'postgres/edited-migrations')),
+            await CHECK_IMPLEMENTATIONS['postgres/edited-migrations'].check(
+                buildCheckInput(session, 'postgres/edited-migrations'),
+            ),
         ).toStrictEqual([]);
         expect(
-            await CHECK_FUNCTIONS['postgres/migration-order'](
+            await CHECK_IMPLEMENTATIONS['postgres/migration-order'].check(
                 buildCheckInput(session, 'postgres/migration-order', { scope: 'apps/api' }),
             ),
         ).toStrictEqual([]);
         expect(
-            await CHECK_FUNCTIONS['postgres/edited-migrations'](
+            await CHECK_IMPLEMENTATIONS['postgres/edited-migrations'].check(
                 buildCheckInput(session, 'postgres/edited-migrations', { scope: 'apps/api' }),
             ),
         ).toStrictEqual([]);

@@ -21,6 +21,7 @@ import {
     type ExtractSink,
     type PathContainer,
     type NamedCategory,
+    type IdentifierRead,
     type IdentifierDeclaration,
 } from '#cli/types/checks/general.ts';
 
@@ -79,11 +80,11 @@ export async function identifiersOf(
     file: string,
     text: string,
     language: string,
-    context?: Pick<CheckInput, 'reads' | 'resources'>,
-): Promise<Identifier[]> {
-    if (language === 'sql') return sqlIdentifiers(file, text, context?.reads);
+    context: Pick<CheckInput, 'reads' | 'resources'>,
+): Promise<IdentifierRead> {
+    if (language === 'sql') return sqlIdentifiers(file, text, context.reads);
     const grammar = selectGrammar(file, language);
-    if (grammar === undefined) return [];
+    if (grammar === undefined) return { identifiers: [], error: undefined };
     const tree = await parseSource(grammar, text, context);
     try {
         let identifiers: Identifier[];
@@ -104,7 +105,10 @@ export async function identifiersOf(
                 identifiers = typescriptIdentifiers(tree.rootNode, file, language);
             }
         }
-        return identifiers.toSorted((left, right) => left.line - right.line || left.column - right.column);
+        return {
+            identifiers: identifiers.toSorted((left, right) => left.line - right.line || left.column - right.column),
+            error: undefined,
+        };
     } finally {
         tree.delete();
     }

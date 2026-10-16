@@ -14,7 +14,6 @@ import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { mkdir, unlink, readFile } from 'node:fs/promises';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { EDITORCONFIG_FILES } from '#tests/config/formatting.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
@@ -66,10 +65,10 @@ test.each([...PROJECT_TRIGGERS])(
         expect(outcome.report.checks.map((check) => check.findings.map(({ message }) => message))).toStrictEqual(
             outcome.report.checks.map(() => ['Project finding']),
         );
-        const preview = await applyFixers(session, [api], { checks: BUILT_IN_CHECKS, isDryRun: true });
+        const preview = await applyFixers(session, [api], { isDryRun: true });
         expect(preview.changed).toStrictEqual(['api/source.ts']);
         expect(await pathExists(join(sandbox.path, 'api/source.ts'))).toBe(false);
-        const applied = await applyFixers(session, [api], { checks: BUILT_IN_CHECKS, isDryRun: false });
+        const applied = await applyFixers(session, [api], { isDryRun: false });
         expect(applied.changed).toStrictEqual(['api/source.ts']);
         expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
     },

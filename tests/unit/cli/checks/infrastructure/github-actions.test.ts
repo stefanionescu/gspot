@@ -9,9 +9,9 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
 import { processResult } from '#tests/setup/processes.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { CALLED_WORKFLOW, ACTIONLINT_EXITS, CALLED_WORKFLOW_REFERENCES } from '#tests/config/github-actions.ts';
 
 // The workflow text actionlint reads: each self-repository marker of a reference becomes a local path at the same
@@ -44,7 +44,7 @@ test.each([
         return processResult();
     });
     const [planned] = planRun(session, { stage: 'commit', only: ['github-actions/actionlint'] });
-    const result = await BUILT_IN_CHECKS['github-actions/actionlint'].run(session, planned!);
+    const result = await CHECK_IMPLEMENTATIONS['github-actions/actionlint'].run(session, planned!);
     expect(result.status, JSON.stringify(result)).toBe('passed');
     expect(run).toHaveBeenCalledTimes(1);
     expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(before);
@@ -69,7 +69,7 @@ test.each([...ACTIONLINT_EXITS])(
         const plans = planRun(session, { stage: 'commit', only: ['github-actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
-        const result = await BUILT_IN_CHECKS['github-actions/actionlint'].run(session, planned);
+        const result = await CHECK_IMPLEMENTATIONS['github-actions/actionlint'].run(session, planned);
         expect(result.status, JSON.stringify(result)).toBe(status);
         const workspace = await Bun.file(record).text();
         expect(workspace).not.toBe(sandbox.path);

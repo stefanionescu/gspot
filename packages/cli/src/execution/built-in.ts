@@ -1,3 +1,5 @@
+// The findings and covered files a built-in check returned, with missing help supplied by its check.
+
 import { emptyResult } from '#cli/execution/report.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { listWorkspaceDependencyFiles } from '#cli/tools/npm/packages.ts';
@@ -11,11 +13,19 @@ import type {
     RunnableCheck,
 } from '#cli/types/execution/check.ts';
 
-// The findings and covered files a built-in check returned, with missing help supplied by its check.
-function checkResult(
-    input: CheckInput,
-    outcome: Finding[] | CheckOutcome,
-): Pick<CheckResult, 'findings' | 'files' | 'fileCount'> {
+/**
+ * Build the result of a completed built-in check and supply its missing help.
+ * @param planned the selected check and repository scope.
+ * @param root0 the completed invocation and its timing.
+ * @param root0.input the checked repository files and services.
+ * @param root0.outcome the returned findings and optional covered file paths.
+ * @param root0.started the monotonic start time.
+ * @returns the completed check result and covered file count.
+ */
+function buildCheckResult(
+    planned: PlannedCheck,
+    { input, outcome, started }: { input: CheckInput; outcome: Finding[] | CheckOutcome; started: number },
+): CheckResult {
     const result: Pick<CheckResult, 'findings' | 'files' | 'fileCount'> = {
         findings: Array.isArray(outcome) ? outcome : outcome.findings,
         fileCount: input.files.length,
@@ -25,7 +35,12 @@ function checkResult(
         result.fileCount = result.files.length;
     }
     for (const finding of result.findings) finding.help ??= input.check.help;
-    return result;
+    return {
+        ...emptyResult(planned),
+        ...result,
+        status: result.findings.length > 0 ? 'failed' : 'passed',
+        duration: performance.now() - started,
+    };
 }
 
 /**
@@ -36,7 +51,7 @@ function checkResult(
  *
  * @returns the check input.
  */
-export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope' | 'check' | 'files'>): CheckInput {
+function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope' | 'check' | 'files'>): CheckInput {
     const input: CheckInput = {
         generatedPaths: session.generatedPaths,
         timeoutSeconds: session.timeoutSeconds,
@@ -51,7 +66,7 @@ export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope'
         check: planned.check,
         files: planned.files,
         settingsFile: session.settingsFile,
-        selection: planned.scope,
+        scope: planned.scope,
         selections: session.scopes,
         manifests: session.manifests,
         inspections: session.inspections,
@@ -76,19 +91,14 @@ export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope'
  *
  * @returns the callback that runs a planned check.
  */
-export function runBuiltInCheck(builtInCheck: BuiltInCheck): RunnableCheck['run'] {
+function runBuiltInCheck(builtInCheck: BuiltInCheck): RunnableCheck['run'] {
     return async (session, planned, options) => {
-        const base = emptyResult(planned);
         const started = performance.now();
         const input = checkInput(session, planned);
         if (options?.staged) input.staged = options.staged;
         const outcome = await builtInCheck(input);
-        const result = checkResult(input, outcome);
-        return {
-            ...base,
-            ...result,
-            status: result.findings.length > 0 ? 'failed' : 'passed',
-            duration: performance.now() - started,
-        };
+        return buildCheckResult(planned, { input, outcome, started });
     };
 }
+
+export { checkInput, runBuiltInCheck, buildCheckResult };

@@ -6,12 +6,11 @@ import { main } from '#cli/commands/program.ts';
 import { gitOutput } from '#tests/setup/git.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
-import type { FindingRow } from '#tests/types/tool-output.ts';
+import { type FindingRow } from '#tests/types/tool-output.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/processes.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
-import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
-import type { RunReport, RunOptions } from '#cli/types/execution/check.ts';
-import type { StdinOptions, SpawnOutcome } from '#tests/types/processes.ts';
+import { type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { type RunReport, type RunOptions } from '#cli/types/execution/check.ts';
+import { type StdinOptions, type SpawnOutcome } from '#tests/types/processes.ts';
 
 /** The gspot source folder in this checkout. */
 export const CLI_SOURCE = join(import.meta.dir, '../../packages/cli/src');
@@ -146,5 +145,5 @@ export async function spawnGspot(
  */
 
 export function buildRunOptions(overrides: Partial<RunOptions> = {}): RunOptions {
-    return { checks: BUILT_IN_CHECKS, stage: 'all', fix: false, isDryRun: false, ...overrides };
+    return { stage: 'all', fix: false, isDryRun: false, ...overrides };
 }

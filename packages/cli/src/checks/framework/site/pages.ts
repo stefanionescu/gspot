@@ -5,6 +5,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { BYTES_PER_KB } from '#cli/config/units.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
@@ -81,20 +82,6 @@ const linkinatorReportSchema = z.object({
     }[];
 }>);
 
-/** HTML diagnostics for every validated output page. */
-const htmlValidationReportSchema = z.array(
-    z.object({
-        filePath: z.string(),
-        messages: z.array(
-            z.object({ ruleId: z.string(), line: z.number(), message: z.string() } satisfies SchemaShape<{
-                ruleId: string;
-                line: number;
-                message: string;
-            }>),
-        ),
-    } satisfies SchemaShape<{ filePath: string; messages: { ruleId: string; line: number; message: string }[] }>),
-) satisfies z.ZodType<{ filePath: string; messages: { ruleId: string; line: number; message: string }[] }[]>;
-
 /** Selectors rejected in each emitted stylesheet. */
 const purgecssReportSchema = z.array(
     z.object({ file: z.string().min(1), rejected: z.array(z.string()) } satisfies SchemaShape<{
@@ -121,7 +108,7 @@ export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]>
             stdin: JSON.stringify({
                 paths,
                 origin: location === undefined ? undefined : new URL(location).origin,
-                skipped: input.selection.view.options('docs').allowed_urls,
+                skipped: input.scope.view.options('docs').allowed_urls,
             }),
         },
     );
@@ -158,32 +145,24 @@ export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
         .filter((path) => path.endsWith(HTML_EXTENSION))
         .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
-    const config = join(
-        input.root,
-        toolFilePath(input, { check: input.check, scope: input.selection, files: input.files }, 'html-validate-built'),
-    );
+    const config = join(input.root, toolFilePath(input, input, 'html-validate-built'));
     using reports = createScratchFolder();
     const command = [HTML_VALIDATE, '--config', config, '--formatter', `json=${join(reports.path, HTML_REPORT_FILE)}`];
     const findings: Finding[] = [];
     for (const batch of fileBatches(pages, command, process.platform)) {
         const result = await runCheckTool(input, [...command, ...batch], { cwd: build.cwd });
         if (![0, 1].includes(result.code)) throw new Error(`HTML validation failed: ${result.stderr}`);
-        const files = htmlValidationReportSchema.parse(
-            JSON.parse(readBytes(reports.path, HTML_REPORT_FILE).toString('utf8')),
-        );
-        if (result.code === 1 && files.every((file) => file.messages.length === 0))
+        const parsed = parseOutput(input.check, readBytes(reports.path, HTML_REPORT_FILE).toString('utf8'), '', {
+            root: build.folder,
+            cwd: build.folder,
+        });
+        if (result.code === 1 && parsed.length === 0)
             throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
         findings.push(
-            ...files.flatMap((file) =>
-                file.messages.map((entry) =>
-                    findingAt(
-                        input,
-                        { file: deriveBuiltFilePath(input, build, file.filePath), line: entry.line },
-                        entry.ruleId,
-                        entry.message,
-                    ),
-                ),
-            ),
+            ...parsed.map((finding) => ({
+                ...finding,
+                file: deriveBuiltFilePath(input, build, join(build.folder, finding.file)),
+            })),
         );
     }
     return findings;
@@ -198,10 +177,7 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const sheets = filesUnder(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
-    const config = join(
-        input.root,
-        toolFilePath(input, { check: input.check, scope: input.selection, files: input.files }, PURGECSS),
-    );
+    const config = join(input.root, toolFilePath(input, input, PURGECSS));
     const result = await runCheckTool(
         input,
         [PURGECSS, '--config', config, '--css', ...sheets, '--content', ...PURGECSS_CONTENT, '--rejected'],
@@ -234,7 +210,7 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
  * @returns one finding for each limit passed.
  */
 export async function siteSize(input: CheckInput): Promise<Finding[]> {
-    const limits = input.selection.view.options('site').size_limit;
+    const limits = input.scope.view.options('site').size_limit;
     const build = await requireBuild(input);
     const files = filesUnder(build.folder);
     return limits.flatMap((limit) => {
@@ -268,7 +244,7 @@ export async function sitemap(input: CheckInput): Promise<Finding[]> {
     if (sitemapFile === undefined) return [];
     const urls = sitemapUrls(build.folder, files);
     const listed = new Set(urls.flatMap((url) => pageOf(url)));
-    const isLeftOut = buildPathMatcher(input.selection.view.options('site').allowed_unlisted_pages);
+    const isLeftOut = buildPathMatcher(input.scope.view.options('site').allowed_unlisted_pages);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))
         .map((url) =>

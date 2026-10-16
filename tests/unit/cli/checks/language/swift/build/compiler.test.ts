@@ -9,8 +9,8 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift/package.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { rejection, containing, textContaining } from '#tests/setup/matchers.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/language/swift/build-folder.ts';
 import { checkFindings, buildCheckInput, swiftBuildInput, isolateCompilerCache } from '#tests/setup/check-input.ts';
@@ -67,8 +67,8 @@ test('a later Swift session reads a failed build after an earlier successful bui
             ),
     );
 
-    expect(await CHECK_FUNCTIONS['swift/build'](first)).toStrictEqual([]);
-    expect(await CHECK_FUNCTIONS['swift/build'](first)).toStrictEqual([]);
+    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(first)).toStrictEqual([]);
+    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(first)).toStrictEqual([]);
     expect(await checkFindings(sandbox.path, 'swift/build')).toStrictEqual([
         {
             check: 'swift/build',
@@ -93,12 +93,20 @@ test('canceled Swift compilation refuses to launch the compiler', async () => {
     const input = prepared.input;
     input.cancelSignal = AbortSignal.abort();
     const run = resources.use(spyOn(processes, 'spawnProcess'));
-    expect(await rejection(CHECK_FUNCTIONS['swift/build'](input))).toBe('The command was canceled.');
-    const analyzer = buildPlan(input, 'analyze');
+    const compilation = await executeRun(
+        prepared.session,
+        buildRunOptions({ only: ['swift/build'], cancelSignal: input.cancelSignal }),
+    );
+    expect(compilation.report.checks).toMatchObject([{ status: 'error', note: 'The check was canceled.' }]);
+    const analyzer = buildPlan(input, { purpose: 'analyze' });
     await mkdir(analyzer.scratch!, { recursive: true });
     const state = join(analyzer.scratch!, 'state');
     await writeFile(state, 'retained compiler state');
-    expect(await rejection(CHECK_FUNCTIONS['swift/swiftlint-analyze'](input))).toBe('The command was canceled.');
+    const analysis = await executeRun(
+        prepared.session,
+        buildRunOptions({ only: ['swift/swiftlint-analyze'], cancelSignal: input.cancelSignal }),
+    );
+    expect(analysis.report.checks).toMatchObject([{ status: 'error', note: 'The check was canceled.' }]);
     expect(await readFile(state, 'utf8')).toBe('retained compiler state');
     expect(run).not.toHaveBeenCalled();
 });
@@ -121,7 +129,9 @@ test('Swift response files stay inside the compiler cache before log publication
         ),
     );
 
-    expect(await rejection(CHECK_FUNCTIONS['swift/build'](input))).toContain('is not a safe repository-relative path');
+    expect(await rejection(CHECK_IMPLEMENTATIONS['swift/build'].check(input))).toContain(
+        'is not a safe repository-relative path',
+    );
     expect(await pathExists(plan.log)).toBe(false);
     const response = join(plan.folder, 'sources');
     await writeFile(response, 'Sources/Main.swift\nSources/Owner.swift\n');
@@ -145,7 +155,7 @@ test('a failed Swift source preparation releases its build claim before a later 
     const plan = buildPlan(input);
     await rm(join(sandbox.path, 'Main.swift'));
     const run = resources.use(spyOn(processes, 'spawnProcess'));
-    expect(await rejection(CHECK_FUNCTIONS['swift/build'](input))).toContain('ENOENT');
+    expect(await rejection(CHECK_IMPLEMENTATIONS['swift/build'].check(input))).toContain('ENOENT');
     expect(run).not.toHaveBeenCalled();
     expect(await pathExists(join(plan.folder, 'build.lock'))).toBe(false);
     {
@@ -172,7 +182,7 @@ test('Swift compiler diagnostics drop the macOS /private prefix from source path
             }),
         ),
     );
-    expect(await CHECK_FUNCTIONS['swift/build'](input)).toStrictEqual([
+    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(input)).toStrictEqual([
         // eslint-disable-next-line sonarjs/publicly-writable-directories -- The test compares this diagnostic path and never opens it.
         containing({ file: '/tmp/project/Main.swift', line: 4, column: 2, rule: 'compiler', message: 'Missing value' }),
         // eslint-disable-next-line sonarjs/publicly-writable-directories -- The test compares this diagnostic path and never opens it.

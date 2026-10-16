@@ -8,8 +8,8 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { filesUnder, requireBuild } from '#cli/checks/framework/site/build.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
@@ -51,7 +51,7 @@ ${SITE_BUILD_SCRIPT}`,
         paths: ['build.js'],
         resources: resources,
     });
-    expect(await CHECK_FUNCTIONS['site/build'](request)).toStrictEqual([
+    expect(await CHECK_IMPLEMENTATIONS['site/build'].check(request)).toStrictEqual([
         containing({ rule: 'build', message: textContaining('local-input.txt') }),
     ]);
     const corrected = await requireBuild(

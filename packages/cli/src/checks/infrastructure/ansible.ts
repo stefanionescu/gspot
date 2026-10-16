@@ -15,7 +15,7 @@ async function lintProject(input: CheckInput, folder: string): Promise<Finding[]
     );
     if (files.length === 0) return [];
     const cwd = join(input.root, folder);
-    const planned = { check: input.check, scope: input.selection, files };
+    const planned = { ...input, files };
     const substitutions = commandSubstitutions(input, planned, cwd);
     const argv = substitute(input, planned, input.check.command as string[], substitutions).filter(
         (part) => typeof part === 'string',
@@ -48,7 +48,7 @@ export async function ansibleLint(input: CheckInput): Promise<Finding[]> {
         .filter((path) => path === ANSIBLE_CFG || path.endsWith(`/${ANSIBLE_CFG}`))
         .map((path) => (path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''));
     const findings: Finding[] = [];
-    for (const folder of folders.length > 0 ? folders : [input.selection.scope.path])
+    for (const folder of folders.length > 0 ? folders : [input.scope.scope.path])
         findings.push(...(await lintProject(input, folder)));
     return findings;
 }

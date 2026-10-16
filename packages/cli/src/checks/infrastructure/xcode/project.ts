@@ -1,9 +1,10 @@
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { parsePbxproj } from '#cli/parsers/xcode.ts';
 import { PBXPROJ } from '#cli/config/parsers/xcode.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { listSourcePaths } from '#cli/repository/coverage.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
-import { findingAt, sourcePaths } from '#cli/checks/finding.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { XCODEPROJ_SUFFIX } from '#cli/config/checks/infrastructure/xcode.ts';
@@ -19,7 +20,7 @@ function projectFolder(projectFile: string): string {
  * @returns the findings.
  */
 export function xcodeFilesWithoutTarget(input: CheckInput): Finding[] {
-    const projects = sourcePaths(input, [PBXPROJ]).map((path) => ({
+    const projects = listSourcePaths(input.files, [PBXPROJ]).map((path) => ({
         path,
         ...parsePbxproj(readCachedBytes(input.reads, path).toString('utf8'), projectFolder(path)),
     }));
@@ -32,7 +33,9 @@ export function xcodeFilesWithoutTarget(input: CheckInput): Finding[] {
     );
     const referenced = new Set(references.map(({ path }) => path));
     const folders = projects.flatMap((project) => project.folders);
-    const tree = sourcePaths(input, [SWIFT_EXTENSION]).filter((file) => posix.basename(file) !== PACKAGE_SWIFT);
+    const tree = listSourcePaths(input.files, [SWIFT_EXTENSION]).filter(
+        (file) => posix.basename(file) !== PACKAGE_SWIFT,
+    );
     return tree
         .filter(
             (file) =>

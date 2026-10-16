@@ -59,22 +59,22 @@ const GIT_HOOK_SCRIPT = String.raw`
 import { join, resolve } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
 const { copyRevision } = await import(process.argv[2]);
-const { runGit, runGitForBytes, runGitBlocking, gitText } = await import(process.argv[3]);
+const { runGit, runGitForBytes, runGitBlocking, readGitText } = await import(process.argv[3]);
 const { runTool } = await import(process.argv[4]);
 const root = process.cwd();
 const nested = join(root, 'nested');
-const gitDir = (await gitText(root, ['rev-parse', '--absolute-git-dir'])).replace(/\n$/u, '');
+const gitDir = (await readGitText(root, ['rev-parse', '--absolute-git-dir'], {})).replace(/\n$/u, '');
 const index = resolve(root, process.env.GIT_INDEX_FILE);
 const head = readFileSync(join(gitDir, 'HEAD'));
 const indexed = readFileSync(index);
-const hash = (await gitText(root, ['rev-parse', 'HEAD'])).trim();
+const hash = (await readGitText(root, ['rev-parse', 'HEAD'], {})).trim();
 const reports = [];
 for (const source of [{ kind: 'index' }, { kind: 'commit', hash }]) {
     await copyRevision(nested, source, async (checkout, tree) => {
-        const folder = (await gitText(checkout, ['rev-parse', '--absolute-git-dir'])).trim();
-        const bytes = await runGitForBytes(checkout, ['ls-files', '-z']);
+        const folder = (await readGitText(checkout, ['rev-parse', '--absolute-git-dir'], {})).trim();
+        const bytes = await runGitForBytes(checkout, ['ls-files', '-z'], {});
         const tool = await runTool(['git', 'rev-parse', '--absolute-git-dir'], { cwd: checkout, timeoutSeconds: Number(process.argv[5]) });
-        const configured = runGitBlocking(checkout, ['config', '--get', 'gspot.boundary']);
+        const configured = runGitBlocking(checkout, ['config', '--get', 'gspot.boundary'], {});
         const intentional = runGitBlocking(checkout, ['config', '--get', 'gspot.explicit'], {
             env: { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'gspot.explicit', GIT_CONFIG_VALUE_0: 'caller' },
         });
@@ -84,7 +84,7 @@ for (const source of [{ kind: 'index' }, { kind: 'commit', hash }]) {
         reports.push({
             kind: source.kind,
             source: readFileSync(join(checkout, 'source.txt'), 'utf8'),
-            tree: tree === (await gitText(checkout, ['write-tree'])).trim(),
+            tree: tree === (await readGitText(checkout, ['write-tree'], {})).trim(),
             ownMetadata: folder !== gitDir,
             toolMetadata: tool.stdout.trim() === folder,
             paths: Buffer.from(bytes.stdout).toString('utf8').split('\0').filter(Boolean),

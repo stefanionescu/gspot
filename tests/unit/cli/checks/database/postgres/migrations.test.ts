@@ -3,29 +3,29 @@ import { join, basename } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { rejection } from '#tests/setup/matchers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
+import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { DEFAULT_MIGRATION_FOLDER_FILES } from '#tests/config/postgres.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
-test('unreadable SQL is an error and the fixed migration is read', async () => {
+test('unreadable SQL reports its syntax location and the fixed migration is read', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': settingsText(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' }),
         'migrations/20240201_teams.sql': 'CREATE TABLE ;',
     });
-    expect(
-        await rejection(readMigrations(buildCheckInput(await openSession(sandbox.path), 'postgres/edited-migrations'))),
-    ).toContain('migrations/20240201_teams.sql:1:14:');
+    const parsed = await readMigrations(buildCheckInput(await openSession(sandbox.path), 'postgres/edited-migrations'));
+    expect(parsed.findings).toMatchObject([
+        { file: 'migrations/20240201_teams.sql', line: 1, column: 14, rule: 'syntax' },
+    ]);
     await writeFile(
         join(sandbox.path, 'migrations/20240201_teams.sql'),
         'CREATE TABLE teams (id integer PRIMARY KEY);\n',
     );
-    const restored = await readMigrations(
+    const { migrations: restored } = await readMigrations(
         buildCheckInput(await openSession(sandbox.path), 'postgres/edited-migrations'),
     );
     expect(restored[0]?.statements[0]?.kind).toBe('CreateStmt');
@@ -40,10 +40,10 @@ test('dbmate and golang-migrate replays exclude rollback SQL', async () => {
         'db/migrations/2_secure.down.sql': 'ALTER TABLE teams DISABLE ROW LEVEL SECURITY;',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'postgres/migration-order');
-    const migrations = await readMigrations(input);
+    const { migrations } = await readMigrations(input);
     expect(migrations.map((migration) => migration.name)).toStrictEqual(['1_teams.sql', '2_secure.up.sql']);
     expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
-    expect(await CHECK_FUNCTIONS['postgres/migration-order'](input)).toStrictEqual([]);
+    expect(await CHECK_IMPLEMENTATIONS['postgres/migration-order'].check(input)).toStrictEqual([]);
 });
 
 test('the default migration folders are read in root and child scopes, and a set folder replaces them', async () => {
@@ -62,7 +62,7 @@ test('the default migration folders are read in root and child scopes, and a set
     for (const scope of ['', 'app']) {
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'postgres/migration-order', { scope });
-        const migrations = await readMigrations(input);
+        const { migrations } = await readMigrations(input);
         expect(migrations.map(({ name }) => name)).toStrictEqual(['1_first.sql', '2_second.sql', '3_third.sql']);
         expect(
             planRun(session, { stage: 'commit', only: ['postgres/squawk'] })
@@ -78,7 +78,7 @@ test('the default migration folders are read in root and child scopes, and a set
     for (const scope of ['', 'app']) {
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'postgres/migration-order', { scope });
-        const migrations = await readMigrations(input);
+        const { migrations } = await readMigrations(input);
         expect(migrations.map(({ name }) => name)).toStrictEqual(['5_custom.sql']);
         expect(
             planRun(session, { stage: 'commit', only: ['postgres/squawk'] })
