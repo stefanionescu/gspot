@@ -22,6 +22,31 @@ import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/
 import { PREFACE_BODY, REMOTE_URL_USER, REMOTE_URL_SCHEME } from '#cli/config/commands/init.ts';
 import { type InitAnswers, type InitSelection, type SettingsDraft } from '#cli/types/commands/init.ts';
 
+function buildOpenapiTables(
+    selections: { scope: string; selected: Manifest[] }[],
+    draft: SettingsDraft,
+    repository: Repository,
+): Map<string, TomlTable> {
+    const openapiSelections = selections
+        .map(({ scope, selected }) => ({
+            scope,
+            openapi: selected.find((entry) => entry.configuration.name === 'openapi'),
+        }))
+        .filter(
+            (entry): entry is typeof entry & { openapi: Manifest } =>
+                entry.openapi !== undefined && draft.template?.tables.openapi?.document === undefined,
+        );
+    return new Map(
+        openapiSelections.flatMap(({ scope, openapi }) => {
+            const matches = filenameMatcher(openapi.detect.filenames);
+            const document = repository.files.find(
+                (file) => matches(file.path) && scopeOf(file.path, draft.scopes).path === scope,
+            );
+            return document === undefined ? [] : [[scope, { openapi: { document: document.path } }] as const];
+        }),
+    );
+}
+
 /**
  * Choose the CI provider from existing files and the origin host.
  * @param root the repository root
@@ -72,24 +97,7 @@ function headTables(
             return [scope, { xcode }];
         }),
     );
-    const openapiSelections = selections
-        .map(({ scope, selected }) => ({
-            scope,
-            openapi: selected.find((entry) => entry.configuration.name === 'openapi'),
-        }))
-        .filter(
-            (entry): entry is typeof entry & { openapi: Manifest } =>
-                entry.openapi !== undefined && draft.template?.tables.openapi?.document === undefined,
-        );
-    const openapiTables = new Map(
-        openapiSelections.flatMap(({ scope, openapi }) => {
-            const matches = filenameMatcher(openapi.detect.filenames);
-            const document = repository.files.find(
-                (file) => matches(file.path) && scopeOf(file.path, draft.scopes).path === scope,
-            );
-            return document === undefined ? [] : [[scope, { openapi: { document: document.path } }] as const];
-        }),
-    );
+    const openapiTables = buildOpenapiTables(selections, draft, repository);
     const tables = new Map(
         scopes.map((scope) => [scope, { ...projects.get(scope), ...openapiTables.get(scope), ...formats.get(scope) }]),
     );
