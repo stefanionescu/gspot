@@ -5,17 +5,16 @@ import { classifyFile } from '#cli/repository/kind.ts';
 import { findScopes } from '#cli/repository/scopes.ts';
 import { swiftSourceTags } from '#cli/parsers/swift.ts';
 import { blockSpan } from '#cli/system/managed-blocks.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { isGitRepository } from '#cli/repository/find-root.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { openSafeFolder } from '#cli/system/safe-folder/open.ts';
+import { readPrefix, readSource } from '#cli/system/file-reads.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
-import { readText, readPrefix, readSource } from '#cli/system/file-reads.ts';
 import { attributesFor, gitAttributes, attributeRules } from '#cli/parsers/git.ts';
 import { readIndexEntries, listRepositoryFiles } from '#cli/repository/tracked.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -32,39 +31,15 @@ import {
  * Reads attribute rules once for a repository read.
  * @param root the repository root.
  * @param paths the tracked attribute-file paths.
- * @param hasGit whether Git can evaluate repository and user attribute precedence.
  * @returns the parsed rules, or none when the optional file does not exist.
  */
-function readAttributes(root: string, paths: string[], hasGit: boolean): Map<string, Record<string, string>> {
+function readAttributes(root: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
-    if (hasGit) {
-        const result = runGitBlocking(root, [...CHECK_ATTRIBUTES_ARGV], {
-            stdin: paths.join('\0') + '\0',
-        });
-        if (result.code !== 0) throw new Error(`Git could not read the attributes: ${result.stderr.trim()}`);
-        return gitAttributes(result.stdout);
-    }
-    const files = [
-        ...new Set([GITATTRIBUTES_FILE, ...paths.filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)]),
-    ];
-    const declarations = files
-        .toSorted((left, right) => left.split('/').length - right.split('/').length)
-        .flatMap((path) => {
-            const text = readText(root, path);
-            return text === undefined ? [] : attributeRules(text, posix.dirname(path));
-        });
-    const rules = declarations.map((entry) => ({
-        matcher: pathMatcher([entry.pattern]),
-        attributes: entry.attributes,
-    }));
-    const attributes = new Map<string, Record<string, string>>();
-    for (const path of paths) {
-        let effective: Record<string, string> = {};
-        for (const rule of rules.filter((entry) => entry.matcher(path)))
-            effective = attributesFor(rule.attributes, effective);
-        attributes.set(path, effective);
-    }
-    return attributes;
+    const result = runGitBlocking(root, [...CHECK_ATTRIBUTES_ARGV], {
+        stdin: paths.join('\0') + '\0',
+    });
+    if (result.code !== 0) throw new Error(`Git could not read the attributes: ${result.stderr.trim()}`);
+    return gitAttributes(result.stdout);
 }
 
 /**
@@ -87,11 +62,12 @@ export async function readRepository(
     const entries = await listRepositoryFiles(root, index, hasGit);
     using directory = openSafeFolder(root);
     const files: TrackedFile[] = [];
-    const attributes = readAttributes(
-        root,
-        entries.map((entry) => entry.path),
-        hasGit,
-    );
+    const attributes = hasGit
+        ? readAttributes(
+              root,
+              entries.map((entry) => entry.path),
+          )
+        : new Map<string, Record<string, string>>();
     for (const entry of entries) {
         const prefix = entry.symlink ? Buffer.alloc(0) : readPrefix(root, entry.path, FILE_PREFIX_BYTES, reads);
         const file = classifyFile(root, entry, prefix, { declarations, attributes });

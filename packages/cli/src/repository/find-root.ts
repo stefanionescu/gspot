@@ -1,7 +1,6 @@
 // Finds a repository root from a file or directory.
-import { statSync } from 'node:fs';
+import { statSync, realpathSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
-import { realPath } from '#cli/system/safe-folder/reads.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { gitLine, isOutsideGit, runGitBlocking } from '#cli/system/git.ts';
 import { GIT_LOCALE, WORK_TREE_ARGV, GIT_TOP_LEVEL_ARGV } from '#cli/config/system/git.ts';
@@ -28,7 +27,7 @@ export function isGitRepository(root: string): boolean {
  * @returns the root.
  */
 export function findRoot(start: string): string {
-    const directory = realPath(start);
+    const directory = realpathSync(start);
     const top = runGitBlocking(directory, [...GIT_TOP_LEVEL_ARGV]);
     const gitRoot = top.code === 0 ? resolve(gitLine(top.stdout)) : undefined;
     if (gitRoot === undefined && !isOutsideGit(runGitBlocking(directory, WORK_TREE_ARGV, { env: GIT_LOCALE })))

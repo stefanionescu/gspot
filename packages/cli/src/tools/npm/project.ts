@@ -9,19 +9,19 @@ import type { Session } from '#cli/types/planning.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { executableNames } from '#cli/system/executables.ts';
+import { sourcePath } from '#cli/system/safe-folder/reads.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/diagnostics.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import { realPath, sourcePath } from '#cli/system/safe-folder/reads.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { isYarnBerry, npmClientMajor } from '#cli/parsers/npm-client.ts';
-import { rmSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { toolVersionState, parseVersionOutput } from '#cli/tools/versions.ts';
 import { lockfileMatches, stripRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
 import { parseToolProject, toolProjectLockfile } from '#cli/parsers/tool-project.ts';
+import { rmSync, existsSync, realpathSync, readFileSync, writeFileSync } from 'node:fs';
 import { installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/diagnostics.ts';
 import { writeNpmrc, registryEnvironment, registryCredentials } from '#cli/tools/npm/registry.ts';
 import { DOT_GSPOT, NPM_TOOL_PROJECT_FILE, NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -120,7 +120,7 @@ async function runNpmWrappersOnce(
     timeoutSeconds: number,
     steps: (readonly string[])[],
 ): Promise<void> {
-    const root = realPath(work);
+    const root = realpathSync(work);
     // Select the first Windows wrapper that exists: an npm command file or a Bun executable.
     for (const tool of selected) {
         if (!needsVersionCheck(tool, dependencies)) continue;

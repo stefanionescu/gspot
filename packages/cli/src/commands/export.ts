@@ -1,3 +1,4 @@
+import { realpathSync } from 'node:fs';
 import { isRecord } from '#cli/objects.ts';
 import { GspotError } from '#cli/errors.ts';
 import { toPosix } from '#cli/system/paths.ts';
@@ -7,7 +8,6 @@ import { printResult } from '#cli/terminal/print.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { realPath } from '#cli/system/safe-folder/reads.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';
@@ -35,7 +35,7 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
     const template = parseTemplate(saved.text, file);
     let parent;
     try {
-        parent = realPath(parentPath);
+        parent = realpathSync(parentPath);
     } catch (error) {
         if (isRecord(error) && error['code'] === 'ENOENT')
             throw new GspotError('files', `The folder ${parentPath} does not exist.`);

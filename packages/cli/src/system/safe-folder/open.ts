@@ -1,15 +1,13 @@
 // Opens a safe folder with confined reads and writes.
 // The sorted names in a directory inside the root, or none when the entry does not exist.
-
 import type { Stats } from 'node:fs';
 import { replaceEntry } from '#cli/system/safe-folder/writes.ts';
 import { takeLock, releaseLocks } from '#cli/system/safe-folder/lock.ts';
 import { systemSegments, portableSegments } from '#cli/system/safe-folder/names.ts';
-import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync } from 'node:fs';
 import type { FileCopy, PathFormat, SafeFolder, SafeFolderState } from '#cli/types/system/safe-folder.ts';
+import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
-    realPath,
     readEntry,
     sameEntry,
     sourcePath,
@@ -82,7 +80,7 @@ function listOf(bounds: SafeFolderState, path: string | undefined): string[] {
  */
 export function openSafeFolder(root: string, pathFormat: PathFormat = 'portable'): SafeFolder {
     const bounds: SafeFolderState = {
-        root: realPath(root),
+        root: realpathSync(root),
         partsOf: pathFormat === 'portable' ? portableSegments : systemSegments,
         locks: new Map(),
     };

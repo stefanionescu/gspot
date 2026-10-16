@@ -66,6 +66,7 @@ test('build, dist and coverage folders are checked; folders marked linguist-gene
         'emitted/cards/asset-one.ts': '',
         'emitted/cards/asset-two.ts': '',
     });
+    commitAll(sandbox.path);
     const result = await executeRun(
         await openSession(sandbox.path),
         buildRunOptions({ stage: 'commit', only: ['structure/lone-files', 'structure/shared-prefixes'] }),

@@ -1,10 +1,10 @@
 // Runs Git commands with repository environment isolation.
 // Runs Git commands with repository environment isolation.
 import { resolve } from 'node:path';
+import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/errors.ts';
 import { TRAILING_NEWLINE } from '#cli/config/text.ts';
 import { run, runBlocking } from '#cli/system/processes.ts';
-import { realPath } from '#cli/system/safe-folder/reads.ts';
 import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 import type { StdoutRead, SpawnResult, SpawnOptions, ByteSpawnResult } from '#cli/types/system/processes.ts';
 
@@ -83,7 +83,7 @@ function targetGitEnvironment(root: string, source: GitRepository, environment: 
     });
     if (isOutsideGit(target)) return { env: { ...isolated, ...explicit } };
     if (target.code !== 0) return { failure: target };
-    const isSameRepository = realPath(source.directory) === realPath(gitLine(target.stdout));
+    const isSameRepository = realpathSync(source.directory) === realpathSync(gitLine(target.stdout));
     return { env: { ...(isSameRepository ? source.env : isolated), ...explicit } };
 }
 

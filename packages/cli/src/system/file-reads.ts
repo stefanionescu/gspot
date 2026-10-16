@@ -1,14 +1,13 @@
 // Reads repository files and caches calculations for one run.
 // Lazily initialized values share the lifetime of their execution read cache.
-
 import { decodeUtf8 } from '#cli/text.ts';
+import { sourcePath } from '#cli/system/safe-folder/reads.ts';
 import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
-import { openSync, readSync, closeSync, readFileSync } from 'node:fs';
-import { realPath, sourcePath } from '#cli/system/safe-folder/reads.ts';
+import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
 
 // Use this run's resolved root when it belongs to the requested repository.
 function realRoot(root: string, reads?: ReadCache): string {
-    return reads?.root === root ? root : realPath(root);
+    return reads?.root === root ? root : realpathSync(root);
 }
 /**
  * Reuse one value produced by a stable key during this run.
@@ -112,5 +111,5 @@ export function readText(root: string, path: string, reads?: ReadCache): string 
  * @returns the session-owned read cache.
  */
 export function createReadCache(root: string): ReadCache {
-    return { root: realPath(root), sources: new Map(), memo: new Map(), parsed: new Map() };
+    return { root: realpathSync(root), sources: new Map(), memo: new Map(), parsed: new Map() };
 }

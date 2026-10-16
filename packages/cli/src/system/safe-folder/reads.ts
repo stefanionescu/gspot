@@ -1,12 +1,12 @@
 // Reads files and links through checked parent directories.
+// Reads files and links through checked parent directories.
 import type { Stats } from 'node:fs';
-import { GspotError } from '#cli/errors.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { isInside } from '#cli/system/paths.ts';
 import { join, posix, relative } from 'node:path';
+import { lstatSync, mkdirSync, readFileSync, readlinkSync, realpathSync } from 'node:fs';
 import { systemSegments, assertOutsideStateFolder } from '#cli/system/safe-folder/names.ts';
 import type { FileCopy, PlannedFiles, SafeFolderState } from '#cli/types/system/safe-folder.ts';
-import { lstatSync, mkdirSync, existsSync, readFileSync, readlinkSync, realpathSync } from 'node:fs';
 
 import {
     MODE_BITS,
@@ -174,26 +174,6 @@ export function validateCopy(
 }
 
 /**
- * Resolve a path and distinguish an unavailable runtime operation from a missing file.
- * @param path the filesystem path to resolve.
- * @returns its real system spelling.
- * @throws when the runtime cannot resolve an existing path, or the filesystem operation fails.
- */
-export function realPath(path: string): string {
-    try {
-        return realpathSync(path);
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT' && existsSync(path))
-            throw new GspotError(
-                'filesystem',
-                `The runtime cannot open this path: ${path}. Check runtime support for this path.`,
-                { cause: error },
-            );
-        throw error;
-    }
-}
-
-/**
  * Read a written source path while refusing links outside the root's real path.
  * @param root the resolved directory.
  * @param path the root-relative source.
@@ -201,7 +181,7 @@ export function realPath(path: string): string {
  * @returns the contained path.
  */
 export function sourcePath(root: string, path: string, partsOf = systemSegments): string {
-    const target = realPath(join(root, ...partsOf(path)));
+    const target = realpathSync(join(root, ...partsOf(path)));
     if (!isInside(relative(root, target))) throw new Error(`Source link leaves the repository: ${path}`);
     return target;
 }
