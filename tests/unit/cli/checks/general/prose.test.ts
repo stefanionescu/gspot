@@ -27,14 +27,14 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
     const run = resources.use(
-        spyOn(processes, 'run').mockResolvedValue(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(
             processResult({ stdout: JSON.stringify({ [join(directory.path, path)]: [VALE_ALERT] }) }),
         ),
     );
     const result = await executeRun(session, buildRunOptions({ only: ['prose/vale'] }));
     expect(run.mock.calls).toHaveLength(1);
     const [command, options] = run.mock.calls[0]!;
-    expect(options.timeoutMs).toBe(1000);
+    expect(options.timeoutSeconds).toBe(1000);
     expect(options.cwd).toBe(join(directory.path, '.gspot/config'));
     expect(command).toContain(join(directory.path, '.gspot/config/vale.ini'));
     expect(command).toContain(join(directory.path, path));
@@ -64,7 +64,7 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
     const scanned: string[] = [];
     const nativePaths: string[] = [];
     const run = resources.use(
-        spyOn(processes, 'run').mockImplementation((command, options) => {
+        spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
             nativePaths.push(...command.filter((argument) => argument.startsWith('--path=')));
             scanned.push(options.stdin!);
             return Promise.resolve(processResult({ stdout: JSON.stringify({ 'source.mts.ts': [VALE_ALERT] }) }));
@@ -93,7 +93,7 @@ test('Vale reads known file types by path, and .mts files and scripts without an
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
-    using run = spyOn(processes, 'run').mockResolvedValue(processResult({ stdout: '{}' }));
+    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ stdout: '{}' }));
     expect(await checkFindings(session.root, 'prose/vale')).toStrictEqual([]);
     expect(
         run.mock.calls.map(([command, options]) => ({
@@ -121,7 +121,7 @@ test('Vale groups path files by extension and reads each script without an exten
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
-    using run = spyOn(processes, 'run').mockResolvedValue(processResult({ stdout: '{}' }));
+    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ stdout: '{}' }));
     expect(await checkFindings(session.root, 'prose/vale')).toStrictEqual([]);
     const sourcePaths = new Set(['a.md', 'b.md', 'c.ts', 'd.sh', 'e.sh'].map((path) => join(sandbox.path, path)));
     expect(
@@ -200,7 +200,7 @@ test.each([
             ]),
         ),
     );
-    resources.use(spyOn(processes, 'run').mockResolvedValue(processResult({ stdout: absoluteOutput })));
+    resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ stdout: absoluteOutput })));
     expect(await checkFindings(session.root, 'prose/vale')).toStrictEqual(
         findings.map((finding) => ({
             ...finding,
@@ -220,7 +220,7 @@ test.each(['diagnostic text', '{"file.md":[{}]}'])(
         const session = await openSession(sandbox.path);
         using resources = new DisposableStack();
         resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'vale')]));
-        resources.use(spyOn(processes, 'run').mockResolvedValue(processResult({ stdout })));
+        resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ stdout })));
         expect(checkFindings(session.root, 'prose/vale')).rejects.toThrow(
             stdout.startsWith('{') ? 'Line' : SyntaxError,
         );

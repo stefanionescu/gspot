@@ -71,10 +71,10 @@ test('a failed program download of an npm wrapper keeps the lockfile and install
     const installed = await installCommand(root);
     expect(installed.exitCode, installed.text).toBe(0);
     const { lockfilePath, lockfile } = await readToolProjectFiles(root, 'npm');
-    const original = processes.run;
+    const original = processes.spawnProcess;
     using mockResources = new DisposableStack();
     mockResources.use(
-        spyOn(processes, 'run').mockImplementation(async (argv, options, output) => {
+        spyOn(processes, 'spawnProcess').mockImplementation(async (argv, options) => {
             if (/(?:editorconfig-checker|[\\/]ec(?:\.cmd)?$)/u.test(argv[0] ?? ''))
                 return {
                     code: 7,
@@ -83,7 +83,7 @@ test('a failed program download of an npm wrapper keeps the lockfile and install
                     missing: false,
                     duration: 1,
                 };
-            return original(argv, options, output);
+            return original(argv, options);
         }),
     );
     using owner = openWriter(root);

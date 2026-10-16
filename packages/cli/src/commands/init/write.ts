@@ -4,9 +4,9 @@ import { writeSettings } from '#cli/settings/file.ts';
 import { type Writer } from '#cli/types/ownership.ts';
 import { planDeletion } from '#cli/ownership/plans.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { type FileCopy } from '#cli/types/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { type InitPrepared } from '#cli/types/commands/init.ts';
-import { type FileCopy } from '#cli/types/system/safe-folder.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 
 // Deletes replaced files only when their bytes still match the plan.

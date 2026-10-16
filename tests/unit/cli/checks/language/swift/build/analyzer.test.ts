@@ -19,7 +19,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
     await using _preparation = prepared.resources;
     const input = prepared.input;
     resources.use(
-        spyOn(processes, 'run')
+        spyOn(processes, 'spawnProcess')
             .mockResolvedValueOnce(processResult({ code: 7 }))
             .mockResolvedValue(processResult()),
     );
@@ -36,7 +36,7 @@ test('a silent failed SwiftLint analyzer reports its exit code', async () => {
     await using _preparation = prepared.resources;
     const input = prepared.input;
     resources.use(
-        spyOn(processes, 'run')
+        spyOn(processes, 'spawnProcess')
             .mockResolvedValueOnce(processResult())
             .mockResolvedValue(processResult({ code: 7 })),
     );
@@ -62,7 +62,7 @@ test('manual analysis clears its own compiler state without consuming the increm
     await writeFile(compilerState, 'incremental');
     await writeFile(analyzerState, 'old analyzer');
     resources.use(
-        spyOn(processes, 'run')
+        spyOn(processes, 'spawnProcess')
             .mockResolvedValueOnce(processResult({ stdout: 'incremental log' }))
             .mockResolvedValueOnce(processResult({ stdout: 'complete compiler log' }))
             .mockResolvedValue(processResult()),

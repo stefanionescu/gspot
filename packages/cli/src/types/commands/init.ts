@@ -1,8 +1,8 @@
 import type { Session } from '#cli/types/planning.ts';
+import type { FileCopy } from '#cli/types/system/files.ts';
 import type { Template } from '#cli/types/settings/file.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
-import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';

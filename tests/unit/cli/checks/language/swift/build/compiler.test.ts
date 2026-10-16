@@ -30,7 +30,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
     const initial = prepared.session;
     const corrected = await openSession(sandbox.path);
     const run = resources.use(
-        spyOn(processes, 'run').mockResolvedValue(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(
             processResult({ code: 7, stdout: 'Compiler startup failed', stderr: 'Permission denied' }),
         ),
     );
@@ -60,7 +60,7 @@ test('a later Swift session reads a failed build after an earlier successful bui
     const first = prepared.input;
 
     resources.use(
-        spyOn(processes, 'run')
+        spyOn(processes, 'spawnProcess')
             .mockResolvedValueOnce(processResult())
             .mockResolvedValue(
                 processResult({ code: 1, stderr: `${sandbox.path}/Main.swift:4:2: error: Missing value` }),
@@ -92,7 +92,7 @@ test('canceled Swift compilation refuses to launch the compiler', async () => {
     await using _preparation = prepared.resources;
     const input = prepared.input;
     input.cancelSignal = AbortSignal.abort();
-    const run = resources.use(spyOn(processes, 'run'));
+    const run = resources.use(spyOn(processes, 'spawnProcess'));
     expect(await rejection(CHECK_FUNCTIONS['swift/build'](input))).toBe('The command was canceled.');
     const analyzer = buildPlan(input, 'analyze');
     await mkdir(analyzer.scratch!, { recursive: true });
@@ -116,7 +116,7 @@ test('Swift response files stay inside the compiler cache before log publication
     const plan = buildPlan(input);
 
     const run = resources.use(
-        spyOn(processes, 'run').mockResolvedValue(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(
             processResult({ stdout: `swiftc @${join(sandbox.path, 'external-response')}` }),
         ),
     );
@@ -144,7 +144,7 @@ test('a failed Swift source preparation releases its build claim before a later 
     const input = buildCheckInput(session, 'swift/build');
     const plan = buildPlan(input);
     await rm(join(sandbox.path, 'Main.swift'));
-    const run = resources.use(spyOn(processes, 'run'));
+    const run = resources.use(spyOn(processes, 'spawnProcess'));
     expect(await rejection(CHECK_FUNCTIONS['swift/build'](input))).toContain('ENOENT');
     expect(run).not.toHaveBeenCalled();
     expect(await pathExists(join(plan.folder, 'build.lock'))).toBe(false);
@@ -164,7 +164,7 @@ test('Swift compiler diagnostics drop the macOS /private prefix from source path
     const input = prepared.input;
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'run').mockResolvedValue(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(
             processResult({
                 code: 1,
                 // eslint-disable-next-line sonarjs/publicly-writable-directories -- The test compares compiler diagnostic text and never opens these paths.

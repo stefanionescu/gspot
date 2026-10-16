@@ -5,7 +5,7 @@ export const UNSAFE_CHARACTERS = /[\\:<>"|?*\p{Cc}]/u;
 
 export const UNSAFE_PATH_END = /[. ]$/u;
 
-export const RESERVED_SEGMENTS = ['', '.', '..'] as const;
+export const RESERVED_SEGMENTS: ReadonlySet<string> = new Set(['', '.', '..']);
 
 export const LOCK_TOKEN_SEPARATOR = ':';
 

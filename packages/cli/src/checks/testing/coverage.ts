@@ -1,9 +1,9 @@
 import { join, relative } from 'node:path';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { type Files } from '#cli/types/system/files.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { type CheckInput } from '#cli/types/execution/check.ts';
 import { type CoverageReport } from '#cli/types/checks/testing.ts';
-import { type SafeFolder } from '#cli/types/system/safe-folder.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
 import { type SwiftBuildPlan } from '#cli/types/checks/language.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/language/swift/build-folder.ts';
@@ -22,7 +22,7 @@ import {
 async function packageCoverage(
     input: CheckInput,
     plan: SwiftBuildPlan,
-    files: SafeFolder,
+    files: Files,
     cwd: string,
 ): Promise<CoverageReport> {
     const tested = await runCheckTool(input, plan.argv, { cwd });

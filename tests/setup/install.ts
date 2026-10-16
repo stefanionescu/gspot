@@ -1,4 +1,5 @@
 // Packs packages, serves their registry, and installs sandbox tool projects.
+// Packs packages, serves their registry, and installs sandbox tool projects.
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { expect } from 'bun:test';
@@ -22,12 +23,12 @@ import type { SandboxSettings } from '#tests/types/sandbox.ts';
 import { installPythonTools } from '#cli/tools/python/project.ts';
 import { toolProjectLockfile } from '#cli/parsers/tool-project.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { testModules, installedModules } from '#tests/setup/modules.ts';
 import type { LockedInputs, ToolProjectFiles } from '#tests/types/npm.ts';
 import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/e2e.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
-import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 
 import {
     MISE_TRUST,
@@ -67,11 +68,9 @@ export async function installRuntimes(root: string): Promise<void> {
 
 /** Resolve the installed test package executables before system tools. */
 export function toolsPath(): string {
-    return [
-        join(testModules, '.bin'),
-        join(installedModules, '.bin'),
-        environmentVariable(buildSpawnEnvironment(), 'PATH') ?? '',
-    ].join(delimiter);
+    return [join(testModules, '.bin'), join(installedModules, '.bin'), readEnvironmentVariable('PATH') ?? ''].join(
+        delimiter,
+    );
 }
 
 /** Return the folder that holds the current test run's packages and tool paths. */
@@ -281,7 +280,7 @@ export async function installCompiler(root: string, folder = join(root, 'node_mo
     const kind = isWindows ? 'junction' : 'dir';
     await symlink(await realpath(join(installedModules, 'typescript')), join(folder, 'typescript'), kind);
     await symlink(await realpath(join(installedModules, '.bin')), join(folder, '.bin'), kind);
-    return [join(folder, '.bin'), environmentVariable(buildSpawnEnvironment(), 'PATH') ?? ''].join(delimiter);
+    return [join(folder, '.bin'), readEnvironmentVariable('PATH') ?? ''].join(delimiter);
 }
 
 /** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */

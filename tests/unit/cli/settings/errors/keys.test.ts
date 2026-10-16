@@ -17,7 +17,7 @@ test('an entry that matches no rule file names the near match', () => {
     ).toThrow('ACCESSIBILITY.md');
 });
 
-test.each([FIRST_READ[0], 'general/prose'])('a first-read entry %s cannot be left out', (entry) => {
+test.each([...FIRST_READ].slice(0, 1).concat('general/prose'))('a first-read entry %s cannot be left out', (entry) => {
     expect(() => parseSettings(`[rules]\nexclude = [".gspot/rules/${entry}"]\n`)).toThrow('every agent opens first');
 });
 

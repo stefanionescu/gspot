@@ -23,7 +23,7 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
     const entries = Object.entries(process.env);
     if (overrides !== undefined) entries.push(...Object.entries(overrides));
     for (const [key, value] of entries) {
-        const name = process.platform === 'win32' ? key.toUpperCase() : key;
+        const name = environmentKey(key);
         if (value === undefined) variables.delete(name);
         else variables.set(name, [key, value]);
     }
@@ -31,17 +31,21 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
 }
 
 /**
- * Read one environment value using the system's variable-name identity.
- * @param variables the environment to read.
+ * Read one value from the native process environment.
  * @param name the variable name.
- * @returns its value when present.
+ * @returns the value when present.
  */
-export function environmentVariable(variables: Record<string, string | undefined>, name: string): string | undefined {
-    const key =
-        process.platform === 'win32'
-            ? Object.keys(variables).find((candidate) => candidate.toUpperCase() === name.toUpperCase())
-            : name;
-    return key === undefined ? undefined : variables[key];
+export function readEnvironmentVariable(name: string): string | undefined {
+    return process.env[name];
+}
+
+/**
+ * Compare plain-record environment keys by their system identity.
+ * @param name the variable name.
+ * @returns its comparison key.
+ */
+export function environmentKey(name: string): string {
+    return process.platform === 'win32' ? name.toUpperCase() : name;
 }
 
 /**

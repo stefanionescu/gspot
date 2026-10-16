@@ -1,11 +1,11 @@
 // Creates scratch folders and lists files without following links.
 import { tmpdir } from 'node:os';
 import picomatch from 'picomatch';
-import type { Dirent } from 'node:fs';
 import { join, relative } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { ScratchFolder } from '#cli/types/system/files.ts';
-import { rmSync, lstatSync, mkdtempSync, readdirSync, realpathSync } from 'node:fs';
+import { openFiles, walkFiles } from '#cli/system/files/open.ts';
+import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
 import { GLOB_EXCLUDE, DRIVE_LETTER, PARENT_SEGMENT, FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
 
 // Refuses a pattern that climbs out of the folder it scans, in plain form, or hidden in a brace alternative.
@@ -29,27 +29,6 @@ export function createScratchFolder(): ScratchFolder {
             rmSync(path, { recursive: true, force: true });
         },
     };
-}
-
-/**
- * Visit entries under a temporary folder without following directory links.
- * @param folder the scratch directory.
- * @param skip whether to omit the contents of a directory.
- * @returns every entry other than directories.
- */
-// eslint-disable-next-line sonarjs/cognitive-complexity -- reason: The directory walk keeps skip decisions and pending directories in one loop without adding a one-caller traversal wrapper.
-export function* listFolderFiles(folder: string, skip?: (entry: Dirent) => boolean): Generator<Dirent> {
-    const pending = [folder];
-    for (const directory of pending) {
-        for (const entry of readdirSync(directory, { withFileTypes: true })) {
-            if (skip?.(entry) === true) continue;
-            if (entry.isDirectory()) {
-                pending.push(join(directory, entry.name));
-                continue;
-            }
-            yield entry;
-        }
-    }
 }
 
 /**
@@ -92,14 +71,14 @@ export function listMatchingPaths(cwd: string, patterns: string | string[]): str
             continue;
         }
         if (!stat.isDirectory() || isPruned(base)) continue;
-        for (const entry of listFolderFiles(
-            start,
-            (entry) =>
-                entry.isDirectory() && isPruned(convertToPosixPath(relative(cwd, join(entry.parentPath, entry.name)))),
-        )) {
-            const file = convertToPosixPath(relative(cwd, join(entry.parentPath, entry.name)));
+        using files = openFiles(start);
+        walkFiles(files, '', (path) => {
+            const absolute = join(start, path);
+            const file = convertToPosixPath(relative(cwd, absolute));
+            if (lstatSync(absolute).isDirectory()) return !isPruned(file);
             if (matches(file) && !isExcluded(file)) found.add(file);
-        }
+            return false;
+        });
     }
     return [...found];
 }

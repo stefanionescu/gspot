@@ -3,10 +3,9 @@ import { statSync } from 'node:fs';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { toolTimeoutMilliseconds } from '#cli/tools/run.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { ToolAvailability } from '#cli/types/tools/run.ts';
-import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { toolProjectPackage } from '#cli/configurations/tool-pins.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
@@ -48,7 +47,7 @@ function searchDirectories(root: string, options: LocateOptions): string[] {
 }
 
 // Whether a candidate exists: a managed path must resolve through the root boundary, read other candidates directly from disk.
-function candidateExists(files: SafeFolder, root: string, path: string): boolean {
+function candidateExists(files: Files, root: string, path: string): boolean {
     const local = convertToPosixPath(relative(root, path));
     if (!local.startsWith(`${DOT_GSPOT}/`)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
@@ -68,7 +67,7 @@ function systemCandidates(root: string, name: string, timeoutSeconds: number): s
         const result = spawnProcessBlocking([mise, MISE_WHICH, name], {
             cwd: root,
             env: TOOL_ENV,
-            timeoutMs: toolTimeoutMilliseconds(timeoutSeconds),
+            timeoutSeconds: timeoutSeconds,
         });
         const selected = result.stdout.trim();
         return result.code === 0 && selected !== '' ? [selected] : [];
@@ -278,7 +277,7 @@ function readMiseBinPaths(
     steps.push(command);
     const result = spawnProcessBlocking(command, {
         cwd: join(root, DOT_GSPOT),
-        timeoutMs: toolTimeoutMilliseconds(timeoutSeconds),
+        timeoutSeconds: timeoutSeconds,
         env: TOOL_ENV,
     });
     return result.code === 0 ? result.stdout.trim().split(/\r?\n/u).filter(Boolean) : [];

@@ -6,13 +6,13 @@ import { GspotError } from '#cli/system/errors.ts';
 import { yarnSettings } from '#cli/tools/npm/yarn.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/diagnostics.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
@@ -226,7 +226,7 @@ function assertNpmClientVersion(client: NpmClient, version: SpawnResult): void {
  */
 async function prepareNpmLockfile(
     manifest: GeneratedFile,
-    owner: Pick<SafeFolder, 'read'>,
+    owner: Pick<Files, 'read'>,
     preparation: Pick<Session, 'root' | 'npmClient' | 'timeoutSeconds'>,
     yarn: string | undefined,
     steps: (readonly string[])[],
@@ -276,7 +276,7 @@ async function prepareNpmLockfile(
  */
 async function installNpmTools(
     session: Pick<Session, 'root' | 'npmClient' | 'timeoutSeconds'>,
-    owner: Pick<SafeFolder, 'read' | 'removeTree'>,
+    owner: Pick<Files, 'read' | 'removeTree'>,
     tools: Iterable<ToolDeclaration>,
     steps: (readonly string[])[],
 ): Promise<string> {

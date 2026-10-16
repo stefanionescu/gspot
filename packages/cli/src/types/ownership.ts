@@ -1,9 +1,9 @@
 import type { JsonValue } from '#cli/types/parsers/json.ts';
+import type { Files, FileCopy } from '#cli/types/system/files.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { FileCopy, SafeFolder } from '#cli/types/system/safe-folder.ts';
 
 /** One locked repository writer. */
-export type Writer = { files: SafeFolder; [Symbol.dispose](): void };
+export type Writer = { files: Files; [Symbol.dispose](): void };
 
 export type FileEdit = { path: string; changes: { path: KeyPath; value: JsonValue }[] };
 

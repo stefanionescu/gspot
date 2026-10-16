@@ -1,10 +1,10 @@
 // Reads, compares, and replaces one contained file or link.
 import { randomUUID } from 'node:crypto';
+import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { join, posix, dirname } from 'node:path';
-import { assertOutsideStateFolder } from '#cli/system/files/names.ts';
+import { splitSystemPath } from '#cli/system/files/names.ts';
+import { type FileCopy, type FilesState } from '#cli/types/system/files.ts';
 import { TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
-import { type FileCopy, type PlannedFiles, type SafeFolderState } from '#cli/types/system/safe-folder.ts';
 
 import {
     MODE_BITS,
@@ -24,7 +24,6 @@ import {
     unlinkSync,
     fchmodSync,
     renameSync,
-    symlinkSync,
     readFileSync,
     readlinkSync,
     writeFileSync,
@@ -60,28 +59,9 @@ function readRegularFile(target: string, stat: Stats, path: string): FileCopy {
     return { bytes, mode: normalizeFileMode({ mode: stat.mode & MODE_BITS }) };
 }
 
-// Whether gspot refuses a link's target text: not valid UTF-8, empty, or absolute.
-function isUnsafeLinkTarget(value: FileCopy, target: string): boolean {
-    return !Buffer.from(target).equals(value.bytes) || target === '' || target.startsWith('/');
-}
-
-// Refuses a link with a missing destination or another link as its destination, reading proposed files before the disk.
-function assertLinkDestination(
-    bounds: SafeFolderState,
-    path: string,
-    destination: string,
-    plannedFiles?: PlannedFiles,
-): void {
-    const targetFile =
-        plannedFiles?.has(destination) === true ? plannedFiles.get(destination) : readEntry(bounds, destination, false);
-    if (targetFile === undefined)
-        throw new Error(`The link target for ${path} is missing. Restore the target or remove the link.`);
-    if (targetFile.isLink) throw new Error(`The link target for ${path} is not a regular file. Choose a regular file.`);
-}
-
 // Check the same parent directories before a read or a prepared write.
-function walkParentFolders(bounds: SafeFolderState, path: string, statParent: (path: string) => Stats): string {
-    const parts = bounds.partsOf(path);
+function walkParentFolders(bounds: FilesState, path: string, statParent: (path: string) => Stats): string {
+    const parts = splitSystemPath(path);
     let folder = bounds.root;
     for (const part of parts.slice(0, -1)) {
         folder = join(folder, part);
@@ -145,7 +125,7 @@ export function isSameContents(found: FileCopy | undefined, expected: FileCopy |
  * @param path the root-relative path.
  * @returns the absolute path.
  */
-export function verifyPath(bounds: SafeFolderState, path: string): string {
+export function verifyPath(bounds: FilesState, path: string): string {
     return walkParentFolders(bounds, path, lstatSync);
 }
 
@@ -155,23 +135,20 @@ export function verifyPath(bounds: SafeFolderState, path: string): string {
  * @param path the root-relative path.
  * @returns the absolute path after preparing its parents.
  */
-export function preparePath(bounds: SafeFolderState, path: string): string {
+export function preparePath(bounds: FilesState, path: string): string {
     return walkParentFolders(bounds, path, prepareParentFolder);
 }
 
 /**
- * The copy at a path, or undefined for a missing entry.
+ * Read a regular file with no other hard link, or return undefined when absent.
  * @param bounds the root.
  * @param path the root-relative path.
- * @param allowLink whether to read a symbolic link rather than refuse it.
- * @returns the copy.
+ * @returns the file copy.
  */
-export function readEntry(bounds: SafeFolderState, path: string, allowLink: boolean): FileCopy | undefined {
+export function readEntry(bounds: FilesState, path: string): FileCopy | undefined {
     try {
         const target = verifyPath(bounds, path);
-        const stat = lstatSync(target);
-        if (allowLink && stat.isSymbolicLink()) return readSymbolicLink(target, stat);
-        return readRegularFile(target, stat, path);
+        return readRegularFile(target, lstatSync(target), path);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
         throw error;
@@ -179,43 +156,20 @@ export function readEntry(bounds: SafeFolderState, path: string, allowLink: bool
 }
 
 /**
- * Checks a copy's path and, for a link, its target, requiring a normalized relative path to a regular file
- * inside the root.
+ * Read a file or symbolic link without following the link, or return undefined when absent.
  * @param bounds the root.
  * @param path the root-relative path.
- * @param value the copy.
- * @param plannedFiles planned file writes, consulted before the disk for a link's destination.
- * @returns the link target text, or undefined for a regular file.
+ * @returns the entry copy.
  */
-export function validateCopy(
-    bounds: SafeFolderState,
-    path: string,
-    value: FileCopy,
-    plannedFiles?: PlannedFiles,
-): string | undefined {
-    bounds.partsOf(path);
-    if (!value.isLink) return undefined;
-    const target = value.bytes.toString('utf8');
-    if (isUnsafeLinkTarget(value, target))
-        throw new Error(`${path} has an unsafe link target. Use a relative path inside the repository.`);
-    const destination = posix.join(posix.dirname(path), target);
-    bounds.partsOf(destination);
-    assertOutsideStateFolder(destination);
-    if (posix.relative(posix.dirname(path), destination) !== target)
-        throw new Error(
-            `The link target for ${path} is not a normalized relative path. Remove dot and parent segments.`,
-        );
-    assertLinkDestination(bounds, path, destination, plannedFiles);
-    return target;
-}
-
-/**
- * Create a symbolic link after the caller validates its target.
- * @param path the path of the new link.
- * @param target the target text or bytes.
- */
-export function writeLink(path: string, target: string | Buffer): void {
-    symlinkSync(target, path);
+export function readEntryKeepingLinks(bounds: FilesState, path: string): FileCopy | undefined {
+    try {
+        const target = verifyPath(bounds, path);
+        const stat = lstatSync(target);
+        return stat.isSymbolicLink() ? readSymbolicLink(target, stat) : readRegularFile(target, stat, path);
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        throw error;
+    }
 }
 
 /**
@@ -225,21 +179,14 @@ export function writeLink(path: string, target: string | Buffer): void {
  * @param value the copy to write.
  * @param expected the copy the caller last saw there, or undefined for a new file.
  */
-export function replaceEntry(
-    bounds: SafeFolderState,
-    path: string,
-    value: FileCopy,
-    expected: FileCopy | undefined,
-): void {
-    const link = validateCopy(bounds, path, value);
+export function replaceEntry(bounds: FilesState, path: string, value: FileCopy, expected: FileCopy | undefined): void {
     const target = preparePath(bounds, path);
     const temporary = join(dirname(target), `${TEMPORARY_FILE_PREFIX}${randomUUID()}${TEMPORARY_FILE_SUFFIX}`);
     let staged = false;
     try {
-        if (link === undefined) writeStagedFile(temporary, value);
-        else writeLink(temporary, link);
+        writeStagedFile(temporary, value);
         staged = true;
-        if (!isSameContents(readEntry(bounds, path, expected?.isLink === true), expected))
+        if (!isSameContents(readEntry(bounds, path), expected))
             throw new Error(`Destination changed during the operation: ${path}`);
         if (isRenameBlocked(expected)) unlinkSync(target);
         renameSync(temporary, target);

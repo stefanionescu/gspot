@@ -37,7 +37,7 @@ test.each([
         toolDeclaration(session.manifests.values(), 'actionlint'),
         toolDeclaration(session.manifests.values(), 'shellcheck'),
     ]);
-    using run = spyOn(processes, 'run').mockImplementation(async (_command, options) => {
+    using run = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
         const prepared = await readFile(join(options.cwd, '.github/workflows/caller.yml'), 'utf8');
         expect(prepared).toBe(expected);
         expect(prepared).toHaveLength(before.length);

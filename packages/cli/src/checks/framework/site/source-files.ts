@@ -17,7 +17,7 @@ export function unusedAssets(input: CheckInput): Finding[] {
     const paths = new Set([
         ...local,
         ...input.index
-            .filter((entry) => entry.stage === 0 && new Set<string | undefined>(GIT_FILE_MODES).has(entry.mode))
+            .filter((entry) => entry.stage === 0 && GIT_FILE_MODES.has(entry.mode))
             .map((entry) => entry.path),
     ]);
     const texts = paths

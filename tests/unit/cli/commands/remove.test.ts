@@ -77,13 +77,13 @@ configurations = ["bash"]
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await pathExists(join(sandbox.path, '.gspot/config/api/shellcheckrc'))).toBe(true);
-    const run = processes.run;
+    const run = processes.spawnProcess;
     const installations: string[][] = [];
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'run').mockImplementation((command, options, output) => {
+        spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
             if (command[0] === 'npm' && command[1] !== '--version') installations.push([...command]);
-            return run(command, options, output);
+            return run(command, options);
         }),
     );
     const result = await runGspot(sandbox.path, [...argv, '--json']);

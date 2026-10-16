@@ -34,7 +34,7 @@ test.each([...SVELTE_PROJECTS])(
         await createFileTree(sandbox.path, {});
 
         let runtimePath = '';
-        using run = spyOn(processes, 'run').mockImplementation((argv, options) => {
+        using run = spyOn(processes, 'spawnProcess').mockImplementation((argv, options) => {
             runtimePath = z.string().parse(argv[argv.indexOf('--tsconfig') + 1]);
             const config = z.record(z.string(), z.unknown()).parse(JSON.parse(readFileSync(runtimePath, 'utf8')));
             expect(options.cwd).toBe(join(sandbox.path, scope));
@@ -73,7 +73,9 @@ test('svelte-check errors and warnings become findings at one-based positions wi
     });
     const session = await openSession(sandbox.path);
     await fakeNpmTool(sandbox.path, 'svelte-check');
-    using _run = spyOn(processes, 'run').mockResolvedValue(processResult({ code: 1, stdout: SVELTE_CHECK_OUTPUT }));
+    using _run = spyOn(processes, 'spawnProcess').mockResolvedValue(
+        processResult({ code: 1, stdout: SVELTE_CHECK_OUTPUT }),
+    );
     const input = buildCheckInput(session, 'svelte/svelte-check');
     expect(await svelteCheck(input)).toStrictEqual([
         {
@@ -104,7 +106,7 @@ test('a Windows file name becomes a forward-slash path', async () => {
     await using sandbox = await testdir({ 'gspot.toml': settingsText(['svelte']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'svelte/svelte-check');
     await fakeNpmTool(sandbox.path, 'svelte-check');
-    using _run = spyOn(processes, 'run').mockResolvedValue(
+    using _run = spyOn(processes, 'spawnProcess').mockResolvedValue(
         processResult({
             code: 1,
             stdout: SVELTE_CHECK_OUTPUT.replace('src/Count.svelte', String.raw`src\\Count.svelte`),
@@ -118,7 +120,7 @@ test('a svelte-check failure line is an error, not a clean result', async () => 
     await using sandbox = await testdir({ 'gspot.toml': settingsText(['svelte']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'svelte/svelte-check');
     await fakeNpmTool(sandbox.path, 'svelte-check');
-    using _run = spyOn(processes, 'run').mockResolvedValue(
+    using _run = spyOn(processes, 'spawnProcess').mockResolvedValue(
         processResult({ code: 1, stdout: '1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"' }),
     );
     expect(await rejection(svelteCheck(input))).toBe(

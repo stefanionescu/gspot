@@ -4,7 +4,6 @@ import { detectPackageManager } from 'nypm';
 import { GspotError } from '#cli/system/errors.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import { toolTimeoutMilliseconds } from '#cli/tools/run.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
@@ -74,7 +73,7 @@ export function readNpmClientVersion(root: string, client: NpmClientIdentity, ti
     if (version !== undefined) return { name, version };
     const result = spawnProcessBlocking([name, VERSION_FLAG], {
         cwd: root,
-        timeoutMs: toolTimeoutMilliseconds(timeoutSeconds),
+        timeoutSeconds: timeoutSeconds,
     });
     if (result.code !== 0) throw new GspotError('tool', `Cannot determine the ${name} version for the tool project.`);
     return npmClientSchema.parse({ name, version: result.stdout.trim() });

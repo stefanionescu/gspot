@@ -139,7 +139,7 @@ test.each([
         holder === undefined
             ? Bun.spawn(command, {
                   cwd: directory.path,
-                  timeout: prepareCommand(command, { cwd: directory.path }).options.timeoutMs,
+                  timeout: prepareCommand(command, { cwd: directory.path }).options.timeoutSeconds,
               })
             : undefined;
     const lock = holder ?? `${String(sleeper!.pid)}:held`;

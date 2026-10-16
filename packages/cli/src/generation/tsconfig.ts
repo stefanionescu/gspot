@@ -30,8 +30,7 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
         files
             .filter(
                 (file) =>
-                    (file.tags.includes('typescript') ||
-                        new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(file.path))) &&
+                    (file.tags.includes('typescript') || DECLARATION_EXTENSIONS.has(extractExtension(file.path))) &&
                     scopeOf(file.path, scopeEntries).path === scope,
             )
             .map((file) => file.path),
@@ -58,8 +57,7 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
     const sources = files.filter(
         (file) =>
             file.kind === 'source' &&
-            (file.tags.includes('typescript') ||
-                new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(file.path))) &&
+            (file.tags.includes('typescript') || DECLARATION_EXTENSIONS.has(extractExtension(file.path))) &&
             scopeOf(file.path, scopeEntries).path === scope,
     );
     // Svelte reads these extra extensions through include; tsc ignores them as unsupported sources.

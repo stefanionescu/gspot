@@ -5,40 +5,9 @@ import { isWindows } from '#tests/setup/operating-systems.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
-import { chmod, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
+import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { planBlock, planDeletion, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
 
-{
-    test('a link that points outside the repository is refused, even when it is unchanged', async () => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, { 'project/.keep': '', outside: 'authored' });
-        const project = join(directory.path, 'project');
-        await symlink('../outside', join(project, 'tool'));
-        const target = await readlink(join(project, 'tool'));
-        {
-            using log = openWriter(project);
-
-            const attributes = await lstat(join(project, 'tool'));
-            const mode = attributes.mode & 0o7777;
-            expect(() => {
-                writePlans(log, [
-                    planReplacement(log, {
-                        path: 'tool',
-                        next: {
-                            bytes: Buffer.from(target),
-                            mode,
-                            isLink: true,
-                        },
-                    }),
-                ]);
-            }).toThrow(
-                `${JSON.stringify(target)} is not a safe repository-relative path. Choose a path inside the repository.`,
-            );
-            expect(await readlink(join(project, 'tool'))).toBe(target);
-            expect(await readFile(join(directory.path, 'outside'), 'utf8')).toBe('authored');
-        }
-    });
-}
 {
     test('a planned key edit writes nothing and refuses a later edit', async () => {
         await using directory = await testdir();

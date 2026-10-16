@@ -88,17 +88,6 @@ export function computePosition(text: string, offset: number): TextPosition {
 }
 
 /**
- * Count Unicode code points, including each code point in a compound emoji.
- *
- * @param text the source text.
- *
- * @returns the number of Unicode code points.
- */
-export function codePointLength(text: string): number {
-    return [...text].length;
-}
-
-/**
  * Replace text with spaces while preserving code-unit positions and line breaks.
  *
  * @param text the source text.

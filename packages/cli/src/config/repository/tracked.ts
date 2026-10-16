@@ -1,6 +1,6 @@
 export const NODE_MODULES = 'node_modules';
 
-export const INSTALLED_DEPENDENCY_FOLDERS = [
+export const INSTALLED_DEPENDENCY_FOLDERS: ReadonlySet<string> = new Set([
     NODE_MODULES,
     'bower_components',
     '.venv',
@@ -8,7 +8,7 @@ export const INSTALLED_DEPENDENCY_FOLDERS = [
     'Pods',
     'DerivedData',
     '.build',
-] as const;
+]);
 
 export const GITIGNORE_FILE = '.gitignore';
 export const GIT_FOLDER = '.git';

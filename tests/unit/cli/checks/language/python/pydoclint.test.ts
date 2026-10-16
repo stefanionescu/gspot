@@ -36,7 +36,7 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
             stdout: `pydoclint, version ${session.manifests.get('python')!.tools.find((tool) => tool.name === 'pydoclint')!.version!}\n`,
         }),
     );
-    using run = spyOn(processes, 'run').mockResolvedValue(processResult());
+    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(processResult());
     const result = await pydoclint(session, planned!);
     expect(result.status).toBe('passed');
     expect(run.mock.calls[0]?.[0].slice(1)).toStrictEqual([
@@ -64,7 +64,7 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
             stdout: `pydoclint, version ${session.manifests.get('python')!.tools.find((tool) => tool.name === 'pydoclint')!.version!}\n`,
         }),
     );
-    using command = spyOn(processes, 'run')
+    using command = spyOn(processes, 'spawnProcess')
         .mockResolvedValueOnce(
             processResult({
                 code: 1,

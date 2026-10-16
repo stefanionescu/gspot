@@ -75,11 +75,10 @@ export function readText(root: string, path: string, reads?: ReadCache): string 
  * Read a written source path while refusing links outside the root's real path.
  * @param root the resolved directory.
  * @param path the root-relative source.
- * @param partsOf the owner's path validation.
  * @returns the contained path.
  */
-export function readContainedPath(root: string, path: string, partsOf = splitSystemPath): string {
-    const target = realpathSync(join(root, ...partsOf(path)));
+export function readContainedPath(root: string, path: string): string {
+    const target = realpathSync(join(root, ...splitSystemPath(path)));
     if (!isInside(relative(root, target))) throw new Error(`Source link leaves the repository: ${path}`);
     return target;
 }

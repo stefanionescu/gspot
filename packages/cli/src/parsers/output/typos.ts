@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { resolve, relative } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { codePointLength } from '#cli/system/text.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -46,7 +45,7 @@ function typoPosition(
     return {
         line: entry.line_num,
 
-        column: codePointLength(sourceLine.subarray(0, entry.byte_offset).toString('utf8')) + 1,
+        column: [...sourceLine.subarray(0, entry.byte_offset).toString('utf8')].length + 1,
     };
 }
 

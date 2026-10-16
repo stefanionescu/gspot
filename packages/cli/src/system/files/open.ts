@@ -1,9 +1,8 @@
 // Opens confined file handles and walks files under their root.
-import type { Stats } from 'node:fs';
+import { posix } from 'node:path';
 import { readContainedPath } from '#cli/system/files/reads.ts';
+import type { Files, FilesState } from '#cli/types/system/files.ts';
 import { releaseLocks, lockForWriting } from '#cli/system/files/lock.ts';
-import { splitSystemPath, splitPortablePath } from '#cli/system/files/names.ts';
-import type { FileCopy, PathFormat, SafeFolder, SafeFolderState } from '#cli/types/system/safe-folder.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
@@ -11,109 +10,85 @@ import {
     verifyPath,
     preparePath,
     replaceEntry,
-    validateCopy,
     isSameContents,
+    readEntryKeepingLinks,
 } from '#cli/system/files/entries.ts';
 
-// The stat of an entry inside the root excluding links, or undefined when the entry does not exist.
-function statOf(bounds: SafeFolderState, path: string): Stats | undefined {
-    try {
-        const stat = lstatSync(verifyPath(bounds, path));
-        if (stat.isSymbolicLink()) throw new Error(`${path} is a link. gspot does not write through links.`);
-        return stat;
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
-        throw error;
-    }
-}
-
-// Delete a directory and its contents without following links. Remove links without following them.
-function removeTree(bounds: SafeFolderState, path: string): void {
-    const stat = statOf(bounds, path);
-    if (stat === undefined) return;
-    if (!stat.isDirectory()) throw new Error(`${path} is not a directory. Choose a directory.`);
-    rmSync(verifyPath(bounds, path), { recursive: true, force: true });
-}
-
-// Removes a file inside the root after confirming that it matches the last copy the caller saw.
-function removeEntry(bounds: SafeFolderState, path: string, expected: FileCopy): void {
-    if (!isSameContents(readEntry(bounds, path, expected.isLink === true), expected))
-        throw new Error(`${path} changed before removal. Run the command again.`);
-    unlinkSync(verifyPath(bounds, path));
-}
-
-// Creates a directory inside the root with the mode, accepting one that already exists.
-function makeDirectory(bounds: SafeFolderState, path: string, mode: number): void {
-    const target = preparePath(bounds, path);
-    try {
-        mkdirSync(target, { mode });
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-    }
-    if (!lstatSync(target).isDirectory()) throw new Error(`${path} is not a directory. Choose a directory.`);
-    chmodSync(target, mode);
-}
-
 /**
- * List entries under a safe path without following directory links.
- * @param bounds the directory and its safe path rules.
- * @param path the repository-relative file path.
- * @returns the sorted directory entries.
+ * Open a reader and writer confined to one root, with paths checked for this system.
+ * @param root the folder containing every relative path.
+ * @returns the disposable file handle.
  */
-function listOf(bounds: SafeFolderState, path: string | undefined): string[] {
-    try {
-        const target = path === undefined ? bounds.root : verifyPath(bounds, path);
-        if (!lstatSync(target).isDirectory()) throw new Error(`${path ?? '.'} is not a directory. Choose a directory.`);
-        return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
-        throw error;
-    }
-}
-
-/**
- * Opens a reader and writer confined to one folder. Each call checks its path first.
- * @param root the directory containing every relative path.
- * @param pathFormat portable checks names across supported systems; system checks this system. Both use forward slashes.
- * @returns the root reader and writer, which the caller disposes, as `using` does.
- */
-export function openFiles(root: string, pathFormat: PathFormat = 'portable'): SafeFolder {
-    const bounds: SafeFolderState = {
-        root: realpathSync(root),
-        partsOf: pathFormat === 'portable' ? splitPortablePath : splitSystemPath,
-        locks: new Map(),
-    };
-    return {
-        rmdir: (path) => {
+export function openFiles(root: string): Files {
+    const bounds: FilesState = { root: realpathSync(root), locks: new Map() };
+    const files: Files = {
+        rmdir(path) {
             rmdirSync(verifyPath(bounds, path));
         },
-        removeTree: (path) => {
-            removeTree(bounds, path);
+        removeTree(path) {
+            const stat = files.stat(path);
+            if (stat === undefined) return;
+            if (!stat.isDirectory()) throw new Error(`${path} is not a directory. Choose a directory.`);
+            rmSync(verifyPath(bounds, path), { recursive: true, force: true });
         },
-        realPath: (path) => readContainedPath(bounds.root, path, bounds.partsOf),
-        list: (path) => listOf(bounds, path),
-        stat: (path) => statOf(bounds, path),
-        validate: (path, value, plannedFiles) => {
-            validateCopy(bounds, path, value, plannedFiles);
+        realPath: (path) => readContainedPath(bounds.root, path),
+        list(path) {
+            try {
+                const target = path === undefined ? bounds.root : verifyPath(bounds, path);
+                if (!lstatSync(target).isDirectory())
+                    throw new Error(`${path ?? '.'} is not a directory. Choose a directory.`);
+                return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
+            } catch (error) {
+                if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+                throw error;
+            }
         },
-        read: (path) => readEntry(bounds, path, false),
-        readKeepingLinks: (path) => readEntry(bounds, path, true),
-        write: (path, value, expected) => {
-            replaceEntry(bounds, path, value, expected);
+        stat(path) {
+            try {
+                const stat = lstatSync(verifyPath(bounds, path));
+                if (stat.isSymbolicLink()) throw new Error(`${path} is a link. gspot does not write through links.`);
+                return stat;
+            } catch (error) {
+                if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+                throw error;
+            }
         },
-        remove: (path, expected) => {
-            removeEntry(bounds, path, expected);
+        read: (path) => readEntry(bounds, path),
+        readKeepingLinks: (path) => readEntryKeepingLinks(bounds, path),
+        write: replaceEntry.bind(undefined, bounds),
+        remove(path, expected) {
+            if (!isSameContents(readEntryKeepingLinks(bounds, path), expected))
+                throw new Error(`${path} changed before removal. Run the command again.`);
+            unlinkSync(verifyPath(bounds, path));
         },
-        mkdir: (path, mode) => {
-            makeDirectory(bounds, path, mode);
+        mkdir(path, mode) {
+            const target = preparePath(bounds, path);
+            try {
+                mkdirSync(target, { mode });
+            } catch (error) {
+                if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+            }
+            if (!lstatSync(target).isDirectory()) throw new Error(`${path} is not a directory. Choose a directory.`);
+            chmodSync(target, mode);
         },
-        claim: (path) => {
-            lockForWriting(bounds, path);
-        },
-        [Symbol.dispose]: () => {
-            releaseLocks(bounds);
+        claim: lockForWriting.bind(undefined, bounds),
+        [Symbol.dispose]() {
+            for (const path of releaseLocks(bounds)) removeEmptyFolders(files, path);
         },
     };
+    return files;
+}
+
+/**
+ * Remove empty parent folders left by a removed file, stopping at the root.
+ * @param files the root's file handle.
+ * @param path the removed file's path.
+ */
+export function removeEmptyFolders(files: Files, path: string): void {
+    for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
+        if (files.list(folder).length > 0) return;
+        files.rmdir(folder);
+    }
 }
 
 /**
@@ -122,7 +97,7 @@ export function openFiles(root: string, pathFormat: PathFormat = 'portable'): Sa
  * @param start the folder, with forward slashes, or '' for the root itself.
  * @param visit called with the path of each entry; returns whether to walk into it.
  */
-export function walkFiles(files: SafeFolder, start: string, visit: (path: string) => boolean): void {
+export function walkFiles(files: Files, start: string, visit: (path: string) => boolean): void {
     const pending = [start];
     for (let folder = pending.pop(); folder !== undefined; folder = pending.pop()) {
         const names = files.list(folder === '' ? undefined : folder);

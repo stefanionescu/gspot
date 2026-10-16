@@ -51,7 +51,7 @@ export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
     if (authored.options.jsx !== undefined) delete compilerOptions['jsx'];
     if (jsconfigOwner === undefined)
         jsconfig['files'] = authored.fileNames
-            .filter((path) => new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(path)))
+            .filter((path) => DECLARATION_EXTENSIONS.has(extractExtension(path)))
             .map((path) => convertToPosixPath(relative(join(root, dirname(target)), path)));
     return jsconfig;
 }

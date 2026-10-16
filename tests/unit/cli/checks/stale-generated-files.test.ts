@@ -75,7 +75,7 @@ test('a missing OpenAPI document is reported before generation', async () => {
         'generate.ts': '',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'openapi/stale-document');
-    const run = resources.use(spyOn(processes, 'run'));
+    const run = resources.use(spyOn(processes, 'spawnProcess'));
     expect(await staleGeneratedFiles(input)).toMatchObject([
         {
             file: 'openapi.json',
@@ -108,7 +108,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     resources.use(await mockWrangler(sandbox.path));
     const directories: string[] = [];
     resources.use(
-        spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+        spyOn(processes, 'spawnProcess').mockImplementation(async (argv, options) => {
             expect(argv.slice(1)).toStrictEqual(['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv']);
             directories.push(options.cwd);
             await Bun.write(join(options.cwd, 'cloudflare-env.d.ts'), source);
@@ -127,7 +127,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
 async function prepareSupabaseCheck(
     root: string,
     scope: string,
-    outcome: Awaited<ReturnType<typeof processes.run>>,
+    outcome: Awaited<ReturnType<typeof processes.spawnProcess>>,
     schemas?: readonly string[],
 ) {
     using resources = new DisposableStack();
@@ -151,7 +151,7 @@ async function prepareSupabaseCheck(
     const supabase = executables.sync('supabase', { path: bin });
     const docker = executables.sync('docker', { path: bin });
     const requests: { args: string[]; cwd: string }[] = [];
-    const { spawnProcessBlocking: blocking, run: executeProcess } = processes;
+    const { spawnProcessBlocking: blocking, spawnProcess: executeProcess } = processes;
     resources.use(
         spyOn(processes, 'spawnProcessBlocking').mockImplementation((argv, options) =>
             [supabase, docker].includes(argv[0] ?? '')
@@ -172,7 +172,7 @@ async function prepareSupabaseCheck(
         }) as typeof executables.sync),
     );
     resources.use(
-        spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+        spyOn(processes, 'spawnProcess').mockImplementation(async (argv, options) => {
             if (argv[0] !== supabase) return executeProcess(argv, options);
             requests.push({ args: argv.slice(1), cwd: options.cwd });
             return outcome;

@@ -92,11 +92,11 @@ export const PYTHON_IMPORT_NODES = new Set(['import_statement', 'import_from_sta
 export const SWIFT_ENV_READ = 'ProcessInfo.processInfo.environment';
 
 export const LANGUAGE_BY_EXTENSION = { '.py': 'python', '.swift': 'swift' } as const;
-export const PYTHON_SCOPE_NODES = ['function_definition', 'class_definition', 'lambda'] as const;
+export const PYTHON_SCOPE_NODES: ReadonlySet<string> = new Set(['function_definition', 'class_definition', 'lambda']);
 export const OS_MODULE = 'os';
 export const ENV_NAME = /^[A-Z_][A-Z0-9_]*$/u;
 export const SPEC_SUFFIX = /\.spec$/u;
 
-export const BASH_COMMAND_NODES = ['command', 'declaration_command'] as const;
-export const BASH_SOURCE_COMMANDS = ['source', '.'] as const;
-export const SWIFT_ACCESSOR_OWNERS = ['property_declaration', 'subscript_declaration'] as const;
+export const BASH_COMMAND_NODES: ReadonlySet<string> = new Set(['command', 'declaration_command']);
+export const BASH_SOURCE_COMMANDS: ReadonlySet<string> = new Set(['source', '.']);
+export const SWIFT_ACCESSOR_OWNERS: ReadonlySet<string> = new Set(['property_declaration', 'subscript_declaration']);

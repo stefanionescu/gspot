@@ -53,13 +53,10 @@ export function swiftlintToolFile(
         ...Object.fromEntries(Object.entries(options).filter(([rule]) => !offSet.has(rule))),
         disabled_rules: [
             ...SWIFTLINT_DISABLED,
-            ...off.filter(
-                (rule) =>
-                    !new Set<string>(SWIFTLINT_OPT_IN).has(rule) && !new Set<string>(SWIFTLINT_ANALYZER).has(rule),
-            ),
+            ...off.filter((rule) => !SWIFTLINT_OPT_IN.has(rule) && !SWIFTLINT_ANALYZER.has(rule)),
         ],
-        opt_in_rules: SWIFTLINT_OPT_IN.filter((rule) => !offSet.has(rule)),
-        analyzer_rules: SWIFTLINT_ANALYZER.filter((rule) => !offSet.has(rule)),
+        opt_in_rules: [...SWIFTLINT_OPT_IN].filter((rule) => !offSet.has(rule)),
+        analyzer_rules: [...SWIFTLINT_ANALYZER].filter((rule) => !offSet.has(rule)),
     };
 
     return (

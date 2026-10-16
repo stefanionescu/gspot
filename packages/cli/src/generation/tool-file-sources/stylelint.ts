@@ -89,9 +89,7 @@ export function stylelintToolFile(
 
     const off = rulesOff('css/stylelint');
     const activeRules = new Set(
-        [...stylelintRuleNames, 'function-no-unknown'].filter(
-            (rule) => isAll || !new Set<string>(STYLELINT_ALL_LEVEL_RULES).has(rule),
-        ),
+        [...stylelintRuleNames, 'function-no-unknown'].filter((rule) => isAll || !STYLELINT_ALL_LEVEL_RULES.has(rule)),
     );
     const chosen = Object.fromEntries(Object.entries(options.rules).filter(([rule]) => activeRules.has(rule)));
     const tailwind = scopeDependencies.includes('tailwindcss');
@@ -115,7 +113,7 @@ export function stylelintToolFile(
         extends: 'stylelint-config-standard',
         rules: Object.assign(
             { ...STYLELINT_BASE_RULES, ...syntaxRules },
-            Object.fromEntries((isAll ? [] : STYLELINT_ALL_LEVEL_RULES).map((rule) => [rule, null])),
+            Object.fromEntries((isAll ? [] : [...STYLELINT_ALL_LEVEL_RULES]).map((rule) => [rule, null])),
             chosen,
             Object.fromEntries(off.map((rule) => [rule, null])),
         ),

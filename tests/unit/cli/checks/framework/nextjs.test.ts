@@ -67,10 +67,10 @@ function mockNextjsCommands(
             });
         }),
     );
-    const nativeRun = processes.run;
+    const nativeRun = processes.spawnProcess;
     resources.use(
-        spyOn(processes, 'run').mockImplementation(async (command, options, output) => {
-            if (command[0] === 'git') return await nativeRun(command, options, output);
+        spyOn(processes, 'spawnProcess').mockImplementation(async (command, options) => {
+            if (command[0] === 'git') return await nativeRun(command, options);
             const cwd = options.cwd;
             directories.push(cwd);
             commands.push([...command]);

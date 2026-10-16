@@ -2,6 +2,7 @@ import { createTwoFilesPatch } from 'diff';
 import type { StaleFile } from '#cli/types/apply.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import { listStrayPaths } from '#cli/ownership/plans.ts';
 import { staleLockfiles } from '#cli/tools/lockfiles.ts';
 import { DIFF_CONTEXT_LINES } from '#cli/config/apply.ts';
@@ -10,7 +11,6 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import { parseToolProject } from '#cli/parsers/tool-project.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
-import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 
 import {
@@ -34,7 +34,7 @@ function patch(path: string, before: string, after: string, beforeName: string):
     );
 }
 
-function staleWholeFiles(files: SafeFolder, generated: Generated): StaleFile[] {
+function staleWholeFiles(files: Files, generated: Generated): StaleFile[] {
     return generated.files.flatMap((file): StaleFile[] => {
         const current = files.read(file.path);
         if (current === undefined) return [{ path: file.path, kind: 'missing' }];
@@ -52,7 +52,7 @@ function staleWholeFiles(files: SafeFolder, generated: Generated): StaleFile[] {
     });
 }
 
-function staleBlocks(files: SafeFolder, generated: Generated): StaleFile[] {
+function staleBlocks(files: Files, generated: Generated): StaleFile[] {
     const entries: StaleFile[] = [];
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
@@ -70,7 +70,7 @@ function staleBlocks(files: SafeFolder, generated: Generated): StaleFile[] {
 }
 
 // Classify merged files with no remaining managed fields as missing or changed.
-function staleKeys(files: SafeFolder, generated: Generated): StaleFile[] {
+function staleKeys(files: Files, generated: Generated): StaleFile[] {
     return generated.fileEdits.flatMap((output): StaleFile[] => {
         const current = files.read(output.path);
         if (current === undefined) return [{ path: output.path, kind: 'missing' }];

@@ -4,9 +4,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { listFolderFiles } from '#cli/system/files/folders.ts';
-import { splitPortablePath } from '#cli/system/files/names.ts';
 import { type SiteBuild } from '#cli/types/checks/framework.ts';
+import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { OUTPUT_TAIL_LINES } from '#cli/config/checks/framework/site.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
@@ -61,17 +60,19 @@ function cachedBuild(input: CheckInput): Promise<SiteBuild> {
  */
 export function filesUnder(folder: string): string[] {
     const root = realpathSync.native(folder);
-    return [...listFolderFiles(root)]
-        .flatMap((entry) => {
-            const absolute = join(entry.parentPath, entry.name);
-            const path = convertToPosixPath(relative(root, absolute));
-            if (!isInside(relative(root, realpathSync.native(absolute))))
-                throw new Error(`The build output links outside the build folder: ${path}`);
-            const stat = statSync(absolute);
-            if (stat.isDirectory()) throw new Error(`The build output entry is a directory link: ${path}`);
-            return stat.isFile() ? [path] : [];
-        })
-        .toSorted((left, right) => left.localeCompare(right));
+    using files = openFiles(root);
+    const found: string[] = [];
+    walkFiles(files, '', (path) => {
+        const absolute = join(root, path);
+        if (lstatSync(absolute).isDirectory()) return true;
+        if (!isInside(relative(root, realpathSync.native(absolute))))
+            throw new Error(`The build output links outside the build folder: ${path}`);
+        const stat = statSync(absolute);
+        if (stat.isDirectory()) throw new Error(`The build output entry is a directory link: ${path}`);
+        if (stat.isFile()) found.push(path);
+        return false;
+    });
+    return found.toSorted((left, right) => left.localeCompare(right));
 }
 
 /**
@@ -87,7 +88,7 @@ export function repositoryPath(
     absolute: string,
 ): string {
     const path = convertToPosixPath(relative(build.folder, absolute));
-    splitPortablePath(path);
+
     return `${input.selection.view.options('site')['build_folder']}/${path}`;
 }
 

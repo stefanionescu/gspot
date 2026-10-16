@@ -15,7 +15,7 @@ export type SpawnOptions = {
     cwd: string;
     env?: Record<string, string | undefined>;
     stdin?: string;
-    timeoutMs?: number;
+    timeoutSeconds?: number;
 };
 
 export type AsyncSpawnOptions = SpawnOptions & {

@@ -74,10 +74,7 @@ export function isInGspotFolder(path: string): boolean {
  * @returns whether project discovery must leave out the path.
  */
 export function isToolingPath(path: string): boolean {
-    return (
-        isInGspotFolder(path) ||
-        path.split('/').some((part) => new Set<string | undefined>(INSTALLED_DEPENDENCY_FOLDERS).has(part))
-    );
+    return isInGspotFolder(path) || path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part));
 }
 
 /**

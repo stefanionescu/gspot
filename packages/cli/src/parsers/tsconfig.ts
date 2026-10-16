@@ -9,7 +9,6 @@ import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { join, dirname, resolve, relative } from 'node:path';
-import { splitPortablePath } from '#cli/system/files/names.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
@@ -136,13 +135,13 @@ function compilerHost(root: string, scope: string, reads: ReadCache, options: ts
  */
 function readCompilerFile(root: string, path: string, reads: ReadCache): string | undefined {
     const local = convertToPosixPath(relative(root, path));
-    using files = openFiles(root, 'system');
+    using files = openFiles(root);
     try {
         const segments = local.split('/');
         const dependency = segments.indexOf(NODE_MODULES);
         if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
             // Follow linked dependency folders. Refuse links preceding node_modules.
-            splitPortablePath(local);
+
             if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }

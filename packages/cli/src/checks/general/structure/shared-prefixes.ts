@@ -59,7 +59,7 @@ export function sharedPrefixes(input: CheckInput): Finding[] {
             if (entry.kind === 'dir')
                 return (
                     !entry.name.startsWith('.') &&
-                    !new Set<string | undefined>(INSTALLED_DEPENDENCY_FOLDERS).has(entry.name) &&
+                    !INSTALLED_DEPENDENCY_FOLDERS.has(entry.name) &&
                     prefixOf(entry.name) === prefix
                 );
             if (hasDeclaredKindSuffix(entry.name, kinds)) return false;

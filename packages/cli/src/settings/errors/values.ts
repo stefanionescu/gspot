@@ -159,11 +159,11 @@ function ruleExcludeErrors(exclude: string[]): RuleExcludeError[] {
         ruleFiles(manifest).map((file) => file.path),
     );
     return exclude.flatMap((entry, index) => {
-        if (FIRST_READ.some((file) => isExcluded(entry, `${RULES_DIRECTORY}/${file}`)))
+        if ([...FIRST_READ].some((file) => isExcluded(entry, `${RULES_DIRECTORY}/${file}`)))
             return [
                 {
                     index,
-                    message: `[rules] exclude names ${formatCodeList([entry])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
+                    message: `[rules] exclude names ${formatCodeList([entry])}, which holds a file every agent opens first (${formatCodeList([...FIRST_READ])}). Remove the entry.`,
                 },
             ];
         if (paths.some((path) => isExcluded(entry, `${RULES_DIRECTORY}/${path}`))) return [];

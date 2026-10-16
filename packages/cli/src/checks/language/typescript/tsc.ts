@@ -67,7 +67,7 @@ function scopeCompilerProject(
     );
     return {
         fileNames: config.fileNames.filter(
-            (path) => new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(path)) || files.has(path),
+            (path) => DECLARATION_EXTENSIONS.has(extractExtension(path)) || files.has(path),
         ),
         options: {
             ...config.options,

@@ -1,10 +1,10 @@
 // Starts test commands and limits them to the current test timeout.
 import { spyOn, type Mock } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
-import { run, spawnProcessBlocking } from '#cli/system/processes.ts';
+import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { CapturedChild, CapturedProcess } from '#tests/types/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
-import { EXIT_POLL_MS, READY_POLL_MS, TEST_TIMEOUT_MS } from '#tests/config/processes.ts';
+import { EXIT_POLL_MS, READY_POLL_MS, MS_PER_SECOND, TEST_TIMEOUT_MS } from '#tests/config/processes.ts';
 
 // Bun runs each file's tests serially; the preload opens and disposes one timeout for each test.
 let timeoutAt: number | undefined;
@@ -18,13 +18,15 @@ let timeoutAt: number | undefined;
 function prepareCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
-): { options: AsyncSpawnOptions & { timeoutMs: number }; context: string } {
+): { options: AsyncSpawnOptions & { timeoutSeconds: number }; context: string } {
     const remaining = timeLeft();
     const context = `Command: ${command.join(' ')}\nWorking directory: ${options.cwd}`;
     if (remaining <= 0)
         throw new Error(`The test timeout has elapsed.\n${context}\nOutput: the command was not started.`);
-    const timeoutMs = Math.min(options.timeoutMs ?? TEST_TIMEOUT_MS, remaining);
-    return { options: { ...options, timeoutMs }, context };
+    const timeoutSeconds =
+        Math.min((options.timeoutSeconds ?? TEST_TIMEOUT_MS / MS_PER_SECOND) * MS_PER_SECOND, remaining) /
+        MS_PER_SECOND;
+    return { options: { ...options, timeoutSeconds }, context };
 }
 
 /**
@@ -64,8 +66,9 @@ function commandTimeoutError(
  */
 async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const prepared = prepareCommand(command, options);
-    const result = await run([...command], prepared.options);
-    if (result.isTimedOut === true) throw commandTimeoutError(prepared.options.timeoutMs, prepared.context, result);
+    const result = await spawnProcess([...command], prepared.options);
+    if (result.isTimedOut === true)
+        throw commandTimeoutError(prepared.options.timeoutSeconds * MS_PER_SECOND, prepared.context, result);
     return result;
 }
 
@@ -78,7 +81,8 @@ async function runCommand(command: readonly string[], options: AsyncSpawnOptions
 function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
     const prepared = prepareCommand(command, options);
     const result = spawnProcessBlocking([...command], prepared.options);
-    if (result.isTimedOut === true) throw commandTimeoutError(prepared.options.timeoutMs, prepared.context, result);
+    if (result.isTimedOut === true)
+        throw commandTimeoutError(prepared.options.timeoutSeconds * MS_PER_SECOND, prepared.context, result);
     return result;
 }
 
@@ -88,10 +92,10 @@ function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptio
  * @param result the replacement command result calculation.
  * @returns a spy whose disposal restores command execution.
  */
-function fakeCommand(name: string, result: typeof run): Mock<typeof run> {
-    const runProcess = processes.run;
-    return spyOn(processes, 'run').mockImplementation((command, options, output) =>
-        command[0] === name ? result(command, options, output) : runProcess(command, options, output),
+function fakeCommand(name: string, result: typeof spawnProcess): Mock<typeof spawnProcess> {
+    const runProcess = processes.spawnProcess;
+    return spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
+        command[0] === name ? result(command, options) : runProcess(command, options),
     );
 }
 
@@ -150,7 +154,7 @@ function startCommand(
         ...(prepared.options.stdin === undefined ? {} : { stdin: Buffer.from(prepared.options.stdin) }),
         stdout: 'pipe',
         stderr: 'pipe',
-        timeout: prepared.options.timeoutMs,
+        timeout: prepared.options.timeoutSeconds * MS_PER_SECOND,
         killSignal: 'SIGKILL',
     });
     return { child, ...captureChild(child) };

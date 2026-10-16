@@ -24,13 +24,13 @@ configurations = []
         'api/entry.sh': 'echo api\n',
     });
     commitAll(sandbox.path);
-    const run = processes.run;
+    const run = processes.spawnProcess;
     const installations: string[][] = [];
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'run').mockImplementation((command, options, output) => {
+        spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
             if (command[0] === 'npm' && command[1] !== '--version') installations.push([...command]);
-            return run(command, options, output);
+            return run(command, options);
         }),
     );
     const result = await runGspot(sandbox.path, [...argv, '--json']);

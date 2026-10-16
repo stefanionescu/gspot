@@ -1,7 +1,7 @@
 // Prints command results and failures with the selected output options.
 import pc from 'picocolors';
 import { RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
-import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson } from '#cli/types/terminal.ts';
 
 let options: OutputOptions = { json: false, color: false };
@@ -18,7 +18,7 @@ export const colors = pc.createColors(false);
  * @returns whether to paint
  */
 export function isColorAllowed(): boolean {
-    const noColor = environmentVariable(buildSpawnEnvironment(), 'NO_COLOR');
+    const noColor = readEnvironmentVariable('NO_COLOR');
     if (noColor !== undefined && noColor !== '') return false;
     return process.stderr.isTTY && process.stdout.isTTY;
 }

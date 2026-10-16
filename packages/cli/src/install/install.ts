@@ -30,7 +30,7 @@ export async function installTools(session: Session, log: Writer, generated: Gen
     const mise = which.sync('mise', { nothrow: true });
     const context: InstallContext = { session, writer: log, generated, tools, mise, steps };
     try {
-        if (findStaleFiles(session, generated).some((file) => new Set<string>(TOOL_PROJECT_INPUTS).has(file.path)))
+        if (findStaleFiles(session, generated).some((file) => TOOL_PROJECT_INPUTS.has(file.path)))
             throw new GspotError('installation', 'Run gspot apply first');
         const programNote = await installMiseTools(context);
         notes.push(...(await installToolProjects(context)));

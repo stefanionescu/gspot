@@ -13,7 +13,7 @@ import { inspectTool, toolAvailability } from '#cli/tools/find.ts';
 import { executionFailure } from '#cli/execution/command/output.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
-import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { environmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import type {
     CheckTool,
@@ -101,7 +101,9 @@ export function companionEnvironment(
         ...env,
         PATH: [
             ...directories,
-            environmentVariable(env, 'PATH') ?? environmentVariable(buildSpawnEnvironment(), 'PATH') ?? '',
+            env[Object.keys(env).find((name) => environmentKey(name) === 'PATH') ?? 'PATH'] ??
+                readEnvironmentVariable('PATH') ??
+                '',
         ].join(delimiter),
     };
 }

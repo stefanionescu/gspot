@@ -1,10 +1,11 @@
 // Runs Git commands with repository environment isolation.
+// Runs Git commands with repository environment isolation.
 import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { TRAILING_NEWLINE } from '#cli/config/text.ts';
-import { run, spawnProcessBlocking } from '#cli/system/processes.ts';
-import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { environmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { StdoutRead, SpawnResult, SpawnOptions, ByteSpawnResult } from '#cli/types/system/processes.ts';
 
 import type {
@@ -42,20 +43,16 @@ function parseLocalEnvironment(text: string): string[] {
 }
 
 // The hook's original working directory owns relative paths and Git's implicit worktree root.
-function readInheritedGitEnvironment(
-    inherited: Record<string, string>,
-    origin: string,
-    overrides: Record<string, string | undefined>,
-): GitSource {
+function readInheritedGitEnvironment(origin: string): GitSource {
     const env = Object.fromEntries(
         GIT_PATH_VARIABLES.flatMap((name) => {
-            const value = environmentVariable(inherited, name);
+            const value = readEnvironmentVariable(name);
             return value === undefined ? [] : [[name, resolve(origin, value)]];
         }),
     );
     const source = spawnProcessBlocking(['git', ...GIT_SOURCE_ARGUMENTS], {
         cwd: origin,
-        env: { ...env, ...overrides },
+        env: env,
     });
     if (source.code !== 0) return { failure: source };
     const line = source.stdout.indexOf('\n');
@@ -63,12 +60,12 @@ function readInheritedGitEnvironment(
     const directory = trimGitLine(source.stdout.slice(line + 1));
     if (
         !isBare &&
-        environmentVariable(inherited, GIT_DIR_VARIABLE) !== undefined &&
-        environmentVariable(inherited, GIT_WORK_TREE_VARIABLE) === undefined
+        readEnvironmentVariable(GIT_DIR_VARIABLE) !== undefined &&
+        readEnvironmentVariable(GIT_WORK_TREE_VARIABLE) === undefined
     ) {
         const worktree = spawnProcessBlocking(['git', ...GIT_TOP_LEVEL_ARGUMENTS], {
             cwd: origin,
-            env: { ...env, ...overrides },
+            env: env,
         });
         if (worktree.code !== 0) return { failure: worktree };
         env[GIT_WORK_TREE_VARIABLE] = trimGitLine(worktree.stdout);
@@ -108,10 +105,10 @@ export function buildGitEnvironment(
     argv: readonly string[],
     explicit: Record<string, string | undefined>,
 ): GitEnvironment {
-    const inherited = buildSpawnEnvironment();
     if (
-        !Object.keys(inherited).some((key) => {
-            const name = process.platform === 'win32' ? key.toUpperCase() : key;
+        // eslint-disable-next-line n/no-process-env -- reason: Git scans native variable names to isolate repository-local settings.
+        !Object.keys(process.env).some((key) => {
+            const name = environmentKey(key);
             return name.startsWith(GIT_VARIABLE_PREFIX) && !GIT_NONLOCAL_ENVIRONMENT_NAME.test(name);
         })
     )
@@ -120,21 +117,17 @@ export function buildGitEnvironment(
     if (sourceMetadata === undefined) {
         const declared = spawnProcessBlocking(['git', ...GIT_LOCAL_VARIABLES_ARGUMENTS], { cwd: origin, env: {} });
         if (declared.code !== 0) return { failure: declared };
-        const metadata = parseLocalEnvironment(declared.stdout).filter(
-            (name) => !new Set<string | undefined>(GIT_COMMAND_CONFIGURATION).has(name),
-        );
+        const metadata = parseLocalEnvironment(declared.stdout).filter((name) => !GIT_COMMAND_CONFIGURATION.has(name));
         sourceMetadata = { metadata };
     }
     const { metadata } = sourceMetadata;
-    if (!metadata.some((name) => environmentVariable(inherited, name) !== undefined)) return { env: explicit };
+    if (!metadata.some((name) => readEnvironmentVariable(name) !== undefined)) return { env: explicit };
     const isolated = Object.fromEntries(metadata.map((name) => [name, undefined]));
     if (argv[0] === GIT_EXECUTABLE && argv[1] === GIT_CLONE_COMMAND) return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
-        Object.entries(explicit).filter(
-            ([name]) => !metadata.includes(process.platform === 'win32' ? name.toUpperCase() : name),
-        ),
+        Object.entries(explicit).filter(([name]) => !metadata.includes(environmentKey(name))),
     );
-    const source = (sourceMetadata.source ??= readInheritedGitEnvironment(inherited, origin, {}));
+    const source = (sourceMetadata.source ??= readInheritedGitEnvironment(origin));
     if ('failure' in source) return source;
     return readTargetGitEnvironment(root, source, { isolated, overrides, explicit });
 }
@@ -156,7 +149,7 @@ export function isOutsideGit(inspection: SpawnResult): boolean {
 export function runGitBlocking(
     root: string,
     argv: readonly string[],
-    options: Omit<SpawnOptions, 'cwd' | 'timeoutMs'> = {},
+    options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
 ): SpawnResult {
     const selected = buildGitEnvironment(root, ['git', ...argv], { ...options.env });
     if ('failure' in selected) return selected.failure;
@@ -173,12 +166,14 @@ export function runGitBlocking(
 export async function runGit(
     root: string,
     argv: readonly string[],
-    options: GitOptions = {},
+    options: GitOptions,
     output: StdoutRead = 'utf8',
 ): Promise<SpawnResult> {
     const selected = buildGitEnvironment(root, ['git', ...argv], { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return run(['git', ...argv], { ...options, env: selected.env, cwd: root }, output);
+    const command = ['git', ...argv];
+    const prepared = { ...options, env: selected.env, cwd: root };
+    return output === 'utf8' ? spawnProcess(command, prepared) : streamProcess(command, prepared, output);
 }
 /**
  * Runs Git with cancellation and keeps output bytes for paths and objects.
@@ -190,7 +185,7 @@ export async function runGit(
 export async function runGitForBytes(
     root: string,
     argv: readonly string[],
-    options: GitOptions = {},
+    options: GitOptions,
 ): Promise<ByteSpawnResult> {
     const chunks: Buffer[] = [];
     const result = await runGit(root, argv, options, async (output) => {
@@ -218,7 +213,7 @@ export function readGitSetting(root: string, key: string): string | undefined {
  * @returns the absolute path.
  */
 export function readHooksFolder(root: string): string {
-    const result = runGitBlocking(root, [...GIT_HOOKS_ARGUMENTS]);
+    const result = runGitBlocking(root, GIT_HOOKS_ARGUMENTS);
     if (result.code !== 0) throw new Error(`Cannot read the Git hooks folder: ${result.stderr.trim()}`);
     return resolve(root, trimGitLine(result.stdout));
 }
@@ -229,7 +224,7 @@ export function readHooksFolder(root: string): string {
  * @param options cancellation and input.
  * @returns the standard output as printed.
  */
-export async function readGitText(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string> {
+export async function readGitText(root: string, argv: readonly string[], options: GitOptions): Promise<string> {
     const result = await runGit(root, argv, options);
     if (result.code !== 0)
         throw new GspotError(
@@ -245,7 +240,7 @@ export async function readGitText(root: string, argv: readonly string[], options
  * @param options cancellation and input.
  * @returns the lines, in order.
  */
-export async function readGitLines(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string[]> {
+export async function readGitLines(root: string, argv: readonly string[], options: GitOptions): Promise<string[]> {
     const text = await readGitText(root, argv, options);
     return text.split('\n').filter((line) => line !== '');
 }
@@ -256,7 +251,7 @@ export async function readGitLines(root: string, argv: readonly string[], option
  * @param options cancellation and input.
  * @returns the paths, in order.
  */
-export async function readGitPaths(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string[]> {
+export async function readGitPaths(root: string, argv: readonly string[], options: GitOptions): Promise<string[]> {
     const text = await readGitText(root, argv, options);
     return text.split('\0').filter((path) => path !== '');
 }
@@ -266,8 +261,8 @@ export async function readGitPaths(root: string, argv: readonly string[], option
  * @param options cancellation and input.
  * @returns true for a shallow repository.
  */
-export async function isShallow(root: string, options: GitOptions = {}): Promise<boolean> {
-    const answer = await readGitText(root, [...GIT_SHALLOW_ARGUMENTS], options);
+export async function isShallow(root: string, options: GitOptions): Promise<boolean> {
+    const answer = await readGitText(root, GIT_SHALLOW_ARGUMENTS, options);
     return answer.trim() === 'true';
 }
 /**
@@ -297,6 +292,6 @@ export function trimGitLine(text: string): string {
  * @param options cancellation and input.
  * @returns the top-level folder.
  */
-export async function gitTopLevel(root: string, options: GitOptions = {}): Promise<string> {
+export async function gitTopLevel(root: string, options: GitOptions): Promise<string> {
     return trimGitLine(await readGitText(root, [...GIT_TOP_LEVEL_ARGUMENTS], options));
 }

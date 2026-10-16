@@ -57,11 +57,11 @@ async function scratchFix(
     const preparedScratch = await prepareInScratch({ ...session, root }, planned, command, toolPath, options);
     using scratch = preparedScratch.copy;
     const prepared = preparedScratch.prepared;
-    using files = openFiles(root, 'system');
+    using files = openFiles(root);
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const originals = new Map(paths.map((path) => [path, files.read(path)]));
     const result = await runFix(session, planned, prepared);
-    using corrected = openFiles(scratch.path, 'system');
+    using corrected = openFiles(scratch.path);
     for (const path of result.changed) {
         const original = originals.get(path);
         const value = corrected.read(path);

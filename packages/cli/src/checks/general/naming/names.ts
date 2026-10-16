@@ -214,8 +214,8 @@ function ruleLimits(settings: NamingSettings, identifier: Identifier, rules: Com
     // Ruff checks Python class and exception names and SwiftLint checks Swift type and variable names,
     // so gspot checks neither their case nor their length.
     if (
-        (identifier.language === 'swift' && new Set<string | undefined>(SWIFTLINT_PARENTS).has(parent)) ||
-        (identifier.language === 'python' && new Set<string | undefined>(RUFF_CATEGORIES).has(identifier.category))
+        (identifier.language === 'swift' && SWIFTLINT_PARENTS.has(parent)) ||
+        (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category))
     )
         return { ...base, caseNames: [], maxChars: 0 };
     const caseRule = rules.findLast((rule) => rule.caseNames !== undefined);

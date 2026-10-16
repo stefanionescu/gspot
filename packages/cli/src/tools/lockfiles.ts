@@ -1,10 +1,10 @@
 import { parse as parseToml } from 'smol-toml';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import { lockfileMatches } from '#cli/tools/npm/lockfiles.ts';
 import { prepareNpmLockfile } from '#cli/tools/npm/project.ts';
 import { parseToolProject } from '#cli/parsers/tool-project.ts';
-import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { preparePythonLockfile, pythonLockfileMatches } from '#cli/tools/python/project.ts';
@@ -72,7 +72,7 @@ export function staleLockfiles(
 export async function prepareLockfiles(
     preparation: PythonPreparation & Pick<Session, 'npmClient'>,
     files: GeneratedFile[],
-    owner: Pick<SafeFolder, 'read'>,
+    owner: Pick<Files, 'read'>,
     steps: (readonly string[])[],
 ): Promise<void> {
     const packages = files.find((file) => file.path === NPM_TOOL_PROJECT_FILE);

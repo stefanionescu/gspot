@@ -75,7 +75,7 @@ test.each([0, 7])("a run deletes the build's scratch copy after exit %i", async 
     let cwd = '';
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'run').mockImplementation(async (_argv, options) => {
+        spyOn(processes, 'spawnProcess').mockImplementation(async (_argv, options) => {
             cwd = options.cwd!;
             await mkdir(join(cwd, 'dist'), { recursive: true });
             await writeFile(join(cwd, 'dist/index.html'), 'isolated output');

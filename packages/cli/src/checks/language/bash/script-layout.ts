@@ -86,8 +86,8 @@ function fileFindings(input: CheckInput, file: ScriptFile, isConfigOwner: boolea
     const report: ScriptReport = (line, rule, text) => {
         findings.push(findingAt(input, { file: file.path, line }, rule, text));
     };
-    if (!new Set<string | undefined>(BASH_SHEBANGS).has(file.lines[0]))
-        report(1, 'shebang', `The first line is not one of ${BASH_SHEBANGS.join(' or ')}.`);
+    if (!BASH_SHEBANGS.has(file.lines[0] ?? ''))
+        report(1, 'shebang', `The first line is not one of ${[...BASH_SHEBANGS].join(' or ')}.`);
     const code = codeLines(file.code);
     if (file.isExecutable) {
         strictModeFindings(code, report);

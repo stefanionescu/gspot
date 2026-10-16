@@ -40,7 +40,7 @@ test.each([
         toolDeclaration(session.manifests.values(), 'openssl'),
         toolDeclaration(session.manifests.values(), 'docker'),
     ]);
-    using run = spyOn(processes, 'run').mockImplementation(async (command) => {
+    using run = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
         if (!command.includes('--rm')) return processResult();
         expect(command.filter((_, index) => command[index - 1] === '--add-host')).toStrictEqual([...hosts]);
         const volumes = command.filter((_, index) => command[index - 1] === '-v');
@@ -76,7 +76,7 @@ test.each(['stdout', 'stderr'])(
         );
         const directories: string[] = [];
         const diagnostic = 'The temporary key could not be written.';
-        using spawn = spyOn(processes, 'run').mockImplementation((_command, options) => {
+        using spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
             directories.push(options.cwd);
             return Promise.resolve(
                 processResult({

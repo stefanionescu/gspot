@@ -133,7 +133,7 @@ export const LENGTH_STYLES = {
     paragraph: { extends: 'occurrence', scope: 'paragraph', token: String.raw`[.!?](\s|$)` },
     sentence: { extends: 'occurrence', scope: 'sentence', token: String.raw`\b\w+\b` },
 } as const;
-export const RECOMMENDED_STYLES = ['dates', 'link-text', 'alt-text'] as const;
+export const RECOMMENDED_STYLES: ReadonlySet<string> = new Set(['dates', 'link-text', 'alt-text']);
 export const VALE_SKIPPED_SCOPES = 'script, style, pre, figure, table';
 export const VALE_MARKUP_FILES = '*.{md,mdx,html,htm,astro,svelte,vue}';
 

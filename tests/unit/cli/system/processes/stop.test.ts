@@ -2,19 +2,20 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
-import { run } from '#cli/system/processes.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { CLI_SOURCE } from '#tests/setup/run-gspot.ts';
+import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { waitForExit, prepareCommand } from '#tests/setup/processes.ts';
 import { isWindows, useOperatingSystem } from '#tests/setup/operating-systems.ts';
 
 const captures = {
-    text: (command: string[], options: AsyncSpawnOptions) => run(command, prepareCommand(command, options).options),
+    text: (command: string[], options: AsyncSpawnOptions) =>
+        spawnProcess(command, prepareCommand(command, options).options),
     bytes: async (command: string[], options: AsyncSpawnOptions) => {
         const chunks: Buffer[] = [];
-        const result = await run(command, { ...prepareCommand(command, options).options }, async (output) => {
+        const result = await streamProcess(command, { ...prepareCommand(command, options).options }, async (output) => {
             for await (const chunk of output) chunks.push(chunk);
         });
         return { ...result, stdout: Buffer.concat(chunks) };
@@ -85,7 +86,7 @@ test.each([
         const parent = `Bun.spawn([process.execPath, "-e", ${JSON.stringify(descendant)}], {stdout:"inherit", stderr:"inherit"}); await Bun.sleep(10000);`;
         const running = captures[capture]([process.execPath, '-e', parent], {
             cwd: sandbox.path,
-            ...(termination === 'timeout' ? { timeoutMs: 1500 } : {}),
+            ...(termination === 'timeout' ? { timeoutSeconds: 1.5 } : {}),
             ...(termination === 'canceled' ? { cancelSignal: AbortSignal.timeout(1500) } : {}),
         });
         if (capture === 'bytes') expect(running).rejects.toThrow('The operation timed out');
@@ -105,14 +106,14 @@ test('an exiting CLI stops its running process group', async () => {
     await using sandbox = await testdir();
     const descendant = 'console.log(process.pid); setInterval(() => {}, 1000);';
     const sourceUrl = pathToFileURL(join(CLI_SOURCE, 'system/processes.ts')).href;
-    const script = `import {run} from ${JSON.stringify(sourceUrl)}; void run([process.execPath,"-e",${JSON.stringify(descendant)}],{cwd:process.cwd(),onStdout(chunk){process.stdout.write(chunk);process.exit(19);}});`;
+    const script = `import {spawnProcess} from ${JSON.stringify(sourceUrl)}; void spawnProcess([process.execPath,"-e",${JSON.stringify(descendant)}],{cwd:process.cwd(),onStdout(chunk){process.stdout.write(chunk);process.exit(19);}});`;
     const command = [process.execPath, '-e', script];
     const prepared = prepareCommand(command, { cwd: sandbox.path });
     const child = Bun.spawn(command, {
         cwd: sandbox.path,
         stdout: 'pipe',
         stderr: 'pipe',
-        timeout: prepared.options.timeoutMs,
+        timeout: prepared.options.timeoutSeconds * 1000,
         killSignal: 'SIGKILL',
     });
     const output = new Response(child.stdout).text();
@@ -222,9 +223,13 @@ test('stream reading keeps raw bytes and the error output', async () => {
         String.raw`process.stdout.write(Buffer.from([0,255,0,10])); process.stderr.write("diagnostic\n");`,
     ];
     const bytes: Buffer[] = [];
-    const result = await run(command, { ...prepareCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
-        for await (const chunk of chunks) bytes.push(chunk);
-    });
+    const result = await streamProcess(
+        command,
+        { ...prepareCommand(command, { cwd: sandbox.path }).options },
+        async (chunks) => {
+            for await (const chunk of chunks) bytes.push(chunk);
+        },
+    );
     expect(Buffer.concat(bytes)).toStrictEqual(Buffer.from([0, 255, 0, 10]));
     expect(result).toMatchObject({ code: 0, stdout: '', stderr: 'diagnostic\n', missing: false });
 });
@@ -235,7 +240,7 @@ test('a stream reader that throws stops and drains its child', async () => {
     const failure = new Error('Consumer refused the bytes.');
     const command = [process.execPath, '-e', 'process.stdout.write("ready"); setInterval(() => {}, 1000);'];
     expect(
-        run(command, { ...prepareCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
+        streamProcess(command, { ...prepareCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
             for await (const chunk of chunks) {
                 expect(chunk.length).toBeGreaterThan(0);
                 throw failure;
@@ -258,7 +263,7 @@ test('stream cancellation stops the child and keeps the cancellation reason', as
         'process.stdout.write(String(process.pid)); setInterval(() => process.stdout.write("pending"), 1000);',
     ];
     expect(
-        run(
+        streamProcess(
             command,
             {
                 ...prepareCommand(command, { cwd: sandbox.path }).options,
@@ -282,7 +287,7 @@ test('a finished stream keeps the reader error after cleanup', async () => {
     const refusal = new Error('Invalid native stream');
     const command = [process.execPath, '-e', 'process.stdout.write("invalid");'];
     expect(
-        run(command, { ...prepareCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
+        streamProcess(command, { ...prepareCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
             for await (const chunk of chunks) expect(chunk.toString()).toBe('invalid');
             throw refusal;
         }),

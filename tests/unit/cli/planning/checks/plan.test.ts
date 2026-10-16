@@ -38,7 +38,7 @@ test('coverage arguments leave other commands, your own checks, and given argume
     });
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'push', only: ['project/tests'] })[0]!;
-    using run = spyOn(processes, 'run');
+    using run = spyOn(processes, 'spawnProcess');
     run.mockImplementation((argv) => {
         expect(argv).toStrictEqual(command);
         return Promise.resolve({ code: 0, missing: false, stdout: '', stderr: '', duration: 1 });

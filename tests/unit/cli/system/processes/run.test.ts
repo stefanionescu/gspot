@@ -6,14 +6,14 @@ import { fakeTool } from '#tests/setup/fake-tool.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
-import { run, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 
 const backends = [
     {
         name: 'asynchronous',
         execute: async (command: string[], options: AsyncSpawnOptions) =>
-            await run(command, prepareCommand(command, options).options),
+            await spawnProcess(command, prepareCommand(command, options).options),
     },
     {
         name: 'synchronous',
@@ -80,7 +80,7 @@ process.exitCode = ${String(status)};`;
         await using sandbox = await testdir();
         const result = await backend.execute([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
             cwd: sandbox.path,
-            timeoutMs: 150,
+            timeoutSeconds: 0.15,
         });
         expect(result.isTimedOut).toBe(true);
         expect(result.code).not.toBe(0);
@@ -103,7 +103,7 @@ test('a process canceled before it starts reports the cancellation', async () =>
     await using sandbox = await testdir();
     const controller = new AbortController();
     controller.abort(new Error('Native cancellation'));
-    const result = await run([process.execPath, '-e', 'process.exit(0)'], {
+    const result = await spawnProcess([process.execPath, '-e', 'process.exit(0)'], {
         cwd: sandbox.path,
         cancelSignal: controller.signal,
     });

@@ -7,10 +7,10 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
+import type { Files, FileCopy } from '#cli/types/system/files.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/system/modes.ts';
-import type { FileCopy, SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { SwiftBuildPlan, SwiftBuildPurpose, PreparedSwiftBuild } from '#cli/types/checks/language.ts';
 
 import {
@@ -38,7 +38,7 @@ import {
 
 // The sources to build, each as the copy it must have under source/ in the build folder.
 function readBuildSources(root: string, paths: string[]): Map<string, FileCopy> {
-    using source = openFiles(root, 'system');
+    using source = openFiles(root);
     const wantedFiles = new Map<string, FileCopy>();
     for (const file of paths) {
         const mode = statSync(source.realPath(file)).mode & MODE_BITS;
@@ -48,7 +48,7 @@ function readBuildSources(root: string, paths: string[]): Map<string, FileCopy> 
 }
 
 // Removes unwanted files and then their containing folders, deepest first.
-function pruneSources(folder: string, files: SafeFolder, wantedFiles: Map<string, FileCopy>): void {
+function pruneSources(folder: string, files: Files, wantedFiles: Map<string, FileCopy>): void {
     const wantedFolders = new Set(
         [...wantedFiles.keys()].flatMap((path) => {
             const parts = path.split('/');
@@ -85,13 +85,13 @@ function buildFolder(root: string): string {
  * @param folder the build folder.
  * @returns the locked root, which the caller disposes.
  */
-function openBuildCache(folder: string): SafeFolder {
+function openBuildCache(folder: string): Files {
     const home = readCacheFolder();
     mkdirSync(home, { recursive: true, mode: PRIVATE_DIRECTORY });
     using parentFiles = openFiles(home);
     parentFiles.mkdir(convertToPosixPath(relative(home, folder)), PRIVATE_DIRECTORY);
     using resources = new DisposableStack();
-    const files = resources.use(openFiles(folder, 'system'));
+    const files = resources.use(openFiles(folder));
     files.claim(BUILD_LOCK);
     resources.move();
     return files;

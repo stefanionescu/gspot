@@ -94,7 +94,7 @@ export async function visitParsedSources(input: ParsedSourceInput, visit: (sourc
  * @returns the grammar, or undefined for declaration files and languages without a grammar.
  */
 export function grammarFor(path: string, language: string): GrammarName | undefined {
-    if (DECLARATION_EXTENSIONS.some((extension) => path.endsWith(extension))) return undefined;
+    if ([...DECLARATION_EXTENSIONS].some((extension) => path.endsWith(extension))) return undefined;
     const grammar = Object.entries(LANGUAGE_GRAMMARS).find(([configuration]) => configuration === language)?.[1];
     return grammar === 'typescript' && path.endsWith(TSX_EXTENSION) ? 'tsx' : grammar;
 }

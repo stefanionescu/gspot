@@ -1,18 +1,18 @@
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
+import { lstatSync } from 'node:fs';
+import { isInside } from '#cli/system/paths.ts';
 import { AGENTS_FILE } from '#cli/config/rules.ts';
 import { attributeRules } from '#cli/parsers/git.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
-import { listFolderFiles } from '#cli/system/files/folders.ts';
 import { planKeyChanges } from '#cli/ownership/managed-keys.ts';
+import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import type { Files, FileCopy } from '#cli/types/system/files.ts';
 import { hasGeneratedHeader } from '#cli/parsers/generated-header.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
-import type { FileCopy, SafeFolder } from '#cli/types/system/safe-folder.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-blocks.ts';
 import type { Writer, FileEdit, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
@@ -40,7 +40,7 @@ function removeBlock(path: string, current: FileCopy): FileCopy | undefined {
  * @param disk the repository reader.
  * @returns whether gspot owns the whole file.
  */
-export function isOwned(path: string, disk: SafeFolder): boolean {
+export function isOwned(path: string, disk: Files): boolean {
     if (!isInside(path)) return false;
     if (path.startsWith(`${DOT_GSPOT}/`)) return true;
     const file = disk.readKeepingLinks(path);
@@ -72,15 +72,15 @@ export function listStrayPaths(
     ]);
     const installations = [STATE_DIRECTORY, ...Object.values(INSTALLED_TOOL_FOLDERS)];
     const ownFolder = disk.stat(DOT_GSPOT);
-    const ownPaths =
-        ownFolder === undefined
-            ? []
-            : [
-                  ...listFolderFiles(disk.realPath(DOT_GSPOT), (entry) => {
-                      const path = convertToPosixPath(relative(session.root, join(entry.parentPath, entry.name)));
-                      return installations.some((folder) => path === folder || path.startsWith(`${folder}/`));
-                  }),
-              ].map((entry) => convertToPosixPath(relative(session.root, join(entry.parentPath, entry.name))));
+    const ownPaths: string[] = [];
+    if (ownFolder !== undefined) {
+        walkFiles(disk, DOT_GSPOT, (path) => {
+            if (installations.some((folder) => path === folder || path.startsWith(`${folder}/`))) return false;
+            if (lstatSync(join(session.root, path)).isDirectory()) return true;
+            ownPaths.push(path);
+            return false;
+        });
+    }
     const candidates = new Set([
         ...ownPaths,
         ...session.repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),

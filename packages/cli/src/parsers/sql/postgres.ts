@@ -1,11 +1,11 @@
 // Reads PostgreSQL statements and their parse trees.
 // SQL payloads use PostgreSQL's node union; procedural output has a separate external shape.
 import type { Parsed } from '#cli/types/errors.ts';
+import { computePosition } from '#cli/system/text.ts';
 import { maskPsqlSyntax } from '#cli/parsers/sql/lexer.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { Node, RawStmt, ParseResult } from '@pgsql/types';
-import { computePosition, codePointLength } from '#cli/system/text.ts';
 import type { SqlFile, SqlNodeFields, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 
 const SQL_MEMO = { create: () => new Map<string, Promise<SqlFile>>() };
@@ -30,7 +30,7 @@ async function parseSqlText(text: string): Promise<SqlFile> {
     const bytes = Buffer.from(source, 'utf8');
     if ('error' in parsed) {
         let offset = 0;
-        let remaining = Math.min(parsed.error.offset, codePointLength(source));
+        let remaining = Math.min(parsed.error.offset, [...source].length);
         for (const character of source) {
             if (remaining <= 0) break;
             offset += character.length;

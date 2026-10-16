@@ -7,7 +7,7 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { NPM_INSTALL_FLAGS, OFFLINE_ENVIRONMENT } from '#tests/config/e2e.ts';
 import { sep, join, resolve, relative, delimiter, isAbsolute } from 'node:path';
-import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 const root = join(import.meta.dir, '../..');
 const inherited = { ...buildSpawnEnvironment() };
@@ -16,7 +16,7 @@ export const packedEnvironment: Record<string, string | undefined> = {
     ...inherited,
     NODE_PATH: undefined,
     NODE_OPTIONS: undefined,
-    PATH: (environmentVariable(inherited, 'PATH') ?? '')
+    PATH: (readEnvironmentVariable('PATH') ?? '')
         .split(delimiter)
         .filter((entry) => {
             const path = relative(root, resolve(entry));

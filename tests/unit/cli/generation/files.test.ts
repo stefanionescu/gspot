@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { run } from '#cli/system/processes.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -9,6 +8,7 @@ import { runGspot } from '#tests/setup/run-gspot.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { rm, stat, readFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/session.ts';
+import { spawnProcess } from '#cli/system/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { readBlock } from '#cli/system/managed-blocks.ts';
@@ -132,7 +132,7 @@ test.each([true, false])(
         expect((await pathExists(path)) ? await readFile(path, 'utf8') : undefined).toBe(
             authored ? original : undefined,
         );
-        const initialized = await run(['git', 'init', '--quiet'], { cwd: repository.path });
+        const initialized = await spawnProcess(['git', 'init', '--quiet'], { cwd: repository.path });
         expect(initialized.code, initialized.stderr).toBe(0);
         {
             using log = openWriter(repository.path);

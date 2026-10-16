@@ -59,7 +59,7 @@ test.skipIf(isWindows)('SIGTERM to the packed gspot stops the tool process it st
         env: consumer.offlineOptions.env,
         stdout: 'pipe',
         stderr: 'pipe',
-        timeout: prepared.options.timeoutMs,
+        timeout: prepared.options.timeoutSeconds,
         killSignal: 'SIGKILL',
     });
     await using capture = captureChild(child);

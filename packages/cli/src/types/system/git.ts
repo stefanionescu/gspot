@@ -13,4 +13,4 @@ export type GitTargetEnvironment = {
 };
 
 /** Git commands share the spawn contract; the runner owns the working directory. */
-export type GitOptions = Omit<AsyncSpawnOptions, 'cwd' | 'timeoutMs'>;
+export type GitOptions = Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>;

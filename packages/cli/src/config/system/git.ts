@@ -11,7 +11,7 @@ export const GIT_PATH_VARIABLES = [
 ] as const;
 
 /** Command-scope configuration may supply authentication and applies to both repositories. */
-export const GIT_COMMAND_CONFIGURATION = ['GIT_CONFIG_COUNT', 'GIT_CONFIG_PARAMETERS'] as const;
+export const GIT_COMMAND_CONFIGURATION: ReadonlySet<string> = new Set(['GIT_CONFIG_COUNT', 'GIT_CONFIG_PARAMETERS']);
 
 /** These native commands create metadata instead of using the invoking repository's metadata. */
 export const GIT_CLONE_COMMAND = 'clone';

@@ -101,9 +101,7 @@ export function valeIniToolFile({ targetPath = '.gspot/config/vale.ini', isAll, 
     const rules: Record<string, string> = isAll
         ? Object.fromEntries(Object.keys(VALE_OFF_RULES).map((rule) => [rule, 'NO']))
         : Object.fromEntries(
-              prose.rules
-                  .filter((rule) => !new Set<string>(RECOMMENDED_STYLES).has(rule))
-                  .map((rule) => [`gspot.${rule}`, 'NO']),
+              prose.rules.filter((rule) => !RECOMMENDED_STYLES.has(rule)).map((rule) => [`gspot.${rule}`, 'NO']),
           );
     const folders = [STYLES_DIRECTORY];
     const basedOn = ['gspot'];

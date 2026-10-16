@@ -15,7 +15,7 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])('allowed packages: $name', async (sc
     await prepareLicenseSandbox(sandbox.path, scenario);
 
     const scanned: string[] = [];
-    using output = spyOn(processes, 'run').mockImplementation((command) => {
+    using output = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
         const interpreter = command.at(-1)!;
         const [scope, identity] = Object.entries(reports).find(
             ([entry]) => interpreter === buildVenvExecutablePath(join(sandbox.path, entry, '.venv'), 'python'),
@@ -55,7 +55,7 @@ test.each([...ALLOWED_PACKAGE_CASES])('an allowed package: $name', async (sample
 
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'run').mockResolvedValue(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(
             processResult({ stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', License: license }]) }),
         ),
     );

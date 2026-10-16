@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { symlink } from 'node:fs/promises';
-import { run } from '#cli/system/processes.ts';
 import { planRun } from '#cli/planning/checks.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { checkInput } from '#cli/execution/built-in.ts';
+import { spawnProcess } from '#cli/system/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
@@ -151,7 +151,7 @@ stage = "commit"
         const planned = plans[0]!;
         planned.tool = { name: 'echo', installers: {}, kind: 'program', env: { TOOL_RELEASE: 'v3.4.0' } };
         const prepared = prepareCommand(session, planned, planned.check.command!, commandEnvironment(session, planned));
-        const result = await run(prepared.commands[0]!.argv, { cwd: prepared.cwd, env: prepared.env });
+        const result = await spawnProcess(prepared.commands[0]!.argv, { cwd: prepared.cwd, env: prepared.env });
         expect(result.code, result.stderr).toBe(0);
         expect(JSON.parse(result.stdout)).toStrictEqual([
             'v3.4.0',

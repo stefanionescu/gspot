@@ -27,9 +27,7 @@ export function structureSources(input: CheckInput): TrackedFile[] {
  * @returns whether a dependency folder contains the directory.
  */
 export function isDependencyFolder(directory: string): boolean {
-    return directory
-        .split('/')
-        .some((segment) => new Set<string | undefined>(INSTALLED_DEPENDENCY_FOLDERS).has(segment));
+    return directory.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment));
 }
 
 /**

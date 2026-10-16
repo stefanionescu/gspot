@@ -35,7 +35,7 @@ const result = await checker.check({
     linksToSkip: (href) => {
         const url = new URL(href);
         return Promise.resolve(
-            (url.origin !== request.origin && !new Set<string>(LOCAL_HOSTS).has(url.hostname)) ||
+            (url.origin !== request.origin && !LOCAL_HOSTS.has(url.hostname)) ||
                 skipped.some((pattern) => pattern.test(href)),
         );
     },

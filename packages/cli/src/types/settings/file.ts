@@ -1,7 +1,7 @@
+import type { FileCopy } from '#cli/types/system/files.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { Defined, Optional } from '#cli/types/objects.ts';
 import type { ParsedSite } from '#cli/types/checks/framework.ts';
-import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ParsedPostgres } from '#cli/types/checks/database.ts';
 import type { REEXPORT_MODES } from '#cli/config/settings/schema.ts';

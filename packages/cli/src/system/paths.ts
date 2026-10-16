@@ -48,7 +48,7 @@ export function isInside(local: string): boolean {
  */
 export function extractExtension(path: string): string {
     const base = posix.basename(path);
-    const declaration = DECLARATION_EXTENSIONS.find((extension) => base.endsWith(extension));
+    const declaration = [...DECLARATION_EXTENSIONS].find((extension) => base.endsWith(extension));
     if (declaration !== undefined) return declaration;
     const index = base.lastIndexOf('.');
     return index <= 0 ? '' : base.slice(index).toLowerCase();

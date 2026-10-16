@@ -55,7 +55,7 @@ function stripAllLevelSections(text: string, level: Level): string {
 function groupFilesByArea(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
     for (const file of files) {
-        if (new Set<string>(FIRST_READ).has(file.path)) continue;
+        if (FIRST_READ.has(file.path)) continue;
         const area = GROUP_LABELS[file.group];
         const list = rows.get(area) ?? [];
         list.push(`\`${file.target}\``);
@@ -66,7 +66,7 @@ function groupFilesByArea(files: RuleFile[]): [string, string[]][] {
 
 function formatRulesIndex(files: RuleFile[]): string[] {
     return [
-        `Read ${FIRST_READ.map((path) => '`' + RULES_DIRECTORY + '/' + path + '`').join(' and ')} first. Then read the rules for the files you change. A more specific rule wins over a general one.`,
+        `Read ${[...FIRST_READ].map((path) => '`' + RULES_DIRECTORY + '/' + path + '`').join(' and ')} first. Then read the rules for the files you change. A more specific rule wins over a general one.`,
         '',
         ...groupFilesByArea(files).flatMap(([area, paths]) => [
             `${area}:`,

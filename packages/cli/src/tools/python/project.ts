@@ -7,11 +7,11 @@ import { GspotError } from '#cli/system/errors.ts';
 import { unavailableNote } from '#cli/tools/find.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import type { Files } from '#cli/types/system/files.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import { UV_LOCKFILE_NAME } from '#cli/config/parsers/lockfiles.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
@@ -135,7 +135,7 @@ const uvLockSchema = z.object({
  */
 export async function preparePythonLockfile(
     manifest: GeneratedFile,
-    owner: Pick<SafeFolder, 'read'>,
+    owner: Pick<Files, 'read'>,
     preparation: PythonPreparation,
     steps: (readonly string[])[],
 ): Promise<GeneratedFile> {
@@ -197,7 +197,7 @@ export async function preparePythonLockfile(
  */
 export async function installPythonTools(
     root: string,
-    owner: Pick<SafeFolder, 'read'>,
+    owner: Pick<Files, 'read'>,
     executable: string,
     timeoutSeconds: number,
     steps: (readonly string[])[],

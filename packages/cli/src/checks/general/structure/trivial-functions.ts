@@ -33,9 +33,8 @@ function functionBody(node: Node, language: CountedLanguage): Node[] {
 
 // Whether a Bash node supplies one executable command or statement.
 function isBashStatement(node: Node): boolean {
-    if (new Set<string | undefined>(BASH_COMMAND_NODES).has(node.type)) return true;
-    if (node.type === 'variable_assignment')
-        return !new Set<string | undefined>(BASH_COMMAND_NODES).has(node.parent?.type);
+    if (BASH_COMMAND_NODES.has(node.type)) return true;
+    if (node.type === 'variable_assignment') return !BASH_COMMAND_NODES.has(node.parent?.type ?? '');
     return node.type.endsWith('_statement') && node.type !== 'compound_statement';
 }
 
@@ -94,7 +93,7 @@ const LANGUAGE_SUBSTANCE: Record<CountedLanguage, Record<string, IsSubstantial>>
     bash: {
         command: (node: Node): boolean => {
             const name = node.childForFieldName('name')?.text;
-            return !new Set<string | undefined>(BASH_SOURCE_COMMANDS).has(name);
+            return !BASH_SOURCE_COMMANDS.has(name ?? '');
         },
     },
     python: {},
@@ -159,7 +158,7 @@ function accessorName(node: Node, label: string): string {
     let declaration = node.parent;
     while (declaration !== null) {
         const type = declaration.type;
-        if (new Set<string | undefined>(SWIFT_ACCESSOR_OWNERS).has(type)) break;
+        if (SWIFT_ACCESSOR_OWNERS.has(type)) break;
         declaration = declaration.parent;
     }
     if (declaration === null) return label;

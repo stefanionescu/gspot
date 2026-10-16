@@ -48,13 +48,13 @@ function readFileEntry(
     const stat = lstatSync(join(root, path), { throwIfNoEntry: false });
     if (stat === undefined) return undefined;
     if (stat.isSymbolicLink()) {
-        if (new Set<string>(INSTALLED_DEPENDENCY_FOLDERS).has(posix.basename(path))) return undefined;
+        if (INSTALLED_DEPENDENCY_FOLDERS.has(posix.basename(path))) return undefined;
         // Inventory installed links without reading their dependency targets outside this root.
         if (
             path
                 .split('/')
                 .slice(0, -1)
-                .some((part) => new Set<string | undefined>(INSTALLED_DEPENDENCY_FOLDERS).has(part))
+                .some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
         )
             return { path, size: stat.size, executable: false, symlink: true };
         return symlinkEntry(root, path);

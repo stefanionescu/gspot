@@ -34,7 +34,7 @@ test.each(['', 'apps/example'].flatMap((scope) => LICENSE_MANIFESTS.map((row) =>
             [path]: source,
         });
 
-        using spawn = spyOn(processes, 'run');
+        using spawn = spyOn(processes, 'spawnProcess');
         expect(await rejection(checkFindings(sandbox.path, 'licenses/allowed'))).toBe(
             `Install the project dependencies first: ${installed} is missing in ${scope === '' ? 'the root' : scope}.`,
         );
@@ -56,7 +56,7 @@ test.each([...SCANNER_FAILURES])(
         const directories: string[] = [];
         using resources = new DisposableStack();
         resources.use(
-            spyOn(processes, 'run').mockImplementation((_argv, options) => {
+            spyOn(processes, 'spawnProcess').mockImplementation((_argv, options) => {
                 directories.push(options.cwd);
                 return Promise.resolve(
                     directories.length === 1
@@ -84,9 +84,9 @@ test('one scan reads package.json and pyproject.toml, accepts a license choice, 
     });
 
     const directories: string[] = [];
-    const nativeRun = processes.run;
-    using output = spyOn(processes, 'run').mockImplementation((command, options, reader) => {
-        if (command[0] === 'git') return nativeRun(command, options, reader);
+    const nativeRun = processes.spawnProcess;
+    using output = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+        if (command[0] === 'git') return nativeRun(command, options);
         directories.push(options.cwd);
         return Promise.resolve(
             processResult({

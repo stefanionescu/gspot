@@ -1,10 +1,9 @@
 // Claims writer locks and recovers abandoned locks.
-import { posix } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import type { FileCopy, FilesState } from '#cli/types/system/files.ts';
 import { PRIVATE_FILE, PRIVATE_DIRECTORY } from '#cli/config/system/modes.ts';
 import { readEntry, verifyPath, preparePath } from '#cli/system/files/entries.ts';
-import type { FileCopy, SafeFolderState } from '#cli/types/system/safe-folder.ts';
-import { linkSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, writeFileSync } from 'node:fs';
+import { linkSync, mkdirSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { LOCK_TOKEN_SEPARATOR, LOCK_RECOVERY_SUFFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
 
 // Creates the lock file with the token, or returns false when another holder already owns the file.
@@ -38,7 +37,7 @@ function assertAbandonedLock(current: FileCopy, path: string): void {
 }
 
 // A separate lease prevents concurrent reclaimers from deleting a replacement writer's lock.
-function removeStaleLock(bounds: SafeFolderState, path: string, target: string): void {
+function removeStaleLock(bounds: FilesState, path: string, target: string): void {
     const reclaim = `${target}${LOCK_RECOVERY_SUFFIX}`;
     try {
         mkdirSync(reclaim, { mode: PRIVATE_DIRECTORY });
@@ -50,7 +49,7 @@ function removeStaleLock(bounds: SafeFolderState, path: string, target: string):
         );
     }
     try {
-        const stale = readEntry(bounds, path, false);
+        const stale = readEntry(bounds, path);
         if (stale !== undefined) {
             assertAbandonedLock(stale, path);
             unlinkSync(target);
@@ -62,18 +61,18 @@ function removeStaleLock(bounds: SafeFolderState, path: string, target: string):
 
 /**
  * Release every lock claimed through this safe folder.
- * @param bounds the directory and its safe path rules.
+ * @param bounds the root and its held locks.
+ * @returns the paths of released locks for parent-folder cleanup.
  */
-export function releaseLocks(bounds: SafeFolderState): void {
+export function releaseLocks(bounds: FilesState): string[] {
+    const released: string[] = [];
     for (const [path, holder] of bounds.locks) {
-        if (readEntry(bounds, path, false)?.bytes.toString('utf8') !== holder) continue;
+        if (readEntry(bounds, path)?.bytes.toString('utf8') !== holder) continue;
         unlinkSync(verifyPath(bounds, path));
-        for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
-            if (readdirSync(verifyPath(bounds, folder)).length > 0) break;
-            rmdirSync(verifyPath(bounds, folder));
-        }
+        released.push(path);
     }
     bounds.locks.clear();
+    return released;
 }
 
 /**
@@ -81,11 +80,11 @@ export function releaseLocks(bounds: SafeFolderState): void {
  * @param bounds the root, which records the lock it now holds.
  * @param path the root-relative path of the lock file.
  */
-export function lockForWriting(bounds: SafeFolderState, path: string): void {
+export function lockForWriting(bounds: FilesState, path: string): void {
     const target = preparePath(bounds, path);
     const token = `${String(process.pid)}${LOCK_TOKEN_SEPARATOR}${randomUUID()}`;
     while (!writeLockFile(target, token)) {
-        const current = readEntry(bounds, path, false);
+        const current = readEntry(bounds, path);
         if (current === undefined) continue;
         assertAbandonedLock(current, path);
         removeStaleLock(bounds, path, target);

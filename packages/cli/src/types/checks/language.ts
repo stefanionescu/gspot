@@ -1,6 +1,5 @@
-import type { ReadCache } from '#cli/types/system/files.ts';
 import type { ScriptSyntax } from '#cli/types/parsers/bash.ts';
-import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
+import { type Files, type ReadCache } from '#cli/types/system/files.ts';
 import type { FENCE_PARSERS } from '#cli/config/checks/language/markdown.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 
@@ -39,7 +38,7 @@ export type SwiftBuildOutput = { code: number; output: string; source: string };
 export type SwiftBuildPurpose = 'compile' | 'analyze' | 'coverage' | 'periphery';
 
 /** Prepared source copy and its locked root, disposed by the native consumer. */
-export type PreparedSwiftBuild = { files: SafeFolder; source: string };
+export type PreparedSwiftBuild = { files: Files; source: string };
 
 export type FenceParser = (typeof FENCE_PARSERS)[keyof typeof FENCE_PARSERS];
 

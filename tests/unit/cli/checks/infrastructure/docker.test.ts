@@ -34,10 +34,10 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
     const session = await openSession(directory.path);
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'trivy')]));
-    const nativeRun = processes.run;
+    const nativeRun = processes.spawnProcess;
     resources.use(
-        spyOn(processes, 'run').mockImplementation((command, options, output) => {
-            if (command[0] === 'git') return nativeRun(command, options, output);
+        spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+            if (command[0] === 'git') return nativeRun(command, options);
             expect(command.at(-1)).toBe('nginx:1.27.2');
             expect(options.cwd).toBe(directory.path);
             return Promise.resolve(processResult({ code: TRIVY_FINDINGS_EXIT, stdout: VALID_REPORT }));
@@ -67,7 +67,7 @@ test('a fatal registry failure is reported with its diagnostic', async () => {
     const session = await openSession(directory.path);
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'trivy')]));
-    resources.use(spyOn(processes, 'run').mockResolvedValue(processResult({ code, stdout, stderr })));
+    resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ code, stdout, stderr })));
     expect(await rejection(checkFindings(session.root, 'docker/trivy-image'))).toContain(diagnostic);
 });
 
@@ -78,7 +78,7 @@ test.each([...INVALID_COMPOSE])('Trivy refuses $name before scanning an image', 
         'compose.yaml': source,
     });
     const session = await openSession(directory.path);
-    using scan = spyOn(processes, 'run');
+    using scan = spyOn(processes, 'spawnProcess');
     expect(await rejection(checkFindings(session.root, 'docker/trivy-image'))).toContain(
         'Cannot read Compose service images in compose.yaml.',
     );
@@ -92,7 +92,7 @@ test('Trivy leaves build-only services unscanned', async () => {
         'compose.yaml': 'services: {app: {build: .}}\n',
     });
     const session = await openSession(directory.path);
-    using scan = spyOn(processes, 'run');
+    using scan = spyOn(processes, 'spawnProcess');
     expect(await checkFindings(session.root, 'docker/trivy-image')).toStrictEqual([]);
     expect(scan).not.toHaveBeenCalled();
 });
@@ -137,7 +137,9 @@ test('Trivy scans a repeated image once and reports each advisory and secret in 
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'trivy')]));
     const scan = resources.use(
-        spyOn(processes, 'run').mockResolvedValue(processResult({ code: TRIVY_FINDINGS_EXIT, stdout: MIXED_REPORT })),
+        spyOn(processes, 'spawnProcess').mockResolvedValue(
+            processResult({ code: TRIVY_FINDINGS_EXIT, stdout: MIXED_REPORT }),
+        ),
     );
     const findings = await checkFindings(session.root, 'docker/trivy-image');
     expect(scan).toHaveBeenCalledTimes(1);
@@ -166,7 +168,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
                 { ...toolDeclaration(session.manifests.values(), 'docker'), version: DOCKER_VERSION },
             ]),
         );
-        const toolRun = resources.use(spyOn(processes, 'run').mockResolvedValue(processResult()));
+        const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult()));
         const planned = planRun(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
         expect(await BUILT_IN_CHECKS['docker/compose'].run(session, planned)).toMatchObject({
             status: 'passed',

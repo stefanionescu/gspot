@@ -1,12 +1,11 @@
 import type { Session } from '#cli/types/planning.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import type { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
-import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
+import { type FileCopy, type ReadCache } from '#cli/types/system/files.ts';
 import type { Manifest, ToolDeclaration, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 /** Applicable checks and their required tools at one generation boundary. */

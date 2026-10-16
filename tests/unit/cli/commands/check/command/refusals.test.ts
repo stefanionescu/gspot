@@ -114,7 +114,7 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no sc
         cwd: sandbox.path,
         stdin: line,
         stderr: 'pipe',
-        timeout: prepared.options.timeoutMs,
+        timeout: prepared.options.timeoutSeconds,
     });
     expect(await indexed.exited, await new Response(indexed.stderr).text()).toBe(0);
     await using temporary = await testdir();

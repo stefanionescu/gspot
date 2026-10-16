@@ -1,6 +1,5 @@
-import { run } from '#cli/system/processes.ts';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
-import { MS_PER_SECOND } from '#cli/config/units.ts';
+import { spawnProcess } from '#cli/system/processes.ts';
 import { buildGitEnvironment } from '#cli/system/git.ts';
 import type { ToolRunOptions } from '#cli/types/tools/run.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
@@ -28,10 +27,10 @@ export async function runTool(command: readonly string[], options: ToolRunOption
         };
     const selected = buildGitEnvironment(prepared.cwd, command, { ...TOOL_ENV, ...prepared.env });
     if ('failure' in selected) return selected.failure;
-    const result = await run(command, {
+    const result = await spawnProcess(command, {
         ...prepared,
         env: selected.env,
-        timeoutMs: toolTimeoutMilliseconds(timeoutSeconds),
+        timeoutSeconds: timeoutSeconds,
         cancelSignal,
     });
     return {
@@ -39,16 +38,6 @@ export async function runTool(command: readonly string[], options: ToolRunOption
         stdout: result.stdout.replaceAll('\r\n', '\n'),
         stderr: result.stderr.replaceAll('\r\n', '\n'),
     };
-}
-/**
- * The single tool timeout converted for process APIs.
- *
- * @param seconds the duration in seconds.
- *
- * @returns the duration in milliseconds.
- */
-export function toolTimeoutMilliseconds(seconds: number): number {
-    return seconds * MS_PER_SECOND;
 }
 
 /**

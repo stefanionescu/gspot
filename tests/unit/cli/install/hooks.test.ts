@@ -56,13 +56,13 @@ test.each([...HOOK_REPOSITORIES])(
                 textContaining(`pre-push: ${command} check --hook pre-push -- "$@"`),
             ]),
         );
-        const native = processes.run;
+        const native = processes.spawnProcess;
         const editorconfig = toolDeclaration(configurationManifests().values(), 'editorconfig-checker');
-        using installer = spyOn(processes, 'run').mockImplementation((argv, options, output) => {
+        using installer = spyOn(processes, 'spawnProcess').mockImplementation((argv, options) => {
             if (argv[0] === 'mise') return Promise.resolve(MISE_INSTALL_RESULT);
             const version = installedVersionResponse(sandbox.path, argv, editorconfig);
             if (version !== undefined) return Promise.resolve(version);
-            return native(argv, options, output);
+            return native(argv, options);
         });
         expect(await installCommand(sandbox.path)).toMatchObject({ exitCode: 0, text: textContaining(text) });
         expect(
@@ -117,11 +117,11 @@ test.each(['', 'app/'])(
         expect(removed).toMatchObject({ exitCode: 0, text: textContaining('Run: gspot install') });
         expect(await pathExists(hook)).toBe(false);
         expect(readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
-        const native = processes.run;
+        const native = processes.spawnProcess;
         const editorconfig = toolDeclaration(configurationManifests().values(), 'editorconfig-checker');
-        using _installer = spyOn(processes, 'run').mockImplementation((argv, options, output) => {
+        using _installer = spyOn(processes, 'spawnProcess').mockImplementation((argv, options) => {
             const version = installedVersionResponse(root, argv, editorconfig);
-            return version === undefined ? native(argv, options, output) : Promise.resolve(version);
+            return version === undefined ? native(argv, options) : Promise.resolve(version);
         });
         const installedResult = await installCommand(root);
         expect(installedResult, installedResult.text).toMatchObject({

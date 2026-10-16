@@ -206,7 +206,7 @@ await import(${JSON.stringify(CLI_MAIN)});
             stdin: 'pipe',
             stdout: 'pipe',
             stderr: 'pipe',
-            timeout: prepared.options.timeoutMs,
+            timeout: prepared.options.timeoutSeconds,
         });
         await using capture = captureChild(child);
         const { output, errors } = capture;

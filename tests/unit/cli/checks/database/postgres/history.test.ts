@@ -137,8 +137,8 @@ import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
         const childHash = gitOutput(sandbox.path, ['rev-parse', 'HEAD:apps/api/migrations/2_api.sql']);
         const session = await openSession(sandbox.path);
         const requests: string[] = [];
-        const nativeRun = processes.run;
-        using _stream = spyOn(processes, 'run').mockImplementation((argv, options, output) => {
+        const nativeRun = processes.streamProcess;
+        using _stream = spyOn(processes, 'streamProcess').mockImplementation((argv, options, output) => {
             if (argv[0] === 'git' && argv[1] === 'cat-file') requests.push(options.stdin!);
             return nativeRun(argv, options, output);
         });

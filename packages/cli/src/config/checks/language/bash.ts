@@ -1,5 +1,5 @@
 /** The two shebangs a Bash script may open with. */
-export const BASH_SHEBANGS = ['#!/usr/bin/env bash', '#!/bin/bash'] as const;
+export const BASH_SHEBANGS: ReadonlySet<string> = new Set(['#!/usr/bin/env bash', '#!/bin/bash']);
 
 export const EXIT_CALL = /\bexit(?:\s|$)/u;
 
@@ -64,7 +64,7 @@ export const SOURCE_STATEMENT = /^(?:source|\.)\s+/u;
 export const WORD = /[A-Za-z0-9]+/gu;
 
 /** Words that say nothing in a function summary. */
-export const VAGUE_WORDS = [
+export const VAGUE_WORDS: ReadonlySet<string> = new Set([
     'a',
     'an',
     'and',
@@ -79,7 +79,7 @@ export const VAGUE_WORDS = [
     'run',
     'runs',
     'the',
-] as const;
+]);
 
 /** The doc sections a function comment may carry, in the order they go. */
 export const BASH_DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '# Returns:'] as const;

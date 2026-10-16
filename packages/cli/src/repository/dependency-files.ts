@@ -4,13 +4,12 @@ import { createRequire } from 'node:module';
 import { readJson } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { isToolingPath } from '#cli/repository/selectors.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { type Files, type ReadCache } from '#cli/types/system/files.ts';
 import { packageJsonSchema, dependencyFileParser } from '#cli/parsers/dependency-files.ts';
 import type { PackageJson, DependencyFile, InstalledDependency } from '#cli/types/parsers/dependency-files.ts';
 
@@ -79,11 +78,7 @@ export function packageFiles(root: string, manifests: string[]): string[] {
  * @param manifest the absolute package.json path.
  * @returns the validated package fields, or undefined when the file does not exist.
  */
-export function installedPackage(
-    files: SafeFolder | undefined,
-    root: string,
-    manifest: string,
-): PackageJson | undefined {
+export function installedPackage(files: Files | undefined, root: string, manifest: string): PackageJson | undefined {
     try {
         let text: string | undefined;
         if (files === undefined) text = readFileSync(manifest, 'utf8');

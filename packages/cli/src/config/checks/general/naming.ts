@@ -142,7 +142,7 @@ export const SWIFT_TYPE_NODES = ['class_declaration', 'protocol_declaration', 't
 
 export const SWIFT_MEMBER_PARENTS = new Set(['class_body', 'protocol_body', 'enum_class_body']);
 
-export const TYPESCRIPT_PARAMETER_NODES = ['required_parameter', 'optional_parameter'] as const;
+export const TYPESCRIPT_PARAMETER_NODES: ReadonlySet<string> = new Set(['required_parameter', 'optional_parameter']);
 
 export const TYPESCRIPT_DECLARATIONS = [
     [TYPESCRIPT_FUNCTION_NODES, 'functions'],
@@ -187,8 +187,8 @@ export const DIGIT_RUNS = /\d+/gu;
 export const LAST_EXTENSION = /\.[^.]*$/u;
 export const TEST_TERM_GROUP = 'tests';
 export const DIGIT_BOUNDARY = /(?<=\D)(?=\d)|(?<=\d)(?=\D)/u;
-export const SWIFTLINT_PARENTS = ['types', 'variables'] as const;
-export const RUFF_CATEGORIES = ['classes', 'exceptions'] as const;
+export const SWIFTLINT_PARENTS: ReadonlySet<string> = new Set(['types', 'variables']);
+export const RUFF_CATEGORIES: ReadonlySet<string> = new Set(['classes', 'exceptions']);
 
 export const SWIFT_NAME_QUOTE = '`';
 export const SWIFT_CALLABLE_NODES = [...SWIFT_FUNCTION_NODES, 'init_declaration'] as const;

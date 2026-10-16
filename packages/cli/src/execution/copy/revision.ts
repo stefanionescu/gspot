@@ -1,5 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { setImmediate } from 'node:timers/promises';
+import type { Files } from '#cli/types/system/files.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
@@ -11,7 +12,6 @@ import { writeScratchFiles } from '#cli/execution/copy/scratch.ts';
 import { packageFiles } from '#cli/repository/dependency-files.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
-import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 import { join, posix, dirname, resolve, basename, relative } from 'node:path';
 import type { ScratchFile, DependencyCopy } from '#cli/types/execution/copy.ts';
@@ -34,7 +34,7 @@ import {
 } from '#cli/config/execution/copy.ts';
 
 // Refuses a copy whose Vale configuration differs from the configuration that selected its installed packages.
-function assertValeMatches(installed: SafeFolder, destination: SafeFolder, config: string): void {
+function assertValeMatches(installed: Files, destination: Files, config: string): void {
     const current = installed.read(config);
     const selected = destination.read(config);
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
@@ -45,7 +45,7 @@ function assertValeMatches(installed: SafeFolder, destination: SafeFolder, confi
 }
 
 // Copies one package file the copy lacks through the same confined writer.
-function copyPackageFile(installed: SafeFolder, destination: SafeFolder, path: string): void {
+function copyPackageFile(installed: Files, destination: Files, path: string): void {
     if (destination.read(path) !== undefined) return;
     const content = installed.read(path);
     if (content === undefined)
@@ -55,7 +55,7 @@ function copyPackageFile(installed: SafeFolder, destination: SafeFolder, path: s
 
 // The dependency folders the copy's projects own, when the working tree has them installed. Python
 // environments stay in place; their tools check the copy's files.
-function listDependencyFolders(installed: SafeFolder, projects: string[]): string[] {
+function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
         if (basename(path) !== 'package.json') return [];
@@ -82,7 +82,7 @@ function assertDependencyReady(scratch: string, folder: string): void {
 // Git's clean filters decide the comparison, so a manifest checked out with CRLF matches its LF blob.
 async function assertDependencyFilesUnchanged(
     root: string,
-    installed: SafeFolder,
+    installed: Files,
     inputs: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
@@ -117,7 +117,7 @@ async function assertDependencyFilesUnchanged(
 function copyValePackages(root: string, scratch: string, paths: string[]): void {
     const configurations = paths.filter((path) => path === VALE_CONFIG || path.endsWith(`/${VALE_CONFIG}`));
     using installed = openFiles(root);
-    using destination = openFiles(resolve(scratch), 'system');
+    using destination = openFiles(resolve(scratch));
     const packages = listStyleFiles(installed, VALE_PACKAGE_DIRECTORY);
     if (packages.length === 0) return;
     for (const config of configurations) assertValeMatches(installed, destination, config);
@@ -140,7 +140,7 @@ async function revisionDependencies(
     entries: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<DependencyCopy[]> {
-    using installed = openFiles(root, 'system');
+    using installed = openFiles(root);
     const inputs = entries.filter((entry) => {
         const name = basename(entry.path);
         const lockfile = lockfileEntry(name);
@@ -258,7 +258,7 @@ async function populateRevision(
  *
  * @returns the files, relative to the root.
  */
-function listStyleFiles(files: SafeFolder, folder: string): string[] {
+function listStyleFiles(files: Files, folder: string): string[] {
     const found: string[] = [];
     walkFiles(files, folder, (path) => {
         if (files.stat(path)?.isDirectory() === true) return true;

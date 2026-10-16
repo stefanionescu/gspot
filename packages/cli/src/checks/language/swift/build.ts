@@ -1,12 +1,12 @@
 import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { type Files } from '#cli/types/system/files.ts';
 import { targetInScope } from '#cli/repository/scopes.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
-import { type SafeFolder } from '#cli/types/system/safe-folder.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
@@ -63,7 +63,7 @@ function outputFindings(input: CheckInput, output: string, levels: Set<string>, 
 
 // The package manager hands the compiler its sources in a response file, written as @path. The analyzer reads the
 // file names from the log and opens no response file, so the log spells out each one.
-function expandResponseFiles(line: string, folder: string, files: SafeFolder): string {
+function expandResponseFiles(line: string, folder: string, files: Files): string {
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
         const content = files.read(

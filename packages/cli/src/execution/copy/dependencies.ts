@@ -34,7 +34,7 @@ import {
 function untrackedDeclaration(root: string, tracked: ReadonlySet<string>, path: string): string | undefined {
     const local = convertToPosixPath(relative(root, path));
     if (!isInside(local) || tracked.has(local)) return undefined;
-    if (!new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(local))) return undefined;
+    if (!DECLARATION_EXTENSIONS.has(extractExtension(local))) return undefined;
     return local;
 }
 

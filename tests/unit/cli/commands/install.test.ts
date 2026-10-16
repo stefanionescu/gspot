@@ -31,11 +31,11 @@ enabled = false
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'));
     const before = await readTree(sandbox.path);
-    const run = processes.run;
+    const run = processes.spawnProcess;
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'run').mockImplementation((command, options, output) => {
-            if (command[0] !== 'npm') return run(command, options, output);
+        spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+            if (command[0] !== 'npm') return run(command, options);
             return Promise.reject(new Error('Unexpected process failure.'));
         }),
     );
@@ -77,13 +77,13 @@ test.each([...MISE_FAILURES])(
                 return options?.all === true && path !== null ? [path] : path;
             }) as typeof which.sync),
         );
-        const native = processes.run;
+        const native = processes.spawnProcess;
         const editorconfig = toolDeclaration(configurationManifests().values(), 'editorconfig-checker');
         mockResources.use(
-            spyOn(processes, 'run').mockImplementation((command, options, output) => {
+            spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
                 const version = installedVersionResponse(sandbox.path, command, editorconfig);
                 if (version !== undefined) return Promise.resolve(version);
-                if (command[0] !== 'mise') return native(command, options, output);
+                if (command[0] !== 'mise') return native(command, options);
                 const failed = !isRepaired && (failsOn === 'every call' || command[1] === failsOn);
                 const code = failed ? exitCode : 0;
                 return Promise.resolve({
@@ -122,9 +122,9 @@ test('install after init refuses when uv cannot make the Python lockfile, and wr
     await using sandbox = await testdir({ 'main.py': 'print("authored")\n' });
     const uvVersion = toolDeclaration(configurationManifests().values(), 'uv').version;
     const locks: string[][] = [];
-    const run = processes.run;
+    const run = processes.spawnProcess;
     mockResources.use(
-        spyOn(processes, 'run').mockImplementation((command, options, output) => {
+        spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
             if (command[0] === 'mise')
                 return Promise.resolve({
                     code: 0,
@@ -145,7 +145,7 @@ test('install after init refuses when uv cannot make the Python lockfile, and wr
                 locks.push([...command]);
                 return Promise.resolve(UV_LOCK_FAILURE);
             }
-            return run(command, options, output);
+            return run(command, options);
         }),
     );
     const paths = new Map(

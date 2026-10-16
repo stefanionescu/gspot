@@ -109,7 +109,7 @@ export const MISE_SCHEMA = {
 
 export const SEMGREP_IGNORED = ['dist/', 'build/', 'coverage/', '.env*'] as const;
 
-export const STYLELINT_ALL_LEVEL_RULES = [
+export const STYLELINT_ALL_LEVEL_RULES: ReadonlySet<string> = new Set([
     'no-descending-specificity',
     'container-name-pattern',
     'custom-media-pattern',
@@ -121,7 +121,7 @@ export const STYLELINT_ALL_LEVEL_RULES = [
     'selector-class-pattern',
     'selector-id-pattern',
     'selector-not-notation',
-] as const;
+]);
 
 export const TAILWIND_AT_RULES = [
     'tailwind',

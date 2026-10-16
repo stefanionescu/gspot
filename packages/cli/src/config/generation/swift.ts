@@ -1,4 +1,4 @@
-export const SWIFTLINT_OPT_IN = [
+export const SWIFTLINT_OPT_IN: ReadonlySet<string> = new Set([
     'missing_docs',
     'explicit_init',
     'fatal_error_message',
@@ -79,8 +79,12 @@ export const SWIFTLINT_OPT_IN = [
     'file_name_no_space',
     'discouraged_optional_boolean',
     'discouraged_optional_collection',
-] as const;
-export const SWIFTLINT_ANALYZER = ['capture_variable', 'typesafe_array_init', 'unused_import'] as const;
+]);
+export const SWIFTLINT_ANALYZER: ReadonlySet<string> = new Set([
+    'capture_variable',
+    'typesafe_array_init',
+    'unused_import',
+]);
 export const SWIFTLINT_RECOMMENDED_OFF = [
     'closure_body_length',
     'convenience_type',

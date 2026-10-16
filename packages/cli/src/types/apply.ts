@@ -1,5 +1,5 @@
+import type { FileCopy } from '#cli/types/system/files.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
-import type { FileCopy } from '#cli/types/system/safe-folder.ts';
 
 export type WriteRequest = {
     generated: Generated;

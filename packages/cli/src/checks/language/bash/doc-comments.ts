@@ -29,7 +29,7 @@ function isMeaningful(name: string, summary: string): boolean {
     const words = summary
         .matchAll(WORD)
         .map((match) => match[0].toLowerCase())
-        .filter((word) => !new Set<string | undefined>(VAGUE_WORDS).has(word))
+        .filter((word) => !VAGUE_WORDS.has(word))
         .toArray();
     return words.some((word) => !nameWords.has(word));
 }

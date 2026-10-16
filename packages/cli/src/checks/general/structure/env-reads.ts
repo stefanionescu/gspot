@@ -22,8 +22,7 @@ import {
 // Bindings inside a function or class belong to that lexical scope.
 function bindingScope(node: Node): Node {
     let scope = node.parent ?? node;
-    while (scope.parent !== null && !new Set<string | undefined>(PYTHON_SCOPE_NODES).has(scope.type))
-        scope = scope.parent;
+    while (scope.parent !== null && !PYTHON_SCOPE_NODES.has(scope.type)) scope = scope.parent;
     return scope;
 }
 

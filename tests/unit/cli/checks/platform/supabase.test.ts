@@ -33,7 +33,9 @@ test('Supabase config.toml and function folders are read per scope', async () =>
     });
     const session = await openSession(sandbox.path);
     using _pins = mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'deno')]);
-    using run = spyOn(processes, 'run').mockResolvedValue(processResult({ stdout: '{"diagnostics":[],"errors":[]}' }));
+    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(
+        processResult({ stdout: '{"diagnostics":[],"errors":[]}' }),
+    );
     for (const [scope, expected] of [
         ['', 'supabase/functions/root'],
         ['apps/api', 'apps/api/edge/hello'],
@@ -63,7 +65,7 @@ test.each([1, 2])("Deno lint exit %s without JSON reports Deno's error text", as
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolDeclaration(session.manifests.values(), 'deno')]));
     resources.use(
-        spyOn(processes, 'run').mockResolvedValue(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(
             processResult({ code, stderr: 'The project configuration is invalid.' }),
         ),
     );

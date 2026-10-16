@@ -46,7 +46,7 @@ test('import-linter reads setup.cfg first and reports each broken contract with 
         ]),
     );
     const command = resources.use(
-        spyOn(processes, 'run').mockResolvedValue(processResult({ code: 1, stdout: IMPORT_CONTRACT_REPORT })),
+        spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ code: 1, stdout: IMPORT_CONTRACT_REPORT })),
     );
     const findings = await checkFindings(session.root, 'python/import-linter');
     expect(findings.map((finding) => [finding.file, finding.rule])).toStrictEqual([

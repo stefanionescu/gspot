@@ -37,7 +37,7 @@ function addParameter(sink: ExtractSink, parameter: Node): void {
 function addParameters(sink: ExtractSink, node: Node): void {
     const parameters = node.childForFieldName('parameters')?.namedChildren ?? [];
     for (const parameter of parameters) {
-        if (new Set<string | undefined>(TYPESCRIPT_PARAMETER_NODES).has(parameter.type)) addParameter(sink, parameter);
+        if (TYPESCRIPT_PARAMETER_NODES.has(parameter.type)) addParameter(sink, parameter);
         else addPattern(sink, parameter, 'parameters');
     }
     addPattern(sink, node.childForFieldName('parameter'), 'parameters');

@@ -2,21 +2,20 @@ import semver from 'semver';
 import { realpathSync } from 'node:fs';
 import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import { toolTimeoutMilliseconds } from '#cli/tools/run.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { installedPackage } from '#cli/repository/dependency-files.ts';
 import { TOOL_ENV, NO_VERSION, VERSION_FLAG } from '#cli/config/tools/run.ts';
 import type { ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts';
 
 // The version the first package.json above a folder declares for the named package, searching upward.
-function versionAbove(files: SafeFolder | undefined, root: string, start: string, name: string): string | undefined {
+function versionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, 'package.json');
         if (files !== undefined && !convertToPosixPath(relative(root, manifest)).startsWith(`${DOT_GSPOT}/`))
@@ -115,7 +114,7 @@ export function readToolVersion(
     const installedVersion = packageVersion(root, path, npm?.name);
     const result = spawnProcessBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
         cwd,
-        timeoutMs: toolTimeoutMilliseconds(timeoutSeconds),
+        timeoutSeconds: timeoutSeconds,
         env: { ...TOOL_ENV, ...tool.env },
     });
     return parseVersionOutput(tool, result, installedVersion);

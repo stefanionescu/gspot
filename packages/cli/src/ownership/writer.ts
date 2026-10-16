@@ -1,27 +1,15 @@
-import { posix } from 'node:path';
-import { openFiles } from '#cli/system/files/open.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/ownership.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
+import { openFiles, removeEmptyFolders } from '#cli/system/files/open.ts';
 
-// Remove empty folders left by a removed generated file.
-function removeEmptyFolders(writer: Writer, path: string): void {
-    for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
-        if (writer.files.list(folder).length > 0) return;
-        writer.files.rmdir(folder);
-    }
-}
-
-// Publish regular targets before links so each link finds its target.
+// Write each changed regular file under the writer lock.
 function writeBatch(writer: Writer, plans: WritePlan[]): void {
-    const ordered = plans.toSorted(
-        (left, right) => Number(left.after?.isLink === true) - Number(right.after?.isLink === true),
-    );
-    for (const { path, before, after } of ordered) {
+    for (const { path, before, after } of plans) {
         if (after === undefined) {
             if (before !== undefined) {
                 writer.files.remove(path, before);
-                removeEmptyFolders(writer, path);
+                removeEmptyFolders(writer.files, path);
             }
         } else if (!isSameContents(before, after)) writer.files.write(path, after, before);
     }
@@ -46,15 +34,6 @@ export function openWriter(root: string): Writer {
  * @param plans the plans for distinct files.
  */
 export function writePlans(writer: Writer, plans: WritePlan[]): void {
-    const plannedFiles = new Map(
-        plans.map(({ path, after, before, status }) => [
-            path,
-            status === 'preserved' || (status === 'unchanged' && after === undefined) ? before : after,
-        ]),
-    );
-    for (const plan of plans) {
-        if (plan.after !== undefined) writer.files.validate(plan.path, plan.after, plannedFiles);
-    }
     const conflict = plans.find((plan) => plan.status === 'preserved');
     if (conflict !== undefined) throw notOverwrittenError([conflict.path], 'retry the command');
     writeBatch(

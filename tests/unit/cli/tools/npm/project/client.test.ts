@@ -67,13 +67,13 @@ test.each([...VERSION_SOURCES])(
             rootSettingSchemas.tool_timeout_seconds.parse(undefined),
         );
         expect(installer).toStrictEqual({ name: 'bun', version: '0.0.0' });
-        const run = processes.run;
+        const run = processes.spawnProcess;
         let observed: ReturnType<typeof run> | undefined;
-        using boundary = spyOn(processes, 'run').mockImplementation((argv, options, output) => {
+        using boundary = spyOn(processes, 'spawnProcess').mockImplementation((argv, options) => {
             if (argv[0] === 'bun' && argv[1] !== '--version')
                 throw new Error('Unexpected native package operation before version refusal.');
             const prepared = prepareCommand(argv, options);
-            observed = run(argv, prepared.options, output);
+            observed = run(argv, prepared.options);
             return observed;
         });
         const failure = await installNpmTools(session, owner, [], []).catch((error: unknown) => error);

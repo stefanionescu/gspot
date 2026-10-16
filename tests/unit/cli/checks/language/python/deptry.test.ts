@@ -47,7 +47,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
     using resources = mockPinnedExecutables(
         ['uv', 'deptry'].map((name) => toolDeclaration(session.manifests.values(), name)),
     );
-    const executed = resources.use(spyOn(processes, 'run').mockResolvedValue(processResult({ stdout: '[]' })));
+    const executed = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(processResult({ stdout: '[]' })));
     const checked = await checkReport(sandbox.path, ['check', '--only', 'python/deptry', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks.map(({ scope, status }) => [scope, status])).toStrictEqual(

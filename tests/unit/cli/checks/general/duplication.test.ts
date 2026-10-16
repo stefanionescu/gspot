@@ -22,7 +22,7 @@ test.each([1, 0])('jscpd output is kept in the error when exit %i writes no repo
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const session = await openSession(directory.path);
     const directories: string[] = [];
-    using _spawn = spyOn(processes, 'run').mockImplementation((command) => {
+    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
         directories.push(command[command.indexOf('--output') + 1]!);
         return Promise.resolve(processResult({ code, stdout: 'The scanner could not write its report.\n' }));
     });
@@ -67,7 +67,7 @@ for (const mode of ['relative', 'absolute', 'namespaced'])
         };
         await createFileTree(root, { 'scripts/café.sh': 'echo clone\n', 'vendor/copy.sh': 'echo vendor\n' });
         const session = await openSession(root);
-        using _spawn = spyOn(processes, 'run').mockImplementation(async (command) => {
+        using _spawn = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
             const work = command[command.indexOf('--output') + 1]!;
             await Bun.write(join(work, 'jscpd-report.json'), JSON.stringify(report));
             return processResult();
