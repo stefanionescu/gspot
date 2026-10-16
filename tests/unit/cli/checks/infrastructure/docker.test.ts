@@ -5,11 +5,11 @@ import { rejection } from '#tests/setup/matchers.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 
 import {

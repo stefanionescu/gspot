@@ -7,9 +7,9 @@ import { BYTES_PER_KB } from '#cli/config/units.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { BASH_REPOSITORY } from '#tests/config/bash/sandbox.ts';
+import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { TRACKED_PATTERNS, LARGE_FILE_SETTINGS, LARGE_FILE_ATTRIBUTES } from '#tests/config/repository.ts';
 

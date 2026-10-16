@@ -4,8 +4,8 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { ROOT_PORT_SOURCE, CHILD_PORT_SOURCE, STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 

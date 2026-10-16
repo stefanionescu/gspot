@@ -4,8 +4,8 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { MARKDOWN_FENCE_CASES } from '#tests/config/markdown.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 

@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { unlink, readFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import { copyRevision } from '#cli/execution/copy/revision.ts';
+import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 
 test("an asset in a scope's assets folder counts as used when a file outside the scope links to it", async () => {

@@ -6,9 +6,9 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 
 {

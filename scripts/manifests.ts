@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import { listAssets } from '#cli/system/assets.ts';
 import { isBelowFloor } from '#cli/tools/versions.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { CheckContradiction } from './types/manifests.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { listChecksById, listDeclaredTools, buildManifestError } from '#cli/configurations/manifests.ts';
 import type { Manifest, PinRequirement, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';

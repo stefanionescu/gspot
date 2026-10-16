@@ -4,10 +4,10 @@ import { test, spyOn, expect } from 'bun:test';
 import { pathExists } from '#tests/setup/files.ts';
 import { rejection } from '#tests/setup/matchers.ts';
 import * as processes from '#cli/system/processes.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { swiftBuildInput } from '#tests/setup/check-input.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { buildPlan } from '#cli/checks/language/swift/build-folder.ts';
 
 test('analysis refuses an incomplete compiler log after a failed build', async () => {

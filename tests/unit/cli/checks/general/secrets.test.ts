@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
+import { CHECK_FUNCTIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 
 import {

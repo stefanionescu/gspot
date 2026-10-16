@@ -7,10 +7,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { applyFixers } from '#cli/execution/fixes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { textContaining } from '#tests/setup/matchers.ts';
 import { FIXER_OUTCOMES } from '#tests/config/execution.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/implementations.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { planFixer, buildFixerSettings } from '#tests/setup/fixer.ts';
 
