@@ -80,7 +80,9 @@ function buildImportBoundariesRule(
  * @param context the repository root, read cache, selected scopes, and Node.js script paths.
  * @returns the boundary-rule blocks with the aliases of each project.
  */
-function buildScopeImportBlocks(context: EslintContext): EslintBlock[] {
+function buildScopeImportBlocks(
+    context: Pick<EslintContext, 'root' | 'reads' | 'scopes' | 'nodeFiles'>,
+): EslintBlock[] {
     const { root, reads, scopes, nodeFiles } = context;
     return scopes
         .filter((entry) => entry.scope.path !== '')

@@ -114,8 +114,8 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
 export const TOKEN_IGNORES = [
     String.raw`(eslint-(?:disable|enable)(?:-next-line|-line)?\s+[^\n]*?--\s*(?:reason:\s*)?)`,
     String.raw`(https?://[^\s)]+)`,
-    String.raw`(@(?:param|template|typedef)\s+(?:\{[^}\n]*\}\s+)?(?:\[[^\]\n]*\]|\S+))`,
-    String.raw`(@(?:returns?|throws|type|see|example|deprecated)\b(?:\s+\{[^}\n]*\})?)`,
+    String.raw`(@(?:param|template|typedef)\s+(?:\{[^\n]*\}\s+)?(?:\[[^\]\n]*\]|\S+))`,
+    String.raw`(@(?:returns?|throws|type|see|example|deprecated)\b(?:\s+\{[^\n]*\})?)`,
 ] as const;
 
 /** Skip front matter. */

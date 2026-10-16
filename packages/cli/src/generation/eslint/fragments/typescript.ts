@@ -1,45 +1,39 @@
-import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
-import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+import { serializeBlocks } from '#cli/generation/eslint/print.ts';
+import { buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES_OFF } from '#cli/config/generation/eslint-fragments.ts';
+import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Write typescript ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintPresets the declared ESLint preset reader.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.eslintFiles the code and test file selectors.
- * @param root0.json the JSON writer for emitted options.
- * @param root0.eslint the resolved ESLint configuration reader.
- *
- * @returns the ESLint fragment source.
+ * Apply typed presets and the selected project files.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildTypescriptFragment({
-    eslintPresets,
-    eslintModule,
-    eslintFiles,
-    json,
-    eslint,
-}: Pick<EslintFragmentInputs, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'json' | 'eslint'>): string {
-    const output: string[] = [
-        "import tseslint from 'typescript-eslint';\nimport { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';\n",
+function buildTypescriptFragment(
+    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'json' | 'eslint'>,
+): EslintFragment {
+    const { eslintPresets, eslintModule, eslintFiles, json, eslint } = context;
+
+    const imports: string[] = [
+        "import tseslint from 'typescript-eslint';",
+        "import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';",
     ];
-    const presets = eslintPresets('typescript') as FragmentPresets;
-    for (const [index, { parser, ...block }] of presets.strict.blocks.entries()) {
-        output.push(
-            '\n',
-            eslintModule.block(
+
+    const output: string[] = ['\n\n'];
+    const presets = eslintPresets.get('typescript') as FragmentPresets;
+    output.push(
+        serializeBlocks(
+            eslintModule,
+            buildPresetBlocks(presets.strict, 'tseslint', ({ parser, ...block }, index, source) => [
                 { ...block, files: parser ? eslintFiles.typescriptSource : eslintFiles.typescript },
-                `...${serializePresetAccess('tseslint', presets.strict.source)}[${String(index)}]`,
+                `...${source}[${String(index)}]`,
                 {
-                    expression: `${serializePresetAccess('tseslint', presets.strict.source)}[${String(index)}].rules`,
+                    expression: `${source}[${String(index)}].rules`,
                     rules: block.rules,
                 },
-            ),
-            ',\n',
-        );
-    }
-    const projects = eslint().projects;
+            ]),
+        ),
+    );
+    const projects = eslint.projects;
 
     output.push(
         '\n',
@@ -54,5 +48,7 @@ export function buildTypescriptFragment({
         }),
         ',\n',
     );
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }
+
+export { buildTypescriptFragment };

@@ -311,3 +311,7 @@ per_scope = true
 target = ".gspot/config/semgrep/javascript.yml"
 tool = "semgrep"
 when = { configuration = "security" }
+
+[[tool_file]]
+target = ".gspot/config/eslint-runtime.mjs"
+tool = "eslint"

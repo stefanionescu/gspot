@@ -1,46 +1,45 @@
-import { pickPresetFields } from '#cli/generation/eslint/presets.ts';
 import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
+import { pickPresetFields, buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
 import { serializeBlocks, serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { ASTRO_FILES, ASTRO_RULES, ASTRO_SCRIPT_FILES } from '#cli/config/generation/eslint-fragments.ts';
-import type { EslintModule, FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+
+import {
+    type EslintModule,
+    type EslintContext,
+    type EslintFragment,
+    type FragmentPresets,
+} from '#cli/types/generation/eslint.ts';
 
 /**
- * Write astro ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintPresets the declared ESLint preset reader.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.configurations the selected configuration names.
- *
- * @returns the ESLint fragment source.
+ * Apply Astro presets and its component parser choices.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildAstroFragment({
-    eslintPresets,
-    eslintModule,
-    configurations,
-}: Pick<EslintFragmentInputs, 'eslintPresets' | 'eslintModule' | 'configurations'>): string {
-    const presets = eslintPresets('astro') as FragmentPresets;
-    const blocks: Parameters<EslintModule['block']>[] = (['recommended', 'accessibility'] as const).flatMap((name) => {
-        const preset = presets[name];
-        const source = serializePresetAccess('astroPlugin', preset.source);
-        return preset.blocks.map(
-            (block, index): Parameters<EslintModule['block']> => [
-                {
-                    ...pickPresetFields(block),
-                    files: block.files ?? ASTRO_FILES,
-                    ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
-                },
-                `...${source}[${String(index)}]`,
-                { expression: `${source}[${String(index)}].rules`, rules: block.rules },
-            ],
-        );
-    });
+export function buildAstroFragment(
+    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'configurations'>,
+): EslintFragment {
+    const { eslintPresets, eslintModule, configurations } = context;
+
+    const imports: string[] = ["import astroPlugin from 'eslint-plugin-astro';"];
+
+    const presets = eslintPresets.get('astro') as FragmentPresets;
+    const blocks: Parameters<EslintModule['block']>[] = (['recommended', 'accessibility'] as const).flatMap((name) =>
+        buildPresetBlocks(presets[name], 'astroPlugin', (block, index, source) => [
+            {
+                ...pickPresetFields(block),
+                files: block.files ?? ASTRO_FILES,
+                ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
+            },
+            `...${source}[${String(index)}]`,
+            { expression: `${source}[${String(index)}].rules`, rules: block.rules },
+        ]),
+    );
     blocks.push([
         { files: ASTRO_FILES, rules: ASTRO_RULES },
         'languageOptions: { parserOptions: { tsconfigRootDir: root } }',
     ]);
     if (configurations.includes('typescript')) {
-        const preset = (eslintPresets('typescript') as FragmentPresets).untyped;
+        const preset = (eslintPresets.get('typescript') as FragmentPresets).untyped;
         const untyped = pickPresetFields(preset.blocks[0]);
         const source = serializePresetAccess('tseslint', preset.source);
         blocks.push(
@@ -55,5 +54,5 @@ export function buildAstroFragment({
             ],
         );
     }
-    return "import astroPlugin from 'eslint-plugin-astro';\n" + serializeBlocks(eslintModule, blocks) + '\n';
+    return { imports: imports, blocks: serializeBlocks(eslintModule, blocks) + '\n' };
 }

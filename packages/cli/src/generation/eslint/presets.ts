@@ -2,10 +2,16 @@ import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { eslintPresetSchema } from '#cli/configurations/schema/manifest.ts';
-import { ESLINT_PRESETS_FILE, PACKAGE_JSON_PATTERN } from '#cli/config/generation/eslint.ts';
-import { type EslintModule, type EslintPresets, type EslintSettingsBlock } from '#cli/types/generation/eslint.ts';
+
+import {
+    type EslintModule,
+    type EslintPresets,
+    type FragmentPreset,
+    type EslintSettingsBlock,
+} from '#cli/types/generation/eslint.ts';
 
 const eslintPresetsSchema = z.record(z.string(), eslintPresetSchema) satisfies z.ZodType<EslintPresets>;
 
@@ -16,7 +22,9 @@ const eslintPresetsSchema = z.record(z.string(), eslintPresetSchema) satisfies z
  *
  * @returns the native rule and file properties.
  */
-function pickPresetFields(block: EslintSettingsBlock | EslintPresets[string]['blocks'][number]): EslintSettingsBlock {
+export function pickPresetFields(
+    block: EslintSettingsBlock | EslintPresets[string]['blocks'][number],
+): EslintSettingsBlock {
     return {
         ...(block.files === undefined ? {} : { files: block.files }),
         ...(block.ignores === undefined ? {} : { ignores: block.ignores }),
@@ -32,7 +40,7 @@ function pickPresetFields(block: EslintSettingsBlock | EslintPresets[string]['bl
  *
  * @returns preset blocks without executable plugin or parser objects.
  */
-function readPresets(manifest: Manifest): EslintPresets {
+export function readPresets(manifest: Manifest): EslintPresets {
     const parsed = eslintPresetsSchema.parse(JSON.parse(readAsset(`${manifest.dir}/${ESLINT_PRESETS_FILE}`)));
     return Object.fromEntries(
         Object.entries(parsed).map(([name, preset]) => [
@@ -44,28 +52,20 @@ function readPresets(manifest: Manifest): EslintPresets {
 
 /**
  * Build the blocks of one pinned preset with the caller's rule and parser choices.
- * @param presets the pinned export and all configuration blocks it contains.
- * @param sources the JavaScript identifier for the preset package import.
- * @param codeFiles the transformation that retains each block and its runtime source expression.
+ * @param preset the pinned export and all configuration blocks it contains.
+ * @param importName the JavaScript identifier for the preset package import.
+ * @param transform the transformation that retains each block and its runtime source expression.
  * @returns the transformed preset blocks with their runtime source expressions.
  */
-function buildPresetBlocks(
-    presets: EslintPresets,
-    sources: readonly (readonly [string, string])[],
-    codeFiles: string[],
+export function buildPresetBlocks(
+    preset: Pick<FragmentPreset, 'source'> & { blocks: readonly FragmentPreset['blocks'][number][] },
+    importName: string,
+    transform: (
+        block: FragmentPreset['blocks'][number],
+        index: number,
+        source: string,
+    ) => Parameters<EslintModule['block']>,
 ): Parameters<EslintModule['block']>[] {
-    return sources.map(([name, variable]) => {
-        const selected = presets[name] as EslintPresets[string];
-        const preset = pickPresetFields(selected.blocks[0] as EslintPresets[string]['blocks'][number]);
-        const files = name === 'packageJson' ? [PACKAGE_JSON_PATTERN] : codeFiles;
-        const source = serializePresetAccess(variable, selected.source);
-        return [
-            stripUndefined({ ...preset, files }),
-            `...${source}`,
-            { expression: `${source}.rules`, rules: preset.rules },
-        ];
-    });
+    const source = serializePresetAccess(importName, preset.source);
+    return preset.blocks.map((block, index) => transform(block, index, source));
 }
-
-export { buildPresetBlocks };
-export { readPresets, pickPresetFields };

@@ -23,6 +23,7 @@ import { buildMarkdownlintFile } from '#cli/generation/tool-files/markdownlint.t
 import { buildHtmlValidateFile } from '#cli/generation/tool-files/html-validate.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/tool-files/python.ts';
 import { buildSemgrepFile, buildSemgrepignore } from '#cli/generation/tool-files/semgrep.ts';
+import { ESLINT_RUNTIME_FILE, ESLINT_RUNTIME_TARGET } from '#cli/config/generation/eslint.ts';
 import { type GeneratedFile, type ToolFileBuilder, type ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
@@ -51,6 +52,7 @@ import {
 } from '#cli/generation/tool-files/vale.ts';
 
 const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
+    [ESLINT_RUNTIME_TARGET]: (context) => readAsset(`${context.manifest.dir}/${ESLINT_RUNTIME_FILE}`),
     '.gspot/config/ansible-lint.yml': buildAnsibleLintFile,
     '.gspot/config/vale/styles/gspot/acronyms.yml': buildAcronymsStyle,
     '.gspot/config/gixy.cfg': buildGixyFile,
@@ -99,9 +101,9 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
 };
 /**
  * Build one target file and its declared pointers.
- * @param context the selected tool file, scope, and output target.
- * @param fragmentPaths the pointer paths already emitted as fragments.
- * @returns the target and the pointers that still need output.
+ * @param context the declared output, its owner, and the selected scope settings.
+ * @param fragmentPaths the existing fragment paths that keep their own output.
+ * @returns the generated target and the pointer files that do not replace fragments.
  */
 function buildToolFile(context: ToolFileContext, fragmentPaths: ReadonlySet<string>): GeneratedFile[] {
     const { toolFile, targetPath } = context;

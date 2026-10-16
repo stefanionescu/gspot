@@ -15,7 +15,7 @@ type ManagedBlock = { path: string; block: string; style: BlockStyle };
 
 type SemgrepRule = Record<string, unknown> & { id: string; paths?: { include: string[] } };
 
-type WholeToolFile = Extract<ToolFileDeclaration, { fragment: false }>;
+type WholeToolFile = Extract<ToolFileDeclaration, { source: string }>;
 
 /** Repository-wide consumers and the consumers of the current scope. */
 export type GenerationConsumers = { repository: ToolFileConsumers; scope: ToolFileConsumers };

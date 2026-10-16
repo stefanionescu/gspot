@@ -1,23 +1,20 @@
-import type { EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { JEST_GLOBAL_PACKAGE } from '#cli/config/generation/eslint-fragments.ts';
+import { type EslintContext, type EslintFragment } from '#cli/types/generation/eslint.ts';
 
 /**
- * Write jest ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.eslintFiles the code and test file selectors.
- * @param root0.testRuleNames the retained test lint rule names.
- *
- * @returns the ESLint fragment source.
+ * Apply Jest rules with the selected test files and globals.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildJestFragment({
-    eslintModule,
-    eslintFiles,
-    testRuleNames,
-}: Pick<EslintFragmentInputs, 'eslintModule' | 'eslintFiles' | 'testRuleNames'>): string {
+export function buildJestFragment(
+    context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'testRuleNames'>,
+): EslintFragment {
+    const { eslintModule, eslintFiles, testRuleNames } = context;
+
+    const imports: string[] = ["import jest from 'eslint-plugin-jest';"];
+
     const output: string[] = [
-        "import jest from 'eslint-plugin-jest';\n",
+        '\n',
         eslintModule.block(
             {
                 files: eslintFiles.tests,
@@ -30,5 +27,5 @@ export function buildJestFragment({
         ),
         ',\n',
     ];
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }

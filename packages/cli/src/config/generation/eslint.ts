@@ -1,3 +1,5 @@
+const FRAGMENT_BLANK_LINES = 3;
+
 export const ESLINT_RULE_NAMES_FILE = 'eslint-rule-names.json';
 export const ESLINT_RUNTIME_NAMES_FILE = 'eslint-runtime-names.json';
 export const ESLINT_PRESETS_FILE = 'eslint-presets.json';
@@ -177,15 +179,19 @@ export const FILE_PRESETS = [
 ] as const;
 export const PACKAGE_JSON_PATTERN = '**/package.json';
 
+export const ESLINT_RUNTIME_FILE = 'eslint-runtime.mjs';
+export const ESLINT_RUNTIME_TARGET = '.gspot/config/eslint-runtime.mjs';
+
 export const ESLINT_BASE_IMPORTS = [
-    ['{ join, relative, sep }', 'node:path'],
-    ['{ readFileSync }', 'node:fs'],
-    ['{ fileURLToPath }', 'node:url'],
+    ['{ root, runtimeMatches, stripRuntimeGlobals, componentMatches }', './' + ESLINT_RUNTIME_FILE],
+    ['{ join }', 'node:path'],
     ['eslint', '@eslint/js'],
     ['sonarjs', 'eslint-plugin-sonarjs'],
     ['unicorn', 'eslint-plugin-unicorn'],
     ['packageJson', 'eslint-plugin-package-json'],
     ['prettierConfig', 'eslint-config-prettier'],
     ['globals', 'globals'],
-    ['picomatch', 'picomatch'],
 ] as const;
+
+/** Spacing preceding component framework preset blocks. */
+export const FRAGMENT_SPACING = '\n'.repeat(FRAGMENT_BLANK_LINES);

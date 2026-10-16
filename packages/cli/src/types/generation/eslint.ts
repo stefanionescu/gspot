@@ -15,7 +15,7 @@ type EslintBoundaryFile = {
     isUnknown?: boolean;
 };
 
-type FragmentPreset = {
+export type FragmentPreset = {
     source: string;
     blocks: [EslintSettingsBlock & { parser: boolean }, ...(EslintSettingsBlock & { parser: boolean })[]];
 };
@@ -69,17 +69,6 @@ export type EslintBoundaryContext = {
     trpcPaths: string[];
 };
 
-/** Repository settings, selected scopes, and Node file paths for generate ESLint. */
-export type EslintContext = {
-    generatedPatterns: string[];
-    root: string;
-    reads: ReadCache;
-    settings: Settings;
-    scopes: ScopeSelection[];
-    selection: ScopeSelection;
-    nodeFiles: string[];
-};
-
 /** The parts of the ESLint configuration that the settings and the emitted scope decide. */
 export type EslintParts = {
     projects: string[];
@@ -121,7 +110,6 @@ export type EslintSettingsBlock = {
 
 /** The actual default blocks and an emitter bound to the owning scope. */
 export type EslintModule = {
-    blocks: EslintSettingsBlock[];
     block: (block: EslintSettingsBlock, runtime?: string, preset?: EslintRuleSource) => string;
 };
 
@@ -173,15 +161,21 @@ export type EslintPresets = Record<
 >;
 
 /** Inputs and printers shared by the ESLint fragment builders. */
-export type EslintFragmentInputs = {
+export type EslintContext = {
+    generatedPatterns: string[];
+    root: string;
+    reads: ReadCache;
+    scopes: ScopeSelection[];
+    selection: ScopeSelection;
+    nodeFiles: string[];
+    pluginLevels: EslintRuleLevels;
     ruleOptions: EslintRuleOptions[];
-    eslint: () => EslintParts;
+    eslint: EslintParts;
     eslintModule: EslintModule;
     eslintFiles: EslintFiles;
-    eslintFragmentBlocks: EslintSettingsBlock[];
-    settingsBlocks: () => EslintRuleBlock[];
+    settingsBlocks: EslintRuleBlock[];
     eslintAllRules: Set<string>;
-    eslintPresets: (configuration: string) => EslintPresets;
+    eslintPresets: Map<string, EslintPresets>;
     configurations: string[];
     settings: ScopeView['settings'];
     roles: ScopeView['roles'];
@@ -192,7 +186,7 @@ export type EslintFragmentInputs = {
     isAll: boolean;
     repositorySettings: Settings;
     files: (extension: string) => string[];
-    json: (value: unknown, indent?: number) => string;
+    json: (value: unknown) => string;
 };
 
 export type EslintRuleLevels = Record<string, Level | 'none'>;
@@ -219,4 +213,13 @@ export type StylelintComponent = {
     functions?: readonly string[];
 };
 
+/** Imports and native configuration blocks produced by one selected ESLint fragment. */
+export type EslintFragment = { imports: string[]; blocks: string };
+
+export type EslintFacts = Pick<
+    EslintContext,
+    'root' | 'reads' | 'scopes' | 'repositorySettings' | 'selection' | 'nodeFiles' | 'generatedPatterns'
+>;
+
+/** Relative-import enforcement with explicit project folders and import aliases. */
 export type EslintImportBoundaryRule = ['error', { folders: string[]; aliases: Record<string, string> }];

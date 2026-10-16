@@ -1,25 +1,25 @@
+import { FRAGMENT_SPACING } from '#cli/config/generation/eslint.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 import { REACT_RULES, JSX_CODE_FILES } from '#cli/config/generation/eslint-fragments.ts';
-import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Write react ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintPresets the declared ESLint preset reader.
- * @param root0.eslintModule the ESLint block writer.
- *
- * @returns the ESLint fragment source.
+ * Apply React, hooks, and refresh rules for the selected JSX mode.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildReactFragment({
-    eslintPresets,
-    eslintModule,
-}: Pick<EslintFragmentInputs, 'eslintPresets' | 'eslintModule'>): string {
-    const output: string[] = [
-        "import reactHooks from 'eslint-plugin-react-hooks';\nimport react from 'eslint-plugin-react';\nimport reactRefresh from 'eslint-plugin-react-refresh';\n",
+function buildReactFragment(context: Pick<EslintContext, 'eslintPresets' | 'eslintModule'>): EslintFragment {
+    const { eslintPresets, eslintModule } = context;
+
+    const imports: string[] = [
+        "import reactHooks from 'eslint-plugin-react-hooks';",
+        "import react from 'eslint-plugin-react';",
+        "import reactRefresh from 'eslint-plugin-react-refresh';",
     ];
-    const presets = eslintPresets('react') as FragmentPresets;
+
+    const output: string[] = [FRAGMENT_SPACING];
+    const presets = eslintPresets.get('react') as FragmentPresets;
     output.push(
         '\n',
         eslintModule.block(
@@ -48,5 +48,7 @@ export function buildReactFragment({
         ),
         ',\n',
     );
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }
+
+export { buildReactFragment };

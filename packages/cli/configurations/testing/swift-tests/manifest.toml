@@ -12,7 +12,6 @@ filenames = ["*.xctestplan"]
 paths = ["**/*Tests/**/*.swift"]
 
 [[tool_file]]
-fragment = true
 per_scope = true
 pointer = { path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
 target = ".gspot/config/swiftlint.yml"

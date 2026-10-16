@@ -97,8 +97,10 @@ function buildBoundarySettings({
  *
  * @returns one classification block and its ordered dependency policies.
  */
-export function buildBoundaryBlocks(context: EslintContext): EslintBlock[] {
-    const { settings, scopes, nodeFiles } = context;
+export function buildBoundaryBlocks(
+    context: Pick<EslintContext, 'repositorySettings' | 'scopes' | 'nodeFiles'>,
+): EslintBlock[] {
+    const { repositorySettings: settings, scopes, nodeFiles } = context;
     const modules = scopes
         .filter(({ scope }) => scope.path === '')
         .flatMap(({ view }) => view.values.architecture?.module ?? []);

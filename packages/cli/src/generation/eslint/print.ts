@@ -14,7 +14,7 @@ function serializeSelector(selector: EslintFileSelector): string {
     if (typeof selector === 'string') return JSON.stringify(selector);
     if ('component' in selector)
         return `componentMatches(${selector.component}Parser, ${JSON.stringify(selector.component)}, tseslint.parser)`;
-    return `runtimeMatches(${String(selector.runtime.index)})`;
+    return `runtimeMatches(${String(selector.runtime.index)}, runtimeDeclarations)`;
 }
 
 function serializePresetRules(rules: EslintSettingsBlock['rules'], preset: EslintRuleSource): string[] {
@@ -37,7 +37,7 @@ function serializePresetRules(rules: EslintSettingsBlock['rules'], preset: Eslin
  *
  * @returns a JavaScript configuration block.
  */
-function serializeBlock(block: EslintSettingsBlock, runtime = '', preset?: EslintRuleSource): string {
+function serializeBlock(block: EslintSettingsBlock, runtime: string, preset: EslintRuleSource | undefined): string {
     const { files, rules, ...fields } = block;
     const content = {
         ...fields,
@@ -56,23 +56,13 @@ function serializeBlock(block: EslintSettingsBlock, runtime = '', preset?: Eslin
     }
     return `{${parts.join(', ')}}`;
 }
-
 /**
- * Serialize selector expressions for emitted ESLint blocks.
- *
- * @param runtimes the JavaScript runtime selections.
- *
- * @returns the serialized selector definitions.
+ * Serialize the runtime declarations used by the shared file selectors.
+ * @param runtimes the ordered runtime declarations and their file selectors.
+ * @returns the JavaScript declaration shared by runtime file matchers.
  */
 export function serializeRuntimeSelectors(runtimes: EslintParts['runtimes']): string {
-    const output: string[] = [
-        "\n// The root has no closing separator because TypeScript's project service resolves from its containing folder.\nconst root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\\\/]$/u, '');\nconst RUNTIME_GLOBAL_NAMES = new Set(Object.keys({ ...globals.node, ...globals.browser, ...globals.worker, ...globals.serviceworker, ...globals['react-native'] }));\n// Keep compiler and test globals from framework presets; runtime APIs have their own file selectors.\nfunction stripRuntimeGlobals(block) {\n    const names = block.languageOptions?.globals;\n    if (names === undefined) return block;\n    return { ...block, languageOptions: { ...block.languageOptions, globals: Object.fromEntries(Object.entries(names).filter(([name]) => !RUNTIME_GLOBAL_NAMES.has(name))) } };\n}\nconst runtimeDeclarations = ",
-
-        JSON.stringify(runtimes),
-        ";\nconst runtimeMatchers = runtimeDeclarations.map(({ scope, includes, excludes }) => {\n    const included = includes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));\n    const excluded = excludes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));\n    return (path) => {\n        if (scope !== '' && !path.startsWith(`${scope}/`)) return false;\n        return included.some((pattern) => pattern(path)) && !excluded.some((pattern) => pattern(path));\n    };\n});\nfunction runtimeMatches(index) {\n    const matches = (file) => runtimeMatchers.findLastIndex((matcher) => matcher(relative(root, file).split(sep).join('/'))) === index;\n    return matches;\n}\n// Component parsers keep script language attributes. The last parser checks syntax errors.\nfunction componentMatches(parser, framework, typescriptParser) {\n    return (file) => {\n        try {\n            const parsed = parser.parseForESLint(readFileSync(file, 'utf8'), { filePath: file, tsconfigRootDir: root, ecmaVersion: 'latest', sourceType: 'module', parser: framework === 'vue' ? false : { ts: typescriptParser, typescript: typescriptParser } });\n            const scripts = framework === 'vue' ? parsed.services.getDocumentFragment().children.filter((node) => node.type === 'VElement' && node.name === 'script') : parsed.ast.body.filter((node) => node.type === 'SvelteScriptElement');\n            return scripts.some((script) => script.startTag.attributes.some((attribute) => attribute.key?.name === 'lang' && ['ts', 'typescript'].includes(framework === 'vue' ? attribute.value?.value : attribute.value[0]?.value)));\n        } catch (error) {\n            if (error instanceof SyntaxError || (error instanceof Error && error.name === 'TSError')) return false;\n            throw error;\n        }\n    };\n}\n",
-    ];
-
-    return output.join('');
+    return `const runtimeDeclarations = ${JSON.stringify(runtimes)};\n`;
 }
 
 /**

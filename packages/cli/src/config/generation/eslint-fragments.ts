@@ -1,4 +1,4 @@
-export const ASTRO_RULES = {
+const ASTRO_RULES = {
     'astro/no-set-html-directive': 'error',
     'astro/no-exports-from-components': 'error',
     'astro/no-prerender-export-outside-pages': 'error',
@@ -9,16 +9,16 @@ export const ASTRO_RULES = {
     'astro/prefer-split-class-list': 'error',
 } as const;
 
-export const EXPO_RULES = {
+const EXPO_RULES = {
     'expo/no-env-var-destructuring': 'error',
     'expo/no-dynamic-env-var': 'error',
     'expo/use-dom-exports': 'error',
     'expo/prefer-box-shadow': 'error',
 } as const;
 
-export const EXPRESS_RULES = { 'security/detect-no-csrf-before-method-override': 'error' } as const;
+const EXPRESS_RULES = { 'security/detect-no-csrf-before-method-override': 'error' } as const;
 
-export const REACT_NATIVE_RULES = {
+const REACT_NATIVE_RULES = {
     '@react-native/platform-colors': 'error',
     '@react-native/no-deep-imports': 'error',
     'react-native/no-unused-styles': 'error',
@@ -30,16 +30,16 @@ export const REACT_NATIVE_RULES = {
     'react-native/no-color-literals': 'error',
 } as const;
 
-export const SVELTE_RULES = {
+const SVELTE_RULES = {
     'svelte/no-target-blank': 'error',
     'svelte/button-has-type': 'error',
     'svelte/no-useless-mustaches': 'error',
     'svelte/prefer-const': 'error',
 } as const;
 
-export const TRANSLATIONS_RULES = { 'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }] } as const;
+const TRANSLATIONS_RULES = { 'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }] } as const;
 
-export const REACT_RULES = {
+const REACT_RULES = {
     'react/no-array-index-key': 'error',
     'react/self-closing-comp': 'error',
     'react/no-danger': 'error',
@@ -48,9 +48,9 @@ export const REACT_RULES = {
     'react/no-object-type-as-default-prop': 'error',
 } as const;
 
-export const JSX_CODE_FILES = ['**/*.{js,jsx,ts,tsx}'] as const;
+const JSX_CODE_FILES = ['**/*.{js,jsx,ts,tsx}'] as const;
 
-export const TYPESCRIPT_RULES = {
+const TYPESCRIPT_RULES = {
     '@typescript-eslint/no-misused-spread': ['error', { allow: ['string'] }],
     // The TypeScript rule owns deprecated API uses.
     'sonarjs/deprecation': 'off',
@@ -109,33 +109,33 @@ export const TYPESCRIPT_RULES = {
     'no-unused-vars': 'off',
 } as const;
 
-export const TYPESCRIPT_TEST_RULES_OFF = {
+const TYPESCRIPT_TEST_RULES_OFF = {
     '@typescript-eslint/no-magic-numbers': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
 } as const;
 
-export const NESTJS_ALL_LEVEL_RULES = {
+const NESTJS_ALL_LEVEL_RULES = {
     '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
 } as const;
 
-export const NESTJS_INJECTABLE_FILTER_PATHS = [
+const NESTJS_INJECTABLE_FILTER_PATHS = [
     '/dist/',
     '/node_modules/',
     String.raw`\.test\.`,
     String.raw`\.spec\.`,
 ] as const;
 
-export const NEXT_PAGES_FOLDERS = ['pages/', 'src/pages/'] as const;
+const NEXT_PAGES_FOLDERS = ['pages/', 'src/pages/'] as const;
 
-export const NEXT_SERVER_FILES = ['**/server/**', '**/*.server.*'] as const;
+const NEXT_SERVER_FILES = ['**/server/**', '**/*.server.*'] as const;
 
-export const NEXT_RULES = {
+const NEXT_RULES = {
     '@next/next/no-html-link-for-pages': 'error',
     '@next/next/no-async-client-component': 'error',
     'gspot/require-server-only': 'error',
 } as const;
 
-export const VUE_RULES = {
+const VUE_RULES = {
     'vue/component-api-style': ['error', ['script-setup']],
     'vue/no-useless-v-bind': 'error',
     'vue/prefer-true-attribute-shorthand': 'error',
@@ -145,18 +145,18 @@ export const VUE_RULES = {
     'vue/no-template-target-blank': 'error',
 } as const;
 
-export const ASTRO_FILES = ['**/*.astro'] as const;
-export const ASTRO_SCRIPT_FILES = ['**/*.astro/*.ts', '**/*.astro/*.js'] as const;
+const ASTRO_FILES = ['**/*.astro'] as const;
+const ASTRO_SCRIPT_FILES = ['**/*.astro/*.ts', '**/*.astro/*.js'] as const;
 
-export const SVELTE_FILES = ['**/*.svelte', '**/*.svelte.js', '**/*.svelte.ts'] as const;
+const SVELTE_FILES = ['**/*.svelte', '**/*.svelte.js', '**/*.svelte.ts'] as const;
 
-export const JSX_FILES = ['**/*.{jsx,tsx}'] as const;
+const JSX_FILES = ['**/*.{jsx,tsx}'] as const;
 
-export const TESTING_LIBRARY_DEFAULT_PRESET = 'dom';
+const TESTING_LIBRARY_DEFAULT_PRESET = 'dom';
 
-export const ZUSTAND_STORE_CREATORS = ['create', 'createStore'] as const;
+const ZUSTAND_STORE_CREATORS = ['create', 'createStore'] as const;
 
-export const ZOD_RULES = [
+const ZOD_RULES = [
     'no-any-schema',
     'no-coerce-boolean',
     'no-empty-custom-schema',
@@ -168,6 +168,73 @@ export const ZOD_RULES = [
     'require-brand-type-parameter',
 ] as const;
 
-export const DRIZZLE_RULES = ['drizzle/enforce-delete-with-where', 'drizzle/enforce-update-with-where'] as const;
+const DRIZZLE_RULES = ['drizzle/enforce-delete-with-where', 'drizzle/enforce-update-with-where'] as const;
 
-export const JEST_GLOBAL_PACKAGE = '@jest/globals';
+const JEST_GLOBAL_PACKAGE = '@jest/globals';
+
+/** Import statements, selectors, and lint rules for the fragments with no configuration-specific calculation. */
+const PLUGIN_LINT_RULE_FRAGMENTS: Readonly<
+    Record<
+        string,
+        {
+            imports: readonly string[];
+            plugins: string;
+            files: 'code' | readonly string[];
+            ignores?: 'testFiles';
+            rules: Readonly<Record<string, unknown>>;
+        }
+    >
+> = {
+    expo: {
+        imports: ["import expoPlugin from 'eslint-plugin-expo';"],
+        plugins: 'plugins: { expo: expoPlugin }',
+        files: 'code',
+        rules: EXPO_RULES,
+    },
+    express: { imports: [], plugins: '', files: 'code', rules: EXPRESS_RULES },
+    'react-native': {
+        imports: [
+            "import reactNativePlatform from '@react-native/eslint-plugin';",
+            "import reactNative from 'eslint-plugin-react-native';",
+        ],
+        plugins: "plugins: { '@react-native': reactNativePlatform, 'react-native': reactNative }",
+        files: 'code',
+        rules: REACT_NATIVE_RULES,
+    },
+    zod: {
+        imports: ["import zodPlugin from 'eslint-plugin-zod';"],
+        plugins: 'plugins: { zod: zodPlugin }',
+        files: 'code',
+        rules: Object.fromEntries(ZOD_RULES.map((rule) => [`zod/${rule}`, 'error'])),
+    },
+    translations: {
+        imports: ["import i18next from 'eslint-plugin-i18next';"],
+        plugins: 'plugins: { i18next }',
+        files: JSX_FILES,
+        ignores: 'testFiles',
+        rules: TRANSLATIONS_RULES,
+    },
+};
+
+export {
+    VUE_RULES,
+    NEXT_RULES,
+    ASTRO_RULES,
+    REACT_RULES,
+    ASTRO_FILES,
+    SVELTE_RULES,
+    SVELTE_FILES,
+    DRIZZLE_RULES,
+    JSX_CODE_FILES,
+    TYPESCRIPT_RULES,
+    NEXT_SERVER_FILES,
+    NEXT_PAGES_FOLDERS,
+    ASTRO_SCRIPT_FILES,
+    JEST_GLOBAL_PACKAGE,
+    NESTJS_ALL_LEVEL_RULES,
+    ZUSTAND_STORE_CREATORS,
+    TYPESCRIPT_TEST_RULES_OFF,
+    PLUGIN_LINT_RULE_FRAGMENTS,
+    NESTJS_INJECTABLE_FILTER_PATHS,
+    TESTING_LIBRARY_DEFAULT_PRESET,
+};

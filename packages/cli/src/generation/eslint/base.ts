@@ -1,8 +1,9 @@
+import { stripUndefined } from '#cli/system/values.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { buildScopeFiles } from '#cli/generation/eslint/files.ts';
-import { buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
 import { buildLevelRules } from '#cli/generation/eslint/lint-rules.ts';
+import { pickPresetFields, buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
 import { TEST_RULES, SCRIPT_RULES, BASE_SELECTORS, JAVASCRIPT_RULES } from '#cli/config/generation/eslint-rules.ts';
 
 import {
@@ -11,12 +12,13 @@ import {
     PACKAGE_JSON_PATTERN,
     ESLINT_PLUGIN_IMPORTS,
 } from '#cli/config/generation/eslint.ts';
-import type {
-    EslintModule,
-    EslintPlugins,
-    SelectorGroup,
-    EslintRuleLevels,
-    EslintFragmentInputs,
+import {
+    type EslintModule,
+    type EslintPlugins,
+    type SelectorGroup,
+    type EslintContext,
+    type EslintPresets,
+    type EslintRuleLevels,
 } from '#cli/types/generation/eslint.ts';
 
 /**
@@ -29,14 +31,14 @@ import type {
  *
  * @returns the blocks for source syntax and code rules.
  */
-export function buildBlocksBeforeFragments(
-    base: EslintFragmentInputs,
+function buildBlocksBeforeFragments(
+    base: EslintContext,
     view: Pick<ScopeView, 'limit'>,
     pluginLevels: EslintRuleLevels,
     plugins: EslintPlugins,
 ): Parameters<EslintModule['block']>[] {
     const { eslintFiles, isAll, json } = base;
-    const config = base.eslint();
+    const config = base.eslint;
     const rules = buildLevelRules(view, isAll ? BASE_SELECTORS : []);
     const pluginMap = Object.entries(plugins)
         .map(([name, [importName]]) => `${JSON.stringify(name)}: ${importName}`)
@@ -59,7 +61,7 @@ export function buildBlocksBeforeFragments(
         return [data, runtime];
     });
     return [
-        ...buildPresetBlocks(base.eslintPresets('javascript'), CODE_PRESETS, eslintFiles.code),
+        ...buildBasePresetBlocks(base.eslintPresets.get('javascript') as EslintPresets, CODE_PRESETS, eslintFiles.code),
         [
             { files: eslintFiles.code, rules: { ...rules.code, ...pluginRules, ...config.allLevelRules } },
             `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }${config.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
@@ -88,13 +90,13 @@ export function buildBlocksBeforeFragments(
  *
  * @returns the blocks for package and file conventions.
  */
-export function buildBlocksAfterFragments(
-    base: EslintFragmentInputs,
+function buildBlocksAfterFragments(
+    base: EslintContext,
     view: Pick<ScopeView, 'limit'>,
     fragmentSelectors: SelectorGroup[],
 ): Parameters<EslintModule['block']>[] {
     const { eslintFiles, isAll, json } = base;
-    const config = base.eslint();
+    const config = base.eslint;
     const selectors = isAll ? BASE_SELECTORS : [];
     const rules = buildLevelRules(view, selectors);
     const runtimes: Parameters<EslintModule['block']>[] = config.runtimes.map(({ runtime }, index) => {
@@ -133,7 +135,7 @@ export function buildBlocksAfterFragments(
         [{ files: eslintFiles.code, ignores: [...config.testFiles, ...config.scriptFiles], rules: rules.console }],
         [{ files: eslintFiles.scripts, rules: SCRIPT_RULES }],
         [{ files: eslintFiles.tests, rules: TEST_RULES }],
-        ...buildPresetBlocks(base.eslintPresets('javascript'), FILE_PRESETS, eslintFiles.code),
+        ...buildBasePresetBlocks(base.eslintPresets.get('javascript') as EslintPresets, FILE_PRESETS, eslintFiles.code),
         [
             {
                 files: [PACKAGE_JSON_PATTERN],
@@ -151,9 +153,9 @@ export function buildBlocksAfterFragments(
  *
  * @returns the ESLint plugin declarations required by this configuration.
  */
-export function selectPlugins(base: EslintFragmentInputs): EslintPlugins {
+function selectPlugins(base: EslintContext): EslintPlugins {
     const { isAll, repositorySettings } = base;
-    const config = base.eslint();
+    const config = base.eslint;
     return {
         ...ESLINT_PLUGIN_IMPORTS,
         ...(isAll ? { perfectionist: ['perfectionist', 'eslint-plugin-perfectionist'] } : {}),
@@ -163,3 +165,29 @@ export function selectPlugins(base: EslintFragmentInputs): EslintPlugins {
         ...(config.boundaryBlocks.length > 0 ? { boundaries: ['boundaries', 'eslint-plugin-boundaries'] } : {}),
     };
 }
+
+// Base presets use their first block as an object; framework presets preserve their complete block arrays.
+function buildBasePresetBlocks(
+    presets: EslintPresets,
+    sources: readonly (readonly [string, string])[],
+    codeFiles: string[],
+): Parameters<EslintModule['block']>[] {
+    return sources.flatMap(([name, importName]) => {
+        const selected = presets[name] as EslintPresets[string];
+        const files = name === 'packageJson' ? [PACKAGE_JSON_PATTERN] : codeFiles;
+        return buildPresetBlocks(
+            { ...selected, blocks: [stripUndefined(selected.blocks[0] as EslintPresets[string]['blocks'][number])] },
+            importName,
+            (block, _index, source) => {
+                const fields = pickPresetFields(block);
+                return [
+                    stripUndefined({ ...fields, files }),
+                    `...${source}`,
+                    { expression: `${source}.rules`, rules: fields.rules },
+                ];
+            },
+        );
+    });
+}
+
+export { selectPlugins, buildBlocksAfterFragments, buildBlocksBeforeFragments };

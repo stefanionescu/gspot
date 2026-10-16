@@ -92,20 +92,25 @@ const toolFileSchema = z
         'Companion tools require a consuming tool or check.',
     )
     // Copied files use the same relative path beneath tool-files and the generated configuration folder.
-    .transform((toolFile) =>
-        toolFile.fragment
-            ? { ...toolFile, fragment: true as const }
-            : {
-                  ...toolFile,
-                  fragment: false as const,
-                  source: posix.join(
-                      TOOL_FILES_FOLDER,
-                      toolFile.target.startsWith(TOOL_FILE_PREFIX)
-                          ? toolFile.target.slice(TOOL_FILE_PREFIX.length)
-                          : posix.basename(toolFile.target),
-                  ),
-              },
-    ) satisfies z.ZodType<ToolFileDeclaration, ToolFileInput>;
+    .transform((toolFile) => {
+        if (toolFile.fragment) return { ...toolFile, fragment: true as const };
+        if (toolFile.pointer?.directories !== undefined)
+            return {
+                ...toolFile,
+                fragment: false as const,
+                pointer: { ...toolFile.pointer, directories: toolFile.pointer.directories },
+            };
+        return {
+            ...toolFile,
+            fragment: false as const,
+            source: posix.join(
+                TOOL_FILES_FOLDER,
+                toolFile.target.startsWith(TOOL_FILE_PREFIX)
+                    ? toolFile.target.slice(TOOL_FILE_PREFIX.length)
+                    : posix.basename(toolFile.target),
+            ),
+        };
+    }) satisfies z.ZodType<ToolFileDeclaration, ToolFileInput>;
 
 const sentence = z.string().min(1);
 

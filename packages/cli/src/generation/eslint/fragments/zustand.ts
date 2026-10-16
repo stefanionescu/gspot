@@ -1,23 +1,18 @@
-import type { EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
 import { ZUSTAND_STORE_CREATORS } from '#cli/config/generation/eslint-fragments.ts';
+import { type EslintContext, type EslintFragment } from '#cli/types/generation/eslint.ts';
 
 /**
- * Write zustand ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.eslintFiles the code and test file selectors.
- * @param root0.roles the architecture role selectors.
- * @param root0.eslint the resolved ESLint configuration reader.
- *
- * @returns the ESLint fragment source.
+ * Apply Zustand store rules to the selected files.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildZustandFragment({
-    eslintModule,
-    eslintFiles,
-    roles,
-    eslint,
-}: Pick<EslintFragmentInputs, 'eslintModule' | 'eslintFiles' | 'roles' | 'eslint'>): string {
+export function buildZustandFragment(
+    context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'roles' | 'eslint'>,
+): EslintFragment {
+    const { eslintModule, eslintFiles, roles, eslint } = context;
+
+    const imports: string[] = [];
+
     const output: string[] = [
         '\n',
         eslintModule.block({
@@ -28,7 +23,7 @@ export function buildZustandFragment({
                     'error',
                     {
                         paths: [
-                            ...eslint().restrictedImports,
+                            ...eslint.restrictedImports,
                             {
                                 name: 'zustand',
                                 importNames: ZUSTAND_STORE_CREATORS,
@@ -42,5 +37,5 @@ export function buildZustandFragment({
         }),
         ',\n\n',
     ];
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }

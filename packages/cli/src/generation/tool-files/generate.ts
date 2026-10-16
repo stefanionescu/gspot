@@ -96,7 +96,7 @@ function removeDuplicateToolFiles(session: Session, generated: GeneratedFile[]):
                     (target) =>
                         target.owner.selection.scope.path === scope.path &&
                         target.toolFile.per_scope &&
-                        !target.toolFile.fragment &&
+                        target.toolFile.source !== undefined &&
                         files.has(target.target),
                 ),
                 files,
@@ -149,7 +149,7 @@ function buildToolFiles(context: GenerationInputs, consumers: GenerationConsumer
     const seen = new Set<string>();
     for (const { toolFile, target, owner, pointers } of targets) {
         if (!isTargetEnabled(toolFile, context, consumers)) continue;
-        if (toolFile.fragment) {
+        if (toolFile.fragment || toolFile.source === undefined) {
             files.push(...pointers);
             continue;
         }
@@ -157,7 +157,7 @@ function buildToolFiles(context: GenerationInputs, consumers: GenerationConsumer
         seen.add(target);
         const fragmentPaths = new Set(
             targets
-                .filter((entry) => entry.toolFile.fragment && entry.toolFile.target === toolFile.target)
+                .filter((entry) => entry.toolFile.source === undefined && entry.toolFile.target === toolFile.target)
                 .flatMap((entry) => entry.pointers.map((pointer) => pointer.path)),
         );
         files.push(
@@ -186,7 +186,7 @@ function listToolFileTargets(context: GenerationInputs): ToolFileTarget[] {
                 target,
                 owner,
                 pointers:
-                    toolFile.fragment && toolFile.pointer?.directories !== undefined
+                    !toolFile.fragment && toolFile.source === undefined
                         ? buildPointerFiles(owner, toolFile, target)
                         : [],
             };

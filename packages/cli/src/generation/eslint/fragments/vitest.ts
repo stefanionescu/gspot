@@ -1,25 +1,20 @@
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
-import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Write vitest ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintPresets the declared ESLint preset reader.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.eslintFiles the code and test file selectors.
- * @param root0.testRuleNames the retained test lint rule names.
- *
- * @returns the ESLint fragment source.
+ * Apply Vitest presets to the selected test files.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildVitestFragment({
-    eslintPresets,
-    eslintModule,
-    eslintFiles,
-    testRuleNames,
-}: Pick<EslintFragmentInputs, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'testRuleNames'>): string {
-    const output: string[] = ["import vitest from '@vitest/eslint-plugin';\n"];
-    const preset = (eslintPresets('vitest') as FragmentPresets).recommended;
+export function buildVitestFragment(
+    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'testRuleNames'>,
+): EslintFragment {
+    const { eslintPresets, eslintModule, eslintFiles, testRuleNames } = context;
+
+    const imports: string[] = ["import vitest from '@vitest/eslint-plugin';"];
+
+    const output: string[] = ['\n'];
+    const preset = (eslintPresets.get('vitest') as FragmentPresets).recommended;
     output.push(
         eslintModule.block(
             {
@@ -35,5 +30,5 @@ export function buildVitestFragment({
         ),
         ',\n',
     );
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }

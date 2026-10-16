@@ -1,61 +1,55 @@
-import { pickPresetFields } from '#cli/generation/eslint/presets.ts';
+import { serializeBlocks } from '#cli/generation/eslint/print.ts';
+import { FRAGMENT_SPACING } from '#cli/config/generation/eslint.ts';
 import { VUE_RULES } from '#cli/config/generation/eslint-fragments.ts';
-import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
-import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+import { pickPresetFields, buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
+import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Write vue ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintPresets the declared ESLint preset reader.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.configurations the selected configuration names.
- *
- * @returns the ESLint fragment source.
+ * Apply Vue presets, accessibility rules, and component parsing.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildVueFragment({
-    eslintPresets,
-    eslintModule,
-    configurations,
-}: Pick<EslintFragmentInputs, 'eslintPresets' | 'eslintModule' | 'configurations'>): string {
-    const output: string[] = [
-        "import vuePlugin from 'eslint-plugin-vue';\nimport vueParser from 'vue-eslint-parser';\nimport vueAccessibility from 'eslint-plugin-vuejs-accessibility';\n",
+function buildVueFragment(
+    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'configurations'>,
+): EslintFragment {
+    const { eslintPresets, eslintModule, configurations } = context;
+
+    const imports: string[] = [
+        "import vuePlugin from 'eslint-plugin-vue';",
+        "import vueParser from 'vue-eslint-parser';",
+        "import vueAccessibility from 'eslint-plugin-vuejs-accessibility';",
     ];
-    const presets = eslintPresets('vue') as FragmentPresets;
+
+    const output: string[] = [FRAGMENT_SPACING];
+    const presets = eslintPresets.get('vue') as FragmentPresets;
     const typed = configurations.includes('typescript');
-    for (const [index, block] of presets.recommended.blocks.entries()) {
-        output.push(
-            '\n',
-            eslintModule.block(
+    output.push(
+        serializeBlocks(
+            eslintModule,
+            buildPresetBlocks(presets.recommended, 'vuePlugin', (block, index, source) => [
                 {
                     ...pickPresetFields(block),
                     ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
                 },
-                `...${serializePresetAccess('vuePlugin', presets.recommended.source)}[${String(index)}]`,
+                `...${source}[${String(index)}]`,
                 {
-                    expression: `${serializePresetAccess('vuePlugin', presets.recommended.source)}[${String(index)}].rules`,
+                    expression: `${source}[${String(index)}].rules`,
                     rules: block.rules,
                 },
-            ),
-            ',\n',
-        );
-    }
-    for (const [index, block] of presets.accessibility.blocks.entries()) {
-        output.push(
-            '\n',
-            eslintModule.block(
+            ]),
+        ),
+        serializeBlocks(
+            eslintModule,
+            buildPresetBlocks(presets.accessibility, 'vueAccessibility', (block, index, source) => [
                 { ...pickPresetFields(block), files: ['**/*.vue'] },
-                `...${serializePresetAccess('vueAccessibility', presets.accessibility.source)}[${String(index)}]`,
+                `...${source}[${String(index)}]`,
                 {
-                    expression: `${serializePresetAccess('vueAccessibility', presets.accessibility.source)}[${String(index)}].rules`,
+                    expression: `${source}[${String(index)}].rules`,
                     rules: block.rules,
                 },
-            ),
-            ',\n',
-        );
-    }
-    output.push(
+            ]),
+        ),
         '\n',
         eslintModule.block(
             {
@@ -71,5 +65,7 @@ export function buildVueFragment({
         ),
         ',\n',
     );
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }
+
+export { buildVueFragment };

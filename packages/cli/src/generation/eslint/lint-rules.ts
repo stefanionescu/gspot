@@ -20,7 +20,6 @@ import {
     type EslintRuleOptions,
     type EslintSettingsBlock,
     type ScopeEslintSettings,
-    type EslintFragmentInputs,
 } from '#cli/types/generation/eslint.ts';
 import {
     ESLINT_CHECK,
@@ -157,10 +156,10 @@ export function buildLevelRules(
  * @returns the emitted rule blocks with resolved file selectors.
  */
 export function buildSelectedBlocks(
-    base: Pick<EslintFragmentInputs, 'settingsBlocks' | 'eslintFiles'>,
+    base: Pick<EslintContext, 'settingsBlocks' | 'eslintFiles'>,
 ): EslintSettingsBlock[] {
     const result: EslintSettingsBlock[] = [];
-    for (const { scope, includes, excludes, rules } of base.settingsBlocks()) {
+    for (const { scope, includes, excludes, rules } of base.settingsBlocks) {
         const entries = Object.entries(rules);
         for (const block of [
             {
@@ -205,9 +204,9 @@ export function findParentSelection(scopes: ScopeSelection[], path: string): Sco
  * @returns environment and structural rules at all, otherwise no blocks.
  */
 export function buildEnvironmentRuleBlocks(
-    input: Pick<EslintContext, 'scopes' | 'settings' | 'nodeFiles'>,
+    input: Pick<EslintContext, 'scopes' | 'repositorySettings' | 'nodeFiles'>,
 ): EslintRuleBlock[] {
-    const { scopes, settings, nodeFiles } = input;
+    const { scopes, repositorySettings: settings, nodeFiles } = input;
     if (settings.level !== 'all') return [];
     const environmentScopes = scopes.filter((selection) => {
         const parent = findParentSelection(scopes, selection.scope.path);
@@ -216,7 +215,7 @@ export function buildEnvironmentRuleBlocks(
             !isDeepStrictEqual(selection.view.roles.environment_readers, parent.view.roles.environment_readers)
         );
     });
-    const blocks: EslintRuleBlock[] = environmentScopes.flatMap((selection) => {
+    return environmentScopes.flatMap((selection) => {
         const owners = selection.view.roles.environment_readers;
         return owners.length === 0
             ? []
@@ -236,7 +235,6 @@ export function buildEnvironmentRuleBlocks(
                   },
               ];
     });
-    return blocks;
 }
 
 /**
@@ -247,9 +245,9 @@ export function buildEnvironmentRuleBlocks(
  * @returns the lint rules that detect unnecessary forwarding functions.
  */
 export function buildTrivialRuleBlocks(
-    input: Pick<EslintContext, 'scopes' | 'settings' | 'nodeFiles'>,
+    input: Pick<EslintContext, 'scopes' | 'repositorySettings' | 'nodeFiles'>,
 ): EslintRuleBlock[] {
-    const { scopes, settings, nodeFiles } = input;
+    const { scopes, repositorySettings: settings, nodeFiles } = input;
     if (settings.level !== 'all') return [];
     const blocks: EslintRuleBlock[] = [];
     const allowIndex = settings.structure.reexports === 'index-only';

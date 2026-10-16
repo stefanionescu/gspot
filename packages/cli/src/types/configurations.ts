@@ -86,7 +86,20 @@ export type ParsedManifest = {
             | undefined;
         per_scope: boolean;
         when?: { configuration: string } | undefined;
-    } & ({ fragment: true } | { fragment: false; source: string }))[];
+    } & (
+        | { fragment: true }
+        | { fragment: false; source: string }
+        | {
+              fragment: false;
+              source?: undefined;
+              pointer: {
+                  path: string;
+                  directories: string[];
+                  body?: string | undefined;
+                  when?: { configuration: string } | undefined;
+              };
+          }
+    ))[];
     checks: ParsedCheck[];
     naming?: { override: (NamingOverride & { reason: string })[] } | undefined;
     rules: Record<string, ParsedManifest['detect']>;

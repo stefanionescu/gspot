@@ -13,9 +13,7 @@ import type { EslintModule, EslintModuleInput, EslintSettingsBlock } from '#cli/
  */
 export function createBlockWriter(input: EslintModuleInput): EslintModule {
     const { allRules, isAll, codeFiles, ruleOptions, scope } = input;
-    const blocks: EslintSettingsBlock[] = [];
     return {
-        blocks,
         block: (payload, runtime, preset) => {
             const rules: Record<string, unknown> = Object.fromEntries(
                 (payload.rules === undefined ? [] : Object.entries(payload.rules)).map(([name, value]) => [
@@ -54,11 +52,14 @@ export function createBlockWriter(input: EslintModuleInput): EslintModule {
                 ];
             });
             const emitted = [block, ...configured];
-            blocks.push(...emitted);
             return emitted
                 .map((entry, index) => {
-                    const source = serializeBlock(entry, index === 0 ? runtime : '', index === 0 ? preset : undefined);
-                    return scope === undefined ? source : `stripRuntimeGlobals(${source})`;
+                    const source = serializeBlock(
+                        entry,
+                        index === 0 ? (runtime ?? '') : '',
+                        index === 0 ? preset : undefined,
+                    );
+                    return scope === undefined ? source : `stripRuntimeGlobals(${source}, globals)`;
                 })
                 .join(',\n');
         },

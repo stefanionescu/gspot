@@ -6,5 +6,3 @@ export type Fragment = { manifest: Manifest; toolFile: ToolFileDeclaration };
 
 /** A fragment selector with its resolved source paths. */
 export type SelectorPaths = Pick<FragmentSelector, 'selector' | 'message'> & { files?: string[]; except?: string[] };
-
-export type TypescriptImports = { imports: string[]; body: string };

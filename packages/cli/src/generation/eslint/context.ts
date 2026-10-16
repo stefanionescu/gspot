@@ -1,17 +1,22 @@
+import { z } from 'zod';
 import { basename } from 'node:path/posix';
-import type { Session } from '#cli/types/planning.ts';
+import type { MemoKey } from '#cli/types/system/files.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { readAsset, listAssets } from '#cli/system/assets.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { generatedIgnores } from '#cli/generation/ignore-files.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
 import { buildBoundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
+import { LEVELS, CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
+import { getCachedValue, getCachedMapValue } from '#cli/system/files/cache.ts';
+import { listFragmentConfigurations } from '#cli/generation/eslint/fragments/build.ts';
 import { buildFilePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 import { listScriptPaths, buildRuntimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 
@@ -22,10 +27,10 @@ import {
 } from '#cli/generation/eslint/imports.ts';
 import type {
     EslintParts,
+    EslintFacts,
     EslintPresets,
     EslintContext,
     EslintRuleLevels,
-    EslintFragmentInputs,
 } from '#cli/types/generation/eslint.ts';
 import {
     buildRuleOptions,
@@ -41,13 +46,15 @@ import {
     BARREL_FILES_RULE,
     EXPORTS_LAST_RULE,
     IMPORT_LAYOUT_RULES,
+    ESLINT_PRESETS_FILE,
     ESLINT_SETTINGS_TABLE,
     IMPORT_BOUNDARIES_RULE,
+    ESLINT_RULE_LEVELS_FILE,
 } from '#cli/config/generation/eslint.ts';
 
 // ESLint options and the separate reason you give for them.
-function buildExtraBlock(context: EslintContext): EslintParts['extra'] {
-    const { settings, selection } = context;
+function buildExtraBlock(context: Pick<EslintContext, 'repositorySettings' | 'selection'>): EslintParts['extra'] {
+    const { repositorySettings: settings, selection } = context;
     const entries = selection.view.extra('eslint');
     if (entries === undefined || Object.keys(entries).length === 0) return undefined;
     return {
@@ -55,22 +62,47 @@ function buildExtraBlock(context: EslintContext): EslintParts['extra'] {
         entries,
     };
 }
+function buildEslintFacts({ session, selection }: ToolFileContext): EslintFacts {
+    const recognized = buildPathMatcher([buildSourcePattern(...CODE_LANGUAGES)]);
+    const nodeFiles = session.repository.files
+        .filter((file) => !recognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
+        .map((file) => file.path);
+    return {
+        root: session.root,
+        reads: session.reads,
+        scopes: session.scopes,
+        repositorySettings: session.settingsFile.settings,
+        selection,
+        nodeFiles,
+        generatedPatterns: generatedIgnores(session),
+    };
+}
 
-/**
- * The parts of the ESLint configuration the settings decides: limits, rule options, file sets, and override blocks.
- *
- * @param context the repository settings, selected scopes, and detected Node file paths.
- * @param projects the parsed dependency files.
- *
- * @returns the values, ready to serialize into the configuration.
- */
-function calculateConfiguration(context: EslintContext, projects: string[]): EslintParts {
-    const { root, reads, scopes, selection, nodeFiles, settings } = context;
+function readEslintPresets(session: ToolFileContext['session']): Map<string, EslintPresets> {
+    const { reads } = session;
+    const assets = getCachedValue(reads, presetAssets);
+    return new Map(
+        [...session.manifests.values()]
+            .filter(
+                (manifest) =>
+                    Object.keys(manifest.eslint.presets).length > 0 ||
+                    assets.has(`${manifest.dir}/${ESLINT_PRESETS_FILE}`),
+            )
+            .map((manifest) => [
+                manifest.configuration.name,
+                getCachedMapValue(reads, presetInputs, manifest, () => readPresets(manifest)),
+            ]),
+    );
+}
+
+function buildProjectOptions(session: ToolFileContext['session'], context: EslintFacts): EslintParts {
+    const { root, reads, scopes, selection, nodeFiles, repositorySettings } = context;
     const { view } = selection;
+    const repository = session.repository;
     const tool = view.options(ESLINT_SETTINGS_TABLE);
     const aliases = readScopeAliases(root, '', reads);
     return {
-        projects,
+        projects: repository.files.filter((file) => basename(file.path) === TSCONFIG_FILE).map((file) => file.path),
         nodeFiles,
         testFiles: view.test_files,
         scriptFiles: listScriptPaths(context),
@@ -79,13 +111,13 @@ function calculateConfiguration(context: EslintContext, projects: string[]): Esl
             [IMPORT_BOUNDARIES_RULE]: buildImportBoundariesRule(context.scopes, aliases),
             [EXPORTS_LAST_RULE]: 'error',
             ...IMPORT_LAYOUT_RULES,
-            ...(settings.structure.reexports === 'none'
+            ...(repositorySettings.structure.reexports === 'none'
                 ? {}
                 : {
                       [BARREL_FILES_RULE]: [
                           'error',
                           {
-                              amountOfExportsToConsiderModuleAsBarrel: context.selection.view.limit(
+                              amountOfExportsToConsiderModuleAsBarrel: selection.view.limit(
                                   'index_exports',
                                   'typescript',
                               ),
@@ -103,107 +135,73 @@ function calculateConfiguration(context: EslintContext, projects: string[]): Esl
 }
 
 /**
- * Read the rule lists once and prepare file selectors for this generation run.
- *
- * @param session the repository and parsed settings of this run.
- * @param selection the current scope.
- * @param pluginLevels the ESLint plugin rule levels.
- *
- * @returns the data and callbacks for emitting the ESLint assets.
+ * Compute the repository facts, selected rule blocks, and printers used by this scope's ESLint file.
+ * @param input the repository, selected scope, and ESLint tool-file declaration.
+ * @returns the scope facts, selected presets, rule blocks, and printers.
  */
-function moduleInputs(session: Session, selection: ScopeSelection, pluginLevels: EslintRuleLevels) {
-    const { root, reads, scopes, settingsFile, repository } = session;
-    const { settings } = settingsFile;
-    const options = buildRuleOptions(settings);
+function buildEslintContext(input: ToolFileContext): EslintContext {
+    const { session, selection, toolFile } = input;
+    const context = buildEslintFacts(input);
+    const { reads, scopes, repositorySettings, nodeFiles } = context;
+    const repository = session.repository;
+    const pluginLevels = getCachedValue(reads, pluginRuleLevels);
+    const view = selection.view;
+    const options = buildRuleOptions(repositorySettings);
     const allRules = new Set([
         ...[...session.manifests.values()].flatMap((manifest) => [...manifest.eslint.all_level_rules]),
         ...Object.entries(pluginLevels).flatMap(([name, level]) => (level === 'all' ? [`gspot/${name}`] : [])),
     ]);
-    const presets = new Map<string, EslintPresets>();
-    const recognized = buildPathMatcher([buildSourcePattern(...CODE_LANGUAGES)]);
-    const nodeFiles = repository.files
-        .filter((file) => !recognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
-        .map((file) => file.path);
     const eslintFiles = buildFilePatterns({
-        components: [],
+        components: listFragmentConfigurations(scopes, selection, toolFile),
         nodeFiles,
-        tests: selection.view.test_files,
+        tests: view.test_files,
         scripts: listScriptPaths({ selection }),
     });
-    const context = {
-        root,
-        reads,
-        settings,
-        scopes,
-        selection,
-        nodeFiles,
-        generatedPatterns: generatedIgnores(session),
-    };
-    let configuration: EslintParts | undefined;
     return {
+        ...context,
+        pluginLevels,
         ruleOptions: options,
-        eslint: () =>
-            (configuration ??= calculateConfiguration(
-                context,
-                repository.files.filter((file) => basename(file.path) === TSCONFIG_FILE).map((file) => file.path),
-            )),
-        settingsBlocks: () => [
+        eslint: buildProjectOptions(session, context),
+        settingsBlocks: [
             ...buildEnvironmentRuleBlocks(context),
             ...buildTrivialRuleBlocks(context),
             ...buildRulesOffBlocks(scopes),
-            ...buildIgnoreBlocks(settings),
+            ...buildIgnoreBlocks(repositorySettings),
         ],
         eslintAllRules: allRules,
         eslintModule: createBlockWriter({
             allRules,
-            isAll: settings.level === 'all',
+            isAll: repositorySettings.level === 'all',
             codeFiles: eslintFiles.code,
             ruleOptions: options,
         }),
         eslintFiles,
-        eslintFragmentBlocks: [],
-        eslintPresets: (name: string) => {
-            let preset = presets.get(name);
-            if (preset !== undefined) return preset;
-            preset = readPresets(session.manifests.get(name) as Manifest);
-            presets.set(name, preset);
-            return preset;
-        },
-    };
-}
-
-/**
- * Prepare repository facts and callbacks used by the typed ESLint fragments.
- *
- * @param session the repository session.
- * @param selection the selected scope and its settings.
- * @param pluginLevels the ESLint plugin rule levels.
- *
- * @returns the typed values used by ESLint fragment builders.
- */
-export function buildEslintContext(
-    session: Session,
-    selection: ScopeSelection,
-    pluginLevels: EslintRuleLevels,
-): EslintFragmentInputs {
-    const { settings: repositorySettings } = session.settingsFile;
-    const { settings } = selection.view;
-    const isAll = repositorySettings.level === 'all';
-    return {
-        ...moduleInputs(session, selection, pluginLevels),
-        configurations: selection.view.configurations,
-        settings,
-        roles: selection.view.roles,
-        testFiles: selection.view.test_files,
+        eslintPresets: readEslintPresets(session),
+        configurations: view.configurations,
+        settings: view.settings,
+        roles: view.roles,
+        testFiles: view.test_files,
         scope: selection.scope.path,
         scopeDependencies: Object.keys(getProjectDependencies(session.packageManifests, selection.scope.path)),
         testRuleNames: TEST_RULE_NAMES,
-        isAll,
-        repositorySettings,
+        isAll: repositorySettings.level === 'all',
         files: (extension) =>
-            session.repository.files.flatMap((file) =>
+            repository.files.flatMap((file) =>
                 file.kind === 'source' && file.path.endsWith(extension) ? [file.path] : [],
             ),
-        json: (value, indent = JSON_INDENT) => JSON.stringify(value, null, indent),
+        json: (value) => JSON.stringify(value, null, JSON_INDENT),
     };
 }
+
+const pluginRuleLevelsSchema = z.record(
+    z.string(),
+    z.enum(LEVELS).or(z.literal('none')),
+) satisfies z.ZodType<EslintRuleLevels>;
+const pluginRuleLevels: MemoKey<EslintRuleLevels> = {
+    create: () => pluginRuleLevelsSchema.parse(JSON.parse(readAsset(ESLINT_RULE_LEVELS_FILE))),
+};
+const presetInputs: MemoKey<Map<Manifest, EslintPresets>> = { create: () => new Map() };
+
+const presetAssets: MemoKey<Set<string>> = { create: () => new Set(listAssets(CONFIGURATIONS_FOLDER)) };
+
+export { buildEslintContext };

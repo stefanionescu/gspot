@@ -1,27 +1,28 @@
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
 import { TESTING_LIBRARY_DEFAULT_PRESET } from '#cli/config/generation/eslint-fragments.ts';
-import type { EslintPresets, FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+
+import {
+    type EslintPresets,
+    type EslintContext,
+    type EslintFragment,
+    type FragmentPresets,
+} from '#cli/types/generation/eslint.ts';
 
 /**
- * Write testingLibrary ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintPresets the declared ESLint preset reader.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.eslintFiles the code and test file selectors.
- * @param root0.scopeDependencies the dependency names in this scope.
- *
- * @returns the ESLint fragment source.
+ * Apply the test-library presets of the selected frameworks.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildTestingLibraryFragment({
-    eslintPresets,
-    eslintModule,
-    eslintFiles,
-    scopeDependencies,
-}: Pick<EslintFragmentInputs, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'scopeDependencies'>): string {
-    const output: string[] = ["import testingLibrary from 'eslint-plugin-testing-library';\n"];
-    const presets = eslintPresets('testing-library') as FragmentPresets;
+export function buildTestingLibraryFragment(
+    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'scopeDependencies'>,
+): EslintFragment {
+    const { eslintPresets, eslintModule, eslintFiles, scopeDependencies } = context;
+
+    const imports: string[] = ["import testingLibrary from 'eslint-plugin-testing-library';"];
+
+    const output: string[] = ['\n'];
+    const presets = eslintPresets.get('testing-library') as FragmentPresets;
     const dependencies = scopeDependencies.filter((name) => name.startsWith('@testing-library/'));
     if (dependencies.length > 0) {
         const presetNames = dependencies
@@ -48,5 +49,5 @@ export function buildTestingLibraryFragment({
         }
     }
     output.push('\n');
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }

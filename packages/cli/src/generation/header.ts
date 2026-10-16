@@ -1,5 +1,4 @@
-// Formats generated-file headers and JSON documents.
-// Formats generated-file headers and JSON documents.
+// Formats the ownership notice for generated files.
 
 import { extractExtension } from '#cli/system/paths.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';

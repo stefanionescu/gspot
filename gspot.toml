@@ -397,7 +397,7 @@ import_extension = "ts"
 
 [tools.knip]
 ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build imports these packages through CSS or copies their grammar files by path." }
-entry = ["tests/setup/prepare-run.ts", "scripts/build.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-program.ts", "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs"]
+entry = ["tests/setup/prepare-run.ts", "scripts/build.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-program.ts", "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs", "packages/cli/configurations/language/javascript/eslint-runtime.mjs"]
 
 [tools.typos]
 extra = { value = { type = { license_names = { extend-glob = ["gspot.toml"], extend-words = { axe = "axe" } }, zod_types = { extend-glob = ["objects.ts"], extend-words = { optin = "optin" } } } }, reason = "Typos splits the published axe-core license name; Zod names its optional input marker optin." }
@@ -462,6 +462,18 @@ reason = "The declaration build uses the root workspace TypeScript dependency, s
 check = "prose/vale"
 paths = ["packages/cli/configurations/general/prose/tool-files/vale/styles/LICENSES.md"]
 reason = "The upstream license notices must keep their exact text."
+
+[[ignore]]
+check = "prose/vale"
+rule = "Google.Parens"
+paths = ["packages/cli/configurations/language/javascript/eslint-runtime.mjs"]
+reason = "Nested JSDoc type syntax is machine metadata. The corrected token pattern handles it after the final pin upgrade."
+
+[[ignore]]
+check = "prose/vale"
+rule = "gspot.sentence-length"
+paths = ["packages/cli/configurations/language/javascript/eslint-runtime.mjs"]
+reason = "Nested JSDoc type syntax is machine metadata. The corrected token pattern handles it after the final pin upgrade."
 
 [[ignore]]
 check = "prose/vale"

@@ -1,22 +1,19 @@
 import { DRIZZLE_RULES } from '#cli/config/generation/eslint-fragments.ts';
-import type { EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+import { type EslintContext, type EslintFragment } from '#cli/types/generation/eslint.ts';
 
 /**
- * Write drizzle ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.eslintFiles the code and test file selectors.
- * @param root0.settings the validated settings.
- *
- * @returns the ESLint fragment source.
+ * Require safe changes in Drizzle queries.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildDrizzleFragment({
-    eslintModule,
-    eslintFiles,
-    settings,
-}: Pick<EslintFragmentInputs, 'eslintModule' | 'eslintFiles' | 'settings'>): string {
-    const output: string[] = ["import drizzlePlugin from 'eslint-plugin-drizzle';\n"];
+export function buildDrizzleFragment(
+    context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'settings'>,
+): EslintFragment {
+    const { eslintModule, eslintFiles, settings } = context;
+
+    const imports: string[] = ["import drizzlePlugin from 'eslint-plugin-drizzle';"];
+
+    const output: string[] = ['\n'];
     const rule = ['error', { drizzleObjectName: settings['drizzle.client_names'] }];
     output.push(
         '\n',
@@ -29,5 +26,5 @@ export function buildDrizzleFragment({
         ),
         ',\n',
     );
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }

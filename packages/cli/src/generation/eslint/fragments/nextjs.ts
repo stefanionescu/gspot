@@ -1,5 +1,5 @@
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
-import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 import {
     NEXT_RULES,
@@ -9,30 +9,22 @@ import {
 } from '#cli/config/generation/eslint-fragments.ts';
 
 /**
- * Write nextjs ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintPresets the declared ESLint preset reader.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.eslintFiles the code and test file selectors.
- * @param root0.scope the selected project scope.
- * @param root0.files the selected source files.
- * @param root0.json the JSON writer for emitted options.
- *
- * @returns the ESLint fragment source.
+ * Apply Next.js presets and the selected pages and JSX settings.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildNextjsFragment({
-    eslintPresets,
-    eslintModule,
-    eslintFiles,
-    scope,
-    files,
-    json,
-}: Pick<EslintFragmentInputs, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'scope' | 'files' | 'json'>): string {
-    const output: string[] = [
-        "import nextPlugin from '@next/eslint-plugin-next';\nimport reactRefresh from 'eslint-plugin-react-refresh';\n",
+export function buildNextjsFragment(
+    context: Pick<EslintContext, 'eslintPresets' | 'eslintModule' | 'eslintFiles' | 'scope' | 'files' | 'json'>,
+): EslintFragment {
+    const { eslintPresets, eslintModule, eslintFiles, scope, files, json } = context;
+
+    const imports: string[] = [
+        "import nextPlugin from '@next/eslint-plugin-next';",
+        "import reactRefresh from 'eslint-plugin-react-refresh';",
     ];
-    const presets = eslintPresets('nextjs') as FragmentPresets;
+
+    const output: string[] = ['\n\n'];
+    const presets = eslintPresets.get('nextjs') as FragmentPresets;
     const prefix = scope === '' ? '' : `${scope}/`;
     const hasPages = files('').some((path) => NEXT_PAGES_FOLDERS.some((folder) => path.startsWith(prefix + folder)));
     output.push(
@@ -62,5 +54,5 @@ export function buildNextjsFragment({
         }),
         ',\n',
     );
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }

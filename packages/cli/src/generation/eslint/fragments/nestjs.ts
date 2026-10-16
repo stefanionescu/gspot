@@ -1,32 +1,22 @@
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
-import type { FragmentPresets, EslintFragmentInputs } from '#cli/types/generation/eslint.ts';
+import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/config/generation/eslint-fragments.ts';
 
 /**
- * Write nestjs ESLint rules for the selected scope.
- *
- * @param root0 the values for this generated file.
- * @param root0.eslintModule the ESLint block writer.
- * @param root0.eslintFiles the code and test file selectors.
- * @param root0.eslintPresets the declared ESLint preset reader.
- * @param root0.scope the selected project scope.
- * @param root0.scopeDependencies the dependency names in this scope.
- *
- * @returns the ESLint fragment source.
+ * Apply NestJS rules and the selected TypeScript parsing mode.
+ * @param context the selected presets, rule printer, and scope settings.
+ * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildNestjsFragment({
-    eslintModule,
-    eslintFiles,
-    eslintPresets,
-    scope,
-    scopeDependencies,
-}: Pick<
-    EslintFragmentInputs,
-    'eslintModule' | 'eslintFiles' | 'eslintPresets' | 'scope' | 'scopeDependencies'
->): string {
-    const output: string[] = ["import nestjsTyped from '@darraghor/eslint-plugin-nestjs-typed';\n"];
-    const presets = eslintPresets('nestjs') as FragmentPresets;
+export function buildNestjsFragment(
+    context: Pick<EslintContext, 'eslintModule' | 'eslintFiles' | 'eslintPresets' | 'scope' | 'scopeDependencies'>,
+): EslintFragment {
+    const { eslintModule, eslintFiles, eslintPresets, scope, scopeDependencies } = context;
+
+    const imports: string[] = ["import nestjsTyped from '@darraghor/eslint-plugin-nestjs-typed';"];
+
+    const output: string[] = ['\n'];
+    const presets = eslintPresets.get('nestjs') as FragmentPresets;
     output.push(
         '\n',
         eslintModule.block({
@@ -72,5 +62,5 @@ export function buildNestjsFragment({
         ),
         ',\n',
     );
-    return output.join('');
+    return { imports: imports, blocks: output.join('') };
 }
