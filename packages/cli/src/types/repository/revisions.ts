@@ -1,6 +1,7 @@
 export type Revision = { kind: 'index' } | { kind: 'commit'; hash: string };
 
 export type PushRevision = {
+    base: string;
     hash: string;
     tree: string;
     refs: string[];
@@ -19,7 +20,7 @@ export type PushLine = { localRef: string; localHash: string; remoteRef: string;
 /** Git's pre-push protocol input and the remote name supplied to the hook. */
 export type PushInput = { stdin: string; remote?: string };
 
-export type Comparison = { changed: string[] | undefined; range: string[] };
+export type Comparison = { base: string; changed: string[] | undefined; range: string[] };
 
 export type PushSearch = {
     root: string;

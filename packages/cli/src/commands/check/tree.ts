@@ -22,6 +22,49 @@ import type { RunReport, FixReport, RunOptions } from '#cli/types/execution/chec
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 
+function buildRunOptions(
+    options: CheckOptions,
+    filters: RunFilters,
+    signal: AbortSignal,
+    revision: RevisionSource | undefined,
+): RunOptions {
+    const { changed, staging, stage, paths } = filters;
+    const changedPaths = changed?.paths;
+    const changedCommits = changed?.commits;
+    const comparison = buildComparison(revision, changed);
+    return {
+        checks: BUILT_IN_CHECKS,
+        ...compact({
+            stage,
+            fix: options.fix,
+            isDryRun: options.isDryRun,
+            onResult: options.onResult,
+            staged: staging.staged,
+            changed: changedPaths,
+            comparison,
+            only: options.only,
+            paths,
+            messageFile: options.messageFile,
+            push: options.push,
+            // A --changed run checks the commit messages and history after the merge base, not the whole history.
+            commits: revision === undefined ? changedCommits : revision.commits,
+            base: revision?.base ?? changed?.reference,
+            historyComplete: revision?.historyComplete,
+        }),
+        unstagedChanges: staging.unstaged,
+        cancelSignal: signal,
+    };
+}
+
+function buildComparison(
+    revision: RevisionSource | undefined,
+    changed: RunFilters['changed'],
+): RunOptions['comparison'] {
+    if (revision !== undefined) return { content: revision.content, reference: revision.reference };
+    if (changed !== undefined) return { content: 'working-tree', reference: changed.reference };
+    return undefined;
+}
+
 // The repository files a selector names: the file itself, or everything under a folder.
 function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
     const selector = toPosix(relative(session.root, resolve(options.cwd, path)));
@@ -137,32 +180,7 @@ async function runSelected(
     revision: RevisionSource | undefined,
     selections: RunFilters,
 ): Promise<CommandResult<RunReport>> {
-    const { changed, staging, stage, paths } = selections;
-    const { paths: changedPaths, commits: changedCommits } = changed ?? { paths: undefined, commits: undefined };
-    let comparison: RunOptions['comparison'];
-    if (revision !== undefined) comparison = { content: revision.content, reference: revision.reference };
-    else if (changed !== undefined) comparison = { content: 'working-tree', reference: changed.reference };
-    const outcome = await executeRun(session, {
-        checks: BUILT_IN_CHECKS,
-        ...compact({
-            stage,
-            fix: options.fix,
-            isDryRun: options.isDryRun,
-            onResult: options.onResult,
-            staged: staging.staged,
-            changed: changedPaths,
-            comparison,
-            only: options.only,
-            paths,
-            messageFile: options.messageFile,
-            push: options.push,
-            // A --changed run checks the commit messages and history after the merge base, not the whole history.
-            commits: revision === undefined ? changedCommits : revision.commits,
-            historyComplete: revision?.historyComplete,
-        }),
-        unstagedChanges: staging.unstaged,
-        cancelSignal: signal,
-    });
+    const outcome = await executeRun(session, buildRunOptions(options, selections, signal, revision));
     const reportText = runText(outcome.report, options.verbose, options.hook);
     const text = outcome.fixes ? reportFixes(outcome.fixes, options.isDryRun, reportText) : reportText;
     return {

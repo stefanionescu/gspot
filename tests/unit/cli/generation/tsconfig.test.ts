@@ -31,7 +31,7 @@ test.each(MALFORMED_TSCONFIGS)(
     },
 );
 
-test('the strict compiler options leave out an ignored rule and keep your own options', async () => {
+test('an authored project extends its own compiler options without forcing required options', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': settingsText(['typescript'], {
@@ -60,21 +60,17 @@ test('the strict compiler options leave out an ignored rule and keep your own op
     });
     expect(parsed).toMatchObject({
         extends: '../../tsconfig.json',
-        compilerOptions: { strict: true, noPropertyAccessFromIndexSignature: true },
     });
-    expect(parsed).not.toHaveProperty('compilerOptions.noImplicitReturns');
+    expect(Object.keys(parsed['compilerOptions']!)).toStrictEqual(['typeRoots']);
 });
 
-test('framework compiler options apply only in their scope', async () => {
+test('projects without tsconfig.json get required options and framework options only in their scope', async () => {
     await using sandbox = await testdir({
         'gspot.toml': settingsText(['typescript'], {
             level: 'all',
-            tables: '[[scope]]\npath = "service"\n\nconfigurations = ["nestjs"]',
+            tables: '[[ignore]]\ncheck = "typescript/tsconfig"\nrule = "noImplicitReturns"\nreason = "Returns are checked separately."\n[[scope]]\npath = "service"\n\nconfigurations = ["nestjs"]',
         }),
-        'tsconfig.json': STRICT_TSCONFIG_TEXT,
         'source.ts': 'export const port = 8080;\n',
-        'service/tsconfig.json':
-            '{"extends":"../tsconfig.json","compilerOptions":{"experimentalDecorators":true,"emitDecoratorMetadata":true}}',
         'service/source.ts': 'export const port = 3000;\n',
     });
     const session = await openSession(sandbox.path);
@@ -88,9 +84,17 @@ test('framework compiler options apply only in their scope', async () => {
             scope: scope.scope.path,
             files: session.repository.files,
             scopeEntries: session.repository.scopes,
-            options: requiredTsconfigOptions('all', scope.selected),
+            options: Object.fromEntries(
+                Object.entries(requiredTsconfigOptions('all', scope.selected)).filter(
+                    ([name]) => !scope.view.rulesOff('typescript/tsconfig').includes(name),
+                ),
+            ),
         }),
     }));
+    for (const { config } of projects) {
+        expect(config).toHaveProperty('compilerOptions.strict', true);
+        expect(config).not.toHaveProperty('compilerOptions.noImplicitReturns');
+    }
     expect(projects.find(({ scope }) => scope === 'service')?.config).toHaveProperty(
         'compilerOptions.experimentalDecorators',
         true,

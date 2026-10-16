@@ -87,7 +87,8 @@ export const FRAMEWORK_NAMES = [
     },
 ] as const;
 
-export const ALLOWED_NAME_SETTINGS = `configurations = ["naming", "bash"]
+export const ALLOWED_NAME_SETTINGS = `level = "all"
+configurations = ["naming", "bash"]
 [[naming.override]]
 allowed_names = ["remoteRecord"]
 reason = "The external JavaScript interface fixes this name."

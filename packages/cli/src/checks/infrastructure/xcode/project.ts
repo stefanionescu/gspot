@@ -14,7 +14,7 @@ function projectFolder(projectFile: string): string {
     return bundle.slice(0, bundle.lastIndexOf('/') + 1);
 }
 /**
- * Report Swift sources outside targets and project references missing from the tree.
+ * Report Swift sources outside targets.
  * @param input the check input.
  * @returns the findings.
  */
@@ -33,8 +33,7 @@ export function xcodeFilesWithoutTarget(input: CheckInput): Finding[] {
     const referenced = new Set(references.map(({ path }) => path));
     const folders = projects.flatMap((project) => project.folders);
     const tree = sourcePaths(input, [SWIFT_EXTENSION]).filter((file) => posix.basename(file) !== PACKAGE_SWIFT);
-    const inTree = new Set(tree);
-    const untargeted = tree
+    return tree
         .filter(
             (file) =>
                 !referenced.has(file) &&
@@ -43,15 +42,4 @@ export function xcodeFilesWithoutTarget(input: CheckInput): Finding[] {
         .map((file) =>
             findingAt(input, { file, line: 1 }, 'untargeted', 'This Swift file is in no target of the project.'),
         );
-    const gone = references
-        .filter(({ path }) => !inTree.has(path))
-        .map(({ path: name, project }) =>
-            findingAt(
-                input,
-                { file: project, line: 1 },
-                'missing-file',
-                `The project names ${name}, and the tree holds no such file.`,
-            ),
-        );
-    return [...untargeted, ...gone];
 }

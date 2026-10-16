@@ -42,6 +42,7 @@ export type System = { platform: string; arch: string };
 
 export type PlanOptions = {
     includeUnsupported?: boolean;
+    base?: string;
     commits?: string[];
     historyComplete?: boolean;
     stage: StageFilter | 'any';
@@ -77,6 +78,7 @@ export type SettingsSkip =
 export type ToolIgnore = { file: string; matches: (path: string) => boolean };
 
 export type PlannedCheck = {
+    base?: string;
     commits?: string[];
     scope: ScopeSelection;
     check: CheckDeclaration;

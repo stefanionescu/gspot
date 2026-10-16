@@ -172,10 +172,11 @@ export type TrufflehogResult = {
     Verified: true;
     SourceMetadata: {
         Data: {
-            JsonEnumerator: {
-                metadata: string;
+            Git: {
+                commit: string;
+                file: string;
+                line: number;
             };
         };
     };
 };
-export type TrufflehogMetadata = { commit: string; file: string };

@@ -1,3 +1,4 @@
+import { compact } from '#cli/objects.ts';
 import { GspotError } from '#cli/errors.ts';
 import { coveredBy } from '#cli/repository/select.ts';
 import { isOutsideChildren } from '#cli/repository/scopes.ts';
@@ -47,10 +48,13 @@ function planOne(context: PlanInputs, entry: PlanEntry, isRootCheck: boolean): P
         scope: isRootCheck ? rootScope : scope,
         check,
         ...filesFor(context, entry, isRootCheck),
-        ...(manifest === undefined ? {} : { manifest }),
-        ...(tool === undefined ? {} : { tool }),
-        ...(options.commits === undefined ? {} : { commits: options.commits }),
-        ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
+        ...compact({
+            manifest,
+            tool,
+            base: options.base,
+            commits: options.commits,
+            messageFile: options.messageFile,
+        }),
     };
     const skip = skipFor(planned, context);
     return restrictIgnoredPaths(session, skip === undefined ? planned : { ...planned, skip });

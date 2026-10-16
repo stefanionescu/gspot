@@ -27,7 +27,7 @@ help = "Rename the file or folder, or add a path rule under [[naming.override]] 
 [[check]]
 name = "settings"
 example = "A naming allowance for an identifier that no selected source contains reports an unmatched settings entry. Remove the obsolete allowance or correct it to the exact required identifier and scope."
-level = "recommended"
+level = "all"
 stage = "commit"
 runs = "once"
 summary = "Reports allowed names that no selected source uses."

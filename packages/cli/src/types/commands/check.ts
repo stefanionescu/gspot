@@ -41,6 +41,7 @@ type CheckOptions = {
 
 /** What a copy stands for: the staged index or a pushed commit, and the repository whose tools it runs. */
 type RevisionSource = {
+    base?: string;
     commits?: string[];
     historyComplete?: boolean;
     content: 'index' | 'commit';

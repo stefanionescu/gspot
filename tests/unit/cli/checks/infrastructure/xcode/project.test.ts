@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { containing } from '#tests/setup/matchers.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { containing, textContaining } from '#tests/setup/matchers.ts';
 import { GROUPED_PBXPROJ, SINGLE_FILE_PBXPROJ } from '#tests/config/xcode.ts';
 
 {
@@ -25,20 +25,6 @@ import { GROUPED_PBXPROJ, SINGLE_FILE_PBXPROJ } from '#tests/config/xcode.ts';
         expect(broken.report.checks[0]!.findings).toStrictEqual([
             containing({ file: 'Second/Shared.swift', rule: 'untargeted' }),
             containing({ file: 'Synced/Excluded.swift', rule: 'untargeted' }),
-        ]);
-        const included = GROUPED_PBXPROJ.replace('files = (B1, B2,);', 'files = (B1, B2, B3,);')
-            .replace('B1 = {', 'B3 = {isa = PBXBuildFile; fileRef = F2; };\nB1 = {')
-            .replace('membershipExceptions = (Excluded.swift,);', 'membershipExceptions = ();');
-        await Bun.write(`${sandbox.path}/App.xcodeproj/project.pbxproj`, included);
-        await Bun.file(`${sandbox.path}/Second/Shared.swift`).delete();
-        const missing = await checkReport(sandbox.path, command);
-        expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-        expect(missing.report.checks[0]!.findings).toStrictEqual([
-            containing({
-                file: 'App.xcodeproj/project.pbxproj',
-                rule: 'missing-file',
-                message: textContaining('Second/Shared.swift'),
-            }),
         ]);
     });
 

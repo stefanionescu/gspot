@@ -15,12 +15,6 @@ function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     return new Map(pairs);
 }
 
-// The keys that hold a dot: nested keys use dots, so one inside a key names two places.
-function dottedKeys(value: unknown): string[] {
-    if (value === null || typeof value !== 'object') return [];
-    return Object.entries(value).flatMap(([key, entry]) => [...(key.includes('.') ? [key] : []), ...dottedKeys(entry)]);
-}
-
 function translationMessage(text: string): string | undefined {
     if (text.trim() === '') return 'The message is empty.';
     try {
@@ -43,10 +37,12 @@ export function translationsMessages(input: CheckInput): Finding[] {
     const files = input.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${directory}/`) && path.endsWith(MESSAGE_FILE_SUFFIX));
-    const raw = new Map(
-        files.map((path) => [path, JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as unknown]),
+    const messagesByPath = new Map(
+        files.map((path) => [
+            path,
+            flattenMessages(JSON.parse(readSource(input.root, path, input.reads).toString('utf8'))),
+        ]),
     );
-    const messagesByPath = new Map([...raw].map(([path, value]) => [path, flattenMessages(value)]));
     const baseline = [...messagesByPath].find(([path]) => posix.basename(path) === `${base}${MESSAGE_FILE_SUFFIX}`);
     if (baseline === undefined)
         return [
@@ -79,15 +75,7 @@ export function translationsMessages(input: CheckInput): Finding[] {
                     ),
                 )
                 .toArray();
-            const dotted = dottedKeys(raw.get(path)).map((key) =>
-                findingAt(
-                    input,
-                    { file: path, line: 1 },
-                    'dotted-key',
-                    `The key ${key} holds a dot, which is how a nested key is written.`,
-                ),
-            );
-            return [...broken, ...missing, ...dotted];
+            return [...broken, ...missing];
         })
         .toArray();
 }

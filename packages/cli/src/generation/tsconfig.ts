@@ -52,7 +52,6 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
             extends: toPosix(relative(folder, authored.path)),
             files: authored.config.fileNames.map((path) => toPosix(relative(folder, path))),
             compilerOptions: {
-                ...options,
                 ...(authored.config.options.typeRoots === undefined ? { typeRoots } : {}),
             },
         };

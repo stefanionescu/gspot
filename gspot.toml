@@ -104,7 +104,7 @@ reason = "npm names this package.json field packageManager."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/parsers/output.ts"]
-allowed_names = ["Data", "DetectorName", "JsonEnumerator", "SourceMetadata", "Verified", "fixInfo"]
+allowed_names = ["Data", "DetectorName", "Git", "SourceMetadata", "Verified", "fixInfo"]
 reason = "These tool report properties retain the exact TruffleHog, Semgrep, markdownlint and typos JSON field names."
 
 [[naming.override]]

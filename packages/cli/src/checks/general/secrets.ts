@@ -1,32 +1,23 @@
-import { join, posix } from 'node:path';
-import { decodeUtf8 } from '#cli/text.ts';
+import { posix } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { GspotError } from '#cli/errors.ts';
+import { gitText } from '#cli/system/git.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { scratchFolder } from '#cli/system/files.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/system/file-reads.ts';
-import { writeFileSync, appendFileSync } from 'node:fs';
-import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
-import { runGit, runGitForBytes } from '#cli/system/git.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
-import { readBlobs } from '#cli/repository/revisions/objects.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { pushedCommits } from '#cli/repository/revisions/changes.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { mergeRuns, historyResult } from '#cli/checks/general/history.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
+import { readPushBase, pushedCommits } from '#cli/repository/revisions/changes.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
 
 import {
-    DIFF_TREE,
-    CHANGE_LINE,
     ENV_KEY_LINE,
-    COMMIT_METADATA,
-    ENUMERATOR_FILE,
     TRUFFLEHOG_FLAGS,
     ENV_READ_PATTERNS,
-    RAW_CHANGE_FIELDS,
     GITLEAKS_LOG_FLAG,
     ENV_READ_LANGUAGES,
     GITLEAKS_LOG_OPTIONS,
@@ -34,68 +25,6 @@ import {
     TRUFFLEHOG_ENUMERATOR,
     GITLEAKS_STAGED_CHECK,
 } from '#cli/config/checks/general/secrets.ts';
-
-// The blob each changed file holds after the commit, by path.
-// eslint-disable-next-line complexity -- reason: Git change records distinguish added, removed, and renamed objects; this reader validates those forms together.
-async function changedObjects(session: Session, commit: string): Promise<Map<string, string>> {
-    const read = await runGitForBytes(session.root, [...DIFF_TREE, commit, '--'], {
-        cancelSignal: session.cancelSignal,
-    });
-    if (read.code !== 0) throw new Error('Cannot read the changed files for verified secret scanning.');
-    const text = decodeUtf8(read.stdout);
-    if (text === undefined) throw new Error('History paths must be valid UTF-8.');
-    const fields = text.split('\0');
-    if (fields.pop() !== '') throw new Error('Git returned an incomplete list of changed files.');
-    const entries = new Map<string, string>();
-    for (let position = 0; position < fields.length; position += RAW_CHANGE_FIELDS) {
-        const blobId = CHANGE_LINE.exec(fields[position] ?? '')?.[2];
-        const file = fields[position + 1];
-        if (blobId === undefined || file === undefined)
-            throw new Error('Git returned an unsupported changed-file record.');
-        entries.set(file, blobId);
-    }
-    return entries;
-}
-
-// Appends every changed blob of a commit to the enumerator input.
-async function appendBlobs(session: Session, enumeratorFile: string, commit: string): Promise<void> {
-    const entries = await changedObjects(session, commit);
-    const blobs = await readBlobs(session.root, [...entries.values()], session.cancelSignal);
-    for (const [index, [file]] of [...entries].entries()) {
-        const blob = blobs[index] as Buffer;
-        appendFileSync(
-            enumeratorFile,
-            `${JSON.stringify({ metadata: { commit, file }, data_b64: blob.toString('base64') })}\n`,
-        );
-    }
-}
-
-// Appends a commit's author, committer, and message to the enumerator input.
-async function appendMetadata(session: Session, enumeratorFile: string, commit: string): Promise<void> {
-    const commitResult = await runGit(session.root, [...COMMIT_METADATA, commit, '--'], {
-        cancelSignal: session.cancelSignal,
-    });
-    if (commitResult.code !== 0) throw new Error('Cannot read selected commit metadata for verified secret scanning.');
-    appendFileSync(
-        enumeratorFile,
-        `${JSON.stringify({ metadata: { commit, file: '' }, data: commitResult.stdout })}\n`,
-    );
-}
-
-// Writes the enumerator input for every commit, then runs TruffleHog over it.
-async function scanCommits(session: Session, planned: PlannedCheck, commits: string[]): Promise<CheckResult> {
-    using folder = scratchFolder();
-    const scratch = folder.path;
-    const enumeratorFile = join(scratch, ENUMERATOR_FILE);
-    writeFileSync(enumeratorFile, '', { mode: PRIVATE_FILE });
-    for (const commit of commits) {
-        await appendBlobs(session, enumeratorFile, commit);
-        await appendMetadata(session, enumeratorFile, commit);
-    }
-    return await runCheckCommand(session, planned, {
-        command: [...TRUFFLEHOG_ENUMERATOR, enumeratorFile, ...TRUFFLEHOG_FLAGS],
-    });
-}
 
 /**
  * Scan the exact selected commits, including secrets removed before the final pushed tree.
@@ -126,7 +55,7 @@ export async function gitleaksPushed(session: Session, planned: PlannedCheck): P
 }
 
 /**
- * Supply selected changed blobs and commit metadata to TruffleHog's JSON enumerator.
+ * Scan the selected Git range with TruffleHog.
  * @param session the open session.
  * @param planned the planned check.
  * @returns the check result.
@@ -139,7 +68,19 @@ export async function trufflehog(session: Session, planned: PlannedCheck): Promi
     if (!Array.isArray(commits))
         return { ...base, status: 'error', note: 'Cannot select commits for verified secret scanning.' };
     if (commits.length === 0) return { ...base, note: 'No selected commits to scan.' };
-    const result = await scanCommits(session, planned, commits);
+    const head = await gitText(session.root, ['rev-parse', 'HEAD'], { cancelSignal: session.cancelSignal });
+    const since = planned.base ?? (await readPushBase(session.root, session.cancelSignal));
+    const result = await runCheckCommand(session, planned, {
+        command: [
+            ...TRUFFLEHOG_ENUMERATOR,
+            pathToFileURL(session.root).href,
+            '--branch',
+            head.trim(),
+            '--since-commit',
+            since,
+            ...TRUFFLEHOG_FLAGS,
+        ],
+    });
     return { ...result, duration: performance.now() - started };
 }
 

@@ -52,9 +52,6 @@ export const DEPRECATED_ALIAS = /deprecated\s+command|deprecated\s+alias|compati
 
 export const FORWARDED_SCRIPT = /\.(?:sh|js)(?:\s|$)/u;
 
-/** A file stem that identifies a wrapper script. */
-export const FORWARDER_STEM = /(?:^|[._-])(?:compat|wrapper|forward)(?:[._-]|$)/iu;
-
 /** A line that only forwards to another script: an interpreter first, a script name after. */
 export const FORWARDER_INTERPRETER = /^(?:exec )?(?:\/bin\/bash|bash|node)\s/u;
 

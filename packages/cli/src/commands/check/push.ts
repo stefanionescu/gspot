@@ -22,6 +22,7 @@ async function checkRevision(
             { kind: 'commit', hash: revision.hash },
             (scratch) =>
                 checkTree(scratch, options, signal, {
+                    base: revision.base,
                     commits: revision.commits,
                     historyComplete: revision.historyComplete,
                     content: 'commit',

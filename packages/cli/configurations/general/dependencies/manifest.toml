@@ -120,9 +120,9 @@ level = "all"
 stage = "commit"
 runs = "once"
 files = { filenames = ["package.json"] }
-summary = "Checks every package.json: the root names a packageManager, every package names the same one, a workspace root is private, and only one kind of lockfile exists."
+summary = "Checks that the root package.json names a packageManager and that only one kind of lockfile exists."
 why = "Two package managers install two different trees."
-help = "Name one packageManager in the root package.json, use it in every package, mark a workspace root private, and delete the other lockfile."
+help = "Name one packageManager in the root package.json, and delete the other lockfile."
 
 [[check]]
 name = "lockfile-hosts"

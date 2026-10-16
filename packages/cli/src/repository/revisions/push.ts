@@ -6,6 +6,7 @@ import { GspotError } from '#cli/errors.ts';
 import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
+import { readPushBase } from '#cli/repository/revisions/changes.ts';
 import { gitText, gitLines, gitPaths, isShallow } from '#cli/system/git.ts';
 import type { PushLine, Comparison, PushSearch, PushRevision, PushSelection } from '#cli/types/repository/revisions.ts';
 
@@ -83,9 +84,10 @@ async function comparison(context: PushSearch, hash: string, remoteHash: string)
         if (!context.commits.has(remoteHash))
             throw new GspotError('git', `Cannot find pushed object ${remoteHash}. Fetch the remote again.`);
         const previous = context.commits.get(remoteHash);
-        if (previous === undefined) return { changed: undefined, range: [hash] };
+        if (previous === undefined)
+            return { base: await readPushBase(root, cancelSignal), changed: undefined, range: [hash] };
         const changed = await gitPaths(root, [...COMMIT_DIFF_ARGV, previous, hash, '--'], { cancelSignal });
-        return { changed, range: [hash, `^${previous}`] };
+        return { base: previous, changed, range: [hash, `^${previous}`] };
     }
     const range = [
         hash,
@@ -93,17 +95,18 @@ async function comparison(context: PushSearch, hash: string, remoteHash: string)
         context.remote === undefined ? REMOTES_OPTION : `${REMOTES_OPTION}=${context.remote}`,
     ];
     const changed = await gitPaths(root, [...LOG_ARGV, ...range, '--'], { cancelSignal });
-    return { changed, range };
+    return { base: await readPushBase(root, cancelSignal), changed, range };
 }
 
 // The revision a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
 async function buildRevision(context: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = context;
-    const { changed, range } = await comparison(context, hash, line.remoteHash);
+    const { base, changed, range } = await comparison(context, hash, line.remoteHash);
     const history = await gitLines(root, [...REV_LIST_ARGV, ...range, '--'], { cancelSignal });
     const tree = await gitText(root, [...TREE_ARGV, `${hash}${TREE_SUFFIX}`], { cancelSignal });
     const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => a.localeCompare(b));
     return {
+        base,
         hash,
         tree: tree.trim(),
         refs: [line.localRef],
@@ -113,10 +116,13 @@ async function buildRevision(context: PushSearch, line: PushLine, hash: string):
     };
 }
 
-// Records a revision, merging it into one already recorded with the same tree and paths.
+// Share a check only for the same commit, comparison base, and changed paths.
 function recordRevision(result: PushSelection, revision: PushRevision): void {
     const duplicate = result.revisions.find(
-        (entry) => entry.tree === revision.tree && isDeepStrictEqual(entry.paths, revision.paths),
+        (entry) =>
+            entry.hash === revision.hash &&
+            entry.base === revision.base &&
+            isDeepStrictEqual(entry.paths, revision.paths),
     );
     if (duplicate === undefined) {
         result.revisions.push(revision);

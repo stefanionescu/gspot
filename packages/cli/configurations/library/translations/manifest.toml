@@ -19,8 +19,8 @@ example = "If the base locale defines `welcome` but another required locale does
 level = "recommended"
 stage = "push"
 runs = "scope"
-summary = "Checks next-intl JSON/ICU message files under translations.messages_folder: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
-why = "This check compares every locale with the base locale, so missing keys and different interpolation arguments are found across files."
+summary = "Checks next-intl JSON/ICU message files under translations.messages_folder: each message parses, none is empty, and every locale holds every key of the base."
+why = "next-intl reads one locale at a time, so only a comparison of each locale with the base locale finds a key that a locale lacks."
 help = "Correct the message, or add the missing key to the locale."
 
 [check.when]
