@@ -21,7 +21,7 @@ A missing tool makes the run incomplete with exit code 2, which also stops a com
 ## `gspot install` fails
 
 If mise prints `GitHub rate limit exceeded`, set `GITHUB_TOKEN` to a token that
-can read public releases and run `gspot install` again. See [mise: If something does not work](https://mise.jdx.dev/getting-started.html#if-something-does-not-work).
+can read public releases and run `gspot install` again. See [mise: If something does not work](https://mise.jdx.dev/getting-started.html#if-something-doesn-t-work).
 For another error, fix the error and run `gspot install` again.
 To make new lockfiles, delete them and run `gspot install`.
 

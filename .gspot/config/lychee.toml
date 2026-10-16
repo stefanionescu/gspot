@@ -1,1 +1,1 @@
-
+exclude = ["^https://generativespotting\\.com/(?:configure/gspot-toml/|gspot\\.schema\\.json|start/concepts/#levels|start/install/|start/quickstart/|use/agent-rules/|use/ci/|use/findings/|use/hooks/)$", "^https://www\\.npmjs\\.com/package/@gspothq/cli$"]

@@ -367,6 +367,9 @@ may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-
 [dependencies]
 scanner = "@socketsecurity/bun-security-scanner"
 
+[docs]
+allowed_urls = { value = ["^https://generativespotting\\.com/(?:configure/gspot-toml/|gspot\\.schema\\.json|start/concepts/#levels|start/install/|start/quickstart/|use/agent-rules/|use/ci/|use/findings/|use/hooks/)$", "^https://www\\.npmjs\\.com/package/@gspothq/cli$"], reason = "The built site contains these new routes; remove their exclusions after deployment. The npm package page returns HTTP 403 to automated requests." }
+
 [licenses]
 allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
 
