@@ -117,7 +117,7 @@
                 "tests/setup/prepare-run.ts",
                 "scripts/build.ts",
                 "tests/setup/integration.ts",
-                "packages/cli/src/checks/framework/site/linkinator-program.ts",
+                "packages/cli/src/checks/framework/site/linkinator-process.ts",
                 "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs",
                 "packages/cli/configurations/language/javascript/eslint-runtime.mjs",
                 "src/main.{ts,js}",
@@ -163,7 +163,7 @@
         },
         "packages/cli": {
             "entry": [
-                "src/checks/framework/site/linkinator-program.ts",
+                "src/checks/framework/site/linkinator-process.ts",
                 "configurations/language/markdown/tool-files/markdownlint-cli2.mjs",
                 "configurations/language/javascript/eslint-runtime.mjs",
                 "src/main.{ts,js}",

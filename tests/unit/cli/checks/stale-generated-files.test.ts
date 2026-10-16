@@ -18,7 +18,7 @@ import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { staleGeneratedFiles } from '#cli/checks/stale-generated-files.ts';
+import { staleGeneratedFiles } from '#cli/checks/stale-generator-outputs.ts';
 import { GENERATOR_CASES, GENERATOR_SCRIPT } from '#tests/config/generated-files.ts';
 
 import {

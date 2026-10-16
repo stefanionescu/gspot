@@ -42,7 +42,7 @@ function denoConfigArguments(root: string, folder: string): string[] {
     return path === undefined ? [] : [DENO_CONFIG_FLAG, path];
 }
 
-function repositoryPath(root: string, locator: string): string {
+function normalizeDenoPath(root: string, locator: string): string {
     const path = locator.startsWith(FILE_URL_PREFIX) ? fileURLToPath(locator) : locator;
     const local = convertToPosixPath(relative(root, path));
     return local === '' || !isInside(local) ? path : local;
@@ -52,7 +52,7 @@ function repositoryPath(root: string, locator: string): string {
 function firstError(input: CheckInput, folder: string, stderr: string): Finding {
     const output = stripVTControlCharacters(stderr);
     const place = DENO_LOCATION.exec(output)?.groups;
-    const file = place?.['file'] === undefined ? `${folder}/index.ts` : repositoryPath(input.root, place['file']);
+    const file = place?.['file'] === undefined ? `${folder}/index.ts` : normalizeDenoPath(input.root, place['file']);
     const first = output.split('\n').find((line) => line.trim() !== '') ?? 'The deno check command failed.';
     return findingAt(input, { file, line: Number(place?.['line'] ?? 1) }, 'type-error', first.trim());
 }
@@ -175,12 +175,17 @@ export async function supabaseDenoLint(input: CheckInput): Promise<Finding[]> {
             throw new Error(toolOutputDetail(result, 'Deno lint returned invalid JSON diagnostics'), { cause: error });
         }
         const broken = report.errors.map((entry) =>
-            findingAt(input, { file: repositoryPath(input.root, entry.file_path), line: 1 }, 'syntax', entry.message),
+            findingAt(
+                input,
+                { file: normalizeDenoPath(input.root, entry.file_path), line: 1 },
+                'syntax',
+                entry.message,
+            ),
         );
         const found = report.diagnostics.map((entry) =>
             findingAt(
                 input,
-                { file: repositoryPath(input.root, entry.filename), line: entry.range.start.line },
+                { file: normalizeDenoPath(input.root, entry.filename), line: entry.range.start.line },
                 entry.code,
                 entry.message,
             ),

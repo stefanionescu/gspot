@@ -8,8 +8,8 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import * as environment from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
+import { parseSwiftCoverage } from '#cli/checks/testing/coverage.ts';
 import { buildPlan } from '#cli/checks/language/swift/build-folder.ts';
-import { parseSwiftCoverage } from '#cli/checks/testing/swift-tests.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { checkFindings, buildCheckInput, isolateCompilerCache } from '#tests/setup/check-input.ts';
 

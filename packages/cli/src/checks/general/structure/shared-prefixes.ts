@@ -7,7 +7,7 @@ import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { SPEC_SUFFIX, INDEX_STEMS } from '#cli/config/checks/general/structure.ts';
 import { extractStem, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
-import { directoryTree, structureSources, isDependencyFolder } from '#cli/checks/general/structure/source-files.ts';
+import { directoryTree, structureSources, isDependencyFolder } from '#cli/checks/general/structure/folder-tree.ts';
 
 // A selected configuration declares <name>.<kind>.<ext> file names, such as NestJS, so these do not count as a shared prefix.
 function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {

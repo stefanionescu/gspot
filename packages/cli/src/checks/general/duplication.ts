@@ -94,12 +94,12 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
     const report = cloneReportSchema.parse(JSON.parse(readBytes(work, JSCPD_REPORT_FILE).toString('utf8')));
     const share = report.statistics.total.percentage;
     if (share <= limit) return [];
-    const repositoryPath = (name: string): string =>
+    const normalizeClonePath = (name: string): string =>
         convertToPosixPath(isAbsolute(name) ? relative(toNamespacedPath(input.root), toNamespacedPath(name)) : name);
     return report.duplicates.flatMap((clone): Finding[] => {
-        const file = repositoryPath(clone.secondFile.name);
+        const file = normalizeClonePath(clone.secondFile.name);
         if (!owned.includes(file)) return [];
-        const first = repositoryPath(clone.firstFile.name);
+        const first = normalizeClonePath(clone.firstFile.name);
         const other = `${first}:${String(clone.firstFile.start)}`;
         return [
             findingAt(

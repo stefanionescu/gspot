@@ -12,7 +12,7 @@ import { fileBatches } from '#cli/execution/command/batches.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolFilePath } from '#cli/execution/command/placeholders.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
-import { filesUnder, requireBuild, repositoryPath } from '#cli/checks/framework/site/build.ts';
+import { filesUnder, requireBuild, deriveBuiltFilePath } from '#cli/checks/framework/site/build.ts';
 
 import {
     PURGECSS,
@@ -28,7 +28,7 @@ import {
     PURGECSS_CONTENT,
     SITEMAP_LOCATION,
     LINKINATOR_STATES,
-    LINKINATOR_PROGRAM,
+    LINKINATOR_PROCESS,
 } from '#cli/config/checks/framework/site.ts';
 
 function sitemapUrls(folder: string, files: ReadonlySet<string>): string[] {
@@ -108,14 +108,14 @@ const purgecssReportSchema = z.array(
  * @param input the check input.
  * @returns one finding for each broken link.
  */
-export async function linkinator(input: CheckInput): Promise<Finding[]> {
+export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const pages = new Set(filesUnder(build.folder));
     const location = sitemapUrls(build.folder, pages)[0];
     const paths = [...pages].filter((path) => path.endsWith(HTML_EXTENSION));
     const result = await runCheckTool(
         input,
-        { tool: LINKINATOR, entry: LINKINATOR_PROGRAM },
+        { tool: LINKINATOR, entry: LINKINATOR_PROCESS },
         {
             cwd: build.folder,
             stdin: JSON.stringify({
@@ -138,7 +138,7 @@ export async function linkinator(input: CheckInput): Promise<Finding[]> {
             const page = candidates.find((path) => pages.has(path)) ?? candidates[0];
             return findingAt(
                 input,
-                { file: repositoryPath(input, build, join(build.folder, page)), line: 1 },
+                { file: deriveBuiltFilePath(input, build, join(build.folder, page)), line: 1 },
                 'broken-link',
                 link.status === HTTP_OK_STATUS && link.url.includes('#')
                     ? `${link.url} has no matching fragment.`
@@ -178,7 +178,7 @@ export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
                 file.messages.map((entry) =>
                     findingAt(
                         input,
-                        { file: repositoryPath(input, build, file.filePath), line: entry.line },
+                        { file: deriveBuiltFilePath(input, build, file.filePath), line: entry.line },
                         entry.ruleId,
                         entry.message,
                     ),
@@ -214,7 +214,7 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
             findingAt(
                 input,
                 {
-                    file: repositoryPath(
+                    file: deriveBuiltFilePath(
                         input,
                         build,
                         isAbsolute(sheet.file) ? sheet.file : join(build.folder, sheet.file),
@@ -240,7 +240,7 @@ export async function siteSize(input: CheckInput): Promise<Finding[]> {
     return limits.flatMap((limit) => {
         const isCounted = buildPathMatcher(limit.paths);
         const bytes = files
-            .filter((entry) => isCounted(repositoryPath(input, build, join(build.folder, entry))))
+            .filter((entry) => isCounted(deriveBuiltFilePath(input, build, join(build.folder, entry))))
             .reduce((sum, path) => sum + gzipSync(readBytes(build.folder, path)).length, 0);
         const weight = Math.ceil(bytes / BYTES_PER_KB);
         return weight <= limit.kilobytes
@@ -275,7 +275,7 @@ export async function sitemap(input: CheckInput): Promise<Finding[]> {
             findingAt(
                 input,
                 {
-                    file: repositoryPath(input, build, join(build.folder, sitemapFile)),
+                    file: deriveBuiltFilePath(input, build, join(build.folder, sitemapFile)),
                     line: 1,
                 },
                 'missing-page',
@@ -287,12 +287,12 @@ export async function sitemap(input: CheckInput): Promise<Finding[]> {
             (path) =>
                 path.endsWith(HTML_EXTENSION) &&
                 !listed.has(path) &&
-                !isLeftOut(repositoryPath(input, build, join(build.folder, path))),
+                !isLeftOut(deriveBuiltFilePath(input, build, join(build.folder, path))),
         )
         .map((path) =>
             findingAt(
                 input,
-                { file: repositoryPath(input, build, join(build.folder, path)), line: 1 },
+                { file: deriveBuiltFilePath(input, build, join(build.folder, path)), line: 1 },
                 'unlisted-page',
                 'The build wrote this page, and the sitemap does not list it.',
             ),

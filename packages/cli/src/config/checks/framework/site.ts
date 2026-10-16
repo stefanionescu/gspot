@@ -6,7 +6,7 @@ export const SITEMAP_FILE = /^sitemap.*\.xml$/u;
 
 export const HTTP_OK_STATUS = 200;
 
-export const LINKINATOR_PROGRAM = 'dist/linkinator-program.js';
+export const LINKINATOR_PROCESS = 'dist/linkinator-process.js';
 
 export const TEXT_SUFFIXES = new Set([
     '.htm',

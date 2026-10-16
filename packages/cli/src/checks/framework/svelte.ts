@@ -7,7 +7,7 @@ import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
-import { writeTsconfig } from '#cli/checks/language/typescript/project.ts';
+import { writeTsconfig } from '#cli/checks/language/typescript/compiler.ts';
 import { selectRequiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';

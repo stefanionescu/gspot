@@ -7,8 +7,8 @@ import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { mergeRuns, historyResult } from '#cli/checks/general/history.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
+import { mergeRuns, historyResult } from '#cli/checks/general/pushed-commits.ts';
 import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/general/commits.ts';
 
 /**

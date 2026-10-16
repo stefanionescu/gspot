@@ -2,13 +2,15 @@ import { computePosition } from '#cli/system/text.ts';
 import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { SqlNamed, Identifier } from '#cli/types/checks/general.ts';
-import { createIdentifier } from '#cli/checks/general/naming/declarations.ts';
+// eslint-disable-next-line import-x/no-cycle -- reason: These modules import hoisted functions and read no values during initialization.
+import { createIdentifier } from '#cli/checks/general/naming/identifiers.ts';
 import type { SqlFile, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 import { parseSqlFile, listNameParts, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
 import {
     SQL_NAME_TOKEN,
     SQL_QUALIFIED_NAME,
+    SQL_PARAMETER_DEPTH,
     SQL_PARAMETER_PREFIX,
     SQL_TABLE_PARAMETERS,
     SQL_DECLARATION_PREFIX,
@@ -53,8 +55,7 @@ const NAME_READERS: SqlStatementReaders<SqlNamed[]> = {
     CreatePolicyStmt: ({ fields }) => [{ category: 'policies', name: fields.policy_name ?? '' }],
 };
 
-// eslint-disable-next-line complexity, sonarjs/cognitive-complexity -- reason: SQL declaration positions require literal spans, parameter boundaries, and parser locations; splitting these steps repeats scan state.
-function parameterSpans(source: string, start: number): { spans: number[]; end: number } {
+function scanParameterList(source: string, start: number): { spans: number[]; span: number; end: number } {
     const spans: number[] = [];
     const literals = new Map(
         [...listSqlTokens(source.slice(start))].map((token) => [token.start + start, token.end + start]),
@@ -63,36 +64,40 @@ function parameterSpans(source: string, start: number): { spans: number[]; end: 
     let depth = 0;
     let at = start;
     while (at < source.length) {
-        const literal = literals.get(at);
-        if (literal !== undefined) {
-            at = literal;
-            continue;
-        }
-        const character = source[at];
+        const next = literals.get(at) ?? at + 1;
+        const character = source.slice(at, next);
         if (character === ')' && depth === 0) break;
-        if (character === '(' || character === '[') depth += 1;
-        else if (character === ')' || character === ']') depth -= 1;
-        else if (character === ',' && depth === 0) {
+        depth += SQL_PARAMETER_DEPTH.get(character) ?? 0;
+        if (character === ',' && depth === 0) {
             spans.push(span);
             span = at + 1;
         }
-        at += 1;
+        at = next;
     }
-    if (source.slice(span, at).trim() !== '') spans.push(span);
-    return { spans, end: at + 1 };
+    return { spans, span, end: at };
 }
 
-// eslint-disable-next-line complexity -- reason: SQL declaration positions require literal spans, parameter boundaries, and parser locations; splitting these steps repeats scan state.
-function functionNames(statement: SqlStatementView<'CreateFunctionStmt'>, source: string): SqlNamed[] {
+function parameterSpans(source: string, start: number): { spans: number[]; end: number } {
+    const scanned = scanParameterList(source, start);
+    if (source.slice(scanned.span, scanned.end).trim() !== '') scanned.spans.push(scanned.span);
+    return { spans: scanned.spans, end: scanned.end + 1 };
+}
+
+function findFunctionName(statement: SqlStatementView<'CreateFunctionStmt'>, source: string) {
     let start = statement.start + (SQL_DECLARATION_PREFIX.exec(source.slice(statement.start))?.[0].length ?? 0);
     start += source.slice(start).length - source.slice(start).trimStart().length;
     const qualified = SQL_QUALIFIED_NAME.exec(source.slice(start))?.[0] ?? '';
     const lastPart = [...qualified.matchAll(SQL_NAME_TOKEN)].at(-1);
+    return { start, qualified, offset: start + (lastPart?.index ?? 0) };
+}
+
+function functionNames(statement: SqlStatementView<'CreateFunctionStmt'>, source: string): SqlNamed[] {
+    const { start, qualified, offset } = findFunctionName(statement, source);
     const names: SqlNamed[] = [
         {
             category: 'functions',
             name: listNameParts(statement.fields.funcname).at(-1) ?? '',
-            offset: start + (lastPart?.index ?? 0),
+            offset,
         },
     ];
     const open = source.indexOf('(', start + qualified.length);
@@ -112,6 +117,26 @@ function functionNames(statement: SqlStatementView<'CreateFunctionStmt'>, source
     return names;
 }
 
+function findNamedToken(source: string, name: string, offset: number): number {
+    const token = [...source.slice(offset).matchAll(SQL_NAME_TOKEN)].find((match) => {
+        const text = match[0];
+        return text.startsWith('"') ? text.slice(1, -1).replaceAll('""', '"') === name : text.toLowerCase() === name;
+    });
+    return token === undefined ? -1 : offset + token.index;
+}
+
+function findIdentifierOffset(entry: SqlNamed, parsed: SqlFile, source: string, offset: number): number {
+    if (entry.offset !== undefined) return entry.offset;
+    if (entry.location === undefined || entry.location < 0) return findNamedToken(source, entry.name, offset);
+    let found = Buffer.from(parsed.source).subarray(0, entry.location).toString('utf8').length;
+    if (entry.category === 'tables') {
+        const qualified = SQL_QUALIFIED_NAME.exec(source.slice(found))?.[0] ?? '';
+        const last = [...qualified.matchAll(SQL_NAME_TOKEN)].at(-1);
+        if (last !== undefined) found += last.index;
+    }
+    return found;
+}
+
 function statementIdentifiers(
     file: string,
     source: string,
@@ -124,47 +149,27 @@ function statementIdentifiers(
             ? functionNames(statement, lexicalSource)
             : (readStatement(statement, NAME_READERS) ?? []);
     let offset = statement.start + (SQL_DECLARATION_PREFIX.exec(lexicalSource.slice(statement.start))?.[0].length ?? 0);
-    return (
-        named
-            .filter((entry) => entry.name !== '')
-            // eslint-disable-next-line sonarjs/cognitive-complexity, complexity -- reason: SQL declaration positions require literal spans, parameter boundaries, and parser locations; splitting these steps repeats scan state.
-            .flatMap((entry): Identifier[] => {
-                let found = -1;
-                if (entry.offset !== undefined) found = entry.offset;
-                else if (entry.location !== undefined && entry.location >= 0) {
-                    found = Buffer.from(parsed.source).subarray(0, entry.location).toString('utf8').length;
-                    if (entry.category === 'tables') {
-                        const qualified = SQL_QUALIFIED_NAME.exec(lexicalSource.slice(found))?.[0] ?? '';
-                        const last = [...qualified.matchAll(SQL_NAME_TOKEN)].at(-1);
-                        if (last !== undefined) found += last.index;
-                    }
-                } else {
-                    const nameMatch = [...lexicalSource.slice(offset).matchAll(SQL_NAME_TOKEN)].find((match) => {
-                        const name = match[0];
-                        return name.startsWith('"')
-                            ? name.slice(1, -1).replaceAll('""', '"') === entry.name
-                            : name.toLowerCase() === entry.name;
-                    });
-                    if (nameMatch !== undefined) found = offset + nameMatch.index;
-                }
-                if (found !== -1)
-                    offset =
-                        found + (SQL_QUALIFIED_NAME.exec(lexicalSource.slice(found))?.[0].length ?? entry.name.length);
-                if (parsed.variables.some(({ start, end }) => found >= start && found < end)) return [];
-                const identifierStart = found === -1 ? statement.start : found;
-                const quoteWidth = source[identifierStart] === '"' ? 1 : 0;
-                return [
-                    createIdentifier(
-                        { file, language: 'sql' },
-                        {
-                            ...computePosition(source, identifierStart + quoteWidth),
-                            category: entry.category,
-                            name: entry.name,
-                        },
-                    ),
-                ];
-            })
-    );
+    return named
+        .filter((entry) => entry.name !== '')
+
+        .flatMap((entry): Identifier[] => {
+            const found = findIdentifierOffset(entry, parsed, lexicalSource, offset);
+            if (found !== -1)
+                offset = found + (SQL_QUALIFIED_NAME.exec(lexicalSource.slice(found))?.[0].length ?? entry.name.length);
+            if (parsed.variables.some(({ start, end }) => found >= start && found < end)) return [];
+            const identifierStart = found === -1 ? statement.start : found;
+            const quoteWidth = source[identifierStart] === '"' ? 1 : 0;
+            return [
+                createIdentifier(
+                    { file, language: 'sql' },
+                    {
+                        ...computePosition(source, identifierStart + quoteWidth),
+                        category: entry.category,
+                        name: entry.name,
+                    },
+                ),
+            ];
+        });
 }
 
 /**

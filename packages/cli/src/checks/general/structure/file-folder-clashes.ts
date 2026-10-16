@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { extractStem, extractParentFolder } from '#cli/system/paths.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
-import { directoryTree, structureSources } from '#cli/checks/general/structure/source-files.ts';
+import { directoryTree, structureSources } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
  * One finding per file whose stem matches a sibling folder's name.

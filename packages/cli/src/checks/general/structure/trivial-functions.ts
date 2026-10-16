@@ -3,8 +3,8 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { isDocstring } from '#cli/parsers/python.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
-import { CONVENTION_SOURCES } from '#cli/checks/general/structure/conventions.ts';
 import type { IsSubstantial, CountedLanguage } from '#cli/types/checks/general.ts';
+import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sources.ts';
 
 import {
     BARE_NAME_NODES,

@@ -2,27 +2,19 @@ import { z } from 'zod';
 import { parse } from 'yaml';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { runCommandGroups } from '#cli/execution/command/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
+import { DOCKERIGNORE, DOCKERFILE_NAME } from '#cli/config/repository/inventory.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
 import type { ComposeFiles, ComposeService, ComposeDocuments } from '#cli/types/checks/infrastructure.ts';
 
-import {
-    DOCKERIGNORE,
-    EDGE_SLASHES,
-    DOCKERFILE_NAME,
-    IGNORE_ENTRY_FORMS,
-    DOCKERFILE_EXTENSION,
-} from '#cli/config/repository/inventory.ts';
 import {
     TRIVY_YML,
     TRIVY_EXIT,
@@ -31,7 +23,6 @@ import {
     COMPOSE_SUFFIXES,
     COMPOSE_FILE_FLAG,
     TRIVY_IMAGE_COMMAND,
-    DOCKERIGNORE_ENTRIES,
     TRIVY_SCHEMA_VERSION,
 } from '#cli/config/checks/infrastructure/docker.ts';
 
@@ -58,7 +49,13 @@ function composeGroups(files: TrackedFile[]): ComposeFiles[] {
     }
     return [...groups.values()];
 }
+
 // Compose declares paths. Native YAML owns service, image, and build metadata.
+/**
+ * Read Compose declarations and resolve their local build contexts.
+ * @param input the selected Compose files and source reads.
+ * @returns the service declarations and their build contexts.
+ */
 function composeDocuments(input: CheckInput): ComposeDocuments {
     const patterns = input.manifests
         .values()
@@ -105,6 +102,7 @@ function composeDocuments(input: CheckInput): ComposeDocuments {
     }
     return documents;
 }
+
 // Native exit status and parsed findings must agree before a scan can count as clean.
 async function scanImage(input: CheckInput, image: string, path: string): Promise<Finding[]> {
     const result = await runCheckTool(
@@ -134,6 +132,7 @@ async function scanImage(input: CheckInput, image: string, path: string): Promis
         throw new Error(`Trivy returned an inconsistent image report for ${image}.`);
     return findings;
 }
+
 const imageReportSchema = z.object({
     SchemaVersion: z.literal(TRIVY_SCHEMA_VERSION),
     ArtifactName: z.string().min(1),
@@ -175,6 +174,7 @@ const imageReportSchema = z.object({
           }[]
         | undefined;
 }>);
+
 const composeSchema = z.object({
     services: z
         .record(
@@ -200,69 +200,7 @@ const composeSchema = z.object({
         )
         .optional(),
 } satisfies SchemaShape<{ services?: Record<string, ComposeService> | undefined }>);
-/**
- * One finding for each Dockerfile with no ignore file, or with one that lets a required entry through.
- * @param input the check input.
- * @returns the findings.
- */
-export function dockerignore(input: CheckInput): Finding[] {
-    const { contexts } = composeDocuments(input);
-    return input.files
-        .filter((file) => {
-            const name = posix.basename(file.path);
-            return (
-                !name.endsWith(DOCKERIGNORE) &&
-                (name === DOCKERFILE_NAME ||
-                    name.startsWith(`${DOCKERFILE_NAME}.`) ||
-                    name.endsWith(DOCKERFILE_EXTENSION))
-            );
-        })
-        .flatMap(({ path: dockerfile }): Finding[] => {
-            const scope = findScope(dockerfile, input.scopeEntries);
-            const selection = input.selections.find((entry) => entry.scope.path === scope.path) as ScopeSelection;
-            const required = [
-                ...DOCKERIGNORE_ENTRIES,
-                ...selection.selected.flatMap((manifest) => manifest.ignored_folders),
-            ];
-            const paths = [
-                ...new Set([
-                    `${dockerfile}${DOCKERIGNORE}`,
-                    ...(contexts.get(dockerfile) ?? []),
-                    posix.join(posix.dirname(dockerfile), DOCKERIGNORE),
-                ]),
-            ];
-            const ignore = paths
-                .values()
-                .flatMap((path) => {
-                    const text = readCachedText(input.reads, path);
-                    return text === undefined ? [] : [{ path, text }];
-                })
-                .next().value;
-            if (ignore === undefined)
-                return [
-                    findingAt(
-                        input,
-                        { file: dockerfile, line: 1 },
-                        'missing-file',
-                        `Add an ignore file at ${paths.join(' or ')} that lists ${required.join(', ')}.`,
-                    ),
-                ];
-            const lines = new Set(ignore.text.split('\n').map((line) => line.trim().replaceAll(EDGE_SLASHES, '')));
-            const missing = required.filter((entry) =>
-                IGNORE_ENTRY_FORMS.every(([prefix, suffix]) => !lines.has(`${prefix}${entry}${suffix}`)),
-            );
-            return missing.length === 0
-                ? []
-                : [
-                      findingAt(
-                          input,
-                          { file: ignore.path, line: 1 },
-                          'missing-entry',
-                          `Add these entries to ${ignore.path}: ${missing.join(', ')}.`,
-                      ),
-                  ];
-        });
-}
+
 /**
  * Scan each literal service image once and attribute its findings to every declaring Compose file.
  * @param input the check input.
@@ -289,6 +227,7 @@ export async function trivyImage(input: CheckInput): Promise<Finding[]> {
     }
     return findings;
 }
+
 /**
  * Validate each Compose project with its declared overrides through the shared command runner.
  * @param session the open session.
@@ -317,3 +256,5 @@ export async function dockerCompose(session: Session, planned: PlannedCheck): Pr
         }),
     );
 }
+
+export { composeDocuments };

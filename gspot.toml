@@ -43,7 +43,7 @@ allowed_names = ["nextConfig"]
 reason = "This check keeps the Next.js configuration reader name required by the final placement table."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/framework/site/linkinator-program.ts"]
+paths = ["packages/cli/src/checks/framework/site/linkinator-process.ts"]
 allowed_names = ["LinkChecker"]
 reason = "Linkinator exports LinkChecker under this exact name."
 
@@ -83,7 +83,7 @@ allowed_names = ["denoConfigArguments", "readConfigToml"]
 reason = "These readers keep the configuration function names required by the final placement table."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/testing/swift-tests.ts"]
+paths = ["packages/cli/src/checks/testing/coverage.ts"]
 allowed_names = ["module_type"]
 reason = "Swift coverage JSON names the module type field module_type."
 
@@ -397,7 +397,7 @@ import_extension = "ts"
 
 [tools.knip]
 ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build imports these packages through CSS or copies their grammar files by path." }
-entry = ["tests/setup/prepare-run.ts", "scripts/build.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-program.ts", "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs", "packages/cli/configurations/language/javascript/eslint-runtime.mjs"]
+entry = ["tests/setup/prepare-run.ts", "scripts/build.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-process.ts", "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs", "packages/cli/configurations/language/javascript/eslint-runtime.mjs"]
 
 [tools.typos]
 extra = { value = { type = { license_names = { extend-glob = ["gspot.toml"], extend-words = { axe = "axe" } }, zod_types = { extend-glob = ["objects.ts"], extend-words = { optin = "optin" } } } }, reason = "Typos splits the published axe-core license name; Zod names its optional input marker optin." }

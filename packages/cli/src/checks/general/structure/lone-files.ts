@@ -3,7 +3,7 @@ import { extractParentFolder } from '#cli/system/paths.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
-import { directoryTree, structureSources, isDependencyFolder } from '#cli/checks/general/structure/source-files.ts';
+import { directoryTree, structureSources, isDependencyFolder } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
  * One finding per leaf folder that holds exactly one code file and nothing else.

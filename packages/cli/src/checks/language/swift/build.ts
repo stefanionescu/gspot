@@ -31,7 +31,7 @@ import {
     SWIFTLINT_ANALYZE_COMMAND,
 } from '#cli/config/checks/language/swift.ts';
 
-const BUILD_MEMO = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
+const SWIFT_BUILD_MEMO = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
 
 function outputFindings(input: CheckInput, output: string, levels: Set<string>, defaultRule: string): Finding[] {
     const root = convertToPosixPath(withoutPrivatePrefix(input.root));
@@ -73,7 +73,7 @@ function expandResponseFiles(line: string, folder: string, files: Files): string
     });
 }
 
-async function runBuild(input: CheckInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+async function runSwiftBuild(input: CheckInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const prepared = prepareBuild(input, plan.folder);
     using files = prepared.files;
@@ -93,7 +93,7 @@ async function runBuild(input: CheckInput, plan: SwiftBuildPlan): Promise<SwiftB
 
 // Share the compiler log within a command; a later command must read the current source.
 function buildOutput(input: CheckInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
-    return getCachedMapValue(input.reads, BUILD_MEMO, plan.folder, () => runBuild(input, plan));
+    return getCachedMapValue(input.reads, SWIFT_BUILD_MEMO, plan.folder, () => runSwiftBuild(input, plan));
 }
 
 // Normalize both macOS cache paths and compiler-log arguments with the same spelling.

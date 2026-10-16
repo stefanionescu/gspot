@@ -9,8 +9,8 @@ import { fileBatches } from '#cli/execution/command/batches.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { mergeRuns, historyResult } from '#cli/checks/general/history.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
+import { mergeRuns, historyResult } from '#cli/checks/general/pushed-commits.ts';
 import { readPushBase, readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
 

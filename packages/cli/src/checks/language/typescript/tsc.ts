@@ -29,7 +29,7 @@ import {
     appendBuildMetadata,
     restoreCommandPaths,
     writeReferenceProjects,
-} from '#cli/checks/language/typescript/project.ts';
+} from '#cli/checks/language/typescript/compiler.ts';
 
 /**
  * Collect each compiler project's inherited configurations and resolved source dependencies.

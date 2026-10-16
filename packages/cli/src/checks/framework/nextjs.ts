@@ -12,7 +12,7 @@ import { listChecksById } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
-import { runTsc, restoreCommandPaths } from '#cli/checks/language/typescript/project.ts';
+import { runTsc, restoreCommandPaths } from '#cli/checks/language/typescript/compiler.ts';
 import { TSC_TOOL, TYPESCRIPT_TSC_CHECK } from '#cli/config/checks/language/typescript.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/execution/check.ts';
 
@@ -62,7 +62,7 @@ function literalValue(value: ts.Expression): ts.Expression {
  * @param text the source text.
  * @returns disabled checks and likely secret keys with one-based source lines.
  */
-function nextSettingsFindings(input: Pick<CheckInput, 'check'>, path: string, text: string): Finding[] {
+function inspectNextOptions(input: Pick<CheckInput, 'check'>, path: string, text: string): Finding[] {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
     return listTypescriptNodes(source)
         .filter((node) => ts.isPropertyAssignment(node))
@@ -110,7 +110,7 @@ export function nextConfig(input: CheckInput): Finding[] {
         .filter((path) => NEXT_CONFIG.test(path))
         .flatMap((path) => {
             const text = readCachedBytes(input.reads, path).toString('utf8');
-            return nextSettingsFindings(input, path, text);
+            return inspectNextOptions(input, path, text);
         });
 }
 

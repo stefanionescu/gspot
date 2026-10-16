@@ -33,3 +33,10 @@ export const SQL_PARAMETER_PREFIX = /^\s*(?:(?:INOUT|IN|OUT|VARIADIC)\s+)?/iu;
 
 /** Return-table declarations add output parameters after the input list. */
 export const SQL_TABLE_PARAMETERS = /^\s*RETURNS\s+TABLE\s*\(/iu;
+
+export const SQL_PARAMETER_DEPTH = new Map<string, number>([
+    ['(', 1],
+    ['[', 1],
+    [')', -1],
+    [']', -1],
+]);

@@ -11,9 +11,9 @@ import { OUTPUT_TAIL_LINES } from '#cli/config/checks/framework/site.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
 
-const BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
+const SITE_BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 
-async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> {
+async function runSiteBuild(input: CheckInput, scratch: string): Promise<SiteBuild> {
     const site = input.selection.view.options('site');
     const folderPath = site['build_folder'];
     const cwd = join(scratch, input.selection.scope.path);
@@ -40,14 +40,14 @@ async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> 
  */
 function cachedBuild(input: CheckInput): Promise<SiteBuild> {
     const key = join(input.root, input.selection.scope.path);
-    const scopeBuilds = getCachedValue(input.reads, BUILD_MEMO);
+    const scopeBuilds = getCachedValue(input.reads, SITE_BUILD_MEMO);
     const held = scopeBuilds.get(key);
     if (held !== undefined) return held;
     const running = (async () => {
         const resources = input.resources;
         resources.defer(() => scopeBuilds.delete(key));
         const folder = await copyIntoScratch(checkCopyInputs(input));
-        return runBuild(input, resources.use(folder).path);
+        return runSiteBuild(input, resources.use(folder).path);
     })();
     scopeBuilds.set(key, running);
     return running;
@@ -82,7 +82,7 @@ export function filesUnder(folder: string): string[] {
  * @param absolute the built file's absolute path.
  * @returns a confined repository-relative path.
  */
-export function repositoryPath(
+export function deriveBuiltFilePath(
     input: Pick<CheckInput, 'selection'>,
     build: Pick<SiteBuild, 'folder'>,
     absolute: string,
