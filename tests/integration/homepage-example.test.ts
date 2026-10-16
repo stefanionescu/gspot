@@ -73,4 +73,11 @@ test('the recorded example reports the agent findings and passes after the fix',
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     const passedHuman = await spawnGspot(sandbox.path, ['check', '--hook', 'pre-commit']);
     expect(passedHuman.code, passedHuman.stdout + passedHuman.stderr).toBe(0);
+    // A system without a build of a tool skips its check, which changes the counts that the page shows.
+    if (!rejectedReport.skips.some(({ cause }) => cause === 'system')) {
+        expect(rejectedHuman.stdout).toContain(
+            example.rejected.split('\n').find((line) => line.startsWith('Failed:'))!,
+        );
+        expect(passedHuman.stdout).toContain(example.passed);
+    }
 });
