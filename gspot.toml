@@ -163,6 +163,11 @@ paths = ["packages/cli/src/types/objects.ts"]
 allowed_names = ["_zod"]
 reason = "Zod names its schema information property _zod."
 
+[[naming.override]]
+paths = ["packages/cli/src/tools/npm/package-manager.ts"]
+allowed_names = ["package-manager"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
 [architecture.roles]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/environment.ts"]
 scripts = ["scripts/**"]

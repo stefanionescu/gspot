@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { createReadCache } from '#cli/system/files/cache.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { TYPED_DECLARATION } from '#tests/config/typescript.ts';
 import { readPython, disposePython } from '#cli/parsers/python.ts';
-import { parseSource, visitParsed } from '#cli/parsers/tree-sitter.ts';
+import { visitParsed, createReadCache } from '#cli/system/files/cache.ts';
 
 test('parses are cached per run and copied trees outlive the cache', async () => {
     const reads = createReadCache(process.cwd());

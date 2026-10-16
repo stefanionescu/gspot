@@ -4,7 +4,7 @@ import { unlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { parseToolProject } from '#cli/parsers/tool-project.ts';
+import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import { createEslint, lintFindings, readEslintConfiguration } from '#tests/setup/generate.ts';
 
 import {

@@ -1,8 +1,7 @@
 // Assigns content and extension tags to repository files.
 import { posix } from 'node:path';
-import { parseShebang } from '#cli/parsers/shebang.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
+import { parseShebang, lockfileEntry } from '#cli/repository/classify.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 import type { Tagged, FileEntry, ContentPrefix } from '#cli/types/repository/inventory.ts';
 

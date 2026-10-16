@@ -15,7 +15,7 @@ import {
     declaredNpmClient,
     npmClientIdentitySchema,
     npmClientDeclarationSchema,
-} from '#cli/parsers/npm-client.ts';
+} from '#cli/tools/npm/package-manager.ts';
 
 // Read the package manager from repository declarations and lockfiles.
 async function detectedNpmClient(root: string, candidates: string[]) {

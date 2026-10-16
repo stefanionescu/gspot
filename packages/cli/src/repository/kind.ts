@@ -8,7 +8,7 @@ import { extractExtension } from '#cli/system/paths.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { MARKERS } from '#cli/config/system/managed-blocks.ts';
-import { hasGeneratedHeader } from '#cli/parsers/generated-header.ts';
+import { hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { DOT_GSPOT, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
 

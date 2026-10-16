@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { setImmediate } from 'node:timers/promises';
 import type { Files } from '#cli/types/system/files.ts';
-import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
+import { lockfileEntry } from '#cli/repository/classify.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DIRECTORY_MODE } from '#cli/config/system/modes.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';

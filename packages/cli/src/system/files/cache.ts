@@ -1,6 +1,7 @@
 // Caches source bytes and computed values for one run.
 
 import { realpathSync } from 'node:fs';
+import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
 
 /**
@@ -46,4 +47,38 @@ export function getCachedMapValue<Key, Value>(
  */
 export function createReadCache(root: string): ReadCache {
     return { root: realpathSync(root), sources: new Map(), memo: new Map(), parsed: new Map() };
+}
+
+/**
+ * Parse selected files once per run and release them with the run.
+ * @param input the selected paths and source reads.
+ * @param read the source parser.
+ * @param dispose the operation that releases the parsed values.
+ * @param resources the resources released at the end of the run.
+ * @returns the parsed value, valid until disposing of the cleanup stack.
+ */
+export async function visitParsed<Value, Input extends SourceInput>(
+    input: Input,
+    read: (input: Input) => Promise<Value>,
+    dispose: (value: Value) => void,
+    resources: DisposableStack,
+): Promise<Value> {
+    const key = JSON.stringify([read.name, input.root, input.files.map((file) => file.path)]);
+    let pending = input.reads.parsed.get(key);
+    if (pending === undefined) {
+        pending = read(input);
+        input.reads.parsed.set(key, pending);
+        try {
+            // Each reader's name identifies its cached return type.
+            const value = (await pending) as Value;
+            resources.defer(() => {
+                input.reads.parsed.delete(key);
+                dispose(value);
+            });
+        } catch (error) {
+            input.reads.parsed.delete(key);
+            throw error;
+        }
+    }
+    return (await pending) as Value;
 }

@@ -4,13 +4,13 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { listStrayPaths } from '#cli/ownership/plans.ts';
-import { staleLockfiles } from '#cli/tools/lockfiles.ts';
 import { DIFF_CONTEXT_LINES } from '#cli/config/apply.ts';
 import { readBlock } from '#cli/system/managed-blocks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
-import { parseToolProject } from '#cli/parsers/tool-project.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
+import { staleLockfiles } from '#cli/tools/project-lockfiles.ts';
+import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 
 import {

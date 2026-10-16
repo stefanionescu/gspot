@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildTrackedFile } from '#tests/setup/tracked-file.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { INVALID_DEPENDENCY_FILES, INVALID_PYTHON_DEPENDENCIES } from '#tests/config/repository.ts';
@@ -38,23 +39,13 @@ test('a pytest table counts as a pytest dependency', async () => {
 test.each([...INVALID_PYTHON_DEPENDENCIES])('an invalid $name in $path names the file', async ({ path, source }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: source });
-    const repository = await readRepository(sandbox.path, {
-        declarations: [],
-        scopeEntries: [],
-        manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
-    });
-    expect(readDependencyFiles(sandbox.path, repository.files)).rejects.toThrow(`Cannot inspect manifest ${path}`);
+    const files = [buildTrackedFile(path)];
+    expect(readDependencyFiles(sandbox.path, files)).rejects.toThrow(`Cannot inspect manifest ${path}`);
 });
 
 test.each(INVALID_DEPENDENCY_FILES)('invalid %s content %s is a dependency file error', async (path, content) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
-    const repository = await readRepository(sandbox.path, {
-        declarations: [],
-        scopeEntries: [],
-        manifests: configurationManifests(),
-        reads: createReadCache(sandbox.path),
-    });
-    expect(readDependencyFiles(sandbox.path, repository.files)).rejects.toThrow(path);
+    const files = [buildTrackedFile(path)];
+    expect(readDependencyFiles(sandbox.path, files)).rejects.toThrow(path);
 });

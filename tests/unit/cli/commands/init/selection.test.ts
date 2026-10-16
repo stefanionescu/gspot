@@ -12,8 +12,8 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { VUE_COMPONENT } from '#tests/config/components.ts';
-import { parseToolProject } from '#cli/parsers/tool-project.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash/tools.ts';
+import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { TOOLING_PACKAGE, NON_JAVASCRIPT_PROJECTS } from '#tests/config/init.ts';
 

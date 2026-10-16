@@ -3,7 +3,7 @@ import { extractExtension } from '#cli/system/paths.ts';
 import { buildJsconfig } from '#cli/generation/jsconfig.ts';
 import { prettierPlugins } from '#cli/planning/needed-tools.ts';
 import { jsonText, headerFor } from '#cli/generation/headers.ts';
-import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
+import { JSON_EXTENSIONS } from '#cli/config/generation/header.ts';
 import { v8rToolFile } from '#cli/generation/tool-file-sources/v8r.ts';
 import { gixyToolFile } from '#cli/generation/tool-file-sources/gixy.ts';
 import { knipToolFile } from '#cli/generation/tool-file-sources/knip.ts';

@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { visitParsed } from '#cli/parsers/tree-sitter.ts';
+import { visitParsed } from '#cli/system/files/cache.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { readPython, docstringOf, disposePython } from '#cli/parsers/python.ts';
 import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/language/python.ts';

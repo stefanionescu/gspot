@@ -5,7 +5,7 @@ import { npmProject } from '#cli/generation/npm.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { STYLESHEET_CASES } from '#tests/config/stylelint.ts';
-import { parseToolProject } from '#cli/parsers/tool-project.ts';
+import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { YARN_CLIENTS, NEXT_INSTALLATIONS } from '#tests/config/npm.ts';
 import { REACT_NATIVE_TSCONFIG, REACT_NATIVE_DEPENDENCIES } from '#tests/config/react.ts';

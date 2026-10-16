@@ -1,4 +1,5 @@
 // Reads grammars and shares source parses within a run.
+// Reads grammars and shares source parses within a run.
 import { readFileSync } from 'node:fs';
 import { findWasmPath } from '#cli/system/assets.ts';
 import { readSource } from '#cli/system/files/reads.ts';
@@ -12,7 +13,6 @@ import type {
     SourceTree,
     GrammarName,
     ParserState,
-    SourceInput,
     ParsedSourceInput,
 } from '#cli/types/parsers/tree-sitter.ts';
 
@@ -97,38 +97,4 @@ export function grammarFor(path: string, language: string): GrammarName | undefi
     if ([...DECLARATION_EXTENSIONS].some((extension) => path.endsWith(extension))) return undefined;
     const grammar = Object.entries(LANGUAGE_GRAMMARS).find(([configuration]) => configuration === language)?.[1];
     return grammar === 'typescript' && path.endsWith(TSX_EXTENSION) ? 'tsx' : grammar;
-}
-
-/**
- * Parse selected files once per run and release them with the run.
- * @param input the selected paths and source reads.
- * @param read the source parser.
- * @param dispose the operation that releases the parsed values.
- * @param resources the resources released at the end of the run.
- * @returns the parsed value, valid until disposing of the cleanup stack.
- */
-export async function visitParsed<Value, Input extends SourceInput>(
-    input: Input,
-    read: (input: Input) => Promise<Value>,
-    dispose: (value: Value) => void,
-    resources: DisposableStack,
-): Promise<Value> {
-    const key = JSON.stringify([read.name, input.root, input.files.map((file) => file.path)]);
-    let pending = input.reads.parsed.get(key);
-    if (pending === undefined) {
-        pending = read(input);
-        input.reads.parsed.set(key, pending);
-        try {
-            // Each reader's name identifies its cached return type.
-            const value = (await pending) as Value;
-            resources.defer(() => {
-                input.reads.parsed.delete(key);
-                dispose(value);
-            });
-        } catch (error) {
-            input.reads.parsed.delete(key);
-            throw error;
-        }
-    }
-    return (await pending) as Value;
 }

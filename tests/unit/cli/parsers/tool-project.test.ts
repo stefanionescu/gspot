@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { TOOL_REQUIREMENTS } from '#tests/config/npm.ts';
-import { parseToolProject } from '#cli/parsers/tool-project.ts';
+import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
 
 test.each([...TOOL_REQUIREMENTS])('$name', ({ dependency, version, accepted }) => {

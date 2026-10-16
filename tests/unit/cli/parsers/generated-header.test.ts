@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { hasGeneratedHeader } from '#cli/parsers/generated-header.ts';
+import { hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { NOT_GENERATED, GENERATED_HEADERS } from '#tests/config/generated-files.ts';
 
 test('the generated header is found in every comment form, after a shebang, and with CRLF', () => {

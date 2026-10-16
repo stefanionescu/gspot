@@ -1,10 +1,11 @@
 import { Query, type Node } from 'web-tree-sitter';
 import { readSource } from '#cli/system/files/reads.ts';
+import { visitParsed } from '#cli/system/files/cache.ts';
+import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { parseSource, visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { CountedLanguage, ConventionSource } from '#cli/types/checks/general.ts';
 import { CONVENTION_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/checks/general/structure.ts';
 
