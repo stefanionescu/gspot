@@ -3,8 +3,9 @@ import type { Session } from '#cli/types/planning.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { listFileDeclarations } from '#cli/repository/classify.ts';
+import { type ScopeSelection } from '#cli/types/settings/values.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { PRETTIERIGNORE_HEADER } from '#cli/config/generation/formatting.ts';
-import { type ScopeView, type ScopeSelection } from '#cli/types/settings/values.ts';
 import { BRACE_TOKENS, ALWAYS_IGNORED } from '#cli/config/generation/ignore-patterns.ts';
 
 // Expand alternatives before splitting paths because a brace branch can contain a directory separator.
@@ -159,18 +160,13 @@ export function gitignorePatterns(session: Pick<Session, 'reads' | 'repository' 
 }
 
 /**
- * Write the prettierignore configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.ignoresFor the check path-ignore reader.
- * @param root0.ignoredPaths the generated ignore path patterns.
- *
- * @returns the generated configuration text.
+ * Build the Prettier ignore file with the shared section order and the written reasons.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the generated ignore file with its ordered reasons and patterns.
  */
-export function buildPrettierignore({
-    ignoresFor,
-    ignoredPaths,
-}: Pick<ScopeView, 'ignoresFor'> & { ignoredPaths: string[] }): string {
+export function buildPrettierignore(context: ToolFileContext): string {
+    const { ignoresFor } = context.selection.view;
+    const ignoredPaths = gitignorePatterns(context.session);
     return (
         [
             PRETTIERIGNORE_HEADER,

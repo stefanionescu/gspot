@@ -1,27 +1,19 @@
-import type { Level } from '#cli/types/configurations.ts';
-import type { ScopeView } from '#cli/types/settings/values.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
     SQL_FILE_EXTENSIONS,
     SQLFLUFF_CAPITALISATION,
     SQLFLUFF_RECOMMENDED_OFF,
 } from '#cli/config/generation/tool-file-sources.ts';
-
 /**
- * Write the sqlfluff configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.settings the validated settings.
- * @param root0.format the resolved formatting settings.
- * @param root0.rulesOff the disabled lint rule reader.
- * @param level the selected check level.
- *
- * @returns the generated configuration text.
+ * Build sqlfluff file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the SQL dialect, formatting choices, and SQLFluff rule exclusions.
  */
-export function buildSqlfluffFile(
-    { settings, format, rulesOff }: Pick<ScopeView, 'settings' | 'format' | 'rulesOff'>,
-    level: Level,
-): string {
+function buildSqlfluffFile(context: ToolFileContext): string {
+    const { settings, format, rulesOff } = context.selection.view;
+    const level = context.level;
+
     const isAll = level === 'all';
 
     const off = [...rulesOff('sql/sqlfluff'), ...(isAll ? [] : SQLFLUFF_RECOMMENDED_OFF)];
@@ -63,3 +55,5 @@ export function buildSqlfluffFile(
         ].join('\n') + '\n'
     );
 }
+
+export { buildSqlfluffFile };

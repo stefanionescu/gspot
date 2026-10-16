@@ -1,10 +1,9 @@
 import { stringify } from '@decimalturn/toml-patch';
-import type { Session } from '#cli/types/planning.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-files.ts';
-import type { TyposSettings, TyposDictionary, GenerationInputs } from '#cli/types/generation/files.ts';
+import { type TyposSettings, type TyposDictionary, type ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
     TOOL_EMIT_FORMAT,
@@ -36,26 +35,22 @@ function buildSettingsDictionary(spellingScopes: ScopeSelection[]) {
         'extend-words': Object.fromEntries<string>(collectWords('extend-words')),
     };
 }
-
 /**
- * Write the repository vocabulary, dictionaries, and root-relative spelling exclusions.
- *
- * @param input the source values.
- *
- * @returns the generated configuration text.
+ * Build typos file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the spelling dictionaries and reason-grouped exclusions as TOML.
  */
-export function buildTyposFile(
-    input: Pick<GenerationInputs, 'selection' | 'scopes'> &
-        Pick<Session, 'root' | 'settingsFile' | 'reads' | 'repository'>,
-): string {
-    const { settings, ignoresFor, extra } = input.selection.view;
+function buildTyposFile(context: ToolFileContext): string {
+    const { settings, ignoresFor, extra } = context.selection.view;
     const ignoredPaths = [
-        ...generatedIgnores(input),
-        ...selectedIgnorePaths(input.scopes).filter((path) => !path.endsWith('/')),
+        ...generatedIgnores(context.session),
+        ...selectedIgnorePaths(context.scopes).filter((path) => !path.endsWith('/')),
     ];
     const typos = extra('typos') as TyposSettings | undefined;
-    const allowed = Object.fromEntries<string>(input.settingsFile.settings.allowed_words.map((word) => [word, word]));
-    const spellingScopes = input.scopes
+    const allowed = Object.fromEntries<string>(
+        context.session.settingsFile.settings.allowed_words.map((word) => [word, word]),
+    );
+    const spellingScopes = context.scopes
         .filter(({ view }) => view.configurations.includes('spelling'))
         .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path));
     const settingsType = buildSettingsDictionary(spellingScopes);
@@ -101,3 +96,5 @@ export function buildTyposFile(
         TOOL_EMIT_FORMAT,
     );
 }
+
+export { buildTyposFile };

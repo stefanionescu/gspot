@@ -1,17 +1,14 @@
-import type { ScopeView } from '#cli/types/settings/values.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { JSCPD_IGNORED } from '#cli/config/generation/tool-file-sources.ts';
-
 /**
- * Write the jscpd configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.settings the validated settings.
- * @param root0.ignoresFor the check path-ignore reader.
- *
- * @returns the generated configuration text.
+ * Build jscpd file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the duplication scan settings and source exclusions.
  */
-export function buildJscpdFile({ settings, ignoresFor }: Pick<ScopeView, 'settings' | 'ignoresFor'>): string {
+function buildJscpdFile(context: ToolFileContext): string {
+    const { settings, ignoresFor } = context.selection.view;
+
     return JSON.stringify(
         {
             mode: 'strict',
@@ -30,3 +27,5 @@ export function buildJscpdFile({ settings, ignoresFor }: Pick<ScopeView, 'settin
         JSON_INDENT,
     );
 }
+
+export { buildJscpdFile };

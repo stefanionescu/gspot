@@ -5,7 +5,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { eslintInputs } from '#cli/generation/eslint/inputs.ts';
 import { collectFragments } from '#cli/generation/fragments.ts';
 import { appliedBlocks } from '#cli/generation/eslint/blocks.ts';
-import type { ScopeSourceInputs } from '#cli/types/generation/files.ts';
+import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { ESLINT_RULE_LEVELS_FILE } from '#cli/config/generation/eslint.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { codeBlocks, fileBlocks, eslintPlugins } from '#cli/generation/eslint/defaults.ts';
@@ -20,7 +20,7 @@ import { emitBlocks, eslintImports, selectorDefinitions } from '#cli/generation/
  *
  * @returns the generated configuration text.
  */
-export function eslintConfiguration({ session, selection }: ScopeSourceInputs): string {
+export function eslintConfiguration({ session, selection }: ToolFileContext): string {
     const pluginLevels = (
         z.record(z.string(), z.enum(LEVELS).or(z.literal('none'))) satisfies z.ZodType<
             Record<string, (typeof LEVELS)[number] | 'none'>

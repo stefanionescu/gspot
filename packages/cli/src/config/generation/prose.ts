@@ -76,7 +76,7 @@ export const ACRONYMS = [
     'XML',
 ] as const;
 
-export const VALE_OFF_RULES = {
+export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'Vale.Spelling': 'typos owns spelling',
     'Google.Spelling': 'typos owns spelling',
     'Harper.Spelling': 'typos owns spelling',

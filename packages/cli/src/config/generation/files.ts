@@ -12,3 +12,5 @@ export const ATTRIBUTE_GLOB_CHARACTERS = /[\\*?[]/gu;
 export const ATTRIBUTE_QUOTED_CHARACTERS = /[\s"]/u;
 export const AUTO_LF_ATTRIBUTES = ['text=auto', 'eol=lf'] as const;
 export const TOOL_FILE_REFERENCE = /(?:['"]\.\/|\bnew\s+URL\(\s*['"])(?<path>[^'"]+)['"]/gu;
+
+export const SEMGREP_RULE_PACK_FOLDER = '.gspot/config/semgrep/';

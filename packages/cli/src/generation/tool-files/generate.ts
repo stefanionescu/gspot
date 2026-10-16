@@ -1,18 +1,16 @@
 import { join, dirname } from 'node:path/posix';
+import type { Session } from '#cli/types/planning.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { buildPointerFiles } from '#cli/generation/pointers.ts';
-import { emitTarget } from '#cli/generation/tool-files/build.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
+import { buildToolFile } from '#cli/generation/tool-files/build.ts';
 import { TOOL_FILE_REFERENCE } from '#cli/config/generation/files.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 import type {
-    WholeToolFile,
     GeneratedFile,
-    ToolFileInputs,
     ToolFileTarget,
-    GenerationResult,
     GenerationInputs,
     GenerationConsumers,
 } from '#cli/types/generation/files.ts';
@@ -36,30 +34,7 @@ function isTargetEnabled(
         isConfigurationSelected(toolFile.per_scope ? [context.selection] : context.scopes, toolFile.when.configuration)
     );
 }
-
-// Emits one tool file target: its file, its nested copies, and its pointer.
-function emitToolFile(
-    context: ToolFileInputs,
-    toolFile: WholeToolFile,
-    target: string,
-    generated: GenerationResult,
-    fragmentPaths: ReadonlySet<string>,
-): void {
-    const { manifest } = context;
-    const file: GeneratedFile = {
-        path: target,
-        content: emitTarget(`${manifest.dir}/${toolFile.source}`, target, context),
-        kind: 'tool_file',
-    };
-    generated.files.push(
-        file,
-        ...buildPointerFiles(context, toolFile, target).filter(
-            (pointer) => toolFile.pointer?.directories !== undefined || !fragmentPaths.has(pointer.path),
-        ),
-    );
-}
-
-// Sibling references keep their scopeTargets files together when one differs from the root.
+// Tool files that refer to each other must share the same root or scope placement.
 function groupRelatedTargets(scopeTargets: ToolFileTarget[], files: Map<string, GeneratedFile>): ToolFileTarget[][] {
     const references = new Map(
         scopeTargets.map(({ target }) => [
@@ -71,35 +46,62 @@ function groupRelatedTargets(scopeTargets: ToolFileTarget[], files: Map<string, 
             ),
         ]),
     );
-    const groups = scopeTargets.map((entry) => [entry]);
-    for (let index = 0; index < groups.length; index++) {
-        const group = groups[index] as ToolFileTarget[];
-        for (let other = index + 1; other < groups.length; ) {
-            if (
-                group.some((entry) =>
-                    (groups[other] as ToolFileTarget[]).some(
-                        (peer) =>
-                            (references.get(entry.target) as Set<string>).has(peer.target) ||
-                            (references.get(peer.target) as Set<string>).has(entry.target),
-                    ),
-                )
-            ) {
-                group.push(...(groups.splice(other, 1)[0] as ToolFileTarget[]));
-                other = index + 1;
-            } else other++;
+    const groups: ToolFileTarget[][] = [];
+    const seen = new Set<string>();
+    for (const target of scopeTargets) {
+        if (seen.has(target.target)) continue;
+        const group: ToolFileTarget[] = [];
+        const pending = [target];
+        while (pending.length > 0) {
+            const current = pending.pop() as ToolFileTarget;
+            if (seen.has(current.target)) continue;
+            seen.add(current.target);
+            group.push(current);
+            pending.push(
+                ...scopeTargets.filter(
+                    (peer) =>
+                        !seen.has(peer.target) &&
+                        ((references.get(current.target) as Set<string>).has(peer.target) ||
+                            (references.get(peer.target) as Set<string>).has(current.target)),
+                ),
+            );
         }
+        groups.push(group);
     }
     return groups;
 }
-
-// Remove identical root copies, then resolve retained pointers from the emitted paths.
-function removeDuplicateToolFiles(scope: string, targets: ToolFileTarget[], generated: GenerationResult): void {
-    const files = new Map(generated.files.map((file) => [file.path, file]));
-    const scopeTargets = targets.filter(
-        ({ toolFile, target }) =>
-            !toolFile.fragment && toolFile.per_scope && target !== toolFile.target && files.has(target),
+/**
+ * Remove scope copies equal to their root files and point their consumers at the retained files.
+ * @param session the selected repository scopes and tool manifests.
+ * @param generated the generated files before scope deduplication.
+ * @returns the retained files with their updated pointers.
+ */
+function removeDuplicateToolFiles(session: Session, generated: GeneratedFile[]): GeneratedFile[] {
+    // Earlier scopes own repeated destinations; the root scope comes first.
+    const files = new Map(generated.toReversed().map((file) => [file.path, file]));
+    const targets = session.scopes.flatMap((selection) =>
+        listToolFileTargets({
+            session,
+            selection,
+            scopes: session.scopes,
+            manifests: session.neededToolManifests,
+            files: session.repository.files,
+        }),
     );
-    const groups = groupRelatedTargets(scopeTargets, files);
+    const groups = session.scopes
+        .filter(({ scope }) => scope.path !== '')
+        .flatMap(({ scope }) =>
+            groupRelatedTargets(
+                targets.filter(
+                    (target) =>
+                        target.owner.selection.scope.path === scope.path &&
+                        target.toolFile.per_scope &&
+                        !target.toolFile.fragment &&
+                        files.has(target.target),
+                ),
+                files,
+            ),
+        );
     const fragmentPaths = new Set(targets.flatMap(({ pointers }) => pointers.map(({ path }) => path)));
     const skipped = new Set(
         groups
@@ -123,33 +125,54 @@ function removeDuplicateToolFiles(scope: string, targets: ToolFileTarget[], gene
                 ]),
             ),
     );
-    generated.files = generated.files.filter(({ path }) => !skipped.has(path));
-    const available = new Set(generated.files.map(({ path }) => path));
-    for (const { toolFile, owner } of targets) {
-        if (!toolFile.per_scope) continue;
-        for (const pointer of buildPointerFiles(owner, toolFile, buildScopeTarget(scope, toolFile, available))) {
-            const index = generated.files.findIndex(({ path }) => path === pointer.path);
-            if (index !== -1) generated.files[index] = pointer;
-        }
+    const remaining = new Map([...files].filter(([path]) => !skipped.has(path)));
+    const available = new Set(remaining.keys());
+    for (const { toolFile, owner } of targets.filter(({ toolFile }) => toolFile.per_scope)) {
+        for (const pointer of buildPointerFiles(
+            owner,
+            toolFile,
+            buildScopeTarget(owner.selection.scope.path, toolFile, available),
+        ))
+            if (remaining.has(pointer.path)) remaining.set(pointer.path, pointer);
     }
+    return [...remaining.values()];
+}
+/**
+ * Build the tool files declared by one selected scope.
+ * @param context the selected scope and repository generation inputs.
+ * @param consumers the checks and tools that require each target.
+ * @returns the selected tool files and fragment pointers.
+ */
+function buildToolFiles(context: GenerationInputs, consumers: GenerationConsumers): GeneratedFile[] {
+    const targets = listToolFileTargets(context);
+    const files: GeneratedFile[] = [];
+    const seen = new Set<string>();
+    for (const { toolFile, target, owner, pointers } of targets) {
+        if (!isTargetEnabled(toolFile, context, consumers)) continue;
+        if (toolFile.fragment) {
+            files.push(...pointers);
+            continue;
+        }
+        if (seen.has(target)) continue;
+        seen.add(target);
+        const fragmentPaths = new Set(
+            targets
+                .filter((entry) => entry.toolFile.fragment && entry.toolFile.target === toolFile.target)
+                .flatMap((entry) => entry.pointers.map((pointer) => pointer.path)),
+        );
+        files.push(
+            ...buildToolFile(
+                { ...owner, toolFile, targetPath: target, level: context.session.settingsFile.settings.level },
+                fragmentPaths,
+            ),
+        );
+    }
+    return files;
 }
 
-/**
- * Emits the selected tool files in one scope, each target once across scopes.
- *
- * @param context the repository, resolved scope, and template inputs.
- * @param generated the generated destination list.
- * @param seen the targets already emitted.
- * @param consumers the applicable checks and the tools they require.
- */
-export function buildToolFiles(
-    context: GenerationInputs,
-    generated: GenerationResult,
-    seen: Set<string>,
-    consumers: GenerationConsumers,
-): void {
+function listToolFileTargets(context: GenerationInputs): ToolFileTarget[] {
     const { selection } = context;
-    const targets: ToolFileTarget[] = selection.selected.flatMap((manifest) => {
+    return selection.selected.flatMap((manifest) => {
         const owner = { ...context, manifest };
         return manifest.toolFiles.map((toolFile) => {
             let target = toolFile.target;
@@ -169,20 +192,6 @@ export function buildToolFiles(
             };
         });
     });
-    for (const { toolFile, target, owner, pointers } of targets) {
-        if (!isTargetEnabled(toolFile, context, consumers)) continue;
-        if (toolFile.fragment) {
-            generated.files.push(...pointers);
-            continue;
-        }
-        if (seen.has(target)) continue;
-        seen.add(target);
-        const fragmentPaths = new Set(
-            targets
-                .filter((entry) => entry.toolFile.fragment && entry.toolFile.target === toolFile.target)
-                .flatMap((entry) => entry.pointers.map((pointer) => pointer.path)),
-        );
-        emitToolFile(owner, toolFile, target, generated, fragmentPaths);
-    }
-    removeDuplicateToolFiles(selection.scope.path, targets, generated);
 }
+
+export { buildToolFiles, removeDuplicateToolFiles };

@@ -1,13 +1,12 @@
 // The entry files of a folder: what the settings declares for it, then what the configurations of the deepest scope around it know.
 
-import type { Session } from '#cli/types/planning.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { listPointerPaths } from '#cli/generation/pointers.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import type { GenerationInputs } from '#cli/types/generation/files.ts';
+import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import { generatedIgnores, selectedIgnorePaths } from '#cli/generation/ignore-files.ts';
@@ -79,24 +78,19 @@ function buildWorkspaces(root: string, settings: Settings, scopes: ScopeSelectio
         }),
     );
 }
-
 /**
- * Write the knip configuration from selected settings.
- *
- * @param input the source values.
- *
- * @returns the generated configuration text.
+ * Build knip file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the workspace entry points, project selectors, and dependency exclusions.
  */
-export function buildKnipFile(
-    input: Pick<GenerationInputs, 'selection' | 'scopes' | 'files' | 'manifests'> &
-        Pick<Session, 'root' | 'settingsFile' | 'reads' | 'repository' | 'startRunner'>,
-): string {
-    const { selection, scopes, files, manifests, settingsFile, root, startRunner } = input;
+function buildKnipFile(context: ToolFileContext): string {
+    const { selection, scopes, files, manifests } = context;
+    const { settingsFile, root, startRunner } = context.session;
     const { ignoresFor, extra } = selection.view;
     const options = selection.view.options('tools.knip');
     const scanner = selection.view.options('dependencies').scanner;
     const ignoredPaths = [
-        ...generatedIgnores(input),
+        ...generatedIgnores(context.session),
         ...selectedIgnorePaths(scopes).filter((path) => !path.endsWith('/')),
     ];
     const pointers = scopes.flatMap((selection) =>
@@ -145,3 +139,5 @@ export function buildKnipFile(
         JSON_INDENT,
     );
 }
+
+export { buildKnipFile };

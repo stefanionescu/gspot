@@ -2,8 +2,7 @@ import { stringify } from 'yaml';
 import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { dirname, basename, relative } from 'node:path/posix';
-import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { ProseInputs, ValeIniInputs } from '#cli/types/generation/files.ts';
+import { type ProseInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
 import { STYLES_DIRECTORY, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { VALE_PACKAGES, PROSE_FORMATS, VALE_RULE_EXTENSION } from '#cli/config/tools/vale.ts';
 
@@ -28,54 +27,34 @@ function escapeWord(word: string): string {
 function listExceptions(prose: ProseInputs): string[] {
     return [...new Set([...prose.words, ...ACRONYMS])].map((element) => escapeWord(element));
 }
-
 /**
- * Write the shared vocabulary as sentence-case heading exceptions.
- *
- * @param root0 the values for this generated file.
- * @param root0.prose the vocabulary and prose rule inputs.
- *
- * @returns the Vale style text.
+ * Build the heading or title capitalization style declared by this file.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Vale heading capitalization rule.
  */
-export function headingCaseStyle({ prose }: { prose: ProseInputs }): string {
+function buildCapitalizationStyle(context: ToolFileContext): string {
+    const prose = buildProseInputs(context.session, context.manifests);
+    const isTitle = context.toolFile.target.endsWith('/title-case.yml');
     return stringify({
         extends: 'capitalization',
-        message: "Headings below the title use sentence case: '%s'.",
+        message: isTitle
+            ? "The document title uses title case: '%s'."
+            : "Headings below the title use sentence case: '%s'.",
         level: 'error',
-        scope: 'heading.h2',
-        match: '$sentence',
+        scope: isTitle ? 'heading.h1' : 'heading.h2',
+        match: isTitle ? '$title' : '$sentence',
         exceptions: listExceptions(prose),
     });
 }
 
 /**
- * Write the shared vocabulary as title-case exceptions.
- *
- * @param root0 the values for this generated file.
- * @param root0.prose the vocabulary and prose rule inputs.
- *
- * @returns the Vale style text.
+ * Build acronyms style from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Vale acronym rule with the selected acronym allowance.
  */
-export function titleCaseStyle({ prose }: { prose: ProseInputs }): string {
-    return stringify({
-        extends: 'capitalization',
-        message: "The document title uses title case: '%s'.",
-        level: 'error',
-        scope: 'heading.h1',
-        match: '$title',
-        exceptions: listExceptions(prose),
-    });
-}
+function buildAcronymsStyle(context: ToolFileContext): string {
+    const prose = buildProseInputs(context.session, context.manifests);
 
-/**
- * Write the shared vocabulary as first-use acronym exceptions.
- *
- * @param root0 the values for this generated file.
- * @param root0.prose the vocabulary and prose rule inputs.
- *
- * @returns the Vale style text.
- */
-export function buildAcronymsStyle({ prose }: { prose: ProseInputs }): string {
     return stringify({
         extends: 'conditional',
         message: "'%s' is used without being spelled out on first use.",
@@ -86,18 +65,16 @@ export function buildAcronymsStyle({ prose }: { prose: ProseInputs }): string {
         exceptions: listExceptions(prose),
     });
 }
-
 /**
- * Build the repository's single Vale configuration.
- *
- * @param root0 the values for this generated file.
- * @param root0.targetPath the generated destination path.
- * @param root0.isAll whether the all level applies.
- * @param root0.prose the vocabulary and prose rule inputs.
- *
- * @returns the generated configuration text.
+ * Build vale ini file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Vale style locations and rule levels for the selected prose checks.
  */
-export function buildValeIniFile({ targetPath = '.gspot/config/vale.ini', isAll, prose }: ValeIniInputs): string {
+function buildValeIniFile(context: ToolFileContext): string {
+    const isAll = context.level === 'all';
+    const prose = buildProseInputs(context.session, context.manifests);
+    const { targetPath } = context;
+
     const rules: Record<string, string> = isAll
         ? Object.fromEntries(Object.keys(VALE_OFF_RULES).map((rule) => [rule, 'NO']))
         : Object.fromEntries(
@@ -131,7 +108,7 @@ export function buildValeIniFile({ targetPath = '.gspot/config/vale.ini', isAll,
         `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
     ];
     for (const [rule, value] of Object.entries(rules)) {
-        const reason = Object.entries(VALE_OFF_RULES).find(([name]) => name === rule)?.[1];
+        const reason = VALE_OFF_RULES[rule];
         if (reason !== undefined) lines.push(`# ${reason}`);
         lines.push(`${rule} = ${value}`);
     }
@@ -146,16 +123,14 @@ export function buildValeIniFile({ targetPath = '.gspot/config/vale.ini', isAll,
     );
     return `${lines.join('\n')}\n`;
 }
-
 /**
- * Write required alternative text checks for the selected level.
- *
- * @param root0 the values for this generated file.
- * @param root0.isAll whether the all level applies.
- *
- * @returns the Vale style text.
+ * Build alt text style from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Vale alternative-text rule.
  */
-export function buildAltTextStyle({ isAll }: { isAll: boolean }): string {
+function buildAltTextStyle(context: ToolFileContext): string {
+    const isAll = context.level === 'all';
+
     return stringify({
         extends: 'existence',
         message: 'An image needs an alt attribute; decorative images can use an empty value.',
@@ -165,16 +140,14 @@ export function buildAltTextStyle({ isAll }: { isAll: boolean }): string {
         tokens: [ALT_TEXT_TOKENS[0], ...(isAll ? [ALT_TEXT_TOKENS[1]] : [])],
     });
 }
-
 /**
- * Write your own and shipped banned heading patterns.
- *
- * @param root0 the values for this generated file.
- * @param root0.settings the validated settings.
- *
- * @returns the Vale style text.
+ * Build banned headings style from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Vale rule for the configured prohibited headings.
  */
-export function buildBannedHeadingsStyle({ settings }: Pick<ScopeView, 'settings'>): string {
+function buildBannedHeadingsStyle(context: ToolFileContext): string {
+    const { settings } = context.selection.view;
+
     const headings = [...new Set([...BANNED_HEADINGS, ...(settings['docs.banned_headings'] as string[])])];
     return stringify({
         extends: 'existence',
@@ -186,16 +159,14 @@ export function buildBannedHeadingsStyle({ settings }: Pick<ScopeView, 'settings
         tokens: headings.map((heading) => String.raw`(?:\b|^)${escapeWord(heading)}(?:\b|$)`),
     });
 }
-
 /**
- * Write the list item word limit.
- *
- * @param root0 the values for this generated file.
- * @param root0.limit the configured numeric limit reader.
- *
- * @returns the Vale style text.
+ * Build list item style from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Vale list-item punctuation rule.
  */
-export function buildListItemStyle({ limit }: Pick<ScopeView, 'limit'>): string {
+function buildListItemStyle(context: ToolFileContext): string {
+    const { limit } = context.selection.view;
+
     const max = limit('list_item_words');
     return stringify({
         ...LENGTH_STYLES.item,
@@ -204,16 +175,14 @@ export function buildListItemStyle({ limit }: Pick<ScopeView, 'limit'>): string 
         max,
     });
 }
-
 /**
- * Write the paragraph sentence limit.
- *
- * @param root0 the values for this generated file.
- * @param root0.limit the configured numeric limit reader.
- *
- * @returns the Vale style text.
+ * Build paragraph length style from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Vale paragraph length rule with the configured ceiling.
  */
-export function buildParagraphLengthStyle({ limit }: Pick<ScopeView, 'limit'>): string {
+function buildParagraphLengthStyle(context: ToolFileContext): string {
+    const { limit } = context.selection.view;
+
     const max = limit('paragraph_sentences');
     return stringify({
         ...LENGTH_STYLES.paragraph,
@@ -222,16 +191,14 @@ export function buildParagraphLengthStyle({ limit }: Pick<ScopeView, 'limit'>): 
         max,
     });
 }
-
 /**
- * Write the sentence word limit.
- *
- * @param root0 the values for this generated file.
- * @param root0.limit the configured numeric limit reader.
- *
- * @returns the Vale style text.
+ * Build sentence length style from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Vale sentence length rule with the configured ceiling.
  */
-export function buildSentenceLengthStyle({ limit }: Pick<ScopeView, 'limit'>): string {
+function buildSentenceLengthStyle(context: ToolFileContext): string {
+    const { limit } = context.selection.view;
+
     const max = limit('sentence_words');
     return stringify({
         ...LENGTH_STYLES.sentence,
@@ -240,16 +207,14 @@ export function buildSentenceLengthStyle({ limit }: Pick<ScopeView, 'limit'>): s
         max,
     });
 }
-
 /**
- * Write product-name possessive patterns using plain regular-expression escapes.
- *
- * @param root0 the values for this generated file.
- * @param root0.names the companion tool names.
- *
- * @returns the Vale style text.
+ * Build possessives style from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Vale possessive-form rule.
  */
-export function buildPossessivesStyle({ names }: { names: string[] }): string {
+function buildPossessivesStyle(context: ToolFileContext): string {
+    const names = productNames(context.session);
+
     return stringify({
         extends: 'existence',
         message: "Possessive on a product or code name: '%s'. Rephrase with 'of' or 'the'.",
@@ -258,16 +223,14 @@ export function buildPossessivesStyle({ names }: { names: string[] }): string {
         tokens: [String.raw`\b(?:${names.map((name) => escapeWord(name)).join('|')})'s\b`],
     });
 }
-
 /**
- * Write a sorted, unique accepted vocabulary without template indentation.
- *
- * @param root0 the values for this generated file.
- * @param root0.prose the vocabulary and prose rule inputs.
- *
- * @returns the sorted accepted vocabulary.
+ * Build accepted words file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the accepted product names and your own allowed words, one per line.
  */
-export function buildAcceptedWordsFile({ prose }: { prose: ProseInputs }): string {
+function buildAcceptedWordsFile(context: ToolFileContext): string {
+    const prose = buildProseInputs(context.session, context.manifests);
+
     return prose.words.toSorted((left, right) => left.localeCompare(right)).join('\n') + '\n';
 }
 /**
@@ -278,24 +241,47 @@ export function buildAcceptedWordsFile({ prose }: { prose: ProseInputs }): strin
  *
  * @returns prose asset inputs.
  */
-export function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs {
+function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs {
+    // The selected manifest list owns this prose entry for the run.
+    const cached = session.reads.memo.get(manifests) as ProseInputs | undefined;
+    if (cached !== undefined) return cached;
     const words = session.settingsFile.settings.allowed_words;
-    return {
-        words: [
-            ...new Set([
-                ...session.scopes.flatMap(({ selected }) =>
-                    selected.flatMap((manifest) => [
-                        ...manifest.tools.map((tool) => tool.name),
-                        ...manifest.allowed_words,
-                    ]),
-                ),
-                ...words,
-            ]),
-        ],
+    const prose = {
+        words: [...new Set([...productNames(session), ...words])],
         rules: manifests.flatMap((manifest) =>
             manifest.toolFiles
                 .filter((file) => file.tool.includes('vale') && file.target.endsWith(VALE_RULE_EXTENSION))
                 .map((file) => basename(file.target, VALE_RULE_EXTENSION)),
         ),
     };
+    session.reads.memo.set(manifests, prose);
+    return prose;
 }
+
+/**
+ * List product names supplied by the selected tools and configurations.
+ * @param session the repository inventory, selected configurations, and effective settings.
+ * @returns the distinct tool names and allowed product words for the Vale vocabulary.
+ */
+function productNames(session: Session): string[] {
+    return [
+        ...new Set(
+            session.scopes.flatMap(({ selected }) =>
+                selected.flatMap((manifest) => [...manifest.tools.map((tool) => tool.name), ...manifest.allowed_words]),
+            ),
+        ),
+    ];
+}
+
+export {
+    buildValeIniFile,
+    buildAltTextStyle,
+    buildAcronymsStyle,
+    buildListItemStyle,
+    buildPossessivesStyle,
+    buildAcceptedWordsFile,
+    buildCapitalizationStyle,
+    buildBannedHeadingsStyle,
+    buildSentenceLengthStyle,
+    buildParagraphLengthStyle,
+};

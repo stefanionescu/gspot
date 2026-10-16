@@ -2,8 +2,10 @@ import { getValueAt } from '#cli/system/values.ts';
 import { join, dirname, relative } from 'node:path';
 import { findScope } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
+import { generatedIgnores } from '#cli/generation/ignore-files.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import type { JsconfigInput } from '#cli/types/generation/typescript.ts';
+import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE, SOURCE_SELECTION_FIELDS } from '#cli/config/parsers/tsconfig.ts';
 
@@ -14,21 +16,23 @@ import {
     JAVASCRIPT_EXTENSIONS,
     JAVASCRIPT_BUNDLED_IMPORTS,
 } from '#cli/config/generation/typescript.ts';
-
 /**
- * Generates JavaScript compiler settings using the scope's authored resolution and input selection.
- *
- * @param input the source inventory, import styles and authored project paths of one scope.
- *
- * @returns the jsconfig contents.
+ * Build jsconfig from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the JavaScript type-checking project and its scoped source selectors.
  */
-export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
-    const { root, reads, declarationPaths, target, scope, files, scopeEntries, importStyle } = input;
+function buildJsconfig(context: ToolFileContext): string {
+    const { root, reads } = context.session;
+    const { files, targetPath: target } = context;
+    const scope = context.selection.scope.path;
+    const scopeEntries = context.scopes.map((entry) => entry.scope);
+    const importStyle = context.selection.view.options('tools.eslint').import_extension;
+    const declarationPaths = generatedIgnores(context.session);
     const jsconfigOwner = readTsconfig(root, join(root, scope, JSCONFIG_FILE), reads);
     const owner = jsconfigOwner === undefined ? TSCONFIG_FILE : JSCONFIG_FILE;
     const authored = jsconfigOwner ?? readTsconfig(root, join(root, scope, owner), reads);
     const prefix = convertToPosixPath(relative(dirname(target), scope)) + '/';
-    const compilerOptions: Record<string, unknown> = { ...JAVASCRIPT_OPTIONS, ['jsx']: JAVASCRIPT_IMPORTS.jsx };
+    const compilerOptions: Record<string, unknown> = { ...JAVASCRIPT_OPTIONS, jsx: JAVASCRIPT_IMPORTS.jsx };
     const jsconfig: Record<string, unknown> = { compilerOptions };
     const extensionless = files.some(
         (file) =>
@@ -45,7 +49,7 @@ export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
     if (authored === undefined) {
         Object.assign(compilerOptions, JAVASCRIPT_IMPORTS, extensionless ? JAVASCRIPT_BUNDLED_IMPORTS : {});
         jsconfig['exclude'] = [...declarationPaths, ...JAVASCRIPT_EXCLUSIONS].map((path) => `${prefix}${path}`);
-        return jsconfig;
+        return JSON.stringify(jsconfig, null, JSON_INDENT) + '\n';
     }
     jsconfig['extends'] = `${prefix}${owner}`;
     if (authored.options.jsx !== undefined) delete compilerOptions['jsx'];
@@ -53,5 +57,7 @@ export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
         jsconfig['files'] = authored.fileNames
             .filter((path) => DECLARATION_EXTENSIONS.has(extractExtension(path)))
             .map((path) => convertToPosixPath(relative(join(root, dirname(target)), path)));
-    return jsconfig;
+    return JSON.stringify(jsconfig, null, JSON_INDENT) + '\n';
 }
+
+export { buildJsconfig };

@@ -1,32 +1,21 @@
 import { parse, stringify } from 'yaml';
-import type { Session } from '#cli/types/planning.ts';
+import { readAsset } from '#cli/system/assets.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import { gitignorePatterns, moveIgnorePatterns } from '#cli/generation/ignore-files.ts';
-import type { SemgrepDocument, GenerationInputs } from '#cli/types/generation/files.ts';
+import { type SemgrepDocument, type ToolFileContext } from '#cli/types/generation/files.ts';
 import { SEMGREP_IGNORED, SEMGREP_ENV_PATTERNS_INDEX } from '#cli/config/generation/tool-file-sources.ts';
-
 /**
- * Set dependency and folder values in a shipped Semgrep pack.
- *
- * @param source the source paths and dependency trees.
- * @param configuration the configuration name.
- * @param root0 the values for this generated file.
- * @param root0.selection the selected scope and its settings.
- * @param root0.scopes the selected project scopes.
- * @param root0.packageManifests the parsed package dependency files.
- *
- * @returns the generated configuration text.
+ * Build the selected Semgrep pack with its dependency and scope paths.
+ * @param context the selected pack, dependencies, and repository scopes.
+ * @returns the selected Semgrep rule pack text.
  */
-export function buildSemgrepFile(
-    source: string,
-    configuration: string,
-    {
-        selection,
-        scopes,
-        packageManifests,
-    }: Pick<GenerationInputs, 'selection' | 'scopes'> & Pick<Session, 'packageManifests'>,
-): string {
+function buildSemgrepFile(context: ToolFileContext): string {
+    const { selection, scopes } = context;
+    const { packageManifests } = context.session;
+    const source = readAsset(`${context.manifest.dir}/${context.toolFile.source}`);
+    const configuration = context.manifest.configuration.name;
+
     const scopeDependencies = Object.keys(getProjectDependencies(packageManifests, selection.scope.path));
     const document = parse(source) as SemgrepDocument;
     if (configuration === 'javascript' && !scopeDependencies.includes('jsonwebtoken'))
@@ -40,20 +29,15 @@ export function buildSemgrepFile(
     }
     return stringify(document).trimEnd();
 }
-
 /**
- * Write the semgrepignore configuration from selected settings.
- *
- * @param input the source values.
- *
- * @returns the generated configuration text.
+ * Build Semgrep ignore paths from the selected scope and explicit ignores.
+ * @param context the selected scope and repository ignore paths.
+ * @returns one ignored path per line.
  */
-export function buildSemgrepignore(
-    input: Pick<GenerationInputs, 'selection' | 'scopes'> & Pick<Session, 'root' | 'reads' | 'repository'>,
-): string {
-    const { ignoresFor } = input.selection.view;
-    const scope = input.selection.scope.path;
-    const ignoredPaths = gitignorePatterns(input);
+function buildSemgrepignore(context: ToolFileContext): string {
+    const { ignoresFor } = context.selection.view;
+    const scope = context.selection.scope.path;
+    const ignoredPaths = gitignorePatterns(context.session);
     return (
         moveIgnorePatterns(
             [
@@ -68,3 +52,5 @@ export function buildSemgrepignore(
         ).join('\n') + '\n'
     );
 }
+
+export { buildSemgrepFile, buildSemgrepignore };

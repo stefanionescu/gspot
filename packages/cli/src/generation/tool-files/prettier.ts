@@ -4,6 +4,9 @@ import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
+import { listPrettierPlugins } from '#cli/planning/needed-tools.ts';
+import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import { PRETTIER_FIXED_OPTIONS } from '#cli/config/generation/formatting.ts';
 import { escapeGlob, includeFolderContents } from '#cli/repository/matchers.ts';
@@ -127,7 +130,7 @@ function convertFormatSettings(format: Partial<FormatSettings>): Record<string, 
  *
  * @returns the Prettier configuration.
  */
-export function buildPrettierOptions(input: PrettierInput): Record<string, unknown> {
+function buildPrettierOptions(input: PrettierInput): Record<string, unknown> {
     const { settings, format, targetPath, extra, plugins } = input;
     const prefix = convertToPosixPath(relative(dirname(targetPath), '.'));
     const moveFromRoot = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
@@ -145,4 +148,21 @@ export function buildPrettierOptions(input: PrettierInput): Record<string, unkno
         ...(overrides.length === 0 ? {} : { overrides }),
     };
 }
-export { listScopeFormats };
+
+/**
+ * Build the Prettier tool file relative to its destination.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the formatter options, selected plugins, and scoped overrides.
+ */
+function buildPrettierFile(context: ToolFileContext): string {
+    const value = buildPrettierOptions({
+        settings: context.session.settingsFile.settings,
+        format: context.selection.view.format,
+        extra: context.selection.view.extra('prettier'),
+        plugins: [...listPrettierPlugins(context.scopes.flatMap(({ selected }) => selected)).values()],
+        targetPath: context.targetPath,
+    });
+    return JSON.stringify(value, null, JSON_INDENT) + '\n';
+}
+
+export { listScopeFormats, buildPrettierFile, buildPrettierOptions };

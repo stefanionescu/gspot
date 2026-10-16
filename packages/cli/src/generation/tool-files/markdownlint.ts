@@ -1,23 +1,15 @@
-import type { Level } from '#cli/types/configurations.ts';
-import type { ScopeView } from '#cli/types/settings/values.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { MARKDOWNLINT_RULES } from '#cli/config/generation/tool-file-sources.ts';
-
 /**
- * Write the markdownlint configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.format the resolved formatting settings.
- * @param root0.settings the validated settings.
- * @param root0.rulesOff the disabled lint rule reader.
- * @param level the selected check level.
- *
- * @returns the generated configuration text.
+ * Build markdownlint file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Markdown lint rules with the chosen level, indentation, and your own rule options.
  */
-export function buildMarkdownlintFile(
-    { format, settings, rulesOff }: Pick<ScopeView, 'format' | 'settings' | 'rulesOff'>,
-    level: Level,
-): string {
+function buildMarkdownlintFile(context: ToolFileContext): string {
+    const { format, settings, rulesOff } = context.selection.view;
+    const level = context.level;
+
     const isAll = level === 'all';
     const document: Record<string, boolean | Record<string, unknown>> = {
         ...MARKDOWNLINT_RULES,
@@ -33,3 +25,5 @@ export function buildMarkdownlintFile(
     Object.assign(document, Object.fromEntries(rulesOff('markdown/markdownlint').map((rule) => [rule, false])));
     return JSON.stringify(document, null, JSON_INDENT);
 }
+
+export { buildMarkdownlintFile };

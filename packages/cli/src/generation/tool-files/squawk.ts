@@ -1,26 +1,17 @@
 import { stringify } from '@decimalturn/toml-patch';
-import type { Session } from '#cli/types/planning.ts';
-import type { GenerationInputs } from '#cli/types/generation/files.ts';
+import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import { TOOL_EMIT_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/tool-file-sources.ts';
-
 /**
- * Write the squawk configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.selection the selected scope and its settings.
- * @param root0.files the selected source files.
- * @param root0.settingsFile the captured gspot.toml and parsed settings.
- *
- * @returns the generated configuration text.
+ * Build squawk file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the disabled Squawk migration rules.
  */
-export function buildSquawkFile({
-    selection,
-    files,
-    settingsFile,
-}: Pick<GenerationInputs, 'selection' | 'files'> & Pick<Session, 'settingsFile'>): string {
+function buildSquawkFile(context: ToolFileContext): string {
+    const { selection, files } = context;
+
     const { settings, rulesOff } = selection.view;
-    const isAll = settingsFile.settings.level === 'all';
+    const isAll = context.level === 'all';
     const migrations = files.flatMap((file) =>
         file.path.endsWith('.sql') && file.kind === 'source' ? [file.path] : [],
     );
@@ -31,3 +22,5 @@ export function buildSquawkFile({
     };
     return stringify(document, TOOL_EMIT_FORMAT).trimEnd();
 }
+
+export { buildSquawkFile };

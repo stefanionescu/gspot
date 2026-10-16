@@ -150,7 +150,7 @@ export const SWIFTFORMAT_OPTIONS = {
     self: 'init-only',
 } as const;
 export const SWIFTFORMAT_ALL_LEVEL_ON = ['blockComments', 'wrapEnumCases'] as const;
-export const SWIFTFORMAT_OFF = {
+export const SWIFTFORMAT_OFF: Readonly<Record<string, string>> = {
     trailingClosures: '# SwiftLint trailing_closure owns closure syntax, so one tool reports it.',
     initCoderUnavailable:
         '# Inserts an availability attribute into UIKit initializers, a behavior change, not a layout one.',

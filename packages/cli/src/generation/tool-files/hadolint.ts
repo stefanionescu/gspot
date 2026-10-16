@@ -1,22 +1,15 @@
 import { stringify } from 'yaml';
-import type { Level } from '#cli/types/configurations.ts';
-import type { ScopeView } from '#cli/types/settings/values.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { HADOLINT_RECOMMENDED_OFF, HADOLINT_FAILURE_THRESHOLD } from '#cli/config/generation/tool-file-sources.ts';
-
 /**
- * Write the hadolint configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.settings the validated settings.
- * @param root0.rulesOff the disabled lint rule reader.
- * @param level the selected check level.
- *
- * @returns the generated configuration text.
+ * Build hadolint file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Hadolint exclusions and trusted registry settings.
  */
-export function buildHadolintFile(
-    { settings, rulesOff }: Pick<ScopeView, 'settings' | 'rulesOff'>,
-    level: Level,
-): string {
+function buildHadolintFile(context: ToolFileContext): string {
+    const { settings, rulesOff } = context.selection.view;
+    const level = context.level;
+
     const isAll = level === 'all';
     const off = [...rulesOff('docker/hadolint'), ...(isAll ? [] : HADOLINT_RECOMMENDED_OFF)];
     const registries = settings['tools.hadolint.trusted_registries'] as string[];
@@ -27,3 +20,5 @@ export function buildHadolintFile(
     };
     return stringify(document).trimEnd();
 }
+
+export { buildHadolintFile };

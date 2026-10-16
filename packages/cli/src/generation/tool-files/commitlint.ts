@@ -1,17 +1,14 @@
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import type { GenerationInputs } from '#cli/types/generation/files.ts';
+import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/tool-file-sources.ts';
-
 /**
- * Write the commitlint configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.selection the selected scope and its settings.
- * @param root0.scopes the selected project scopes.
- *
- * @returns the generated configuration text.
+ * Build commitlint file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Commitlint rules with the allowed types and scopes of the repository.
  */
-export function buildCommitlintFile({ selection, scopes }: Pick<GenerationInputs, 'selection' | 'scopes'>): string {
+function buildCommitlintFile(context: ToolFileContext): string {
+    const { selection, scopes } = context;
+
     const { settings, rulesOff } = selection.view;
     const types = settings['tools.commitlint.types'] as string[];
     const named = settings['tools.commitlint.scopes'] as string[];
@@ -34,3 +31,5 @@ export function buildCommitlintFile({ selection, scopes }: Pick<GenerationInputs
     const serialized = JSON.stringify(document, null, JSON_INDENT);
     return `module.exports = ${serialized};`;
 }
+
+export { buildCommitlintFile };

@@ -226,4 +226,3 @@ export const ALWAYS_SKIPPED_TAGS = ['experimental'] as const;
 export { COMMITLINT_ERROR_SEVERITY };
 
 export const SEMGREP_ENV_PATTERNS_INDEX = 3;
-export const SEMGREP_CONFIGURATION_COMPONENT = -4;

@@ -1,6 +1,5 @@
 import { stringify } from 'yaml';
-import type { Level } from '#cli/types/configurations.ts';
-import type { ScopeView } from '#cli/types/settings/values.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
     SWIFTLINT_OPT_IN,
@@ -14,23 +13,15 @@ import {
 function buildSeverityLimits(count: unknown) {
     return { warning: count, error: count };
 }
-
 /**
- * Write the swiftlint configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.settings the validated settings.
- * @param root0.format the resolved formatting settings.
- * @param root0.limit the configured numeric limit reader.
- * @param root0.rulesOff the disabled lint rule reader.
- * @param level the selected check level.
- *
- * @returns the generated configuration text.
+ * Build swiftlint file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the SwiftLint rules with the source limits of the repository.
  */
-export function buildSwiftlintFile(
-    { settings, format, limit, rulesOff }: Pick<ScopeView, 'settings' | 'format' | 'limit' | 'rulesOff'>,
-    level: Level,
-): string {
+function buildSwiftlintFile(context: ToolFileContext): string {
+    const { settings, format, limit, rulesOff } = context.selection.view;
+    const level = context.level;
+
     const isAll = level === 'all';
     const off = [...rulesOff('swift/swiftlint'), ...(isAll ? [] : SWIFTLINT_RECOMMENDED_OFF)];
     const offSet = new Set(off);
@@ -74,3 +65,5 @@ export function buildSwiftlintFile(
             .join('\n') + '\n'
     );
 }
+
+export { buildSwiftlintFile };

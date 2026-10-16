@@ -1,12 +1,10 @@
 import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
-import type { Session } from '#cli/types/planning.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import type { Level } from '#cli/types/configurations.ts';
 import { VUE_STYLELINT_OVERRIDE } from '#cli/config/planning.ts';
 import type { RuleNamesFile } from '#cli/types/generation/eslint.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
-import type { GenerationInputs } from '#cli/types/generation/files.ts';
+import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { selectStylelintComponents } from '#cli/planning/needed-tools.ts';
 import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 
@@ -60,27 +58,22 @@ function buildComponentOverrides(
     });
 }
 
-export const ruleNamesFileSchema = z.strictObject({
+const ruleNamesFileSchema = z.strictObject({
     package: z.string().min(1),
     version: z.string().min(1),
     source: z.string().min(1),
     rules: z.array(z.string().min(1)),
 } satisfies SchemaShape<RuleNamesFile>) satisfies z.ZodType<RuleNamesFile>;
-
 /**
- * Write the stylelint configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.selection the selected scope and its settings.
- * @param root0.packageManifests the parsed package dependency files.
- * @param level the selected check level.
- *
- * @returns the generated configuration text.
+ * Build stylelint file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the CSS lint presets and rules selected for this level.
  */
-export function buildStylelintFile(
-    { selection, packageManifests }: Pick<GenerationInputs, 'selection'> & Pick<Session, 'packageManifests'>,
-    level: Level,
-): string {
+function buildStylelintFile(context: ToolFileContext): string {
+    const { selection } = context;
+    const { packageManifests } = context.session;
+    const level = context.level;
+
     const { rulesOff, configurations } = selection.view;
     const options = selection.view.options('tools.stylelint');
     const isAll = level === 'all';
@@ -122,3 +115,6 @@ export function buildStylelintFile(
 
     return `${JSON.stringify(document, null, JSON_INDENT)}\n`;
 }
+
+export { buildStylelintFile };
+export { ruleNamesFileSchema };

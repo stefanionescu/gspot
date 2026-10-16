@@ -1,8 +1,8 @@
 import { stringify as stringifyYaml } from 'yaml';
-import { type ScopeView } from '#cli/types/settings/values.ts';
 import { PERIPHERY_RETAIN } from '#cli/config/generation/swift.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
     MISE_SCHEMA,
@@ -15,54 +15,46 @@ import {
     SPECTRAL_RECOMMENDED_OFF,
     PURGECSS_PSEUDO_CLASS_PATTERN,
 } from '#cli/config/generation/tool-file-sources.ts';
-
 /**
- * Keep disabled Ansible rules in the scope's configuration.
- *
- * @param root0 the values for this generated file.
- * @param root0.rulesOff the disabled lint rule reader.
- *
- * @returns the generated configuration text.
+ * Build ansible lint file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Ansible Lint exclusions as YAML.
  */
-export function buildAnsibleLintFile({ rulesOff }: Pick<ScopeView, 'rulesOff'>): string {
+function buildAnsibleLintFile(context: ToolFileContext): string {
+    const { rulesOff } = context.selection.view;
+
     return stringifyYaml({ skip_list: [...new Set([...ALWAYS_SKIPPED_TAGS, ...rulesOff('ansible/ansible-lint')])] });
 }
-
 /**
- * Write the gixy configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.rulesOff the disabled lint rule reader.
- *
- * @returns the generated configuration text.
+ * Build gixy file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Gixy rule exclusions, or empty text when every rule stays enabled.
  */
-export function buildGixyFile({ rulesOff }: Pick<ScopeView, 'rulesOff'>): string {
+function buildGixyFile(context: ToolFileContext): string {
+    const { rulesOff } = context.selection.view;
+
     const off = rulesOff('nginx/gixy');
     return off.length === 0 ? '' : `skips = ${off.join(',')}\n`;
 }
-
 /**
- * Write the lychee configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.options the command options.
- *
- * @returns the generated configuration text.
+ * Build lychee file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Lychee link exclusions as TOML.
  */
-export function buildLycheeFile({ options }: Pick<ScopeView, 'options'>): string {
+function buildLycheeFile(context: ToolFileContext): string {
+    const { options } = context.selection.view;
+
     const exclude = options('docs').allowed_urls;
     return stringifyToml(exclude.length === 0 ? {} : { exclude }, TOOL_EMIT_FORMAT).trimEnd();
 }
-
 /**
- * Write the osvScanner configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.ignoresFor the check path-ignore reader.
- *
- * @returns the generated configuration text.
+ * Build osv scanner file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the package ignores, reasons, and expiration dates for the scanner.
  */
-export function buildOsvScannerFile({ ignoresFor }: Pick<ScopeView, 'ignoresFor'>): string {
+function buildOsvScannerFile(context: ToolFileContext): string {
+    const { ignoresFor } = context.selection.view;
+
     const entries = ignoresFor('dependencies/osv').filter(
         (entry) => entry.rule !== undefined && entry.paths.length === 0,
     );
@@ -79,16 +71,14 @@ export function buildOsvScannerFile({ ignoresFor }: Pick<ScopeView, 'ignoresFor'
         TOOL_EMIT_FORMAT,
     ).trimEnd();
 }
-
 /**
- * Write the periphery configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.settings the validated settings.
- *
- * @returns the generated configuration text.
+ * Build periphery file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Xcode project, schemes, and retained Periphery declarations as YAML.
  */
-export function buildPeripheryFile({ settings }: Pick<ScopeView, 'settings'>): string {
+function buildPeripheryFile(context: ToolFileContext): string {
+    const { settings } = context.selection.view;
+
     const project = settings['xcode.project'];
     const scheme = settings['xcode.scheme'];
     return stringifyYaml({
@@ -97,48 +87,41 @@ export function buildPeripheryFile({ settings }: Pick<ScopeView, 'settings'>): s
         ...PERIPHERY_RETAIN,
     });
 }
-
 /**
- * Write the purgecss configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.options the command options.
- *
- * @returns the generated configuration text.
+ * Build purgecss file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the JavaScript token extractor and safelist used by PurgeCSS.
  */
-export function buildPurgecssFile({ options }: Pick<ScopeView, 'options'>): string {
+function buildPurgecssFile(context: ToolFileContext): string {
+    const { options } = context.selection.view;
+
     const standard = [
         String(PURGECSS_PSEUDO_CLASS_PATTERN),
         ...options('tools.purgecss').safelist.map((word) => JSON.stringify(word, null, JSON_INDENT)),
     ];
     return `export const defaultExtractor = (content) => (content.match(${String(PURGECSS_EXTRACTOR)}) ?? []).map((token) => { let end = token.length; while (end > 0 && token[end - 1] === ${JSON.stringify(PURGECSS_TOKEN_END)}) end--; return token.slice(0, end); }).filter((token) => token !== '');\nexport const safelist = { standard: [${standard.join(', ')}] };\n`;
 }
-
 /**
- * Write the spectral configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.isAll whether the all level applies.
- *
- * @returns the generated configuration text.
+ * Build spectral file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the OpenAPI preset and the Spectral rules selected at this level.
  */
-export function buildSpectralFile({ isAll }: { isAll: boolean }): string {
+function buildSpectralFile(context: ToolFileContext): string {
+    const isAll = context.level === 'all';
+
     return stringifyYaml({
         extends: ['spectral:oas'],
         ...(isAll ? {} : { rules: Object.fromEntries(SPECTRAL_RECOMMENDED_OFF.map((name) => [name, 'off'])) }),
     }).trimEnd();
 }
-
 /**
- * Write the taplo configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.format the resolved formatting settings.
- * @param root0.extra the authored additional tool options.
- *
- * @returns the generated configuration text.
+ * Build taplo file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Taplo formatting settings with automatic schema lookup disabled.
  */
-export function buildTaploFile({ format, extra }: Pick<ScopeView, 'format' | 'extra'>): string {
+function buildTaploFile(context: ToolFileContext): string {
+    const { format, extra } = context.selection.view;
+
     return stringifyToml(
         {
             schema: { enabled: false },
@@ -152,32 +135,28 @@ export function buildTaploFile({ format, extra }: Pick<ScopeView, 'format' | 'ex
         TOOL_EMIT_FORMAT,
     ).trimEnd();
 }
-
 /**
- * Write the trivy configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.settings the validated settings.
- *
- * @returns the generated configuration text.
+ * Build trivy file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Trivy severity, timeout, and skipped folders as YAML.
  */
-export function buildTrivyFile({ settings }: Pick<ScopeView, 'settings'>): string {
+function buildTrivyFile(context: ToolFileContext): string {
+    const { settings } = context.selection.view;
+
     return stringifyYaml({
         timeout: `${String(settings['tool_timeout_seconds'])}s`,
         severity: settings['tools.trivy.severity'],
         scan: { 'skip-dirs': TRIVY_SKIPPED_FOLDERS },
     }).trimEnd();
 }
-
 /**
- * Write the v8r configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.settings the validated settings.
- *
- * @returns the generated configuration text.
+ * Build v8r file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the v8r schema catalog, including the configured file selectors.
  */
-export function buildV8rFile({ settings }: Pick<ScopeView, 'settings'>): string {
+function buildV8rFile(context: ToolFileContext): string {
+    const { settings } = context.selection.view;
+
     const schemas = (settings['tools.v8r.schema'] as { paths: string[]; url: string }[]).map(({ paths, url }) => ({
         name: url,
         fileMatch: paths,
@@ -188,3 +167,16 @@ export function buildV8rFile({ settings }: Pick<ScopeView, 'settings'>): string 
         stringifyYaml({ ignoreErrors: true, customCatalog: { schemas: [MISE_SCHEMA, ...schemas] } }).trimEnd()
     );
 }
+
+export {
+    buildV8rFile,
+    buildGixyFile,
+    buildTaploFile,
+    buildTrivyFile,
+    buildLycheeFile,
+    buildPurgecssFile,
+    buildSpectralFile,
+    buildPeripheryFile,
+    buildOsvScannerFile,
+    buildAnsibleLintFile,
+};

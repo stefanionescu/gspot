@@ -1,22 +1,19 @@
 import { stringify } from 'yaml';
-import type { ScopeView } from '#cli/types/settings/values.ts';
+import type { ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
     YAMLLINT_RULES,
     YAMLLINT_YAML_OPTIONS,
     YAMLLINT_RULE_OPTIONS,
 } from '#cli/config/generation/tool-file-sources.ts';
-
 /**
- * Write the yamllint configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.settings the validated settings.
- * @param root0.rulesOff the disabled lint rule reader.
- *
- * @returns the generated configuration text.
+ * Build yamllint file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the YAML lint rules with the configured indentation and disabled checks.
  */
-export function buildYamllintFile({ settings, rulesOff }: Pick<ScopeView, 'settings' | 'rulesOff'>): string {
+function buildYamllintFile(context: ToolFileContext): string {
+    const { settings, rulesOff } = context.selection.view;
+
     const rules: Record<string, unknown> = {
         ...Object.fromEntries(YAMLLINT_RULES.map((rule) => [rule, {}])),
         ...YAMLLINT_RULE_OPTIONS,
@@ -29,3 +26,5 @@ export function buildYamllintFile({ settings, rulesOff }: Pick<ScopeView, 'setti
     const document = { rules };
     return stringify(document, YAMLLINT_YAML_OPTIONS).trimEnd();
 }
+
+export { buildYamllintFile };

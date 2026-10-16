@@ -2,35 +2,28 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { relative } from 'node:path/posix';
 import { stringify } from '@decimalturn/toml-patch';
-import { type Session } from '#cli/types/planning.ts';
 import { generatedIgnores } from '#cli/generation/ignore-files.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { TOOL_EMIT_FORMAT } from '#cli/config/generation/tool-file-sources.ts';
-import { type PythonInputs, type GenerationInputs } from '#cli/types/generation/files.ts';
+import { type PythonInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
 import { RUFF_ISORT, RUFF_IGNORED_RULES, BASEDPYRIGHT_OPTIONS } from '#cli/config/generation/python.ts';
 
 /**
  * Resolve Python configuration paths for both type and lint tools.
  *
- * @param session the repository and settings.
- * @param selection the scope receiving this generated file.
- *
+ * @param context the repository, scope settings, tool declaration, and output path.
  * @returns the scope's environment and configuration-relative exclusions.
  */
-function buildPythonInputs(
-    session: Pick<Session, 'root' | 'installedRoot' | 'settingsFile' | 'reads' | 'repository' | 'scopes'>,
-    selection: ScopeSelection,
-): PythonInputs {
+function buildPythonInputs(context: ToolFileContext): PythonInputs {
+    const { session, selection, level } = context;
     const root = session.installedRoot;
-    const { settings } = session.settingsFile;
     const base = posix.relative(posix.join(TOOL_FILE_DIRECTORY, selection.scope.path), '.');
     const exclusions = generatedIgnores(session);
     return {
         ruffRules: selection.selected.flatMap((manifest) => [
             ...manifest.ruff.recommended,
-            ...(settings.level === 'all' ? manifest.ruff.all : []),
+            ...(level === 'all' ? manifest.ruff.all : []),
         ]),
         pythonScopePath: posix.join(base, selection.scope.path),
         pythonVenv:
@@ -47,21 +40,15 @@ function buildPythonInputs(
             ].map((path) => `${base}/${path}`),
     };
 }
-
 /**
- * Write the ruff configuration from selected settings.
- *
- * @param input the source values.
- *
- * @returns the generated configuration text.
+ * Build ruff file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Ruff lint rules, import settings, and source exclusions.
  */
-export function buildRuffFile(
-    input: Pick<GenerationInputs, 'selection' | 'scopes'> &
-        Pick<Session, 'root' | 'installedRoot' | 'settingsFile' | 'reads' | 'repository'>,
-): string {
-    const { settings, format, limit, ignoresFor, rulesOff } = input.selection.view;
-    const { pythonScopePath, pythonExcludes, ruffRules } = buildPythonInputs(input, input.selection);
-    const scope = input.selection.scope.path;
+function buildRuffFile(context: ToolFileContext): string {
+    const { settings, format, limit, ignoresFor, rulesOff } = context.selection.view;
+    const { pythonScopePath, pythonExcludes, ruffRules } = buildPythonInputs(context);
+    const scope = context.selection.scope.path;
     const off = rulesOff('python/ruff');
     const perFile = ignoresFor('python/ruff').filter((entry) => entry.rule !== undefined && entry.paths.length > 0);
     const byPath = new Map<string, string[]>();
@@ -100,20 +87,14 @@ export function buildRuffFile(
 
     return `${stringify(document, TOOL_EMIT_FORMAT).trimEnd()}\n`;
 }
-
 /**
- * Write the basedpyright configuration from selected settings.
- *
- * @param input the source values.
- *
- * @returns the generated configuration text.
+ * Build basedpyright file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Python environment and source paths used by Basedpyright.
  */
-export function buildBasedpyrightFile(
-    input: Pick<GenerationInputs, 'selection' | 'scopes'> &
-        Pick<Session, 'root' | 'installedRoot' | 'settingsFile' | 'reads' | 'repository'>,
-): string {
-    const { pythonVenv, pythonScopePath, pythonExcludes } = buildPythonInputs(input, input.selection);
-    const isAll = input.settingsFile.settings.level === 'all';
+function buildBasedpyrightFile(context: ToolFileContext): string {
+    const { pythonVenv, pythonScopePath, pythonExcludes } = buildPythonInputs(context);
+    const isAll = context.level === 'all';
     return (
         JSON.stringify(
             {
@@ -128,3 +109,5 @@ export function buildBasedpyrightFile(
         ) + '\n'
     );
 }
+
+export { buildRuffFile, buildBasedpyrightFile };

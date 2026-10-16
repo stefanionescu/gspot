@@ -1,12 +1,10 @@
 import { join } from 'node:path/posix';
-import type { Session } from '#cli/types/planning.ts';
-import type { Level } from '#cli/types/configurations.ts';
 import { parseBuildSettings } from '#cli/parsers/xcode.ts';
 import { PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { SWIFT_TOOLS_VERSION } from '#cli/config/generation/tool-file-sources.ts';
-import type { GenerationInputs, SwiftVersionInput } from '#cli/types/generation/files.ts';
+import { type ToolFileContext, type SwiftVersionInput } from '#cli/types/generation/files.ts';
 
 import {
     SWIFTFORMAT_OFF,
@@ -23,22 +21,16 @@ function readSwiftVersion(input: SwiftVersionInput, projectPath: string): string
     const projectText = projectPath === '' ? undefined : readCachedText(reads, join(projectPath, PBXPROJ_NAME));
     return projectText === undefined ? undefined : parseBuildSettings(projectText).swiftVersion;
 }
-
 /**
- * Write the swiftformat configuration from selected settings.
- *
- * @param root0 the values for this generated file.
- * @param root0.selection the selected scope and its settings.
- * @param root0.root the repository root.
- * @param root0.reads the captured source read cache.
- * @param level the selected check level.
- *
- * @returns the generated configuration text.
+ * Build swiftformat file from the selected settings.
+ * @param context the repository, scope settings, tool declaration, and output path.
+ * @returns the Swift language, indentation, line-ending, and rule settings.
  */
-export function buildSwiftformatFile(
-    { selection, root, reads }: Pick<GenerationInputs, 'selection'> & Pick<Session, 'root' | 'reads'>,
-    level: Level,
-): string {
+function buildSwiftformatFile(context: ToolFileContext): string {
+    const { selection } = context;
+    const { root, reads } = context.session;
+    const level = context.level;
+
     const { format, rulesOff } = selection.view;
     const isAll = level === 'all';
     const version = readSwiftVersion(
@@ -71,13 +63,13 @@ export function buildSwiftformatFile(
             '',
             ...document.enable.map((rule) => `--enable ${rule}`),
             '',
-            ...document.disable.flatMap((rule) => [
-                ...Object.entries(document.comments)
-                    .filter(([name]) => name === rule)
-                    .map(([, reason]) => reason),
-                `--disable ${rule}`,
-            ]),
+            ...document.disable.flatMap((rule) => {
+                const reason = document.comments[rule];
+                return [...(reason === undefined ? [] : [reason]), `--disable ${rule}`];
+            }),
             '',
         ].join('\n') + '\n'
     );
 }
+
+export { buildSwiftformatFile };

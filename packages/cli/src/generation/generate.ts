@@ -15,12 +15,12 @@ import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
 import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { buildToolFiles } from '#cli/generation/tool-files/generate.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
+import { buildToolFiles, removeDuplicateToolFiles } from '#cli/generation/tool-files/generate.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/projects.ts';
 import { DOT_GSPOT, STATE_DIRECTORY, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
 
@@ -175,7 +175,6 @@ export function generate(session: Session): GenerationResult {
     const checks = session.configuredChecks;
     const repositoryConsumers = { tools, checks: new Set(checks.map((check) => check.check.name)) };
     const generated: GenerationResult = { notes: [], files: [], blocks: [], fileEdits: [] };
-    const seen = new Set<string>();
     for (const selection of scopes) {
         const scopeChecks = checks.filter(
             (check) => check.scope.scope.path === selection.scope.path || check.check.runs === 'once',
@@ -184,11 +183,17 @@ export function generate(session: Session): GenerationResult {
             tools: new Set(scopeChecks.flatMap((check) => requiredToolNames(check))),
             checks: new Set(scopeChecks.map((check) => check.check.name)),
         };
-        buildToolFiles({ session, files, scopes, manifests, selection }, generated, seen, {
-            repository: repositoryConsumers,
-            scope: scopeConsumers,
-        });
+        generated.files.push(
+            ...buildToolFiles(
+                { session, files, scopes, manifests, selection },
+                {
+                    repository: repositoryConsumers,
+                    scope: scopeConsumers,
+                },
+            ),
+        );
     }
+    generated.files = removeDuplicateToolFiles(session, generated.files);
     generated.fileEdits.push(...buildBunfigEdits(root, scopes), ...buildPointerFieldEdits(session, generated.files));
     generated.files.push(
         ...buildHookFiles(root, settings, session.startRunner),

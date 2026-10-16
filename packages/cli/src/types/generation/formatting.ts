@@ -1,8 +1,6 @@
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { FormatSettings } from '#cli/types/settings/file.ts';
 
-export type JsonFormat = { width: number; indent: number };
-
 export type FormatOverride<Options = Record<string, unknown>> = {
     files: string[];
     excludeFiles: string[];
@@ -17,8 +15,6 @@ export type PrettierPlugin = {
 };
 
 export type ScopeFormat = { scope: string; paths: string[]; format: Partial<FormatSettings> };
-
-export type EditorconfigOverride = { path: string; options: Record<string, string | number | boolean> };
 
 export type ExtraOverride<Options> = {
     files: string | string[];
