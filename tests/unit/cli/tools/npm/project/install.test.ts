@@ -4,11 +4,11 @@ import { runTool } from '#cli/tools/run.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { INSTALL_FAILURES } from '#tests/config/npm.ts';
 import { fakeCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
@@ -101,7 +101,7 @@ test.each([...INSTALL_FAILURES])(
         });
         await createFileTree(repository.path, { 'gspot.toml': settingsText([]) });
         const session = await openSession(repository.path);
-        using owner = openSafeFolder(repository.path);
+        using owner = openFiles(repository.path);
         using resources = new DisposableStack();
         resources.use(
             fakeCommand('bun', (command) =>
@@ -165,7 +165,7 @@ test.each([false, true])(
         });
         await createFileTree(repository.path, { 'gspot.toml': settingsText([]) });
         const session = await openSession(repository.path);
-        using owner = openSafeFolder(repository.path);
+        using owner = openFiles(repository.path);
         using boundary = fakeCommand('bun', async (command, options) => {
             if (!frozen && command[1] !== '--version')
                 await writeFile(join(options.cwd, 'bun.lock'), credentialLockfile);
@@ -219,7 +219,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         PATH: join(sandbox.path, 'missing-bin'),
         MISE_DATA_DIR: join(sandbox.path, 'missing-mise'),
     });
-    using owner = openSafeFolder(sandbox.path);
+    using owner = openFiles(sandbox.path);
     const diagnostic = await rejection(
         prepareNpmLockfile(
             { path: '.gspot/package.json', content: manifest, kind: 'tool_file' },

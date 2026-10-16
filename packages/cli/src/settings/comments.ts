@@ -3,7 +3,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { tomlRange, addTomlComment, tomlCommentAnchors } from '#cli/parsers/toml/comments.ts';
 import type { TomlSyntax, TomlComments, TomlCommentAnchor } from '#cli/types/parsers/toml.ts';
-import { valueAt, isRecord, createTable, isRecordArray, normalizeTables } from '#cli/system/values.ts';
+import { isRecord, getValueAt, createTable, isRecordArray, normalizeTables } from '#cli/system/values.ts';
 import { METADATA_PREFIXES, IGNORE_IDENTITY_FIELDS, TEMPLATE_COMMENT_PREFIX } from '#cli/config/settings/file.ts';
 
 function sameValue(left: unknown, right: unknown): boolean {
@@ -33,8 +33,8 @@ function matchingPositions(
     if (matches.length === 0) return path[0] === 'ignore' || position >= values.length ? [] : [position];
     return matches.toSorted(
         (left, right) =>
-            Number(!sameValue(source['until'], valueAt(values[left], ['until']))) -
-            Number(!sameValue(source['until'], valueAt(values[right], ['until']))),
+            Number(!sameValue(source['until'], getValueAt(values[left], ['until']))) -
+            Number(!sameValue(source['until'], getValueAt(values[right], ['until']))),
     );
 }
 
@@ -45,23 +45,23 @@ function destinations(syntax: TomlSyntax, target: TomlTable, path: KeyPath): Key
             mapped = mapped.map((candidate) => [...candidate, key]);
             continue;
         }
-        const prior: unknown = valueAt(syntax.value, path.slice(0, index));
+        const prior: unknown = getValueAt(syntax.value, path.slice(0, index));
         if (!Array.isArray(prior)) return [];
         const original: readonly unknown[] = prior;
         mapped = mapped.flatMap((candidate) => {
-            const next: unknown = valueAt(target, candidate);
+            const next: unknown = getValueAt(target, candidate);
             if (!Array.isArray(next)) return [];
             const values: readonly unknown[] = next;
             return matchingPositions(original, values, key, path).map((position) => [...candidate, position]);
         });
     }
-    return mapped.filter((candidate) => valueAt(target, candidate) !== undefined);
+    return mapped.filter((candidate) => getValueAt(target, candidate) !== undefined);
 }
 
 function commentTarget(syntax: TomlSyntax, target: TomlTable, written: TomlTable, owner: TomlCommentAnchor) {
     const path = destinations(syntax, target, owner.path)[0];
     if (path === undefined) {
-        if (owner.kind === 'item' || valueAt(written, owner.path) === undefined) return { kind: owner.kind, path };
+        if (owner.kind === 'item' || getValueAt(written, owner.path) === undefined) return { kind: owner.kind, path };
         const [header] = [
             syntax.entries.findLast(
                 (entry) => entry.kind === 'header' && entry.path.every((key, index) => owner.path[index] === key),
@@ -72,7 +72,7 @@ function commentTarget(syntax: TomlSyntax, target: TomlTable, written: TomlTable
         return { kind: 'header', path: header };
     }
     if (owner.kind !== 'key') return { kind: owner.kind, path };
-    const value: unknown = valueAt(target, path);
+    const value: unknown = getValueAt(target, path);
     if (isRecord(value)) return { kind: 'header', path };
     if (isRecordArray(value)) return { kind: 'header', path: [...path, 0] };
     return { kind: owner.kind, path };

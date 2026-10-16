@@ -1,7 +1,7 @@
 import { visit } from 'unist-util-visit';
 import { parseAllDocuments } from 'yaml';
-import { positionAt } from '#cli/system/text.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { computePosition } from '#cli/system/text.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
@@ -33,7 +33,7 @@ function jsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError 
     const diagnostic = printParseErrorCode(error.error)
         .replaceAll(CAMEL_CASE_BOUNDARY, '$<first> $<next>')
         .toLowerCase();
-    return { line: positionAt(body, error.offset).line, message: `JSON syntax error: ${diagnostic}.` };
+    return { line: computePosition(body, error.offset).line, message: `JSON syntax error: ${diagnostic}.` };
 }
 
 function tomlSyntaxError(body: string): FenceSyntaxError | undefined {
@@ -49,7 +49,7 @@ function tomlSyntaxError(body: string): FenceSyntaxError | undefined {
 function yamlSyntaxError(body: string): FenceSyntaxError | undefined {
     const error = parseAllDocuments(body).flatMap((document) => document.errors)[0];
     if (error === undefined) return undefined;
-    return { line: positionAt(body, error.pos[0]).line, message: error.message.split('\n', 1).join('') };
+    return { line: computePosition(body, error.pos[0]).line, message: error.message.split('\n', 1).join('') };
 }
 
 async function treeSyntaxError(

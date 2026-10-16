@@ -1,11 +1,11 @@
 // The check command's flags, its pre-push input, and the cancellation the termination signals cause.
 import { addAbortSignal } from 'node:stream';
 import { resolve, relative } from 'node:path';
-import { compact } from '#cli/system/values.ts';
 import { constants, accessSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { Option } from '@commander-js/extra-typings';
 import { printResult } from '#cli/system/terminal.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
 import { progress } from '#cli/commands/check/report.ts';
 import type { Command } from '@commander-js/extra-typings';
@@ -117,7 +117,7 @@ async function runCheck(paths: string[], flags: ReturnType<ReturnType<typeof reg
             isDryRun: flags.dryRun === true,
             verbose: flags.verbose === true,
             paths,
-            ...compact({
+            ...stripUndefined({
                 hook,
                 only: flags.only,
                 base: flags.changed === true ? (flags.base ?? '') : undefined,

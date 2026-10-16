@@ -18,7 +18,7 @@ export function isInteractive(): boolean {
  * @param overrides tool variables that replace or remove inherited values.
  * @returns the variables as strings.
  */
-export function environmentVariables(overrides?: Record<string, string | undefined>): Record<string, string> {
+export function buildSpawnEnvironment(overrides?: Record<string, string | undefined>): Record<string, string> {
     const variables = new Map<string, [string, string]>();
     const entries = Object.entries(process.env);
     if (overrides !== undefined) entries.push(...Object.entries(overrides));
@@ -48,7 +48,7 @@ export function environmentVariable(variables: Record<string, string | undefined
  * The gspot cache directory of the platform. Refuse relative cache environment paths.
  * @returns the absolute cache directory.
  */
-export function cacheDirectory(): string {
+export function readCacheFolder(): string {
     const { cache } = envPaths(CACHE_FOLDER_NAME, { suffix: '' });
     if (!isAbsolute(cache))
         throw new Error('The cache directory must be absolute; set XDG_CACHE_HOME or LOCALAPPDATA to one.');
@@ -59,6 +59,6 @@ export function cacheDirectory(): string {
  * Translate the host name reported by Node for planning, doctor, and test operating system selection.
  * @returns the gspot name, or the original Node name for another operating system.
  */
-export function currentOperatingSystem(): string {
+export function getOperatingSystem(): string {
     return OPERATING_SYSTEMS.find((platform) => platform.nodeName === process.platform)?.name ?? process.platform;
 }

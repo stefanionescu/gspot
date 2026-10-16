@@ -1,8 +1,8 @@
-import { compact } from '#cli/system/values.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { printResult } from '#cli/system/terminal.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
@@ -46,7 +46,7 @@ async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
         change: (written) => {
             saved = mergeIgnore(
                 list,
-                compact({
+                stripUndefined({
                     check: options.check,
                     rule: options.rule,
                     paths: options.paths,
@@ -81,7 +81,12 @@ export function registerIgnore(program: Command): void {
                 await ignoreCommand({
                     cwd: process.cwd(),
                     check,
-                    ...compact({ paths: flags.paths, rule: flags.rule, reason: flags.reason, until: flags.until }),
+                    ...stripUndefined({
+                        paths: flags.paths,
+                        rule: flags.rule,
+                        reason: flags.reason,
+                        until: flags.until,
+                    }),
                 }),
             );
         });

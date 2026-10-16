@@ -13,7 +13,7 @@ import type { SpawnOutcome } from '#tests/types/processes.ts';
 import { CLI_MAIN, runGspot } from '#tests/setup/run-gspot.ts';
 import { sandboxPath, installToolProjects } from '#tests/setup/install.ts';
 import { CI_SETTINGS, GITLAB_PIPELINE, GITHUB_PIPELINE } from '#tests/config/ci.ts';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
+import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 
 function commitCiSource(root: string, text: string): string {
     gitOutput(root, ['add', '-A']);
@@ -102,7 +102,7 @@ async function runCiJob(
     return await runCommand(['bash', '-e', '-c', script.join('\n')], {
         cwd: root,
         env: {
-            PATH: `${directory}${delimiter}${environmentVariable(environmentVariables(), 'PATH') ?? ''}`,
+            PATH: `${directory}${delimiter}${environmentVariable(buildSpawnEnvironment(), 'PATH') ?? ''}`,
             CI_COMMIT_BEFORE_SHA: comparison,
             CI_MERGE_REQUEST_DIFF_BASE_SHA: '',
             GSPOT_CI_BASE: comparison,

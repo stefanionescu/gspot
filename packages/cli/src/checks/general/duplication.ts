@@ -1,15 +1,15 @@
 import { z } from 'zod';
-import { toPosix } from '#cli/system/paths.ts';
 import { readJson } from '#cli/parsers/json.ts';
 import { statSync, writeFileSync } from 'node:fs';
 import { findingAt } from '#cli/checks/finding.ts';
 import { coveredBy } from '#cli/repository/select.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { FULL_PERCENTAGE } from '#cli/config/units.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -61,7 +61,7 @@ const cloneReportSchema = z.object({
  * @returns the findings.
  */
 export async function jscpd(input: CheckInput): Promise<Finding[]> {
-    using workFolder = scratchFolder();
+    using workFolder = createScratchFolder();
     const work = workFolder.path;
     const owned = [
         ...new Set(
@@ -79,7 +79,7 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
             ),
         ),
     ];
-    using files = openSafeFolder(input.root);
+    using files = openFiles(input.root);
     const generated = files.read(`${TOOL_FILE_DIRECTORY}/${JSCPD_CONFIG_FILE}`);
     if (generated === undefined)
         throw new Error(`Missing ${TOOL_FILE_DIRECTORY}/${JSCPD_CONFIG_FILE}. Run gspot apply.`);
@@ -98,7 +98,7 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
     const share = report.statistics.total.percentage;
     if (share <= limit) return [];
     const repositoryPath = (name: string): string =>
-        toPosix(isAbsolute(name) ? relative(toNamespacedPath(input.root), toNamespacedPath(name)) : name);
+        convertToPosixPath(isAbsolute(name) ? relative(toNamespacedPath(input.root), toNamespacedPath(name)) : name);
     return report.duplicates.flatMap((clone): Finding[] => {
         const file = repositoryPath(clone.secondFile.name);
         if (!owned.includes(file)) return [];

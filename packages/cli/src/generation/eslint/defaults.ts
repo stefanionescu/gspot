@@ -1,4 +1,4 @@
-import { compact } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { literalGlob } from '#cli/repository/selectors.ts';
 import { scopeFiles } from '#cli/generation/eslint/files.ts';
 import { levelRules } from '#cli/generation/eslint/blocks.ts';
@@ -32,7 +32,11 @@ function presetBlocks(
         const preset = presetBlock(selected.blocks[0] as EslintPresets[string]['blocks'][number]);
         const files = name === 'packageJson' ? [PACKAGE_JSON_PATTERN] : codeFiles;
         const source = presetSource(variable, selected.source);
-        return [compact({ ...preset, files }), `...${source}`, { expression: `${source}.rules`, rules: preset.rules }];
+        return [
+            stripUndefined({ ...preset, files }),
+            `...${source}`,
+            { expression: `${source}.rules`, rules: preset.rules },
+        ];
     });
 }
 

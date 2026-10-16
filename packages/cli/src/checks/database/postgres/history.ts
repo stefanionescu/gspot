@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { memoized } from '#cli/system/files/cache.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
+import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/database.ts';
 import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
@@ -31,7 +31,7 @@ async function readCommittedMigrations(input: CheckInput, paths: string[]): Prom
 }
 
 function committedMigrationTexts(input: CheckInput, paths: string[]): Promise<Map<string, string>> {
-    return memoized(input.reads, COMMITTED_MIGRATIONS_MEMO, JSON.stringify(paths), () =>
+    return getCachedMapValue(input.reads, COMMITTED_MIGRATIONS_MEMO, JSON.stringify(paths), () =>
         readCommittedMigrations(input, paths),
     );
 }

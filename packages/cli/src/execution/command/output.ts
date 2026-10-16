@@ -2,8 +2,8 @@ import { statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { toolOutputPath } from '#cli/system/paths.ts';
 import { toolTimeoutSeconds } from '#cli/tools/run.ts';
+import { normalizeOutputPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { TAIL_LINES } from '#cli/config/execution/command.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
@@ -45,7 +45,13 @@ function unexplainedFailure(
         text = output.split('\n').find((line) => line.trim() !== '' && header?.test(line) !== true) ?? placeholder;
     }
     const { name, help } = check;
-    return { check: name, file: file === undefined ? '' : toolOutputPath(file), message: text, help, fixable: false };
+    return {
+        check: name,
+        file: file === undefined ? '' : normalizeOutputPath(file),
+        message: text,
+        help,
+        fixable: false,
+    };
 }
 
 function markFailure(

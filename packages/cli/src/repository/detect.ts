@@ -1,7 +1,7 @@
 // Detects configurations from repository files and dependencies.
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
-import { extensionOf } from '#cli/system/paths.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
@@ -41,7 +41,7 @@ function scopeContents(files: TrackedFile[], packageManifests: DependencyFile[],
         ...scopeDependencyFiles.flatMap((fact) => (fact.runtimes === undefined ? [] : Object.entries(fact.runtimes))),
     ]);
     for (const file of candidates) {
-        const extension = extensionOf(file.path);
+        const extension = extractExtension(file.path);
         if (extension !== '') extensionCounts.set(extension, (extensionCounts.get(extension) ?? 0) + 1);
     }
     return {

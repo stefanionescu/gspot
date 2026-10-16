@@ -3,8 +3,8 @@ import { join, posix } from 'node:path';
 import { quotedEnd } from '#cli/parsers/comments.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/system/files/reads.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
 import type { Mount, NginxMounts, DirectiveScan } from '#cli/types/checks/infrastructure.ts';
 import { type Finding, type CheckInput, type CheckOutcome } from '#cli/types/execution/check.ts';
@@ -255,7 +255,7 @@ export async function nginxConfigTest(input: CheckInput): Promise<CheckOutcome> 
         .map((file) => file.path)
         .filter((path) => path === NGINX_CONF || path.endsWith(`/${NGINX_CONF}`));
     if (paths.length === 0) return { findings: [], files: [] };
-    using workFolder = scratchFolder();
+    using workFolder = createScratchFolder();
     const work = workFolder.path;
     const certificate = await runCheckTool(
         input,

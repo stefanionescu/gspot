@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import { coveredBy } from '#cli/repository/select.ts';
-import { memoized } from '#cli/system/files/cache.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
+import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
@@ -67,7 +67,7 @@ async function readMigrations(input: CheckInput): Promise<Migration[]> {
     const paths = migrationPaths(input);
     if (paths.length === 0) return [];
     const key = JSON.stringify(paths);
-    return memoized(input.reads, MIGRATION_MEMO, key, () =>
+    return getCachedMapValue(input.reads, MIGRATION_MEMO, key, () =>
         parseMigrations(
             input,
             paths

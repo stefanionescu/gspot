@@ -78,7 +78,7 @@ test.each([
 ])(
     'the coverage check applies shared and named target limits: $expected',
     async ({ report, lines, target, expected }) => {
-        using _system = spyOn(environment, 'currentOperatingSystem').mockReturnValue('macos');
+        using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
         await using sandbox = await testdir();
         await using _cache = await isolateCompilerCache();
         await createFileTree(sandbox.path, {
@@ -112,7 +112,7 @@ test.each([
     test.each([...XCTEST_FAILURES])(
         'XCTest coverage classifies $failure and passes after the fix',
         async ({ settings, build, coverage, code, status, produced, note }) => {
-            using _system = spyOn(environment, 'currentOperatingSystem').mockReturnValue('macos');
+            using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
             await using sandbox = await testdir();
             await using _cache = await isolateCompilerCache();
             await createFileTree(sandbox.path, {
@@ -154,7 +154,7 @@ test.each([
     );
 
     test('XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
-        using _system = spyOn(environment, 'currentOperatingSystem').mockReturnValue('macos');
+        using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
         await using sandbox = await testdir();
         await using outside = await testdir();
         await using _cache = await isolateCompilerCache();

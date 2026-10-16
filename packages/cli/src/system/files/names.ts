@@ -14,7 +14,7 @@ function isUnsafeSegment(part: string): boolean {
  * @param path a repository-relative path with forward slashes.
  * @returns the path's segments.
  */
-export function portableSegments(path: string): string[] {
+export function splitPortablePath(path: string): string[] {
     const parts = path.split('/');
     if (parts.some((part) => isUnsafeSegment(part)))
         throw new Error(
@@ -28,8 +28,8 @@ export function portableSegments(path: string): string[] {
  * @param path a repository-relative path with forward slashes.
  * @returns the path's segments.
  */
-export function systemSegments(path: string): string[] {
-    if (process.platform === 'win32') return portableSegments(path);
+export function splitSystemPath(path: string): string[] {
+    if (process.platform === 'win32') return splitPortablePath(path);
     const parts = path.split('/');
     if (parts.some((part) => new Set<string | undefined>(RESERVED_SEGMENTS).has(part) || part.includes('\0')))
         throw new Error(
@@ -52,6 +52,6 @@ export function assertOutsideStateFolder(path: string): void {
  * @param path the proposed path.
  */
 export function assertWritablePath(path: string): void {
-    portableSegments(path);
+    splitPortablePath(path);
     assertOutsideStateFolder(path);
 }

@@ -1,11 +1,11 @@
 // Reads PostgreSQL statements and their parse trees.
 // SQL payloads use PostgreSQL's node union; procedural output has a separate external shape.
-import { memo } from '#cli/system/files/cache.ts';
 import type { Parsed } from '#cli/types/errors.ts';
 import { maskPsqlSyntax } from '#cli/parsers/sql/lexer.ts';
+import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { Node, RawStmt, ParseResult } from '@pgsql/types';
-import { positionAt, codePointLength } from '#cli/system/text.ts';
+import { computePosition, codePointLength } from '#cli/system/text.ts';
 import type { SqlFile, SqlNodeFields, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 
 const SQL_MEMO = { create: () => new Map<string, Promise<SqlFile>>() };
@@ -36,7 +36,12 @@ async function parseSqlText(text: string): Promise<SqlFile> {
             offset += character.length;
             remaining -= 1;
         }
-        return { source, variables, statements: [], error: { text: parsed.error.text, ...positionAt(text, offset) } };
+        return {
+            source,
+            variables,
+            statements: [],
+            error: { text: parsed.error.text, ...computePosition(text, offset) },
+        };
     }
     const statements = parsed.value.stmts ?? [];
     return {
@@ -123,7 +128,7 @@ export function partsOf(list: Node[] | undefined): string[] {
  */
 export function parseSqlFile(text: string, reads?: ReadCache): Promise<SqlFile> {
     if (reads === undefined) return parseSqlText(text);
-    const files = memo(reads, SQL_MEMO);
+    const files = getCachedValue(reads, SQL_MEMO);
     let parsed = files.get(text);
     if (parsed === undefined) {
         parsed = parseSqlText(text);

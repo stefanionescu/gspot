@@ -3,10 +3,10 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
-import { virtualEnvironmentBin } from '#cli/system/paths.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 
@@ -41,7 +41,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
                 [join(scope, 'main.py'), 'VALUE = 1\n'],
             ]),
         ),
-        [join(virtualEnvironmentBin('.gspot/.venv'), 'deptry')]: 'fixture',
+        [join(buildVenvBinPath('.gspot/.venv'), 'deptry')]: 'fixture',
     });
     const session = await openSession(sandbox.path);
     using resources = mockPinnedExecutables(

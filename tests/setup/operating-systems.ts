@@ -1,5 +1,5 @@
 // Selects tool builds and temporarily changes the reported operating system.
-import { currentOperatingSystem } from '#cli/system/environment.ts';
+import { getOperatingSystem } from '#cli/system/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { missingBuild, toolDeclaration } from '#cli/configurations/tool-pins.ts';
 
@@ -16,7 +16,7 @@ export const isMacos = process.platform === 'darwin';
  * @returns whether a tool test may run it here.
  */
 export function hasToolBuild(name: string): boolean {
-    const operatingSystem = currentOperatingSystem();
+    const operatingSystem = getOperatingSystem();
     const pin = toolDeclaration(configurationManifests().values(), name);
     return missingBuild(pin, operatingSystem, process.arch) === undefined;
 }

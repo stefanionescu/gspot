@@ -6,8 +6,8 @@ import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { cacheDirectory } from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/run-gspot.ts';
+import { readCacheFolder } from '#cli/system/environment.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift/package.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
@@ -140,5 +140,5 @@ test('build state lives in the gspot cache, stable for one repository and distin
     const folder = buildPlan(firstInput).folder;
     expect(folder).toBe(buildPlan(firstInput).folder);
     expect(folder).not.toBe(buildPlan(secondInput).folder);
-    expect(folder.startsWith(cacheDirectory() + sep)).toBe(true);
+    expect(folder.startsWith(readCacheFolder() + sep)).toBe(true);
 });

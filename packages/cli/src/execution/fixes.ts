@@ -1,7 +1,7 @@
 import { createTwoFilesPatch } from 'diff';
-import { toPosix } from '#cli/system/paths.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { readSource } from '#cli/system/files/reads.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
@@ -57,11 +57,11 @@ async function scratchFix(
     const preparedScratch = await prepareInScratch({ ...session, root }, planned, command, toolPath, options);
     using scratch = preparedScratch.copy;
     const prepared = preparedScratch.prepared;
-    using files = openSafeFolder(root, 'system');
+    using files = openFiles(root, 'system');
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const originals = new Map(paths.map((path) => [path, files.read(path)]));
     const result = await runFix(session, planned, prepared);
-    using corrected = openSafeFolder(scratch.path, 'system');
+    using corrected = openFiles(scratch.path, 'system');
     for (const path of result.changed) {
         const original = originals.get(path);
         const value = corrected.read(path);
@@ -252,8 +252,8 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], opt
     const diffs = isDryRun
         ? changed.map((path) =>
               createTwoFilesPatch(
-                  `a/${toPosix(path)}`,
-                  `b/${toPosix(path)}`,
+                  `a/${convertToPosixPath(path)}`,
+                  `b/${convertToPosixPath(path)}`,
                   before.get(path)?.toString('utf8') ?? '',
                   after.get(path)?.toString('utf8') ?? '',
                   '',

@@ -1,7 +1,7 @@
 // Explain a check, or one rule of the tool a check runs.
-import { compact } from '#cli/system/values.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { configurationSettings } from '#cli/settings/view.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/configurations.ts';
@@ -150,7 +150,7 @@ export function explainCheck(session: Session | undefined, checkName: string): E
             why: check.why,
             help: check.help,
             when: check.when,
-            ...compact({
+            ...stripUndefined({
                 crash_pattern: facts.crashPattern,
                 run_in_copy: check.run_in_copy,
             }),

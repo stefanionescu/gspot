@@ -1,6 +1,6 @@
 // The plan initialization shows before writing files, including dry runs.
-import { compact } from '#cli/system/values.ts';
 import { colors } from '#cli/system/terminal.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { readLintJobs } from '#cli/repository/tooling.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
@@ -159,7 +159,7 @@ export function buildInitPlan(
         if (answers.hooks) change.push(HOOKS_ROW);
     }
     return {
-        ...compact({ template }),
+        ...stripUndefined({ template }),
         level: settings.level,
         configurations: configurationRows(planning, settings),
         write: [

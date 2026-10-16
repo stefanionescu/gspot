@@ -1,6 +1,6 @@
 import { splitByCase } from 'scule';
-import { compact } from '#cli/system/values.ts';
 import { tablesFor } from '#cli/settings/inherit.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
@@ -108,7 +108,7 @@ export function readNamingSettings(
         ...shipped.override.map((rule, index) => compileOverride(rule, `shipped rule ${String(index + 1)}`)),
         ...manifests.flatMap((manifest) =>
             (manifest.naming?.override ?? []).map((rule) =>
-                compileOverride(compact(rule), `the ${manifest.configuration.name} configuration`),
+                compileOverride(stripUndefined(rule), `the ${manifest.configuration.name} configuration`),
             ),
         ),
         ...settings.naming.override.map((rule, index) =>

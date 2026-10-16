@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
-import { executableNames } from '#cli/system/paths.ts';
+import { listExecutableNames } from '#cli/system/paths.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
-import { run, runBlocking } from '#cli/system/processes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
+import { run, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
 const backends = [
@@ -18,7 +18,7 @@ const backends = [
     {
         name: 'synchronous',
         execute: (command: string[], options: AsyncSpawnOptions) =>
-            runBlocking(command, prepareCommand(command, options).options),
+            spawnProcessBlocking(command, prepareCommand(command, options).options),
     },
 ];
 
@@ -32,7 +32,7 @@ for (const backend of backends) {
         );
         await fakeTool(sandbox.path, 'selected/sibling', "console.log('selected');");
         await fakeTool(sandbox.path, 'unrelated/sibling', "console.log('unrelated');");
-        const result = await backend.execute([join(sandbox.path, 'selected', executableNames('parent')[0]!)], {
+        const result = await backend.execute([join(sandbox.path, 'selected', listExecutableNames('parent')[0]!)], {
             cwd: sandbox.path,
             env: { PATH: join(sandbox.path, 'unrelated') },
         });

@@ -16,7 +16,7 @@ import type { ToolDeclaration } from '#cli/types/configurations.ts';
 export function mockPinnedExecutables(tools: ToolDeclaration[]): DisposableStack {
     const resources = new DisposableStack();
     const locate = executables.sync;
-    const runBlocking = processes.runBlocking;
+    const runBlocking = processes.spawnProcessBlocking;
     resources.use(
         spyOn(executables, 'sync').mockImplementation(((
             name: string,
@@ -30,7 +30,7 @@ export function mockPinnedExecutables(tools: ToolDeclaration[]): DisposableStack
         }) as typeof executables.sync),
     );
     resources.use(
-        spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The process API requires an executable as the first command item.
             const executable = command[0]!;
             const pin = tools.find((tool) => tool.name === basename(executable));

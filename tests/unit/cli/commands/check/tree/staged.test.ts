@@ -7,12 +7,12 @@ import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { fileMode } from '#cli/system/files/entries.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
@@ -53,7 +53,7 @@ stage = "commit"
     expect(result.report.checks[0]?.status).toBe('passed');
     expect(await readFile(join(directory.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
     const attributes = await stat(join(directory.path, 'task.sh'));
-    expect(attributes.mode & 0o777).toBe(fileMode({ mode: 0o644 }));
+    expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o644 }));
     expect(await pathExists(join(directory.path, 'created.txt'))).toBe(false);
 });
 

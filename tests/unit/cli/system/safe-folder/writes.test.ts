@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { fileMode } from '#cli/system/files/entries.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
 import { OUTSIDE_LINKS, MODE_REPLACEMENTS, LINK_TARGET_REFUSALS } from '#tests/config/system.ts';
 
@@ -11,9 +11,9 @@ test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(
     'write and remove keep the file modes $original/$replacement and refuse a stale expected copy',
     async ({ original: originalMode, replacement: replacementMode, content }) => {
         await using directory = await testdir();
-        using root = openSafeFolder(directory.path);
-        const original = { bytes: Buffer.from([0, 255, 10]), mode: fileMode({ mode: originalMode }) };
-        const replacement = { bytes: Buffer.from(content), mode: fileMode({ mode: replacementMode }) };
+        using root = openFiles(directory.path);
+        const original = { bytes: Buffer.from([0, 255, 10]), mode: normalizeFileMode({ mode: originalMode }) };
+        const replacement = { bytes: Buffer.from(content), mode: normalizeFileMode({ mode: replacementMode }) };
         root.write('config/input', original, undefined);
         expect(root.read('config/input')).toStrictEqual(original);
         root.write('config/input', replacement, original);
@@ -51,7 +51,7 @@ test
         await symlink(outside, join(project, 'escape'));
         await symlink(join(outside, 'sentinel'), join(project, 'linked'));
         await link(join(outside, 'sentinel'), join(project, 'hardlinked'));
-        using root = openSafeFolder(project, format);
+        using root = openFiles(project, format);
         expect(() => {
             root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
         }).toThrow(refusal);
@@ -74,7 +74,7 @@ test.skipIf(isWindows).each([...LINK_TARGET_REFUSALS])(
         const project = join(directory.path, 'project');
         await symlink('../outside', join(project, 'escape'));
         await symlink('../outside/sentinel', join(project, 'escaped-file'));
-        using root = openSafeFolder(project);
+        using root = openFiles(project);
         expect(() => {
             root.write('tool', { bytes: Buffer.from(target), mode: 0o777, isLink: true }, undefined);
         }).toThrow(refusal);

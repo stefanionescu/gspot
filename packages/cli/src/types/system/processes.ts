@@ -44,5 +44,5 @@ export type StdoutRead = 'utf8' | ((chunks: AsyncIterable<Buffer>) => Promise<vo
 export type ProcessTreeControl = {
     state: { isTimedOut: boolean; isCanceled: boolean };
     stop: () => void;
-    dispose: (executionFailure: unknown) => Promise<void>;
+    release: (executionFailure: unknown) => Promise<void>;
 };

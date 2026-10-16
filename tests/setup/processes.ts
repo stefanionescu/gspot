@@ -1,7 +1,7 @@
 // Starts test commands and limits them to the current test timeout.
 import { spyOn, type Mock } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
-import { run, runBlocking } from '#cli/system/processes.ts';
+import { run, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { CapturedChild, CapturedProcess } from '#tests/types/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { EXIT_POLL_MS, READY_POLL_MS, TEST_TIMEOUT_MS } from '#tests/config/processes.ts';
@@ -77,7 +77,7 @@ async function runCommand(command: readonly string[], options: AsyncSpawnOptions
  */
 function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
     const prepared = prepareCommand(command, options);
-    const result = runBlocking([...command], prepared.options);
+    const result = spawnProcessBlocking([...command], prepared.options);
     if (result.isTimedOut === true) throw commandTimeoutError(prepared.options.timeoutMs, prepared.context, result);
     return result;
 }

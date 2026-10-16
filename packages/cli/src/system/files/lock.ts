@@ -2,13 +2,13 @@
 import { posix } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { PRIVATE_FILE, PRIVATE_DIRECTORY } from '#cli/config/system/modes.ts';
+import { readEntry, verifyPath, preparePath } from '#cli/system/files/entries.ts';
 import type { FileCopy, SafeFolderState } from '#cli/types/system/safe-folder.ts';
-import { readEntry, checkedPath, preparedPath } from '#cli/system/files/entries.ts';
 import { linkSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, writeFileSync } from 'node:fs';
 import { LOCK_TOKEN_SEPARATOR, LOCK_RECOVERY_SUFFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
 
 // Creates the lock file with the token, or returns false when another holder already owns the file.
-function tryLock(target: string, token: string): boolean {
+function writeLockFile(target: string, token: string): boolean {
     const temporary = `${target}.${randomUUID()}${TEMPORARY_FILE_SUFFIX}`;
     writeFileSync(temporary, token, { flag: 'wx', mode: PRIVATE_FILE });
     try {
@@ -67,10 +67,10 @@ function removeStaleLock(bounds: SafeFolderState, path: string, target: string):
 export function releaseLocks(bounds: SafeFolderState): void {
     for (const [path, holder] of bounds.locks) {
         if (readEntry(bounds, path, false)?.bytes.toString('utf8') !== holder) continue;
-        unlinkSync(checkedPath(bounds, path));
+        unlinkSync(verifyPath(bounds, path));
         for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
-            if (readdirSync(checkedPath(bounds, folder)).length > 0) break;
-            rmdirSync(checkedPath(bounds, folder));
+            if (readdirSync(verifyPath(bounds, folder)).length > 0) break;
+            rmdirSync(verifyPath(bounds, folder));
         }
     }
     bounds.locks.clear();
@@ -81,10 +81,10 @@ export function releaseLocks(bounds: SafeFolderState): void {
  * @param bounds the root, which records the lock it now holds.
  * @param path the root-relative path of the lock file.
  */
-export function takeLock(bounds: SafeFolderState, path: string): void {
-    const target = preparedPath(bounds, path);
+export function lockForWriting(bounds: SafeFolderState, path: string): void {
+    const target = preparePath(bounds, path);
     const token = `${String(process.pid)}${LOCK_TOKEN_SEPARATOR}${randomUUID()}`;
-    while (!tryLock(target, token)) {
+    while (!writeLockFile(target, token)) {
         const current = readEntry(bounds, path, false);
         if (current === undefined) continue;
         assertAbandonedLock(current, path);

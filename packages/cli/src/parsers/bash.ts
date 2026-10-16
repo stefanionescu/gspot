@@ -1,6 +1,6 @@
 // Parses Bash scripts and counts their functions and control flow.
 import type { Node } from 'web-tree-sitter';
-import { blankOut } from '#cli/system/text.ts';
+import { convertToSpaces } from '#cli/system/text.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { ParseCache } from '#cli/types/parsers/tree-sitter.ts';
@@ -122,7 +122,10 @@ function maskComments(text: string, comments: Node[]): string {
     const pieces: string[] = [];
     let offset = 0;
     for (const comment of comments) {
-        pieces.push(text.slice(offset, comment.startIndex), blankOut(text.slice(comment.startIndex, comment.endIndex)));
+        pieces.push(
+            text.slice(offset, comment.startIndex),
+            convertToSpaces(text.slice(comment.startIndex, comment.endIndex)),
+        );
         offset = comment.endIndex;
     }
     pieces.push(text.slice(offset));

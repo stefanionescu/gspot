@@ -1,8 +1,8 @@
 import { emitAll } from '#cli/generation/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { noteLines } from '#cli/system/terminal.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { writeSettings } from '#cli/settings/file.ts';
+import { formatNotes } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
@@ -60,7 +60,7 @@ function reportText(report: ApplyReport): string {
     ];
     if (lines.length === 0 && report.notes.length === 0)
         lines.push(`everything up to date (${String(report.unchanged.length)} files)`);
-    return `${lines.length === 0 ? '' : lines.join('\n') + '\n'}${noteLines(report.notes)}`;
+    return `${lines.length === 0 ? '' : lines.join('\n') + '\n'}${formatNotes(report.notes)}`;
 }
 
 /**

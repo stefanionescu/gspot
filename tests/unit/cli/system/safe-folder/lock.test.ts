@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSafeFolder } from '#cli/system/files/open.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { stat, mkdir, rmdir, readFile } from 'node:fs/promises';
 import { STATE_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -16,7 +16,7 @@ test('a lock removed after a failed create can be taken', async () => {
     });
     const target = join(sandbox.path, `${STATE_DIRECTORY}/writer.lock`);
     {
-        using files = openSafeFolder(sandbox.path);
+        using files = openFiles(sandbox.path);
         const publish = fs.linkSync;
         using boundaries = new DisposableStack();
         boundaries.use(
@@ -45,7 +45,7 @@ test('a live lock written during the dead-holder check survives', async () => {
     await createFileTree(sandbox.path, { [`${STATE_DIRECTORY}/writer.lock`]: stale, source: 'kept' });
     const target = join(sandbox.path, `${STATE_DIRECTORY}/writer.lock`);
     {
-        using files = openSafeFolder(sandbox.path);
+        using files = openFiles(sandbox.path);
         const kill = process.kill.bind(process);
         using boundaries = new DisposableStack();
         boundaries.use(
@@ -77,7 +77,7 @@ test('the recovery folder refuses a second recovery until the first one ends', a
     const target = join(sandbox.path, `${STATE_DIRECTORY}/writer.lock`);
     await mkdir(`${target}.reclaim`);
     {
-        using files = openSafeFolder(sandbox.path);
+        using files = openFiles(sandbox.path);
         expect(() => {
             files.claim(`${STATE_DIRECTORY}/writer.lock`);
         }).toThrow('Another process is recovering');
@@ -98,9 +98,9 @@ test('a second writer is refused until the first releases the lock', async () =>
     await createFileTree(directory.path, { source: 'kept' });
     const path = `${STATE_DIRECTORY}/writer.lock`;
     {
-        using second = openSafeFolder(directory.path);
+        using second = openFiles(directory.path);
         {
-            using first = openSafeFolder(directory.path);
+            using first = openFiles(directory.path);
             first.claim(path);
             const firstToken = first.read(path)?.bytes.toString('utf8');
             expect(firstToken).toStartWith(`${String(process.pid)}:`);
@@ -115,7 +115,7 @@ test('a second writer is refused until the first releases the lock', async () =>
         }).not.toThrow();
         expect(second.read(path)?.bytes.toString('utf8')).toStartWith(`${String(process.pid)}:`);
     }
-    using files = openSafeFolder(directory.path);
+    using files = openFiles(directory.path);
     expect(files.read(path)).toBeUndefined();
     expect(await readFile(join(directory.path, 'source'), 'utf8')).toBe('kept');
 });

@@ -1,8 +1,8 @@
-import { toPosix } from '#cli/system/paths.ts';
 import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/repository/inventory.ts';
 import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { projectChecked } from '#cli/checks/language/typescript/project.ts';
@@ -25,7 +25,7 @@ export function typescriptTsconfig(input: CheckInput): Finding[] {
     const scopeTsconfig =
         project === undefined
             ? joinScope(input.selection.scope.path, TSCONFIG_FILE)
-            : toPosix(relative(input.root, project.path));
+            : convertToPosixPath(relative(input.root, project.path));
     const candidates = new Set([
         scopeTsconfig,
         ...input.files

@@ -1,6 +1,5 @@
 import { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
-import { toPosix } from '#cli/system/paths.ts';
 import { commitAll } from '#tests/setup/git.ts';
 import { join, posix, relative } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
@@ -8,6 +7,7 @@ import { runGspot } from '#tests/setup/run-gspot.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { buildInitOptions } from '#tests/setup/init.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseTemplate } from '#cli/settings/templates.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
@@ -116,7 +116,7 @@ test.each(['eslint.config.mts', 'eslint.config.cts'])('init replaces your ESLint
     commitAll(sandbox.path);
     await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
     const before = await new ESLint({ cwd: sandbox.path }).findConfigFile('main.js');
-    expect(toPosix(relative(sandbox.path, before!))).toBe(file);
+    expect(convertToPosixPath(relative(sandbox.path, before!))).toBe(file);
     const options = buildInitOptions(sandbox.path, { configurations: ['javascript'] });
     const preview = await initCommand({ ...options, isDryRun: true });
     const plan = preview.json.plan!;
@@ -128,7 +128,7 @@ test.each(['eslint.config.mts', 'eslint.config.cts'])('init replaces your ESLint
     expect(written.exitCode, written.text).toBe(0);
     expect(await Bun.file(join(sandbox.path, file)).exists()).toBe(false);
     const after = await new ESLint({ cwd: sandbox.path }).findConfigFile('main.js');
-    expect(toPosix(relative(sandbox.path, after!))).toBe('eslint.config.mjs');
+    expect(convertToPosixPath(relative(sandbox.path, after!))).toBe('eslint.config.mjs');
 });
 
 test.each([...KNIP_FILES])('init replaces your Knip file $file and keeps knip.config.mjs', async ({ file, source }) => {

@@ -1,6 +1,6 @@
 // The access checks of the schema the migrations build: row security, grants, and definer functions.
-import { positionAt } from '#cli/system/text.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { computePosition } from '#cli/system/text.ts';
 import { nodeOf, nodesOf } from '#cli/parsers/sql/postgres.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
@@ -34,7 +34,7 @@ function statementFindings(
             .map((statement) =>
                 findingAt(
                     input,
-                    { file: migration.path, ...positionAt(migration.text, statement.start) },
+                    { file: migration.path, ...computePosition(migration.text, statement.start) },
                     rule,
                     diagnostic,
                 ),
@@ -56,7 +56,7 @@ export async function postgresRowLevelSecurity(input: CheckInput): Promise<Findi
         .map(([table, at]) =>
             findingAt(
                 input,
-                { file: at.path, ...positionAt(at.text, at.offset) },
+                { file: at.path, ...computePosition(at.text, at.offset) },
                 'row-security',
                 `${table} does not have row level security enabled.`,
             ),

@@ -2,8 +2,8 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
-import { valueAt } from '#cli/system/values.ts';
 import { emitAll } from '#cli/generation/files.ts';
+import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitFile } from '#tests/setup/generate.ts';
 import { openSession } from '#cli/commands/session.ts';
@@ -83,7 +83,7 @@ test.each([...PATH_IGNORE_CASES])(
         });
         const content = await emitFile(settings, path, { 'source.js': 'export const port = 8080;\n' });
         const parsed = path.endsWith('.toml') ? parse(content) : (JSON.parse(content) as unknown);
-        const patterns = valueAt(parsed, nativePath);
+        const patterns = getValueAt(parsed, nativePath);
         expect(patterns).toContain('selected/**');
         expect(patterns).not.toContain('rule-only/**');
         expect(patterns).not.toContain('other/**');

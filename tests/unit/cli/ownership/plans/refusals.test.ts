@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { fileMode } from '#cli/system/files/entries.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { OWNERSHIP_REFUSAL } from '#tests/config/generated-files.ts';
 import { chmod, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
@@ -77,7 +77,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement } from '#cli/
                         : planBlock(log, 'config.txt', 'managed content', 'hash');
                 expect(log.files.read('config.txt')).toStrictEqual({
                     bytes: Buffer.from('authored\n'),
-                    mode: fileMode({ mode: 0o640 }),
+                    mode: normalizeFileMode({ mode: 0o640 }),
                 });
                 await writeFile(join(directory.path, 'config.txt'), 'edited after plan\n');
                 expect(() => {
@@ -85,7 +85,7 @@ import { planBlock, planDeletion, planManagedKeys, planReplacement } from '#cli/
                 }).toThrow('Destination changed during the operation: config.txt');
                 expect(log.files.read('config.txt')).toStrictEqual({
                     bytes: Buffer.from('edited after plan\n'),
-                    mode: fileMode({ mode: 0o640 }),
+                    mode: normalizeFileMode({ mode: 0o640 }),
                 });
             }
         },

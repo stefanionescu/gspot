@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
+import { hashContent } from '#cli/system/text.ts';
 import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { contentDigest } from '#cli/system/text.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
@@ -53,7 +53,7 @@ test('an exported template sets up another repository', async () => {
             configurations: [...DESTINATION_CONFIGURATIONS],
         });
         expect(copied).toContain(
-            `# Copied from template ${join(first.path, TEMPLATE_FILE)}, sha256 ${contentDigest(exported)}.\n`,
+            `# Copied from template ${join(first.path, TEMPLATE_FILE)}, sha256 ${hashContent(exported)}.\n`,
         );
         expect(
             await Promise.all([

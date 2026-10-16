@@ -1,8 +1,8 @@
 // Reads grammars and shares source parses within a run.
 import { readFileSync } from 'node:fs';
-import { wasmPath } from '#cli/system/assets.ts';
-import { memo } from '#cli/system/files/cache.ts';
+import { findWasmPath } from '#cli/system/assets.ts';
 import { readSource } from '#cli/system/files/reads.ts';
+import { getCachedValue } from '#cli/system/files/cache.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { TSX_EXTENSION, LANGUAGE_GRAMMARS, GRAMMAR_FILE_EXTENSION } from '#cli/config/parsers/tree-sitter.ts';
@@ -26,7 +26,7 @@ const state: ParserState = {
 async function buildParser(name: GrammarName): Promise<Parser> {
     state.runtime ??= Parser.init();
     await state.runtime;
-    const language = await Language.load(readFileSync(wasmPath(`${name}${GRAMMAR_FILE_EXTENSION}`)));
+    const language = await Language.load(readFileSync(findWasmPath(`${name}${GRAMMAR_FILE_EXTENSION}`)));
     const parser = new Parser();
     parser.setLanguage(language);
     return parser;
@@ -56,7 +56,7 @@ function parserFor(name: GrammarName): Promise<Parser> {
 export async function parseSource(name: GrammarName, text: string, cache?: ParseCache): Promise<Tree> {
     const parser = await parserFor(name);
     if (cache?.resources === undefined) return parser.parse(text) as Tree;
-    const trees = memo(cache.reads, TREE_MEMO);
+    const trees = getCachedValue(cache.reads, TREE_MEMO);
     const key = JSON.stringify([name, text]);
     const held = trees.get(key);
     if (held !== undefined) return held.copy();

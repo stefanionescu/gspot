@@ -1,5 +1,5 @@
-import { positionAt } from '#cli/system/text.ts';
 import { sqlTokens } from '#cli/parsers/sql/lexer.ts';
+import { computePosition } from '#cli/system/text.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { SqlNamed, Identifier } from '#cli/types/checks/general.ts';
 import { createIdentifier } from '#cli/checks/general/naming/declarations.ts';
@@ -157,7 +157,7 @@ function statementIdentifiers(
                     createIdentifier(
                         { file, language: 'sql' },
                         {
-                            ...positionAt(source, identifierStart + quoteWidth),
+                            ...computePosition(source, identifierStart + quoteWidth),
                             category: entry.category,
                             name: entry.name,
                         },

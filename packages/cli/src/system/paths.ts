@@ -9,7 +9,7 @@ const systemExecutables = EXECUTABLE_LAYOUTS[process.platform === 'win32' ? 'win
  * @param path a path in the operating system's form.
  * @returns the path with forward slashes.
  */
-export function toPosix(path: string): string {
+export function convertToPosixPath(path: string): string {
     return sep === '/' ? path : path.split(sep).join('/');
 }
 
@@ -19,7 +19,7 @@ export function toPosix(path: string): string {
  * @param path the path as the tool printed it.
  * @returns the path with forward slashes.
  */
-export function toolOutputPath(path: string): string {
+export function normalizeOutputPath(path: string): string {
     return path.replaceAll('\\', '/');
 }
 
@@ -28,7 +28,7 @@ export function toolOutputPath(path: string): string {
  * @param path a posix path.
  * @returns the path in the operating system's form.
  */
-export function toSystemPath(path: string): string {
+export function convertToSystemPath(path: string): string {
     return sep === '/' ? path : path.split('/').join(sep);
 }
 
@@ -46,7 +46,7 @@ export function isInside(local: string): boolean {
  * @param path a posix path.
  * @returns the extension, '' without an extension.
  */
-export function extensionOf(path: string): string {
+export function extractExtension(path: string): string {
     const base = posix.basename(path);
     const declaration = DECLARATION_EXTENSIONS.find((extension) => base.endsWith(extension));
     if (declaration !== undefined) return declaration;
@@ -70,7 +70,7 @@ export function trimTrailingSlashes(path: string): string {
  * @param path the repository-relative path.
  * @returns its comparison key.
  */
-export function pathKey(path: string): string {
+export function buildPathKey(path: string): string {
     return path.normalize('NFC').toLowerCase();
 }
 
@@ -79,7 +79,7 @@ export function pathKey(path: string): string {
  * @param path the path.
  * @returns the directory.
  */
-export function directoryOf(path: string): string {
+export function extractParentFolder(path: string): string {
     const slash = path.lastIndexOf('/');
     return slash === -1 ? '' : path.slice(0, slash);
 }
@@ -89,9 +89,9 @@ export function directoryOf(path: string): string {
  * @param path a path.
  * @returns the stem.
  */
-export function stemOf(path: string): string {
+export function extractStem(path: string): string {
     const base = posix.basename(path);
-    const extension = extensionOf(base);
+    const extension = extractExtension(base);
     return base.slice(0, base.length - extension.length);
 }
 
@@ -114,7 +114,7 @@ export function includeParentFolders(paths: readonly string[]): Set<string> {
  * @param name the executable name without a suffix.
  * @returns names used by tool-project verification and tool discovery.
  */
-export function executableNames(name: string): string[] {
+export function listExecutableNames(name: string): string[] {
     return systemExecutables.executableSuffixes.map((suffix) => name + suffix);
 }
 
@@ -123,7 +123,7 @@ export function executableNames(name: string): string[] {
  * @param folder the environment directory.
  * @returns its Scripts directory on Windows or bin directory elsewhere.
  */
-export function virtualEnvironmentBin(folder: string): string {
+export function buildVenvBinPath(folder: string): string {
     return join(folder, systemExecutables.environmentDirectory);
 }
 
@@ -133,6 +133,6 @@ export function virtualEnvironmentBin(folder: string): string {
  * @param name the executable name.
  * @returns the executable path with the system's Python launcher suffix.
  */
-export function virtualEnvironmentExecutable(folder: string, name: string): string {
-    return join(virtualEnvironmentBin(folder), name + systemExecutables.environmentSuffix);
+export function buildVenvExecutablePath(folder: string, name: string): string {
+    return join(buildVenvBinPath(folder), name + systemExecutables.environmentSuffix);
 }

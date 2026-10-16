@@ -4,8 +4,8 @@ import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
+import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { prepareLicenseSandbox } from '#tests/setup/licenses.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
 import { LICENSE_SETTINGS, ALLOWED_PACKAGE_CASES, ALLOWED_PACKAGE_SCOPE_CASES } from '#tests/config/licenses.ts';
 
@@ -18,7 +18,7 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])('allowed packages: $name', async (sc
     using output = spyOn(processes, 'run').mockImplementation((command) => {
         const interpreter = command.at(-1)!;
         const [scope, identity] = Object.entries(reports).find(
-            ([entry]) => interpreter === virtualEnvironmentExecutable(join(sandbox.path, entry, '.venv'), 'python'),
+            ([entry]) => interpreter === buildVenvExecutablePath(join(sandbox.path, entry, '.venv'), 'python'),
         )!;
         scanned.push(scope);
         const [name, version] = identity.split('@');

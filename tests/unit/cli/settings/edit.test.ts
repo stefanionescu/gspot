@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { valueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/values.ts';
 import { localDateSchema } from '#cli/settings/schema/parts.ts';
 import { DATED_IGNORE } from '#tests/config/samples/settings.ts';
 import { setKey, addToList, deleteKey, editSettings, findScopeTable, readSettingsEdit } from '#cli/settings/edit.ts';
@@ -84,7 +84,7 @@ test('changing an until date in place rewrites it and keeps its comment', async 
     const source = DATED_IGNORE;
     await writeFile(join(sandbox.path, 'gspot.toml'), source);
     const input = readSettingsEdit(sandbox.path);
-    const until = localDateSchema.parse(valueAt(input.table, ['ignore', 0, 'until']));
+    const until = localDateSchema.parse(getValueAt(input.table, ['ignore', 0, 'until']));
     const original = input.values;
     const result = editSettings(sandbox.path, input, () => until.setUTCDate(21));
     expect(result.changed).toBe(true);

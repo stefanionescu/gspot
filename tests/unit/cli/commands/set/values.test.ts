@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { valueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
@@ -83,7 +83,7 @@ test.each([...EXTRA_OPTION_SCOPES])(
         expect(reset.code, reset.stdout + reset.stderr).toBe(0);
         const next = readSettings(sandbox.path).settings;
         const table = scope === '' ? next.written : next.scopeTables[scope]?.written;
-        expect(valueAt(table, ['tools', 'taplo', 'extra'])).toBeUndefined();
+        expect(getValueAt(table, ['tools', 'taplo', 'extra'])).toBeUndefined();
         expect(await readFile(join(sandbox.path, 'app/settings.toml'), 'utf8')).toBe('enabled = true\n');
     },
 );

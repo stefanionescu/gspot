@@ -207,7 +207,7 @@ export const SET_VALUES = ['set', 'true'] as const;
 export const LFS_FILTER = 'lfs';
 export const MARKDOWN_EXTENSION = '.md';
 export const ATTRIBUTE_SET = 'set';
-export const CHECK_ATTRIBUTES_ARGV = [
+export const CHECK_ATTRIBUTES_ARGUMENTS = [
     'check-attr',
     '--stdin',
     '-z',

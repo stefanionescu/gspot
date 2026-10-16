@@ -25,9 +25,9 @@ import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { NpmClient } from '#cli/types/parsers/dependency-files.ts';
 import { testModules, installedModules } from '#tests/setup/modules.ts';
 import type { LockedInputs, ToolProjectFiles } from '#tests/types/npm.ts';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
 import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/e2e.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
+import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 
 import {
     MISE_TRUST,
@@ -70,7 +70,7 @@ export function toolsPath(): string {
     return [
         join(testModules, '.bin'),
         join(installedModules, '.bin'),
-        environmentVariable(environmentVariables(), 'PATH') ?? '',
+        environmentVariable(buildSpawnEnvironment(), 'PATH') ?? '',
     ].join(delimiter);
 }
 
@@ -281,7 +281,7 @@ export async function installCompiler(root: string, folder = join(root, 'node_mo
     const kind = isWindows ? 'junction' : 'dir';
     await symlink(await realpath(join(installedModules, 'typescript')), join(folder, 'typescript'), kind);
     await symlink(await realpath(join(installedModules, '.bin')), join(folder, '.bin'), kind);
-    return [join(folder, '.bin'), environmentVariable(environmentVariables(), 'PATH') ?? ''].join(delimiter);
+    return [join(folder, '.bin'), environmentVariable(buildSpawnEnvironment(), 'PATH') ?? ''].join(delimiter);
 }
 
 /** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */

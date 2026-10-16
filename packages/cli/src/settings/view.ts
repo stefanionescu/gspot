@@ -2,9 +2,9 @@
 // configurations override an earlier scalar default; other scalar disagreements produce conflicts.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { memo } from '#cli/system/files/cache.ts';
 import { coversScope } from '#cli/repository/scopes.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
+import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { IgnoreEntry } from '#cli/types/settings/file.ts';
 import { SETTING_LANGUAGES } from '#cli/config/settings/schema.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
@@ -144,8 +144,9 @@ const toolDeclarations: MemoKey<Map<string, SettingDeclaration[]>> = {
  * @returns the declarations, their defaults and the conflicts found on the way.
  */
 function knownSettings(selected: Manifest[], level: Level = 'recommended', reads?: ReadCache): KnownSettings {
-    const roots = reads === undefined ? rootDeclarations.create() : memo(reads, rootDeclarations);
-    const declarationsByTool = reads === undefined ? toolDeclarations.create() : memo(reads, toolDeclarations);
+    const roots = reads === undefined ? rootDeclarations.create() : getCachedValue(reads, rootDeclarations);
+    const declarationsByTool =
+        reads === undefined ? toolDeclarations.create() : getCachedValue(reads, toolDeclarations);
 
     const known: KnownSettings = { declarations: new Map(), defaults: new Map(), errors: [] };
     for (const declaration of roots) {

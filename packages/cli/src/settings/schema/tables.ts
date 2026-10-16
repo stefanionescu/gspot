@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { compact } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { TABLE_FIELDS } from '#cli/config/settings/values.ts';
@@ -257,6 +257,6 @@ const tableValuesSchema = z
         'tools.v8r': toolsSchema.shape['v8r'],
         'tools.yamllint': toolsSchema.shape['yamllint'],
     } satisfies SchemaShape<TableValues>)
-    .transform(compact) satisfies z.ZodType<TableValues>;
+    .transform(stripUndefined) satisfies z.ZodType<TableValues>;
 
 export { limitsSchema, namingSchema, tableValuesSchema, configurationTableSchemas };

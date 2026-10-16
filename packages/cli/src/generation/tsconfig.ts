@@ -1,11 +1,11 @@
 import ts from 'typescript';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { toPosix, extensionOf } from '#cli/system/paths.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { TsconfigInput } from '#cli/types/generation/typescript.ts';
+import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 
 import {
     COMPILER_OPTIONS,
@@ -31,7 +31,7 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
             .filter(
                 (file) =>
                     (file.tags.includes('typescript') ||
-                        new Set<string>(DECLARATION_EXTENSIONS).has(extensionOf(file.path))) &&
+                        new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(file.path))) &&
                     scopeOf(file.path, scopeEntries).path === scope,
             )
             .map((file) => file.path),
@@ -46,11 +46,11 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
             },
         ) ?? [];
     const folder = dirname(resolve(root, target));
-    const typeRoots = projectRoots.map((path) => toPosix(relative(folder, path)));
+    const typeRoots = projectRoots.map((path) => convertToPosixPath(relative(folder, path)));
     if (authored !== undefined)
         return {
-            extends: toPosix(relative(folder, authored.path)),
-            files: authored.config.fileNames.map((path) => toPosix(relative(folder, path))),
+            extends: convertToPosixPath(relative(folder, authored.path)),
+            files: authored.config.fileNames.map((path) => convertToPosixPath(relative(folder, path))),
             compilerOptions: {
                 ...(authored.config.options.typeRoots === undefined ? { typeRoots } : {}),
             },
@@ -58,7 +58,8 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
     const sources = files.filter(
         (file) =>
             file.kind === 'source' &&
-            (file.tags.includes('typescript') || new Set<string>(DECLARATION_EXTENSIONS).has(extensionOf(file.path))) &&
+            (file.tags.includes('typescript') ||
+                new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(file.path))) &&
             scopeOf(file.path, scopeEntries).path === scope,
     );
     // Svelte reads these extra extensions through include; tsc ignores them as unsupported sources.
@@ -72,10 +73,10 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
             ...options,
             typeRoots,
         },
-        files: sources.map((file) => toPosix(relative(folder, join(root, file.path)))),
+        files: sources.map((file) => convertToPosixPath(relative(folder, join(root, file.path)))),
         ...(components.length === 0
             ? {}
-            : { include: components.map((file) => toPosix(relative(folder, join(root, file.path)))) }),
+            : { include: components.map((file) => convertToPosixPath(relative(folder, join(root, file.path)))) }),
     };
 }
 

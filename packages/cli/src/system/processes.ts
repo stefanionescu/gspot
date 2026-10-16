@@ -6,7 +6,7 @@ import { MS_PER_SECOND } from '#cli/config/units.ts';
 import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
+import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 
 import type {
     StdoutRead,
@@ -31,8 +31,8 @@ import {
 
 // Execa captures output and uses operating system shims. This boundary supervises each asynchronous process tree.
 
-function commandOptions(options: SpawnOptions, executable: string, readStdout?: Exclude<StdoutRead, 'utf8'>) {
-    const env = environmentVariables(options.env);
+function buildExecaOptions(options: SpawnOptions, executable: string, readStdout?: Exclude<StdoutRead, 'utf8'>) {
+    const env = buildSpawnEnvironment(options.env);
     // A selected tool's launcher must find its sibling runtime and commands before unrelated tools on the executable search path.
     const path = Object.keys(env).find((name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH');
     if (isAbsolute(executable) && path !== undefined)
@@ -53,13 +53,13 @@ function commandOptions(options: SpawnOptions, executable: string, readStdout?: 
 }
 
 // A command that names a file which does not exist. Resolve bare names through the executable search path at spawn.
-function missingExecutable(executable: string, cwd: string): boolean {
+function isExecutableAbsent(executable: string, cwd: string): boolean {
     if (!PATH_SEPARATORS.test(executable)) return false;
     const path = resolve(cwd, executable);
     // Windows names an executable without its extension; the spawn shim tries each PATHEXT entry in turn.
     const extensions =
         process.platform === 'win32'
-            ? (environmentVariable(environmentVariables(), 'PATHEXT') ?? PATHEXT_DEFAULT).split(';')
+            ? (environmentVariable(buildSpawnEnvironment(), 'PATHEXT') ?? PATHEXT_DEFAULT).split(';')
             : [];
     return [path, ...extensions.map((extension) => path + extension.toLowerCase())].every(
         (candidate) => statSync(candidate, { throwIfNoEntry: false }) === undefined,
@@ -68,7 +68,7 @@ function missingExecutable(executable: string, cwd: string): boolean {
 
 // The result of a command whose executable file does not exist, decided before any process starts.
 
-function notFound(executable: string): SpawnCompletion {
+function buildNotFoundCompletion(executable: string): SpawnCompletion {
     return {
         code: 'ENOENT',
         failed: true,
@@ -87,18 +87,18 @@ function isUnfinished(result: SpawnCompletion): boolean {
     return result.cause !== undefined;
 }
 
-function completed(result: SpawnCompletion, started: number, diagnostic: string): SpawnResult {
+function buildSpawnResult(result: SpawnCompletion, started: number, diagnostic: string): SpawnResult {
     const missing = result.code === 'ENOENT';
     const unfinished = isUnfinished(result);
     const isErrored = result.failed && unfinished;
     const code = missing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
-    const diagnostics: (string | undefined)[] = [diagnostic];
-    if (unfinished) diagnostics.push(result.shortMessage);
+    const messages: (string | undefined)[] = [diagnostic];
+    if (unfinished) messages.push(result.shortMessage);
     return {
         // A run that errored can still report exit 0; report it as failed.
         code: isErrored && code === 0 ? FAILED_CODE : code,
         stdout: result.stdout ?? '',
-        stderr: diagnostics.filter(Boolean).join('\n'),
+        stderr: messages.filter(Boolean).join('\n'),
         missing,
         duration: performance.now() - started,
         isTimedOut: result.timedOut,
@@ -116,7 +116,7 @@ function isGroupGone(error: Error, child: ChildProcess): boolean {
     return error.code === 'EPERM' && process.platform === 'darwin' && hasExited;
 }
 
-function terminate(child: ChildProcess, state: ProcessTermination): void {
+function stopProcessTree(child: ChildProcess, state: ProcessTermination): void {
     if (state.stopped || child.pid === undefined) return;
     state.stopped = true;
     try {
@@ -147,11 +147,11 @@ function terminate(child: ChildProcess, state: ProcessTermination): void {
  * @param options the cancellation and timeout controls.
  * @returns completion state and the cleanup operation.
  */
-function watchProcessTree(child: ChildProcess, options: AsyncSpawnOptions): ProcessTreeControl {
+function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): ProcessTreeControl {
     const state = { isTimedOut: false, isCanceled: false };
     const termination: ProcessTermination = { stopped: false, failure: undefined, drainTimer: undefined };
-    const stopTree = terminate.bind(undefined, child, termination);
-    const cancel = () => {
+    const stopTree = stopProcessTree.bind(undefined, child, termination);
+    const stopOnAbort = () => {
         if (termination.stopped) return;
         state.isCanceled = true;
         stopTree();
@@ -166,7 +166,7 @@ function watchProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
                   stopTree();
               }, options.timeoutMs);
     let exitCleanup: Promise<void> | undefined;
-    const exited = () => {
+    const startExitCleanup = () => {
         clearTimeout(timer);
         exitCleanup = delay(REAP_MS).then(() => {
             if (process.platform !== 'win32') stopTree();
@@ -174,20 +174,20 @@ function watchProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
         });
     };
     const streams = child.stdio.filter((stream) => stream !== null && stream !== undefined);
-    child.once('exit', exited);
+    child.once('exit', startExitCleanup);
     for (const stream of streams) stream.once('error', stopTree);
-    options.cancelSignal?.addEventListener('abort', cancel, { once: true });
-    if (options.cancelSignal?.aborted === true) cancel();
+    options.cancelSignal?.addEventListener('abort', stopOnAbort, { once: true });
+    if (options.cancelSignal?.aborted === true) stopOnAbort();
     return {
         state,
         stop: stopTree,
-        async dispose(executionFailure: unknown) {
+        async release(executionFailure: unknown) {
             await exitCleanup;
             clearTimeout(timer);
             clearTimeout(termination.drainTimer);
             removeExitListener();
-            options.cancelSignal?.removeEventListener('abort', cancel);
-            child.removeListener('exit', exited);
+            options.cancelSignal?.removeEventListener('abort', stopOnAbort);
+            child.removeListener('exit', startExitCleanup);
             for (const stream of streams) stream.removeListener('error', stopTree);
             if (termination.failure === undefined || isGroupGone(termination.failure, child)) return;
             throw executionFailure === undefined
@@ -216,14 +216,15 @@ export async function run(
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
-    if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
+    if (isExecutableAbsent(executable, options.cwd))
+        return buildSpawnResult(buildNotFoundCompletion(executable), started, '');
     const readStdout = output === 'utf8' ? undefined : output;
     const child = execa(executable, argv, {
-        ...commandOptions(options, executable, readStdout),
+        ...buildExecaOptions(options, executable, readStdout),
         ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
         detached: process.platform !== 'win32',
     });
-    const supervision = watchProcessTree(child, options);
+    const supervision = trackProcessTree(child, options);
     if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
     if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
     let executionFailure: unknown;
@@ -239,15 +240,16 @@ export async function run(
         const result = await child;
         if (result.failed) executionFailure = new Error(result.shortMessage);
         const diagnostic = result.stderr;
-        return { ...completed(result, started, diagnostic), ...supervision.state };
+        return { ...buildSpawnResult(result, started, diagnostic), ...supervision.state };
     } catch (error) {
         executionFailure = error;
         supervision.stop();
         const result = await child;
-        if (result.code === 'ENOENT') return { ...completed(result, started, result.stderr), ...supervision.state };
+        if (result.code === 'ENOENT')
+            return { ...buildSpawnResult(result, started, result.stderr), ...supervision.state };
         throw error;
     } finally {
-        await supervision.dispose(executionFailure);
+        await supervision.release(executionFailure);
     }
 }
 
@@ -257,12 +259,13 @@ export async function run(
  * @param options working directory, environment, and process controls.
  * @returns captured output and termination status.
  */
-export function runBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {
+export function spawnProcessBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
-    if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
+    if (isExecutableAbsent(executable, options.cwd))
+        return buildSpawnResult(buildNotFoundCompletion(executable), started, '');
     const deadline = options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs };
-    const result = execaSync(executable, argv, { ...commandOptions(options, executable), ...deadline });
-    return completed(result, started, result.stderr);
+    const result = execaSync(executable, argv, { ...buildExecaOptions(options, executable), ...deadline });
+    return buildSpawnResult(result, started, result.stderr);
 }

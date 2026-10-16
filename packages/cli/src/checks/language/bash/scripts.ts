@@ -1,7 +1,7 @@
-import { memoized } from '#cli/system/files/cache.ts';
 import { parseBashScript } from '#cli/parsers/bash.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
+import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { type ScriptFile } from '#cli/types/checks/language.ts';
 import { type CheckInput } from '#cli/types/execution/check.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
@@ -39,7 +39,7 @@ export function readScripts(input: CheckInput): Promise<ScriptFile[]> {
         (file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG) && !isInGspotFolder(file.path),
     );
     const key = JSON.stringify([input.selection.scope.path, files.map((file) => file.path)]);
-    return memoized(input.reads, SCRIPT_MEMO, key, async () => {
+    return getCachedMapValue(input.reads, SCRIPT_MEMO, key, async () => {
         const scripts: ScriptFile[] = [];
         for (const file of files) scripts.push(await readScript(input, file));
         return scripts;

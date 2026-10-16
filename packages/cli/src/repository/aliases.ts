@@ -1,8 +1,8 @@
 // Resolves package and TypeScript import aliases.
-import { toPosix } from '#cli/system/paths.ts';
 import { isRecord } from '#cli/system/values.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
@@ -50,7 +50,7 @@ export function aliasesFor(root: string, scope: string, reads: ReadCache): Recor
     for (const [pattern, targets] of paths) {
         const target = targets[0];
         if (target === undefined) continue;
-        const alias = toPosix(relative(root, resolve(base, target))).replace(TRAILING_STAR, '');
+        const alias = convertToPosixPath(relative(root, resolve(base, target))).replace(TRAILING_STAR, '');
         aliases[pattern.replace(TRAILING_STAR, '')] = alias;
     }
     return aliases;

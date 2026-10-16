@@ -4,8 +4,8 @@ import { parse as parseToml } from 'smol-toml';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
-import { fileMode } from '#cli/system/files/entries.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { TWO_WEEKS_SECONDS } from '#tests/config/dependencies.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
@@ -73,7 +73,7 @@ import { planRemoval, planManagedKeys } from '#cli/ownership/plans.ts';
             writePlans(log, [planRemoval(log, 'package.toml')]);
             expect(await readFile(join(directory.path, 'package.toml'), 'utf8')).toBe(content);
             const metadata = await stat(join(directory.path, 'package.toml'));
-            expect(metadata.mode & 0o777).toBe(fileMode({ mode: 0o640 }));
+            expect(metadata.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
         }
     });
 }

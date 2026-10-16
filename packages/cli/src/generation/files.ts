@@ -1,7 +1,7 @@
-import { pathKey } from '#cli/system/paths.ts';
 import { AGENTS_FILE } from '#cli/config/rules.ts';
 import { miseFile } from '#cli/generation/mise.ts';
 import { npmProject } from '#cli/generation/npm.ts';
+import { buildPathKey } from '#cli/system/paths.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
 import { attributeRules } from '#cli/parsers/git.ts';
@@ -9,9 +9,9 @@ import { readText } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
 import { pythonProject } from '#cli/generation/python.ts';
-import { blockSpan } from '#cli/system/managed-blocks.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
+import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { collectPins } from '#cli/configurations/tool-pins.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
 import { packageRedirects } from '#cli/generation/redirects.ts';
@@ -19,7 +19,7 @@ import { assertWritablePath } from '#cli/system/files/names.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
-import { managedBlock, selectRuleFiles } from '#cli/generation/rules.ts';
+import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { everyManifest, isConfigurationSelected } from '#cli/configurations/select.ts';
@@ -92,7 +92,7 @@ function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], 
         reads,
     } = session;
     const text = readText(repository.root, GITATTRIBUTES_FILE, reads) ?? '';
-    const span = blockSpan(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
+    const span = findBlockSpan(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
     const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
     if (repository.hasGit) {
         generated.blocks.push(
@@ -105,7 +105,7 @@ function emitBlocks(session: Session, manifests: Manifest[], rules: RuleFile[], 
         );
     }
     if (!settings.rules.enabled) return;
-    const block = managedBlock({
+    const block = buildAgentsBlock({
         generatedPaths: [...generated.files, ...generated.fileEdits]
             .map(({ path }) => path)
             .filter((path) => !path.startsWith(`${DOT_GSPOT}/`)),
@@ -135,7 +135,7 @@ function assertDistinctPaths(generated: Generated): void {
     const files = [...generated.files, ...generated.blocks, ...generated.fileEdits];
     for (const file of files) {
         assertWritablePath(file.path);
-        const key = pathKey(file.path);
+        const key = buildPathKey(file.path);
         const previous = paths.get(key);
         if (previous !== undefined) throw new Error(`Generated destinations collide: ${previous} and ${file.path}`);
         paths.set(key, file.path);

@@ -1,15 +1,15 @@
 import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { memoized } from '#cli/system/files/cache.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { targetInScope } from '#cli/repository/scopes.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { toPosix, toolOutputPath } from '#cli/system/paths.ts';
+import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
 import { type SafeFolder } from '#cli/types/system/safe-folder.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
 import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/checks/language.ts';
 import { buildPlan, prepareBuild, scopeBuildFolder } from '#cli/checks/language/swift/build-folder.ts';
 
@@ -34,7 +34,7 @@ import {
 const BUILD_MEMO = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
 
 function outputFindings(input: CheckInput, output: string, levels: Set<string>, defaultRule: string): Finding[] {
-    const root = toPosix(withoutPrivatePrefix(input.root));
+    const root = convertToPosixPath(withoutPrivatePrefix(input.root));
     return [...new Set(output.split('\n'))]
         .flatMap((line) => {
             const groups = MESSAGE_LINE.exec(line)?.groups;
@@ -47,7 +47,7 @@ function outputFindings(input: CheckInput, output: string, levels: Set<string>, 
             const suffix = RULE_SUFFIX.exec(text)?.groups;
             const { rule = defaultRule, text: message = text } = suffix === undefined ? {} : suffix;
             const file = groups['file'] ?? '';
-            const normalized = toolOutputPath(withoutPrivatePrefix(file));
+            const normalized = normalizeOutputPath(withoutPrivatePrefix(file));
             return findingAt(
                 input,
                 {
@@ -66,7 +66,9 @@ function outputFindings(input: CheckInput, output: string, levels: Set<string>, 
 function expandResponseFiles(line: string, folder: string, files: SafeFolder): string {
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
-        const content = files.read(toPosix(relative(withoutPrivatePrefix(folder), withoutPrivatePrefix(path))));
+        const content = files.read(
+            convertToPosixPath(relative(withoutPrivatePrefix(folder), withoutPrivatePrefix(path))),
+        );
         return content === undefined ? token : content.bytes.toString('utf8').trim().replaceAll('\n', ' ');
     });
 }
@@ -76,7 +78,7 @@ async function runBuild(input: CheckInput, plan: SwiftBuildPlan): Promise<SwiftB
     const prepared = prepareBuild(input, plan.folder);
     using files = prepared.files;
     const { source } = prepared;
-    if (plan.scratch !== undefined) files.removeTree(toPosix(relative(plan.folder, plan.scratch)));
+    if (plan.scratch !== undefined) files.removeTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
     const cwd = join(source, input.selection.scope.path);
     const result = await runCheckTool(input, plan.argv, { cwd });
     // Match SwiftLint paths and expose response-file sources in the compiler log.
@@ -84,14 +86,14 @@ async function runBuild(input: CheckInput, plan: SwiftBuildPlan): Promise<SwiftB
         .split('\n')
         .map((line) => withoutPrivatePrefix(expandResponseFiles(line, plan.folder, files)))
         .join('\n');
-    const log = toPosix(relative(plan.folder, plan.log));
+    const log = convertToPosixPath(relative(plan.folder, plan.log));
     files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE }, files.read(log));
     return { output, code: result.code, source };
 }
 
 // Share the compiler log within a command; a later command must read the current source.
 function buildOutput(input: CheckInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
-    return memoized(input.reads, BUILD_MEMO, plan.folder, () => runBuild(input, plan));
+    return getCachedMapValue(input.reads, BUILD_MEMO, plan.folder, () => runBuild(input, plan));
 }
 
 // Normalize both macOS cache paths and compiler-log arguments with the same spelling.

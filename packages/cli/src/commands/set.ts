@@ -15,12 +15,12 @@ import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { isLoosening } from '#cli/settings/errors/reasons.ts';
 import { unknownSettingError } from '#cli/settings/errors/keys.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
-import { compact, valueAt, isRecord } from '#cli/system/values.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { setKey, addToList, findScopeTable } from '#cli/settings/edit.ts';
 import type { Mutation, SettingsEdit } from '#cli/types/settings/file.ts';
 import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/set.ts';
+import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
 import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
 import { type SetOptions, type ParsedSettingValue } from '#cli/types/commands/save-settings.ts';
 import { settingValue, writtenValue, declarationFor, settingDefault } from '#cli/settings/inherit.ts';
@@ -135,12 +135,12 @@ async function changeSetting(
         const scopeTable = findScopeTable(written, options.scope);
         if (change.type === 'list') addToList(scopeTable, options.key, change.value);
         else if (declaration.type === 'table' && isRecord(change.value)) {
-            const written = valueAt(scopeTable, options.key.split('.'));
+            const written = getValueAt(scopeTable, options.key.split('.'));
             const existing = writtenValue(written);
             setKey(scopeTable, options.key, { ...(isRecord(existing) ? existing : {}), ...change.value });
         } else setKey(scopeTable, options.key, change.value);
         if (options.reason !== undefined) {
-            const written = valueAt(scopeTable, options.key.split('.'));
+            const written = getValueAt(scopeTable, options.key.split('.'));
             const value = writtenValue(written);
             setKey(scopeTable, options.key, { value, reason: options.reason });
         }
@@ -193,7 +193,7 @@ export function registerSet(program: Command): void {
                     cwd: process.cwd(),
                     key: setting,
                     items,
-                    ...compact({ reason: flags.reason, scope: flags.scope }),
+                    ...stripUndefined({ reason: flags.reason, scope: flags.scope }),
                 }),
             );
         });

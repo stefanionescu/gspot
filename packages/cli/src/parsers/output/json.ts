@@ -1,16 +1,16 @@
 // Reads findings from declared JSON fields.
 import { isAbsolute } from 'node:path';
-import { valueAt } from '#cli/system/values.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { getValueAt } from '#cli/system/values.ts';
 import { JSON_START } from '#cli/config/parsers/output.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
-import { toPosix, toolOutputPath } from '#cli/system/paths.ts';
+import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
 import type { OutputSpec, JsonFindingSpec } from '#cli/types/parsers/output.ts';
 
 // Findings from a tool that prints JSON: the manifest names the list location and the field for each value.
 
 function listAt(value: unknown, path: string | undefined): unknown[] {
-    const found = path === undefined || path === '' ? value : valueAt(value, path.split('.'));
+    const found = path === undefined || path === '' ? value : getValueAt(value, path.split('.'));
     if (!Array.isArray(found)) throw new Error(`Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
     return found;
 }
@@ -38,7 +38,7 @@ function jsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
         (fields?.[name] ?? '')
             .split(' ')
             .filter((path) => path !== '')
-            .map((path) => sources.map((source) => valueAt(source, path.split('.'))));
+            .map((path) => sources.map((source) => getValueAt(source, path.split('.'))));
     const read = (name: string): string | undefined => {
         const joined = values(name)
             .map(
@@ -58,7 +58,7 @@ function jsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
     const file = read('file') ?? '';
     const finding: Finding = {
         check,
-        file: isAbsolute(file) ? toPosix(file) : toolOutputPath(file),
+        file: isAbsolute(file) ? convertToPosixPath(file) : normalizeOutputPath(file),
         message: diagnostic,
         help,
         fixable: values('fixable').some((entries) => entries.some((value) => value !== undefined)),

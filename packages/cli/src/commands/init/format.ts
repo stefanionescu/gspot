@@ -5,10 +5,10 @@ import { readJson } from '#cli/parsers/json.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { compact, isRecord } from '#cli/system/values.ts';
 import { selectForScope } from '#cli/repository/select.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { draftSelection } from '#cli/commands/init/settings-text.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
@@ -64,7 +64,7 @@ function readFormattingFields(file: string): InitFormatOptions | null {
     const tabWidth = parseFormattingWidth(width);
     const lineWidth = fields['max_line_length'];
     const printWidth = parseFormattingWidth(lineWidth);
-    return compact({ tabWidth, printWidth, singleQuote: undefined });
+    return stripUndefined({ tabWidth, printWidth, singleQuote: undefined });
 }
 
 /**
@@ -86,7 +86,7 @@ function readFormatOptions(file: string, dependencies: Record<string, string>): 
         let options: unknown = isRecord(packageOptions) ? packageOptions : {};
         if (prettierFile !== undefined && (PRETTIER_JSON_FILES as readonly string[]).includes(prettierFile.path))
             options = readJson(posix.join(root, prettierFile.path), prettierFile.text);
-        return { ...PRETTIER_DEFAULTS, ...compact(formatOptionsSchema.parse(options)) };
+        return { ...PRETTIER_DEFAULTS, ...stripUndefined(formatOptionsSchema.parse(options)) };
     }
     return readFormattingFields(file);
 }
@@ -121,7 +121,7 @@ export function readFormatTables(
             if (options === null) return [scope, {}] as const;
             let quotes;
             if (options.singleQuote !== undefined) quotes = options.singleQuote ? 'single' : 'double';
-            const fields = compact({
+            const fields = stripUndefined({
                 indent_width: options.tabWidth,
                 print_width: options.printWidth,
                 quotes,

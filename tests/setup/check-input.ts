@@ -1,12 +1,12 @@
 // Opens the selected check input and owns temporary compiler resources for tests.
 import { spyOn } from 'bun:test';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { toolOutputPath } from '#cli/system/paths.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
 import * as environment from '#cli/system/environment.ts';
+import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift/package.ts';
 import { checkInput, runBuiltInCheck } from '#cli/execution/built-in.ts';
@@ -21,7 +21,7 @@ import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 
 export async function isolateCompilerCache(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
     const cache = resources.use(await testdir());
-    resources.use(spyOn(environment, 'cacheDirectory').mockReturnValue(cache.path));
+    resources.use(spyOn(environment, 'readCacheFolder').mockReturnValue(cache.path));
     return resources.move();
 }
 
@@ -40,12 +40,12 @@ export function buildCheckInput(
     checkId: string,
     options: { scope?: string; paths?: string[]; resources?: DisposableStack } = {},
 ): CheckInput {
-    const path = toolOutputPath(options.scope ?? '');
+    const path = normalizeOutputPath(options.scope ?? '');
     const scope = session.scopes.find((entry) => entry.scope.path === path);
     if (scope === undefined) throw new Error(`The sandbox has no scope at ${path || 'the root'}.`);
     const check = scope.selected.flatMap((manifest) => manifest.checks).find((entry) => entry.name === checkId);
     if (check === undefined) throw new Error(`The sandbox selects no check called ${checkId}.`);
-    const paths = options.paths?.map((source) => toolOutputPath(source));
+    const paths = options.paths?.map((source) => normalizeOutputPath(source));
     const files = session.repository.files.filter(
         (file) =>
             (check.runs === 'once' || scopeOf(file.path, session.repository.scopes).path === path) &&
@@ -71,7 +71,7 @@ export async function swiftBuildInput(
     files: DirectoryJSON = {},
 ): Promise<{ input: CheckInput; session: Session; resources: AsyncDisposableStack }> {
     await using resources = new AsyncDisposableStack();
-    resources.use(spyOn(environment, 'currentOperatingSystem').mockReturnValue('macos'));
+    resources.use(spyOn(environment, 'getOperatingSystem').mockReturnValue('macos'));
     resources.use(mockPinnedExecutables([...configurationManifests().values()].flatMap((manifest) => manifest.tools)));
     resources.use(await isolateCompilerCache());
     await createFileTree(sandbox.path, {

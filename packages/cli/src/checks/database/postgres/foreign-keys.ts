@@ -1,6 +1,6 @@
 // Foreign key columns that no index leads with, read from the schema the migrations build.
-import { positionAt } from '#cli/system/text.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { computePosition } from '#cli/system/text.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
@@ -17,7 +17,7 @@ export async function postgresForeignKeyIndexes(input: CheckInput): Promise<Find
         .map((key) =>
             findingAt(
                 input,
-                { file: key.path, ...positionAt(key.text, key.offset) },
+                { file: key.path, ...computePosition(key.text, key.offset) },
                 'foreign-key-index',
                 `${key.table}.${key.column} is a foreign key and no index leads with it.`,
             ),

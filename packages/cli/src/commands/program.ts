@@ -17,7 +17,7 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
 import { Command, CommanderError } from '@commander-js/extra-typings';
-import { printError, isColorAllowed, configureOutput } from '#cli/system/terminal.ts';
+import { printError, isColorAllowed, setOutputOptions } from '#cli/system/terminal.ts';
 
 function printFailure(error: unknown, isJson: boolean): number {
     if (error instanceof CommanderError) {
@@ -53,7 +53,7 @@ function buildProgram(): Command {
     program.configureOutput({ writeErr: (text) => process.stderr.write(text) });
     program.hook('preAction', (_program, command) => {
         const options = command.opts();
-        configureOutput({
+        setOutputOptions({
             json: options['json'] === true,
             color: isColorAllowed(),
         });
@@ -96,7 +96,7 @@ async function main(argv: string[]): Promise<number> {
         return Number(process.exitCode ?? 0);
     } catch (error) {
         const isJson = commandJson;
-        configureOutput({ json: isJson, color: isColorAllowed() });
+        setOutputOptions({ json: isJson, color: isColorAllowed() });
         if (isJson && error instanceof CommanderError && error.code === 'commander.help')
             return printFailure(new GspotError('arguments', 'Name a command. Run gspot --help to see them.'), isJson);
         return printFailure(error, isJson);

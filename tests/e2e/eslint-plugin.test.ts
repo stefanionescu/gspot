@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { runCommand } from '#tests/setup/processes.ts';
 import { lstat, mkdir, writeFile } from 'node:fs/promises';
 import { packedEnvironment } from '#tests/setup/e2e-sandbox.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import workspacePackage from '#root-package' with { type: 'json' };
 import { TYPE_PROGRAM, MODULE_PROGRAM } from '#tests/config/e2e.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
@@ -57,7 +57,7 @@ const PEER_PACKAGES = [
             ],
             {
                 cwd: consumer,
-                env: { ...packedEnvironment, NPM_CONFIG_USERCONFIG: environmentVariables()['GSPOT_TEST_NPMRC'] },
+                env: { ...packedEnvironment, NPM_CONFIG_USERCONFIG: buildSpawnEnvironment()['GSPOT_TEST_NPMRC'] },
             },
         );
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);

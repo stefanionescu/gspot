@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/system/git.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { pushedCommits } from '#cli/repository/revisions/changes.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { mergeRuns, historyResult } from '#cli/checks/general/history.ts';
@@ -23,7 +23,7 @@ export async function commitlintPushed(session: Session, planned: PlannedCheck):
     if (result.status === 'skipped') return result;
     const commits = await pushedCommits(session.root, planned.commits, session.cancelSignal);
     if (!Array.isArray(commits)) return { ...result, status: 'error', note: commits.error };
-    using folder = scratchFolder();
+    using folder = createScratchFolder();
     const scratch = folder.path;
     const commitFile = join(scratch, MESSAGE_FILE);
     for (const commit of commits) {

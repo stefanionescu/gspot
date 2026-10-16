@@ -151,9 +151,9 @@ async function prepareSupabaseCheck(
     const supabase = executables.sync('supabase', { path: bin });
     const docker = executables.sync('docker', { path: bin });
     const requests: { args: string[]; cwd: string }[] = [];
-    const { runBlocking: blocking, run: executeProcess } = processes;
+    const { spawnProcessBlocking: blocking, run: executeProcess } = processes;
     resources.use(
-        spyOn(processes, 'runBlocking').mockImplementation((argv, options) =>
+        spyOn(processes, 'spawnProcessBlocking').mockImplementation((argv, options) =>
             [supabase, docker].includes(argv[0] ?? '')
                 ? processResult({ stdout: argv[0] === docker ? DOCKER_VERSION_OUTPUT : SUPABASE_VERSION_OUTPUT })
                 : blocking(argv, options),

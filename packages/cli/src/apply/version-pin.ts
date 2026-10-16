@@ -1,9 +1,9 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { startRunner } from '#cli/generation/hooks.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { VERSION_PIN_FILE } from '#cli/config/system/locations.ts';
 import packageManifest from '../../package.json' with { type: 'json' };
@@ -16,7 +16,7 @@ import packageManifest from '../../package.json' with { type: 'json' };
  * @returns the version in .gspot/version.
  */
 export function readVersionPin(root: string): string | undefined {
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     const current = files.read(VERSION_PIN_FILE);
     if (current === undefined) return undefined;
     const line = current.bytes.toString('utf8').trim();

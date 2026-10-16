@@ -1,6 +1,6 @@
 // JSON text the way Prettier prints it: objects one key per line, arrays on one line when they fit.
 import { isRecord } from '#cli/system/values.ts';
-import { extensionOf } from '#cli/system/paths.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { generatedHeader } from '#cli/parsers/generated-header.ts';
 import type { JsonFormat } from '#cli/types/generation/formatting.ts';
@@ -99,7 +99,7 @@ export function hashCommentHeader(): string {
  */
 export function headerFor(path: string): string {
     if (path.startsWith(`${DOT_GSPOT}/`)) return '';
-    const extension = extensionOf(path);
+    const extension = extractExtension(path);
     if (JSON_EXTENSIONS.has(extension)) return '';
     if (SLASH_COMMENT_EXTENSIONS.has(extension)) return commented(generatedHeader(), '//');
     if (HTML_EXTENSIONS.has(extension)) {

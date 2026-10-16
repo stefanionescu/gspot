@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { runCheckSample } from '#tests/setup/fixes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { cacheDirectory } from '#cli/system/environment.ts';
+import { readCacheFolder } from '#cli/system/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandbox.ts';
@@ -27,9 +27,9 @@ test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports
     const command = ['check', '--only', 'swift/build', '--json'];
     const first = await runGspot(sandbox.path, command);
     expect(first.code, first.stdout + first.stderr).toBe(0);
-    const files = await Array.fromAsync(new Bun.Glob('**/Value.swift.o').scan({ cwd: cacheDirectory() }));
+    const files = await Array.fromAsync(new Bun.Glob('**/Value.swift.o').scan({ cwd: readCacheFolder() }));
     expect(files).toHaveLength(1);
-    const compiledFile = join(cacheDirectory(), files[0]!);
+    const compiledFile = join(readCacheFolder(), files[0]!);
     const { mtimeMs: modified } = await stat(compiledFile);
     const again = await runGspot(sandbox.path, command);
     expect(again.code, again.stdout + again.stderr).toBe(0);
@@ -68,10 +68,10 @@ test.skipIf(!isMacos)(
         const command = ['check', '--only', 'swift/build', '--json'];
         const first = await runGspot(sandbox.path, command);
         expect(first.code, first.stdout + first.stderr).toBe(0);
-        const objects = await Array.fromAsync(new Bun.Glob('**/main.o').scan({ cwd: cacheDirectory() }));
+        const objects = await Array.fromAsync(new Bun.Glob('**/main.o').scan({ cwd: readCacheFolder() }));
         expect(objects.length).toBeGreaterThan(0);
         const times = await Promise.all(
-            objects.map((file) => stat(join(cacheDirectory(), file)).then(({ mtimeMs }) => mtimeMs)),
+            objects.map((file) => stat(join(readCacheFolder(), file)).then(({ mtimeMs }) => mtimeMs)),
         );
         const commentedBuild = await runGspot(sandbox.path, command);
         expect(commentedBuild.code, commentedBuild.stdout + commentedBuild.stderr).toBe(0);
@@ -79,7 +79,9 @@ test.skipIf(!isMacos)(
             (JSON.parse(commentedBuild.stdout) as RunReport).checks.flatMap(({ findings }) => findings),
         ).toStrictEqual([]);
         expect(
-            await Promise.all(objects.map((file) => stat(join(cacheDirectory(), file)).then(({ mtimeMs }) => mtimeMs))),
+            await Promise.all(
+                objects.map((file) => stat(join(readCacheFolder(), file)).then(({ mtimeMs }) => mtimeMs)),
+            ),
         ).toStrictEqual(times);
         expect(await readFile(join(sandbox.path, 'main.swift'), 'utf8')).toBe(source);
         expect(await readFile(join(sandbox.path, 'Example.xcodeproj/project.pbxproj'), 'utf8')).toBe(project);

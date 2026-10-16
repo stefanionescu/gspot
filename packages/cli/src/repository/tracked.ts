@@ -7,9 +7,9 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { parseIndexEntries } from '#cli/parsers/git.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
 import { decodeUtf8, readSource } from '#cli/system/files/reads.ts';
-import { GIT_LOCALE, WORK_TREE_ARGV } from '#cli/config/system/git.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/system/locations.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
+import { GIT_LOCALE, WORK_TREE_ARGUMENTS } from '#cli/config/system/git.ts';
 import { EXECUTABLE_BITS, EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { ENTRY_MODES, GITLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { isOutsideGit, runGitBlocking, runGitForBytes } from '#cli/system/git.ts';
@@ -18,8 +18,8 @@ import type { FileEntry, PathIgnore, PendingDirectory, DirectoryContents } from 
 import {
     GIT_FOLDER,
     GITIGNORE_FILE,
-    INDEX_FILES_ARGV,
-    UNTRACKED_FILES_ARGV,
+    INDEX_FILES_ARGUMENTS,
+    UNTRACKED_FILES_ARGUMENTS,
     INSTALLED_DEPENDENCY_FOLDERS,
 } from '#cli/config/repository/tracked.ts';
 
@@ -108,14 +108,18 @@ function walkPaths(root: string): string[] {
 }
 
 // Share Git listing failure classification while each caller owns its output format and non-Git behavior.
-async function listGitFiles(root: string, options: string[], cancelSignal?: AbortSignal): Promise<string | undefined> {
-    const listed = await runGitForBytes(root, options, { cancelSignal });
+async function listGitFiles(
+    root: string,
+    gitArguments: string[],
+    cancelSignal?: AbortSignal,
+): Promise<string | undefined> {
+    const listed = await runGitForBytes(root, gitArguments, { cancelSignal });
     if (listed.code === 0) {
         const text = decodeUtf8(listed.stdout);
         if (text === undefined) throw new GspotError('git', 'Revision paths must be valid UTF-8.');
         return text;
     }
-    if (isOutsideGit(runGitBlocking(root, WORK_TREE_ARGV, { env: GIT_LOCALE }))) return undefined;
+    if (isOutsideGit(runGitBlocking(root, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE }))) return undefined;
     throw new GspotError(
         'git',
         `Git ls-files failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`,
@@ -129,7 +133,7 @@ async function listGitFiles(root: string, options: string[], cancelSignal?: Abor
  * @returns validated entries, retaining stages of conflicted working files.
  */
 export async function readIndexEntries(root: string, cancelSignal?: AbortSignal): Promise<GitIndexEntry[]> {
-    const listed = await listGitFiles(root, [...INDEX_FILES_ARGV], cancelSignal);
+    const listed = await listGitFiles(root, [...INDEX_FILES_ARGUMENTS], cancelSignal);
     return listed === undefined ? [] : parseIndexEntries(listed);
 }
 
@@ -157,7 +161,7 @@ export async function listRepositoryFiles(
     hasGit = true,
 ): Promise<FileEntry[]> {
     const index = indexEntries;
-    const listed = hasGit ? await listGitFiles(root, [...UNTRACKED_FILES_ARGV]) : undefined;
+    const listed = hasGit ? await listGitFiles(root, [...UNTRACKED_FILES_ARGUMENTS]) : undefined;
     const paths =
         listed === undefined
             ? walkPaths(root)

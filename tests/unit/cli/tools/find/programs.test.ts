@@ -11,9 +11,9 @@ import { installCompiler } from '#tests/setup/install.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
+import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { inspectTool, locateCandidates } from '#cli/tools/find.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -250,10 +250,10 @@ test('a system tsc is found in node_modules and the tool project tsc is ignored'
 test('a Python tool uses the tool project environment, not the repository .venv', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        [virtualEnvironmentExecutable('.venv', 'teller')]:
+        [buildVenvExecutablePath('.venv', 'teller')]:
             `#!${process.execPath}\nawait Bun.write('fallback-ran', '');\nconsole.log('1.2.3');\n`,
     });
-    await chmod(join(sandbox.path, virtualEnvironmentExecutable('.venv', 'teller')), EXECUTABLE_FILE);
+    await chmod(join(sandbox.path, buildVenvExecutablePath('.venv', 'teller')), EXECUTABLE_FILE);
     const tool = buildProgramPin('teller', '1.2.3');
     tool.installers['pypi'] = { name: 'teller', version: '1.2.3' };
     expect(
@@ -267,9 +267,9 @@ test('a Python tool uses the tool project environment, not the repository .venv'
         ).state,
     ).toBe('missing');
     await createFileTree(sandbox.path, {
-        [virtualEnvironmentExecutable('.gspot/.venv', 'teller')]: `#!${process.execPath}\nconsole.log('1.2.3');\n`,
+        [buildVenvExecutablePath('.gspot/.venv', 'teller')]: `#!${process.execPath}\nconsole.log('1.2.3');\n`,
     });
-    await chmod(join(sandbox.path, virtualEnvironmentExecutable('.gspot/.venv', 'teller')), EXECUTABLE_FILE);
+    await chmod(join(sandbox.path, buildVenvExecutablePath('.gspot/.venv', 'teller')), EXECUTABLE_FILE);
     expect(
         inspectTool(
             {

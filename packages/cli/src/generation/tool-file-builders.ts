@@ -1,5 +1,5 @@
 import { readAsset } from '#cli/system/assets.ts';
-import { extensionOf } from '#cli/system/paths.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import { buildJsconfig } from '#cli/generation/jsconfig.ts';
 import { prettierPlugins } from '#cli/planning/needed-tools.ts';
 import { jsonText, headerFor } from '#cli/generation/headers.ts';
@@ -247,7 +247,7 @@ export function emitTarget(sourcePath: string, targetPath: string, context: Emit
             packageManifests: session.packageManifests,
         });
     if (builder === undefined && !sourcePath.includes('/semgrep/')) return `${headerFor(targetPath)}${emitted}`;
-    if (JSON_EXTENSIONS.has(extensionOf(targetPath)))
+    if (JSON_EXTENSIONS.has(extractExtension(targetPath)))
         return jsonText(JSON.parse(emitted), {
             width: selection.view.format.print_width,
             indent: selection.view.format.indent_width,

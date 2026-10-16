@@ -8,7 +8,7 @@ import { containingAll } from '#tests/setup/matchers.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e.ts';
 import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/e2e-sandbox.ts';
 import { runCommand, waitForExit, waitForFile, captureChild, prepareCommand } from '#tests/setup/processes.ts';
@@ -34,7 +34,7 @@ async function expectReplacedFiles(root: string, output: string): Promise<void> 
 
 // Windows does not deliver POSIX SIGTERM to the child process group.
 test.skipIf(isWindows)('SIGTERM to the packed gspot stops the tool process it started', async () => {
-    await using consumer = await createPackedSandbox(environmentVariables()['GSPOT_TEST_NPMRC']!);
+    await using consumer = await createPackedSandbox(buildSpawnEnvironment()['GSPOT_TEST_NPMRC']!);
     const cancellation = join(consumer.workspace, 'cancellation');
     await createFileTree(cancellation, { 'source.txt': 'input\n' });
     const marker = 'started.pid';
@@ -78,7 +78,7 @@ test.skipIf(isWindows)('SIGTERM to the packed gspot stops the tool process it st
 });
 
 test('init replaces formatter files, leaves CLAUDE.md and your AGENTS.md notes as written, and check reports findings', async () => {
-    await using consumer = await createPackedSandbox(environmentVariables()['GSPOT_TEST_NPMRC']!);
+    await using consumer = await createPackedSandbox(buildSpawnEnvironment()['GSPOT_TEST_NPMRC']!);
     const { root } = consumer;
     await createFileTree(root, STARTING_FILES);
     const initialized = await setUpPackedSandbox(consumer, {
@@ -109,7 +109,7 @@ test('init replaces formatter files, leaves CLAUDE.md and your AGENTS.md notes a
     expect(lockfileHosts.length).toBeGreaterThan(0);
     for (const finding of lockfileHosts) {
         expect(finding).toMatchObject({ file: 'package-lock.json', rule: 'host' });
-        expect(finding.message).toContain(new URL('/', environmentVariables()['GSPOT_TEST_NPM_REGISTRY']).href);
+        expect(finding.message).toContain(new URL('/', buildSpawnEnvironment()['GSPOT_TEST_NPM_REGISTRY']).href);
     }
     expect(
         checks.flatMap(({ check, status, findings }) =>

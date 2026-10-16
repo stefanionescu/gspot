@@ -11,7 +11,7 @@ import { readVersionPin } from '#cli/apply/version-pin.ts';
 import { reportText } from '#cli/commands/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
-import { noteLines, printResult } from '#cli/system/terminal.ts';
+import { formatNotes, printResult } from '#cli/system/terminal.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/save-settings.ts';
 
 function staleFilesText(drift: StaleFile[]): string {
@@ -33,7 +33,7 @@ function planApply(session: Session): CommandResult {
     const generated = emitAll(session);
     const drift = findStaleFiles(session, generated);
     const summary = drift.length === 0 ? 'every generated file is up to date\n' : staleFilesText(drift);
-    const text = summary + noteLines(generated.notes);
+    const text = summary + formatNotes(generated.notes);
     const pin = { from: readVersionPin(session.root), to: session.version };
     const json: DryRunJson = { dryRun: true, pin, drift, notes: generated.notes };
     const version = pin.from === pin.to ? '' : `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n`;

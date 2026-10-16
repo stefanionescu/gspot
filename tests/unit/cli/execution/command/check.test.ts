@@ -17,7 +17,7 @@ import { isWindows } from '#tests/setup/operating-systems.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/settings/scopes.ts';
 import { runCheckCommand, commandEnvironment } from '#cli/execution/command/check.ts';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
+import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 
 // A checker that passes, and one that fails.
 const PASSING_SCRIPT = `#!${process.execPath}\nprocess.exitCode = 0;\n`;
@@ -97,7 +97,7 @@ help = "Install the accepted version."
     using resources = new DisposableStack();
     resources.use(
         useEnvironment({
-            PATH: [sandbox.path, environmentVariable(environmentVariables(), 'PATH')].filter(Boolean).join(delimiter),
+            PATH: [sandbox.path, environmentVariable(buildSpawnEnvironment(), 'PATH')].filter(Boolean).join(delimiter),
         }),
     );
     const initial = await runCheckCommand(session, planned);

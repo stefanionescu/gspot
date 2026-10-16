@@ -3,18 +3,18 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
-import { stemOf, directoryOf, extensionOf } from '#cli/system/paths.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { SPEC_SUFFIX, INDEX_STEMS } from '#cli/config/checks/general/structure.ts';
+import { extractStem, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
 import { directoryTree, structureSources, isDependencyFolder } from '#cli/checks/general/structure/source-files.ts';
 
 // A selected configuration declares <name>.<kind>.<ext> file names, such as NestJS, so these do not count as a shared prefix.
 function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
-    const extension = extensionOf(name);
+    const extension = extractExtension(name);
     // A selected configuration declares <name>.<kind>.<ext> file names, such as NestJS, so these do not count as a shared prefix.
     if (extension.endsWith('x') || !extensionsTagged('javascript', 'typescript').includes(extension)) return false;
-    const parts = stemOf(name).replace(SPEC_SUFFIX, '').split('.');
+    const parts = extractStem(name).replace(SPEC_SUFFIX, '').split('.');
     const kind = parts.at(-1);
     return parts.length > 1 && kind !== undefined && kinds.has(kind);
 }
@@ -42,8 +42,8 @@ export function sharedPrefixes(input: CheckInput): Finding[] {
     const seen = new Set<string>();
     // eslint-disable-next-line complexity -- reason: Prefix comparison evaluates sibling file and directory relationships together; splitting it adds one-caller predicates.
     return structureSources(input).flatMap((file) => {
-        const directory = directoryOf(file.path);
-        const stem = stemOf(file.path);
+        const directory = extractParentFolder(file.path);
+        const stem = extractStem(file.path);
         const prefix = prefixOf(stem);
         const key = JSON.stringify([directory, prefix]);
         if (
@@ -63,10 +63,13 @@ export function sharedPrefixes(input: CheckInput): Finding[] {
                     prefixOf(entry.name) === prefix
                 );
             if (hasDeclaredKindSuffix(entry.name, kinds)) return false;
-            const peerStem = stemOf(entry.name);
+            const peerStem = extractStem(entry.name);
             return !INDEX_STEMS.has(peerStem) && prefixOf(peerStem) === prefix;
         });
-        if (new Set(peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : stemOf(entry.name)))).size < limit)
+        if (
+            new Set(peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : extractStem(entry.name)))).size <
+            limit
+        )
             return [];
         seen.add(key);
         const names = peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : entry.name)).join(', ');

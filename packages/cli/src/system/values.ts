@@ -8,7 +8,7 @@ import type { Defined } from '#cli/types/objects.ts';
  *
  * @returns the same object without its undefined entries.
  */
-export function compact<T extends object>(value: T): Defined<T> {
+export function stripUndefined<T extends object>(value: T): Defined<T> {
     return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Defined<T>;
 }
 
@@ -42,7 +42,7 @@ export function isRecordArray(value: unknown): value is Record<string, unknown>[
  *
  * @returns the value, or undefined when any key along the path has no value.
  */
-export function valueAt(value: unknown, keys: readonly (string | number)[]): unknown {
+export function getValueAt(value: unknown, keys: readonly (string | number)[]): unknown {
     let current = value;
     for (const key of keys) {
         if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key)) return undefined;

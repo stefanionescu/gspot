@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { checkReport, buildRunOptions } from '#tests/setup/run-gspot.ts';
 import { ASSET_SETTING_CASES, UNREADABLE_RESOURCES, INVALID_RESOURCE_DOCUMENTS } from '#tests/config/xcode.ts';
 
@@ -22,7 +22,7 @@ test.each([...UNREADABLE_RESOURCES])(
         });
         const session = await openSession(sandbox.path);
         const options = buildRunOptions({ stage: 'commit', only: [check] });
-        using files = openSafeFolder(sandbox.path);
+        using files = openFiles(sandbox.path);
         const target = join(sandbox.path, path);
         const { mode } = files.read(path)!;
         await rm(target);

@@ -1,12 +1,12 @@
 import { createTwoFilesPatch } from 'diff';
-import { toPosix } from '#cli/system/paths.ts';
 import type { StaleFile } from '#cli/types/apply.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { listStrayPaths } from '#cli/ownership/plans.ts';
 import { staleLockfiles } from '#cli/tools/lockfiles.ts';
 import { DIFF_CONTEXT_LINES } from '#cli/config/apply.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
-import { currentBlock } from '#cli/system/managed-blocks.ts';
+import { readBlock } from '#cli/system/managed-blocks.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import { parseToolProject } from '#cli/parsers/tool-project.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
@@ -21,9 +21,17 @@ import {
 } from '#cli/config/system/locations.ts';
 
 function patch(path: string, before: string, after: string, beforeName: string): string {
-    return createTwoFilesPatch(`a/${toPosix(path)}`, `b/${toPosix(path)}`, before, after, beforeName, 'generated', {
-        context: DIFF_CONTEXT_LINES,
-    });
+    return createTwoFilesPatch(
+        `a/${convertToPosixPath(path)}`,
+        `b/${convertToPosixPath(path)}`,
+        before,
+        after,
+        beforeName,
+        'generated',
+        {
+            context: DIFF_CONTEXT_LINES,
+        },
+    );
 }
 
 function staleWholeFiles(files: SafeFolder, generated: Generated): StaleFile[] {
@@ -48,7 +56,7 @@ function staleBlocks(files: SafeFolder, generated: Generated): StaleFile[] {
     const entries: StaleFile[] = [];
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
-        const current = currentBlock(text, { path: block.path, style: block.style });
+        const current = readBlock(text, { path: block.path, style: block.style });
         const wanted = block.block.trim();
         if (current === undefined) entries.push({ path: block.path, kind: 'missing' });
         else if (current !== wanted)
@@ -82,7 +90,7 @@ export function findStaleFiles(
     session: Pick<Session, 'root' | 'npmClient' | 'repository' | 'settingsFile'>,
     generated: Generated,
 ): StaleFile[] {
-    using files = openSafeFolder(session.root);
+    using files = openFiles(session.root);
     const known = expectedPaths(session, generated);
     const lockfiles = staleLockfiles(session, generated.files);
     const strays = listStrayPaths(session, known).map((path): StaleFile => ({ path, kind: 'stray' }));

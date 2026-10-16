@@ -129,7 +129,7 @@ test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $nam
     };
     using _which = spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) =>
         options?.all === true ? ['/native/pytest'] : '/native/pytest') as typeof executables.sync);
-    using versionRun = spyOn(processes, 'runBlocking').mockReturnValue({
+    using versionRun = spyOn(processes, 'spawnProcessBlocking').mockReturnValue({
         code: report.code,
         stdout: report.stdout,
         stderr: '',

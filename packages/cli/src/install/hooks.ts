@@ -1,8 +1,8 @@
 import { resolve, relative } from 'node:path';
-import { toPosix } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { hookLine } from '#cli/generation/hooks.ts';
 import { readHooks } from '#cli/repository/tooling.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -10,14 +10,14 @@ import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/hooks.ts';
 import type { HookName, StartRunner } from '#cli/types/generation/files.ts';
 import type { HookPlan, HookStatus, HookContext } from '#cli/types/install.ts';
-import { gitPrefix, hooksDirectory, readGitSetting, runGitBlocking } from '#cli/system/git.ts';
+import { readGitPrefix, readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
 import { HOOK_COMMAND, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install.ts';
 
 // Read this clone's existing hook mechanisms: another folder, a hook tool, or scripts
 // in the default Git hooks folder.
 function otherHooks(root: string, own: string): Tooling['hooks'] {
     const found = readHooks(root).filter((hook) => !(hook.kind === 'hooksPath' && hook.path === own));
-    const directory = hooksDirectory(root);
+    const directory = readHooksFolder(root);
     if (readGitSetting(root, HOOKS_PATH_SETTING) !== undefined || !existsSync(directory)) return found;
     const scripts = readdirSync(directory, { withFileTypes: true }).filter(
         (entry) => entry.isFile() && !entry.name.endsWith(SAMPLE_HOOK_SUFFIX),
@@ -28,7 +28,7 @@ function otherHooks(root: string, own: string): Tooling['hooks'] {
               ...found,
               {
                   kind: 'hooksPath',
-                  path: toPosix(relative(root, directory)),
+                  path: convertToPosixPath(relative(root, directory)),
                   files: scripts.map((entry) => entry.name),
               },
           ];
@@ -52,7 +52,7 @@ function otherHooksNote(hooks: Tooling['hooks'], runner: StartRunner): string {
  */
 function planHooks({ settings, repository, runner }: HookContext): HookPlan {
     if (!repository.hasGit) return { note: '' };
-    const path = `${gitPrefix(repository.root, true)}${HOOKS_DIRECTORY}`;
+    const path = `${readGitPrefix(repository.root, true)}${HOOKS_DIRECTORY}`;
     if (settings.hooks?.enabled !== true)
         return readGitSetting(repository.root, HOOKS_PATH_SETTING) === path
             ? { command: UNSET_HOOKS_PATH, note: 'disabled hooks: unset core.hooksPath' }
@@ -105,7 +105,7 @@ export function hookStatus({ settings, repository, runner }: HookContext): HookS
     if (foreign.length > 0) {
         const paths = foreign.flatMap((hook) => {
             const directory =
-                hook.kind === 'hooksPath' ? hooksDirectory(repository.root) : resolve(repository.root, hook.path);
+                hook.kind === 'hooksPath' ? readHooksFolder(repository.root) : resolve(repository.root, hook.path);
             return hook.files.length === 0 ? [directory] : hook.files.map((file) => resolve(directory, file));
         });
         const ready = paths.some((file) => {

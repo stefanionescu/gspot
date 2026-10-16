@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
-import { compact } from '#cli/system/values.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readGitSetting } from '#cli/system/git.ts';
 import { emitSettings } from '#cli/settings/file.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { detectedDefaults } from '#cli/settings/view.ts';
 import { readLintJobs } from '#cli/repository/tooling.ts';
 import { selectForScope } from '#cli/repository/select.ts';
@@ -93,7 +93,11 @@ function headTables(
             const text = readText(repository.root, file);
             const sdkRoot = text === undefined ? undefined : projectBuildSettings(text).sdkRoot;
             const destination = detectedDefaults(sdkRoot === undefined ? {} : { sdkRoot }).get('xcode.destination');
-            const xcode = { ...(scope === '' ? swift : {}), project: posix.dirname(file), ...compact({ destination }) };
+            const xcode = {
+                ...(scope === '' ? swift : {}),
+                project: posix.dirname(file),
+                ...stripUndefined({ destination }),
+            };
             return [scope, { xcode }];
         }),
     );
@@ -106,7 +110,7 @@ function headTables(
         ...draft.template?.tables,
         configurations: draft.configurations,
         ...tables.get(''),
-        ...compact({ scope: scope.length === 0 ? undefined : scope }),
+        ...stripUndefined({ scope: scope.length === 0 ? undefined : scope }),
     };
 }
 

@@ -3,8 +3,8 @@ import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import type { Parsed } from '#cli/types/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { valueAt, isRecord, normalizeTables } from '#cli/system/values.ts';
 import { JSONC_OPTIONS, JSONC_EXTENSION } from '#cli/config/parsers/json.ts';
+import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
 import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser';
 
 // Parse the complete JSON document before editing or returning any of its fields.
@@ -56,9 +56,9 @@ export function openJsonFile(path: string, source: string): EditableFile {
     let document = readJson(path, text);
     return {
         format: 'json',
-        value: (keys) => normalizeTables(valueAt(document, keys)),
+        value: (keys) => normalizeTables(getValueAt(document, keys)),
         set(keys, value) {
-            if (isDeepStrictEqual(normalizeTables(valueAt(document, keys)), normalizeTables(value))) return;
+            if (isDeepStrictEqual(normalizeTables(getValueAt(document, keys)), normalizeTables(value))) return;
             const next = applyEdits(text, modify(text, [...keys], value, {}));
             document = readJson(path, next);
             text = next;

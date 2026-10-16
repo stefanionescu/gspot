@@ -4,8 +4,8 @@ import { createFileTree } from 'testdirs';
 import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import type { Finding, RunReport } from '#cli/types/execution/check.ts';
 import type { PackedSandbox, CommandOptions } from '#tests/types/e2e.ts';
 import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
@@ -109,7 +109,7 @@ async function runPackedCheck(
     }
 
     test('a packed install runs the pinned language tools, reports their findings, and passes after the fixes', async () => {
-        await using installation = await createPackedSandbox(environmentVariables()['GSPOT_TEST_NPMRC']!);
+        await using installation = await createPackedSandbox(buildSpawnEnvironment()['GSPOT_TEST_NPMRC']!);
 
         await prepareLanguages(installation);
         for (const check of [PROSE_CHECK, SWIFT_CHECK]) {

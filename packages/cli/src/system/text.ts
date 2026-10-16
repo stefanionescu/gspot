@@ -22,7 +22,7 @@ import {
  *
  * @returns the closest candidates.
  */
-export function similar(name: string, candidates: string[]): string[] {
+export function selectSimilarNames(name: string, candidates: string[]): string[] {
     const lower = name.toLowerCase();
     const limit = Math.max(TYPO_MIN, Math.floor(name.length / TYPO_FRACTION));
     return candidates
@@ -43,7 +43,7 @@ export function similar(name: string, candidates: string[]): string[] {
  *
  * @returns the list text.
  */
-export function codeList(items: readonly string[]): string {
+export function formatCodeList(items: readonly string[]): string {
     const shown = items.slice(0, LIST_LIMIT);
     const rest = items.length - shown.length;
     const more = rest > 0 ? ` and ${String(rest)} more` : '';
@@ -57,7 +57,7 @@ export function codeList(items: readonly string[]): string {
  *
  * @returns the digest.
  */
-export function contentDigest(content: string | Uint8Array): string {
+export function hashContent(content: string | Uint8Array): string {
     return createHash(DIGEST_ALGORITHM).update(content).digest('hex');
 }
 
@@ -81,7 +81,7 @@ export function quoteArgument(value: string): string {
  *
  * @returns the position.
  */
-export function positionAt(text: string, offset: number): TextPosition {
+export function computePosition(text: string, offset: number): TextPosition {
     const before = text.slice(0, offset);
     const line = before.split('\n').length;
     return { line, column: offset - before.lastIndexOf('\n') };
@@ -105,6 +105,6 @@ export function codePointLength(text: string): number {
  *
  * @returns spaces at the original text positions.
  */
-export function blankOut(text: string): string {
+export function convertToSpaces(text: string): string {
     return text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
 }

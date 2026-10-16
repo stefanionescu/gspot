@@ -11,7 +11,7 @@ import { rm, stat, readFile } from 'node:fs/promises';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { currentBlock } from '#cli/system/managed-blocks.ts';
+import { readBlock } from '#cli/system/managed-blocks.ts';
 
 test('the managed block reaches AGENTS.md and the instruction files, and a second apply leaves AGENTS.md alone', async () => {
     await using sandbox = await testdir();
@@ -22,13 +22,13 @@ test('the managed block reaches AGENTS.md and the instruction files, and a secon
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const instructions = currentBlock(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8'), {
+    const instructions = readBlock(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8'), {
         path: 'AGENTS.md',
         style: 'markdown',
     });
     expect(instructions).toContain('agent/WORKING.md');
     expect(
-        currentBlock(await readFile(join(sandbox.path, 'TEAM.md'), 'utf8'), { path: 'TEAM.md', style: 'markdown' }),
+        readBlock(await readFile(join(sandbox.path, 'TEAM.md'), 'utf8'), { path: 'TEAM.md', style: 'markdown' }),
     ).toBe(instructions);
     const attributes = await stat(join(sandbox.path, 'AGENTS.md'));
     const modified = attributes.mtimeMs;

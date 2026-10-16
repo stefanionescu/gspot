@@ -1,9 +1,9 @@
 import { join, relative } from 'node:path';
-import { toPosix } from '#cli/system/paths.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import { checkInput } from '#cli/execution/built-in.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { RAN_STATUSES } from '#cli/config/execution/run.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { coverageArguments } from '#cli/planning/checks.ts';
@@ -84,7 +84,7 @@ function missingToolFile(
 ): CheckResult | undefined {
     const paths = options.configurationFiles?.(checkInput(session, planned));
     if (paths === undefined) return undefined;
-    using files = openSafeFolder(session.root);
+    using files = openFiles(session.root);
     const missing = [...paths, ...commandToolFiles(session, planned, command)].find((path) =>
         path.startsWith(`${DOT_GSPOT}/`)
             ? files.read(path) === undefined
@@ -231,7 +231,7 @@ export function commandEnvironment(
  */
 export function commandSubstitutions(source: CommandSource, planned: SubstitutionCheck, cwd: string): Substitutions {
     const substitutions: Substitutions = {
-        files: planned.files.map((file) => toPosix(relative(cwd, join(source.root, file.path)))),
+        files: planned.files.map((file) => convertToPosixPath(relative(cwd, join(source.root, file.path)))),
         scope: planned.scope.scope.path,
         root: source.root,
         indent: planned.scope.view.format.indent_style === 'space' ? planned.scope.view.format.indent_width : 0,

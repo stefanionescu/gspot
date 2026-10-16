@@ -6,12 +6,12 @@ import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { fileMode } from '#cli/system/files/entries.ts';
 import { parseTemplate } from '#cli/settings/templates.ts';
 import { commitAll, gitOutput } from '#tests/setup/git.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { parseToolProject } from '#cli/parsers/tool-project.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { INIT_FILES, REPLACED_TOOL_FILES } from '#tests/config/init.ts';
 import { containingAll, textContaining } from '#tests/setup/matchers.ts';
@@ -91,7 +91,7 @@ exclude_rules = LT01, RF01
     });
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
     const attributes = await stat(join(sandbox.path, path));
-    expect(attributes.mode & 0o777).toBe(fileMode({ mode: 0o640 }));
+    expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
 });
 
 test('init replaces an ignore file inside a scope, and the scope check runs', async () => {
@@ -150,7 +150,7 @@ exclude_rules = LT01
         expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
         expect(await readFile(target, 'utf8')).toBe(original);
         const attributes = await stat(target);
-        expect(attributes.mode & 0o777).toBe(fileMode({ mode: 0o640 }));
+        expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
         expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(!isDryRun);
         expect(await pathExists(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(!isDryRun);
     },
@@ -191,7 +191,7 @@ keep = true
         });
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
         const attributes = await stat(join(sandbox.path, path));
-        expect(attributes.mode & 0o777).toBe(fileMode({ mode: 0o640 }));
+        expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
         expect(await pathExists(join(sandbox.path, generated.folder, scope, generated.file))).toBe(true);
     },
 );

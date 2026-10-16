@@ -1,7 +1,7 @@
 // Prints command results and failures with the selected output options.
 import pc from 'picocolors';
 import { RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
+import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson } from '#cli/types/terminal.ts';
 
 let options: OutputOptions = { json: false, color: false };
@@ -18,7 +18,7 @@ export const colors = pc.createColors(false);
  * @returns whether to paint
  */
 export function isColorAllowed(): boolean {
-    const noColor = environmentVariable(environmentVariables(), 'NO_COLOR');
+    const noColor = environmentVariable(buildSpawnEnvironment(), 'NO_COLOR');
     if (noColor !== undefined && noColor !== '') return false;
     return process.stderr.isTTY && process.stdout.isTTY;
 }
@@ -27,7 +27,7 @@ export function isColorAllowed(): boolean {
  * Sets the output mode for the process.
  * @param next JSON format and terminal color
  */
-export function configureOutput(next: OutputOptions): void {
+export function setOutputOptions(next: OutputOptions): void {
     options = next;
     Object.assign(colors, pc.createColors(next.color));
 }
@@ -77,6 +77,6 @@ export function print(text: string): void {
  * @param notes the messages attached to the prepared command result
  * @returns the note lines, or no text when the list contains no notes
  */
-export function noteLines(notes: string[]): string {
+export function formatNotes(notes: string[]): string {
     return notes.map((note) => `note     ${note}\n`).join('');
 }

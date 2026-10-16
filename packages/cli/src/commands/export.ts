@@ -1,13 +1,13 @@
 import { realpathSync } from 'node:fs';
-import { toPosix } from '#cli/system/paths.ts';
 import { isRecord } from '#cli/system/values.ts';
 import { isOwned } from '#cli/ownership/plans.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
@@ -41,10 +41,10 @@ export async function exportCommand(options: ExportOptions): Promise<CommandResu
             throw new GspotError('files', `The folder ${parentPath} does not exist.`);
         throw error;
     }
-    using destination = openSafeFolder(parent);
+    using destination = openFiles(parent);
     const name = basename(file);
-    const path = toPosix(relative(root, resolve(parent, name)));
-    using disk = openSafeFolder(root);
+    const path = convertToPosixPath(relative(root, resolve(parent, name)));
+    using disk = openFiles(root);
     if (path === SETTINGS_FILE || isOwned(path, disk))
         throw new GspotError('template', `gspot writes ${path} itself. Choose another file name.`);
     const index = await readIndexEntries(root);

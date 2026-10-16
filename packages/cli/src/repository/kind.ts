@@ -3,10 +3,10 @@
 
 import { posix } from 'node:path';
 import { tagEntry } from '#cli/repository/tags.ts';
-import { extensionOf } from '#cli/system/paths.ts';
 import { readSource } from '#cli/system/files/reads.ts';
-import { blockSpan } from '#cli/system/managed-blocks.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { MARKERS } from '#cli/config/system/managed-blocks.ts';
 import { hasGeneratedHeader } from '#cli/parsers/generated-header.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
@@ -60,7 +60,7 @@ function attributeKind(attributes: Record<string, string> | undefined): FileClas
 // License texts belong to another party. A code file whose name looks like a license stays source.
 function isLicenseFile(path: string): boolean {
     const name = posix.basename(path);
-    const tags = (EXTENSION_TAGS as Readonly<Record<string, readonly string[]>>)[extensionOf(name)] ?? [];
+    const tags = (EXTENSION_TAGS as Readonly<Record<string, readonly string[]>>)[extractExtension(name)] ?? [];
     return (LICENSE_FILE.test(name) || NOTICE_FILE.test(name)) && tags.every((tag) => LICENSE_TAGS.has(tag));
 }
 
@@ -80,7 +80,7 @@ function sourceKind(root: string, entry: FileEntry, prefix: Buffer): FileClassif
     if (entry.symlink || !entry.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
     const text = readSource(root, entry.path).toString('utf8');
-    const span = blockSpan(text, { path: entry.path, style: 'markdown' });
+    const span = findBlockSpan(text, { path: entry.path, style: 'markdown' });
     if (span === undefined || `${text.slice(0, span.start)}${text.slice(span.end)}`.trim() !== '') return SOURCE_KIND;
     return { kind: 'generated', source: 'gspot' };
 }

@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { stemOf } from '#cli/system/paths.ts';
+import { extractStem } from '#cli/system/paths.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { sqlIdentifiers } from '#cli/checks/general/naming/sql.ts';
 import { REST_SEGMENT } from '#cli/config/checks/general/naming.ts';
@@ -28,7 +28,7 @@ function segmentName(segment: string, containers: PathContainer[]): Pick<Identif
  */
 export function fileIdentifier(path: string, language: string, containers: PathContainer[]): Identifier {
     const base = posix.basename(path);
-    const name = language === 'sql' && base.endsWith(SQL_EXTENSION) ? base : stemOf(base);
+    const name = language === 'sql' && base.endsWith(SQL_EXTENSION) ? base : extractStem(base);
     const named = segmentName(
         name,
         containers.filter((container) => container.category !== 'directories'),

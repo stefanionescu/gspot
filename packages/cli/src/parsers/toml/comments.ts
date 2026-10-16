@@ -1,5 +1,5 @@
 // Retains TOML comments at their syntax entries.
-import { valueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/values.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 
@@ -22,7 +22,7 @@ function tablePath(node: Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>, pos
     const path: KeyPath[number][] = [];
     for (const [index, key] of node.key.item.value.entries()) {
         path.push(key);
-        if (!Array.isArray(valueAt(positions.value, path))) continue;
+        if (!Array.isArray(getValueAt(positions.value, path))) continue;
         const name = JSON.stringify(node.key.item.value.slice(0, index + 1));
         let position = positions.active.get(name) ?? 0;
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- reason: Convert the library enum to text before comparing syntax names, as the TOML parser interface requires.

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import picomatch from 'picomatch';
 import type { Dirent } from 'node:fs';
 import { join, relative } from 'node:path';
-import { toPosix } from '#cli/system/paths.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { ScratchFolder } from '#cli/types/system/files.ts';
 import { rmSync, lstatSync, mkdtempSync, readdirSync, realpathSync } from 'node:fs';
 import { GLOB_EXCLUDE, DRIVE_LETTER, PARENT_SEGMENT, FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
@@ -21,7 +21,7 @@ function assertInsideFolder(pattern: string): void {
  * Use the real system path, which on Windows expands short folder names, as the paths tools report do.
  * @returns the folder, which the caller disposes, as `using` does.
  */
-export function scratchFolder(): ScratchFolder {
+export function createScratchFolder(): ScratchFolder {
     const path = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-')));
     return {
         path,
@@ -59,7 +59,7 @@ export function* listFolderFiles(folder: string, skip?: (entry: Dirent) => boole
  * @returns matching paths relative to cwd, each once in scan order.
  */
 // eslint-disable-next-line complexity, sonarjs/cognitive-complexity -- reason: Glob traversal keeps fixed folder roots and exclusions together; splitting it repeats filesystem and match state.
-export function globPaths(cwd: string, patterns: string | string[]): string[] {
+export function listMatchingPaths(cwd: string, patterns: string | string[]): string[] {
     const list = [patterns].flat();
     for (const pattern of list) assertInsideFolder(pattern);
     const positive = list.filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE));
@@ -87,16 +87,17 @@ export function globPaths(cwd: string, patterns: string | string[]): string[] {
         const stat = lstatSync(start, { throwIfNoEntry: false });
         if (stat === undefined) continue;
         if (glob === '' && !stat.isDirectory()) {
-            const file = toPosix(relative(cwd, start));
+            const file = convertToPosixPath(relative(cwd, start));
             if (matches(file) && !isExcluded(file)) found.add(file);
             continue;
         }
         if (!stat.isDirectory() || isPruned(base)) continue;
         for (const entry of listFolderFiles(
             start,
-            (entry) => entry.isDirectory() && isPruned(toPosix(relative(cwd, join(entry.parentPath, entry.name)))),
+            (entry) =>
+                entry.isDirectory() && isPruned(convertToPosixPath(relative(cwd, join(entry.parentPath, entry.name)))),
         )) {
-            const file = toPosix(relative(cwd, join(entry.parentPath, entry.name)));
+            const file = convertToPosixPath(relative(cwd, join(entry.parentPath, entry.name)));
             if (matches(file) && !isExcluded(file)) found.add(file);
         }
     }

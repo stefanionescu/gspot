@@ -1,6 +1,6 @@
 // Parses the configuration declarations needed by a test.
 import { parse } from 'smol-toml';
-import { compact } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
 import type { ManifestDeclaration } from '#cli/types/configurations.ts';
 
@@ -27,7 +27,7 @@ export function buildManifest(
     });
     return {
         ...declared,
-        checks: declared.checks.map((check) => compact({ ...check, name: `${name}/${check.name}` })),
+        checks: declared.checks.map((check) => stripUndefined({ ...check, name: `${name}/${check.name}` })),
         dir: `configurations/${project.group ?? 'language'}/${name}`,
     };
 }

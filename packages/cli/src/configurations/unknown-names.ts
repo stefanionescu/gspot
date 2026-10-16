@@ -1,4 +1,4 @@
-import { similar, codeList } from '#cli/system/text.ts';
+import { formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import type { Manifest, UnknownConfiguration, ConfigurationDeclaration } from '#cli/types/configurations.ts';
 
 /**
@@ -8,8 +8,8 @@ import type { Manifest, UnknownConfiguration, ConfigurationDeclaration } from '#
  * @returns the public diagnostic
  */
 export function unknownConfigurationMessage(name: string, known: string[]): string {
-    const suggestions = similar(name, known);
-    return `There is no configuration called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + codeList(suggestions) + '?' : ''} Run \`gspot list configurations\` to see the available configurations.`;
+    const suggestions = selectSimilarNames(name, known);
+    return `There is no configuration called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''} Run \`gspot list configurations\` to see the available configurations.`;
 }
 
 /**
@@ -38,6 +38,6 @@ export function unknownConfigurations<Declaration extends Pick<ConfigurationDecl
  * @returns the shared selection diagnostic
  */
 export function unknownCheckMessage(name: string, known: string[]): string {
-    const suggestions = similar(name, known);
-    return `There is no check called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + codeList(suggestions) + '?' : ''}`;
+    const suggestions = selectSimilarNames(name, known);
+    return `There is no check called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''}`;
 }

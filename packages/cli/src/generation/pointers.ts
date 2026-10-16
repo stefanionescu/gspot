@@ -5,8 +5,8 @@ import { pathMatcher } from '#cli/repository/selectors.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { isInScope, joinScope, nestedScopes } from '#cli/repository/scopes.ts';
-import { toPosix, directoryOf, includeParentFolders } from '#cli/system/paths.ts';
 import type { GeneratedFile, ToolFileInputs } from '#cli/types/generation/files.ts';
+import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 import { TARGET_PLACEHOLDER, TARGET_JSON_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER } from '#cli/config/configurations.ts';
 
 /**
@@ -42,7 +42,7 @@ function fillTarget(value: string, pointerPath: string, targetPath: string): str
  * @returns a portable relative path understood by configuration loaders.
  */
 export function relativeTarget(pointerPath: string, targetPath: string): string {
-    const relativePath = toPosix(relative(dirname(pointerPath), targetPath));
+    const relativePath = convertToPosixPath(relative(dirname(pointerPath), targetPath));
     return relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
 }
 
@@ -106,7 +106,7 @@ export function pointerPaths(
     ).filter((file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)));
     const directories = new Set(
         owned.flatMap(({ path }) =>
-            [...includeParentFolders([directoryOf(path)])]
+            [...includeParentFolders([extractParentFolder(path)])]
                 .filter((directory) => directory !== '' && matches(directory))
                 .toSorted((left, right) => right.length - left.length)
                 .map((directory) => (isInScope(directory, scope) ? directory : scope)),

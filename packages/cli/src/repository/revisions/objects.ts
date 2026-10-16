@@ -5,7 +5,13 @@ import { runGit, runGitForBytes } from '#cli/system/git.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
 import { parseGitBlobs, parseTreeEntries, parseIndexRevision } from '#cli/parsers/git.ts';
-import { HEAD_ARGV, BLOBS_ARGV, TREE_ENTRIES_ARGV, SYMBOLIC_HEAD_ARGV } from '#cli/config/repository/revisions.ts';
+
+import {
+    HEAD_ARGUMENTS,
+    BLOBS_ARGUMENTS,
+    TREE_ENTRIES_ARGUMENTS,
+    SYMBOLIC_HEAD_ARGUMENTS,
+} from '#cli/config/repository/revisions.ts';
 
 /**
  * Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
@@ -20,7 +26,7 @@ export async function listRevisionEntries(
     cancelSignal?: AbortSignal,
 ): Promise<GitEntry[]> {
     if (source.kind === 'index') return parseIndexRevision(await readIndexEntries(root, cancelSignal));
-    const read = await runGitForBytes(root, [...TREE_ENTRIES_ARGV, source.hash], { cancelSignal });
+    const read = await runGitForBytes(root, [...TREE_ENTRIES_ARGUMENTS, source.hash], { cancelSignal });
     if (read.code !== 0)
         throw new GspotError(
             'git',
@@ -46,7 +52,7 @@ export async function visitGitBlobs(
     if (objects.length === 0) return;
     const result = await runGit(
         root,
-        [...BLOBS_ARGV],
+        [...BLOBS_ARGUMENTS],
         {
             stdin: objects.join('\n') + '\n',
             cancelSignal,
@@ -87,11 +93,11 @@ export async function readBlobs(root: string, requested: string[], cancelSignal?
  */
 export async function readHead(root: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
     const options = { cancelSignal };
-    const head = await runGit(root, [...HEAD_ARGV], options);
+    const head = await runGit(root, [...HEAD_ARGUMENTS], options);
     if (head.code === 0) return head.stdout.trim();
     const failure = new GspotError('git', 'Cannot read committed Git history. Restore HEAD and check again.');
     if (head.code !== 1) throw failure;
-    const symbolic = await runGit(root, [...SYMBOLIC_HEAD_ARGV], options);
+    const symbolic = await runGit(root, [...SYMBOLIC_HEAD_ARGUMENTS], options);
     if (symbolic.code !== 0) throw failure;
     return undefined;
 }

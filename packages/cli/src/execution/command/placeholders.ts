@@ -1,7 +1,7 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { toSystemPath } from '#cli/system/paths.ts';
 import { targetInScope } from '#cli/repository/scopes.ts';
+import { convertToSystemPath } from '#cli/system/paths.ts';
 import { toolFileName } from '#cli/configurations/manifests.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 
@@ -50,7 +50,7 @@ function listArguments(planned: SubstitutionCheck, part: string): string[] | und
     const name = groups['setting'] ?? '';
     const held = planned.scope.view.settings[name];
     const items = held ?? [];
-    return commandItems(items, name).flatMap((item) => [groups['flag'] ?? '', toSystemPath(item)]);
+    return commandItems(items, name).flatMap((item) => [groups['flag'] ?? '', convertToSystemPath(item)]);
 }
 
 /**
@@ -65,7 +65,9 @@ function existingFileArguments(root: string, part: string): string[] | undefined
     const groups = EXISTING_PLACEHOLDER.exec(part)?.groups;
     if (groups === undefined) return undefined;
     const path = join(root, groups['path'] ?? '');
-    return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : [groups['flag'] ?? '', toSystemPath(path)];
+    return statSync(path, { throwIfNoEntry: false }) === undefined
+        ? []
+        : [groups['flag'] ?? '', convertToSystemPath(path)];
 }
 
 function allToolFiles(session: CommandSource, planned: SubstitutionCheck): ToolFileDeclaration[] {
@@ -207,10 +209,10 @@ export function substituteValue(
                 : '';
         })
         .replaceAll(TOOL_FILE_PLACEHOLDER, (_match, name: string) =>
-            toSystemPath(join(session.root, toolFilePath(session, planned, name))),
+            convertToSystemPath(join(session.root, toolFilePath(session, planned, name))),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
-            toSystemPath(pointerFilePath(session, substitutions.scope, name)),
+            convertToSystemPath(pointerFilePath(session, substitutions.scope, name)),
         )
         .replaceAll(SCOPE_PLACEHOLDER, () => (substitutions.scope === '' ? '.' : substitutions.scope))
         .replaceAll(ROOT_PLACEHOLDER, () => substitutions.root)

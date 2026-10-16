@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import { memo } from '#cli/system/files/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { RuleSource } from '#cli/types/rules.ts';
-import { compact, isRecord } from '#cli/system/values.ts';
+import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { readAsset, listAssets } from '#cli/system/assets.ts';
+import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { type NamingDefaults } from '#cli/types/checks/general.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
@@ -132,7 +132,7 @@ function parseManifest(text: string, dir: string): ManifestDeclaration {
     return {
         ...declared,
         checks: declared.checks.map((check) =>
-            compact({ ...check, name: `${declared.configuration.name}/${check.name}` }),
+            stripUndefined({ ...check, name: `${declared.configuration.name}/${check.name}` }),
         ),
         dir,
     };
@@ -144,7 +144,7 @@ function parseManifest(text: string, dir: string): ManifestDeclaration {
  * @returns the manifests
  */
 function configurationManifests(reads?: ReadCache): Map<string, Manifest> {
-    if (reads !== undefined) return memo(reads, MANIFESTS);
+    if (reads !== undefined) return getCachedValue(reads, MANIFESTS);
     const manifests = new Map<string, ManifestDeclaration>();
     const toolVersions = (z.record(z.string(), z.string().min(1)) satisfies z.ZodType<Record<string, string>>).parse(
         JSON.parse(readAsset(TOOL_VERSIONS_FILE)),
@@ -182,7 +182,7 @@ function knownChecks(checks: readonly Pick<CheckDeclaration, 'name'>[], reads?: 
  * @returns the shipped naming choices
  */
 function namingDefaults(reads?: ReadCache): NamingDefaults {
-    if (reads !== undefined) return memo(reads, NAMING_DEFAULTS);
+    if (reads !== undefined) return getCachedValue(reads, NAMING_DEFAULTS);
     return namingDefaultsSchema.parse(JSON.parse(readAsset(NAMING_DEFAULTS_FILE)));
 }
 

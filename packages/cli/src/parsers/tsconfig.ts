@@ -2,16 +2,16 @@
 import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
-import { memo } from '#cli/system/files/cache.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { toPosix, isInside } from '#cli/system/paths.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { join, dirname, resolve, relative } from 'node:path';
-import { portableSegments } from '#cli/system/files/names.ts';
+import { splitPortablePath } from '#cli/system/files/names.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { TSCONFIG_FILE, TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
 
@@ -110,12 +110,12 @@ function compilerHost(root: string, scope: string, reads: ReadCache, options: ts
     host.getCurrentDirectory = () => join(root, scope);
     host.realpath = (path) => {
         const target = nativeRealpath?.(path) ?? path;
-        const local = toPosix(relative(root, path));
+        const local = convertToPosixPath(relative(root, path));
         if (
             (isInside(local) && local.split('/').includes(NODE_MODULES)) ||
             [...libraries].some((library) => isInside(relative(library, path)))
         ) {
-            const marker = toPosix(target).indexOf(`/${NODE_MODULES}/`);
+            const marker = convertToPosixPath(target).indexOf(`/${NODE_MODULES}/`);
             if (marker !== -1) libraries.add(target.slice(0, marker + `/${NODE_MODULES}`.length));
         }
         return target;
@@ -135,14 +135,14 @@ function compilerHost(root: string, scope: string, reads: ReadCache, options: ts
  * @returns source text, or undefined for a missing input.
  */
 function readCompilerFile(root: string, path: string, reads: ReadCache): string | undefined {
-    const local = toPosix(relative(root, path));
-    using files = openSafeFolder(root, 'system');
+    const local = convertToPosixPath(relative(root, path));
+    using files = openFiles(root, 'system');
     try {
         const segments = local.split('/');
         const dependency = segments.indexOf(NODE_MODULES);
         if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
             // Follow linked dependency folders. Refuse links preceding node_modules.
-            portableSegments(local);
+            splitPortablePath(local);
             if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }
@@ -161,7 +161,7 @@ function readCompilerFile(root: string, path: string, reads: ReadCache): string 
  * @returns the parsed configuration, or undefined when the file does not exist.
  */
 export function readTsconfig(root: string, path: string, reads: ReadCache): TypeScriptConfiguration | undefined {
-    const configurations = memo(reads, TSCONFIG_MEMO);
+    const configurations = getCachedValue(reads, TSCONFIG_MEMO);
     const key = JSON.stringify([root, resolve(path)]);
     if (configurations.has(key)) return configurations.get(key);
     try {
@@ -204,9 +204,9 @@ export function readTsconfigProject(
     if (config === undefined) return undefined;
     const projects = tsconfigProjects(root, path, reads);
     const members = new Set(
-        [...projects.values()].flatMap((project) => project.fileNames.map((file) => toPosix(file))),
+        [...projects.values()].flatMap((project) => project.fileNames.map((file) => convertToPosixPath(file))),
     );
-    if (folder !== own && files.some((file) => !members.has(toPosix(join(root, file))))) return undefined;
+    if (folder !== own && files.some((file) => !members.has(convertToPosixPath(join(root, file))))) return undefined;
     return { path, config, projects };
 }
 

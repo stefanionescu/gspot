@@ -14,8 +14,8 @@ import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { colors, printResult } from '#cli/system/terminal.ts';
 import type { ToolInspection } from '#cli/types/tools/find.ts';
+import { getOperatingSystem } from '#cli/system/environment.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/find.ts';
-import { currentOperatingSystem } from '#cli/system/environment.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { collectPins, missingBuild } from '#cli/configurations/tool-pins.ts';
 import { type Suggestions, type DoctorReport } from '#cli/types/commands/doctor.ts';
@@ -65,7 +65,7 @@ function versionLine(report: DoctorReport): string {
  * @returns the report, with exit code 1 when tools or Git hooks need changes
  */
 function buildDoctorReport(session: Session, pinned: string | undefined): DoctorReport {
-    const platform = currentOperatingSystem();
+    const platform = getOperatingSystem();
     // The session omits a tool with no build for this host; its checks skip here.
     const inspections = new Map<string, ToolInspection>();
     const pins = collectPins(session.neededToolManifests).filter(

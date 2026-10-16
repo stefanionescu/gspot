@@ -10,11 +10,11 @@ import { knipFindings } from '#cli/parsers/output/knip.ts';
 import { sarifFindings } from '#cli/parsers/output/sarif.ts';
 import { typosFindings } from '#cli/parsers/output/typos.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
-import { toPosix, toolOutputPath } from '#cli/system/paths.ts';
 import { semgrepFindings } from '#cli/parsers/output/semgrep.ts';
 import { parseRegex, parseGrouped } from '#cli/parsers/output/text.ts';
 import { trufflehogFindings } from '#cli/parsers/output/trufflehog.ts';
 import { markdownlintFindings } from '#cli/parsers/output/markdownlint.ts';
+import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
 
 import type {
     OutputSpec,
@@ -38,8 +38,8 @@ function relativeTo(root: string, file: string): string {
     if (!isAbsolute(file)) return file;
     try {
         // The call gives Windows paths one drive letter case and their long folder names.
-        const realRoot = `${toPosix(realpathSync.native(root))}/`;
-        const realFile = toPosix(realpathSync.native(file));
+        const realRoot = `${convertToPosixPath(realpathSync.native(root))}/`;
+        const realFile = convertToPosixPath(realpathSync.native(file));
         return realFile.startsWith(realRoot) ? realFile.slice(realRoot.length) : file;
     } catch (error) {
         if (new Set<string | undefined>(MISSING_PATH_CODES).has((error as NodeJS.ErrnoException).code)) return file;
@@ -132,7 +132,7 @@ export const outputFormats = {
  */
 export function parseOutput(check: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
     const { root, cwd } = paths;
-    const nativeRoot = isAbsolute(root) ? toPosix(root) : toolOutputPath(root);
+    const nativeRoot = isAbsolute(root) ? convertToPosixPath(root) : normalizeOutputPath(root);
     const output = check.output;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`);
@@ -153,7 +153,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     return findings.map((finding) => ({
         ...finding,
         fixable: check.fix !== undefined && finding.fixable,
-        file: relativeTo(nativeRoot, toPosix(finding.file)),
+        file: relativeTo(nativeRoot, convertToPosixPath(finding.file)),
     }));
 }
 

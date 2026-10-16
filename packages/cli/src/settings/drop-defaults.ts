@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { valueAt, isRecord } from '#cli/system/values.ts';
 import { selectForScope } from '#cli/repository/select.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { WrittenTable } from '#cli/types/settings/values.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
@@ -27,7 +27,7 @@ function inheritedValue(tables: WrittenTable[], key: string, consumer: WrittenTa
     for (const table of tables.filter(({ scope }) => isInScope(consumer.scope, scope))) {
         const candidates = settingCandidates(match, key)
             .filter((candidate) => !(table.scope === omitted && candidate === key))
-            .map((candidate) => valueAt(table.table, candidate.split('.')))
+            .map((candidate) => getValueAt(table.table, candidate.split('.')))
             .filter((written) => written !== undefined);
         for (const written of candidates) {
             value = mergeValue(match.declaration, value, writtenValue(written));

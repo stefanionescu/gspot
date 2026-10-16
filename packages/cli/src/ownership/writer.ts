@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
-import { sameEntry } from '#cli/system/files/entries.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/ownership.ts';
+import { isSameContents } from '#cli/system/files/entries.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 
 // Remove empty folders left by a removed generated file.
@@ -23,7 +23,7 @@ function writeBatch(writer: Writer, plans: WritePlan[]): void {
                 writer.files.remove(path, before);
                 removeEmptyFolders(writer, path);
             }
-        } else if (!sameEntry(before, after)) writer.files.write(path, after, before);
+        } else if (!isSameContents(before, after)) writer.files.write(path, after, before);
     }
 }
 
@@ -34,7 +34,7 @@ function writeBatch(writer: Writer, plans: WritePlan[]): void {
  */
 export function openWriter(root: string): Writer {
     using resources = new DisposableStack();
-    const files = resources.use(openSafeFolder(root));
+    const files = resources.use(openFiles(root));
     files.claim(WRITER_LOCK_FILE);
     resources.move();
     return { files, [Symbol.dispose]: files[Symbol.dispose] };

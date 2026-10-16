@@ -16,13 +16,13 @@ import type { RuleFile, RuleSource, RuleSection, ManagedBlockValues } from '#cli
 import { FIRST_READ, RULES_HEADING, CHECKS_CLOSING, ALL_LEVEL_MARKER, RULES_ONLY_CLOSING } from '#cli/config/rules.ts';
 
 // The rules of the selected configurations; a file with a condition installs only when the repository meets it.
-function configurationRules(
+function listConfigurationRules(
     manifests: Manifest[],
     repository: Repository,
-    packageManifests: DependencyFile[],
+    dependencyFiles: DependencyFile[],
 ): RuleSource[] {
     const conditions = manifests.flatMap((manifest) => Object.values(manifest.rules));
-    const matched = detectConditions(conditions, repository.files, packageManifests);
+    const matched = detectConditions(conditions, repository.files, dependencyFiles);
     return manifests.flatMap((manifest) =>
         ruleFiles(manifest).filter((file) => {
             const condition = manifest.rules[posix.basename(file.source)];
@@ -39,11 +39,11 @@ function configurationRules(
  *
  * @returns the original bytes outside excluded sections.
  */
-function textAtLevel(text: string, level: Level): string {
+function stripAllLevelSections(text: string, level: Level): string {
     if (level === 'all') return text;
     let through = 0;
     const output: string[] = [];
-    for (const section of ruleSections(text).filter((entry) => entry.all)) {
+    for (const section of parseHeadingSections(text).filter((entry) => entry.all)) {
         if (section.start < through) continue;
         output.push(text.slice(through, section.start));
         through = section.end;
@@ -52,7 +52,7 @@ function textAtLevel(text: string, level: Level): string {
     return output.join('');
 }
 
-function rulesByArea(files: RuleFile[]): [string, string[]][] {
+function groupFilesByArea(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
     for (const file of files) {
         if (new Set<string>(FIRST_READ).has(file.path)) continue;
@@ -64,11 +64,16 @@ function rulesByArea(files: RuleFile[]): [string, string[]][] {
     return [...rows];
 }
 
-function indexLines(files: RuleFile[]): string[] {
+function formatRulesIndex(files: RuleFile[]): string[] {
     return [
         `Read ${FIRST_READ.map((path) => '`' + RULES_DIRECTORY + '/' + path + '`').join(' and ')} first. Then read the rules for the files you change. A more specific rule wins over a general one.`,
         '',
-        ...rulesByArea(files).flatMap(([area, paths]) => [`${area}:`, '', ...paths.map((path) => `- ${path}`), '']),
+        ...groupFilesByArea(files).flatMap(([area, paths]) => [
+            `${area}:`,
+            '',
+            ...paths.map((path) => `- ${path}`),
+            '',
+        ]),
     ];
 }
 
@@ -79,7 +84,7 @@ function indexLines(files: RuleFile[]): string[] {
  *
  * @returns source ranges, depths, and level markers for each heading.
  */
-function ruleSections(text: string): RuleSection[] {
+function parseHeadingSections(text: string): RuleSection[] {
     const nodes = fromMarkdown(text).children;
     const headings = nodes.flatMap((node, index) => {
         if (node.type !== 'heading') return [];
@@ -101,7 +106,7 @@ function ruleSections(text: string): RuleSection[] {
  * @param manifests the selected configurations.
  * @param repository the source inventory for the conditional rules.
  * @param level the selected enforcement level.
- * @param packageManifests the parsed source package manifests.
+ * @param dependencyFiles the parsed source package manifests.
  *
  * @returns each rule with its final content and destination.
  */
@@ -110,19 +115,19 @@ export function selectRuleFiles(
     manifests: Manifest[],
     repository: Repository,
     level: Level,
-    packageManifests: DependencyFile[],
+    dependencyFiles: DependencyFile[],
 ): RuleFile[] {
     if (!rules.enabled) return [];
     const sources = new Map(
-        configurationRules(manifests, repository, packageManifests).map((file) => [file.path, file]),
+        listConfigurationRules(manifests, repository, dependencyFiles).map((file) => [file.path, file]),
     );
     return sources
         .values()
         .filter(({ path }) => !rules.exclude.some((entry) => isExcluded(entry, `${RULES_DIRECTORY}/${path}`)))
         .flatMap(({ source, path, group }) => {
             const text = readAsset(source);
-            const content = textAtLevel(text, level);
-            if (content !== text && !ruleSections(content).some((section) => section.depth > 1)) return [];
+            const content = stripAllLevelSections(text, level);
+            if (content !== text && !parseHeadingSections(content).some((section) => section.depth > 1)) return [];
             return [{ path, target: `${RULES_DIRECTORY}/${path}`, content, group }];
         })
         .toArray();
@@ -140,8 +145,14 @@ export function selectRuleFiles(
  *
  * @returns the heading, rule index, and instructions for changing settings.
  */
-export function managedBlock({ files, generatedPaths, level, hasChecks, startCommand }: ManagedBlockValues): string {
-    const index = files.length > 0 ? indexLines(files) : [];
+export function buildAgentsBlock({
+    files,
+    generatedPaths,
+    level,
+    hasChecks,
+    startCommand,
+}: ManagedBlockValues): string {
+    const index = files.length > 0 ? formatRulesIndex(files) : [];
     const outside = [...new Set(generatedPaths)]
         .toSorted((first, second) => first.localeCompare(second))
         .map((path) => `\`${path}\``);

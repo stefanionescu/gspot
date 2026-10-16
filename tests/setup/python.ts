@@ -12,7 +12,7 @@ import { settingsText } from '#tests/setup/settings.ts';
 import { gitignoreBlock } from '#cli/generation/files.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
 import { installToolProjects } from '#tests/setup/install.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
+import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 
 import {
     PYTHON_INDEX_NAME,
@@ -90,7 +90,7 @@ async function createPythonIndex(
 ): Promise<AsyncDisposable & { version: string; url: string; readonly requests: number }> {
     await using source = await createPythonSandbox(work, { indexFile: 'uv.toml' });
     await installToolProjects(source.root);
-    const binary = virtualEnvironmentExecutable(join(work, '.gspot/.venv'), 'ruff');
+    const binary = buildVenvExecutablePath(join(work, '.gspot/.venv'), 'ruff');
     const inspected = await runCommand([binary, '--version'], { cwd: work });
     if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
     const version = RUFF_VERSION_OUTPUT.exec(inspected.stdout.trim())?.groups?.['version'];

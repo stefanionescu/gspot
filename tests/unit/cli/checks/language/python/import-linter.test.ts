@@ -3,11 +3,11 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
-import { virtualEnvironmentBin } from '#cli/system/paths.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { IMPORT_CONTRACT_REPORT } from '#tests/config/python/imports.ts';
 import { toolDeclaration, toolProjectPins } from '#cli/configurations/tool-pins.ts';
@@ -35,7 +35,7 @@ test('import-linter reads setup.cfg first and reports each broken contract with 
         '.importlinter': config,
         'pyproject.toml': '[tool.importlinter]\nroot_package = "example"\n',
         'example/__init__.py': '',
-        [join(virtualEnvironmentBin('.gspot/.venv'), 'lint-imports')]: 'fixture',
+        [join(buildVenvBinPath('.gspot/.venv'), 'lint-imports')]: 'fixture',
     });
     const session = await openSession(sandbox.path);
     using resources = new DisposableStack();

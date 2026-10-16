@@ -3,14 +3,14 @@ import { runGit } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { MODE_BITS } from '#cli/config/system/modes.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
-import { systemSegments } from '#cli/system/files/names.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { splitSystemPath } from '#cli/system/files/names.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { GIT_IGNORED_PATHS } from '#cli/config/execution/copy.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { toPosix, isInside, extensionOf } from '#cli/system/paths.ts';
 import { readTsconfig, projectSources } from '#cli/parsers/tsconfig.ts';
 import { TSCONFIG_FILE, JSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
+import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 
 import type {
     PendingLink,
@@ -32,9 +32,9 @@ import {
 } from 'node:fs';
 
 function untrackedDeclaration(root: string, tracked: ReadonlySet<string>, path: string): string | undefined {
-    const local = toPosix(relative(root, path));
+    const local = convertToPosixPath(relative(root, path));
     if (!isInside(local) || tracked.has(local)) return undefined;
-    if (!new Set<string>(DECLARATION_EXTENSIONS).has(extensionOf(local))) return undefined;
+    if (!new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(local))) return undefined;
     return local;
 }
 
@@ -129,7 +129,7 @@ export async function copyDependencies(
     for (const dependency of input.dependencies) {
         input.cancelSignal?.throwIfAborted();
         const source = realpathSync(join(root, dependency.path));
-        const target = join(input.target, ...systemSegments(dependency.path));
+        const target = join(input.target, ...splitSystemPath(dependency.path));
         mkdirSync(dirname(target), { recursive: true });
         await copyTree(context, source, target, dependency.operation);
     }
@@ -181,7 +181,7 @@ export async function declarationDependencies(
         configurationPaths = configurationPaths.union(
             new Set(
                 config.configurationFiles
-                    .map((path) => toPosix(relative(root, path)))
+                    .map((path) => convertToPosixPath(relative(root, path)))
                     .filter((path) => tracked.has(path)),
             ),
         );

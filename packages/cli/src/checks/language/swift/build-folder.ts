@@ -1,15 +1,15 @@
 import { isDeepStrictEqual } from 'node:util';
-import { toPosix } from '#cli/system/paths.ts';
+import { hashContent } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { contentDigest } from '#cli/system/text.ts';
 import { readSource } from '#cli/system/files/reads.ts';
-import { cacheDirectory } from '#cli/system/environment.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { readCacheFolder } from '#cli/system/environment.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/system/modes.ts';
-import { openSafeFolder, walkSafeFolder } from '#cli/system/files/open.ts';
 import type { FileCopy, SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { SwiftBuildPlan, SwiftBuildPurpose, PreparedSwiftBuild } from '#cli/types/checks/language.ts';
 
@@ -38,7 +38,7 @@ import {
 
 // The sources to build, each as the copy it must have under source/ in the build folder.
 function readBuildSources(root: string, paths: string[]): Map<string, FileCopy> {
-    using source = openSafeFolder(root, 'system');
+    using source = openFiles(root, 'system');
     const wantedFiles = new Map<string, FileCopy>();
     for (const file of paths) {
         const mode = statSync(source.realPath(file)).mode & MODE_BITS;
@@ -56,7 +56,7 @@ function pruneSources(folder: string, files: SafeFolder, wantedFiles: Map<string
         }),
     );
     const empty: string[] = [];
-    walkSafeFolder(files, BUILD_SOURCE_DIRECTORY, (path) => {
+    walkFiles(files, BUILD_SOURCE_DIRECTORY, (path) => {
         const entry = lstatSync(join(folder, path));
         if (entry.isDirectory()) {
             if (!wantedFolders.has(path)) empty.push(path);
@@ -76,8 +76,8 @@ function pruneSources(folder: string, files: SafeFolder, wantedFiles: Map<string
  * @returns the cache folder for this repository.
  */
 function buildFolder(root: string): string {
-    const identity = contentDigest(realpathSync(root));
-    return join(cacheDirectory(), identity);
+    const identity = hashContent(realpathSync(root));
+    return join(readCacheFolder(), identity);
 }
 
 /**
@@ -86,12 +86,12 @@ function buildFolder(root: string): string {
  * @returns the locked root, which the caller disposes.
  */
 function openBuildCache(folder: string): SafeFolder {
-    const home = cacheDirectory();
+    const home = readCacheFolder();
     mkdirSync(home, { recursive: true, mode: PRIVATE_DIRECTORY });
-    using parentFiles = openSafeFolder(home);
-    parentFiles.mkdir(toPosix(relative(home, folder)), PRIVATE_DIRECTORY);
+    using parentFiles = openFiles(home);
+    parentFiles.mkdir(convertToPosixPath(relative(home, folder)), PRIVATE_DIRECTORY);
     using resources = new DisposableStack();
-    const files = resources.use(openSafeFolder(folder, 'system'));
+    const files = resources.use(openFiles(folder, 'system'));
     files.claim(BUILD_LOCK);
     resources.move();
     return files;

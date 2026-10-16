@@ -7,10 +7,10 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { NPM_INSTALL_FLAGS, OFFLINE_ENVIRONMENT } from '#tests/config/e2e.ts';
 import { sep, join, resolve, relative, delimiter, isAbsolute } from 'node:path';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
+import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 
 const root = join(import.meta.dir, '../..');
-const inherited = { ...environmentVariables() };
+const inherited = { ...buildSpawnEnvironment() };
 /** An installed npm package runs with the user's paths and no source module overrides. */
 export const packedEnvironment: Record<string, string | undefined> = {
     ...inherited,

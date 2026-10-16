@@ -3,9 +3,9 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
-import { valueAt, isRecord } from '#cli/system/values.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
+import { isRecord, getValueAt } from '#cli/system/values.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { type PathVisitor } from '#cli/types/settings/values.ts';
 import { NEGATED_PATTERN } from '#cli/config/checks/general/gspot.ts';
@@ -30,7 +30,7 @@ export function unusedEntries(input: CheckInput): Finding[] {
                     .filter((part): part is string => typeof part === 'string')
                     .filter((part, index, fields) => part !== 'paths' || index !== fields.length - 1);
                 const key = [...path, ...names].join('.');
-                const source = valueAt(table.written, names);
+                const source = getValueAt(table.written, names);
                 const where = Array.isArray(source) && source.some((entry) => isRecord(entry)) ? `[[${key}]]` : key;
                 findings.push(
                     findingAt(

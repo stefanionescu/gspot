@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { valueAt } from '#cli/system/values.ts';
 import { readTree } from '#tests/setup/files.ts';
+import { getValueAt } from '#cli/system/values.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
@@ -28,7 +28,7 @@ test.each([...LOOSENED_SETTINGS])('$key keeps its reason through list edits', as
         const result = await runGspot(sandbox.path, argv);
         expect(result.code, result.stdout + result.stderr).toBe(0);
     }
-    const saved = valueAt(parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text()), key.split('.'));
+    const saved = getValueAt(parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text()), key.split('.'));
     expect(saved).toMatchObject({ value: [second], reason: SETTING_REASON });
 });
 
@@ -47,7 +47,7 @@ test.each(LOOSENED_SETTINGS.filter(({ key }) => key !== 'allowed_words'))(
         const changed = await runGspot(sandbox.path, ['set', key, value, '--scope', 'app', '--reason', SETTING_REASON]);
         expect(changed.code, changed.stdout + changed.stderr).toBe(0);
         const saved = parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text());
-        expect(valueAt(saved, key.split('.'))).toMatchObject({ value: [second], reason: SETTING_REASON });
+        expect(getValueAt(saved, key.split('.'))).toMatchObject({ value: [second], reason: SETTING_REASON });
         const restored = await runGspot(sandbox.path, ['unset', key, '--scope', 'app']);
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
         const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);

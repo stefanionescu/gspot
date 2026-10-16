@@ -2,8 +2,8 @@
 import { isUtf8 } from 'node:buffer';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
-import { systemSegments } from '#cli/system/files/names.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { splitSystemPath } from '#cli/system/files/names.ts';
 import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
 
 // Use this run's resolved root when it belongs to the requested repository.
@@ -21,7 +21,7 @@ function realRoot(root: string, reads?: ReadCache): string {
  */
 export function readPrefix(root: string, path: string, limit: number, reads?: ReadCache): Buffer {
     const buffer = Buffer.alloc(limit);
-    const source = sourcePath(realRoot(root, reads), path);
+    const source = readContainedPath(realRoot(root, reads), path);
     const descriptor = openSync(source, 'r');
     let offset = 0;
     try {
@@ -47,7 +47,7 @@ export function readSource(root: string, path: string, reads?: ReadCache): Buffe
     const read = reads?.root === root ? reads.sources : undefined;
     const held = read?.get(path);
     if (held !== undefined) return held;
-    const bytes = readFileSync(sourcePath(realRoot(root, reads), path));
+    const bytes = readFileSync(readContainedPath(realRoot(root, reads), path));
     read?.set(path, bytes);
     return bytes;
 }
@@ -78,7 +78,7 @@ export function readText(root: string, path: string, reads?: ReadCache): string 
  * @param partsOf the owner's path validation.
  * @returns the contained path.
  */
-export function sourcePath(root: string, path: string, partsOf = systemSegments): string {
+export function readContainedPath(root: string, path: string, partsOf = splitSystemPath): string {
     const target = realpathSync(join(root, ...partsOf(path)));
     if (!isInside(relative(root, target))) throw new Error(`Source link leaves the repository: ${path}`);
     return target;

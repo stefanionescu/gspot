@@ -2,14 +2,14 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
-import { openSafeFolder } from '#cli/system/files/open.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 
 test('rmdir refuses linked and outside parents and keeps folders that are not empty', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'project/.keep': '', 'outside/kept/value': 'external' });
     const root = join(sandbox.path, 'project');
     await symlink('../outside', join(root, 'linked'));
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     expect(() => {
         files.rmdir('linked/kept');
     }).toThrow('is a link or is not a directory');

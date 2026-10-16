@@ -4,11 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { applyChanges } from '#tests/setup/files.ts';
 import { containing } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { fileMode } from '#cli/system/files/entries.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandbox.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
 import { SWIFT_FORMAT_CHECK } from '#tests/config/swift/projects.ts';
 import { checkChanges, runCheckSample } from '#tests/setup/fixes.ts';
@@ -126,7 +126,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         await chmod(join(root, 'Value.swift'), 0o444);
         const found = await documentationFindings(root, 1);
         const { mode } = await stat(join(root, 'Value.swift'));
-        expect(mode & 0o777).toBe(fileMode({ mode: 0o444 }));
+        expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
         await chmod(join(root, 'Value.swift'), 0o644);
         expect(found.map(({ line, column }) => [line, column])).toStrictEqual([
             [4, 1],

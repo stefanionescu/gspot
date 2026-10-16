@@ -1,13 +1,13 @@
 import semver from 'semver';
 import { realpathSync } from 'node:fs';
-import { toPosix } from '#cli/system/paths.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { runBlocking } from '#cli/system/processes.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { toolTimeoutMilliseconds } from '#cli/tools/run.ts';
 import { join, dirname, basename, relative } from 'node:path';
+import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
@@ -19,7 +19,8 @@ import type { ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts
 function versionAbove(files: SafeFolder | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, 'package.json');
-        if (files !== undefined && !toPosix(relative(root, manifest)).startsWith(`${DOT_GSPOT}/`)) return undefined;
+        if (files !== undefined && !convertToPosixPath(relative(root, manifest)).startsWith(`${DOT_GSPOT}/`))
+            return undefined;
         const parsed = installedPackage(files, root, manifest);
         if (parsed?.name === name) return parsed.version;
     }
@@ -37,8 +38,10 @@ function versionAbove(files: SafeFolder | undefined, root: string, start: string
  */
 function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    using files = toPosix(relative(root, path)).startsWith(`${DOT_GSPOT}/`) ? openSafeFolder(root) : undefined;
-    const folder = dirname(files === undefined ? realpathSync(path) : files.realPath(toPosix(relative(root, path))));
+    using files = convertToPosixPath(relative(root, path)).startsWith(`${DOT_GSPOT}/`) ? openFiles(root) : undefined;
+    const folder = dirname(
+        files === undefined ? realpathSync(path) : files.realPath(convertToPosixPath(relative(root, path))),
+    );
     // A Windows shim in node_modules/.bin has its own file, so find its package
     // found by name beside that folder.
     const start = basename(folder) === basename(NPM_BIN_FOLDER) ? join(dirname(folder), name) : folder;
@@ -110,7 +113,7 @@ export function readToolVersion(
 ): ParsedToolVersion {
     const npm = tool.installers['npm'];
     const installedVersion = packageVersion(root, path, npm?.name);
-    const result = runBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
+    const result = spawnProcessBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
         cwd,
         timeoutMs: toolTimeoutMilliseconds(timeoutSeconds),
         env: { ...TOOL_ENV, ...tool.env },

@@ -2,14 +2,14 @@
 import picomatch from 'picomatch';
 import { realpathSync } from 'node:fs';
 import type { Package } from '@manypkg/tools';
-import { memo } from '#cli/system/files/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { posix, basename, relative } from 'node:path';
-import { toPosix, isInside } from '#cli/system/paths.ts';
+import { getCachedValue } from '#cli/system/files/cache.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import { projectSources, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
@@ -166,7 +166,7 @@ export function packageWorkspaces(root: string): string[] {
     for (const found of packages)
         if (!isInside(relative(realpathSync(root), realpathSync(found.dir))))
             throw new GspotError('filesystem', `Workspace package leaves the repository: ${found.relativeDir}`);
-    return packages.map((found) => toPosix(found.relativeDir)).filter((path) => path !== '' && path !== '.');
+    return packages.map((found) => convertToPosixPath(found.relativeDir)).filter((path) => path !== '' && path !== '.');
 }
 
 /**
@@ -236,7 +236,7 @@ export function projectDependencies(manifests: DependencyFile[], scope: string):
  * @returns workspace dependency paths.
  */
 export function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
-    const cache = memo(reads, WORKSPACE_SOURCE_MEMO);
+    const cache = getCachedValue(reads, WORKSPACE_SOURCE_MEMO);
     const project = files
         .map((file) => file.path)
         .filter(
@@ -270,10 +270,12 @@ export function workspaceSourceFiles(root: string, scope: string, files: Tracked
                 : projectSources(root, folder, reads, {
                       ...project.config,
                       fileNames: project.config.fileNames.filter((file) =>
-                          isInScope(toPosix(relative(root, file)), folder),
+                          isInScope(convertToPosixPath(relative(root, file)), folder),
                       ),
                   }).flatMap(
-                      (file) => ordered.find((path) => isInScope(toPosix(relative(root, file.fileName)), path)) ?? [],
+                      (file) =>
+                          ordered.find((path) => isInScope(convertToPosixPath(relative(root, file.fileName)), path)) ??
+                          [],
                   );
         const dependencies = [...packages]
             .filter(([, dependency]) => dependency?.name !== undefined && names.includes(dependency.name))

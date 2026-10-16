@@ -3,7 +3,6 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { hasValePackages } from '#cli/install/vale.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { toPosix, extensionOf } from '#cli/system/paths.ts';
 import { VALE_CONFIG } from '#cli/config/system/locations.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
@@ -13,6 +12,7 @@ import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { VALE_ERROR_LINE } from '#cli/config/checks/general/prose.ts';
 import { VALE_TOOL, VALE_ARGUMENTS } from '#cli/config/tools/vale.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
+import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { PROSE_GRAMMARS, SCRIPT_GRAMMAR } from '#cli/config/generation/prose.ts';
 import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/types/checks/general.ts';
@@ -25,7 +25,7 @@ import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/type
 function valeAlerts(stdout: string): ValeAlert[] {
     return Object.entries(valeReportSchema.parse(JSON.parse(stdout))).flatMap(([file, alerts]) =>
         alerts.map((alert) => ({
-            file: toPosix(file),
+            file: convertToPosixPath(file),
             line: alert.Line,
             column: alert.Span[0],
             check: alert.Check,
@@ -74,7 +74,7 @@ async function pathAlerts(input: CheckInput, routes: ProseRoute[]): Promise<Vale
     }
     return alerts.map((alert) => ({
         ...alert,
-        file: toPosix(
+        file: convertToPosixPath(
             relative(
                 input.root,
                 isAbsolute(alert.file) ? alert.file : join(input.root, dirname(VALE_CONFIG), alert.file),
@@ -106,7 +106,7 @@ async function stdinAlerts(input: CheckInput, route: ProseRoute): Promise<ValeAl
  * @returns the route.
  */
 function routeFor(file: TrackedFile): ProseRoute | undefined {
-    const extension = extensionOf(file.path);
+    const extension = extractExtension(file.path);
     const grammars: Readonly<Record<string, Omit<ProseRoute, 'path'>>> = PROSE_GRAMMARS;
     const grammar =
         grammars[extension] ?? (extension === '' && file.tags.includes(SCRIPT_TAG) ? SCRIPT_GRAMMAR : undefined);

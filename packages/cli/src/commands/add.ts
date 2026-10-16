@@ -1,9 +1,9 @@
 // Add written configuration choices through the settings transaction.
-import { compact } from '#cli/system/values.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { findScopeTable } from '#cli/settings/edit.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
@@ -70,7 +70,7 @@ export function registerAdd(program: Command): void {
                 await addCommand({
                     cwd: process.cwd(),
                     configurations: configurations,
-                    ...compact({ scope: flags.scope }),
+                    ...stripUndefined({ scope: flags.scope }),
                 }),
             );
         });

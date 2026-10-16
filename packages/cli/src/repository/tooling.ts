@@ -11,8 +11,8 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { npmToolNames } from '#cli/configurations/tool-pins.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/system/locations.ts';
-import { hooksDirectory, readGitSetting } from '#cli/system/git.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { join, extname, dirname, basename, relative } from 'node:path';
@@ -221,7 +221,7 @@ export function readHooks(root: string): Tooling['hooks'] {
     const manifest = readPackageJson(root, PACKAGE_JSON);
     const packageHooks = manifest !== undefined && Object.hasOwn(manifest, SIMPLE_GIT_HOOKS_KEY);
     const hooksPath = readGitSetting(root, HOOKS_PATH_SETTING) ?? '';
-    const location = hooksPath === '' ? undefined : hooksDirectory(root);
+    const location = hooksPath === '' ? undefined : readHooksFolder(root);
     const hookNames = [
         ...LEFTHOOK_NAMES.flatMap((name) =>
             LEFTHOOK_EXTENSIONS.flatMap((extension) =>

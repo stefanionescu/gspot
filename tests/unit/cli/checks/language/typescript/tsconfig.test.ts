@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { toPosix } from '#cli/system/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { CHECK_FUNCTIONS } from '#cli/checks/built-in.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { ROOT_PORT_SOURCE, CHILD_PORT_SOURCE, STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 
@@ -32,7 +32,7 @@ import { ROOT_PORT_SOURCE, CHILD_PORT_SOURCE, STRICT_TSCONFIG_TEXT } from '#test
         const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
         // TypeScript prints the inherited path with forward slashes on every platform.
         expect(() => CHECK_FUNCTIONS['typescript/tsconfig'](input)).toThrow(
-            `Cannot read file '${toPosix(join(sandbox.path, 'missing.json'))}'`,
+            `Cannot read file '${convertToPosixPath(join(sandbox.path, 'missing.json'))}'`,
         );
         await writeFile(join(sandbox.path, 'missing.json'), STRICT_TSCONFIG_TEXT);
         expect(await checkFindings(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);

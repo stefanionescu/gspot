@@ -1,6 +1,5 @@
 import executables from 'which';
 import { join, basename } from 'node:path';
-import { toPosix } from '#cli/system/paths.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { planRun } from '#cli/planning/checks.ts';
@@ -15,6 +14,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { runCheckSample } from '#tests/setup/fixes.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { settingsText } from '#tests/setup/settings.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { nextjsTsc, nextConfig } from '#cli/checks/framework/nextjs.ts';
@@ -58,9 +58,9 @@ function mockNextjsCommands(
         spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) =>
             options?.all === true ? [process.execPath] : process.execPath) as typeof executables.sync),
     );
-    const runBlocking = processes.runBlocking;
+    const runBlocking = processes.spawnProcessBlocking;
     resources.use(
-        spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
             if (command[0] === 'git') return runBlocking(command, options);
             return processResult({
                 stdout: basename(command[0] ?? '') === 'next' ? NEXT_VERSION_OUTPUT : TYPESCRIPT_VERSION_OUTPUT,
@@ -122,7 +122,7 @@ for (const scope of ['', 'app'])
             expect(found).toHaveLength(1);
             expect(found[0]).toMatchObject({
                 check,
-                file: toPosix(join(scope, 'src/app/page.ts')),
+                file: convertToPosixPath(join(scope, 'src/app/page.ts')),
                 line: 1,
             });
             expect(found[0]!.message).toContain('Type mismatch');

@@ -7,21 +7,21 @@ import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
 import { readPushBase } from '#cli/repository/revisions/changes.ts';
-import { gitText, gitLines, gitPaths, isShallow } from '#cli/system/git.ts';
+import { isShallow, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
 import type { PushLine, Comparison, PushSearch, PushRevision, PushSelection } from '#cli/types/repository/revisions.ts';
 
 import {
-    LOG_ARGV,
-    PEEL_ARGV,
-    TREE_ARGV,
     ABSENT_HASH,
     PEEL_SUFFIX,
-    REMOTE_ARGV,
     TREE_SUFFIX,
-    REV_LIST_ARGV,
+    LOG_ARGUMENTS,
+    PEEL_ARGUMENTS,
+    TREE_ARGUMENTS,
     REMOTES_OPTION,
-    COMMIT_DIFF_ARGV,
-    SHALLOW_FILE_ARGV,
+    REMOTE_ARGUMENTS,
+    REV_LIST_ARGUMENTS,
+    COMMIT_DIFF_ARGUMENTS,
+    SHALLOW_FILE_ARGUMENTS,
 } from '#cli/config/repository/revisions.ts';
 
 // Whether a pre-push field pair holds two object ids of the same hash length.
@@ -53,7 +53,7 @@ async function peelCommits(
         ),
     ];
     if (hashes.length === 0) return new Map();
-    const responses = await gitLines(root, [...PEEL_ARGV], {
+    const responses = await readGitLines(root, [...PEEL_ARGUMENTS], {
         cancelSignal,
         stdin: hashes.map((hash) => `${hash}${PEEL_SUFFIX}`).join('\n') + '\n',
     });
@@ -68,7 +68,7 @@ async function peelCommits(
 
 // The commits a shallow clone's history stops at.
 async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): Promise<Set<string>> {
-    const path = await gitText(root, [...SHALLOW_FILE_ARGV], { cancelSignal });
+    const path = await readGitText(root, [...SHALLOW_FILE_ARGUMENTS], { cancelSignal });
     const text = await readFile(resolve(root, path.trim()), 'utf8');
     return new Set(text.trim().split('\n'));
 }
@@ -82,7 +82,7 @@ async function comparison(context: PushSearch, hash: string, remoteHash: string)
         const previous = context.commits.get(remoteHash);
         if (previous === undefined)
             return { base: await readPushBase(root, cancelSignal), changed: undefined, range: [hash] };
-        const changed = await gitPaths(root, [...COMMIT_DIFF_ARGV, previous, hash, '--'], { cancelSignal });
+        const changed = await readGitPaths(root, [...COMMIT_DIFF_ARGUMENTS, previous, hash, '--'], { cancelSignal });
         return { base: previous, changed, range: [hash, `^${previous}`] };
     }
     const range = [
@@ -90,7 +90,7 @@ async function comparison(context: PushSearch, hash: string, remoteHash: string)
         '--not',
         context.remote === undefined ? REMOTES_OPTION : `${REMOTES_OPTION}=${context.remote}`,
     ];
-    const changed = await gitPaths(root, [...LOG_ARGV, ...range, '--'], { cancelSignal });
+    const changed = await readGitPaths(root, [...LOG_ARGUMENTS, ...range, '--'], { cancelSignal });
     return { base: await readPushBase(root, cancelSignal), changed, range };
 }
 
@@ -98,8 +98,8 @@ async function comparison(context: PushSearch, hash: string, remoteHash: string)
 async function buildRevision(context: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = context;
     const { base, changed, range } = await comparison(context, hash, line.remoteHash);
-    const history = await gitLines(root, [...REV_LIST_ARGV, ...range, '--'], { cancelSignal });
-    const tree = await gitText(root, [...TREE_ARGV, `${hash}${TREE_SUFFIX}`], { cancelSignal });
+    const history = await readGitLines(root, [...REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
+    const tree = await readGitText(root, [...TREE_ARGUMENTS, `${hash}${TREE_SUFFIX}`], { cancelSignal });
     const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => a.localeCompare(b));
     return {
         base,
@@ -164,7 +164,7 @@ export async function selectPush(
         .filter((row) => row.trim() !== '')
         .map((line) => parseLine(line));
     const shallow = await isShallow(root, { cancelSignal });
-    const remotes = remote === undefined ? [] : await gitLines(root, [...REMOTE_ARGV], { cancelSignal });
+    const remotes = remote === undefined ? [] : await readGitLines(root, [...REMOTE_ARGUMENTS], { cancelSignal });
     const context: PushSearch = {
         root,
         cancelSignal,

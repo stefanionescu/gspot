@@ -1,24 +1,24 @@
 // Opens confined file handles and walks files under their root.
 import type { Stats } from 'node:fs';
-import { sourcePath } from '#cli/system/files/reads.ts';
-import { takeLock, releaseLocks } from '#cli/system/files/lock.ts';
-import { systemSegments, portableSegments } from '#cli/system/files/names.ts';
+import { readContainedPath } from '#cli/system/files/reads.ts';
+import { releaseLocks, lockForWriting } from '#cli/system/files/lock.ts';
+import { splitSystemPath, splitPortablePath } from '#cli/system/files/names.ts';
 import type { FileCopy, PathFormat, SafeFolder, SafeFolderState } from '#cli/types/system/safe-folder.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
     readEntry,
-    sameEntry,
-    checkedPath,
+    verifyPath,
+    preparePath,
     replaceEntry,
-    preparedPath,
     validateCopy,
+    isSameContents,
 } from '#cli/system/files/entries.ts';
 
 // The stat of an entry inside the root excluding links, or undefined when the entry does not exist.
 function statOf(bounds: SafeFolderState, path: string): Stats | undefined {
     try {
-        const stat = lstatSync(checkedPath(bounds, path));
+        const stat = lstatSync(verifyPath(bounds, path));
         if (stat.isSymbolicLink()) throw new Error(`${path} is a link. gspot does not write through links.`);
         return stat;
     } catch (error) {
@@ -32,19 +32,19 @@ function removeTree(bounds: SafeFolderState, path: string): void {
     const stat = statOf(bounds, path);
     if (stat === undefined) return;
     if (!stat.isDirectory()) throw new Error(`${path} is not a directory. Choose a directory.`);
-    rmSync(checkedPath(bounds, path), { recursive: true, force: true });
+    rmSync(verifyPath(bounds, path), { recursive: true, force: true });
 }
 
 // Removes a file inside the root after confirming that it matches the last copy the caller saw.
 function removeEntry(bounds: SafeFolderState, path: string, expected: FileCopy): void {
-    if (!sameEntry(readEntry(bounds, path, expected.isLink === true), expected))
+    if (!isSameContents(readEntry(bounds, path, expected.isLink === true), expected))
         throw new Error(`${path} changed before removal. Run the command again.`);
-    unlinkSync(checkedPath(bounds, path));
+    unlinkSync(verifyPath(bounds, path));
 }
 
 // Creates a directory inside the root with the mode, accepting one that already exists.
 function makeDirectory(bounds: SafeFolderState, path: string, mode: number): void {
-    const target = preparedPath(bounds, path);
+    const target = preparePath(bounds, path);
     try {
         mkdirSync(target, { mode });
     } catch (error) {
@@ -62,7 +62,7 @@ function makeDirectory(bounds: SafeFolderState, path: string, mode: number): voi
  */
 function listOf(bounds: SafeFolderState, path: string | undefined): string[] {
     try {
-        const target = path === undefined ? bounds.root : checkedPath(bounds, path);
+        const target = path === undefined ? bounds.root : verifyPath(bounds, path);
         if (!lstatSync(target).isDirectory()) throw new Error(`${path ?? '.'} is not a directory. Choose a directory.`);
         return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
     } catch (error) {
@@ -77,20 +77,20 @@ function listOf(bounds: SafeFolderState, path: string | undefined): string[] {
  * @param pathFormat portable checks names across supported systems; system checks this system. Both use forward slashes.
  * @returns the root reader and writer, which the caller disposes, as `using` does.
  */
-export function openSafeFolder(root: string, pathFormat: PathFormat = 'portable'): SafeFolder {
+export function openFiles(root: string, pathFormat: PathFormat = 'portable'): SafeFolder {
     const bounds: SafeFolderState = {
         root: realpathSync(root),
-        partsOf: pathFormat === 'portable' ? portableSegments : systemSegments,
+        partsOf: pathFormat === 'portable' ? splitPortablePath : splitSystemPath,
         locks: new Map(),
     };
     return {
         rmdir: (path) => {
-            rmdirSync(checkedPath(bounds, path));
+            rmdirSync(verifyPath(bounds, path));
         },
         removeTree: (path) => {
             removeTree(bounds, path);
         },
-        realPath: (path) => sourcePath(bounds.root, path, bounds.partsOf),
+        realPath: (path) => readContainedPath(bounds.root, path, bounds.partsOf),
         list: (path) => listOf(bounds, path),
         stat: (path) => statOf(bounds, path),
         validate: (path, value, plannedFiles) => {
@@ -108,7 +108,7 @@ export function openSafeFolder(root: string, pathFormat: PathFormat = 'portable'
             makeDirectory(bounds, path, mode);
         },
         claim: (path) => {
-            takeLock(bounds, path);
+            lockForWriting(bounds, path);
         },
         [Symbol.dispose]: () => {
             releaseLocks(bounds);
@@ -122,11 +122,11 @@ export function openSafeFolder(root: string, pathFormat: PathFormat = 'portable'
  * @param start the folder, with forward slashes, or '' for the root itself.
  * @param visit called with the path of each entry; returns whether to walk into it.
  */
-export function walkSafeFolder(files: SafeFolder, start: string, visit: (path: string) => boolean): void {
+export function walkFiles(files: SafeFolder, start: string, visit: (path: string) => boolean): void {
     const pending = [start];
-    for (let directory = pending.pop(); directory !== undefined; directory = pending.pop()) {
-        const names = files.list(directory === '' ? undefined : directory);
-        const paths = directory === '' ? names : names.map((name) => `${directory}/${name}`);
+    for (let folder = pending.pop(); folder !== undefined; folder = pending.pop()) {
+        const names = files.list(folder === '' ? undefined : folder);
+        const paths = folder === '' ? names : names.map((name) => `${folder}/${name}`);
         pending.push(...paths.filter((path) => visit(path)));
     }
 }

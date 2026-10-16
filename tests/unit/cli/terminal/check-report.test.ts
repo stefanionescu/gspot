@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { stripVTControlCharacters } from 'node:util';
-import { configureOutput } from '#cli/system/terminal.ts';
+import { setOutputOptions } from '#cli/system/terminal.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runText, progress } from '#cli/commands/check/report.ts';
 
@@ -76,15 +76,15 @@ test('findings that share a help print it once, after the last of them', () => {
 });
 
 test('colors change the report only by escape codes', () => {
-    configureOutput({ json: false, color: false });
+    setOutputOptions({ json: false, color: false });
     const plain = runText(REPORT, false);
     try {
-        configureOutput({ json: false, color: true });
+        setOutputOptions({ json: false, color: true });
         const colored = runText(REPORT, false);
         expect(colored).not.toBe(plain);
         expect(stripVTControlCharacters(colored)).toBe(plain);
     } finally {
-        configureOutput({ json: false, color: false });
+        setOutputOptions({ json: false, color: false });
     }
     expect(runText(REPORT, false)).toBe(plain);
 });

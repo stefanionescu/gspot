@@ -2,8 +2,8 @@
 import { statSync, realpathSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { gitLine, isOutsideGit, runGitBlocking } from '#cli/system/git.ts';
-import { GIT_LOCALE, WORK_TREE_ARGV, GIT_TOP_LEVEL_ARGV } from '#cli/config/system/git.ts';
+import { trimGitLine, isOutsideGit, runGitBlocking } from '#cli/system/git.ts';
+import { GIT_LOCALE, WORK_TREE_ARGUMENTS, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 
 /**
  * True when a Git work tree contains the root.
@@ -12,7 +12,7 @@ import { GIT_LOCALE, WORK_TREE_ARGV, GIT_TOP_LEVEL_ARGV } from '#cli/config/syst
  * @throws when Git cannot establish the repository state.
  */
 export function isGitRepository(root: string): boolean {
-    const inspection = runGitBlocking(root, WORK_TREE_ARGV, { env: GIT_LOCALE });
+    const inspection = runGitBlocking(root, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
     if (isOutsideGit(inspection)) return false;
     throw new Error(
@@ -28,9 +28,9 @@ export function isGitRepository(root: string): boolean {
  */
 export function findRoot(start: string): string {
     const directory = realpathSync(start);
-    const top = runGitBlocking(directory, [...GIT_TOP_LEVEL_ARGV]);
-    const gitRoot = top.code === 0 ? resolve(gitLine(top.stdout)) : undefined;
-    if (gitRoot === undefined && !isOutsideGit(runGitBlocking(directory, WORK_TREE_ARGV, { env: GIT_LOCALE })))
+    const top = runGitBlocking(directory, [...GIT_TOP_LEVEL_ARGUMENTS]);
+    const gitRoot = top.code === 0 ? resolve(trimGitLine(top.stdout)) : undefined;
+    if (gitRoot === undefined && !isOutsideGit(runGitBlocking(directory, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
         throw new Error(`Git root discovery failed in ${directory} (exit ${String(top.code)}): ${top.stderr.trim()}`);
     let current = directory;
     while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {

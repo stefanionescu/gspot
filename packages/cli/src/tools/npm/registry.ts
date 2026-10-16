@@ -6,7 +6,7 @@ import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { registryPasswords } from '#cli/tools/diagnostics.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
 
 import {
@@ -26,7 +26,7 @@ import {
 
 // Read and validate the configuration before exposing its effective registry settings.
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {
-    const inherited = environmentVariables();
+    const inherited = buildSpawnEnvironment();
     const npm = which.sync(NPM_PROGRAM, { nothrow: true });
     const npmPath = npm === null ? dirname(process.execPath) : dirname(dirname(realpathSync(npm)));
     const config = new Config({

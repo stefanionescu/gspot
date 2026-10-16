@@ -2,12 +2,12 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { counted } from '#cli/commands/check/report.ts';
-import { compact, isRecord } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { knownChecks } from '#cli/configurations/manifests.ts';
+import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { unknownCheckMessage } from '#cli/configurations/unknown-names.ts';
 import { saveSettings, startSettingsEdit } from '#cli/commands/save-settings.ts';
 import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/save-settings.ts';
@@ -90,7 +90,7 @@ async function unignoreCommand(
         everywhere === 0
             ? ''
             : `Kept ${String(everywhere)} ${noun} that ${verb} every path. To delete ${pronoun}, run gspot unignore without --paths.\n`;
-    const warningFields = compact({ warning: everywhere === 0 ? undefined : warning.trim() });
+    const warningFields = stripUndefined({ warning: everywhere === 0 ? undefined : warning.trim() });
     if (deleted === 0 && changedIgnores === 0) {
         parseSettings(input.text, root);
         return {

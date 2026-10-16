@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { applyBlock } from '#cli/system/managed-blocks.ts';
+import { replaceBlock } from '#cli/system/managed-blocks.ts';
 import { planBlock, planRemoval } from '#cli/ownership/plans.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 
@@ -22,7 +22,7 @@ import { writePlans, openWriter } from '#cli/ownership/writer.ts';
             writePlans(log, [planBlock(log, 'AGENTS.md', 'updated instructions', 'markdown')]);
             expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
                 prefix +
-                    applyBlock(original, 'updated instructions', { path: 'AGENTS.md', style: 'markdown' }) +
+                    replaceBlock(original, 'updated instructions', { path: 'AGENTS.md', style: 'markdown' }) +
                     suffix,
             );
         }

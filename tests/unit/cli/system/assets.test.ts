@@ -43,7 +43,7 @@ test('a missing grammar file stops gspot with a reinstall message', async () => 
             process.execPath,
             '--no-install',
             '-e',
-            "import { wasmPath } from './packages/cli/src/system/assets.ts'; wasmPath('bash.wasm');",
+            "import { findWasmPath } from './packages/cli/src/system/assets.ts'; findWasmPath('bash.wasm');",
         ],
         {
             cwd,

@@ -2,8 +2,8 @@
 import { createFileTree } from 'testdirs';
 import { join, relative } from 'node:path';
 import { fakeTool } from '#tests/setup/fake-tool.ts';
+import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { virtualEnvironmentBin } from '#cli/system/paths.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { ALLOWED_PACKAGE_SCOPE_CASES } from '#tests/config/licenses.ts';
@@ -49,7 +49,7 @@ export async function prepareLicenseSandbox(
     });
     await fakeTool(
         root,
-        relative(root, join(virtualEnvironmentBin(join(root, '.gspot/.venv')), 'pip-licenses')),
+        relative(root, join(buildVenvBinPath(join(root, '.gspot/.venv')), 'pip-licenses')),
         `console.log(${JSON.stringify('pip-licenses ' + version)});`,
     );
 }

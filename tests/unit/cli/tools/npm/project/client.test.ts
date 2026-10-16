@@ -4,10 +4,10 @@ import { pathExists } from '#tests/setup/files.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/setup/matchers.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
 import { installNpmTools } from '#cli/tools/npm/project.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
@@ -59,7 +59,7 @@ test.each([...VERSION_SOURCES])(
         await createFileTree(repository.path, { '.gspot/package.json': original, '.gspot/bun.lock': lockfile });
         await createFileTree(repository.path, { 'gspot.toml': settingsText([]) });
         const session = await openSession(repository.path);
-        using owner = openSafeFolder(repository.path);
+        using owner = openFiles(repository.path);
         const identity = await selectNpmClient(repository.path, []);
         const installer = readNpmClientVersion(
             repository.path,

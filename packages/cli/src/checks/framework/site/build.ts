@@ -1,13 +1,13 @@
 import { join, relative } from 'node:path';
-import { memo } from '#cli/system/files/cache.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { toPosix, isInside } from '#cli/system/paths.ts';
+import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { portableSegments } from '#cli/system/files/names.ts';
 import { listFolderFiles } from '#cli/system/files/folders.ts';
+import { splitPortablePath } from '#cli/system/files/names.ts';
 import { type SiteBuild } from '#cli/types/checks/framework.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { OUTPUT_TAIL_LINES } from '#cli/config/checks/framework/site.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
@@ -23,7 +23,7 @@ async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> 
     const folder = join(scratch, folderPath);
     const built = result.code === 0 ? lstatSync(folder, { throwIfNoEntry: false }) : undefined;
     if (built?.isSymbolicLink() === true)
-        throw new Error(`The build output folder is a link: ${toPosix(relative(scratch, folder))}`);
+        throw new Error(`The build output folder is a link: ${convertToPosixPath(relative(scratch, folder))}`);
     const isBuilt = built?.isDirectory() === true;
     const outputTail = [result.stderr, result.stdout]
         .join('\n')
@@ -41,7 +41,7 @@ async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> 
  */
 function cachedBuild(input: CheckInput): Promise<SiteBuild> {
     const key = join(input.root, input.selection.scope.path);
-    const scopeBuilds = memo(input.reads, BUILD_MEMO);
+    const scopeBuilds = getCachedValue(input.reads, BUILD_MEMO);
     const held = scopeBuilds.get(key);
     if (held !== undefined) return held;
     const running = (async () => {
@@ -64,7 +64,7 @@ export function filesUnder(folder: string): string[] {
     return [...listFolderFiles(root)]
         .flatMap((entry) => {
             const absolute = join(entry.parentPath, entry.name);
-            const path = toPosix(relative(root, absolute));
+            const path = convertToPosixPath(relative(root, absolute));
             if (!isInside(relative(root, realpathSync.native(absolute))))
                 throw new Error(`The build output links outside the build folder: ${path}`);
             const stat = statSync(absolute);
@@ -86,8 +86,8 @@ export function repositoryPath(
     build: Pick<SiteBuild, 'folder'>,
     absolute: string,
 ): string {
-    const path = toPosix(relative(build.folder, absolute));
-    portableSegments(path);
+    const path = convertToPosixPath(relative(build.folder, absolute));
+    splitPortablePath(path);
     return `${input.selection.view.options('site')['build_folder']}/${path}`;
 }
 

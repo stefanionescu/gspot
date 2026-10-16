@@ -1,7 +1,7 @@
 import { run } from '#cli/system/processes.ts';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
-import { gitEnvironment } from '#cli/system/git.ts';
 import { MS_PER_SECOND } from '#cli/config/units.ts';
+import { buildGitEnvironment } from '#cli/system/git.ts';
 import type { ToolRunOptions } from '#cli/types/tools/run.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
@@ -26,7 +26,7 @@ export async function runTool(command: readonly string[], options: ToolRunOption
             duration: 0,
             isCanceled: true,
         };
-    const selected = gitEnvironment(prepared.cwd, command, { ...TOOL_ENV, ...prepared.env });
+    const selected = buildGitEnvironment(prepared.cwd, command, { ...TOOL_ENV, ...prepared.env });
     if ('failure' in selected) return selected.failure;
     const result = await run(command, {
         ...prepared,

@@ -1,8 +1,8 @@
 import { runTool } from '#cli/tools/run.ts';
-import { toPosix } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
-import { openSafeFolder } from '#cli/system/files/open.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
@@ -22,7 +22,7 @@ import { VALE_STYLES_PATH, VALE_INSTALL_PREFIX, VALE_INSTALL_ARGUMENTS } from '#
  * @returns whether the config and required package directories exist.
  */
 export function hasValePackages(root: string, level: Settings['level']): boolean {
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     if (files.read(VALE_CONFIG) === undefined) return false;
     if (level === 'recommended') return true;
     return VALE_PACKAGE_FOLDERS.every(
@@ -45,14 +45,16 @@ export async function installValePackages(context: InstallContext): Promise<stri
     const tool = toolDeclaration(search.neededToolManifests, 'vale');
     const available = toolAvailability(tool, inspectTool(search, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     const temporary = mkdtempSync(join(files.realPath(DOT_GSPOT), VALE_INSTALL_PREFIX));
     try {
         const config = join(temporary, VALE_CONFIG);
         const text = readFileSync(files.realPath(VALE_CONFIG), 'utf8');
         const last = [...text.matchAll(VALE_STYLES_PATH)].at(-1);
         const content = text.replaceAll(VALE_STYLES_PATH, (line, path: string, offset: number) =>
-            offset === last?.index ? line : `StylesPath = ${toPosix(resolve(root, dirname(VALE_CONFIG), path.trim()))}`,
+            offset === last?.index
+                ? line
+                : `StylesPath = ${convertToPosixPath(resolve(root, dirname(VALE_CONFIG), path.trim()))}`,
         );
         mkdirSync(dirname(config), { recursive: true });
         writeFileSync(config, content);

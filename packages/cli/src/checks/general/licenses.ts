@@ -8,12 +8,12 @@ import parseExpression from 'spdx-expression-parse';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { licenseProjects } from '#cli/planning/needed-tools.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { everyTable, writtenSetting } from '#cli/settings/inherit.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
 import { configurationTableSchemas } from '#cli/settings/schema/tables.ts';
@@ -67,10 +67,10 @@ async function javascriptLicenses(input: CheckInput, start: string): Promise<Lic
 async function pythonLicenses(input: CheckInput, start: string): Promise<LicensedPackage[]> {
     assertInstalled(input, PYTHON_ENVIRONMENT_FOLDER, start);
     const installed = join(start, PYTHON_ENVIRONMENT_FOLDER);
-    using scratch = scratchFolder();
+    using scratch = createScratchFolder();
     const report = await licenseReport(
         input,
-        [...PIP_LICENSES_COMMAND, virtualEnvironmentExecutable(installed, 'python')],
+        [...PIP_LICENSES_COMMAND, buildVenvExecutablePath(installed, 'python')],
         scratch.path,
     );
     return pythonReportSchema

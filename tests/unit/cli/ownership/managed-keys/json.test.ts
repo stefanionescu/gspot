@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { fileMode } from '#cli/system/files/entries.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/stylelint.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
@@ -37,7 +37,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
                 .replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./next.json"}'),
         );
         const metadata = await stat(join(sandbox.path, path));
-        expect(metadata.mode & 0o777).toBe(fileMode({ mode: 0o640 }));
+        expect(metadata.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
     }
 });
 

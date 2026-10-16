@@ -7,7 +7,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { git, commitAll, gitOutput } from '#tests/setup/git.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { toolsPath, testRunFolder } from '#tests/setup/install.ts';
 import { TUTORIALS, QUICKSTART_COMMANDS } from '#tests/config/e2e.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -27,7 +27,7 @@ test.each(
         MISE_STATE_DIR: join(sandbox.path, 'state'),
         MISE_CACHE_DIR: join(sandbox.path, 'cache'),
         MISE_CEILING_PATHS: dirname(root),
-        NPM_CONFIG_USERCONFIG: environmentVariables()['GSPOT_TEST_NPMRC']!,
+        NPM_CONFIG_USERCONFIG: buildSpawnEnvironment()['GSPOT_TEST_NPMRC']!,
     };
 
     await linkQuickstartTools(root, environment);

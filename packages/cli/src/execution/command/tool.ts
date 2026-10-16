@@ -1,7 +1,7 @@
 import { dirname, delimiter } from 'node:path';
-import { assetPath } from '#cli/system/assets.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import type { ToolSearch } from '#cli/types/tools/find.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { checkCompanions } from '#cli/planning/needed-tools.ts';
@@ -13,7 +13,7 @@ import { inspectTool, toolAvailability } from '#cli/tools/find.ts';
 import { executionFailure } from '#cli/execution/command/output.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
+import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 
 import type {
     CheckTool,
@@ -101,7 +101,7 @@ export function companionEnvironment(
         ...env,
         PATH: [
             ...directories,
-            environmentVariable(env, 'PATH') ?? environmentVariable(environmentVariables(), 'PATH') ?? '',
+            environmentVariable(env, 'PATH') ?? environmentVariable(buildSpawnEnvironment(), 'PATH') ?? '',
         ].join(delimiter),
     };
 }
@@ -121,7 +121,8 @@ export async function runCheckTool(
     options: CheckToolOptions,
 ): Promise<SpawnResult> {
     const { name, path, env } = checkTool(input, 'tool' in command ? command.tool : (command[0] as string), options);
-    const argv = 'tool' in command ? [process.execPath, assetPath(command.entry), path] : [path, ...command.slice(1)];
+    const argv =
+        'tool' in command ? [process.execPath, buildAssetPath(command.entry), path] : [path, ...command.slice(1)];
     const { result, failure } = await runPlannedTool(
         argv,
         {

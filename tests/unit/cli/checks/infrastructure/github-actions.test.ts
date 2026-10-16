@@ -5,12 +5,12 @@ import { pathExists } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { fileMode } from '#cli/system/files/entries.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { toolDeclaration } from '#cli/configurations/tool-pins.ts';
 import { CALLED_WORKFLOW, ACTIONLINT_EXITS, CALLED_WORKFLOW_REFERENCES } from '#tests/config/github-actions.ts';
 
@@ -76,7 +76,7 @@ test.each([...ACTIONLINT_EXITS])(
         expect(await pathExists(workspace)).toBe(false);
         expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
         const attributes = await stat(join(sandbox.path, '.github/workflows/caller.yml'));
-        expect(attributes.mode & 0o777).toBe(fileMode({ mode: 0o444 }));
+        expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
         expect(await pathExists(join(sandbox.path, '.git'))).toBe(false);
         if (note !== undefined) expect(result.note).toContain(note);
         expect(result.findings).toMatchObject(findings);

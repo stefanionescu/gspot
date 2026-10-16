@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { valueAt, isRecord } from '#cli/system/values.ts';
+import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import { settingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { similar, codeList, quoteArgument } from '#cli/system/text.ts';
+import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { isLoosening, reasonError, isReasonNeeded, isReasonAccepted } from '#cli/settings/errors/reasons.ts';
 
 import type {
@@ -176,19 +176,19 @@ export function unknownSettingError(known: KnownSettings, key: string): string {
     const all = known.declarations.keys().toArray();
     if (key.startsWith('limits.')) {
         const limits = all.filter((candidate) => candidate.startsWith('limits.'));
-        return `\`${key}\` is not a limit any check reads. The limits that exist are ${codeList(limits.map((candidate) => candidate.slice('limits.'.length)))}.`;
+        return `\`${key}\` is not a limit any check reads. The limits that exist are ${formatCodeList(limits.map((candidate) => candidate.slice('limits.'.length)))}.`;
     }
     const prefix = settingTable(key);
     const keys = all
         .filter((candidate) => candidate.startsWith(`${prefix}.`))
         .map((candidate) => candidate.slice(prefix.length + 1));
-    const near = similar(key.slice(prefix.length + 1), keys);
+    const near = selectSimilarNames(key.slice(prefix.length + 1), keys);
     const rest = keys.filter((item) => !near.includes(item));
     const suggestions = [...near, ...rest];
     return `No selected configuration has the setting \`${key}\`. ${
         suggestions.length === 0
             ? 'No setting exists under that table.'
-            : 'The settings that exist under that table are ' + codeList(suggestions) + '.'
+            : 'The settings that exist under that table are ' + formatCodeList(suggestions) + '.'
     } Run \`gspot list settings\` to see every one.`;
 }
 
@@ -237,7 +237,7 @@ export function validateAgainstKnownSettings(
             scope === undefined
                 ? { declarations: new Map([known, ...scopeKnown.values()].flatMap((entry) => [...entry.declarations])) }
                 : active;
-        const roles = valueAt(table.written, ['architecture', 'roles']);
+        const roles = getValueAt(table.written, ['architecture', 'roles']);
         const undeclaredRoles = Object.keys(isRecord(roles) ? roles : {}).filter(
             (role) =>
                 !roleKnown.declarations.has(`architecture.roles.${role}`) &&

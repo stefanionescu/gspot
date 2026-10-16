@@ -19,10 +19,10 @@ test.each([...DOCTOR_RESULTS])('Expo Doctor runs once in each app folder: $name'
         ),
     });
     const directories: string[] = [];
-    const runBlocking = processes.runBlocking;
+    const runBlocking = processes.spawnProcessBlocking;
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'runBlocking').mockImplementation((command, options) =>
+        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
             command[0] === 'git' ? runBlocking(command, options) : DOCTOR_VERSION,
         ),
     );

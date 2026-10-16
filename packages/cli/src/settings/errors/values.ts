@@ -1,15 +1,15 @@
 import { FIRST_READ } from '#cli/config/rules.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
-import { valueAt, isRecord } from '#cli/system/values.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { isRecord, getValueAt } from '#cli/system/values.ts';
 import { configurationSettings } from '#cli/settings/view.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { pathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { similar, codeList, quoteArgument } from '#cli/system/text.ts';
+import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
+import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import type { ToolTable, SettingsError, RuleExcludeError } from '#cli/types/settings/file.ts';
 import { allChecks, ruleFiles, configurationManifests } from '#cli/configurations/manifests.ts';
 
@@ -47,7 +47,7 @@ function duplicateScopeErrors(paths: string[]): SettingsError[] {
     const seen = new Set<string>();
     const errors: SettingsError[] = [];
     for (const path of paths) {
-        const key = pathKey(trimTrailingSlashes(path));
+        const key = buildPathKey(trimTrailingSlashes(path));
         if (seen.has(key))
             errors.push({
                 path: ['scope', path],
@@ -97,7 +97,7 @@ function pathErrors(root: string, settings: Settings): SettingsError[] {
               isRecord(entry) && typeof entry['path'] === 'string' ? [entry['path']] : [],
           )
         : [];
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     const missing = paths.flatMap((path) => {
         const location: KeyPath = ['scope', path];
         try {
@@ -130,7 +130,7 @@ function extraOptionErrors(table: Partial<Settings>, tools: ToolDeclaration[]): 
         if (options === undefined) continue;
         for (const restriction of tool.refused_options ?? []) {
             const refused = restriction.paths.some((path) => {
-                const value = valueAt(options, path.split('.'));
+                const value = getValueAt(options, path.split('.'));
                 return value !== undefined;
             });
             if (refused) errors.push({ path: ['tools', tool.name, 'extra'], message: restriction.message });
@@ -163,16 +163,16 @@ function ruleExcludeErrors(exclude: string[]): RuleExcludeError[] {
             return [
                 {
                     index,
-                    message: `[rules] exclude names ${codeList([entry])}, which holds a file every agent opens first (${codeList(FIRST_READ)}). Remove the entry.`,
+                    message: `[rules] exclude names ${formatCodeList([entry])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
                 },
             ];
         if (paths.some((path) => isExcluded(entry, `${RULES_DIRECTORY}/${path}`))) return [];
-        const near = similar(
+        const near = selectSimilarNames(
             entry,
             paths.map((path) => `${RULES_DIRECTORY}/${path}`),
         );
-        const hint = near.length > 0 ? ` Did you mean ${codeList(near)}?` : '';
-        return [{ index, message: `[rules] exclude names ${codeList([entry])}, which matches no rule.${hint}` }];
+        const hint = near.length > 0 ? ` Did you mean ${formatCodeList(near)}?` : '';
+        return [{ index, message: `[rules] exclude names ${formatCodeList([entry])}, which matches no rule.${hint}` }];
     });
 }
 

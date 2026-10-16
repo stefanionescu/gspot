@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { stemOf, directoryOf } from '#cli/system/paths.ts';
+import { extractStem, extractParentFolder } from '#cli/system/paths.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { directoryTree, structureSources } from '#cli/checks/general/structure/source-files.ts';
 
@@ -12,8 +12,8 @@ export function fileFolderClashes(input: CheckInput): Finding[] {
     const files = structureSources(input);
     const tree = directoryTree(input.files);
     return files.flatMap((file) => {
-        const stem = stemOf(file.path);
-        const siblings = tree.get(directoryOf(file.path)) ?? [];
+        const stem = extractStem(file.path);
+        const siblings = tree.get(extractParentFolder(file.path)) ?? [];
         if (siblings.every((entry) => !(entry.kind === 'dir' && entry.name === stem))) return [];
         return [
             findingAt(

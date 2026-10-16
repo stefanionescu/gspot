@@ -2,21 +2,21 @@ import { GspotError } from '#cli/system/errors.ts';
 import { setImmediate } from 'node:timers/promises';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
-import { systemSegments } from '#cli/system/files/names.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DIRECTORY_MODE } from '#cli/config/system/modes.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
+import { splitSystemPath } from '#cli/system/files/names.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
+import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { writeScratchFiles } from '#cli/execution/copy/scratch.ts';
 import { packageFiles } from '#cli/repository/dependency-files.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
-import { openSafeFolder, walkSafeFolder } from '#cli/system/files/open.ts';
-import { runGit, gitText, gitLine, gitTopLevel } from '#cli/system/git.ts';
 import { join, posix, dirname, resolve, basename, relative } from 'node:path';
 import type { ScratchFile, DependencyCopy } from '#cli/types/execution/copy.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
+import { runGit, readGitText, trimGitLine, gitTopLevel } from '#cli/system/git.ts';
 import { visitGitBlobs, listRevisionEntries } from '#cli/repository/revisions/objects.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, existsSync, realpathSync } from 'node:fs';
 import { DOT_GSPOT, VALE_CONFIG, VALE_PACKAGE_DIRECTORY } from '#cli/config/system/locations.ts';
@@ -116,8 +116,8 @@ async function assertDependencyFilesUnchanged(
  */
 function copyValePackages(root: string, scratch: string, paths: string[]): void {
     const configurations = paths.filter((path) => path === VALE_CONFIG || path.endsWith(`/${VALE_CONFIG}`));
-    using installed = openSafeFolder(root);
-    using destination = openSafeFolder(resolve(scratch), 'system');
+    using installed = openFiles(root);
+    using destination = openFiles(resolve(scratch), 'system');
     const packages = listStyleFiles(installed, VALE_PACKAGE_DIRECTORY);
     if (packages.length === 0) return;
     for (const config of configurations) assertValeMatches(installed, destination, config);
@@ -140,7 +140,7 @@ async function revisionDependencies(
     entries: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<DependencyCopy[]> {
-    using installed = openSafeFolder(root, 'system');
+    using installed = openFiles(root, 'system');
     const inputs = entries.filter((entry) => {
         const name = basename(entry.path);
         const lockfile = lockfileEntry(name);
@@ -220,7 +220,7 @@ async function populateRevision(
             `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
         );
     for (const entry of entries.filter((file) => file.mode === GITLINK_MODE)) {
-        const target = join(scratch, ...systemSegments(entry.path));
+        const target = join(scratch, ...splitSystemPath(entry.path));
         mkdirSync(target, { recursive: true, mode: DIRECTORY_MODE });
         chmodSync(target, DIRECTORY_MODE);
     }
@@ -260,7 +260,7 @@ async function populateRevision(
  */
 function listStyleFiles(files: SafeFolder, folder: string): string[] {
     const found: string[] = [];
-    walkSafeFolder(files, folder, (path) => {
+    walkFiles(files, folder, (path) => {
         if (files.stat(path)?.isDirectory() === true) return true;
         found.push(path);
         return false;
@@ -288,15 +288,15 @@ export async function copyRevision<Result>(
     const directory = relative(realpathSync(toplevel), realpathSync(root));
     const entries = await listRevisionEntries(toplevel, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');
-    using scratch = scratchFolder();
-    await gitText(toplevel, [...GIT_SHARED_CLONE, toplevel, scratch.path], {
+    using scratch = createScratchFolder();
+    await readGitText(toplevel, [...GIT_SHARED_CLONE, toplevel, scratch.path], {
         cancelSignal,
     });
     // The clone shares its object store for reads; the copy owns its index and working tree.
-    if (source.kind === 'commit') await gitText(scratch.path, [...GIT_SET_HEAD, source.hash], { cancelSignal });
-    await gitText(scratch.path, GIT_EMPTY_INDEX, { cancelSignal });
-    await gitText(scratch.path, GIT_INDEX_INFO, { cancelSignal, stdin: index });
-    const tree = gitLine(await gitText(scratch.path, GIT_WRITE_TREE, { cancelSignal }));
+    if (source.kind === 'commit') await readGitText(scratch.path, [...GIT_SET_HEAD, source.hash], { cancelSignal });
+    await readGitText(scratch.path, GIT_EMPTY_INDEX, { cancelSignal });
+    await readGitText(scratch.path, GIT_INDEX_INFO, { cancelSignal, stdin: index });
+    const tree = trimGitLine(await readGitText(scratch.path, GIT_WRITE_TREE, { cancelSignal }));
     await populateRevision(toplevel, scratch.path, entries, cancelSignal);
     copyValePackages(
         toplevel,

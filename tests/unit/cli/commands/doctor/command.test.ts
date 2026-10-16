@@ -7,10 +7,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { gitOutput, commitAll } from '#tests/setup/git.ts';
-import { virtualEnvironmentBin } from '#cli/system/paths.ts';
 import { mockPinnedExecutables } from '#tests/setup/pins.ts';
 import { isWindows } from '#tests/setup/operating-systems.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
@@ -124,8 +124,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
                     const installation = toolProjectPackage(tool);
                     let folder = 'test-tools';
                     if (installation?.kind === 'npm') folder = join(NODE_MODULES_DIRECTORY, '.bin');
-                    else if (installation?.kind === 'python')
-                        folder = virtualEnvironmentBin(PYTHON_ENVIRONMENT_DIRECTORY);
+                    else if (installation?.kind === 'python') folder = buildVenvBinPath(PYTHON_ENVIRONMENT_DIRECTORY);
                     return [join(folder, tool.name), 'native lookup target'];
                 }),
             ),
@@ -175,9 +174,9 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
         const path = join(sandbox.path, 'tool-bin', 'pytest');
         return options?.all === true ? [path] : path;
     }) as typeof executables.sync);
-    const nativeVersion = processes.runBlocking;
+    const nativeVersion = processes.spawnProcessBlocking;
     let present = false;
-    using _version = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+    using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
         if (command.slice(1).join(' ') === '--version --version')
             return {
                 code: 0,

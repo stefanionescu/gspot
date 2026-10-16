@@ -1,10 +1,10 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/system/files/reads.ts';
-import { globPaths } from '#cli/system/files/folders.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
+import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { type GeneratedPath } from '#cli/types/configurations.ts';
 import { toolOutputDetail } from '#cli/execution/command/output.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
@@ -38,7 +38,7 @@ function copiedFiles(root: string, scope: string, patterns: string[], targets: G
     const cwd = join(root, scope);
     const excluded = [...GENERATED_SCAN_EXCLUSIONS, DOT_GSPOT].map((name) => `!**/${name}/**`);
     return new Map([
-        ...globPaths(cwd, [...patterns, ...excluded]).map((path): [string, Buffer] => [
+        ...listMatchingPaths(cwd, [...patterns, ...excluded]).map((path): [string, Buffer] => [
             posix.join(scope, path),
             readSource(cwd, path),
         ]),

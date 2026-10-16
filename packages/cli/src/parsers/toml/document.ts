@@ -3,7 +3,7 @@ import { parse as parseToml } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { PATCH_FORMAT } from '#cli/config/parsers/toml.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { valueAt, isRecord, normalizeTables } from '#cli/system/values.ts';
+import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
 import type { TomlInput, TomlSyntax, TomlComments, TomlTextChunk, TomlTableOptions } from '#cli/types/parsers/toml.ts';
 
 import {
@@ -105,7 +105,7 @@ export function openTomlFile(input: TomlInput): EditableFile {
     const original = tomlSyntax(input.source, document);
     return {
         format: 'toml',
-        value: (path) => valueAt(document, path),
+        value: (path) => getValueAt(document, path),
         set(path, value) {
             if (path.some((key) => typeof key !== 'string')) throw new Error(`${input.path} requires TOML table keys.`);
             const key = path.at(-1);

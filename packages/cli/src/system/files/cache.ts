@@ -9,7 +9,7 @@ import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
  * @param key the producer whose identity and return type own the entry.
  * @returns the existing value or the producer's first result.
  */
-export function memo<Value extends object>(reads: ReadCache, key: MemoKey<Value>): Value {
+export function getCachedValue<Value extends object>(reads: ReadCache, key: MemoKey<Value>): Value {
     const held = reads.memo.get(key);
     // Only this key's producer writes its entry; its return type owns the stored value.
     if (held !== undefined) return held as Value;
@@ -26,13 +26,13 @@ export function memo<Value extends object>(reads: ReadCache, key: MemoKey<Value>
  * @param create the calculation.
  * @returns the existing entry or its first calculated value.
  */
-export function memoized<Key, Value>(
+export function getCachedMapValue<Key, Value>(
     reads: ReadCache,
     key: MemoKey<Map<Key, Value>>,
     entry: Key,
     create: () => Value,
 ): Value {
-    const values = memo(reads, key);
+    const values = getCachedValue(reads, key);
     if (values.has(entry)) return values.get(entry) as Value;
     const value = create();
     values.set(entry, value);

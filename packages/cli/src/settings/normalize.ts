@@ -1,4 +1,4 @@
-import { compact } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { ParsedSettings } from '#cli/types/settings/file.ts';
@@ -18,11 +18,11 @@ function normalizeScopeTables(written: NonNullable<ParsedSettings['scope']>[numb
     const normalizedTools =
         tools === undefined
             ? undefined
-            : compact({
+            : stripUndefined({
                   ...tools,
                   eslint: tools.eslint === undefined ? undefined : { ...tools.eslint, override: [] },
               });
-    return compact({
+    return stripUndefined({
         ...table,
         ...normalized,
         written,
@@ -47,7 +47,7 @@ function normalizeChecks(checks: ParsedSettings['command_check']): Settings['che
     return Object.fromEntries(
         (checks ?? []).map((entry) => {
             const name = entry.name;
-            const { paths, ...definition } = compact(entry);
+            const { paths, ...definition } = stripUndefined(entry);
             return [
                 name,
                 {
@@ -78,7 +78,7 @@ function normalizeChecks(checks: ParsedSettings['command_check']): Settings['che
  */
 export function buildSettings(written: ParsedSettings): Settings {
     const { command_check: commandChecks, ...document } = written;
-    const tables = compact({
+    const tables = stripUndefined({
         rules: written.rules,
         hooks: written.hooks,
         ci: written.ci,
@@ -88,7 +88,7 @@ export function buildSettings(written: ParsedSettings): Settings {
         scopes.map(([path, scope]) => [trimTrailingSlashes(path), normalizeScopeTables(scope)]),
     );
     return {
-        ...compact(document),
+        ...stripUndefined(document),
         written: written,
         level: settingsSchema.shape.level.parse(written.level),
         configurations: written.configurations,
@@ -108,11 +108,11 @@ export function buildSettings(written: ParsedSettings): Settings {
         structure: {
             reexports: settingsSchema.shape.structure.unwrap().shape.reexports.parse(written.structure?.reexports),
         },
-        format: compact({ ...written.format }),
+        format: stripUndefined({ ...written.format }),
         allowed_words: settingsSchema.shape.allowed_words.parse(written.allowed_words),
-        tools: compact({ ...written.tools }),
+        tools: stripUndefined({ ...written.tools }),
         test_files: settingsSchema.shape.test_files.parse(written.test_files),
-        ignore: (written.ignore ?? []).map((entry) => compact(entry)),
+        ignore: (written.ignore ?? []).map((entry) => stripUndefined(entry)),
         check: normalizeChecks(commandChecks),
 
         ...tables,

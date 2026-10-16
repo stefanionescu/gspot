@@ -6,9 +6,9 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/init.ts';
 import { useEnvironment } from '#tests/setup/environment.ts';
+import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { containing, textContaining } from '#tests/setup/matchers.ts';
 import { sandboxPath, installToolProjects } from '#tests/setup/install.ts';
 
@@ -70,7 +70,7 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
     await installToolProjects(root);
     const location = await runCommand(
         [
-            virtualEnvironmentExecutable(join(root, '.venv'), 'python'),
+            buildVenvExecutablePath(join(root, '.venv'), 'python'),
             '-I',
             '-c',
             'import sysconfig; print(sysconfig.get_path("purelib"))',

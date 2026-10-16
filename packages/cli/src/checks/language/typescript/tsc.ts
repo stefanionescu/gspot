@@ -7,15 +7,15 @@ import { checkInput } from '#cli/execution/built-in.ts';
 import { coveredInputs } from '#cli/planning/checks.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
-import { toPosix, isInside, extensionOf } from '#cli/system/paths.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { type TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/execution/copy/scratch.ts';
+import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { readTsconfig, projectSources, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 
 import {
@@ -43,7 +43,7 @@ function compilerInputs(session: Session, projects: Iterable<readonly [string, T
             ...config.configurationFiles,
             ...projectSources(session.root, scope, session.reads, config).map((source) => source.fileName),
         ])
-        .map((path) => toPosix(relative(session.root, path)))
+        .map((path) => convertToPosixPath(relative(session.root, path)))
         .filter(isInside);
 }
 
@@ -67,7 +67,7 @@ function scopeCompilerProject(
     );
     return {
         fileNames: config.fileNames.filter(
-            (path) => new Set<string>(DECLARATION_EXTENSIONS).has(extensionOf(path)) || files.has(path),
+            (path) => new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(path)) || files.has(path),
         ),
         options: {
             ...config.options,
@@ -100,13 +100,13 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
             : compilerInputs(
                   session,
                   [...references.projects].map(([path, config]) => [
-                      toPosix(relative(session.root, dirname(path))),
+                      convertToPosixPath(relative(session.root, dirname(path))),
                       config,
                   ]),
               );
     using source =
         references === undefined
-            ? scratchFolder()
+            ? createScratchFolder()
             : await copyIntoScratch(checkCopyInputs(checkInput(session, planned), prerequisites));
     if (references !== undefined) {
         writeReferenceProjects({
@@ -131,7 +131,7 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
 export async function javascriptTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;
     if (coveredInputs(session, planned).length === 0) return { ...emptyResult(planned), fileCount: 0 };
-    const target = toPosix(join(TOOL_FILE_DIRECTORY, scope, JSCONFIG_FILE));
+    const target = convertToPosixPath(join(TOOL_FILE_DIRECTORY, scope, JSCONFIG_FILE));
     const generated = readTsconfig(session.root, join(session.root, target), session.reads);
     if (generated === undefined) throw new Error(`Missing JavaScript tool file: ${target}`);
     const project = {
@@ -153,7 +153,7 @@ export async function javascriptTsc(session: Session, planned: PlannedCheck): Pr
                 typeRoots: project.options.typeRoots?.map((path) => join(scratch, relative(session.root, path))),
             },
             files: project.fileNames.map((path) =>
-                toPosix(relative(dirname(generatedPath), join(scratch, relative(session.root, path)))),
+                convertToPosixPath(relative(dirname(generatedPath), join(scratch, relative(session.root, path)))),
             ),
             include: [],
             exclude: [],

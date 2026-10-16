@@ -1,4 +1,4 @@
-import { gitPrefix } from '#cli/system/git.ts';
+import { readGitPrefix } from '#cli/system/git.ts';
 import { name as cliName } from '../../package.json';
 import { selectNpmClient } from '#cli/tools/npm/client.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
@@ -65,7 +65,7 @@ export function hookLine(name: HookName, runner: StartRunner): string {
  */
 export function hookFiles(root: string, settings: Settings, runner: StartRunner): GeneratedFile[] {
     if (settings.hooks?.enabled !== true) return [];
-    const prefix = gitPrefix(root, isGitRepository(root));
+    const prefix = readGitPrefix(root, isGitRepository(root));
     return (Object.keys(HOOK_ARGS) as HookName[]).map((name) => ({
         path: `${HOOKS_DIRECTORY}/${name}`,
         content: hookScript(name, runner, prefix),

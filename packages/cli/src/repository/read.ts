@@ -1,13 +1,13 @@
 // Reads repository files, scopes, and dependency declarations.
 import { posix } from 'node:path';
 import { runGitBlocking } from '#cli/system/git.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { classifyFile } from '#cli/repository/kind.ts';
 import { findScopes } from '#cli/repository/scopes.ts';
 import { swiftSourceTags } from '#cli/parsers/swift.ts';
-import { blockSpan } from '#cli/system/managed-blocks.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
+import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { isGitRepository } from '#cli/repository/find-root.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
@@ -24,7 +24,7 @@ import {
     FILE_PREFIX_BYTES,
     VENDORED_ATTRIBUTE,
     GENERATED_ATTRIBUTE,
-    CHECK_ATTRIBUTES_ARGV,
+    CHECK_ATTRIBUTES_ARGUMENTS,
 } from '#cli/config/repository/inventory.ts';
 
 /**
@@ -35,7 +35,7 @@ import {
  */
 function readAttributes(root: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
-    const result = runGitBlocking(root, [...CHECK_ATTRIBUTES_ARGV], {
+    const result = runGitBlocking(root, [...CHECK_ATTRIBUTES_ARGUMENTS], {
         stdin: paths.join('\0') + '\0',
     });
     if (result.code !== 0) throw new Error(`Git could not read the attributes: ${result.stderr.trim()}`);
@@ -60,7 +60,7 @@ export async function readRepository(
     const hasGit = isGitRepository(root);
     const index = hasGit ? await readIndexEntries(root) : [];
     const entries = await listRepositoryFiles(root, index, hasGit);
-    using directory = openSafeFolder(root);
+    using directory = openFiles(root);
     const files: TrackedFile[] = [];
     const attributes = hasGit
         ? readAttributes(
@@ -118,7 +118,7 @@ export function readGeneratedPatterns(root: string, paths: string[], reads?: Rea
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
                 .flatMap((path) => {
                     const text = readSource(root, path, reads).toString('utf8');
-                    const span = blockSpan(text, { path, style: 'hash' });
+                    const span = findBlockSpan(text, { path, style: 'hash' });
                     const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
                     return attributeRules(authored, posix.dirname(path))
                         .filter((rule) =>

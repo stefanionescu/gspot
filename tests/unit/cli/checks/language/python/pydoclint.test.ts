@@ -8,7 +8,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { processResult } from '#tests/setup/processes.ts';
 import { PYPROJECT } from '#tests/config/python/project.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
+import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
 
 import {
@@ -19,7 +19,7 @@ import {
 
 test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting, expected, command }) => {
     await using sandbox = await testdir();
-    const executable = virtualEnvironmentExecutable('.gspot/.venv', 'pydoclint');
+    const executable = buildVenvExecutablePath('.gspot/.venv', 'pydoclint');
     await createFileTree(sandbox.path, {
         'gspot.toml': settingsText(['python'], {
             tables: setting === undefined ? '' : `[tools.ruff]\ndocstring_convention = "${setting}"\n`,
@@ -31,7 +31,7 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
     await chmod(join(sandbox.path, executable), 0o755);
     const session = await openSession(sandbox.path);
     const [planned] = planRun(session, { stage: 'all', only: ['python/pydoclint'] });
-    using _version = spyOn(processes, 'runBlocking').mockReturnValue(
+    using _version = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(
         processResult({
             stdout: `pydoclint, version ${session.manifests.get('python')!.tools.find((tool) => tool.name === 'pydoclint')!.version!}\n`,
         }),
@@ -48,7 +48,7 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
 
 test('pydoclint keeps earlier style findings when a later style batch fails', async () => {
     await using sandbox = await testdir();
-    const executable = virtualEnvironmentExecutable('.gspot/.venv', 'pydoclint');
+    const executable = buildVenvExecutablePath('.gspot/.venv', 'pydoclint');
     await createFileTree(sandbox.path, {
         'gspot.toml': settingsText(['python']),
         'pyproject.toml': PYPROJECT,
@@ -59,7 +59,7 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
     await chmod(join(sandbox.path, executable), 0o755);
     const session = await openSession(sandbox.path);
     const [planned] = planRun(session, { stage: 'all', only: ['python/pydoclint'] });
-    using _version = spyOn(processes, 'runBlocking').mockReturnValue(
+    using _version = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(
         processResult({
             stdout: `pydoclint, version ${session.manifests.get('python')!.tools.find((tool) => tool.name === 'pydoclint')!.version!}\n`,
         }),

@@ -1,14 +1,14 @@
 // Reads repository dependency files and installed package versions.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { toPosix } from '#cli/system/paths.ts';
 import { readJson } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { globPaths } from '#cli/system/files/folders.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { isToolingPath } from '#cli/repository/selectors.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
 import { join, dirname, basename, relative } from 'node:path';
+import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { packageJsonSchema, dependencyFileParser } from '#cli/parsers/dependency-files.ts';
@@ -68,7 +68,7 @@ export function packageFiles(root: string, manifests: string[]): string[] {
             pattern,
             pattern + FOLDER_CONTENTS,
         ]);
-        return globPaths(join(root, folder), patterns).map((file) => toPosix(join(folder, file)));
+        return listMatchingPaths(join(root, folder), patterns).map((file) => convertToPosixPath(join(folder, file)));
     });
 }
 
@@ -88,8 +88,8 @@ export function installedPackage(
         let text: string | undefined;
         if (files === undefined) text = readFileSync(manifest, 'utf8');
         else {
-            const directory = files.realPath(toPosix(relative(root, dirname(manifest))));
-            const path = toPosix(relative(root, join(directory, basename(manifest))));
+            const directory = files.realPath(convertToPosixPath(relative(root, dirname(manifest))));
+            const path = convertToPosixPath(relative(root, join(directory, basename(manifest))));
             text = readText(root, path);
         }
         return text === undefined ? undefined : readJson(manifest, text, packageJsonSchema);

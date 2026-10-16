@@ -10,7 +10,7 @@ import type { Level } from '#cli/types/configurations.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { RULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
-import { managedBlock, selectRuleFiles } from '#cli/generation/rules.ts';
+import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { allChecks, configurationManifests } from '#cli/configurations/manifests.ts';
 import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/config/rules.ts';
 
@@ -118,7 +118,7 @@ import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests
         const { rules, level } = session.settingsFile.settings;
         const selected = everyManifest(session.scopes);
         const generated = emitAll(session);
-        return managedBlock({
+        return buildAgentsBlock({
             generatedPaths: [...generated.files, ...generated.fileEdits]
                 .map(({ path }) => path)
                 .filter((path) => !path.startsWith('.gspot/')),

@@ -2,13 +2,13 @@
 import { z } from 'zod';
 import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
-import { toPosix } from '#cli/system/paths.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { ESLINT_SEVERITIES } from '#tests/config/eslint/lint-rules.ts';
 import type { LintFinding, EslintConfiguration } from '#tests/types/tool-output.ts';
@@ -25,7 +25,11 @@ async function lintFindings(
         .flatMap(({ filePath, messages }) =>
             messages
                 .filter(({ ruleId, fatal }) => fatal || ruleId === null || rules.includes(ruleId))
-                .map(({ ruleId, line }) => ({ file: toPosix(relative(root, filePath)), rule: ruleId, line })),
+                .map(({ ruleId, line }) => ({
+                    file: convertToPosixPath(relative(root, filePath)),
+                    rule: ruleId,
+                    line,
+                })),
         )
         .toSorted(compareFindings);
 }

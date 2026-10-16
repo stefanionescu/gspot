@@ -8,9 +8,9 @@ import { openSession } from '#cli/commands/session.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { hasToolBuild } from '#tests/setup/operating-systems.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import type { ParameterFinding } from '#tests/types/tool-output.ts';
 import { toolsPath, installToolProjects } from '#tests/setup/install.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -26,7 +26,7 @@ test('suppression detection agrees with Ruff on every noqa comment form and plac
         ...Object.fromEntries(RUFF_SUPPRESSIONS.map(({ source }, index) => [paths[index]!, source])),
     });
     await installToolProjects(sandbox.path);
-    const ruff = virtualEnvironmentExecutable(join(sandbox.path, '.gspot/.venv'), 'ruff');
+    const ruff = buildVenvExecutablePath(join(sandbox.path, '.gspot/.venv'), 'ruff');
     const native = await runCommand(
         [ruff, 'check', '--isolated', '--select', 'F401', '--output-format', 'json', ...paths],
         { cwd: sandbox.path, env: { PATH: toolsPath() } },
@@ -142,7 +142,7 @@ for (const scenario of PARAMETER_LIMIT_TOOLS.filter(
             const command =
                 language === 'python'
                     ? [
-                          virtualEnvironmentExecutable(join(directory.path, '.gspot/.venv'), 'ruff'),
+                          buildVenvExecutablePath(join(directory.path, '.gspot/.venv'), 'ruff'),
                           ...scenario.command.slice(1),
                       ]
                     : scenario.command;

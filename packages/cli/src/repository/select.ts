@@ -1,6 +1,6 @@
 // Selects files and configurations for a scope.
 import { posix } from 'node:path';
-import { extensionOf } from '#cli/system/paths.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
 import type { TrackedFile, FileDeclaration } from '#cli/types/repository/inventory.ts';
@@ -40,7 +40,7 @@ export function isCovered(
     filenames: (path: string) => boolean,
     paths: (path: string) => boolean,
 ): boolean {
-    if (owners.extensions.includes(extensionOf(file.path))) return true;
+    if (owners.extensions.includes(extractExtension(file.path))) return true;
     if (filenames(file.path)) return true;
     if (owners.tags.some((tag) => file.tags.includes(tag))) return true;
     return paths(file.path);

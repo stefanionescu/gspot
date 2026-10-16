@@ -1,21 +1,21 @@
 // Selects positional repository paths and refuses unknown check IDs.
 // Checking one tree: the working tree, or a copy of the index or of a pushed commit.
 import { resolve, relative } from 'node:path';
-import { codeList } from '#cli/system/text.ts';
-import { compact } from '#cli/system/values.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { hookStatus } from '#cli/install/hooks.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
+import { formatCodeList } from '#cli/system/text.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { warn, colors } from '#cli/system/terminal.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { runText } from '#cli/commands/check/report.ts';
-import { toPosix, isInside } from '#cli/system/paths.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import type { Session, StageFilter } from '#cli/types/planning.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { unknownCheckMessage } from '#cli/configurations/unknown-names.ts';
 import type { RunReport, FixReport, RunOptions } from '#cli/types/execution/check.ts';
@@ -34,7 +34,7 @@ function buildRunOptions(
     const comparison = buildComparison(revision, changed);
     return {
         checks: BUILT_IN_CHECKS,
-        ...compact({
+        ...stripUndefined({
             stage,
             fix: options.fix,
             isDryRun: options.isDryRun,
@@ -67,7 +67,7 @@ function buildComparison(
 
 // The repository files a selector names: the file itself, or everything under a folder.
 function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
-    const selector = toPosix(relative(session.root, resolve(options.cwd, path)));
+    const selector = convertToPosixPath(relative(session.root, resolve(options.cwd, path)));
     if (!isInside(selector)) throw new GspotError('arguments', `Path ${path} is outside this repository.`);
     const matches = candidates.filter((file) => isInScope(file, selector));
     if (matches.length === 0) throw new GspotError('arguments', `Path ${path} matches no repository files.`);
@@ -117,7 +117,7 @@ function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string 
         process.stderr.write(`${colors.cyan('[info]')} no fixer changed anything\n`);
         return text;
     }
-    const shown = codeList(fixes.changed);
+    const shown = formatCodeList(fixes.changed);
     warn(`fixers changed ${String(count)} ${noun}; the changes are in the working tree and are not staged: ${shown}`);
     return text;
 }
@@ -185,7 +185,7 @@ async function runSelected(
     const text = outcome.fixes ? reportFixes(outcome.fixes, options.isDryRun, reportText) : reportText;
     return {
         text: options.isDryRun ? `${text}Dry run: nothing was written.\n` : text,
-        json: { ...outcome.report, ...compact({ fixes: outcome.fixes }) },
+        json: { ...outcome.report, ...stripUndefined({ fixes: outcome.fixes }) },
         exitCode: outcome.report.exitCode,
     };
 }

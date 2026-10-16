@@ -2,8 +2,8 @@
 import { z } from 'zod';
 import { join, dirname } from 'node:path';
 import { format, resolveConfig } from 'prettier';
-import { assetPath } from '#cli/system/assets.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { StylelintModule } from './types/rule-lists.ts';
@@ -164,7 +164,7 @@ const ruleNames = ruleNamesFileSchema.parse({
     source: BUILTIN_RULES_SOURCE,
     rules: [...eslint.builtinRules.keys()].toSorted((first, second) => first.localeCompare(second)),
 });
-prepared.set(assetPath(ESLINT_RULE_NAMES_FILE), ruleNames);
+prepared.set(buildAssetPath(ESLINT_RULE_NAMES_FILE), ruleNames);
 for (const manifest of [...manifests.values()].filter((entry) => Object.keys(entry.eslint.presets).length > 0)) {
     const presetsByName = Object.fromEntries(
         await Promise.all(
@@ -176,14 +176,14 @@ for (const manifest of [...manifests.values()].filter((entry) => Object.keys(ent
             }),
         ),
     );
-    const presetsPath = assetPath(`${manifest.dir}/${ESLINT_PRESETS_FILE}`);
+    const presetsPath = buildAssetPath(`${manifest.dir}/${ESLINT_PRESETS_FILE}`);
     prepared.set(presetsPath, presetsByName);
 }
 const installedGlobals = installedAtPin(ESLINT_RUNTIME_NAMES_MODULE);
 const exportedGlobals: unknown = await import(pathToFileURL(installedGlobals.entry).href);
 const globals = eslintGlobalsSchema.parse(exportedGlobals).default;
 prepared.set(
-    assetPath(ESLINT_RUNTIME_NAMES_FILE),
+    buildAssetPath(ESLINT_RUNTIME_NAMES_FILE),
     Object.keys(globals).toSorted((first, second) => first.localeCompare(second)),
 );
 const standard = installedAtPin(STYLELINT_RULE_NAMES_MODULE);
@@ -196,7 +196,7 @@ const style = stylelintConfigSchema.parse(
     }),
 );
 prepared.set(
-    assetPath(STYLELINT_RULE_NAMES_FILE),
+    buildAssetPath(STYLELINT_RULE_NAMES_FILE),
     ruleNamesFileSchema.parse({
         package: standard.name,
         version: standard.version,

@@ -2,13 +2,13 @@ import { isDeepStrictEqual } from 'node:util';
 import { isRecord } from '#cli/system/values.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { keptComments } from '#cli/settings/comments.ts';
 import { layOutSettings } from '#cli/settings/layout.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { tomlSyntax } from '#cli/parsers/toml/comments.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { dropDefaults } from '#cli/settings/drop-defaults.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { FileCopy } from '#cli/types/system/safe-folder.ts';
@@ -164,7 +164,7 @@ function emitSettings(previousText: string, settings: TomlTable): string {
  * @returns the UTF-8 settings text
  */
 function readSettingsFile(root: string): SettingsSource {
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     const original = files.read(SETTINGS_FILE);
     if (original === undefined)
         throw new GspotError('settings', 'There is no gspot.toml here. Run `gspot init` to create one.');

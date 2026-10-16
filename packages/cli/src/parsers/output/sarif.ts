@@ -2,9 +2,9 @@
 import { z } from 'zod';
 import { sep, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { toPosix, isInside } from '#cli/system/paths.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { SARIF_SOURCE_ROOT } from '#cli/config/parsers/output.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding, FindingPlace } from '#cli/types/execution/check.ts';
 import type { SarifLog, SarifRun, SarifPhysicalLocation, SarifArtifactLocation } from '#cli/types/parsers/output.ts';
 
@@ -33,7 +33,7 @@ function sourceFile(artifact: SarifArtifactLocation, run: SarifRun, source: stri
     if (uri.protocol !== 'file:') throw new Error('SARIF reported a source location that is not a file.');
     const file = relative(source, fileURLToPath(uri));
     if (!isInside(file)) throw new Error('SARIF reported a source location outside its selected source copy.');
-    return toPosix(file);
+    return convertToPosixPath(file);
 }
 
 /**

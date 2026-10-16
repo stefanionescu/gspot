@@ -1,10 +1,10 @@
-import { valueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/values.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { join, dirname, relative } from 'node:path';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
-import { toPosix, extensionOf } from '#cli/system/paths.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { JsconfigInput } from '#cli/types/generation/typescript.ts';
+import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE, SOURCE_SELECTION_FIELDS } from '#cli/config/parsers/tsconfig.ts';
 
 import {
@@ -27,7 +27,7 @@ export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
     const jsconfigOwner = readTsconfig(root, join(root, scope, JSCONFIG_FILE), reads);
     const owner = jsconfigOwner === undefined ? TSCONFIG_FILE : JSCONFIG_FILE;
     const authored = jsconfigOwner ?? readTsconfig(root, join(root, scope, owner), reads);
-    const prefix = toPosix(relative(dirname(target), scope)) + '/';
+    const prefix = convertToPosixPath(relative(dirname(target), scope)) + '/';
     const compilerOptions: Record<string, unknown> = { ...JAVASCRIPT_OPTIONS, ['jsx']: JAVASCRIPT_IMPORTS.jsx };
     const jsconfig: Record<string, unknown> = { compilerOptions };
     const extensionless = files.some(
@@ -38,7 +38,7 @@ export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
             scopeOf(file.path, scopeEntries).path === scope,
     );
     const hasSourceSelection = SOURCE_SELECTION_FIELDS.some(
-        (field) => valueAt(jsconfigOwner?.raw, [field]) !== undefined,
+        (field) => getValueAt(jsconfigOwner?.raw, [field]) !== undefined,
     );
     if (!hasSourceSelection)
         jsconfig['include'] = JAVASCRIPT_EXTENSIONS.map((extension) => `${prefix}**/*.${extension}`);
@@ -51,7 +51,7 @@ export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
     if (authored.options.jsx !== undefined) delete compilerOptions['jsx'];
     if (jsconfigOwner === undefined)
         jsconfig['files'] = authored.fileNames
-            .filter((path) => new Set<string>(DECLARATION_EXTENSIONS).has(extensionOf(path)))
-            .map((path) => toPosix(relative(join(root, dirname(target)), path)));
+            .filter((path) => new Set<string>(DECLARATION_EXTENSIONS).has(extractExtension(path)))
+            .map((path) => convertToPosixPath(relative(join(root, dirname(target)), path)));
     return jsconfig;
 }

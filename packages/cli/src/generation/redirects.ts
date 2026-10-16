@@ -1,9 +1,9 @@
 // Redirect declared shared package fields to their generated tool files.
 import { posix } from 'node:path';
 import { readJson } from '#cli/parsers/json.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { relativeTarget } from '#cli/generation/pointers.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
 import { isInScope, nestedScopes, targetInScope } from '#cli/repository/scopes.ts';
@@ -78,7 +78,7 @@ export function packageRedirects(session: Session, generated: GeneratedFile[]): 
             .map(({ path }) => path),
     ]);
     if (redirects.size === 0) return [];
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     return [...packages].flatMap((path) => {
         const source = files.read(path);
         if (source === undefined) return [];

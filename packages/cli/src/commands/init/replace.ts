@@ -1,6 +1,6 @@
 // What init replaces: the tool files of the selected tools, read before init writes anything.
+import { openFiles } from '#cli/system/files/open.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import type { ReplacedFiles } from '#cli/types/commands/init.ts';
 import type { Tooling, FoundToolFile } from '#cli/types/repository/inventory.ts';
 
@@ -31,7 +31,7 @@ export function planReplacedFiles(
 ): ReplacedFiles {
     const replaced: ReplacedFiles = { read: new Map(), deleted: [], retained: [], changed: [] };
     const owned = tooling.toolFiles.filter(({ tool }) => tools.has(tool));
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     for (const path of new Set(owned.filter((entry) => !entry.shared).map((entry) => entry.path))) {
         replaced.read.set(path, files.read(path));
     }

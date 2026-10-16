@@ -1,12 +1,12 @@
 // Reads spelling findings from Typos reports.
 import { z } from 'zod';
 import { resolve, relative } from 'node:path';
-import { toPosix } from '#cli/system/paths.ts';
 import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { codePointLength } from '#cli/system/text.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
 import type { TypoEntry } from '#cli/types/parsers/output.ts';
 
@@ -105,7 +105,7 @@ export function typosFindings(check: string, stdout: string, help: string, root:
     }
     const linesByPath = new Map<string, Buffer[]>();
     return entries.map((entry) => {
-        const path = toPosix(relative(root, resolve(cwd, entry.path)));
+        const path = convertToPosixPath(relative(root, resolve(cwd, entry.path)));
         return typoFinding(check, help, entry, path, typoPosition(root, path, entry, linesByPath));
     });
 }

@@ -1,9 +1,9 @@
 // Reads markdownlint messages and source locations.
 import { z } from 'zod';
 import { resolve, relative } from 'node:path';
-import { toPosix } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/execution/check.ts';
 import type { MarkdownlintEntry } from '#cli/types/parsers/output.ts';
 import { MARKDOWNLINT_SEVERITIES } from '#cli/config/parsers/output.ts';
@@ -61,7 +61,7 @@ export function markdownlintFindings(
         throw new GspotError('output', 'Markdownlint returned invalid structured findings.', { cause: error });
     }
     return entries.map((entry) => {
-        const file = toPosix(relative(root, resolve(cwd, entry.fileName)));
+        const file = convertToPosixPath(relative(root, resolve(cwd, entry.fileName)));
         return markdownlintFinding(check, help, entry, file);
     });
 }

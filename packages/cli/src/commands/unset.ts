@@ -2,10 +2,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { printResult } from '#cli/system/terminal.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { valueAt, isRecord } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { isRecord, getValueAt } from '#cli/system/values.ts';
 import { unknownSettingError } from '#cli/settings/errors/keys.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { writtenValue, declarationFor } from '#cli/settings/inherit.ts';
@@ -55,7 +55,7 @@ export function registerUnset(program: Command): void {
                             removeFromList(scopeTable, setting, items);
                             return;
                         }
-                        const table = writtenValue(valueAt(scopeTable, setting.split('.')));
+                        const table = writtenValue(getValueAt(scopeTable, setting.split('.')));
                         if (!isRecord(table)) return;
                         for (const item of items) Reflect.deleteProperty(table, item);
                         if (Object.keys(table).length === 0) deleteKey(scopeTable, setting);

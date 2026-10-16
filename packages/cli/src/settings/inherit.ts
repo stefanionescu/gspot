@@ -7,7 +7,7 @@ import { commandSchema } from '#cli/configurations/schema/parts.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/scopes.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { compact, valueAt, isRecord, createTable } from '#cli/system/values.ts';
+import { isRecord, getValueAt, createTable, stripUndefined } from '#cli/system/values.ts';
 import { ALL_LANGUAGES, CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/values.ts';
 
 import type {
@@ -78,10 +78,10 @@ function applyTable(
     for (const { candidate, found } of written) {
         const owner = table.scope === undefined ? SETTINGS_FILE : `[scope ${JSON.stringify(table.scope)}]`;
         result = {
-            value: mergeValue(declaration, result.value, valueAt(table.table, candidate.split('.'))),
+            value: mergeValue(declaration, result.value, getValueAt(table.table, candidate.split('.'))),
             source: candidate === key ? owner : `${owner} (${candidate})`,
             origin: table.scope === undefined ? 'root' : 'scope',
-            ...compact({ originScope: table.scope }),
+            ...stripUndefined({ originScope: table.scope }),
             reason: found.reason,
         };
     }
@@ -163,10 +163,13 @@ export function declarationFor(known: KnownSettings, key: string): DeclarationMa
  * @returns the value with its reason, or undefined when the document does not contain the key.
  */
 export function writtenSetting(settings: Pick<Settings, 'written'>, key: string): WrittenSetting | undefined {
-    const value: unknown = valueAt(settings.written, key.split('.'));
+    const value: unknown = getValueAt(settings.written, key.split('.'));
     if (value === undefined) return undefined;
     return isRecord(value) && Object.hasOwn(value, 'value')
-        ? compact({ value: value['value'], reason: typeof value['reason'] === 'string' ? value['reason'] : undefined })
+        ? stripUndefined({
+              value: value['value'],
+              reason: typeof value['reason'] === 'string' ? value['reason'] : undefined,
+          })
         : { value };
 }
 
@@ -256,7 +259,7 @@ export function settingValue(
         value,
         source,
         origin,
-        ...compact({ reason, scope, originScope }),
+        ...stripUndefined({ reason, scope, originScope }),
     };
 }
 

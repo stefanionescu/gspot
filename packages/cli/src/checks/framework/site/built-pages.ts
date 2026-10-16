@@ -6,10 +6,10 @@ import { BYTES_PER_KB } from '#cli/config/units.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { toolFilePath } from '#cli/execution/command/placeholders.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { filesUnder, requireBuild, repositoryPath } from '#cli/checks/framework/site/build.ts';
@@ -162,7 +162,7 @@ export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
         input.root,
         toolFilePath(input, { check: input.check, scope: input.selection, files: input.files }, 'html-validate-built'),
     );
-    using reports = scratchFolder();
+    using reports = createScratchFolder();
     const command = [HTML_VALIDATE, '--config', config, '--formatter', `json=${join(reports.path, HTML_REPORT_FILE)}`];
     const findings: Finding[] = [];
     for (const batch of fileBatches(pages, command, process.platform)) {

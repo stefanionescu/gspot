@@ -1,14 +1,14 @@
 import ts from 'typescript';
 import assert from 'node:assert/strict';
-import { memo } from '#cli/system/files/cache.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import { coveredInputs } from '#cli/planning/checks.ts';
-import { toPosix, isInside } from '#cli/system/paths.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { getCachedValue } from '#cli/system/files/cache.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { type CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TsconfigInput } from '#cli/types/generation/typescript.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
@@ -141,7 +141,7 @@ export function projectChecked(
     scope: string,
     required: Record<string, boolean>,
 ): boolean {
-    const checked = memo(reads, CHECKED_PROJECTS);
+    const checked = getCachedValue(reads, CHECKED_PROJECTS);
     const key = JSON.stringify([
         check,
         path,
@@ -186,7 +186,7 @@ export async function runTsc(session: Session, planned: PlannedCheck, metadataRo
             root: session.root,
             typeRootsFolder: session.installedRoot,
             reads: session.reads,
-            target: toPosix(relative(session.root, generatedPath)),
+            target: convertToPosixPath(relative(session.root, generatedPath)),
             scope: planned.scope.scope.path,
             files: session.repository.files,
             scopeEntries: session.repository.scopes,

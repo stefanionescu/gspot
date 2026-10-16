@@ -9,7 +9,7 @@ import type { BlockSpan, BlockContext } from '#cli/types/system/managed-blocks.t
  * @param context the file path and marker style.
  * @returns the block's character range, or undefined when the file holds none.
  */
-export function blockSpan(text: string, context: BlockContext): BlockSpan | undefined {
+export function findBlockSpan(text: string, context: BlockContext): BlockSpan | undefined {
     const markersForStyle = MARKERS[context.style];
     const start = text.indexOf(markersForStyle.start);
     const closing = text.indexOf(markersForStyle.end);
@@ -37,11 +37,11 @@ export function blockSpan(text: string, context: BlockContext): BlockSpan | unde
  * @param context the file path and marker style.
  * @returns the file text with the block in place.
  */
-export function applyBlock(existing: string, block: string, context: BlockContext): string {
+export function replaceBlock(existing: string, block: string, context: BlockContext): string {
     const { start, end } = MARKERS[context.style];
     const gap = context.style === 'markdown' ? '\n\n' : '\n';
     const body = `${start}${gap}${block.trim()}${gap}${end}\n`;
-    const span = blockSpan(existing, context);
+    const span = findBlockSpan(existing, context);
     if (span !== undefined) return existing.slice(0, span.start) + body + existing.slice(span.end);
     if (existing === '') return body;
     const separator = existing.endsWith('\n') ? '\n' : '\n\n';
@@ -54,8 +54,8 @@ export function applyBlock(existing: string, block: string, context: BlockContex
  * @param context the file path and marker style.
  * @returns the block body, trimmed.
  */
-export function currentBlock(text: string, context: BlockContext): string | undefined {
-    const span = blockSpan(text, context);
+export function readBlock(text: string, context: BlockContext): string | undefined {
+    const span = findBlockSpan(text, context);
     if (span === undefined) return undefined;
     const { start, end } = MARKERS[context.style];
     const block = text.slice(span.start, span.end).trimEnd();

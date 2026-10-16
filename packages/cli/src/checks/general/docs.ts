@@ -8,9 +8,9 @@ import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { readSource } from '#cli/system/files/reads.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { globPaths } from '#cli/system/files/folders.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
+import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/parsers/output.ts';
 import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
@@ -18,7 +18,7 @@ import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
 import { scopeOf, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import type { PathIndex, TaskSources } from '#cli/types/checks/general.ts';
-import { executableNames, includeParentFolders } from '#cli/system/paths.ts';
+import { listExecutableNames, includeParentFolders } from '#cli/system/paths.ts';
 import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/tooling.ts';
 
 import {
@@ -123,7 +123,7 @@ function lineFindings(input: CheckInput, file: string, prose: NumberedLine, inde
             if (names.has(name)) return false;
             return (
                 !command.startsWith(BUN_RUN) ||
-                !executableNames(name).some((binary) => index.tasks.binaries.has(binary))
+                !listExecutableNames(name).some((binary) => index.tasks.binaries.has(binary))
             );
         })
         .map((match) =>
@@ -141,7 +141,7 @@ function taskSources(input: CheckInput, scope: string): TaskSources {
         ...new Set(
             ancestors.flatMap(({ path }) => [
                 ...MISE_FILES.filter((file) => file !== '.tool-versions').map((file) => posix.join(path, file)),
-                ...globPaths(input.root, posix.join(path, MISE_CONF_FILES)),
+                ...listMatchingPaths(input.root, posix.join(path, MISE_CONF_FILES)),
             ]),
         ),
     ];
@@ -157,7 +157,7 @@ function taskSources(input: CheckInput, scope: string): TaskSources {
             ...files.flatMap((file) => miseTasks(input, file)),
             ...ancestors.flatMap(({ path }) => {
                 const folder = posix.join(path, MISE_TASKS_FOLDER);
-                return globPaths(input.root, posix.join(folder, '**')).map((file) =>
+                return listMatchingPaths(input.root, posix.join(folder, '**')).map((file) =>
                     posix.relative(folder, file).replaceAll('/', ':'),
                 );
             }),

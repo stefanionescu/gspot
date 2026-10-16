@@ -11,7 +11,7 @@ import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { CLI_MAIN, runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { waitForExit, waitForFile, startCommand, captureChild, prepareCommand } from '#tests/setup/processes.ts';
@@ -29,7 +29,7 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
         });
         await using capture = startCommand([process.execPath, CLI_MAIN, 'check', '--only', 'project/slow', '--json'], {
             cwd: sandbox.path,
-            env: { ...environmentVariables(), NO_COLOR: '1', CI: '1' },
+            env: { ...buildSpawnEnvironment(), NO_COLOR: '1', CI: '1' },
         });
         const { child } = capture;
         const started = join(sandbox.path, 'started.pid');
@@ -69,7 +69,7 @@ const child = Bun.spawn([${JSON.stringify(options.executable)}, ...args], {stdin
 process.exit(await child.exited);
 `;
     await fakeTool(directory, 'git', script);
-    const environment = environmentVariables();
+    const environment = buildSpawnEnvironment();
     return { ...environment, PATH: `${directory}${delimiter}${environment['PATH'] ?? ''}` };
 }
 
@@ -98,7 +98,7 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
             [process.execPath, CLI_MAIN, 'check', '--staged', '--only', 'project/bash-syntax', '--json'],
             {
                 cwd: sandbox.path,
-                env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment, TMPDIR: scratch },
+                env: { ...buildSpawnEnvironment(), NO_COLOR: '1', CI: '1', ...environment, TMPDIR: scratch },
             },
         );
         const { child } = capture;
@@ -149,7 +149,7 @@ test.skipIf(isWindows)('push cancellation retains completed reports and names re
         {
             cwd: sandbox.path,
             env: {
-                ...environmentVariables(),
+                ...buildSpawnEnvironment(),
                 NO_COLOR: '1',
                 CI: '1',
                 ...(await fakeGit(binaryDirectory, {

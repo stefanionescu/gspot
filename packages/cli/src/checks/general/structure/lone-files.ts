@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { directoryOf } from '#cli/system/paths.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
 import type { Finding, CheckInput } from '#cli/types/execution/check.ts';
@@ -14,7 +14,7 @@ export function loneFiles(input: CheckInput): Finding[] {
     const files = structureSources(input);
     const tree = directoryTree(input.files);
     const extensions = sourceConfigurations(input.selection.selected).flatMap((manifest) => manifest.files.extensions);
-    const checked = new Set(files.map((file) => directoryOf(file.path)));
+    const checked = new Set(files.map((file) => extractParentFolder(file.path)));
     return [...checked].flatMap((directory) => {
         if (directory === '' || isDependencyFolder(directory)) return [];
         const entries = tree.get(directory) ?? [];

@@ -5,13 +5,13 @@ import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { yarnSettings } from '#cli/tools/npm/yarn.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { executableNames } from '#cli/system/paths.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
-import { sourcePath } from '#cli/system/files/reads.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
+import { listExecutableNames } from '#cli/system/paths.ts';
+import { readContainedPath } from '#cli/system/files/reads.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/diagnostics.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
@@ -53,7 +53,7 @@ async function resolveNpmLockfile(
             'installation',
             'node is required by the npm tool project. Install it before it creates its lockfile.',
         );
-    using scratch = scratchFolder();
+    using scratch = createScratchFolder();
     const work = scratch.path;
     writeFileSync(join(work, PACKAGE_JSON), manifest.content);
 
@@ -125,9 +125,15 @@ async function runNpmWrappersOnce(
     for (const tool of selected) {
         if (!needsVersionCheck(tool, dependencies)) continue;
         const name =
-            executableNames(tool.name).find((candidate) => existsSync(join(work, NPM_BIN_FOLDER, candidate))) ??
+            listExecutableNames(tool.name).find((candidate) => existsSync(join(work, NPM_BIN_FOLDER, candidate))) ??
             tool.name;
-        await assertWrapperVersion(work, sourcePath(root, `${NPM_BIN_FOLDER}/${name}`), tool, timeoutSeconds, steps);
+        await assertWrapperVersion(
+            work,
+            readContainedPath(root, `${NPM_BIN_FOLDER}/${name}`),
+            tool,
+            timeoutSeconds,
+            steps,
+        );
     }
 }
 
@@ -158,7 +164,7 @@ async function runNpmClient(request: NpmClientExecution): Promise<NpmClientRun> 
     const { root, work, client, argv, failure, timeoutSeconds, steps } = request;
     const env = await registryEnvironment(root);
     const credentials = registryCredentials(env);
-    using settings = scratchFolder();
+    using settings = createScratchFolder();
     try {
         writeNpmrc(settings.path, env);
         env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);

@@ -1,17 +1,17 @@
 import { join, posix, dirname } from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import { systemSegments } from '#cli/system/files/names.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
+import { splitSystemPath } from '#cli/system/files/names.ts';
 import { PERMISSION_BITS } from '#cli/config/system/modes.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ScratchFolder } from '#cli/types/system/files.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
-import { fileMode, writeLink } from '#cli/system/files/entries.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { SafeFolder } from '#cli/types/system/safe-folder.ts';
 import { copyDependencies } from '#cli/execution/copy/dependencies.ts';
+import { writeLink, normalizeFileMode } from '#cli/system/files/entries.ts';
 import { ENTRY_MODES, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { statSync, chmodSync, constants, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
 import { SCRATCH_EXTRAS, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/execution/copy.ts';
@@ -19,7 +19,7 @@ import type { ScratchFile, DependencyCopy, ScratchCopyPlan, ScratchCopyPaths } f
 
 // All scratch destinations share writes; source reads retain the repository boundary.
 function writeScratchFile(files: SafeFolder, scratch: string, file: ScratchFile): void {
-    const target = join(scratch, ...systemSegments(typeof file === 'string' ? file : file.entry.path));
+    const target = join(scratch, ...splitSystemPath(typeof file === 'string' ? file : file.entry.path));
     mkdirSync(dirname(target), { recursive: true });
     if (typeof file === 'string') {
         const source = files.realPath(file);
@@ -27,7 +27,7 @@ function writeScratchFile(files: SafeFolder, scratch: string, file: ScratchFile)
         chmodSync(target, statSync(source).mode & PERMISSION_BITS);
         return;
     }
-    const mode = fileMode({ mode: ENTRY_MODES[file.entry.mode] });
+    const mode = normalizeFileMode({ mode: ENTRY_MODES[file.entry.mode] });
     if (file.entry.mode === SYMLINK_MODE) writeLink(target, file.bytes);
     else {
         writeFileSync(target, file.bytes, { flag: 'wx', mode });
@@ -41,7 +41,7 @@ function writeScratchFile(files: SafeFolder, scratch: string, file: ScratchFile)
  * @param input source root, destination, and files.
  */
 export async function writeScratchFiles(input: ScratchCopyPlan): Promise<void> {
-    using files = openSafeFolder(input.root, 'system');
+    using files = openFiles(input.root, 'system');
     let written = 0;
     for await (const file of input.files) {
         if (written % FILES_BETWEEN_PAUSES === 0) await setImmediate();
@@ -80,7 +80,7 @@ export function checkCopyInputs(input: CheckInput, extra: string[] = []): Scratc
  * @returns the disposable source copy.
  */
 export async function copyIntoScratch(source: ScratchCopyPaths): Promise<ScratchFolder> {
-    const folder = scratchFolder();
+    const folder = createScratchFolder();
     try {
         const input = {
             ...source,

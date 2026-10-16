@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { gitText } from '#cli/system/git.ts';
+import { readGitText } from '#cli/system/git.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
@@ -68,7 +68,7 @@ export async function trufflehog(session: Session, planned: PlannedCheck): Promi
     if (!Array.isArray(commits))
         return { ...base, status: 'error', note: 'Cannot select commits for verified secret scanning.' };
     if (commits.length === 0) return { ...base, note: 'No selected commits to scan.' };
-    const head = await gitText(session.root, ['rev-parse', 'HEAD'], { cancelSignal: session.cancelSignal });
+    const head = await readGitText(session.root, ['rev-parse', 'HEAD'], { cancelSignal: session.cancelSignal });
     const since = planned.base ?? (await readPushBase(session.root, session.cancelSignal));
     const result = await runCheckCommand(session, planned, {
         command: [

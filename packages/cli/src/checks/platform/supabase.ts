@@ -7,13 +7,13 @@ import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Parsed } from '#cli/types/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { toPosix, isInside } from '#cli/system/paths.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import { walkSqlTree } from '#cli/parsers/sql/postgres.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
 import { readText, readSource } from '#cli/system/files/reads.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
 import { toolFindings, toolOutputDetail } from '#cli/execution/command/output.ts';
@@ -44,7 +44,7 @@ function denoConfigArguments(root: string, folder: string): string[] {
 
 function repositoryPath(root: string, locator: string): string {
     const path = locator.startsWith(FILE_URL_PREFIX) ? fileURLToPath(locator) : locator;
-    const local = toPosix(relative(root, path));
+    const local = convertToPosixPath(relative(root, path));
     return local === '' || !isInside(local) ? path : local;
 }
 

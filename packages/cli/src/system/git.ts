@@ -3,8 +3,8 @@ import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { TRAILING_NEWLINE } from '#cli/config/text.ts';
-import { run, runBlocking } from '#cli/system/processes.ts';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
+import { run, spawnProcessBlocking } from '#cli/system/processes.ts';
+import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 import type { StdoutRead, SpawnResult, SpawnOptions, ByteSpawnResult } from '#cli/types/system/processes.ts';
 
 import type {
@@ -16,23 +16,23 @@ import type {
 } from '#cli/types/system/git.ts';
 import {
     GIT_LOCALE,
-    GIT_HOOKS_ARGV,
     GIT_EXECUTABLE,
-    GIT_SOURCE_ARGV,
-    GIT_SETTING_ARGV,
-    GIT_SHALLOW_ARGV,
     GIT_DIR_VARIABLE,
     GIT_CLONE_COMMAND,
-    GIT_DIRECTORY_ARGV,
     GIT_PATH_VARIABLES,
-    GIT_TOP_LEVEL_ARGV,
+    GIT_HOOKS_ARGUMENTS,
     GIT_VARIABLE_PREFIX,
     NOT_REPOSITORY_CODE,
+    GIT_SOURCE_ARGUMENTS,
     GIT_PREFIX_ARGUMENTS,
+    GIT_SETTING_ARGUMENTS,
+    GIT_SHALLOW_ARGUMENTS,
     GIT_WORK_TREE_VARIABLE,
     NOT_REPOSITORY_MESSAGE,
-    GIT_LOCAL_VARIABLES_ARGV,
+    GIT_DIRECTORY_ARGUMENTS,
+    GIT_TOP_LEVEL_ARGUMENTS,
     GIT_COMMAND_CONFIGURATION,
+    GIT_LOCAL_VARIABLES_ARGUMENTS,
     GIT_NONLOCAL_ENVIRONMENT_NAME,
 } from '#cli/config/system/git.ts';
 
@@ -42,7 +42,7 @@ function parseLocalEnvironment(text: string): string[] {
 }
 
 // The hook's original working directory owns relative paths and Git's implicit worktree root.
-function sourceGitEnvironment(
+function readInheritedGitEnvironment(
     inherited: Record<string, string>,
     origin: string,
     overrides: Record<string, string | undefined>,
@@ -53,36 +53,43 @@ function sourceGitEnvironment(
             return value === undefined ? [] : [[name, resolve(origin, value)]];
         }),
     );
-    const source = runBlocking(['git', ...GIT_SOURCE_ARGV], { cwd: origin, env: { ...env, ...overrides } });
+    const source = spawnProcessBlocking(['git', ...GIT_SOURCE_ARGUMENTS], {
+        cwd: origin,
+        env: { ...env, ...overrides },
+    });
     if (source.code !== 0) return { failure: source };
     const line = source.stdout.indexOf('\n');
     const isBare = source.stdout.slice(0, line) === 'true';
-    const directory = gitLine(source.stdout.slice(line + 1));
+    const directory = trimGitLine(source.stdout.slice(line + 1));
     if (
         !isBare &&
         environmentVariable(inherited, GIT_DIR_VARIABLE) !== undefined &&
         environmentVariable(inherited, GIT_WORK_TREE_VARIABLE) === undefined
     ) {
-        const worktree = runBlocking(['git', ...GIT_TOP_LEVEL_ARGV], {
+        const worktree = spawnProcessBlocking(['git', ...GIT_TOP_LEVEL_ARGUMENTS], {
             cwd: origin,
             env: { ...env, ...overrides },
         });
         if (worktree.code !== 0) return { failure: worktree };
-        env[GIT_WORK_TREE_VARIABLE] = gitLine(worktree.stdout);
+        env[GIT_WORK_TREE_VARIABLE] = trimGitLine(worktree.stdout);
     }
     return { directory, env };
 }
 
 // The target's own metadata decides whether inherited repository-local variables remain valid.
-function targetGitEnvironment(root: string, source: GitRepository, environment: GitTargetEnvironment): GitEnvironment {
+function readTargetGitEnvironment(
+    root: string,
+    source: GitRepository,
+    environment: GitTargetEnvironment,
+): GitEnvironment {
     const { isolated, overrides, explicit } = environment;
-    const target = runBlocking(['git', ...GIT_DIRECTORY_ARGV], {
+    const target = spawnProcessBlocking(['git', ...GIT_DIRECTORY_ARGUMENTS], {
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
     if (isOutsideGit(target)) return { env: { ...isolated, ...explicit } };
     if (target.code !== 0) return { failure: target };
-    const isSameRepository = realpathSync(source.directory) === realpathSync(gitLine(target.stdout));
+    const isSameRepository = realpathSync(source.directory) === realpathSync(trimGitLine(target.stdout));
     return { env: { ...(isSameRepository ? source.env : isolated), ...explicit } };
 }
 
@@ -96,12 +103,12 @@ let sourceMetadata: { metadata: string[]; source?: GitSource } | undefined;
  * @returns the environment for the requested Git command.
  */
 // eslint-disable-next-line complexity -- reason: Git environment isolation combines source-repository identity and command overrides; splitting it adds one-caller wrappers.
-export function gitEnvironment(
+export function buildGitEnvironment(
     root: string,
     argv: readonly string[],
     explicit: Record<string, string | undefined>,
 ): GitEnvironment {
-    const inherited = environmentVariables();
+    const inherited = buildSpawnEnvironment();
     if (
         !Object.keys(inherited).some((key) => {
             const name = process.platform === 'win32' ? key.toUpperCase() : key;
@@ -111,7 +118,7 @@ export function gitEnvironment(
         return { env: explicit };
     const origin = process.cwd();
     if (sourceMetadata === undefined) {
-        const declared = runBlocking(['git', ...GIT_LOCAL_VARIABLES_ARGV], { cwd: origin, env: {} });
+        const declared = spawnProcessBlocking(['git', ...GIT_LOCAL_VARIABLES_ARGUMENTS], { cwd: origin, env: {} });
         if (declared.code !== 0) return { failure: declared };
         const metadata = parseLocalEnvironment(declared.stdout).filter(
             (name) => !new Set<string | undefined>(GIT_COMMAND_CONFIGURATION).has(name),
@@ -127,9 +134,9 @@ export function gitEnvironment(
             ([name]) => !metadata.includes(process.platform === 'win32' ? name.toUpperCase() : name),
         ),
     );
-    const source = (sourceMetadata.source ??= sourceGitEnvironment(inherited, origin, {}));
+    const source = (sourceMetadata.source ??= readInheritedGitEnvironment(inherited, origin, {}));
     if ('failure' in source) return source;
-    return targetGitEnvironment(root, source, { isolated, overrides, explicit });
+    return readTargetGitEnvironment(root, source, { isolated, overrides, explicit });
 }
 /**
  * Distinguishes an absent work tree from broken Git metadata after a failed command.
@@ -151,9 +158,9 @@ export function runGitBlocking(
     argv: readonly string[],
     options: Omit<SpawnOptions, 'cwd' | 'timeoutMs'> = {},
 ): SpawnResult {
-    const selected = gitEnvironment(root, ['git', ...argv], { ...options.env });
+    const selected = buildGitEnvironment(root, ['git', ...argv], { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return runBlocking(['git', ...argv], { ...options, env: selected.env, cwd: root });
+    return spawnProcessBlocking(['git', ...argv], { ...options, env: selected.env, cwd: root });
 }
 /**
  * Runs Git with cancellation.
@@ -169,7 +176,7 @@ export async function runGit(
     options: GitOptions = {},
     output: StdoutRead = 'utf8',
 ): Promise<SpawnResult> {
-    const selected = gitEnvironment(root, ['git', ...argv], { ...options.env });
+    const selected = buildGitEnvironment(root, ['git', ...argv], { ...options.env });
     if ('failure' in selected) return selected.failure;
     return run(['git', ...argv], { ...options, env: selected.env, cwd: root }, output);
 }
@@ -198,7 +205,7 @@ export async function runGitForBytes(
  * @returns the exact value, or undefined for an unset key.
  */
 export function readGitSetting(root: string, key: string): string | undefined {
-    const result = runGitBlocking(root, [...GIT_SETTING_ARGV, key]);
+    const result = runGitBlocking(root, [...GIT_SETTING_ARGUMENTS, key]);
     if (result.code === 0) return result.stdout.slice(0, -1);
     if (result.code === 1 && result.stdout === '' && result.stderr === '') return undefined;
     throw new Error(
@@ -210,10 +217,10 @@ export function readGitSetting(root: string, key: string): string | undefined {
  * @param root the repository root.
  * @returns the absolute path.
  */
-export function hooksDirectory(root: string): string {
-    const result = runGitBlocking(root, [...GIT_HOOKS_ARGV]);
+export function readHooksFolder(root: string): string {
+    const result = runGitBlocking(root, [...GIT_HOOKS_ARGUMENTS]);
     if (result.code !== 0) throw new Error(`Cannot read the Git hooks folder: ${result.stderr.trim()}`);
-    return resolve(root, gitLine(result.stdout));
+    return resolve(root, trimGitLine(result.stdout));
 }
 /**
  * What a Git command prints, or the selection error it failed with.
@@ -222,7 +229,7 @@ export function hooksDirectory(root: string): string {
  * @param options cancellation and input.
  * @returns the standard output as printed.
  */
-export async function gitText(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string> {
+export async function readGitText(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string> {
     const result = await runGit(root, argv, options);
     if (result.code !== 0)
         throw new GspotError(
@@ -238,8 +245,8 @@ export async function gitText(root: string, argv: readonly string[], options: Gi
  * @param options cancellation and input.
  * @returns the lines, in order.
  */
-export async function gitLines(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string[]> {
-    const text = await gitText(root, argv, options);
+export async function readGitLines(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string[]> {
+    const text = await readGitText(root, argv, options);
     return text.split('\n').filter((line) => line !== '');
 }
 /**
@@ -249,8 +256,8 @@ export async function gitLines(root: string, argv: readonly string[], options: G
  * @param options cancellation and input.
  * @returns the paths, in order.
  */
-export async function gitPaths(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string[]> {
-    const text = await gitText(root, argv, options);
+export async function readGitPaths(root: string, argv: readonly string[], options: GitOptions = {}): Promise<string[]> {
+    const text = await readGitText(root, argv, options);
     return text.split('\0').filter((path) => path !== '');
 }
 /**
@@ -260,7 +267,7 @@ export async function gitPaths(root: string, argv: readonly string[], options: G
  * @returns true for a shallow repository.
  */
 export async function isShallow(root: string, options: GitOptions = {}): Promise<boolean> {
-    const answer = await gitText(root, [...GIT_SHALLOW_ARGV], options);
+    const answer = await readGitText(root, [...GIT_SHALLOW_ARGUMENTS], options);
     return answer.trim() === 'true';
 }
 /**
@@ -269,18 +276,18 @@ export async function isShallow(root: string, options: GitOptions = {}): Promise
  * @param hasGit whether the directory belongs to a Git repository.
  * @returns the repository-relative prefix for this directory.
  */
-export function gitPrefix(root: string, hasGit: boolean): string {
+export function readGitPrefix(root: string, hasGit: boolean): string {
     if (!hasGit) return '';
     const result = runGitBlocking(root, GIT_PREFIX_ARGUMENTS);
     if (result.code !== 0) throw new GspotError('git', `Cannot find the hook directory: ${result.stderr.trim()}`);
-    return gitLine(result.stdout);
+    return trimGitLine(result.stdout);
 }
 /**
  * Remove the final newline from a Git result while preserving the value's other bytes.
  * @param text Git's printed value.
  * @returns the value without its final newline.
  */
-export function gitLine(text: string): string {
+export function trimGitLine(text: string): string {
     return text.replace(TRAILING_NEWLINE, '');
 }
 
@@ -291,5 +298,5 @@ export function gitLine(text: string): string {
  * @returns the top-level folder.
  */
 export async function gitTopLevel(root: string, options: GitOptions = {}): Promise<string> {
-    return gitLine(await gitText(root, [...GIT_TOP_LEVEL_ARGV], options));
+    return trimGitLine(await readGitText(root, [...GIT_TOP_LEVEL_ARGUMENTS], options));
 }

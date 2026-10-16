@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { compact } from '#cli/system/values.ts';
 import { readAsset } from '#cli/system/assets.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
 import { eslintPresetSchema } from '#cli/configurations/schema/manifest.ts';
@@ -36,7 +36,7 @@ export function readPresets(manifest: Manifest): EslintPresets {
     return Object.fromEntries(
         Object.entries(parsed).map(([name, preset]) => [
             name,
-            { ...preset, blocks: preset.blocks.map((block) => compact(block)) },
+            { ...preset, blocks: preset.blocks.map((block) => stripUndefined(block)) },
         ]),
     );
 }

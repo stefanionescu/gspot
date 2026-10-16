@@ -11,9 +11,9 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { containingAll } from '#tests/setup/matchers.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
-import { virtualEnvironmentExecutable } from '#cli/system/paths.ts';
 import { toolsPath, installToolProjects } from '#tests/setup/install.ts';
 
 import {
@@ -85,7 +85,7 @@ test.each([...LEVELS])('Ruff at level %s reports correctness, and print calls on
     });
     await installToolProjects(sandbox.path);
     const resultRules = runCommandBlocking(
-        [virtualEnvironmentExecutable(join(sandbox.path, '.gspot/.venv'), 'ruff'), ...RUFF_RULE_ARGUMENTS],
+        [buildVenvExecutablePath(join(sandbox.path, '.gspot/.venv'), 'ruff'), ...RUFF_RULE_ARGUMENTS],
         { cwd: sandbox.path },
     );
     expect(resultRules.code, resultRules.stdout + resultRules.stderr).toBe(0);
@@ -166,7 +166,7 @@ line_ending = "lf"
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, file)).text()).toBe(formatted);
         const editor = runCommandBlocking(
-            [virtualEnvironmentExecutable(join(sandbox.path, '.gspot/.venv'), 'ruff'), ...RUFF_FORMAT_ARGUMENTS, file],
+            [buildVenvExecutablePath(join(sandbox.path, '.gspot/.venv'), 'ruff'), ...RUFF_FORMAT_ARGUMENTS, file],
             options,
         );
         expect(editor.code, editor.stdout + editor.stderr).toBe(0);

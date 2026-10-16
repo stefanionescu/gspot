@@ -52,7 +52,7 @@ test.each([
 test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
-    expect(processes.runBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
+    expect(processes.spawnProcessBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
     const entries = await listRepositoryFiles(sandbox.path, [], false);
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
 });

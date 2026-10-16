@@ -4,7 +4,7 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { writtenValue, replaceWrittenValue } from '#cli/settings/inherit.ts';
-import { valueAt, isRecord, createTable, normalizeTables } from '#cli/system/values.ts';
+import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
 import { sortedToml, emitSettings, parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
 import type { Mutation, TomlTable, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/file.ts';
 
@@ -101,7 +101,7 @@ export function addToList(document: TomlTable, key: string, entries: unknown[]):
  */
 export function removeFromList(document: TomlTable, key: string, entries: unknown[]): void {
     const { path, name } = splitKey(key);
-    const table = valueAt(document, path);
+    const table = getValueAt(document, path);
     if (!isRecord(table)) return;
     const written = table[name];
     const value = writtenValue(written);

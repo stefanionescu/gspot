@@ -2,10 +2,10 @@ import semver from 'semver';
 import { join, dirname } from 'node:path';
 import { detectPackageManager } from 'nypm';
 import { GspotError } from '#cli/system/errors.ts';
-import { runBlocking } from '#cli/system/processes.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { toolTimeoutMilliseconds } from '#cli/tools/run.ts';
+import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { NPM_PROGRAM, NPM_CLIENT_DETECTION } from '#cli/config/tools/npm.ts';
@@ -72,7 +72,10 @@ export async function selectNpmClient(root: string, trackedPaths: string[]): Pro
 export function readNpmClientVersion(root: string, client: NpmClientIdentity, timeoutSeconds: number): NpmClient {
     const { name, version } = client;
     if (version !== undefined) return { name, version };
-    const result = runBlocking([name, VERSION_FLAG], { cwd: root, timeoutMs: toolTimeoutMilliseconds(timeoutSeconds) });
+    const result = spawnProcessBlocking([name, VERSION_FLAG], {
+        cwd: root,
+        timeoutMs: toolTimeoutMilliseconds(timeoutSeconds),
+    });
     if (result.code !== 0) throw new GspotError('tool', `Cannot determine the ${name} version for the tool project.`);
     return npmClientSchema.parse({ name, version: result.stdout.trim() });
 }

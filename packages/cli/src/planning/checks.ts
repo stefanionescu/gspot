@@ -1,8 +1,8 @@
-import { compact } from '#cli/system/values.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { coveredBy } from '#cli/repository/select.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { isOutsideChildren } from '#cli/repository/scopes.ts';
-import { currentOperatingSystem } from '#cli/system/environment.ts';
+import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -48,7 +48,7 @@ function planOne(context: PlanInputs, entry: PlanEntry, isRootCheck: boolean): P
         scope: isRootCheck ? rootScope : scope,
         check,
         ...filesFor(context, entry, isRootCheck),
-        ...compact({
+        ...stripUndefined({
             manifest,
             tool,
             base: options.base,
@@ -100,7 +100,7 @@ function planScope(context: PlanInputs, wholeSeen: Set<string>): PlannedCheck[] 
 
 function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const wholeSeen = new Set<string>();
-    const platform = currentOperatingSystem();
+    const platform = getOperatingSystem();
     const narrow = narrowSet(options);
     return session.scopes.map((scope) => {
         const context: PlanInputs = {

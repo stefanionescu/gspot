@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { compact } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
 import type { ToolInput, ToolFields, InstallerPin, ToolDeclaration } from '#cli/types/configurations.ts';
 import { regexSchema, commandSchema, conditionSchema, versionFloorSchema } from '#cli/configurations/schema/parts.ts';
@@ -165,9 +165,11 @@ const toolSchema = z
         for (const [name, definition] of Object.entries(definitions)) {
             if (definition === undefined) continue;
             installers[name] =
-                typeof definition === 'string' ? compact({ name: definition, version: tool.version }) : definition;
+                typeof definition === 'string'
+                    ? stripUndefined({ name: definition, version: tool.version })
+                    : definition;
         }
-        return { ...compact(tool), installers };
+        return { ...stripUndefined(tool), installers };
     }) satisfies z.ZodType<ToolDeclaration, ToolInput>;
 
 /** A name-only row refers to the complete declaration in another configuration. */

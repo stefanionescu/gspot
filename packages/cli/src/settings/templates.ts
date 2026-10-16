@@ -1,15 +1,15 @@
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { isRecord } from '#cli/system/values.ts';
+import { hashContent } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { contentDigest } from '#cli/system/text.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { templateSchema } from '#cli/settings/schema/templates.ts';
 import { emitSettings, parseTomlText } from '#cli/settings/file.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { unknownConfigurations } from '#cli/configurations/unknown-names.ts';
 import type { Template, ExportedTemplate } from '#cli/types/settings/file.ts';
-import { environmentVariable, environmentVariables } from '#cli/system/environment.ts';
+import { environmentVariable, buildSpawnEnvironment } from '#cli/system/environment.ts';
 
 import {
     RAW_HOST,
@@ -32,7 +32,7 @@ function githubRawUrl(source: string): string {
 async function downloadText(url: string): Promise<string> {
     const token =
         new URL(url).origin === new URL(RAW_HOST).origin
-            ? environmentVariable(environmentVariables(), GITHUB_TOKEN_VARIABLE)
+            ? environmentVariable(buildSpawnEnvironment(), GITHUB_TOKEN_VARIABLE)
             : undefined;
     const headers = token === undefined ? {} : { Authorization: `Bearer ${token}` };
     const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS), headers });
@@ -96,7 +96,7 @@ export function parseTemplate(text: string, source: string): Template {
     if (!result.success || errors.length > 0) throw new GspotError('template', errors.join('\n'));
     return {
         text,
-        digest: contentDigest(text),
+        digest: hashContent(text),
         source,
         tables: written,
     };

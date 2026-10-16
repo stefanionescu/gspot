@@ -3,11 +3,11 @@ import { printResult } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
-import { compact, isRecord } from '#cli/system/values.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { assertVersionPin } from '#cli/apply/version-pin.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
+import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
 import { type Settings, type ScopeSelection } from '#cli/types/settings/values.ts';
@@ -87,7 +87,7 @@ function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): Setting
         (table.tools === undefined ? [] : Object.entries(table.tools)).flatMap(([tool, { extra }]) =>
             isRecord(extra)
                 ? [
-                      compact({
+                      stripUndefined({
                           tool,
                           keys: Object.keys(extra),
                           reason: writtenSetting(table, `tools.${tool}.extra`)?.reason,
@@ -106,7 +106,7 @@ function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): Setting
                 value: entry.value,
                 source: entry.source,
                 origin: entry.origin,
-                ...compact({ originScope: entry.originScope }),
+                ...stripUndefined({ originScope: entry.originScope }),
                 reason_needed: entry.declaration.reason_needed,
                 scope,
             }));

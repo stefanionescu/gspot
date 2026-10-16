@@ -1,7 +1,7 @@
 // Assigns content and extension tags to repository files.
 import { posix } from 'node:path';
-import { extensionOf } from '#cli/system/paths.ts';
 import { parseShebang } from '#cli/parsers/shebang.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 import type { Tagged, FileEntry, ContentPrefix } from '#cli/types/repository/inventory.ts';
@@ -68,7 +68,7 @@ function withoutTrailingVersion(word: string): string {
  * @returns the path and content tags, and whether the file contains binary bytes.
  */
 export function tagEntry(entry: FileEntry, prefix: Buffer): Tagged {
-    const extension = extensionOf(entry.path);
+    const extension = extractExtension(entry.path);
     const base = posix.basename(entry.path);
     const flags: [boolean, string][] = [
         [entry.symlink, 'symlink'],

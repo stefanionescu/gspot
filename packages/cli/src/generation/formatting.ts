@@ -1,8 +1,8 @@
 import { dirname, relative } from 'node:path';
-import { toPosix } from '#cli/system/paths.ts';
 import { everyTable } from '#cli/settings/inherit.ts';
 import { byScopeDepth } from '#cli/repository/scopes.ts';
-import { compact, isRecord } from '#cli/system/values.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/system/locations.ts';
 import type { Settings, ScopeView } from '#cli/types/settings/values.ts';
 import type { WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';
@@ -69,10 +69,12 @@ function formatEntries(settings: Settings): ScopeFormat[] {
             return [{ scope, format }];
         });
     const base = tables.flatMap(({ scope, format: { override: _overrides, ...format } }) =>
-        scope === '' || Object.keys(format).length === 0 ? [] : [{ scope, paths: ['**/*'], format: compact(format) }],
+        scope === '' || Object.keys(format).length === 0
+            ? []
+            : [{ scope, paths: ['**/*'], format: stripUndefined(format) }],
     );
     const overrides = tables.flatMap(({ scope, format }) =>
-        (format.override ?? []).map(({ paths, ...format }) => ({ scope, paths, format: compact(format) })),
+        (format.override ?? []).map(({ paths, ...format }) => ({ scope, paths, format: stripUndefined(format) })),
     );
     return [...base, ...overrides];
 }
@@ -142,7 +144,7 @@ function prettierOptions(format: Partial<FormatSettings>): Record<string, unknow
  */
 export function prettierConfiguration(input: PrettierInput): Record<string, unknown> {
     const { settings, format, targetPath, extra, plugins } = input;
-    const prefix = toPosix(relative(dirname(targetPath), '.'));
+    const prefix = convertToPosixPath(relative(dirname(targetPath), '.'));
     const fromConfig = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
     const { overrides: extraOverrides = [], ...extras } = extra === undefined ? {} : extra;
     const overrides = [

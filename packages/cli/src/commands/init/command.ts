@@ -1,10 +1,10 @@
 import { confirm } from '@clack/prompts';
-import { compact } from '#cli/system/values.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { findRoot } from '#cli/repository/find-root.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { readTooling } from '#cli/repository/tooling.ts';
@@ -132,7 +132,7 @@ function registerInit(program: Command): void {
                     cwd: process.cwd(),
                     yes: flags.yes === true,
                     isDryRun: flags.dryRun === true,
-                    ...compact({ from: flags.from, configurations: flags.configurations }),
+                    ...stripUndefined({ from: flags.from, configurations: flags.configurations }),
                 }),
             );
         });
@@ -167,7 +167,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
         ci = settingsSchema.shape.ci.unwrap().in.shape.provider.parse(templateCi.provider);
     const answers = { hooks, ci, rules };
     const draft = draftSettings(selection, answers);
-    const effective = { ...draft, ...compact({ template: options.template }) };
+    const effective = { ...draft, ...stripUndefined({ template: options.template }) };
     const formats = readFormatTables(effective, repo, manifests, packageManifests);
     const settingsText = initSettingsText(effective, repo, manifests, formats);
     const settings = parseSettings(settingsText, root);

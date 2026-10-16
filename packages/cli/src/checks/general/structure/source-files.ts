@@ -1,5 +1,5 @@
-import { directoryOf } from '#cli/system/paths.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
 import { isInGspotFolder } from '#cli/repository/selectors.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { DirectoryEntry } from '#cli/types/checks/general.ts';
@@ -49,7 +49,7 @@ export function directoryTree(files: readonly { path: string }[]): Map<string, D
         const name = segments.pop();
         if (name === undefined) continue;
         for (const [depth, segment] of segments.entries()) put(segments.slice(0, depth).join('/'), segment, 'dir');
-        put(directoryOf(file.path), name, 'file');
+        put(extractParentFolder(file.path), name, 'file');
     }
     return new Map(
         [...tree].map(([directory, entries]) => [

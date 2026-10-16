@@ -6,7 +6,7 @@ import { runCommand } from '#tests/setup/processes.ts';
 import type { PackedSandbox } from '#tests/types/e2e.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/e2e-sandbox.ts';
 
 const FAKE_MISE = `console.log(${JSON.stringify(CI_PINS.mise.version)});\n`;
@@ -50,7 +50,7 @@ async function prepareFormatterSandbox(installation: PackedSandbox) {
 }
 
 test('the installed formatter reports and fixes source and keeps your package.json fields', async () => {
-    await using consumer = await createPackedSandbox(environmentVariables()['GSPOT_TEST_NPMRC']!);
+    await using consumer = await createPackedSandbox(buildSpawnEnvironment()['GSPOT_TEST_NPMRC']!);
 
     const { command } = consumer;
     const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterSandbox(consumer);

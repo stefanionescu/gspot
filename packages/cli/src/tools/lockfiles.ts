@@ -1,6 +1,6 @@
 import { parse as parseToml } from 'smol-toml';
+import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { lockfileMatches } from '#cli/tools/npm/lockfiles.ts';
 import { prepareNpmLockfile } from '#cli/tools/npm/project.ts';
 import { parseToolProject } from '#cli/parsers/tool-project.ts';
@@ -37,7 +37,7 @@ export function staleLockfiles(
     generated: GeneratedFile[],
 ): StaleLockfile[] {
     const { root } = session;
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     return generated
         .filter((manifest) => manifest.path === NPM_TOOL_PROJECT_FILE || manifest.path === PYTHON_TOOL_PROJECT_FILE)
         .flatMap((manifest) => {

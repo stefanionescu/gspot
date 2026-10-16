@@ -7,8 +7,8 @@ import { UV_TOOL } from '#cli/config/tools/python.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import type { InstallContext } from '#cli/types/install.ts';
+import { getOperatingSystem } from '#cli/system/environment.ts';
 import { requiredToolNames } from '#cli/planning/needed-tools.ts';
-import { currentOperatingSystem } from '#cli/system/environment.ts';
 import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/find.ts';
@@ -18,7 +18,7 @@ import { pinOf, misePins, missingBuild, toolProjectPins } from '#cli/configurati
 // Select only programs required by checks this operating system can run in hooks.
 function installationPrograms(session: Session, tools: ToolDeclaration[]) {
     const manifests = session.neededToolManifests;
-    const host = { platform: currentOperatingSystem(), arch: process.arch };
+    const host = { platform: getOperatingSystem(), arch: process.arch };
     const programNames = new Set(
         session.configuredChecks
             .filter(

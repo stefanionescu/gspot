@@ -3,14 +3,14 @@ import ts from 'typescript';
 import { CST, Lexer } from 'yaml';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import { extensionOf } from '#cli/system/paths.ts';
 import { sqlTokens } from '#cli/parsers/sql/lexer.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { blankOut, positionAt } from '#cli/system/text.ts';
 import type { GrammarName } from '#cli/types/parsers/tree-sitter.ts';
 import { tomlRange, tomlSyntax } from '#cli/parsers/toml/comments.ts';
+import { convertToSpaces, computePosition } from '#cli/system/text.ts';
 import type { CommentReader, SourceComment } from '#cli/types/parsers/comments.ts';
 
 import {
@@ -107,14 +107,14 @@ function sqlComments(text: string): SourceComment[] {
     const comments: SourceComment[] = [];
     for (const { start, end, kind } of sqlTokens(text)) {
         if (kind !== 'line-comment' && kind !== 'block-comment') continue;
-        comments.push(commentAt(text, start, end, positionAt(text, start).line));
+        comments.push(commentAt(text, start, end, computePosition(text, start).line));
     }
     return comments;
 }
 
 // Only Markdown HTML nodes can contain HTML comments. Keep offsets while hiding code examples and prose.
 function markdownHtml(text: string): string {
-    const masked = blankOut(text);
+    const masked = convertToSpaces(text);
     const pieces: string[] = [];
     let offset = 0;
     visit(fromMarkdown(text), 'html', (node) => {
@@ -210,6 +210,6 @@ export function commentText(text: string): string {
 export async function parseComments(path: string, text: string): Promise<SourceComment[]> {
     const grammar = TREE_COMMENT_LANGUAGES.find((language) => language === path);
     if (grammar !== undefined) return treeComments(grammar, text, text);
-    const reader = COMMENT_READERS.get(extensionOf(path));
+    const reader = COMMENT_READERS.get(extractExtension(path));
     return reader === undefined ? [] : reader(text, path);
 }

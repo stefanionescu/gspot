@@ -1,8 +1,8 @@
 import { joinScope } from '#cli/repository/scopes.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { SECONDS_PER_DAY } from '#cli/config/units.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
-import { openSafeFolder } from '#cli/system/files/open.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
@@ -25,7 +25,7 @@ import {
  * @returns each file path and its installation key changes.
  */
 export function bunfigChanges(root: string, scopes: ScopeSelection[]): FileEdit[] {
-    using files = openSafeFolder(root);
+    using files = openFiles(root);
     const selected = scopes
         .filter((selection) =>
             selection.selected.some((manifest) => manifest.configuration.name === DEPENDENCIES_CONFIGURATION),

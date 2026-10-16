@@ -4,10 +4,10 @@ import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { fileMode } from '#cli/system/files/entries.ts';
 import { settingsText } from '#tests/setup/settings.ts';
 import { installedModules } from '#tests/setup/modules.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import type { TypecheckOutcome } from '#tests/types/tool-output.ts';
 import { stat, chmod, readdir, symlink, writeFile } from 'node:fs/promises';
 import { installCompiler, installToolProjects } from '#tests/setup/install.ts';
@@ -135,7 +135,7 @@ configurations = ["typescript"]
         expect(corrected.code, corrected.output).toBe(0);
         expect(await Bun.file(join(sandbox.path, scope, 'tsconfig.json')).text()).toBe(authored);
         const { mode } = await stat(join(sandbox.path, scope, 'tsconfig.json'));
-        expect(mode & 0o777).toBe(fileMode({ mode: 0o640 }));
+        expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
         expect(await Bun.file(join(sandbox.path, scope, 'build/cache.tsbuildinfo')).text()).toBe('authored metadata\n');
     },
 );

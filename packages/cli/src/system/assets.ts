@@ -2,15 +2,15 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
-import { toPosix } from '#cli/system/paths.ts';
 import { statSync, readFileSync } from 'node:fs';
-import { globPaths } from '#cli/system/files/folders.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { ALL_FILES_GLOB, GRAMMARS_FOLDER, CLI_PACKAGE_JSON, PACKAGE_SEARCH_DEPTH } from '#cli/config/system/assets.ts';
 
 let cachedPackageFolder: string | undefined;
 
 // The nearest folder above the running code with a package.json and the configurations, or undefined.
-function nearestPackage(): string | undefined {
+function findNearestPackage(): string | undefined {
     let dir = dirname(fileURLToPath(import.meta.url));
     for (let index = 0; index < PACKAGE_SEARCH_DEPTH; index += 1) {
         if (
@@ -25,8 +25,8 @@ function nearestPackage(): string | undefined {
 
 // The package folder that holds the running code. The source tree and an installed package both have one. Code bundled
 // into another build, such as the documentation site, finds the package through module resolution instead.
-function packageFolder(): string {
-    cachedPackageFolder ??= nearestPackage() ?? dirname(createRequire(import.meta.url).resolve(CLI_PACKAGE_JSON));
+function getPackageFolder(): string {
+    cachedPackageFolder ??= findNearestPackage() ?? dirname(createRequire(import.meta.url).resolve(CLI_PACKAGE_JSON));
     return cachedPackageFolder;
 }
 
@@ -35,8 +35,8 @@ function packageFolder(): string {
  * @param path the asset path, such as `configurations/language/bash/manifest.toml`.
  * @returns the absolute path.
  */
-export function assetPath(path: string): string {
-    return join(packageFolder(), path);
+export function buildAssetPath(path: string): string {
+    return join(getPackageFolder(), path);
 }
 
 /**
@@ -45,7 +45,7 @@ export function assetPath(path: string): string {
  * @returns the text.
  */
 export function readAsset(path: string): string {
-    return readFileSync(assetPath(path), 'utf8');
+    return readFileSync(buildAssetPath(path), 'utf8');
 }
 
 /**
@@ -53,8 +53,8 @@ export function readAsset(path: string): string {
  * @param name the file name, such as `bash.wasm`.
  * @returns the WASM file path.
  */
-export function wasmPath(name: string): string {
-    const root = packageFolder();
+export function findWasmPath(name: string): string {
+    const root = getPackageFolder();
     const path = join(root, GRAMMARS_FOLDER, name);
     if (statSync(path, { throwIfNoEntry: false }) !== undefined) return path;
     throw new Error(`The WebAssembly file ${name} is missing from the installed package. Reinstall gspot.`);
@@ -66,9 +66,9 @@ export function wasmPath(name: string): string {
  * @returns the paths.
  */
 export function listAssets(prefix: string): string[] {
-    const dir = join(packageFolder(), prefix);
+    const dir = join(getPackageFolder(), prefix);
     if (statSync(dir, { throwIfNoEntry: false }) === undefined) return [];
-    return globPaths(dir, ALL_FILES_GLOB)
-        .map((path) => toPosix(join(prefix, path)))
+    return listMatchingPaths(dir, ALL_FILES_GLOB)
+        .map((path) => convertToPosixPath(join(prefix, path)))
         .toSorted((a, b) => a.localeCompare(b));
 }

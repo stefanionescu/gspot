@@ -8,7 +8,7 @@ import { isWindows } from '#tests/setup/operating-systems.ts';
 import type { SpawnOutcome } from '#tests/types/processes.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/bash/tools.ts';
-import { environmentVariables } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { PUSH_CONTENT, GIT_TEST_CONFIG, GIT_TEST_ENVIRONMENT, SANDBOX_COMMIT_STEPS } from '#tests/config/git.ts';
 
 /**
@@ -22,7 +22,7 @@ import { PUSH_CONTENT, GIT_TEST_CONFIG, GIT_TEST_ENVIRONMENT, SANDBOX_COMMIT_STE
 export function git(cwd: string, argv: readonly string[], environment: Record<string, string> = {}): SpawnOutcome {
     const result = runCommandBlocking(['git', ...GIT_TEST_CONFIG, ...argv], {
         cwd,
-        env: { ...environmentVariables(), ...GIT_TEST_ENVIRONMENT, ...environment },
+        env: { ...buildSpawnEnvironment(), ...GIT_TEST_ENVIRONMENT, ...environment },
     });
     return { code: result.code, stdout: result.stdout, stderr: result.stderr };
 }

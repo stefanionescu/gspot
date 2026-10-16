@@ -3,14 +3,14 @@ import { join, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { SchemaShape } from '#cli/types/objects.ts';
-import { scratchFolder } from '#cli/system/files/folders.ts';
 import { runCheckTool } from '#cli/execution/command/tool.ts';
-import { toPosix, toolOutputPath } from '#cli/system/paths.ts';
 import { toolFindings } from '#cli/execution/command/output.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { TOOL_FILE_DIRECTORY } from '#cli/config/system/locations.ts';
 import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { writeTsconfig } from '#cli/checks/language/typescript/project.ts';
 import { type Finding, type CheckInput } from '#cli/types/execution/check.ts';
+import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
 import { TSCONFIG_FILE, TYPESCRIPT_TSCONFIG_CHECK } from '#cli/config/parsers/tsconfig.ts';
 
 import {
@@ -58,7 +58,7 @@ function svelteFindings(input: CheckInput, stdout: string): Finding[] {
             findingAt(
                 input,
                 {
-                    file: joinScope(input.selection.scope.path, toolOutputPath(diagnostic.filename)),
+                    file: joinScope(input.selection.scope.path, normalizeOutputPath(diagnostic.filename)),
                     line: diagnostic.start.line + 1,
                     column: diagnostic.start.character + 1,
                 },
@@ -74,7 +74,7 @@ function svelteFindings(input: CheckInput, stdout: string): Finding[] {
  * @returns one finding for each error and warning.
  */
 export async function svelteCheck(input: CheckInput): Promise<Finding[]> {
-    using runtime = scratchFolder();
+    using runtime = createScratchFolder();
     const target = join(runtime.path, TOOL_FILE_DIRECTORY, input.selection.scope.path, TSCONFIG_FILE);
     const options = Object.fromEntries(
         Object.entries(requiredTsconfigOptions(input.settingsFile.settings.level, input.selection.selected)).filter(
@@ -85,7 +85,7 @@ export async function svelteCheck(input: CheckInput): Promise<Finding[]> {
         root: input.root,
         typeRootsFolder: input.installedRoot,
         reads: input.reads,
-        target: toPosix(relative(input.root, target)),
+        target: convertToPosixPath(relative(input.root, target)),
         scope: input.selection.scope.path,
         files: input.repositoryFiles,
         scopeEntries: input.scopeEntries,

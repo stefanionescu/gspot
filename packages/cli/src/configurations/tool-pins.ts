@@ -1,6 +1,6 @@
-import { compact } from '#cli/system/values.ts';
 import { NODE_TOOL } from '#cli/config/tools/npm.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import { MISE_BACKENDS, PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
 import { manifestError, configurationManifests } from '#cli/configurations/manifests.ts';
@@ -68,7 +68,7 @@ export function pinOf(tool: ToolDeclaration): MisePin | undefined {
     const excluded = toolProjectPackage(tool) !== undefined;
     const pin = excluded ? undefined : misePin(tool);
     if (pin?.version === undefined) return undefined;
-    return { name: pin.name, version: pin.version, ...compact({ options: pin.options }) };
+    return { name: pin.name, version: pin.version, ...stripUndefined({ options: pin.options }) };
 }
 
 /**

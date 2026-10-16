@@ -57,8 +57,8 @@ test('a failed npm version lookup gives the tool error in text and JSON', async 
         'entry.sh': 'echo example\n',
     });
     const before = await readTree(directory.path);
-    const run = processes.runBlocking;
-    using boundary = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+    const run = processes.spawnProcessBlocking;
+    using boundary = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
         if (command[0] !== 'npm' || command[1] !== '--version') return run(command, options);
         return { code: 7, missing: false, duration: 0, stdout: '', stderr: 'version lookup failed' };
     });
