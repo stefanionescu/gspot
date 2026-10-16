@@ -21,7 +21,6 @@ node_modules/
 /packages/*/dist/
 /packages/*/LICENSE.md
 /packages/cli/grammars/
-/packages/cli/gspot.schema.json
 /docs/dist/
 /docs/.astro/
 /docs/.wrangler/
