@@ -28,12 +28,12 @@ function recordLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
 }
 
 /**
- * Read lockfile drift for generated tool projects without resolving or writing.
+ * List the state of each tool project lockfile. Nothing gets resolved or written.
  *
- * @param session the repository root and actual selected npm client.
- * @param generated the proposed project manifests.
+ * @param session the repository root and the package manager.
+ * @param generated the tool project files that apply writes.
  *
- * @returns missing, mismatched, or current lockfiles.
+ * @returns each lockfile with its state: missing, mismatched, or current.
  */
 export function listStaleLockfiles(
     session: Pick<Session, 'root' | 'requirePackageManagerName'>,
@@ -42,15 +42,18 @@ export function listStaleLockfiles(
     const { root } = session;
     using files = openFiles(root);
     return generated
-        .filter((manifest) => manifest.path === NPM_TOOL_PROJECT_FILE || manifest.path === PYTHON_TOOL_PROJECT_FILE)
-        .flatMap((manifest) => {
+        .filter(
+            (toolProjectFile) =>
+                toolProjectFile.path === NPM_TOOL_PROJECT_FILE || toolProjectFile.path === PYTHON_TOOL_PROJECT_FILE,
+        )
+        .flatMap((toolProjectFile) => {
             const npm =
-                manifest.path === NPM_TOOL_PROJECT_FILE
-                    ? parseToolProject(manifest.content, session.requirePackageManagerName())
+                toolProjectFile.path === NPM_TOOL_PROJECT_FILE
+                    ? parseToolProject(toolProjectFile.content, session.requirePackageManagerName())
                     : undefined;
             const python =
-                manifest.path === PYTHON_TOOL_PROJECT_FILE
-                    ? pythonToolProjectSchema.parse(parseToml(manifest.content))
+                toolProjectFile.path === PYTHON_TOOL_PROJECT_FILE
+                    ? pythonToolProjectSchema.parse(parseToml(toolProjectFile.content))
                     : undefined;
             const path = npm === undefined ? UV_LOCKFILE : npm.lockfilePath;
             const recorded = files.read(path);

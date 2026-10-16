@@ -49,7 +49,7 @@ import {
 // Resolve in a disposable directory; keep repository credentials out of the portable result.
 async function createNpmLockfile(
     context: InstallContext,
-    manifest: GeneratedFile,
+    toolProjectFile: GeneratedFile,
     project: NpmToolProject,
     recorded: string | undefined,
     yarn: string | undefined,
@@ -62,7 +62,7 @@ async function createNpmLockfile(
         );
     using scratch = createScratchFolder();
     const work = scratch.path;
-    writeFileSync(join(work, PACKAGE_JSON), manifest.content);
+    writeFileSync(join(work, PACKAGE_JSON), toolProjectFile.content);
 
     if (yarn !== undefined) writeFileSync(join(work, YARN_SETTINGS_FILE), yarn);
     if (recorded !== undefined && isLockfileCurrent(packageManager.name, recorded, project.dependencies))
@@ -192,24 +192,24 @@ async function verifyPackageManagerVersion(context: InstallContext): Promise<voi
  * Prepare the npm tool project's credential-free lockfile.
  *
  * @param context the selected tools, repository writer, session, and command log.
- * @param manifest the generated package.json.
+ * @param toolProjectFile the generated package.json.
  * @param yarn the generated Yarn settings.
  *
  * @returns the lockfile and its recorded bytes.
  */
 async function prepareNpmLockfile(
     context: InstallContext,
-    manifest: GeneratedFile,
+    toolProjectFile: GeneratedFile,
     yarn: string | undefined,
 ): Promise<GeneratedFile> {
     const { root } = context.session;
     const owner = context.writer.files;
     const packageManager = context.session.requirePackageManager();
-    const project = parseToolProject(manifest.content, packageManager.name);
+    const project = parseToolProject(toolProjectFile.content, packageManager.name);
     const original = owner.read(project.lockfilePath);
     const recorded = original?.bytes.toString('utf8');
     if (
-        owner.read(NPM_TOOL_PROJECT_FILE)?.bytes.equals(Buffer.from(manifest.content)) === true &&
+        owner.read(NPM_TOOL_PROJECT_FILE)?.bytes.equals(Buffer.from(toolProjectFile.content)) === true &&
         recorded !== undefined &&
         isLockfileCurrent(packageManager.name, recorded, project.dependencies)
     ) {
@@ -223,7 +223,7 @@ async function prepareNpmLockfile(
         );
         return buildLockfileResult(project.lockfilePath, recorded, original);
     }
-    const lockfile = await createNpmLockfile(context, manifest, project, recorded, yarn);
+    const lockfile = await createNpmLockfile(context, toolProjectFile, project, recorded, yarn);
     return buildLockfileResult(project.lockfilePath, lockfile, original);
 }
 
@@ -238,10 +238,10 @@ async function installNpmTools(context: InstallContext): Promise<string> {
     const { session } = context;
     const { root } = session;
     const owner = context.writer.files;
-    const manifest = owner.read(NPM_TOOL_PROJECT_FILE);
-    if (manifest === undefined) return '';
+    const toolProjectFile = owner.read(NPM_TOOL_PROJECT_FILE);
+    if (toolProjectFile === undefined) return '';
     const packageManager = session.requirePackageManager();
-    const project = parseToolProject(manifest.bytes.toString('utf8'), session.requirePackageManagerName());
+    const project = parseToolProject(toolProjectFile.bytes.toString('utf8'), session.requirePackageManagerName());
     const lockfile = owner.read(project.lockfilePath)?.bytes.toString('utf8');
     if (lockfile === undefined || !isLockfileCurrent(packageManager.name, lockfile, project.dependencies))
         throw new GspotError('installation', 'Run: gspot install');

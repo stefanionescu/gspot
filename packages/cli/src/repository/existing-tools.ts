@@ -284,8 +284,10 @@ export function readExistingTools(
     const manifests = readManifests(reads);
     const npmNames = listNpmToolNames(manifests.values());
     const toolOnlyPackages = dependencyFiles
-        .filter((fact) => fact.kind === 'package.json' && isToolOnlyPackage(fact, npmNames))
-        .map((fact) => fact.path)
+        .filter(
+            (dependencyFile) => dependencyFile.kind === 'package.json' && isToolOnlyPackage(dependencyFile, npmNames),
+        )
+        .map((dependencyFile) => dependencyFile.path)
         .toSorted((a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON));
 
     const inventory = new Set(

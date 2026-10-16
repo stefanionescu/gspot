@@ -2,7 +2,7 @@
 import type { z } from 'zod';
 import type { ErrorCode } from '#cli/types/errors.ts';
 
-/** An error with a failure code, so callers can branch. gspot reports any other error as an internal error. */
+/** Carries a failure code for callers to branch on. gspot reports anything else thrown as an internal failure. */
 export class GspotError extends Error {
     readonly code: ErrorCode;
 

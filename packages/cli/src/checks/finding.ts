@@ -30,8 +30,8 @@ export function buildFinding(
 /**
  * The place of a parsed source node: its file, and its line and column counted from one.
  * @param file the repository path of the source.
- * @param node the node that the finding points at.
- * @returns the file, line, and column of the node.
+ * @param node what the finding points at.
+ * @returns the file, line, and column.
  */
 export function locateNode(file: string, node: Node): FindingPlace {
     return { file, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };

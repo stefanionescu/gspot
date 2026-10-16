@@ -172,10 +172,10 @@ export function readToolProjectPackage(files: Files, repositoryRoot: string, pat
 }
 
 /**
- * Read the path and version of a dependency resolved from its actual project manifest, including hoisted installations.
- * @param repositoryRoot the base folder for resolving the source project manifest.
+ * Read the path and version of an installed package, hoisted or not, as its dependency file resolves it.
+ * @param repositoryRoot the base folder for resolving the dependency file.
  * @param manifest the repository-relative package.json used as the module-resolution base.
- * @param name the package to resolve through the source project manifest.
+ * @param name the package to resolve through the dependency file.
  * @returns the resolved manifest and its version, or undefined when the dependency does not exist.
  */
 export function findInstalledDependency(

@@ -152,7 +152,7 @@ function buildWholeFiles(session: Session, declarations: ToolFileSelection[], st
     }
 }
 
-// A pointer-only declaration replaces the generic pointer for the same scope and declared target.
+// A pointer-only declaration replaces the generic one for the same scope and declared target.
 function collectPointerOnlyPaths(declarations: ToolFileSelection[], selected: ToolFileSelection): Set<string> {
     return new Set(
         declarations

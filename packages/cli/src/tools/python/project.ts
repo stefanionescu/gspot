@@ -150,14 +150,14 @@ const pythonToolProjectSchema = z.object({
  * Resolve the Python tool lockfile outside the repository before writing it.
  *
  * @param context the selected tools, repository writer, session, and command log.
- * @param manifest the generated pyproject.toml.
+ * @param toolProjectFile the generated pyproject.toml.
  *
  * @returns credential-free lockfile bytes.
  */
-async function preparePythonLockfile(context: InstallContext, manifest: GeneratedFile): Promise<GeneratedFile> {
+async function preparePythonLockfile(context: InstallContext, toolProjectFile: GeneratedFile): Promise<GeneratedFile> {
     const { root, uvPath } = context.session;
     const owner = context.writer.files;
-    const project = pythonToolProjectSchema.parse(parse(manifest.content));
+    const project = pythonToolProjectSchema.parse(parse(toolProjectFile.content));
     const original = owner.read(UV_LOCKFILE);
     const recorded = original?.bytes.toString('utf8');
     if (isPythonLockfileCurrent(project, recorded)) {
@@ -174,7 +174,7 @@ async function preparePythonLockfile(context: InstallContext, manifest: Generate
     }
     using scratch = createScratchFolder();
     const work = scratch.path;
-    writeFileSync(join(work, PYPROJECT_TOML), manifest.content);
+    writeFileSync(join(work, PYPROJECT_TOML), toolProjectFile.content);
 
     const credentials = writePythonSettings(root, work);
     const executable = uvPath;
@@ -198,8 +198,8 @@ async function preparePythonLockfile(context: InstallContext, manifest: Generate
 async function installPythonTools(context: InstallContext, executable: string): Promise<string> {
     const { root } = context.session;
     const owner = context.writer.files;
-    const manifest = owner.read(PYTHON_TOOL_PROJECT_FILE);
-    if (manifest === undefined) return '';
+    const toolProjectFile = owner.read(PYTHON_TOOL_PROJECT_FILE);
+    if (toolProjectFile === undefined) return '';
     const work = join(root, DOT_GSPOT);
 
     using settings = createScratchFolder();
@@ -213,7 +213,7 @@ async function installPythonTools(context: InstallContext, executable: string): 
             configFile: join(settings.path, UV_SETTINGS_FILE),
         });
     }
-    const project = pythonToolProjectSchema.parse(parse(manifest.bytes.toString('utf8')));
+    const project = pythonToolProjectSchema.parse(parse(toolProjectFile.bytes.toString('utf8')));
     return `installed ${formatCount(project.project.dependencies.length, 'Python tool')} in .gspot/.venv`;
 }
 
@@ -261,7 +261,7 @@ function isTomlSyntaxError(error: unknown): boolean {
  */
 function isPythonLockfileCurrent(project: PythonToolProject, lockfile: string | undefined): lockfile is string {
     if (lockfile === undefined) return false;
-    const manifest = project.project;
+    const projectTable = project.project;
     let document: unknown;
     try {
         document = parse(lockfile);
@@ -272,9 +272,11 @@ function isPythonLockfileCurrent(project: PythonToolProject, lockfile: string | 
     const validated = uvLockSchema.safeParse(document);
     if (!validated.success) return false;
     const recorded = validated.data;
-    const projectEntry = recorded.package.find((entry) => entry.name === manifest.name && entry.source.virtual === '.');
-    if (projectEntry === undefined || recorded['requires-python'] !== manifest['requires-python']) return false;
-    const expected = manifest.dependencies
+    const projectEntry = recorded.package.find(
+        (entry) => entry.name === projectTable.name && entry.source.virtual === '.',
+    );
+    if (projectEntry === undefined || recorded['requires-python'] !== projectTable['requires-python']) return false;
+    const expected = projectTable.dependencies
         .map((value) => value.replace(PINNED_PACKAGE_NAME, normalizePythonPackage))
         .toSorted((left, right) => left.localeCompare(right));
     return isDeepStrictEqual(normalizeRequirements(projectEntry.metadata['requires-dist']), expected);

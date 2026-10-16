@@ -53,10 +53,10 @@ export function readPackageJson(repositoryRoot: string, path: string): PackageJs
 }
 
 /**
- * True when an npm manifest holds only declared npm tools or recognized Git hook managers.
- * @param dependencyFile the parsed project manifest.
- * @param npmNames declared npm installer packages.
- * @returns whether it holds tooling only.
+ * True for a tool-only package: a package.json with only declared npm tools and Git hook packages.
+ * @param dependencyFile the parsed file.
+ * @param npmNames the package names of the declared npm tools.
+ * @returns whether the file holds tools only.
  */
 export function isToolOnlyPackage(dependencyFile: DependencyFile, npmNames: ReadonlySet<string>): boolean {
     if (dependencyFile.kind !== 'package.json') return false;
@@ -67,7 +67,7 @@ export function isToolOnlyPackage(dependencyFile: DependencyFile, npmNames: Read
 
 /**
  * Get dependencies from the nearest declared npm project that contains a scope.
- * @param dependencyFiles validated source project manifests.
+ * @param dependencyFiles the validated files.
  * @param scope the repository-relative project scope.
  * @returns declared dependencies without borrowing from children or siblings.
  */

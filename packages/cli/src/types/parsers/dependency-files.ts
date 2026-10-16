@@ -31,12 +31,12 @@ export type PackageJson = {
     engines?: Record<string, string> | undefined;
 };
 
-/** An installed dependency resolved from an actual project manifest. */
+/** An installed package, resolved from a dependency file. */
 export type InstalledDependency = { path: string; version: string | undefined };
 
 export type DependencyMap = Record<string, string>;
 
-/** Dependencies and runtime evidence from one supported project manifest. */
+/** The packages and runtimes that one supported dependency file declares. */
 export type DependencyFile = {
     path: string;
     kind: 'package.json' | 'pyproject.toml' | 'Package.swift' | 'Pipfile' | 'requirements.txt';

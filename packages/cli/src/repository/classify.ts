@@ -58,10 +58,10 @@ import {
 
 // Every tracked path has one kind: source, generated, vendored, binary.
 
-function findDeclaredKind(path: string, rules: ClassificationInputs): FileClassification | undefined {
-    const attribute = findAttributeKind(rules.attributes.get(path));
+function findDeclaredKind(path: string, inputs: ClassificationInputs): FileClassification | undefined {
+    const attribute = findAttributeKind(inputs.attributes.get(path));
     if (attribute !== undefined) return attribute;
-    const declaration = rules.declarations.find((entry) => buildPathMatcher(entry.paths)(path));
+    const declaration = inputs.declarations.find((entry) => buildPathMatcher(entry.paths)(path));
     return declaration === undefined ? undefined : { kind: declaration.kind, origin: declaration.configuration };
 }
 
@@ -110,19 +110,19 @@ function classifyManagedDocument(root: string, entry: ListedFile, prefix: Buffer
  * @param file.entry the tracked file entry.
  * @param file.prefix the initial file bytes.
  * @param file.isBinary whether the initial bytes contain binary data.
- * @param rules the generated and vendored declarations and captured Git attributes.
+ * @param inputs the generated and vendored declarations and captured Git attributes.
  * @returns the kind and where it came from.
  */
 function classifyKind(
     file: { root: string; entry: ListedFile; prefix: Buffer; isBinary: boolean },
-    rules: ClassificationInputs,
+    inputs: ClassificationInputs,
 ): FileClassification {
     const { root, entry, isBinary, prefix } = file;
     const { path } = entry;
-    const declared = findDeclaredKind(path, rules);
+    const declared = findDeclaredKind(path, inputs);
     if (declared) return declared;
     // Explicit text attributes override binary content and extension hints.
-    if (isBinary && rules.attributes.get(path)?.[TEXT_ATTRIBUTE] !== ATTRIBUTE_SET)
+    if (isBinary && inputs.attributes.get(path)?.[TEXT_ATTRIBUTE] !== ATTRIBUTE_SET)
         return { kind: 'binary', origin: 'content' };
     if (isLicenseFile(path)) return { kind: 'vendored', origin: 'license' };
     const managed = findGeneratedKind(path, prefix);
@@ -219,17 +219,17 @@ function findLockfile(path: string): Lockfile | undefined {
  * @param repositoryRoot the base folder for resolving tracked entries.
  * @param entry the tracked file entry.
  * @param prefix the initial file bytes.
- * @param rules the file declarations used for classification.
+ * @param inputs the file declarations used for classification.
  * @returns the file kind and its classification source.
  */
 function classifyFile(
     repositoryRoot: string,
     entry: ListedFile,
     prefix: Buffer,
-    rules: ClassificationInputs,
+    inputs: ClassificationInputs,
 ): TrackedFile {
     const tagged = tagFile(entry, prefix);
-    const verdict = classifyKind({ root: repositoryRoot, entry, prefix, isBinary: tagged.isBinary }, rules);
+    const verdict = classifyKind({ root: repositoryRoot, entry, prefix, isBinary: tagged.isBinary }, inputs);
     return {
         path: entry.path,
         kind: verdict.kind,

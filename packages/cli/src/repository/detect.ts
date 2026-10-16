@@ -14,9 +14,9 @@ import type { DetectionEvidence, ConfigurationEvidence } from '#cli/types/reposi
 
 function collectDependencies(dependencyFiles: DependencyFile[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();
-    for (const fact of dependencyFiles) {
-        if (!isInScope(fact.path, scope)) continue;
-        for (const name of Object.keys(fact.dependencies)) dependencies.set(name, fact.path);
+    for (const dependencyFile of dependencyFiles) {
+        if (!isInScope(dependencyFile.path, scope)) continue;
+        for (const name of Object.keys(dependencyFile.dependencies)) dependencies.set(name, dependencyFile.path);
     }
     return dependencies;
 }
@@ -32,14 +32,16 @@ function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFil
         ),
     );
     const paths = new Set(candidates.map((file) => file.path));
-    const scopeDependencyFiles = dependencyFiles.filter((fact) => paths.has(fact.path));
+    const scopeDependencyFiles = dependencyFiles.filter((dependencyFile) => paths.has(dependencyFile.path));
     const runtimes = new Map([
         ...candidates.flatMap((file) =>
             file.tags
                 .filter((tag) => tag.startsWith(RUNTIME_TAG))
                 .map((tag) => [tag.slice(RUNTIME_TAG.length), `${file.path} shebang`] as const),
         ),
-        ...scopeDependencyFiles.flatMap((fact) => (fact.runtimes === undefined ? [] : Object.entries(fact.runtimes))),
+        ...scopeDependencyFiles.flatMap((dependencyFile) =>
+            dependencyFile.runtimes === undefined ? [] : Object.entries(dependencyFile.runtimes),
+        ),
     ]);
     for (const file of candidates) {
         const extension = extractExtension(file.path);

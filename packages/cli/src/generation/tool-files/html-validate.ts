@@ -8,7 +8,7 @@ import {
     HTML_VALIDATE_EXTENDS,
 } from '#cli/config/generation/html.ts';
 
-// The HTML Validate rules for the level, with the rules that the check's ignores turn off.
+// The HTML Validate rules for the level, minus those that the check's ignores turn off.
 function writeHtmlValidateFile(context: ToolFileContext, check: string, overrides: Record<string, unknown>): string {
     const rules: Record<string, unknown> = { ...HTML_RULES, ...overrides };
     for (const rule of [...(context.level === 'all' ? [] : HTML_ALL_RULES), ...context.selection.view.rulesOff(check)])
@@ -17,7 +17,7 @@ function writeHtmlValidateFile(context: ToolFileContext, check: string, override
 }
 
 /**
- * Write the HTML Validate rules for the HTML files in the repository.
+ * HTML Validate rules for the pages in the repository.
  * @param context the repository, scope settings, tool declaration, and output path.
  * @returns the rules of html/html-validate.
  */
@@ -26,7 +26,7 @@ function buildSourceHtmlFile(context: ToolFileContext): string {
 }
 
 /**
- * Write the HTML Validate rules for the pages a site build writes, which allow the markup that build tools add.
+ * HTML Validate rules for built site pages. They allow the markup that site generators add.
  * @param context the repository, scope settings, tool declaration, and output path.
  * @returns the rules of site/html-validate.
  */

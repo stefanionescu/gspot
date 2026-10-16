@@ -111,7 +111,9 @@ export function findScopes(
     const patterns = configurations.flatMap((manifest) => manifest.detect.project_files);
     const npmNames = listNpmToolNames(configurations);
     const toolOnlyPackages = new Set(
-        dependencyFiles.filter((fact) => isToolOnlyPackage(fact, npmNames)).map((fact) => fact.path),
+        dependencyFiles
+            .filter((dependencyFile) => isToolOnlyPackage(dependencyFile, npmNames))
+            .map((dependencyFile) => dependencyFile.path),
     );
     const folders = new Set<string>();
     const sources = files.filter(
