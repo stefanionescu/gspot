@@ -22,10 +22,9 @@ function buildRemovalEdit(
     const current = scopeSettings.configurations;
     return (written) => {
         const scopeTable = findScopeTable(written, options.scope);
-        const list = current;
-        const removed = options.configurations.filter((id) => list.includes(id));
+        const removed = options.configurations.filter((id) => current.includes(id));
         if (removed.length === 0) return;
-        scopeTable['configurations'] = list.filter((id) => !removed.includes(id));
+        scopeTable['configurations'] = current.filter((id) => !removed.includes(id));
         scopeTable['removed_configurations'] = [...new Set([...scopeSettings.removed_configurations, ...removed])];
     };
 }

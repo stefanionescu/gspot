@@ -44,33 +44,30 @@ function listFragmentConfigurations(
 }
 
 function buildFragment(manifest: Manifest, inputs: EslintContext): EslintFragment {
-    const builder = (
-        {
-            astro: buildAstroFragment,
-            vue: buildVueFragment,
-            svelte: buildSvelteFragment,
-            expo: buildLintRuleFragment,
-            nextjs: buildNextjsFragment,
-            typescript: buildTypescriptFragment,
-            zustand: buildZustandFragment,
-            'testing-library': buildTestingLibraryFragment,
-            jest: buildJestFragment,
-            vitest: buildVitestFragment,
-            react: buildReactFragment,
-            'react-dom': buildReactDomFragment,
-            'react-native': buildLintRuleFragment,
-            nestjs: buildNestjsFragment,
-            express: buildLintRuleFragment,
-            drizzle: buildDrizzleFragment,
-            zod: buildLintRuleFragment,
-            'tanstack-query': buildTanstackQueryFragment,
-            translations: buildLintRuleFragment,
-        } as Record<string, (inputs: EslintContext, configuration: string) => EslintFragment>
-    )[manifest.configuration.name];
-    return (builder as (values: EslintContext, configuration: string) => EslintFragment)(
-        inputs,
-        manifest.configuration.name,
-    );
+    const builders: Record<string, (inputs: EslintContext, configuration: string) => EslintFragment> = {
+        astro: buildAstroFragment,
+        vue: buildVueFragment,
+        svelte: buildSvelteFragment,
+        expo: buildLintRuleFragment,
+        nextjs: buildNextjsFragment,
+        typescript: buildTypescriptFragment,
+        zustand: buildZustandFragment,
+        'testing-library': buildTestingLibraryFragment,
+        jest: buildJestFragment,
+        vitest: buildVitestFragment,
+        react: buildReactFragment,
+        'react-dom': buildReactDomFragment,
+        'react-native': buildLintRuleFragment,
+        nestjs: buildNestjsFragment,
+        express: buildLintRuleFragment,
+        drizzle: buildDrizzleFragment,
+        zod: buildLintRuleFragment,
+        'tanstack-query': buildTanstackQueryFragment,
+        translations: buildLintRuleFragment,
+    };
+    const builder = builders[manifest.configuration.name];
+    if (builder === undefined) throw new Error(`No ESLint fragment builder for ${manifest.configuration.name}.`);
+    return builder(inputs, manifest.configuration.name);
 }
 
 // The text emitted by each selected ESLint fragment.
