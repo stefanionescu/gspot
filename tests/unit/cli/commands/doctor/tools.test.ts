@@ -1,5 +1,4 @@
 import semver from 'semver';
-import executables from 'which';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { mkdir, symlink } from 'node:fs/promises';
@@ -11,6 +10,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { useExecutable } from '#tests/setup/processes.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
@@ -93,10 +93,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     });
     const session = await openSession(sandbox.path);
     const tools = listDistinctTools(session.neededToolManifests);
-    using _which = spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) => {
-        const path = join(sandbox.path, 'tool-bin', 'pytest');
-        return options?.all === true ? [path] : path;
-    }) as typeof executables.sync);
+    using _which = useExecutable(join(sandbox.path, 'tool-bin', 'pytest'));
     const nativeVersion = processes.spawnProcessBlocking;
     let present = false;
     using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {

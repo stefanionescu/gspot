@@ -1,7 +1,6 @@
-import executables from 'which';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { runChecks } from '#cli/checks/run/run.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -9,6 +8,7 @@ import { runFixers } from '#cli/checks/run/fixes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { FIXER_RESULTS } from '#tests/data/runs/fixes.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
+import { useExecutable } from '#tests/setup/processes.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/builders.ts';
 
@@ -142,8 +142,7 @@ test('a failed version check blocks a check and its fix without changing source 
         version_command: ['-e', 'console.log("3.8.1"); process.exitCode = 7;'],
     };
     planned.check.fix![0] = 'version-teller';
-    using _which = spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) =>
-        options?.all === true ? [process.execPath] : process.execPath) as typeof executables.sync);
+    using _which = useExecutable(process.execPath);
 
     const checked = await runCheckCommand(session, planned);
     expect(checked.status).toBe('error');

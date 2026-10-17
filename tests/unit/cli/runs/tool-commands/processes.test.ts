@@ -1,7 +1,6 @@
-import executables from 'which';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { planRun } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/checks/run/run.ts';
@@ -9,6 +8,7 @@ import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { checkReport } from '#tests/setup/run-gspot.ts';
+import { useExecutable } from '#tests/setup/processes.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { chmod, symlink, writeFile } from 'node:fs/promises';
@@ -181,10 +181,7 @@ test("a command run in a copy finds its chosen program's companion before an ina
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'commit', only: ['project/companion'] })[0]!;
     using _environment = overrideEnvironment({ PATH: join(sandbox.path, 'inactive') });
-    using _which = spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) => {
-        const path = join(sandbox.path, `native/shellcheck${isWindows ? '.cmd' : ''}`);
-        return options?.all === true ? [path] : path;
-    }) as typeof executables.sync);
+    using _which = useExecutable(join(sandbox.path, `native/shellcheck${isWindows ? '.cmd' : ''}`));
 
     const result = await runCheckCommand(session, planned, { scratchRoot: join(sandbox.path, 'copy') });
     expect(result.status, result.note).toBe('passed');

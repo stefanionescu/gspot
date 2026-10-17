@@ -165,12 +165,25 @@ export {
     runCommandBlocking,
 };
 
-/** Make executable lookup return this path. */
-export function useExecutable(path: string | null): Mock<typeof executables.sync> {
-    return spyOn(executables, 'sync').mockImplementation(((_name: string, options?: executables.Options) =>
-        options?.all === true
-            ? [path].filter((entry): entry is string => entry !== null)
-            : path) as typeof executables.sync);
+/**
+ * Make executable lookup return one path, or the path a function picks for each name.
+ * @param path the path, or a function of the name; when the function gives undefined, the real lookup runs.
+ * @returns the mock.
+ */
+export function useExecutable(
+    path: string | null | ((name: string) => string | null | undefined),
+): Mock<typeof executables.sync> {
+    const locate = executables.sync;
+    return spyOn(executables, 'sync').mockImplementation(((
+        name: string,
+        options?: executables.Options,
+        // eslint-disable-next-line sonarjs/function-return-type -- which.sync returns one path, all paths, or null.
+    ): string | string[] | null => {
+        const found = typeof path === 'function' ? path(name) : path;
+        if (found === undefined) return locate(name, options);
+        if (options?.all === true) return found === null ? [] : [found];
+        return found;
+    }) as typeof executables.sync);
 }
 
 /** Capture a command as text or bytes through the same test process timeout. */

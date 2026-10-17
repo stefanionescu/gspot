@@ -8,6 +8,7 @@ import { runChecks } from '#cli/checks/run/run.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { useExecutable } from '#tests/setup/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
@@ -163,17 +164,13 @@ async function prepareSupabaseCheck(
             return buildProcessResult({ stdout });
         }),
     );
-    const findExecutable = executables.sync;
     resources.use(
-        spyOn(executables, 'sync').mockImplementation(((
-            name: string,
-            options?: executables.Options,
-            // eslint-disable-next-line sonarjs/function-return-type -- which.sync returns one path, all paths, or null.
-        ): string | string[] | null => {
-            if (name !== 'supabase' && name !== 'docker') return findExecutable(name, options);
-            const path = name === 'supabase' ? supabase : docker;
-            return options?.all === true ? [path] : path;
-        }) as typeof executables.sync),
+        useExecutable((name) =>
+            new Map([
+                ['supabase', supabase],
+                ['docker', docker],
+            ]).get(name),
+        ),
     );
     resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation(async (commandArguments, options) => {
@@ -224,15 +221,7 @@ test('Supabase types need Docker before the local stack starts', async () => {
     await using sandbox = await testdir();
     using fixture = await prepareSupabaseCheck(sandbox.path, '', buildProcessResult({ stdout: SUPABASE_TYPES_OUTPUT }));
     await Bun.write(join(sandbox.path, 'database.ts'), SUPABASE_TYPES_OUTPUT);
-    resources.use(
-        spyOn(executables, 'sync').mockImplementation(((
-            name: string,
-            options?: executables.Options,
-        ): string | string[] | null => {
-            if (name !== 'supabase') return null;
-            return options?.all === true ? ['/fixture/supabase'] : '/fixture/supabase';
-        }) as typeof executables.sync),
-    );
+    resources.use(useExecutable((name) => (name === 'supabase' ? '/fixture/supabase' : null)));
 
     expect(await fixture.execute()).toMatchObject({
         status: 'missing',

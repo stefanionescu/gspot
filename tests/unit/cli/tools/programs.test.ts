@@ -1,7 +1,6 @@
-import executables from 'which';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { runTool } from '#cli/tools/run.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -96,10 +95,9 @@ test.each([0, 1])('mise finds the program in the original repository with exit c
         `if (process.cwd() !== ${JSON.stringify(join(sandbox.path, 'work'))}) process.exit(9); console.log(${JSON.stringify(executable)}); process.exitCode = ${String(status)};\n`,
     );
     using _environment = overrideEnvironment({ MISE_DATA_DIR: join(sandbox.path, 'mise') });
-    using _which = spyOn(executables, 'sync').mockImplementation(((name: string, options?: executables.Options) => {
-        const path = join(sandbox.path, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`);
-        return options?.all === true ? [path] : path;
-    }) as typeof executables.sync);
+    using _which = useExecutable((name) =>
+        join(sandbox.path, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`),
+    );
     const candidates = locateCandidates(join(sandbox.path, 'copy'), 'tsc', {
         search: 'mise',
         timeoutSeconds: SETTING_DEFAULTS.tool_timeout_seconds,

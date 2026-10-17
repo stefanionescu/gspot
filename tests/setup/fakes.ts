@@ -1,8 +1,8 @@
-import executables from 'which';
 import { spyOn, type Mock } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
 import { join, dirname, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
+import { useExecutable } from '#tests/setup/processes.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { EXECUTABLE_MODE } from '#tests/data/test-setup.ts';
@@ -33,19 +33,12 @@ export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typ
  */
 export function fakePinnedExecutables(tools: ToolDeclaration[]): DisposableStack {
     const resources = new DisposableStack();
-    const locate = executables.sync;
     const runBlocking = processes.spawnProcessBlocking;
     resources.use(
-        spyOn(executables, 'sync').mockImplementation(((
-            name: string,
-            options?: executables.Options,
-            // eslint-disable-next-line sonarjs/function-return-type -- which.sync returns one path, all paths, or null.
-        ): string | string[] | null => {
+        useExecutable((name) => {
             if (name === 'mise') return null;
-            if (!tools.some((tool) => tool.name === name)) return locate(name, options);
-            const path = join(process.cwd(), 'test-tools', name);
-            return options?.all === true ? [path] : path;
-        }) as typeof executables.sync),
+            return tools.some((tool) => tool.name === name) ? join(process.cwd(), 'test-tools', name) : undefined;
+        }),
     );
     resources.use(
         spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {

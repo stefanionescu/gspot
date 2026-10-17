@@ -1,4 +1,3 @@
-import executables from 'which';
 import { join, basename } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { commitAll } from '#tests/setup/git.ts';
@@ -10,6 +9,7 @@ import * as processes from '#cli/system/processes.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { useExecutable } from '#tests/setup/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
@@ -42,10 +42,7 @@ function mockNextjsCommands(
     const commands: string[][] = [];
     // Record command arguments and source files for assertions after the check.
     const routesSeen: string[] = [];
-    resources.use(
-        spyOn(executables, 'sync').mockImplementation(((...[, options]: [string, executables.Options?]) =>
-            options?.all === true ? [process.execPath] : process.execPath) as typeof executables.sync),
-    );
+    resources.use(useExecutable(process.execPath));
     const runBlocking = processes.spawnProcessBlocking;
     resources.use(
         spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
