@@ -10,6 +10,19 @@ import type { InstallerPin, ToolDeclaration } from '#cli/types/configurations.ts
 import { DAY_MILLISECONDS, PUBLISH_TIME_APIS } from '#tests/data/tools/installation.ts';
 
 /**
+ * Call a registry API, and name the refusal when it answers with an error.
+ * @param url the API address.
+ * @param init the request headers.
+ * @returns the response.
+ * @throws when the registry refuses, for example GitHub without GITHUB_TOKEN after its rate limit.
+ */
+async function readRegistryResponse(url: string, init?: RequestInit): Promise<Response> {
+    const response = await fetch(url, init);
+    if (!response.ok) throw new Error(`${url} answered ${String(response.status)}: ${await response.text()}`);
+    return response;
+}
+
+/**
  * Read when a tool's npm or PyPI version came out.
  * @param tool declaration with a version and installers.
  * @returns the publish time, or undefined when the tool has neither pin.
@@ -18,11 +31,11 @@ async function readPackagePublishTime(tool: ToolDeclaration): Promise<string | u
     const { npm, pypi } = tool.installers;
     if (tool.version === undefined) return undefined;
     if (npm !== undefined) {
-        const response = await fetch(`${PUBLISH_TIME_APIS.npm}${npm.name.replace('/', '%2F')}`);
+        const response = await readRegistryResponse(`${PUBLISH_TIME_APIS.npm}${npm.name.replace('/', '%2F')}`);
         return z.object({ time: z.record(z.string(), z.string()) }).parse(await response.json()).time[tool.version];
     }
     if (pypi === undefined) return undefined;
-    const response = await fetch(`${PUBLISH_TIME_APIS.pypi}${pypi.name}/${tool.version}/json`);
+    const response = await readRegistryResponse(`${PUBLISH_TIME_APIS.pypi}${pypi.name}/${tool.version}/json`);
     const files = z
         .object({ urls: z.array(z.object({ upload_time_iso_8601: z.string() })) })
         .parse(await response.json());
@@ -36,9 +49,12 @@ async function readPackagePublishTime(tool: ToolDeclaration): Promise<string | u
  */
 async function readReleasePublishTime(github: InstallerPin & { version: string }): Promise<string> {
     const token = readEnvironmentVariable('GITHUB_TOKEN');
-    const response = await fetch(`${PUBLISH_TIME_APIS.github}${github.name}/releases/tags/${github.version}`, {
-        headers: token === undefined ? {} : { authorization: `Bearer ${token}` },
-    });
+    const response = await readRegistryResponse(
+        `${PUBLISH_TIME_APIS.github}${github.name}/releases/tags/${github.version}`,
+        {
+            headers: token === undefined ? {} : { authorization: `Bearer ${token}` },
+        },
+    );
     return z.object({ published_at: z.string() }).parse(await response.json()).published_at;
 }
 
