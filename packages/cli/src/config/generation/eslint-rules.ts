@@ -221,7 +221,7 @@ export const ALL_LEVEL_RULES = {
                 match: [
                     {
                         tags: ['param'],
-                        disallowName: String.raw`/^root\d*$/`,
+                        disallowName: String.raw`/^root\d+$/`,
                         message: 'Name the parameter for its role, such as options.',
                     },
                 ],

@@ -79,3 +79,21 @@ export const TSC_ARGUMENTS = [
     '--pretty',
     'false',
 ] as const;
+
+/** A parameter named root, and the root0 placeholder that JSDoc gives an unnamed object parameter. */
+export const ROOT_PARAMETERS = `/**
+ * Join a path to the folder.
+ * @param root the folder to start from.
+ * @param path the path inside it.
+ * @returns both, joined with a slash.
+ */
+export function joinPath(root, path) { return \`\${root}/\${path}\`; }
+
+/**
+ * Read the name from the options.
+ * @param root0 what to read from.
+ * @param root0.name the value to give back.
+ * @returns the value of that field.
+ */
+export function readName({ name }) { return name; }
+`;

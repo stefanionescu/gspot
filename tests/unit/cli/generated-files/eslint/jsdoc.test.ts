@@ -13,6 +13,7 @@ import {
     JSDOC_RULES,
     TSC_ARGUMENTS,
     JSDOC_FINDINGS,
+    ROOT_PARAMETERS,
 } from '#tests/data/generated-files/eslint/jsdoc.ts';
 
 test.each([...LEVELS])(
@@ -94,4 +95,17 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
     });
     const compiled = await runCommand(TSC_ARGUMENTS, { cwd: sandbox.path });
     expect(compiled.code, compiled.stdout + compiled.stderr).toBe(0);
+});
+
+test('jsdoc/match-name reports the root0 placeholder and keeps a parameter named root', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'source.js': ROOT_PARAMETERS,
+    });
+    const eslint = await createEslint(sandbox.path);
+    expect(await collectLintFindings(eslint, sandbox.path, ['source.js'], ['jsdoc/match-name'])).toStrictEqual([
+        { file: 'source.js', rule: 'jsdoc/match-name', line: 11 },
+    ]);
 });
