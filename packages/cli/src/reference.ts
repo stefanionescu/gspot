@@ -2,6 +2,7 @@ import { buildProgram } from '#cli/main.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { SCHEMA_FILE } from '#cli/config/settings/file.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -16,10 +17,13 @@ import {
     PURGECSS_PSEUDO_CLASS_PATTERN,
 } from '#cli/config/generation/tool-files.ts';
 
-function groupSettingVariants(configurations: ReferenceData['configurations']): SettingVariant[] {
+function groupSettingVariants(configurations: ReferenceData['configurations'], reads: ReadCache): SettingVariant[] {
     const settings = new Map<string, SettingVariant[]>();
     const declarations = [
-        ...[...buildKnownSettings([]).declarations.values()].map((setting) => ({ setting, owner: 'gspot' })),
+        ...[...buildKnownSettings([], 'recommended', reads).declarations.values()].map((setting) => ({
+            setting,
+            owner: 'gspot',
+        })),
         ...configurations.flatMap((manifest) =>
             listConfigurationSettings(manifest.configuration.name).map((setting) => ({
                 setting,
@@ -77,14 +81,15 @@ function buildCommandReference(command: ReturnType<typeof buildProgram>['command
  * @returns the data for the reference pages.
  */
 export function readReferenceData(): ReferenceData {
-    const configurations = [...readManifests(createReadCache(process.cwd())).values()].toSorted((first, second) =>
+    const reads = createReadCache(process.cwd());
+    const configurations = [...readManifests(reads).values()].toSorted((first, second) =>
         first.configuration.name.localeCompare(second.configuration.name),
     );
     return {
         commands: buildProgram(() => {}).commands.map((command) => buildCommandReference(command)),
         configurations,
         checks: [...listChecksById(configurations).values()],
-        settings: groupSettingVariants(configurations),
+        settings: groupSettingVariants(configurations, reads),
         schema: buildJsonSchema(),
         schemaFile: SCHEMA_FILE,
         version: packageManifest.version,

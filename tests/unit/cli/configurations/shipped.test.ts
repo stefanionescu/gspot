@@ -111,7 +111,7 @@ function checkSettingViolations(
 
 test('a check waits for each setting with an empty default', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
-    const declarations = buildKnownSettings(manifests, 'all').declarations;
+    const declarations = buildKnownSettings(manifests, 'all', createReadCache(process.cwd())).declarations;
     const violations = manifests.flatMap((manifest) =>
         manifest.checks.flatMap((check) => checkSettingViolations(check, declarations)),
     );
@@ -120,7 +120,7 @@ test('a check waits for each setting with an empty default', () => {
 
 test('every default names a declared setting', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
-    const declarations = buildKnownSettings(manifests, 'all').declarations;
+    const declarations = buildKnownSettings(manifests, 'all', createReadCache(process.cwd())).declarations;
     expect(
         manifests.flatMap((manifest) =>
             Object.keys(manifest.defaults)

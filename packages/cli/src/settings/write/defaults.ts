@@ -116,13 +116,17 @@ function dropDefaults(settings: TomlTable): TomlTable {
     const root = {
         scope: '',
         table: settings,
-        known: buildKnownSettings(selectForScope(selection, '', manifests), level),
+        known: buildKnownSettings(selectForScope(selection, '', manifests), level, reads),
     };
     const tables = [
         root,
         ...scopes.map<WrittenTable>((table) => {
             const scope = trimTrailingSlashes(table['path'] as string);
-            return { scope, table, known: buildKnownSettings(selectForScope(selection, scope, manifests), level) };
+            return {
+                scope,
+                table,
+                known: buildKnownSettings(selectForScope(selection, scope, manifests), level, reads),
+            };
         }),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     // The writer has no project input to prove a computed default. Keep a written choice until the writer knows that input.

@@ -126,11 +126,10 @@ export function listNameParts(list: Node[] | undefined): string[] {
 /**
  * Parse a PostgreSQL file once per run.
  * @param text the original SQL, including supported psql syntax.
- * @param reads the run cache, absent for a standalone parse.
+ * @param reads the run cache.
  * @returns the statements and the original error positions.
  */
-export function parseSqlFile(text: string, reads?: ReadCache): Promise<SqlFile> {
-    if (reads === undefined) return parseSqlText(text);
+export function parseSqlFile(text: string, reads: ReadCache): Promise<SqlFile> {
     const files = getCachedValue(reads, SQL_MEMO);
     let parsed = files.get(text);
     if (parsed === undefined) {

@@ -69,23 +69,20 @@ removed_configurations = ["site"]
 });
 
 test('two configurations with different defaults are an error until gspot.toml sets the value', () => {
+    const reads = createReadCache(process.cwd());
     const known = buildConflictingSettings();
 
     const source = buildSettingsText(['sql'], { rules: true });
-    const settings = parseSettings(source, undefined, createReadCache(process.cwd()));
-    expect(validateKeys(known, settings, new Map(), buildKnownSettings([]))).toStrictEqual([
+    const settings = parseSettings(source, undefined, reads);
+    expect(validateKeys(known, settings, new Map(), buildKnownSettings([], 'recommended', reads))).toStrictEqual([
         {
             path: ['configurations'],
             message:
                 'The configurations `sql` and `alternate-sql` set `tools.sqlfluff.dialect` to different values. Set it yourself in gspot.toml to decide.',
         },
     ]);
-    const corrected = parseSettings(
-        `${source}[tools.sqlfluff]\ndialect = "sqlite"\n`,
-        undefined,
-        createReadCache(process.cwd()),
-    );
-    expect(validateKeys(known, corrected, new Map(), buildKnownSettings([]))).toStrictEqual([]);
+    const corrected = parseSettings(`${source}[tools.sqlfluff]\ndialect = "sqlite"\n`, undefined, reads);
+    expect(validateKeys(known, corrected, new Map(), buildKnownSettings([], 'recommended', reads))).toStrictEqual([]);
     expect(getSettingValue(known, corrected, 'tools.sqlfluff.dialect')).toMatchObject({
         value: 'sqlite',
         source: 'gspot.toml',
@@ -93,19 +90,26 @@ test('two configurations with different defaults are an error until gspot.toml s
 });
 
 test('the conflict is reported at the scope that selects both configurations', () => {
+    const reads = createReadCache(process.cwd());
     const known = buildConflictingSettings();
 
     const settings = parseSettings(
         buildSettingsText([], { rules: true, tables: '\n[[scope]]\npath = "db"\nconfigurations = ["sql"]\n' }),
         undefined,
-        createReadCache(process.cwd()),
+        reads,
     );
     expect(
-        validateKeys(buildKnownSettings([]), settings, new Map([['db', known]]), buildKnownSettings([])),
+        validateKeys(
+            buildKnownSettings([], 'recommended', reads),
+            settings,
+            new Map([['db', known]]),
+            buildKnownSettings([], 'recommended', reads),
+        ),
     ).toStrictEqual([{ path: ['scope', 0, 'configurations'], message: known.errors[0]!.message }]);
 });
 
 test('a scope value settles the scopes below it, and a sibling scope still reports the conflict', () => {
+    const reads = createReadCache(process.cwd());
     const known = buildConflictingSettings();
 
     const settings = parseSettings(
@@ -114,12 +118,17 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
             tables: '\n[[scope]]\npath = "app"\nconfigurations = ["sql"]\ntools.sqlfluff.dialect = "sqlite"\n[[scope]]\npath = "app/db"\nconfigurations = ["sql"]\n[[scope]]\npath = "other"\nconfigurations = ["sql"]\n',
         }),
         undefined,
-        createReadCache(process.cwd()),
+        reads,
     );
     const scopes = new Map(Object.keys(settings.scopes).map((path) => [path, known]));
-    expect(validateKeys(buildKnownSettings([]), settings, scopes, buildKnownSettings([]))).toStrictEqual([
-        { path: ['scope', 2, 'configurations'], message: known.errors[0]!.message },
-    ]);
+    expect(
+        validateKeys(
+            buildKnownSettings([], 'recommended', reads),
+            settings,
+            scopes,
+            buildKnownSettings([], 'recommended', reads),
+        ),
+    ).toStrictEqual([{ path: ['scope', 2, 'configurations'], message: known.errors[0]!.message }]);
     expect(getSettingValue(known, settings, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
         value: 'sqlite',
         source: '[scope "app"]',
@@ -127,18 +136,15 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
 });
 
 test("a written false overrides a configuration's true default", () => {
-    const known = buildKnownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
+    const reads = createReadCache(process.cwd());
+    const known = buildKnownSettings(selectConfigurations(['supabase'], readManifests(reads)), 'recommended', reads);
     const source = buildSettingsText(['supabase'], { rules: true });
-    const settings = parseSettings(source, undefined, createReadCache(process.cwd()));
+    const settings = parseSettings(source, undefined, reads);
     expect(getSettingValue(known, settings, 'tools.squawk.assume_in_transaction')).toMatchObject({
         value: true,
         source: 'configuration supabase',
     });
-    const corrected = parseSettings(
-        `${source}[tools.squawk]\nassume_in_transaction = false\n`,
-        undefined,
-        createReadCache(process.cwd()),
-    );
+    const corrected = parseSettings(`${source}[tools.squawk]\nassume_in_transaction = false\n`, undefined, reads);
     expect(getSettingValue(known, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
         value: false,
         source: 'gspot.toml',
@@ -146,13 +152,10 @@ test("a written false overrides a configuration's true default", () => {
 });
 
 test('an inherited default names the configuration that declares it', () => {
-    const known = buildKnownSettings(selectConfigurations(['supabase'], readManifests(createReadCache(process.cwd()))));
-    const settings = parseSettings(
-        buildSettingsText(['supabase'], { rules: true }),
-        undefined,
-        createReadCache(process.cwd()),
-    );
-    expect(validateKeys(known, settings, new Map(), buildKnownSettings([]))).toStrictEqual([]);
+    const reads = createReadCache(process.cwd());
+    const known = buildKnownSettings(selectConfigurations(['supabase'], readManifests(reads)), 'recommended', reads);
+    const settings = parseSettings(buildSettingsText(['supabase'], { rules: true }), undefined, reads);
+    expect(validateKeys(known, settings, new Map(), buildKnownSettings([], 'recommended', reads))).toStrictEqual([]);
     expect(getSettingValue(known, settings, 'tools.sqlfluff.dialect')).toMatchObject({
         value: 'postgres',
         source: 'configuration postgres',
@@ -169,8 +172,11 @@ test('a per-language key maps to its base setting', () => {
 });
 
 test('limits that no check reads are refused', () => {
+    const reads = createReadCache(process.cwd());
     const known = buildKnownSettings(
-        selectConfigurations(['structure', 'sql', 'bash'], readManifests(createReadCache(process.cwd()))),
+        selectConfigurations(['structure', 'sql', 'bash'], readManifests(reads)),
+        'recommended',
+        reads,
     );
     expect(findDeclaration(known, 'limits.sql.function_lines')).toBeUndefined();
     expect(findDeclaration(known, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
@@ -221,7 +227,8 @@ test('lists add up across tables without repeats', () => {
 });
 
 test('list defaults add up across configurations before root and scope additions', () => {
-    const naming = readManifests(createReadCache(process.cwd())).get('naming')!;
+    const reads = createReadCache(process.cwd());
+    const naming = readManifests(reads).get('naming')!;
     const manifests = [naming];
     for (const [index, terms] of [['dispatcher'], ['dispatcher', 'orchestrator']].entries()) {
         manifests.push({
@@ -230,14 +237,14 @@ test('list defaults add up across configurations before root and scope additions
             defaults: { 'naming.banned_words': terms },
         });
     }
-    const defaults = buildKnownSettings(manifests);
+    const defaults = buildKnownSettings(manifests, 'recommended', reads);
     const settings = parseSettings(
         buildSettingsText(['naming'], {
             rules: true,
             tables: '[naming]\nbanned_words = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\nnaming.banned_words = ["orchestrator", "handler"]\n',
         }),
         undefined,
-        createReadCache(process.cwd()),
+        reads,
     );
     expect(getSettingValue(defaults, settings, 'naming.banned_words', 'api')?.value).toStrictEqual([
         'dispatcher',
@@ -245,18 +252,21 @@ test('list defaults add up across configurations before root and scope additions
         'manager',
         'handler',
     ]);
-    expect(validateKeys(defaults, settings, new Map([['api', defaults]]), buildKnownSettings([]))).toStrictEqual([]);
+    expect(
+        validateKeys(defaults, settings, new Map([['api', defaults]]), buildKnownSettings([], 'recommended', reads)),
+    ).toStrictEqual([]);
 });
 
 test("a scope's rules keep other rules and replace the whole options of the same rule", () => {
-    const known = buildKnownSettings(selectConfigurations(['css'], readManifests(createReadCache(process.cwd()))));
+    const reads = createReadCache(process.cwd());
+    const known = buildKnownSettings(selectConfigurations(['css'], readManifests(reads)), 'recommended', reads);
     const settings = parseSettings(
         buildSettingsText(['css'], {
             rules: true,
             tables: '[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "error" }]\n[[scope]]\npath = "app"\nconfigurations = []\ntools.stylelint.rules.color-named = ["always-where-possible"]\n',
         }),
         undefined,
-        createReadCache(process.cwd()),
+        reads,
     );
     expect(getSettingValue(known, settings, 'tools.stylelint.rules', 'app')?.value).toStrictEqual({
         'selector-max-id': 0,
@@ -269,21 +279,24 @@ test("a scope's rules keep other rules and replace the whole options of the same
 });
 
 function buildConflictingSettings() {
-    const sql = readManifests(createReadCache(process.cwd())).get('sql')!;
-    return buildKnownSettings([
-        sql,
-        {
-            ...sql,
-            configuration: { ...sql.configuration, name: 'alternate-sql' },
-            defaults: { 'tools.sqlfluff.dialect': 'postgres' },
-        },
-    ]);
+    const reads = createReadCache(process.cwd());
+    const sql = readManifests(reads).get('sql')!;
+    return buildKnownSettings(
+        [
+            sql,
+            {
+                ...sql,
+                configuration: { ...sql.configuration, name: 'alternate-sql' },
+                defaults: { 'tools.sqlfluff.dialect': 'postgres' },
+            },
+        ],
+        'recommended',
+        reads,
+    );
 }
 
 function buildLanguageSettings() {
-    const selected = selectConfigurations(
-        ['structure', 'bash', 'naming', 'format', 'prose'],
-        readManifests(createReadCache(process.cwd())),
-    );
-    return buildKnownSettings(selected);
+    const reads = createReadCache(process.cwd());
+    const selected = selectConfigurations(['structure', 'bash', 'naming', 'format', 'prose'], readManifests(reads));
+    return buildKnownSettings(selected, 'recommended', reads);
 }

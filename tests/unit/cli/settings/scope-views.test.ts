@@ -142,7 +142,12 @@ test('an until date ends at the start of that date in UTC, and the expired ignor
             createReadCache(process.cwd()),
         );
         const selected = selectForScope(settings, '', readManifests(createReadCache(process.cwd())));
-        const view = buildScopeView(buildKnownSettings(selected), settings, selected, '');
+        const view = buildScopeView(
+            buildKnownSettings(selected, 'recommended', createReadCache(process.cwd())),
+            settings,
+            selected,
+            '',
+        );
         expect(view.ignoresFor('dependencies/osv-scanner')).toStrictEqual([
             { ...entries[3], paths: [] },
             { ...entries[0], paths: [] },
@@ -150,7 +155,12 @@ test('an until date ends at the start of that date in UTC, and the expired ignor
         expect(view.rulesOff('dependencies/osv-scanner')).toStrictEqual(['future', 'permanent']);
         expect(settings.ignore).toStrictEqual([entries[3], entries[1], entries[0], entries[2]]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
-        const next = buildScopeView(buildKnownSettings(selected), settings, selected, '');
+        const next = buildScopeView(
+            buildKnownSettings(selected, 'recommended', createReadCache(process.cwd())),
+            settings,
+            selected,
+            '',
+        );
         expect(next.rulesOff('dependencies/osv-scanner')).toStrictEqual(['permanent']);
         expect(view.rulesOff('dependencies/osv-scanner')).toStrictEqual(['future', 'permanent']);
     } finally {

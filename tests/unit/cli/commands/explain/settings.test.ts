@@ -13,6 +13,8 @@ import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/data/commands/set.ts';
 test.each(['swift', 'sql'])("explain shows each scope's default and current naming limit (%j)", async (language) => {
     const settings = buildKnownSettings(
         selectConfigurations(['naming'], readManifests(createReadCache(process.cwd()))),
+        'recommended',
+        createReadCache(process.cwd()),
     );
     const swift = Number(settings.defaults.get('naming.swift.max_characters')?.value);
     const sql = Number(settings.defaults.get('naming.sql.max_words')?.value);

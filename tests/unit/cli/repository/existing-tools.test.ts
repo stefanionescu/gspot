@@ -22,7 +22,7 @@ test('tool discovery finds nested tool files and skips root .gspot and vendored 
         scopes: [],
         manifests: readManifests(createReadCache(process.cwd())),
     });
-    const discovered = readExistingTools(sandbox.path, repository.files, []);
+    const discovered = readExistingTools(sandbox.path, repository.files, [], createReadCache(sandbox.path));
     expect(discovered.toolFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
 });
 
@@ -91,7 +91,7 @@ test('tool discovery reads tool sections through a link inside the repository', 
     const source = '[tool.ruff]\nline-length = 100\n';
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
-    const tooling = readExistingTools(sandbox.path, [], []);
+    const tooling = readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path));
     expect(tooling.toolFiles).toContainEqual({
         tool: 'ruff',
         path: 'pyproject.toml',
@@ -111,10 +111,10 @@ test.each([...LINKED_RULE_FOLDERS])(
         const root = join(sandbox.path, 'project');
         await mkdir(dirname(join(root, path)), { recursive: true });
         await symlink(join(sandbox.path, 'outside'), join(root, path), 'dir');
-        expect(readExistingTools(root, [], []).ruleFolders).toStrictEqual([path]);
+        expect(readExistingTools(root, [], [], createReadCache(root)).ruleFolders).toStrictEqual([path]);
         await unlink(join(root, path));
         await createFileTree(root, { [`${path}/guide.md`]: 'authored rules\n' });
-        expect(readExistingTools(root, [], []).ruleFolders).toStrictEqual([path]);
+        expect(readExistingTools(root, [], [], createReadCache(root)).ruleFolders).toStrictEqual([path]);
     },
 );
 

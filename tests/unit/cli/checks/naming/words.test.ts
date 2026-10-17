@@ -18,7 +18,7 @@ test('a number word such as base64 counts as one word; repeated, extra, banned a
         'naming/identifiers',
     )!.check;
     const selected = selectConfigurations(['naming'], readManifests(createReadCache(process.cwd())));
-    const known = buildKnownSettings(selected);
+    const known = buildKnownSettings(selected, 'recommended', createReadCache(process.cwd()));
     const settings = parseSettings(
         buildSettingsText(['naming'], { rules: true }),
         undefined,

@@ -101,7 +101,14 @@ test('a tool option named reason is passed on and is not a gspot reason', () => 
         createReadCache(process.cwd()),
     );
     const selected = selectForScope(settings, '', readManifests(createReadCache(process.cwd())));
-    expect(buildScopeView(buildKnownSettings(selected), settings, selected, '').extra('prettier')).toStrictEqual({
+    expect(
+        buildScopeView(
+            buildKnownSettings(selected, 'recommended', createReadCache(process.cwd())),
+            settings,
+            selected,
+            '',
+        ).extra('prettier'),
+    ).toStrictEqual({
         reason: false,
     });
 });

@@ -7,9 +7,9 @@ import { isRecord } from '#cli/system/values.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { HOOKS_PATH } from '#cli/config/system/locations.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -278,7 +278,7 @@ export function readExistingTools(
     repositoryRoot: string,
     files: TrackedFile[],
     dependencyFiles: DependencyFile[],
-    reads = createReadCache(repositoryRoot),
+    reads: ReadCache,
 ): ExistingTools {
     const paths = new Set(files.map((file) => file.path));
     const manifests = readManifests(reads);

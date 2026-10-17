@@ -113,6 +113,7 @@ for (const scenario of PARAMETER_LIMIT_TOOLS.filter(
             const { value: defaultMaximum } = buildKnownSettings(
                 [readManifests(createReadCache(process.cwd())).get('structure')!],
                 'all',
+                createReadCache(process.cwd()),
             ).defaults.get('limits.function_parameters')!;
             const maximum = supplied === 'default' ? defaultMaximum : supplied;
             await using sandbox = await testdir();

@@ -61,7 +61,7 @@ describe('drop-defaults', () => {
         const after = parseSettings(written, undefined, createReadCache(process.cwd()));
         for (const path of ['', ...Object.keys(before.scopes)]) {
             const selected = selectForScope(before, path, manifests);
-            const known = buildKnownSettings(selected);
+            const known = buildKnownSettings(selected, 'recommended', createReadCache(process.cwd()));
             expect(buildScopeView(known, after, selected, path).options('supabase')).toStrictEqual(
                 buildScopeView(known, before, selected, path).options('supabase'),
             );

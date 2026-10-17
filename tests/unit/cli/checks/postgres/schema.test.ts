@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
 import { type Migration } from '#cli/types/checks/database.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 
@@ -81,6 +82,6 @@ test('an unnamed foreign key gets the PostgreSQL default name and does not count
  * @returns the migration.
  */
 async function parseMigration(name: string, text: string, version = name.slice(0, 1)): Promise<Migration> {
-    const parsed = await parseSqlFile(text);
+    const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
     return { path: `migrations/${name}`, name, version, text, statements: parsed.statements };
 }

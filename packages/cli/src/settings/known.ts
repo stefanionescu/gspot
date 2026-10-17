@@ -131,13 +131,12 @@ const toolDeclarations: MemoKey<Map<string, SettingDeclaration[]>> = {
  * single-value defaults.
  * @param selected the manifests of the selection, in order.
  * @param level picks the recommended or all defaults.
- * @param reads the run cache, if a session runs this.
+ * @param reads the run cache.
  * @returns the declarations, their defaults, and the conflicts found on the way.
  */
-function buildKnownSettings(selected: Manifest[], level: Level = 'recommended', reads?: ReadCache): KnownSettings {
-    const roots = reads === undefined ? rootDeclarations.create() : getCachedValue(reads, rootDeclarations);
-    const declarationsByTool =
-        reads === undefined ? toolDeclarations.create() : getCachedValue(reads, toolDeclarations);
+function buildKnownSettings(selected: Manifest[], level: Level, reads: ReadCache): KnownSettings {
+    const roots = getCachedValue(reads, rootDeclarations);
+    const declarationsByTool = getCachedValue(reads, toolDeclarations);
 
     const known: KnownSettings = { declarations: new Map(), defaults: new Map(), errors: [] };
     for (const declaration of roots) {

@@ -164,7 +164,12 @@ export function namingSettingsFor(text: string, scope = ''): NamingSettings {
     const reads = createReadCache(process.cwd());
     const settings = parseSettings(text, undefined, reads);
     const selected = selectForScope(settings, scope, readManifests(reads));
-    const view = buildScopeView(buildKnownSettings(selected), settings, selected, scope);
+    const view = buildScopeView(
+        buildKnownSettings(selected, 'recommended', createReadCache(process.cwd())),
+        settings,
+        selected,
+        scope,
+    );
     return readNamingSettings({
         selection: { view, scope: { path: scope }, selected },
         settingsFile: { settings },
