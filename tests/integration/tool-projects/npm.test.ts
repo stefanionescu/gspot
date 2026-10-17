@@ -15,7 +15,7 @@ import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { TOOL_PROJECT_BYTE_ATTRIBUTES } from '#tests/data/parsers/git.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { PACKAGE_MANAGER_ROWS } from '#tests/data/tools/npm-tool-project.ts';
-import { writeLockedInputs, readToolProjectFiles } from '#tests/setup/install.ts';
+import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
 import { createPackageManagerSandbox } from '#tests/setup/package-manager-sandboxes.ts';
 import type { ToolProjectFiles, PackageManagerSandbox } from '#tests/types/packages.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
@@ -25,7 +25,7 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
     async (packageManager, projectPath) => {
         await using sandbox = await createPackageManagerSandbox(packageManager, projectPath);
         const { root, registry } = sandbox;
-        await writeLockedInputs(root);
+        await installToolProjects(root);
         const { lockfilePath, lockfile } = await readToolProjectFiles(root, packageManager);
         expect(Buffer.from(lockfile).toString('utf8')).not.toContain(NPM_REGISTRY_TOKEN);
         for (let attempt = 0; attempt < 2; attempt++) {
@@ -63,7 +63,7 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
     async (packageManager, projectPath) => {
         await using sandbox = await createPackageManagerSandbox(packageManager, projectPath);
         const { root, rootPackage } = sandbox;
-        await writeLockedInputs(root);
+        await installToolProjects(root);
         const { manifest, lockfilePath, lockfile } = await readToolProjectFiles(root, packageManager);
         const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierManifest.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
@@ -125,8 +125,9 @@ test.each([...PACKAGE_MANAGER_ROWS])(
     async (packageManager, projectPath) => {
         await using sandbox = await createPackageManagerSandbox(packageManager, projectPath);
         const { root, rootPackage, yarnConfiguration } = sandbox;
-        const { inputs } = await writeLockedInputs(root);
-        const { manifest, lockfilePath, lockfile, mode } = inputs!;
+        await installToolProjects(root);
+        const inputs = await readToolProjectFiles(root, packageManager);
+        const { manifest, lockfilePath, lockfile, mode } = inputs;
         const installed = await spawnGspot(root, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         expect(installed.stdout).toContain('.gspot/node_modules');
@@ -171,7 +172,7 @@ test.each([...PACKAGE_MANAGER_ROWS])(
         const second = JSON.parse(applied.stdout) as ApplyReport;
         expect(second.written).toStrictEqual([]);
         expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
-        if (projectPath === 'package.json') await assertCloneInstallation(sandbox, inputs!);
+        if (projectPath === 'package.json') await assertCloneInstallation(sandbox, inputs);
     },
 );
 

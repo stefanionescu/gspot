@@ -11,7 +11,7 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import type { IndexedPythonSandbox } from '#tests/types/packages.ts';
-import { writeLockedInputs, installToolProjects } from '#tests/setup/install.ts';
+import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
 
 import {
     ZIP_LAYOUT,
@@ -179,7 +179,7 @@ Tag: py3-none-any
     entries.push([`${metadata}/RECORD`, Buffer.from(`${record}${metadata}/RECORD,,\r\n`)]);
     return entries;
 }
-/** Create a local package index and a Python project, then write its locked inputs. */
+/** Create a local package index and a Python project, then install its tools and read the tool project files. */
 async function createIndexedPythonSandbox(
     root: string,
     work: string,
@@ -188,7 +188,8 @@ async function createIndexedPythonSandbox(
     await using resources = new AsyncDisposableStack();
     const registry = resources.use(await createPythonIndex(work));
     const project = resources.use(await createPythonSandbox(root, { indexFile, indexUrl: registry.url }));
-    const inputs = await writeLockedInputs(root);
+    await installToolProjects(root);
+    const inputs = await readToolProjectFiles(root, 'uv');
     const owned = resources.move();
     return {
         rootProject: project.rootProject,

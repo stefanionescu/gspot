@@ -1,4 +1,3 @@
-import type { Session } from '#cli/types/planning.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
@@ -47,19 +46,10 @@ export type PackageManagerSandbox = {
 
 /** Tool project files read before an install. */
 export type ToolProjectFiles = {
-    manifest: Uint8Array;
+    manifest: Buffer<ArrayBuffer>;
     lockfilePath: string;
-    lockfile: Uint8Array;
+    lockfile: Buffer<ArrayBuffer>;
     mode: number;
-};
-
-/** Tool project files read before a locked install. */
-export type LockedInputs = {
-    session: Session;
-    inputs?: ToolProjectFiles;
-    manifest?: Buffer<ArrayBuffer>;
-    lockfilePath?: string;
-    lockfile?: Buffer<ArrayBuffer>;
 };
 
 /** A Python project and its local package index, disposed together. */
@@ -67,5 +57,5 @@ export type IndexedPythonSandbox = AsyncDisposable & {
     rootProject: Buffer<ArrayBuffer>;
     rootConfiguration: Buffer<ArrayBuffer>;
     registry: { url: string; readonly requests: number };
-    inputs: LockedInputs;
+    inputs: ToolProjectFiles;
 };

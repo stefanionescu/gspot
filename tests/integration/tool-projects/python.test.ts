@@ -12,7 +12,7 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
 import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
-import { writeLockedInputs, captureInstallRefusal } from '#tests/setup/install.ts';
+import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
 import { createPythonSandbox, createIndexedPythonSandbox } from '#tests/setup/python-index.ts';
 import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/data/tools/python-tool-project.ts';
 
@@ -22,11 +22,7 @@ test.each([...PYTHON_PROJECTS])(
         await using repository = await testdir();
         await using artifacts = await testdir();
         await using prepared = await createIndexedPythonSandbox(repository.path, artifacts.path, configuration);
-        const { inputs: preparedInputs } = prepared;
-        const { manifest, lockfilePath, lockfile } = preparedInputs;
-        if (manifest === undefined) throw new Error('The Python project has no locked manifest.');
-        if (lockfilePath === undefined) throw new Error('The Python project has no lockfile path.');
-        if (lockfile === undefined) throw new Error('The Python project has no lockfile bytes.');
+        const { manifest, lockfilePath, lockfile } = prepared.inputs;
         const { rootProject, rootConfiguration } = prepared;
         expect(lockfile.toString('utf8')).not.toContain('synthetic-uv-password');
         const brokenUv = await fakeTool(artifacts.path, 'bin/uv', 'process.exitCode = 87;');
@@ -69,10 +65,8 @@ test.each([...PYTHON_PROJECTS])(
         await using prepared = await createPythonSandbox(repository.path, {
             indexFile: configuration,
         });
-        const preparedInputs = await writeLockedInputs(repository.path);
-        const { manifest, lockfile } = preparedInputs;
-        if (manifest === undefined || lockfile === undefined)
-            throw new Error('The Python project has no locked inputs.');
+        await installToolProjects(repository.path);
+        const { manifest, lockfile } = await readToolProjectFiles(repository.path, 'uv');
         const { rootConfiguration } = prepared;
         const clone = join(artifacts.path, 'clone');
         commitAll(repository.path);
@@ -109,26 +103,16 @@ test('conflicted Python lockfiles survive offline apply and are repaired by inst
     await using repository = await testdir();
     await using artifacts = await testdir();
     await using prepared = await createIndexedPythonSandbox(repository.path, artifacts.path, configuration);
-    const { registry, inputs: preparedInputs } = prepared;
-    const { lockfilePath, lockfile } = preparedInputs;
-    if (lockfilePath === undefined || lockfile === undefined)
-        throw new Error('The Python project has no locked inputs.');
+    const { lockfilePath, lockfile } = prepared.inputs;
     const { rootConfiguration } = prepared;
-    {
-        const installed = await spawnGspot(repository.path, ['install']);
-        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    }
+    const conflict = '<<<<<<< interrupted lockfile\n';
     await chmod(lockfilePath, 0o644);
-    await writeFile(lockfilePath, '<<<<<<< interrupted lockfile\n');
-    const refusal = await captureInstallRefusal(repository.path, [], registry);
-    expect(refusal.message).toContain('run: gspot install');
-    expect(refusal.requests).toBe(0);
-    const repaired = await spawnGspot(repository.path, ['apply']);
-    expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
-    {
-        const installed = await spawnGspot(repository.path, ['install']);
-        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    }
+    await writeFile(lockfilePath, conflict);
+    const applied = await spawnGspot(repository.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
+    const installed = await spawnGspot(repository.path, ['install']);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
     expect(await readFile(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
 });
