@@ -10,8 +10,8 @@ gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "
 
 Every ignore needs a reason. Leave out `--rule` to ignore the whole check.
 Add `--paths` to select files. Add `--until YYYY-MM-DD` for an ignore that ends at 00:00 UTC on that date.
-The saved record remains for review. To ignore a dependency advisory, use
-`gspot ignore dependencies/osv-scanner --rule <advisory ID> --reason "..."` with the advisory's ID and your reason.
+After that date, the record stays in `gspot.toml` for review. To ignore a dependency advisory, give its ID as the rule:
+`gspot ignore dependencies/osv-scanner --rule <advisory ID> --reason "..."`.
 
 To remove the ignore:
 
@@ -19,6 +19,6 @@ To remove the ignore:
 gspot unignore javascript/eslint --rule no-console --paths "scripts/**"
 ```
 
-`gspot check --verbose` prints each applied ignore, its reason, and the number of findings it matched.
+`gspot check --verbose` prints each ignore in effect, its reason, and the number of findings it matched.
 
-To change a limit, see [limits](/reference/gspot-toml/limits/). Use an ignore only when you can state why a check does not apply.
+To change a limit, see [limits](/reference/gspot-toml/limits/). Use an ignore only when you can state why the check does not fit that code.

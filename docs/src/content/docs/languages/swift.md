@@ -19,7 +19,7 @@ SwiftLint checks source files. SwiftFormat formats them. Xcode checks need macOS
 
 Run `gspot add swift-tests`. gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder
 that turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, while your
-source files keep those rules. `gspot check --only swift/swiftlint` reads these nested files. When configuring an editor directly, omit `--config` from SwiftLint because that option disables nested configuration.
+source files keep those lint rules. `gspot check --only swift/swiftlint` reads these nested files. In an editor, run SwiftLint without `--config`, because that option turns off the nested files.
 
 [swift-tests](/reference/configurations/swift-tests/) declares checks for test reasons and coverage.
 
@@ -35,5 +35,5 @@ Replace `Orders` with the target named in the coverage report. Add `reason` when
 Then run `gspot apply` and `gspot check --only swift-tests/coverage`. Write these records by hand;
 `gspot set` writes no record lists.
 
-Xcode coverage needs macOS, the `xcode` configuration, and `swift.xcode_project` and `swift.xcode_scheme` in `gspot.toml`.
+Xcode coverage also needs the `xcode` configuration, plus `swift.xcode_project` and `swift.xcode_scheme` in `gspot.toml`.
 `gspot init` writes the ones it finds.

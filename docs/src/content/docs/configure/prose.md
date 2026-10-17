@@ -24,11 +24,11 @@ allowed_words = { value = ["capitalisation"], reason = "The product uses British
 gspot set allowed_words capitalisation --reason "The product uses British spelling."
 ```
 
-This removes the `spelling/typos` finding for `capitalisation` and accepts the word in prose. Other spelling and prose findings still apply.
+This removes the `spelling/typos` finding for `capitalisation` and accepts the word in prose.
 Use `gspot explain allowed_words` to inspect the value and its source.
 
 ## Prose checks
 
-The prose rules check sentence length, word choice, and paragraph structure. Keep comments and documentation in
-plain language. Use [prose settings](/reference/configurations/prose/) to inspect the checks, and the
-[`allowed_words` setting](/reference/gspot-toml/#allowed_words) to inspect accepted values.
+The prose checks cover sentence length, word choice, and paragraph structure. Keep comments and documentation in
+plain language. The [prose configuration](/reference/configurations/prose/) lists the checks; the
+[`allowed_words` setting](/reference/gspot-toml/#allowed_words) gives the accepted values.

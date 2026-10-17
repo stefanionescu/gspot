@@ -60,7 +60,7 @@ The Python tools gspot installs, at pinned versions.
 </dt>
 <dd>
 
-Yarn settings for the npm tools, when the repository uses Yarn 2 or newer.
+Yarn options for the npm tools, when the repository uses Yarn 2 or newer.
 
 </dd>
 
@@ -77,12 +77,12 @@ The gspot version of the repository.
 
 <dt>
 
-Tool file entry points
+Pointers
 
 </dt>
 <dd>
 
-Tool file entry points at each scope root that needs one and inside test folders.
+Files that lead a tool or editor to its tool file, at each scope root that needs one and inside test folders.
 
 </dd>
 
@@ -93,7 +93,7 @@ Sections between gspot markers
 </dt>
 <dd>
 
-Blocks in `.gitignore`, `.gitattributes`, and `AGENTS.md`. You own the rest of each file.
+In `.gitignore`, `.gitattributes`, and `AGENTS.md`. The rest of each file stays yours.
 
 </dd>
 
@@ -148,44 +148,36 @@ Keys in shared files
 </dt>
 <dd>
 
-Install settings in files such as `bunfig.toml`. The other keys stay yours.
+Install options in files such as `bunfig.toml`. The other keys stay yours.
 
 </dd>
 
 </dl>
 
-Tool file entry points include `eslint.config.mjs`, `prettier.config.mjs`, `.prettierignore`,
-`.stylelintrc.json`, `.editorconfig`, `.semgrepignore`, `pyrightconfig.json`,
-`.swiftlint.yml`, `.markdownlint-cli2.mjs`, and `ruff.toml`, depending on the selected
-configurations. Each scope that uses a tool gets its tool file entry point. Python service
-scopes and Swift test folders can have tool file entry points at these example paths:
+Pointers include `eslint.config.mjs`, `pyrightconfig.json`, and `ruff.toml`, depending on the selected
+configurations. Each scope that uses a tool gets its pointer, for example:
 
 ```text
 services/api/pyrightconfig.json
 Tests/.swiftlint.yml
 ```
 
-Some tools have no tool file entry point. gspot passes them their tool file when it runs them; give your editor the same path.
-
-Do not edit a generated file. Change `gspot.toml`, then run `gspot apply`. It replaces owned files from your settings. Files with local edits or merge markers also receive the generated content. Move any change you need into `gspot.toml` before you apply.
+Some tools have no pointer. gspot passes their tool file when it runs them; give your editor the same path.
 
 ## What to commit
 
-Commit `gspot.toml`, everything gspot writes under `.gspot/config/` and `.gspot/rules/`, the
-needed `.gspot/package.json` and its manager lockfile, `.gspot/pyproject.toml`, `.gspot/uv.lock`, `.gspot/version`, `.gspot/mise.toml`, `.gspot/.yarnrc.yml`, and `.gspot/hooks/`, the tool file entry points, and the sections between gspot markers.
-Commit the tool files and rules so editors and coding agents can use them immediately after a clone, before `gspot install` runs.
-After a teammate clones the repository, `gspot install` installs the locked tools and the hooks.
+Commit `gspot.toml`, every file that [What gspot writes](#what-gspot-writes) lists, the pointers, `.editorconfig`, the CI
+workflow, and each file with a section between gspot markers.
+Editors and coding agents can then use the tool files and rules right after a clone, before `gspot install` runs.
+Git does not keep the installed tools or the hooks, so run `gspot install` in each new clone.
 
 The section between gspot markers in `.gitignore` keeps these out of Git: the installed tools in `.gspot/node_modules/` and `.gspot/.venv/`, `.gspot/vale/` when prose checks need it, and installation caches.
 
 ## Before you apply
 
-Generated files have a gspot header or appear in the sections between gspot markers. gspot uses these markers and
-the generated text to identify its files. `gspot apply` replaces those files from your settings.
-Review local edits and move any change you need into `gspot.toml` before you apply.
+Do not edit a generated file. Each one has a gspot header or sits in a section between gspot markers; gspot finds its
+files by these markers and the generated text. `gspot apply` replaces those files from your settings, even files with
+local edits or merge markers. Move any change you need into `gspot.toml` before you apply.
 
-gspot also generates the tool file entry points and `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml` outside `.gspot/`.
-Do not hand-edit them.
-
-gspot updates the files in `.gspot/` when you upgrade gspot. Tell dependency bots to skip that folder,
-for Renovate: `"ignorePaths": [".gspot/**"]`.
+gspot updates the files in `.gspot/` when you upgrade gspot. Tell dependency bots to skip that folder;
+for Renovate, set `"ignorePaths": [".gspot/**"]`.

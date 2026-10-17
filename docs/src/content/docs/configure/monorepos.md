@@ -4,8 +4,8 @@ description: Give each scope its own configurations and settings in gspot.toml.
 ---
 
 A scope holds the configurations and settings for one folder. `gspot init`
-proposes a scope for each folder with a tracked project file, such as `package.json`,
-`pyproject.toml`, or `Package.swift`. Check their paths and configurations in the plan before you accept.
+plans a scope for each folder with a tracked project file, such as `package.json`,
+`pyproject.toml`, or `Package.swift`. Check the path and configurations of each scope in the plan before you accept it.
 
 ## Declare scopes
 
@@ -22,7 +22,7 @@ path = "ios"
 configurations = ["swift", "xcode"]
 ```
 
-Each `[[scope]]` names its folder in `path`. Its settings apply to that folder only.
+Each `[[scope]]` names its folder in `path`. Its settings cover that folder only.
 
 After you change the scopes, apply the settings, install the tools, and check one scope:
 
@@ -32,15 +32,15 @@ gspot install
 gspot check api
 ```
 
-## Which scope owns a file
+## Which scope a file belongs to
 
-The deepest scope that contains a file owns it. Files outside every scope belong to the root.
+A file belongs to the deepest scope that contains it. Files outside every scope belong to the root.
 A whole-project check, such as a type check, can read other files of the same project when you
 name one file.
 
 To see the scope and the checks of a file, run `gspot explain` with the path. Start the path
-with `./` when it also names a configuration or a check: `gspot explain bash` explains the configuration, and
-a path prefixed with `./` explains the file.
+with `./` when it also names a configuration or a check: `gspot explain bash` describes the configuration, and
+the `./` form describes the file.
 
 When a scope needs a tool file with other text than the shared copy, gspot writes it to
 `.gspot/config/<tool>/<scope path>/<file>`.
@@ -51,11 +51,10 @@ When a scope needs a tool file with other text than the shared copy, gspot write
 gspot set limits.function_lines 80 --scope api --reason "The parser is one state machine."
 ```
 
-Root settings apply to every scope. A setting in a scope replaces the root value for that scope
-and the scopes inside it. Write paths relative to the repository root. The default paths of a configuration apply inside the scope that selects it.
+Root settings cover every scope. Write paths relative to the repository root. The default paths of a configuration resolve inside the scope that selects it.
 
 A list setting adds up: a scope gets the values of its configurations, the root, and every scope that contains it, without repeats. A single-value setting takes the nearest value. If two selected configurations give
-different defaults for the same setting, gspot names both configurations. To decide, set the value at the
+different defaults for the same setting, gspot names both. To pick one, set the value at the
 root or in a scope.
 
 ## Files a scope reads
@@ -64,8 +63,8 @@ Checks that read project files look inside the scope only. Each child scope chec
 
 ## TypeScript app and Python API
 
-Given an npm project under `apps/web` and a Python project under `services/api`, `gspot init` proposes one scope
-for each. Check their configurations in the plan. To add a configuration that init did not detect:
+For an npm project under `apps/web` and a Python project under `services/api`, `gspot init` plans one scope
+for each. To add a configuration that init did not detect:
 
 ```shell
 gspot add pytest --scope services/api

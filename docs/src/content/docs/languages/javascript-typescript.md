@@ -53,16 +53,16 @@ Index exemptions for ESLint re-export rules and `gspot/no-trivial-files`.
 
 </dl>
 
-Environment-reader checks and limits on index files that re-export other files apply at level `all`. The index limits apply when you allow re-exports. See the [ESLint plugin reference](/reference/eslint-plugin/) for the rule options.
+The environment reader checks and the limits on index files that re-export other files run at level `all`. The index limits run only when you allow re-exports. See the [ESLint plugin reference](/reference/eslint-plugin/) for the lint rule options.
 
 ## JavaScript runtimes
 
-ESLint gives each file one runtime. Ordinary modules use Node.js built-ins; `.cjs` and `.cts`
-files also receive CommonJS globals. React, Vue, and Svelte application sources use
-browser globals. React Native sources use native globals. Build scripts retain Node.js.
-Next.js sources retain Node.js by default because server components can use its APIs.
+Each file gets one ESLint runtime. Ordinary modules use Node.js built-ins; `.cjs` and `.cts`
+files also get CommonJS globals. React, Vue, and Svelte application sources use
+browser globals. React Native sources use native globals. Build scripts keep Node.js.
+Next.js sources keep Node.js by default because server components can use its APIs.
 
-Use `[[tools.eslint.override]]` to declare another runtime for a file selector:
+To give some files another runtime, add a `[[tools.eslint.override]]` record:
 
 ```toml title="gspot.toml"
 [[tools.eslint.override]]
@@ -78,23 +78,21 @@ paths = ["src/serviceworker.js"]
 runtime = "serviceworker"
 ```
 
-Write paths relative to the repository root. Later records win when they overlap.
+Write paths relative to the repository root. When records overlap, the later one counts.
 Use an explicit `node` runtime for server code inside a browser or React Native project.
 
-Runtime names follow the pinned [globals package](https://github.com/sindresorhus/globals);
-`serviceworker` names its serviceworker
-set. Web Workers and service workers have different APIs. Browser and native files do not
-receive Node.js rules. React Native retains the `process` and `require` globals its
-runtime supports, and does not receive Node.js globals such as `Buffer` and `__dirname`.
-gspot rejects unknown runtime names before writing tool files.
+Runtime names follow the pinned [globals package](https://github.com/sindresorhus/globals); use `serviceworker` for
+service workers, which have other APIs than Web Workers. Browser and native
+files get no Node.js lint rules. React Native files keep the `process` and `require` globals, but get no other
+Node.js globals, such as `Buffer` and `__dirname`. An unknown runtime name stops gspot before it writes tool files.
 
-JavaScript checks inherit your own `jsconfig.json` first and `tsconfig.json` otherwise. The TypeScript fallback keeps compiler settings and declarations while selecting JavaScript sources for this check. Your own JSX setting remains in force; otherwise the generated project uses `jsx: "preserve"`. Scopes without either project file use Bundler resolution when an extensionless import style matches a JavaScript source file. Ambient types come from the source project, including your own custom roots.
+JavaScript checks extend your own `jsconfig.json`, or your `tsconfig.json` when no `jsconfig.json` exists. From a `tsconfig.json`, they keep the compiler options and declarations but select only JavaScript sources. Your own JSX setting stays; without one, the generated project uses `jsx: "preserve"`. A scope with neither file uses Bundler resolution when imports without extensions name JavaScript source files. Ambient types come from the source project, including your own type roots.
 
 For compiler selection, see the [TypeScript configuration](/reference/configurations/typescript/).
 
-JavaScript and TypeScript checks use the project's TypeScript compiler when available. If the project has none, gspot prefers its pinned compiler in the tool project over a global compiler. Run `gspot install` to install that compiler. An interrupted tool-project installation reports an error; it does not block an available project compiler.
+JavaScript and TypeScript checks use the TypeScript compiler of the project. Without one, gspot uses its pinned compiler from the tool project before any global compiler. Run `gspot install` to install the pinned compiler. An interrupted tool project install reports an error but does not block a project compiler.
 
-TypeScript source files or your own `tsconfig.json` select TypeScript checks. A TypeScript tool dependency or declaration files alone do not. When a scope has no configuration of your own, gspot generates a standalone compiler project for its source files and declarations. The project excludes generated files, vendored files, and child scopes. Your own configuration keeps its project settings and receives the strict options required by the selected level.
+TypeScript source files or your own `tsconfig.json` select TypeScript checks; a TypeScript tool dependency or declaration files alone do not. When a scope has no `tsconfig.json` of your own, gspot writes a standalone compiler project for its source files and declarations. That project leaves out generator output, vendored files, and child scopes. Your own `tsconfig.json` keeps its compiler options and gets the strict ones that the selected level requires.
 
 See the [JavaScript configuration](/reference/configurations/javascript/) for settings translated into ESLint plugin options.
 
@@ -106,10 +104,9 @@ provide Next.js 15.5 or later. The Next.js Semgrep rules run in `security/semgre
 
 ## React Native
 
-`gspot init` detects `react-native` from React Native dependencies and `expo` from Expo
-dependencies. The Expo configuration requires React Native and adds Expo rules and
-`expo/expo-doctor`. A bare React Native project does not require either Expo tool. React web
-projects that depend on `react-dom` also select the React DOM configuration, which supplies
-the DOM accessibility plugin. Native sources retain React's hooks and component rules.
+`gspot init` selects `react-native` and `expo` from their dependencies. The Expo configuration requires React
+Native and adds Expo lint rules and `expo/expo-doctor`. A bare React Native project needs no Expo tool. A React web
+project that depends on `react-dom` also gets the React DOM configuration and its DOM accessibility plugin.
+Native sources keep the React hooks and component lint rules.
 
 See [Lint rule options](/configure/lint-rules/) for custom React Native text components.

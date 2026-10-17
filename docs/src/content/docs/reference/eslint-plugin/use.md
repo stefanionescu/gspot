@@ -3,7 +3,7 @@ title: Use the ESLint plugin
 description: Install and configure the published plugin without the gspot CLI.
 ---
 
-ESLint rules for code that AI coding agents often write. They flag files and functions that only forward a call,
+Lint rules for ESLint aimed at code that AI coding agents often write. They flag files and functions that only forward a call,
 exports that only rename a value, and imports through index files. They also flag comments mixed into import
 blocks and private environment variables read in client code.
 
@@ -12,7 +12,7 @@ when you run ESLint without gspot.
 
 ## Install
 
-You need Node.js 22.12 or newer and ESLint 9.38.0 or newer with a flat configuration file, such as
+You need Node.js 22.12 or newer and ESLint 9.38.0 or newer with a flat config file, such as
 `eslint.config.mjs`.
 
 | Package manager | Command                                                |
@@ -24,8 +24,8 @@ You need Node.js 22.12 or newer and ESLint 9.38.0 or newer with a flat configura
 
 ## Use
 
-Add a configuration to `eslint.config.mjs`. `recommended` turns on `gspot/no-client-env`; `all` turns on every
-rule except `gspot/require-server-only`.
+Add a plugin config to `eslint.config.mjs`. `recommended` turns on `gspot/no-client-env`; `all` turns on every
+lint rule except `gspot/require-server-only`.
 
 ```javascript
 import gspot from '@gspothq/eslint-plugin';
@@ -42,19 +42,19 @@ src/orders.js
 
 ## Rules
 
-| Rule                           | In          | What it finds                                                                                       |
-| ------------------------------ | ----------- | --------------------------------------------------------------------------------------------------- |
-| `gspot/no-client-env`          | recommended | Private environment reads in client modules.                                                        |
-| `gspot/no-comments-in-imports` | all         | Comments inside or right after the import block.                                                    |
-| `gspot/import-boundaries`      | all         | Relative imports that leave the nearest boundary folder.                                            |
-| `gspot/no-alias-exports`       | all         | Exported constants that only rename another value.                                                  |
-| `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.                      |
-| `gspot/no-trivial-files`       | all         | Files with only forwarding code, aliases, re-exports, or small functions.                           |
-| `gspot/no-trivial-functions`   | all         | Named functions of two statements or fewer that are not exported and are used in at most one place. |
-| `gspot/require-server-only`    | none        | Selected server modules that do not import `server-only` or declare `use server`.                   |
+| Rule                           | In          | What it finds                                                                     |
+| ------------------------------ | ----------- | --------------------------------------------------------------------------------- |
+| `gspot/no-client-env`          | recommended | Private environment reads in client modules.                                      |
+| `gspot/no-comments-in-imports` | all         | Comments inside or right after the import block.                                  |
+| `gspot/import-boundaries`      | all         | Relative imports that leave the nearest boundary folder.                          |
+| `gspot/no-alias-exports`       | all         | Exported constants that only rename another value.                                |
+| `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.    |
+| `gspot/no-trivial-files`       | all         | Files with only forwarding code, aliases, re-exports, or small functions.         |
+| `gspot/no-trivial-functions`   | all         | Unexported named functions of two statements or fewer, used in one place at most. |
+| `gspot/require-server-only`    | none        | Selected server modules that do not import `server-only` or declare `use server`. |
 
-The [rule reference](/reference/eslint-plugin/) gives each rule's options, defaults,
-and examples.
+The [rule reference](/reference/eslint-plugin/) gives the options, defaults,
+and examples of each lint rule.
 
 Turn on `gspot/require-server-only` for the files that hold server code:
 
@@ -85,5 +85,5 @@ export default [
 ];
 ```
 
-`gspot/no-trivial-functions` uses the type information from `projectService` to leave alone a method that an
+`gspot/no-trivial-functions` uses the type information from `projectService` to skip a method that an
 interface or a base class declares.

@@ -24,7 +24,7 @@ Run these commands in the root of your repository.
 </Tabs>
 
 1. The first command adds gspot to the project, pinned to one version.
-2. `gspot init` shows a plan. When you accept it, it writes `gspot.toml`, the tool files, `AGENTS.md`, the agent
+2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the tool files, `AGENTS.md`, the agent
    rules, and the Git hooks.
 3. `gspot install` installs the pinned tools and turns on the hooks. From then on, every commit runs the checks.
 
@@ -56,7 +56,7 @@ Agents read the steps in [/llms.txt](/llms.txt). Read the whole documentation in
 ## After setup
 
 Commit as usual. The pre-commit hook checks the staged files and stops the commit when a check fails. Run
-`gspot check` to check every file, including work that you did not commit.
+`gspot check` for every file, including work that you did not commit.
 
 ## Next steps
 

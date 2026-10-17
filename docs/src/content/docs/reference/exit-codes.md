@@ -3,15 +3,14 @@ title: Exit codes and environment variables
 description: Read command exit codes and the environment variables used by gspot.
 ---
 
-| Exit code      | Meaning                                                                                                  |
-| -------------- | -------------------------------------------------------------------------------------------------------- |
-| `0`            | The command finished.                                                                                    |
-| `1`            | `check` found findings, or `doctor` found a setup problem.                                               |
-| `2`            | The run did not finish: a tool is missing, a fixer failed, a report is invalid, or the input is invalid. |
-| `130` or `143` | `check` or `install` was stopped by Ctrl-C or SIGTERM.                                                   |
+| Exit code      | Meaning                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------- |
+| `0`            | The command finished.                                                                        |
+| `1`            | `check` reported findings, or `doctor` found a setup problem.                                |
+| `2`            | The run did not finish: a missing tool, a failed fixer, an invalid report, or invalid input. |
+| `130` or `143` | Ctrl-C or SIGTERM stopped `check` or `install`.                                              |
 
-gspot keeps exit code `2` for failure and usage errors to preserve its established exit-code contract.
-Each [command page](/reference/commands/) lists its own exit codes. `gspot doctor` exits `1` for a tool or hook that needs setup.
+Each [command page](/reference/commands/) lists its own exit codes.
 
 ## Environment variables
 

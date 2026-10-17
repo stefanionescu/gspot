@@ -11,7 +11,7 @@ An npm `package.json` or Python `pyproject.toml` selects the general `licenses` 
 stage. Install your project dependencies first. Python projects use the `.venv` of their scope,
 and `gspot install` installs the license scanner.
 
-gspot does not choose allowed licenses for you. Until you set `licenses.allowed` or an allowed package, gspot does not scan licenses. For example, after reviewing the licenses your project accepts:
+gspot picks no allowed licenses for you, and scans none until you set `licenses.allowed` or an allowed package. After you review the licenses that your project accepts, list them:
 
 ```shell
 gspot set licenses.allowed MIT Apache-2.0 BSD-3-Clause
@@ -45,12 +45,12 @@ then check again. An accepted advisory needs an [ignore with a reason](/use/igno
 
 Lockfile downloads use `registry.npmjs.org` and `registry.yarnpkg.com` by default.
 Add another reviewed host with `gspot set dependencies.allowed_registries <HOST> --reason "<WHY>"`.
-Replace the placeholders with the host and your reason. Downloads must still use HTTPS. A host allowed in a scope applies to that folder and the folders inside it.
+Downloads must still use HTTPS. A host allowed in a scope counts for that folder and the folders inside it.
 
 ## Release age
 
-A new release waits `dependencies.min_release_age_days` days, 7 by default, before any installer may install it. gspot
-writes this hold into the settings file of each installer that a folder uses:
+A new release waits `dependencies.min_release_age_days` days, 7 by default, before an install can pick it up. gspot
+writes this hold into the file of each installer that a folder uses:
 
 | Installer           | File                  | Key and unit                     |
 | ------------------- | --------------------- | -------------------------------- |

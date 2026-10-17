@@ -24,11 +24,11 @@ level = "recommended"
 ```
 
 A configuration groups checks, tool files, and rules for a language, framework, or concern.
-gspot selects its general configurations such as secrets and spelling by itself, even when you write the list yourself. Use `gspot add <configuration>` to select a configuration,
-or `gspot remove <configuration>` to remove a language or framework configuration.
+gspot always selects the general configurations, such as `secrets` and `spelling`, even when you write the list yourself. Run `gspot add <configuration>` to select a configuration,
+or `gspot remove <configuration>` to drop a language or framework.
 
-`gspot remove nextjs` writes `nextjs` into `removed_configurations`, so detection does not add it back; `gspot add nextjs` brings it back. gspot refuses to remove a configuration that another selected configuration needs. When the tools change, gspot prints a reminder to run `gspot install`.
-You cannot remove a general configuration such as `secrets`. Change the level with `gspot set level`, or turn off one of its checks with an [ignore](/use/ignore/).
+`gspot remove nextjs` writes `nextjs` into `removed_configurations`, so detection does not select it again; `gspot add nextjs` reverses that. gspot does not remove a configuration that another selected configuration needs. When the tools change, gspot prints a reminder to run `gspot install`.
+You cannot remove a general configuration. Change the level with `gspot set level`, or turn off one of its checks with an [ignore](/use/ignore/).
 
 Framework lint rules follow your dependencies. For example, a NestJS project that uses `@nestjs/swagger` also gets the Swagger lint rules.
 
@@ -44,12 +44,12 @@ Neither enables experimental or preview lint rules.
 ## Other ways to write a setting
 
 - `--scope api` writes the setting in the scope `api`.
-- `gspot unset <setting>` removes your value and its reason, so the default applies again.
+- `gspot unset <setting>` removes your value and its reason, so the default takes effect again.
 - On a list, `gspot set` adds items and `gspot unset <setting> <item...>` removes them.
   To replace a whole list, run `gspot unset <setting>`, then `gspot set <setting> <items...>`.
 - A scope's list adds to inherited lists. A command argument list replaces the inherited one as a whole.
 
-A value that loosens a check needs a reason beside the value. This covers a raised limit, lowered coverage, and an item added to an allow-list, such as `allowed_words` or `dependencies.allowed_registries`, that the shipped list lacks:
+A value that loosens a check needs a reason beside it. This covers a raised limit, lowered coverage, and an item added to an allow-list, such as `allowed_words` or `dependencies.allowed_registries`, that the shipped list lacks:
 
 ```toml
 [limits]

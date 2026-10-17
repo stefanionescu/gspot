@@ -3,7 +3,7 @@ title: Git hooks
 description: Run checks before commits and pushes and check commit messages.
 ---
 
-`gspot init` proposes Git hooks. With `hooks.enabled = true`, gspot writes three hooks and `gspot install` turns them on:
+The `gspot init` plan includes Git hooks. With `hooks.enabled = true`, gspot writes three hooks and `gspot install` turns them on:
 
 | Hook         | Checks                                               |
 | ------------ | ---------------------------------------------------- |
@@ -11,15 +11,15 @@ description: Run checks before commits and pushes and check commit messages.
 | `pre-push`   | Push-stage checks over every pushed revision         |
 | `commit-msg` | Message-stage checks; commitlint runs at level `all` |
 
-At level `recommended`, no check reads commit messages, so the commit-msg hook finds nothing. Level `all` adds the commit message check: `commits/commitlint`.
+At level `recommended`, no check reads commit messages; level `all` adds `commits/commitlint`.
 
-The commit hook reads staged files. The push hook covers the commits Git pushes, including intermediate commits. Some checks, such as the type checker, read the whole project. They can report a problem in a file you did not change.
+The commit hook checks the staged files. The push hook checks every commit that it pushes, intermediate ones included. Some checks, such as the type checker, read the whole project and can report a finding in a file you did not change.
 
 ## After you clone
 
 `gspot install` points Git at the hooks in your copy; see [Set up a clone](/start/install/#set-up-a-clone).
 
-A repository with Husky, Lefthook, or a hook folder you wrote retains its existing hooks. gspot prints all three gspot hook lines. Add each line to the matching hook. For npm, the lines have this form:
+A repository with Husky, Lefthook, or your own hook folder keeps its hooks. gspot prints three hook lines instead; add each line to the matching hook. For npm, the lines look like this:
 
 ```shell
 # pre-commit
@@ -30,7 +30,7 @@ npm exec --no -- gspot check --hook pre-push -- "$@"
 npm exec --no -- gspot check --hook commit-msg -- "$1"
 ```
 
-Use the exact lines printed by your installation for its package manager or mise. A missing integration line leaves that hook's checks inactive.
+Use the exact lines that gspot prints for your package manager or mise. A hook without its line runs no gspot checks.
 
 ## Check hooks
 
@@ -39,7 +39,7 @@ gspot check --hook pre-commit
 gspot check --hook commit-msg -- .git/COMMIT_EDITMSG
 ```
 
-The pre-push hook requires Git's remote arguments and revision updates on standard input. Use `git push` to exercise that protocol. For a branch comparison outside a push:
+The pre-push hook needs the remote arguments and revision updates that Git passes on standard input, so test it with `git push`. To compare with a branch outside a push:
 
 ```shell
 gspot check --changed origin/main
@@ -52,7 +52,7 @@ gspot set hooks.enabled true
 gspot install
 ```
 
-`git commit --no-verify` and `git push --no-verify` bypass the local hooks once. CI still runs. To stop a finding for good, add an ignore. See [Ignore a finding](/use/ignore/).
+`git commit --no-verify` and `git push --no-verify` bypass the local hooks once. CI still runs. To stop a finding on every run, add an ignore. See [Ignore a finding](/use/ignore/).
 
 Checks at the manual stage run only when named with `--only`, for example `gspot check --only security/semgrep-registry`. See [CI](/use/ci/) for pipeline setup.
 

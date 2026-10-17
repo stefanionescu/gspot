@@ -13,12 +13,19 @@ mise exec -- gspot install
 mise exec -- gspot check --only python/ruff python/basedpyright
 ```
 
-An explicit `[tool.pydoclint]` style in `pyproject.toml` wins. Otherwise, pydoclint follows the project Ruff pydocstyle convention, then `tools.ruff.docstring_convention` when it equals `google` or `numpy`. Without a declared style, gspot detects sections that use Google or NumPy conventions in source docstrings. Other conventions do not select a pydoclint style. If neither a declaration nor the source selects a style, pydoclint uses its default.
+pydoclint takes its docstring style from the first source that sets one:
+
+1. A `[tool.pydoclint]` style in `pyproject.toml`.
+2. The pydocstyle convention in the Ruff options of the project.
+3. `tools.ruff.docstring_convention`, when it equals `google` or `numpy`.
+4. Google or NumPy sections that gspot finds in your docstrings.
+
+Otherwise, pydoclint uses its default.
 
 See [Tests and coverage](/checks/testing/#python) for pytest.
 
 ## Ruff
 
-`python/ruff` checks Python source and reports each lint rule by its Ruff code. Run `gspot check --fix` to apply
-available fixes, then read the findings that remain. Ruff rules for pytest apply to test files selected by
-`test_files`.
+`python/ruff` checks Python source and reports each lint rule by its Ruff code. Run `gspot check --fix` for the
+available fixes, then read the findings that remain. The Ruff lint rules for pytest cover the files that
+`test_files` selects.

@@ -20,7 +20,7 @@ Git and Node.js 24.15 or newer. The tools that your checks run need these:
 
 ### Operating system limits
 
-Swift needs its toolchain. SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage need macOS with Xcode selected by `xcode-select`. Container checks can need a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) lists its operating systems and other requirements.
+Swift checks need the Swift toolchain. SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage need macOS with Xcode selected by `xcode-select`. Some container checks need a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) lists its systems and other requirements.
 
 :::note
 The Bash checks need Bash 4.4 or newer. macOS comes with Bash 3.2, so install a newer Bash.
@@ -33,10 +33,10 @@ The Bash checks need Bash 4.4 or newer. macOS comes with Bash 3.2, so install a 
 | Has `package.json`                 | As a dev dependency, pinned to one version. Start later commands with `npx gspot`, `pnpm exec gspot`, `yarn exec gspot`, or `bunx gspot`. |
 | Any other, such as Python or Swift | As an npm package that mise pins in your `mise.toml`. Start later commands with `mise exec -- gspot`.                                     |
 
-The guides write commands as `gspot ...`. Add the start from this table.
+The guides show commands as `gspot ...`; add the start from this table.
 
 :::caution
-Install `@gspothq/cli` before you run `npx gspot`. Before installation, npx can download the separate npm package named `gspot`.
+Install `@gspothq/cli` before you run `npx gspot`. Otherwise, npx can download the unrelated npm package named `gspot`.
 :::
 
 ## Repository with package.json
@@ -93,7 +93,7 @@ one with few downloads; `allow_low_downloads=true` approves gspot.
 
 ## Set up a clone
 
-Use the version recorded in `.gspot/version`. `gspot init` refuses to run where `gspot.toml` exists; use `gspot install`.
+Use the gspot version in `.gspot/version`. `gspot init` stops where `gspot.toml` exists, so run `gspot install` instead.
 Install the app dependencies from the committed lockfile first.
 
 <Tabs syncKey="package-manager">
@@ -145,13 +145,12 @@ mise exec -- gspot check
 </TabItem>
 </Tabs>
 
-`gspot install` installs the tools and turns on hooks in this clone. If it fails, fix the error and run it again.
-If `gspot install` changes a lockfile under `.gspot/`, commit that file.
+`gspot install` installs the tools and turns on hooks in this clone.
+If it changes a lockfile under `.gspot/`, commit that file.
 
 ## Private registries
 
 The npm, pnpm, Yarn, and Bun installs of gspot use the registry settings of your repository and your environment. uv
 reads Python package indexes from `uv.toml` or `[tool.uv]` in `pyproject.toml`.
 
-Keep credentials in environment variables or your user settings, never in `gspot.toml` or a lockfile. Each
-teammate gives their own credentials when they run `gspot install`.
+Keep credentials in environment variables or your user settings, never in `gspot.toml` or a lockfile.

@@ -38,7 +38,7 @@ Fix the file, then run the check again.
 | `gspot check <file> <folder>`                         | Some files and folders, relative to the current folder.             |
 | `gspot check --only javascript/eslint typescript/tsc` | Some checks.                                                        |
 
-A check that reads the whole project, such as `typescript/tsc`, still reports findings across the project.
+A check that reads the whole project, such as `typescript/tsc`, still reports findings in every file.
 
 ## Fix findings automatically
 
@@ -59,5 +59,5 @@ them. To add a fixer for your own command, see [command checks](/configure/comma
 The report shows `failed`, `missing`, and `error` rows. Add `--verbose` for the `passed` and `skipped` rows, each
 command, and each ignore with its reason. `gspot check --json` prints the whole report as one JSON object.
 
-When a rule does not apply, [ignore the finding](/use/ignore/). To change a limit, see
+When a lint rule does not fit your code, [ignore the finding](/use/ignore/). To change a limit, see
 [limits](/reference/gspot-toml/limits/).

@@ -3,7 +3,7 @@ title: Command checks
 description: Run your own command as a gspot check, with its findings in the same report.
 ---
 
-A command check runs a command of yours on the files you select. gspot reads its output as
+A command check runs your own command on the files you select. gspot reads its output as
 findings, so they appear in the same report as every other check.
 
 ## Example: find unfinished notes
@@ -51,7 +51,7 @@ gspot apply
 gspot check --only notes
 ```
 
-The check exits with `1` and reports a finding on the note's first line. Replace it with
+The check exits with `1` and reports a finding on the first line of the note. Replace that line with
 the finished instruction:
 
 ```text
@@ -111,7 +111,7 @@ The [command check reference](/reference/gspot-toml/command_check/) lists every 
 
 ## Add a fix command
 
-To let `gspot check --fix` fix the findings, set `fix` to a list of arguments.
+For `gspot check --fix`, set `fix` to a list of arguments.
 `--fix` runs every fixer, then runs them again on the files that changed, so a formatter
 reads what another fixer wrote. Then it runs the checks again. The fix commands change your working tree, not the staging area.
 

@@ -49,7 +49,8 @@ npx gspot install   # install the tools and turn on the Git hooks
 npx gspot check     # check every file now
 ```
 
-Commit what `gspot init` writes. After a teammate clones the repository, `npx gspot install` sets up their copy.
+Commit the files that `gspot init` writes. Git does not keep the installed tools or the hooks, so run
+`npx gspot install` again in each new clone.
 
 ## Documentation
 

@@ -3,25 +3,25 @@ title: Coding agents
 description: Write rules and preserve your own text.
 ---
 
-gspot writes rules: Markdown files that tell coding agents how to write code that passes its checks. The checks
-still decide whether code passes.
+gspot writes rules: Markdown files that tell coding agents how to write code that passes the checks. The rules
+only guide agents; the checks still block failing code.
 
 ## Rules for agents
 
 When `rules.enabled = true`, gspot writes the rules that fit your languages, frameworks, and level
-under `.gspot/rules/`, and a section between gspot markers in `AGENTS.md` that lists them. gspot preserves your own text outside the block.
+under `.gspot/rules/`. A section between gspot markers in `AGENTS.md` lists them.
 
 Codex, Cursor, and GitHub Copilot read `AGENTS.md`. gspot writes a section between gspot markers at the top of `CLAUDE.md` with
-`@AGENTS.md`, so Claude Code reads the same rules. gspot keeps your own text outside both blocks.
+`@AGENTS.md`, so Claude Code reads the same rules. gspot keeps your own text outside both sections.
 
-Point any other coding agent to `AGENTS.md` in its own settings.
+Point any other coding agent to `AGENTS.md`.
 
-## Instructions in the block
+## Instructions in the section
 
-The block lists the rules, gives the command to run before committing, and says how to change settings. Do not edit
-files under `.gspot/`. To keep a finding, add an ignore with a reason: run `gspot ignore`.
+The section lists the rules, gives the command to run before a commit, and says how to change settings. Do not edit
+files under `.gspot/`. To accept a finding, run `gspot ignore` with a reason.
 
 ## Turn rules off
 
-Run `gspot set rules.enabled false`. This deletes the rules and the sections between gspot markers gspot wrote. gspot also deletes
-an instruction file it created, unless you edited it. Your own text stays.
+Run `gspot set rules.enabled false`. gspot then deletes the rules and its sections between gspot markers. It also removes
+an instruction file that it created, unless you edited that file. Your own text stays.

@@ -4,8 +4,8 @@ description: Fix gspot.toml errors, missing tools, failed installs, version mism
 ---
 
 Start with `gspot doctor`. It lists missing tools, hook problems, and generated files that changed.
-When you [report a problem](https://github.com/stefanionescu/gspot/issues), include the output, check name,
-and command that reproduces it. Leave out credentials.
+When you [report a problem](https://github.com/stefanionescu/gspot/issues), include the output, the check ID,
+and the command that reproduces it. Leave out credentials.
 
 ## gspot.toml has an error
 
@@ -22,7 +22,6 @@ A missing tool makes the run incomplete with exit code 2, which also stops a com
 
 If mise prints `GitHub rate limit exceeded`, set `GITHUB_TOKEN` to a token that
 can read public releases and run `gspot install` again. See [mise: If something does not work](https://mise.jdx.dev/getting-started.html#if-something-doesn-t-work).
-For another error, fix the error and run `gspot install` again.
 To make new lockfiles, delete them and run `gspot install`.
 
 ## The installed version differs from the pinned version
@@ -36,7 +35,7 @@ Move any change you need into `gspot.toml` before you run `gspot apply`. Apply r
 
 ## A check runs slowly
 
-Run the reproduce command in the report to time that check alone. `--verbose` prints each command.
+Run the `run again:` command from the report to time that check alone. `--verbose` prints each command.
 
 ## `gspot init` waits for an answer in CI
 
