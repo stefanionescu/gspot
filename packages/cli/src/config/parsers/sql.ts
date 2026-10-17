@@ -38,3 +38,4 @@ export const SQL_PARAMETER_DEPTH = new Map<string, number>([
     [')', -1],
     [']', -1],
 ]);
+export const MIGRATION_SYNTAX_SKIP = 'A migration does not parse. postgres/migration-order reports where.';

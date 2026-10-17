@@ -4,6 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { checkReport } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
@@ -84,4 +85,16 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
             .find((plan) => plan.selection.scope.path === scope)!
             .files.map(({ path }) => basename(path)),
     ).toStrictEqual(['5_custom.sql']);
+});
+
+test('a migration that does not parse gets one syntax finding, from postgres/migration-order', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['postgres'], { level: 'all', tables: '[postgres]\nfrozen_through = "all"\n' }),
+        'migrations/20240201_teams.sql': 'CREATE TABLE ;',
+    });
+    const { report } = await checkReport(sandbox.path, ['check', '--json']);
+    const syntax = report.checks.flatMap(({ check, findings }) =>
+        findings.filter(({ rule }) => rule === 'syntax').map(() => check),
+    );
+    expect(syntax).toStrictEqual(['postgres/migration-order']);
 });

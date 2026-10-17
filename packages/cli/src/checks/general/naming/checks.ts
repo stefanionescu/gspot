@@ -82,17 +82,8 @@ async function readDeclaredNames(input: CheckInput): Promise<{ files: FileNames[
                 language,
                 scopeInput,
             );
-            if (error !== undefined) {
-                findings.push(
-                    buildFinding(
-                        scopeInput,
-                        { file: file.path, line: error.line, column: error.column },
-                        'syntax',
-                        error.text,
-                    ),
-                );
-                continue;
-            }
+            // The language's own linter reports a file that does not parse.
+            if (error !== undefined) continue;
             const declarations = identifiers.map((identifier) => identifier.name);
             files.push({
                 path: file.path,
@@ -173,12 +164,8 @@ export async function checkNamingIdentifiers(input: CheckInput): Promise<Finding
     for (const { file, language } of listNamedFiles(input)) {
         const text = readCachedBytes(input.reads, file.path).toString('utf8');
         const { identifiers, error } = await parseIdentifiers(file.path, text, language, input);
-        if (error !== undefined) {
-            findings.push(
-                buildFinding(input, { file: file.path, line: error.line, column: error.column }, 'syntax', error.text),
-            );
-            continue;
-        }
+        // The language's own linter reports a file that does not parse.
+        if (error !== undefined) continue;
         findings.push(...checkIdentifiers(input, settings, identifiers));
     }
     return findings;

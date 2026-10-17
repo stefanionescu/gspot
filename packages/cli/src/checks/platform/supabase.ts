@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { parse } from '@decimalturn/toml-patch';
 import { isRecord } from '#cli/system/values.ts';
 import { join, posix, relative } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import type { Parsed } from '#cli/types/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { buildFinding } from '#cli/checks/finding.ts';
@@ -11,6 +12,7 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { walkSqlTree } from '#cli/parsers/sql/postgres.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
 import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
@@ -133,7 +135,7 @@ export async function checkSupabaseStoragePolicies(input: CheckInput): Promise<F
     if (read === undefined || 'error' in read) return []; // files/taplo-format reports project syntax errors.
     const { value: config } = read;
     const { migrations, findings: syntax } = await readMigrations(input);
-    if (syntax.length > 0) return syntax;
+    if (syntax.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
     const policed = new Set<string>();
     const policies = migrations
         .flatMap((migration) => migration.statements)

@@ -1,7 +1,9 @@
+import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
+import { MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
@@ -46,7 +48,7 @@ function checkStatements(
  */
 export async function checkRowLevelSecurity(input: CheckInput): Promise<Finding[]> {
     const { migrations, findings: syntax } = await readMigrations(input);
-    if (syntax.length > 0) return syntax;
+    if (syntax.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
     const schema = buildSchema(migrations);
     const schemas = new Set(input.selection.view.options('postgres')['client_schemas']);
     return schema.tables
@@ -70,7 +72,7 @@ export async function checkRowLevelSecurity(input: CheckInput): Promise<Finding[
  */
 export async function checkPostgresGrants(input: CheckInput): Promise<Finding[]> {
     const { migrations, findings: syntax } = await readMigrations(input);
-    if (syntax.length > 0) return syntax;
+    if (syntax.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
     const frozen = selectFrozenMigrations(
         migrations.map(({ path }) => path),
         input.selection.view.options('postgres').frozen_through,
@@ -101,7 +103,7 @@ export async function checkDefinerSearchPath(input: CheckInput): Promise<Finding
     const message =
         'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.';
     const { migrations, findings: syntax } = await readMigrations(input);
-    if (syntax.length > 0) return syntax;
+    if (syntax.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
     return checkStatements(input, migrations, {
         rule: 'definer-search-path',
         message: message,

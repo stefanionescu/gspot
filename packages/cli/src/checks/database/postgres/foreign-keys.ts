@@ -1,5 +1,7 @@
+import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
+import { MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
@@ -11,7 +13,7 @@ import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
  */
 export async function checkForeignKeyIndexes(input: CheckInput): Promise<Finding[]> {
     const { migrations, findings: syntax } = await readMigrations(input);
-    if (syntax.length > 0) return syntax;
+    if (syntax.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
     const schema = buildSchema(migrations);
     return schema.foreignKeys
         .filter((key) => schema.indexed.get(key.table)?.has(key.column) !== true)

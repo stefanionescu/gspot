@@ -1,10 +1,11 @@
+import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
-import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/database.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
+import { FROZEN_NONE, MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { readBlobs, listHeadEntries } from '#cli/repository/revisions/tree-entries.ts';
 
@@ -100,7 +101,7 @@ export async function checkPostgresEditedMigrations(input: CheckInput): Promise<
     const through = input.selection.view.options('postgres')['frozen_through'];
     if (through === FROZEN_NONE) return [];
     const { migrations, findings: syntax } = await readMigrations(input);
-    if (syntax.length > 0) return syntax;
+    if (syntax.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
     const texts = await readCommittedMigrations(
         input,
         migrations.map((migration) => migration.path),
