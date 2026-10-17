@@ -329,7 +329,6 @@ export {
     findDeclaration,
     getSettingTable,
     getWrittenSetting,
-    listCandidateKeys,
     listSettingsTables,
     findSettingDefault,
     replaceWrittenValue,

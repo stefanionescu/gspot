@@ -156,3 +156,30 @@ test('a neutral format setting stays settable without a reason', async () => {
         ],
     });
 });
+
+test('explain shows the default of a path setting joined with the scope, as gspot uses it', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': `configurations = []\n[[scope]]\npath = "web"\nconfigurations = ["site"]\n`,
+        'web/index.html': '<!doctype html><title>Example</title>\n',
+    });
+    const explained = await runGspot(sandbox.path, ['explain', 'site.build_folder', '--json']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    const { scopes } = JSON.parse(explained.stdout) as {
+        scopes: { scope: string; default: unknown; current: unknown }[];
+    };
+    const web = scopes.find((entry) => entry.scope === 'web');
+    expect(web?.default).toBe(web?.current);
+});
+
+test('explain tells you to write a record list by hand, not with gspot set', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': `configurations = ["javascript"]\n[[scope]]\npath = "app"\n`,
+        'index.js': 'export const example = 1;\n',
+        'app/index.js': 'export const example = 1;\n',
+    });
+    const explained = await runGspot(sandbox.path, ['explain', 'architecture.module']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(explained.stdout).toContain('write [[architecture.module]] records by hand in gspot.toml');
+    expect(explained.stdout).not.toContain('gspot set');
+    expect(explained.stdout).not.toContain('--scope');
+});

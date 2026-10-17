@@ -10,6 +10,7 @@ import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
@@ -24,7 +25,7 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 import { ESLINT_TOOL, ESLINT_RULE_NAMES_FILE } from '#cli/config/generation/eslint.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { listCheckIds, listRuleFiles, readManifests } from '#cli/configurations/manifests.ts';
-import { listSettings, getSettingValue, findDeclaration, listCandidateKeys } from '#cli/settings/inherit.ts';
+import { listSettings, getSettingValue, findDeclaration, findSettingDefault } from '#cli/settings/inherit.ts';
 import { type Explanation, type SettingScope, type ConfigurationExplanation } from '#cli/types/commands/explain.ts';
 
 function formatList(label: string, items: string[]): string[] {
@@ -82,15 +83,25 @@ function explainConfiguration(
 }
 
 // Describe one scope: the default, the value and where it comes from, and how to change it.
-function formatSettingScope(key: string, declaration: SettingDeclaration, entry: SettingScope): string[] {
+function formatSettingScope(
+    key: string,
+    declaration: SettingDeclaration,
+    entry: SettingScope,
+    recordList: boolean,
+): string[] {
     const { scope, shipped, effective } = entry;
     const { value, source, reason } = effective ?? { value: undefined, source: 'unset', reason: undefined };
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
-    return [
+    const head = [
         '',
         `Scope: ${formatScopeLabel(scope)}`,
         `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
         `Current value: ${JSON.stringify(value)} (from ${source})`,
+    ];
+    if (recordList)
+        return [...head, `Change it: write [[${key}]] records by hand in gspot.toml, then run gspot apply.`];
+    return [
+        ...head,
         ...(value !== undefined && isLoosening(declaration, value, shipped)
             ? [
                   'If you set this value, give a reason: write it as { value = ..., reason = "..." }, or run gspot set with --reason.',
@@ -104,18 +115,24 @@ function formatSettingScope(key: string, declaration: SettingDeclaration, entry:
 
 function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
     if (session === undefined) return undefined;
+    const { settings } = session.settingsFile;
+    // A record list lives in the root table only, so only the root scope can change it.
+    const recordList = Object.hasOwn(RECORD_FIELDS, key);
     const scopes = session.scopes.flatMap((selection) => {
         const match = findDeclaration(selection.known, key);
-        if (match === undefined) return [];
+        if (match === undefined || (recordList && selection.scope.path !== '')) return [];
         return [
             {
                 scope: selection.scope.path,
                 declaration: match.declaration,
-                effective: getSettingValue(selection.known, session.settingsFile.settings, key, selection.scope.path),
-                shipped: listCandidateKeys(match, key)
-                    .toReversed()
-                    .map((candidate) => selection.known.defaults.get(candidate))
-                    .find((entry) => entry !== undefined)?.value,
+                effective: getSettingValue(selection.known, settings, key, selection.scope.path),
+                shipped: findSettingDefault(
+                    selection.known,
+                    match,
+                    selection.scope.path,
+                    (dependentKey) =>
+                        getSettingValue(selection.known, settings, dependentKey, selection.scope.path)?.value,
+                )?.value,
             },
         ];
     });
@@ -129,7 +146,7 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
         ...(first.declaration.reason_needed === undefined
             ? []
             : [`Reason: ${REASON_NEEDED_TEXTS[first.declaration.reason_needed]}`]),
-        ...scopes.flatMap((entry) => formatSettingScope(key, first.declaration, entry)),
+        ...scopes.flatMap((entry) => formatSettingScope(key, first.declaration, entry, recordList)),
     ];
     return {
         kind: 'setting',
