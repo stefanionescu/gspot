@@ -1,5 +1,3 @@
-
-
 [configuration]
 description = "Astro components: ESLint applies the recommended and accessibility rules of eslint-plugin-astro as errors to frontmatter, markup, and scripts. `astro check` reports type errors in each component."
 requires = ["javascript"]
@@ -13,6 +11,9 @@ extensions = [".astro"]
 [files]
 extensions = [".astro"]
 filenames = ["astro.config.mjs", "astro.config.ts"]
+
+[defaults]
+"tools.eslint.import_extension" = "extensionless"
 
 [[tool]]
 kind = "library"
@@ -49,6 +50,28 @@ files = "*.astro"
 [tool.prettier.overrides.options]
 parser = "astro"
 
+[eslint]
+all_level_rules = ["astro/no-unused-css-selector", "astro/prefer-class-list-directive", "astro/prefer-object-class-list", "astro/prefer-split-class-list"]
+
+[eslint.presets.recommended]
+package = "eslint-plugin-astro"
+source = "configs.flat/recommended"
+
+[eslint.presets.accessibility]
+package = "eslint-plugin-astro"
+source = "configs.flat/jsx-a11y-recommended"
+
+[[eslint.rules_off]]
+files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
+reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
+rules = ["gspot/no-trivial-files"]
+
+[[tool_file]]
+fragment = true
+required_tools = ["eslint-plugin-astro", "eslint-plugin-jsx-a11y"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+
 [[check]]
 command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--minimumFailingSeverity", "warning"]
 cwd = "scope"
@@ -68,28 +91,3 @@ extensions = [".astro"]
 [check.output]
 format = "regex"
 pattern = "^(?<file>[^:\\s][^:]*\\.astro):(?<line>\\d+):(?<column>\\d+) - (?:error|warning) (?<rule>[a-z-]+\\(\\d+\\)): (?<message>.*)$"
-
-[eslint]
-all_level_rules = ["astro/no-unused-css-selector", "astro/prefer-class-list-directive", "astro/prefer-object-class-list", "astro/prefer-split-class-list"]
-
-[eslint.presets.recommended]
-package = "eslint-plugin-astro"
-source = "configs.flat/recommended"
-
-[eslint.presets.accessibility]
-package = "eslint-plugin-astro"
-source = "configs.flat/jsx-a11y-recommended"
-
-[[eslint.rules_off]]
-files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
-reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
-rules = ["gspot/no-trivial-files"]
-
-[defaults]
-"tools.eslint.import_extension" = "extensionless"
-
-[[tool_file]]
-fragment = true
-required_tools = ["eslint-plugin-astro", "eslint-plugin-jsx-a11y"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

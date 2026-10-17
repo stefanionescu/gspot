@@ -1,4 +1,5 @@
 allowed_words = ["PostgreSQL", "Postgres"]
+
 [configuration]
 description = "Postgres migrations: squawk for changes that lock or break, ordered versions, and no edits after a run. Schema checks require row security, explicit grants, and an index under every foreign key."
 requires = ["sql"]
@@ -11,6 +12,15 @@ dependencies = ["pg", "postgres", "psycopg", "asyncpg", "@neondatabase/serverles
 [files]
 paths = ["db/migrations/*.sql", "migrations/*.sql", "**/supabase/migrations/*.sql"]
 
+[defaults]
+"tools.sqlfluff.dialect" = "postgres"
+
+[[naming.override]]
+allow_digits = true
+categories = ["folders"]
+paths = ["**/migrations/**"]
+reason = "Migration directories use the migration tool timestamp names."
+
 [[tool]]
 github = { name = "sbdchd/squawk", version = "v2.64.0" }
 min_version = "2.0.0"
@@ -19,6 +29,7 @@ name = "squawk"
 npm = "squawk-cli"
 replace = [".squawk.toml", "squawk.toml"]
 version = "2.64.0"
+
 [[tool_file]]
 per_scope = true
 target = ".gspot/config/squawk.toml"
@@ -95,12 +106,3 @@ runs = "scope"
 stage = "commit"
 summary = "Checks that an index, a primary key, or a unique key leads with every foreign key column."
 why = "Deleting a parent row scans the whole child table when the foreign key has no index."
-
-[[naming.override]]
-allow_digits = true
-categories = ["folders"]
-paths = ["**/migrations/**"]
-reason = "Migration directories use the migration tool timestamp names."
-
-[defaults]
-"tools.sqlfluff.dialect" = "postgres"

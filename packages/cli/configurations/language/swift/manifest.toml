@@ -1,5 +1,4 @@
 allowed_words = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
-
 ignored_folders = [".build", "DerivedData", "Pods"]
 
 [configuration]
@@ -15,6 +14,10 @@ project_files = ["Package.swift"]
 extensions = [".swift"]
 filenames = ["Package.swift", "Package.resolved"]
 
+[rules]
+"SWIFTUI.md" = { tags = ["swift-import:SwiftUI"] }
+"UIKIT.md" = { tags = ["swift-import:UIKit"] }
+
 [[tool]]
 brew = "swiftlint"
 builds = ["macos", "linux"]
@@ -27,6 +30,7 @@ rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
 suppression = { marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)" }
 version = "0.63.2"
 version_command = ["version"]
+
 [[tool]]
 builds = ["macos", "linux"]
 min_version = "0.54.0"
@@ -38,6 +42,7 @@ version = "0.61.1"
 brew = "swiftformat"
 github = { name = "nicklockwood/SwiftFormat", version = "0.61.1" }
 mise = { name = "swiftformat", version = "0.61.1", options = { no_app = true, rename_exe = "swiftformat" } }
+
 [[tool]]
 brew = "periphery"
 builds = ["macos"]
@@ -49,6 +54,7 @@ replace = [".periphery.yml", ".periphery.yaml"]
 suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)" }
 version = "3.6.0"
 version_command = ["version"]
+
 [[tool]]
 name = "swift"
 system = true
@@ -73,6 +79,12 @@ tool = "swiftformat"
 per_scope = true
 target = ".gspot/config/periphery.yml"
 tool = "periphery"
+
+[[tool_file]]
+per_scope = true
+target = ".gspot/config/semgrep/swift.yml"
+tool = "semgrep"
+when = { configuration = "security" }
 
 [[check]]
 command = ["swiftlint", "lint", "--strict", "--quiet", "--no-cache", "--reporter", "json", "{files}"]
@@ -139,13 +151,3 @@ stage = "push"
 summary = "Scans the built project for declarations nothing uses."
 tool = "periphery"
 why = "People read, maintain, and migrate dead code without knowing that nothing uses it."
-
-[rules]
-"SWIFTUI.md" = { tags = ["swift-import:SwiftUI"] }
-"UIKIT.md" = { tags = ["swift-import:UIKit"] }
-
-[[tool_file]]
-per_scope = true
-target = ".gspot/config/semgrep/swift.yml"
-tool = "semgrep"
-when = { configuration = "security" }

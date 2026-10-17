@@ -8,6 +8,9 @@ title = "Drizzle"
 [detect]
 dependencies = ["drizzle-orm"]
 
+[rules."DRIZZLE.md"]
+dependencies = ["pg", "postgres"]
+
 [[tool]]
 kind = "library"
 name = "eslint-plugin-drizzle"
@@ -22,6 +25,16 @@ name = "drizzle-kit"
 npm = "drizzle-kit"
 system = true
 version_command = ["--version"]
+
+[[eslint.selectors]]
+message = "Raw SQL skips the types of the schema. Use the query builder, or accept this finding with a rule-specific ignore."
+selector = "TaggedTemplateExpression[tag.name='sql']"
+
+[[tool_file]]
+fragment = true
+required_tools = ["eslint-plugin-drizzle"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
 
 [[check]]
 command = ["drizzle-kit", "generate"]
@@ -40,16 +53,3 @@ pattern = "**/*"
 
 [check.files]
 paths = ["drizzle.config.ts", "drizzle.config.js", "drizzle.config.mts", "drizzle.config.mjs", "drizzle.config.cts", "drizzle.config.cjs"]
-
-[rules."DRIZZLE.md"]
-dependencies = ["pg", "postgres"]
-
-[[eslint.selectors]]
-message = "Raw SQL skips the types of the schema. Use the query builder, or accept this finding with a rule-specific ignore."
-selector = "TaggedTemplateExpression[tag.name='sql']"
-
-[[tool_file]]
-fragment = true
-required_tools = ["eslint-plugin-drizzle"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

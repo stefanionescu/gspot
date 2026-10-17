@@ -13,10 +13,12 @@ name = "commitlint"
 npm = "@commitlint/cli"
 replace = [".commitlintrc", ".commitlintrc.json", ".commitlintrc.yml", ".commitlintrc.yaml", ".commitlintrc.js", ".commitlintrc.cjs", ".commitlintrc.mjs", ".commitlintrc.ts", ".commitlintrc.cts", ".commitlintrc.mts", "commitlint.config.js", "commitlint.config.cjs", "commitlint.config.mjs", "commitlint.config.ts", "commitlint.config.cts", "commitlint.config.mts"]
 version = "21.2.2"
+
 [[tool.replace_key]]
 file = "package.json"
 key = "commitlint"
 redirect = true
+
 [[tool_file]]
 target = ".gspot/config/commitlint.config.cjs"
 tool = "commitlint"

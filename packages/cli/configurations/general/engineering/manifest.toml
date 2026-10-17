@@ -1,4 +1,5 @@
 allowed_words = ["Bun", "Node", "npm", "pnpm", "mise", "CI", "macOS", "Linux", "Windows", "CSRF", "ASD"]
+
 [configuration]
 always_selected = true
 description = "Rules for working and writing code. The `[rules]` setting turns them on or off."

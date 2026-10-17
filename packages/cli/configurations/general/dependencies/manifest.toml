@@ -1,5 +1,3 @@
-shared_prefixes = { prefixes = ["package", "pnpm"] }
-
 [configuration]
 always_selected = true
 description = "Checks for known advisories, one version per package, exact pins, one package manager, and a lockfile that matches its dependency file."
@@ -8,6 +6,9 @@ title = "Dependencies"
 [files]
 filenames = ["package.json", "bun.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bunfig.toml", ".npmrc", "pnpm-workspace.yaml", "pyproject.toml", "uv.lock", "requirements*.txt", "Package.swift", "Package.resolved", "Cargo.toml", "Cargo.lock", "go.mod", "go.sum", "Gemfile.lock"]
 kinds = ["source", "generated"]
+
+[shared_prefixes]
+prefixes = ["package", "pnpm"]
 
 [[tool]]
 brew = "osv-scanner"
@@ -19,12 +20,14 @@ replace = ["osv-scanner.toml"]
 scoop = "osv-scanner"
 version = "2.6.0"
 winget = "Google.OSVScanner"
+
 [[tool]]
 mise = "npm:syncpack"
 name = "syncpack"
 npm = "syncpack"
 replace = [".syncpackrc", ".syncpackrc.json", ".syncpackrc.yaml", ".syncpackrc.yml", ".syncpackrc.ts", ".syncpackrc.mjs", ".syncpackrc.js", ".syncpackrc.cjs", "syncpack.config.js", "syncpack.config.cjs", "syncpack.config.mjs", "syncpack.config.ts"]
 version = "15.3.3"
+
 [[tool_file]]
 target = ".gspot/config/osv-scanner.toml"
 tool = "osv-scanner"

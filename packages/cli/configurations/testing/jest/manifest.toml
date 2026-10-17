@@ -21,6 +21,15 @@ npm = "eslint-plugin-jest"
 rule_prefix = "jest"
 version = "29.16.6"
 
+[eslint]
+all_level_rules = ["jest/prefer-strict-equal"]
+
+[[tool_file]]
+fragment = true
+required_tools = ["eslint-plugin-jest"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+
 [[check]]
 command = ["jest", "--ci", "--rootDir={root}/{scope}", "--coverage", "--coverageReporters=text-summary", "--coverageThreshold={\"global\":{\"lines\":{setting:coverage.lines},\"branches\":{setting:coverage.branches},\"functions\":{setting:coverage.functions},\"statements\":{setting:coverage.statements}}}"]
 crash_pattern = "^No tests found|^  ● Test suite failed to run"
@@ -42,12 +51,3 @@ extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
 [check.output]
 format = "regex"
 pattern = "^Jest: \"global\" (?<message>coverage threshold for .+ not met: .+)$"
-
-[eslint]
-all_level_rules = ["jest/prefer-strict-equal"]
-
-[[tool_file]]
-fragment = true
-required_tools = ["eslint-plugin-jest"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

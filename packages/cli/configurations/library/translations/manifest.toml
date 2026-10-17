@@ -6,12 +6,24 @@ title = "Translations"
 [detect]
 dependencies = ["next-intl", "react-i18next", "i18next", "react-intl", "@lingui/core"]
 
+[rules."NEXT-INTL.md"]
+dependencies = ["next-intl"]
+
 [[tool]]
 kind = "library"
 name = "eslint-plugin-i18next"
 npm = "eslint-plugin-i18next"
 rule_prefix = "i18next"
 version = "6.1.5"
+
+[eslint]
+all_level_rules = ["i18next/no-literal-string"]
+
+[[tool_file]]
+fragment = true
+required_tools = ["eslint-plugin-i18next"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
 
 [[check]]
 example = "When the base locale defines `welcome` and another lacks it, the check reports the missing key. Add the translation with the same placeholders."
@@ -26,15 +38,3 @@ why = "next-intl loads one locale at a time, so only a comparison with the base 
 [check.when]
 dependencies = ["next-intl"]
 setting = "translations.messages_folder"
-
-[rules."NEXT-INTL.md"]
-dependencies = ["next-intl"]
-
-[eslint]
-all_level_rules = ["i18next/no-literal-string"]
-
-[[tool_file]]
-fragment = true
-required_tools = ["eslint-plugin-i18next"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

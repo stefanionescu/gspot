@@ -1,4 +1,5 @@
 allowed_words = ["Supabase"]
+
 [configuration]
 description = "A Supabase project: edge functions under Deno. Every storage bucket has a policy, and privileged keys stay in their allowed files."
 requires = ["postgres", "javascript"]
@@ -11,6 +12,10 @@ project_files = ["supabase/config.toml"]
 
 [files]
 paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]
+
+[defaults]
+"postgres.client_schemas" = ["public"]
+"tools.squawk.assume_in_transaction" = true
 
 [[tool]]
 brew = "deno"
@@ -30,6 +35,12 @@ npm = "supabase"
 scoop = "supabase"
 system = true
 version_command = ["--version"]
+
+[[tool_file]]
+per_scope = true
+target = ".gspot/config/semgrep/supabase.yml"
+tool = "semgrep"
+when = { configuration = "security" }
 
 [[check]]
 example = "A storage bucket with no policy on `storage.objects` reports a finding. Add a migration that defines access for that bucket."
@@ -86,13 +97,3 @@ stage = "push"
 summary = "Compares `supabase.types_file` with the output the Supabase CLI writes from the local database."
 tool = "supabase"
 why = "Stale types let code compile against a column the database dropped."
-
-[defaults]
-"postgres.client_schemas" = ["public"]
-"tools.squawk.assume_in_transaction" = true
-
-[[tool_file]]
-per_scope = true
-target = ".gspot/config/semgrep/supabase.yml"
-tool = "semgrep"
-when = { configuration = "security" }

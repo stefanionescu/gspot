@@ -1,4 +1,5 @@
 allowed_words = ["CSS"]
+
 [configuration]
 description = "CSS files and style blocks in Vue and Svelte components: Stylelint with the standard rules, Prettier for layout, and module classes both defined and used. SCSS gets formatting only."
 title = "CSS"
@@ -9,16 +10,21 @@ extensions = [".css", ".vue", ".svelte"]
 [files]
 extensions = [".css"]
 
+[rules]
+"TAILWIND.md" = { dependencies = ["tailwindcss"] }
+
 [[tool]]
 name = "stylelint"
 npm = "stylelint"
 replace = [".stylelintrc", ".stylelintrc.json", ".stylelintrc.js", ".stylelintrc.cjs", ".stylelintrc.mjs", ".stylelintrc.yml", ".stylelintrc.yaml", "stylelint.config.js", "stylelint.config.cjs", "stylelint.config.mjs"]
 suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:\\*/)?$" }
 version = "16.23.1"
+
 [[tool.replace_key]]
 file = "package.json"
 key = "stylelint"
 redirect = true
+
 [[tool]]
 kind = "library"
 name = "stylelint-config-standard"
@@ -51,6 +57,3 @@ stage = "commit"
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
 tool = ["stylelint", "stylelint-config-standard"]
 why = "A browser silently skips a declaration it cannot parse, so a typo in a property ships as a missing style."
-
-[rules]
-"TAILWIND.md" = { dependencies = ["tailwindcss"] }

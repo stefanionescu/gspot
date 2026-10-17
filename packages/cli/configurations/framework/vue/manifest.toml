@@ -11,6 +11,9 @@ extensions = [".vue"]
 [files]
 extensions = [".vue"]
 
+[defaults]
+"tools.eslint.import_extension" = "extensionless"
+
 [[tool]]
 kind = "library"
 name = "eslint-plugin-vue"
@@ -39,6 +42,23 @@ name = "vue-tsc"
 npm = "vue-tsc"
 version = "3.3.11"
 
+[eslint]
+all_level_rules = ["vue/no-useless-v-bind", "vue/prefer-true-attribute-shorthand", "vue/attribute-hyphenation", "vue/attributes-order", "vue/block-order", "vue/component-api-style", "vue/component-definition-name-casing", "vue/define-emits-declaration", "vue/define-props-declaration", "vue/multi-word-component-names", "vue/one-component-per-file", "vue/order-in-components", "vue/prop-name-casing", "vue/require-default-prop", "vue/this-in-template", "vue/v-bind-style", "vue/v-on-event-hyphenation", "vue/v-on-style", "vue/v-slot-style"]
+
+[eslint.presets.recommended]
+package = "eslint-plugin-vue"
+source = "configs.flat/recommended"
+
+[eslint.presets.accessibility]
+package = "eslint-plugin-vuejs-accessibility"
+source = "configs.flat/recommended"
+
+[[tool_file]]
+fragment = true
+required_tools = ["eslint-plugin-vue", "vue-eslint-parser", "eslint-plugin-vuejs-accessibility"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+
 [[check]]
 cwd = "scope"
 example = "`const count: number = 'one';` in a component script reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
@@ -61,23 +81,3 @@ extensions = [".vue"]
 [check.output]
 format = "regex"
 pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"
-
-[eslint]
-all_level_rules = ["vue/no-useless-v-bind", "vue/prefer-true-attribute-shorthand", "vue/attribute-hyphenation", "vue/attributes-order", "vue/block-order", "vue/component-api-style", "vue/component-definition-name-casing", "vue/define-emits-declaration", "vue/define-props-declaration", "vue/multi-word-component-names", "vue/one-component-per-file", "vue/order-in-components", "vue/prop-name-casing", "vue/require-default-prop", "vue/this-in-template", "vue/v-bind-style", "vue/v-on-event-hyphenation", "vue/v-on-style", "vue/v-slot-style"]
-
-[eslint.presets.recommended]
-package = "eslint-plugin-vue"
-source = "configs.flat/recommended"
-
-[eslint.presets.accessibility]
-package = "eslint-plugin-vuejs-accessibility"
-source = "configs.flat/recommended"
-
-[defaults]
-"tools.eslint.import_extension" = "extensionless"
-
-[[tool_file]]
-fragment = true
-required_tools = ["eslint-plugin-vue", "vue-eslint-parser", "eslint-plugin-vuejs-accessibility"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

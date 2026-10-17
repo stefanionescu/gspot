@@ -1,5 +1,4 @@
 allowed_words = ["Python", "Ruff"]
-
 ignored_folders = [".venv", "venv"]
 
 [configuration]
@@ -16,6 +15,81 @@ shebangs = ["python", "python3"]
 extensions = [".py", ".pyi"]
 filenames = ["pyproject.toml", "setup.cfg", ".importlinter"]
 
+[[naming.override]]
+allowed_names = ["__init__", "__main__"]
+categories = ["files"]
+languages = ["python"]
+paths = ["**/__init__.py", "**/__main__.py"]
+reason = "Python names these files."
+
+[[naming.override]]
+allowed_names = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
+categories = ["methods"]
+languages = ["python"]
+paths = ["**"]
+reason = "unittest discovers its lifecycle methods by these names."
+
+[[naming.override]]
+allowed_names = [
+    "__init__",
+    "__main__",
+    "__all__",
+    "__name__",
+    "__file__",
+    "__dict__",
+    "__slots__",
+    "__repr__",
+    "__str__",
+    "__eq__",
+    "__hash__",
+    "__len__",
+    "__iter__",
+    "__next__",
+    "__enter__",
+    "__exit__",
+    "__call__",
+    "__getitem__",
+    "__setitem__",
+    "__delitem__",
+    "__contains__",
+    "__lt__",
+    "__le__",
+    "__gt__",
+    "__ge__",
+    "__ne__",
+    "__bool__",
+    "__post_init__",
+    "__class_getitem__",
+    "__aenter__",
+    "__aexit__",
+    "__await__",
+    "__aiter__",
+    "__anext__",
+    "__new__",
+    "__spec__",
+    "__package__",
+    "__loader__",
+    "__cached__",
+    "__doc__",
+    "__annotations__",
+    "__path__",
+    "__class__",
+    "__classcell__",
+    "__qualname__",
+    "__builtins__",
+]
+categories = ["functions", "methods", "variables", "constants", "attributes"]
+languages = ["python"]
+paths = ["**"]
+reason = "Python defines these special methods and attributes."
+
+[[naming.override]]
+categories = ["functions", "variables", "constants", "methods", "attributes"]
+ignored_prefix = "^_+"
+languages = ["python"]
+paths = ["**"]
+reason = "A leading underscore marks a private Python declaration."
+
 [[tool]]
 mise = "uv"
 name = "uv"
@@ -31,9 +105,11 @@ replace = ["ruff.toml", ".ruff.toml"]
 rule_url = "https://docs.astral.sh/ruff/rules/{rule}/"
 suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)[^#]*# ?(?<reason>\\S.*)" }
 version = "0.16.8"
+
 [[tool.replace_key]]
 file = "pyproject.toml"
 table = "tool.ruff"
+
 [[tool]]
 min_version = "1.20.0"
 name = "basedpyright"
@@ -41,12 +117,15 @@ npm = "basedpyright"
 replace = ["pyrightconfig.json"]
 suppression = { marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)" }
 version = "1.40.1"
+
 [[tool.replace_key]]
 file = "pyproject.toml"
 table = "tool.basedpyright"
+
 [[tool.replace_key]]
 file = "pyproject.toml"
 table = "tool.pyright"
+
 [[tool]]
 mise = "pipx:import-linter"
 name = "lint-imports"
@@ -66,146 +145,6 @@ mise = "pipx:deptry"
 name = "deptry"
 pypi = "deptry"
 version = "0.25.1"
-
-[[tool_file]]
-per_scope = true
-pointer = { path = "ruff.toml", body = 'extend = "{target}"' }
-target = ".gspot/config/ruff.toml"
-tool = "ruff"
-
-[[tool_file]]
-per_scope = true
-pointer = { path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}" }
-target = ".gspot/config/basedpyrightconfig.json"
-tool = "basedpyright"
-
-[[check]]
-command = ["ruff", "check", "--no-cache", "--output-format", "json", "{files}"]
-example = "`eval(user_input)` reports S307. Parse the input instead, and allow only known operations."
-exit_codes = [1]
-files = { extensions = [".py", ".pyi"] }
-fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
-help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore python/ruff --rule <code> --reason \"<why>\"`, and add `--paths` to limit it."
-level = "recommended"
-name = "ruff"
-output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
-stage = "commit"
-summary = "Lints every Python file with the Ruff rules for the level, security rules included."
-why = "Ruff runs the rules of a dozen older tools fast enough for every commit."
-
-[[check]]
-command = [
-    "ruff",
-    "format",
-    "--no-cache",
-    "--check",
-    "--output-format",
-    "concise",
-    "{files}",
-]
-example = "`value=1` differs from the Ruff output. Run `gspot check --fix` to get `value = 1`."
-exit_codes = [1]
-files = { extensions = [".py", ".pyi"] }
-fix = ["ruff", "format", "--no-cache", "--quiet", "{files}"]
-help = "Run `gspot check --fix`."
-level = "recommended"
-name = "ruff-format"
-output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", message = "This file is not formatted the way Ruff formats it." }
-stage = "commit"
-summary = "Checks the layout of every Python file against the Ruff formatter."
-why = "One layout everywhere keeps a diff about the change."
-
-[[check]]
-command = ["basedpyright", "--outputjson"]
-cwd = "scope"
-example = "`count: int = \"one\"` reports an incompatible type. Assign a number, such as `count: int = 1`, or change the annotation to `str`."
-exit_codes = [1]
-files = { extensions = [".py", ".pyi"] }
-help = "Fix the type, or narrow it where the value arrives. Accept a file that needs another dependency set with `gspot ignore python/basedpyright --paths <path> --reason \"<why>\"`."
-level = "recommended"
-name = "basedpyright"
-output = { format = "json", items = "generalDiagnostics", line_base = 0, fields = { file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message" } }
-runs = "scope"
-stage = "push"
-summary = "Type checks the project. At level `all`, it also requires annotations."
-why = "Each type error found here becomes a crash that never reaches a user."
-
-[[check]]
-cwd = "scope"
-env = { PYTHONDONTWRITEBYTECODE = "1" }
-example = "A module that imports from a forbidden layer reports a broken contract. Move the shared code to an allowed layer, and update the import."
-files = { extensions = [
-    ".py",
-], filenames = [
-    "pyproject.toml",
-    "setup.cfg",
-    ".importlinter",
-] }
-help = "Move the import to the side the contract allows, or change the contract."
-level = "recommended"
-name = "import-linter"
-runs = "scope"
-stage = "commit"
-summary = "Runs project import contracts from setup.cfg, .importlinter, or pyproject.toml."
-tool = ["uv", "lint-imports"]
-why = "A layer that imports the layer above it turns an architecture into a diagram nobody follows."
-
-[[check]]
-cwd = "scope"
-example = "A docstring that documents `name` for a function that takes `path` reports a mismatch. Document `path` instead."
-files = { extensions = [".py"] }
-help = "Bring the docstring in line with the signature."
-level = "recommended"
-name = "pydoclint"
-output = { format = "grouped", file_pattern = "^(?<file>\\S.*\\.py)$", pattern = "^\\s+(?<line>\\d+): (?<rule>DOC\\d+): (?<message>.*)$" }
-stage = "commit"
-summary = "Checks that each docstring names the arguments, return value, and exceptions of its function."
-tool = "pydoclint"
-why = "A docstring that contradicts the signature misleads more than none, because people trust it."
-
-[[check]]
-cwd = "scope"
-env = { PYTHONDONTWRITEBYTECODE = "1" }
-example = "An import of a third-party package missing from the project dependencies reports a finding. Declare the package and update the lockfile, or remove the import."
-files = { extensions = [".py"], filenames = ["pyproject.toml"] }
-help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with `gspot ignore python/deptry --rule <code> --reason \"<why>\"`."
-level = "recommended"
-name = "deptry"
-output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$" }
-runs = "scope"
-stage = "push"
-summary = "Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones."
-tool = ["uv", "deptry"]
-why = "An import that works through somebody else's dependency breaks the day they drop it."
-
-[[check]]
-example = "A `requirements.txt` kept by hand beside a locked project reports a second dependency list. Export it from the lockfile, declare it generated, and install from the lock."
-files = { filenames = [
-    "uv.lock",
-    "poetry.lock",
-    "pdm.lock",
-], kinds = [
-    "source",
-    "generated",
-] }
-help = "Export the requirements file from the lockfile, declare it generated, and replace `pip install` with the locked command. Accept a reviewed path with `gspot ignore python/pip-installs --paths <glob> --reason \"<why>\"`."
-level = "all"
-name = "pip-installs"
-runs = "scope"
-stage = "commit"
-summary = "Checks that pyproject.toml lists every dependency, with no hand-kept requirements file and no `pip install`."
-why = "Two dependency lists drift apart, and the image installs packages the lockfile never pinned."
-
-[[check]]
-example = "A docstring that only repeats the function name reports a placeholder. Describe the behavior, inputs, and effects that the name leaves out."
-files = { extensions = [".py"] }
-help = "Say what the function does that its name does not, or for whom it exists."
-level = "all"
-name = "placeholder-docstrings"
-runs = "scope"
-stage = "commit"
-summary = "Finds docstrings that hold a placeholder word, or the name of the function again."
-why = "A docstring that says nothing satisfies the lint rule and wastes the line."
 
 [ruff]
 recommended = [
@@ -430,78 +369,142 @@ all = [
     "TRY",
 ]
 
+[[tool_file]]
+per_scope = true
+pointer = { path = "ruff.toml", body = 'extend = "{target}"' }
+target = ".gspot/config/ruff.toml"
+tool = "ruff"
 
-[[naming.override]]
-allowed_names = ["__init__", "__main__"]
-categories = ["files"]
-languages = ["python"]
-paths = ["**/__init__.py", "**/__main__.py"]
-reason = "Python names these files."
+[[tool_file]]
+per_scope = true
+pointer = { path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}" }
+target = ".gspot/config/basedpyrightconfig.json"
+tool = "basedpyright"
 
-[[naming.override]]
-allowed_names = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
-categories = ["methods"]
-languages = ["python"]
-paths = ["**"]
-reason = "unittest discovers its lifecycle methods by these names."
+[[check]]
+command = ["ruff", "check", "--no-cache", "--output-format", "json", "{files}"]
+example = "`eval(user_input)` reports S307. Parse the input instead, and allow only known operations."
+exit_codes = [1]
+files = { extensions = [".py", ".pyi"] }
+fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
+help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore python/ruff --rule <code> --reason \"<why>\"`, and add `--paths` to limit it."
+level = "recommended"
+name = "ruff"
+output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
+stage = "commit"
+summary = "Lints every Python file with the Ruff rules for the level, security rules included."
+why = "Ruff runs the rules of a dozen older tools fast enough for every commit."
 
-[[naming.override]]
-allowed_names = [
-    "__init__",
-    "__main__",
-    "__all__",
-    "__name__",
-    "__file__",
-    "__dict__",
-    "__slots__",
-    "__repr__",
-    "__str__",
-    "__eq__",
-    "__hash__",
-    "__len__",
-    "__iter__",
-    "__next__",
-    "__enter__",
-    "__exit__",
-    "__call__",
-    "__getitem__",
-    "__setitem__",
-    "__delitem__",
-    "__contains__",
-    "__lt__",
-    "__le__",
-    "__gt__",
-    "__ge__",
-    "__ne__",
-    "__bool__",
-    "__post_init__",
-    "__class_getitem__",
-    "__aenter__",
-    "__aexit__",
-    "__await__",
-    "__aiter__",
-    "__anext__",
-    "__new__",
-    "__spec__",
-    "__package__",
-    "__loader__",
-    "__cached__",
-    "__doc__",
-    "__annotations__",
-    "__path__",
-    "__class__",
-    "__classcell__",
-    "__qualname__",
-    "__builtins__",
+[[check]]
+command = [
+    "ruff",
+    "format",
+    "--no-cache",
+    "--check",
+    "--output-format",
+    "concise",
+    "{files}",
 ]
-categories = ["functions", "methods", "variables", "constants", "attributes"]
-languages = ["python"]
-paths = ["**"]
-reason = "Python defines these special methods and attributes."
+example = "`value=1` differs from the Ruff output. Run `gspot check --fix` to get `value = 1`."
+exit_codes = [1]
+files = { extensions = [".py", ".pyi"] }
+fix = ["ruff", "format", "--no-cache", "--quiet", "{files}"]
+help = "Run `gspot check --fix`."
+level = "recommended"
+name = "ruff-format"
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", message = "This file is not formatted the way Ruff formats it." }
+stage = "commit"
+summary = "Checks the layout of every Python file against the Ruff formatter."
+why = "One layout everywhere keeps a diff about the change."
 
-[[naming.override]]
-categories = ["functions", "variables", "constants", "methods", "attributes"]
-ignored_prefix = "^_+"
-languages = ["python"]
-paths = ["**"]
-reason = "A leading underscore marks a private Python declaration."
+[[check]]
+command = ["basedpyright", "--outputjson"]
+cwd = "scope"
+example = "`count: int = \"one\"` reports an incompatible type. Assign a number, such as `count: int = 1`, or change the annotation to `str`."
+exit_codes = [1]
+files = { extensions = [".py", ".pyi"] }
+help = "Fix the type, or narrow it where the value arrives. Accept a file that needs another dependency set with `gspot ignore python/basedpyright --paths <path> --reason \"<why>\"`."
+level = "recommended"
+name = "basedpyright"
+output = { format = "json", items = "generalDiagnostics", line_base = 0, fields = { file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message" } }
+runs = "scope"
+stage = "push"
+summary = "Type checks the project. At level `all`, it also requires annotations."
+why = "Each type error found here becomes a crash that never reaches a user."
+
+[[check]]
+cwd = "scope"
+env = { PYTHONDONTWRITEBYTECODE = "1" }
+example = "A module that imports from a forbidden layer reports a broken contract. Move the shared code to an allowed layer, and update the import."
+files = { extensions = [
+    ".py",
+], filenames = [
+    "pyproject.toml",
+    "setup.cfg",
+    ".importlinter",
+] }
+help = "Move the import to the side the contract allows, or change the contract."
+level = "recommended"
+name = "import-linter"
+runs = "scope"
+stage = "commit"
+summary = "Runs project import contracts from setup.cfg, .importlinter, or pyproject.toml."
+tool = ["uv", "lint-imports"]
+why = "A layer that imports the layer above it turns an architecture into a diagram nobody follows."
+
+[[check]]
+cwd = "scope"
+example = "A docstring that documents `name` for a function that takes `path` reports a mismatch. Document `path` instead."
+files = { extensions = [".py"] }
+help = "Bring the docstring in line with the signature."
+level = "recommended"
+name = "pydoclint"
+output = { format = "grouped", file_pattern = "^(?<file>\\S.*\\.py)$", pattern = "^\\s+(?<line>\\d+): (?<rule>DOC\\d+): (?<message>.*)$" }
+stage = "commit"
+summary = "Checks that each docstring names the arguments, return value, and exceptions of its function."
+tool = "pydoclint"
+why = "A docstring that contradicts the signature misleads more than none, because people trust it."
+
+[[check]]
+cwd = "scope"
+env = { PYTHONDONTWRITEBYTECODE = "1" }
+example = "An import of a third-party package missing from the project dependencies reports a finding. Declare the package and update the lockfile, or remove the import."
+files = { extensions = [".py"], filenames = ["pyproject.toml"] }
+help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with `gspot ignore python/deptry --rule <code> --reason \"<why>\"`."
+level = "recommended"
+name = "deptry"
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$" }
+runs = "scope"
+stage = "push"
+summary = "Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones."
+tool = ["uv", "deptry"]
+why = "An import that works through somebody else's dependency breaks the day they drop it."
+
+[[check]]
+example = "A `requirements.txt` kept by hand beside a locked project reports a second dependency list. Export it from the lockfile, declare it generated, and install from the lock."
+files = { filenames = [
+    "uv.lock",
+    "poetry.lock",
+    "pdm.lock",
+], kinds = [
+    "source",
+    "generated",
+] }
+help = "Export the requirements file from the lockfile, declare it generated, and replace `pip install` with the locked command. Accept a reviewed path with `gspot ignore python/pip-installs --paths <glob> --reason \"<why>\"`."
+level = "all"
+name = "pip-installs"
+runs = "scope"
+stage = "commit"
+summary = "Checks that pyproject.toml lists every dependency, with no hand-kept requirements file and no `pip install`."
+why = "Two dependency lists drift apart, and the image installs packages the lockfile never pinned."
+
+[[check]]
+example = "A docstring that only repeats the function name reports a placeholder. Describe the behavior, inputs, and effects that the name leaves out."
+files = { extensions = [".py"] }
+help = "Say what the function does that its name does not, or for whom it exists."
+level = "all"
+name = "placeholder-docstrings"
+runs = "scope"
+stage = "commit"
+summary = "Finds docstrings that hold a placeholder word, or the name of the function again."
+why = "A docstring that says nothing satisfies the lint rule and wastes the line."

@@ -9,6 +9,28 @@ title = "React"
 [detect]
 dependencies = ["react"]
 
+[defaults]
+"tools.eslint.import_extension" = "extensionless"
+
+[[naming.override]]
+cases = ["pascal", "kebab"]
+categories = ["files"]
+paths = ["**/*.tsx", "**/*.jsx"]
+reason = "A component file takes the component's name."
+
+[[naming.override]]
+cases = ["pascal", "camel"]
+categories = ["functions"]
+paths = ["**/*.tsx", "**/*.jsx"]
+reason = "A function that returns JSX is a component and takes a capital."
+
+[[naming.override]]
+allowed_names = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
+categories = ["functions", "methods", "variables"]
+languages = ["typescript", "javascript"]
+paths = ["**"]
+reason = "React defines these subscription and snapshot callback names."
+
 [[tool]]
 kind = "library"
 name = "eslint-plugin-react-hooks"
@@ -29,25 +51,6 @@ name = "eslint-plugin-react-refresh"
 npm = "eslint-plugin-react-refresh"
 rule_prefix = "react-refresh"
 version = "0.5.7"
-
-[[naming.override]]
-cases = ["pascal", "kebab"]
-categories = ["files"]
-paths = ["**/*.tsx", "**/*.jsx"]
-reason = "A component file takes the component's name."
-
-[[naming.override]]
-cases = ["pascal", "camel"]
-categories = ["functions"]
-paths = ["**/*.tsx", "**/*.jsx"]
-reason = "A function that returns JSX is a component and takes a capital."
-
-[[naming.override]]
-allowed_names = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
-categories = ["functions", "methods", "variables"]
-languages = ["typescript", "javascript"]
-paths = ["**"]
-reason = "React defines these subscription and snapshot callback names."
 
 [eslint]
 all_level_rules = ["react/self-closing-comp", "react/display-name", "react/no-array-index-key", "react/prop-types"]
@@ -72,9 +75,6 @@ source = "configs.recommended"
 files = ["**/*.tsx", "**/*.jsx"]
 reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
 rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
-
-[defaults]
-"tools.eslint.import_extension" = "extensionless"
 
 [[tool_file]]
 fragment = true

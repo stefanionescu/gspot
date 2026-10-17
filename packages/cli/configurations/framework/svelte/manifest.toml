@@ -1,5 +1,3 @@
-
-
 [configuration]
 description = "ESLint checks Svelte markup and scripts. DOM manipulation and event-dispatcher typing rules apply at level all; HTML injection rules apply at both levels."
 requires = ["javascript"]
@@ -13,6 +11,9 @@ extensions = [".svelte"]
 [files]
 extensions = [".svelte"]
 filenames = ["svelte.config.js", "svelte.config.ts"]
+
+[defaults]
+"tools.eslint.import_extension" = "extensionless"
 
 [[tool]]
 kind = "library"
@@ -51,6 +52,19 @@ files = "*.svelte"
 [tool.prettier.overrides.options]
 embeddedLanguageFormatting = "auto"
 
+[eslint]
+all_level_rules = ["svelte/no-useless-mustaches", "svelte/prefer-const", "svelte/no-dom-manipulating", "svelte/require-event-dispatcher-types"]
+
+[eslint.presets.recommended]
+package = "eslint-plugin-svelte"
+source = "configs.recommended"
+
+[[tool_file]]
+fragment = true
+required_tools = ["eslint-plugin-svelte", "svelte-eslint-parser"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+
 [[check]]
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
 help = "Fix each warning and error svelte-check prints; both fail the check."
@@ -65,19 +79,3 @@ why = "tsc cannot parse a component file, and the Svelte compiler warns about ma
 
 [check.files]
 extensions = [".svelte"]
-
-[eslint]
-all_level_rules = ["svelte/no-useless-mustaches", "svelte/prefer-const", "svelte/no-dom-manipulating", "svelte/require-event-dispatcher-types"]
-
-[eslint.presets.recommended]
-package = "eslint-plugin-svelte"
-source = "configs.recommended"
-
-[defaults]
-"tools.eslint.import_extension" = "extensionless"
-
-[[tool_file]]
-fragment = true
-required_tools = ["eslint-plugin-svelte", "svelte-eslint-parser"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

@@ -1,4 +1,5 @@
 allowed_words = ["HTML"]
+
 [configuration]
 description = "HTML files: html-validate for structure and accessibility, and no inline script or handler."
 title = "HTML"
@@ -12,6 +13,7 @@ npm = "html-validate"
 replace = [".htmlvalidate.json", ".htmlvalidate.js", ".htmlvalidate.cjs"]
 suppression = { marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=\\s|\\]|$)", reason = "(?: -- |: )(?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*\\]?\\s*(?:--!?>)?$" }
 version = "11.6.1"
+
 [[tool_file]]
 check = "html/html-validate"
 target = ".gspot/config/html-validate-source.json"

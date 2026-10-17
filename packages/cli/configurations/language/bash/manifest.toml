@@ -1,4 +1,5 @@
 allowed_words = ["Bash", "ShellCheck", "tree-sitter"]
+
 [configuration]
 description = "Shell scripts, hooks, and task files: ShellCheck, shfmt, a syntax check, and the structure rules for shell."
 suggests = []
@@ -11,6 +12,20 @@ shebangs = ["shell"]
 [files]
 extensions = [".sh", ".bash", ".zsh", ".bats"]
 tags = ["shebang:shell"]
+
+[[naming.override]]
+allowed_names = ["IFS", "OPTARG", "OPTIND", "EUID", "UID", "PPID", "RANDOM", "SECONDS", "LINENO", "BASH_SOURCE", "BASH_REMATCH", "BASH_VERSION", "BASH_VERSINFO", "FUNCNAME", "PIPESTATUS", "REPLY", "CDPATH", "OLDPWD", "SHLVL", "HOSTNAME", "OSTYPE", "MACHTYPE", "COLUMNS", "LINES"]
+categories = ["variables"]
+languages = ["bash"]
+paths = ["**"]
+reason = "The shell defines these variable names."
+
+[[naming.override]]
+categories = ["functions", "variables", "constants", "methods", "attributes"]
+ignored_prefix = "^_+"
+languages = ["bash"]
+paths = ["**"]
+reason = "A leading underscore marks a private shell declaration."
 
 [[tool]]
 apt = "shellcheck"
@@ -27,6 +42,7 @@ scoop = "shellcheck"
 suppression = { marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reason>\\S.*)" }
 version = "0.11.0"
 winget = "koalaman.shellcheck"
+
 [[tool]]
 brew = "shfmt"
 github = { name = "mvdan/sh", version = "v3.12.0" }
@@ -44,6 +60,12 @@ system = true
 per_scope = true
 target = ".gspot/config/shellcheckrc"
 tool = "shellcheck"
+
+[[tool_file]]
+per_scope = true
+target = ".gspot/config/semgrep/bash.yml"
+tool = "semgrep"
+when = { configuration = "security" }
 
 [[check]]
 command = ["zsh", "-n", "{file}"]
@@ -156,23 +178,3 @@ name = "safety"
 stage = "commit"
 summary = "Finds broad process kills and recursive deletes, except traps that remove mktemp paths. At level all, also reports discarded failures."
 why = "Each of these lets a script silently destroy something by mistake."
-
-[[naming.override]]
-allowed_names = ["IFS", "OPTARG", "OPTIND", "EUID", "UID", "PPID", "RANDOM", "SECONDS", "LINENO", "BASH_SOURCE", "BASH_REMATCH", "BASH_VERSION", "BASH_VERSINFO", "FUNCNAME", "PIPESTATUS", "REPLY", "CDPATH", "OLDPWD", "SHLVL", "HOSTNAME", "OSTYPE", "MACHTYPE", "COLUMNS", "LINES"]
-categories = ["variables"]
-languages = ["bash"]
-paths = ["**"]
-reason = "The shell defines these variable names."
-
-[[naming.override]]
-categories = ["functions", "variables", "constants", "methods", "attributes"]
-ignored_prefix = "^_+"
-languages = ["bash"]
-paths = ["**"]
-reason = "A leading underscore marks a private shell declaration."
-
-[[tool_file]]
-per_scope = true
-target = ".gspot/config/semgrep/bash.yml"
-tool = "semgrep"
-when = { configuration = "security" }

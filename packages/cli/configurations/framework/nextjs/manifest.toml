@@ -1,6 +1,18 @@
 allowed_words = ["Next.js"]
 generated = ["next-env.d.ts"]
 
+[configuration]
+description = "A Next.js app: ESLint rules for the framework and hooks, and server code marked server-only. The configuration leaves every build check on."
+requires = ["typescript", "react", "react-dom"]
+suggests = ["css"]
+title = "Next.js"
+
+[detect]
+dependencies = ["next"]
+
+[files]
+paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts"]
+
 [[naming.override]]
 allowed_names = ["page", "layout", "template", "default", "loading", "error", "not-found", "global-error", "route", "middleware", "proxy", "instrumentation", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
 categories = ["files"]
@@ -14,18 +26,6 @@ languages = ["typescript", "javascript"]
 paths = ["**"]
 reason = "Next.js discovers these data and metadata exports by name."
 
-[configuration]
-description = "A Next.js app: ESLint rules for the framework and hooks, and server code marked server-only. The configuration leaves every build check on."
-requires = ["typescript", "react", "react-dom"]
-suggests = ["css"]
-title = "Next.js"
-
-[detect]
-dependencies = ["next"]
-
-[files]
-paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts"]
-
 [[tool]]
 min_version = "15.5.0"
 name = "next"
@@ -38,18 +38,6 @@ name = "@next/eslint-plugin-next"
 npm = "@next/eslint-plugin-next"
 rule_prefix = "@next/next"
 version = "16.3.8"
-
-[[check]]
-example = "`const count: number = \"one\";` reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
-help = "Fix the first error tsc prints; later errors often come from the same mistake."
-instead_of = "typescript/tsc"
-level = "recommended"
-name = "tsc"
-runs = "scope"
-stage = "push"
-summary = "Has Next.js write its types, then type-checks the app with the strict compiler options."
-tool = "next"
-why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc run fails on imports the framework resolves."
 
 [eslint]
 all_level_rules = ["@next/next/next-script-for-ga", "@next/next/no-html-link-for-pages", "@next/next/no-img-element", "@next/next/no-page-custom-font"]
@@ -77,3 +65,15 @@ tool = "eslint"
 per_scope = true
 target = ".gspot/config/semgrep/nextjs.yml"
 tool = "semgrep"
+
+[[check]]
+example = "`const count: number = \"one\";` reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
+help = "Fix the first error tsc prints; later errors often come from the same mistake."
+instead_of = "typescript/tsc"
+level = "recommended"
+name = "tsc"
+runs = "scope"
+stage = "push"
+summary = "Has Next.js write its types, then type-checks the app with the strict compiler options."
+tool = "next"
+why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc run fails on imports the framework resolves."

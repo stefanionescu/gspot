@@ -16,6 +16,7 @@ replace = ["typos.toml", ".typos.toml", "_typos.toml"]
 scoop = "typos"
 version = "1.43.5"
 winget = "crate-ci.typos"
+
 [[tool_file]]
 per_scope = true
 target = ".gspot/config/typos.toml"

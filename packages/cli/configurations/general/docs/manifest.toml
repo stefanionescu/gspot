@@ -15,6 +15,7 @@ mise = "lychee"
 name = "lychee"
 replace = ["lychee.toml", ".lycheeignore"]
 version = "0.24.2"
+
 [[tool_file]]
 per_scope = true
 target = ".gspot/config/lychee.toml"

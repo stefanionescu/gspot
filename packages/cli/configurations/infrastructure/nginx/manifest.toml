@@ -1,4 +1,5 @@
 allowed_words = ["nginx", "NGINX"]
+
 [configuration]
 description = "nginx files: gixy finds security mistakes, and the server parser checks the rest in a container."
 title = "nginx"

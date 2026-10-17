@@ -16,6 +16,7 @@ name = "linkinator"
 npm = "linkinator"
 replace = ["linkinator.config.json"]
 version = "8.1.0"
+
 [[tool]]
 name = "purgecss"
 npm = "purgecss"

@@ -7,6 +7,13 @@ title = "pytest"
 dependencies = ["pytest"]
 filenames = ["conftest.py", "pytest.ini"]
 
+[[naming.override]]
+categories = ["functions", "methods"]
+ignored_prefix = "^test_"
+languages = ["python"]
+paths = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"]
+reason = "The test runner finds a test by this prefix."
+
 [[tool]]
 install_hint = "Run: python -m pip install pytest"
 min_version = "7.0.0"
@@ -25,6 +32,10 @@ system = true
 version_command = ["pytest", "--version", "--version"]
 version_pattern = "pytest-cov-(\\d+(?:\\.\\d+)+)"
 
+[ruff]
+all = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT018", "PT019", "PT022", "PT023", "PT026"]
+recommended = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT020", "PT021", "PT024", "PT025", "PT027", "PT028", "PT030", "PT031"]
+
 [[check]]
 command = ["pytest", "-q", "--strict-markers", "--strict-config", "--cov", "--cov-fail-under={setting:coverage.lines}", "--no-header", "-p", "no:cacheprovider"]
 cwd = "scope"
@@ -40,14 +51,3 @@ stage = "push"
 summary = "Runs pytest with coverage, and fails on a broken test or a covered share under the floor."
 tool = ["pytest", "pytest-cov"]
 why = "Coverage shows the Python branches and lines that no test runs, before a push."
-
-[ruff]
-all = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT018", "PT019", "PT022", "PT023", "PT026"]
-recommended = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT020", "PT021", "PT024", "PT025", "PT027", "PT028", "PT030", "PT031"]
-
-[[naming.override]]
-categories = ["functions", "methods"]
-ignored_prefix = "^test_"
-languages = ["python"]
-paths = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"]
-reason = "The test runner finds a test by this prefix."

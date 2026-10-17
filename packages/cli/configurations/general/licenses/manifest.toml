@@ -12,6 +12,7 @@ npm = "license-checker-rseidelsohn"
 replace = [".license-checker.json"]
 version = "5.0.1"
 version_exit_code = 1
+
 [[tool]]
 mise = "pipx:pip-licenses"
 name = "pip-licenses"

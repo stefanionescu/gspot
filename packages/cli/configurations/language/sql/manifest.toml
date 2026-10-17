@@ -1,4 +1,5 @@
 allowed_words = ["SQL"]
+
 [configuration]
 description = "SQLFluff checks layout and style in the project dialect. At level all, the configuration also checks line comments and file length."
 suggests = []
@@ -17,15 +18,19 @@ pypi = "sqlfluff"
 replace = [".sqlfluff", ".sqlfluffignore"]
 suppression = { marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)" }
 version = "4.3.0"
+
 [[tool.replace_key]]
 file = "pyproject.toml"
 table = "tool.sqlfluff"
+
 [[tool.replace_key]]
 file = "setup.cfg"
 table = "sqlfluff"
+
 [[tool.replace_key]]
 file = "tox.ini"
 table = "sqlfluff"
+
 [[tool_file]]
 per_scope = true
 target = ".gspot/config/sqlfluff.cfg"

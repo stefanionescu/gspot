@@ -1,4 +1,5 @@
 allowed_words = ["GitHub"]
+
 [configuration]
 description = "GitHub Actions workflows: actionlint for syntax and expressions, and zizmor for security audits and action pins."
 title = "GitHub Actions"

@@ -12,6 +12,7 @@ name = "jscpd"
 npm = "jscpd"
 replace = [".jscpd.json"]
 version = "5.2.0"
+
 [[tool_file]]
 target = ".gspot/config/jscpd.json"
 tool = "jscpd"

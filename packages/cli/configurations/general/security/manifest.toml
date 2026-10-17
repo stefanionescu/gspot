@@ -1,4 +1,5 @@
 allowed_words = ["Semgrep"]
+
 [configuration]
 always_selected = true
 description = "Runs Semgrep security rules over every file a language configuration claims."
@@ -19,6 +20,7 @@ replace = [".semgrepignore"]
 suppression = { marker = "\\bnosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
 version = "1.178.0"
 version_command = ["--disable-version-check", "--version"]
+
 [[tool_file]]
 per_scope = true
 target = ".semgrepignore"

@@ -1,6 +1,3 @@
-[shared_prefixes]
-kinds = ["controller", "service", "module", "guard", "pipe", "filter", "interceptor", "middleware", "decorator", "gateway", "resolver", "repository", "entity", "dto", "strategy", "provider"]
-
 [configuration]
 description = "A NestJS service: the compiler options that decorators need, plugin rules for providers, routes, and DTOs, and no circular modules."
 requires = ["typescript"]
@@ -13,6 +10,9 @@ filenames = ["nest-cli.json"]
 
 [files]
 filenames = ["nest-cli.json"]
+
+[shared_prefixes]
+kinds = ["controller", "service", "module", "guard", "pipe", "filter", "interceptor", "middleware", "decorator", "gateway", "resolver", "repository", "entity", "dto", "strategy", "provider"]
 
 [[tool]]
 kind = "library"

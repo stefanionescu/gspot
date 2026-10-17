@@ -1,4 +1,5 @@
 allowed_words = ["JSON", "TOML", "YAML"]
+
 [configuration]
 always_selected = true
 description = "Checks JSON, YAML, TOML, XML, and related formats, and writes a tool file for each checker."
@@ -17,6 +18,7 @@ replace = ["taplo.toml", ".taplo.toml"]
 version = "0.10.0"
 # No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
 github = { name = "tamasfe/taplo", version = "0.10.0" }
+
 [[tool]]
 brew = "yamllint"
 mise = "pipx:yamllint"
@@ -24,6 +26,7 @@ name = "yamllint"
 pypi = "yamllint"
 replace = [".yamllint", ".yamllint.yml", ".yamllint.yaml"]
 version = "1.38.0"
+
 [[tool]]
 mise = "npm:v8r"
 name = "v8r"

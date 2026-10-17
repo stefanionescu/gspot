@@ -1,4 +1,5 @@
 allowed_words = ["gspot"]
+
 [configuration]
 always_selected = true
 description = "Checks gspot.toml, generated files, and suppression reasons, and requires Node.js as a system tool."

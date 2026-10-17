@@ -19,6 +19,7 @@ scoop = "vale"
 suppression = { marker = "^<!--\\s*vale\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
 version = "3.21.0"
 winget = "errata-ai.Vale"
+
 [[tool_file]]
 target = ".gspot/config/vale.ini"
 tool = "vale"
@@ -62,16 +63,6 @@ tool = "vale"
 [[tool_file]]
 target = ".gspot/config/vale/styles/config/vocabularies/words/accept.txt"
 tool = "vale"
-
-[[check]]
-example = "`Release on 03/04/2026.` reports an ambiguous date. Write `Release on March 4, 2026.` instead."
-help = "Rewrite the sentence the alert names, add a real name and its reason to the root allowed_words setting, or use `gspot ignore prose/vale --rule <rule> --reason \"<why>\"`."
-level = "recommended"
-name = "vale"
-stage = "commit"
-summary = "Checks ambiguous dates, link text, and alternative text with the shipped Vale styles at level `recommended`. Level `all` adds the complete style and upstream packages."
-tool = "vale"
-why = "Hedging, marketing, or wandering prose reaches everyone who opens the code, and no other check catches it."
 
 [[tool_file]]
 target = ".gspot/config/vale/styles/LICENSES.md"
@@ -224,3 +215,13 @@ tool = "vale"
 [[tool_file]]
 target = ".gspot/config/vale/styles/gspot/idioms.yml"
 tool = "vale"
+
+[[check]]
+example = "`Release on 03/04/2026.` reports an ambiguous date. Write `Release on March 4, 2026.` instead."
+help = "Rewrite the sentence the alert names, add a real name and its reason to the root allowed_words setting, or use `gspot ignore prose/vale --rule <rule> --reason \"<why>\"`."
+level = "recommended"
+name = "vale"
+stage = "commit"
+summary = "Checks ambiguous dates, link text, and alternative text with the shipped Vale styles at level `recommended`. Level `all` adds the complete style and upstream packages."
+tool = "vale"
+why = "Hedging, marketing, or wandering prose reaches everyone who opens the code, and no other check catches it."

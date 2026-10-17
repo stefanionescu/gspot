@@ -1,8 +1,5 @@
 allowed_words = ["TypeScript"]
 
-[shared_prefixes]
-prefixes = ["tsconfig"]
-
 [configuration]
 description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
 requires = ["javascript"]
@@ -17,6 +14,9 @@ filenames = ["tsconfig.json"]
 extensions = [".ts", ".tsx", ".mts", ".cts", ".d.ts"]
 filenames = ["tsconfig.json", "tsconfig.*.json"]
 
+[shared_prefixes]
+prefixes = ["tsconfig"]
+
 [[tool]]
 kind = "library"
 name = "typescript-eslint"
@@ -28,6 +28,23 @@ version = "8.70.0"
 
 [tool.eslint]
 extensions = [".ts", ".tsx", ".mts", ".cts"]
+
+[eslint]
+all_level_rules = ["@typescript-eslint/ban-ts-comment", "@typescript-eslint/consistent-type-definitions", "@typescript-eslint/consistent-type-exports", "@typescript-eslint/consistent-type-imports", "@typescript-eslint/explicit-module-boundary-types", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-extraneous-class", "@typescript-eslint/no-magic-numbers", "@typescript-eslint/no-mixed-enums", "@typescript-eslint/no-namespace", "@typescript-eslint/no-non-null-assertion", "@typescript-eslint/no-require-imports", "@typescript-eslint/no-this-alias", "@typescript-eslint/no-unnecessary-type-parameters", "@typescript-eslint/prefer-readonly", "@typescript-eslint/prefer-reduce-type-parameter", "@typescript-eslint/prefer-return-this-type", "@typescript-eslint/strict-boolean-expressions", "@typescript-eslint/triple-slash-reference", "@typescript-eslint/unified-signatures"]
+
+[eslint.presets.strict]
+package = "typescript-eslint"
+source = "configs.strictTypeChecked"
+
+[eslint.presets.untyped]
+package = "typescript-eslint"
+source = "configs.disableTypeChecked"
+
+[[tool_file]]
+fragment = true
+required_tools = ["typescript-eslint"]
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
 
 [[check]]
 cwd = "scope"
@@ -53,20 +70,3 @@ name = "tsconfig"
 stage = "commit"
 summary = "Requires strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes, noImplicitOverride, and noFallthroughCasesInSwitch in every tsconfig you write. Level all also requires noImplicitReturns and noPropertyAccessFromIndexSignature."
 why = "One tsconfig that drops strict lets untyped code back in for that whole scope."
-
-[eslint]
-all_level_rules = ["@typescript-eslint/ban-ts-comment", "@typescript-eslint/consistent-type-definitions", "@typescript-eslint/consistent-type-exports", "@typescript-eslint/consistent-type-imports", "@typescript-eslint/explicit-module-boundary-types", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-extraneous-class", "@typescript-eslint/no-magic-numbers", "@typescript-eslint/no-mixed-enums", "@typescript-eslint/no-namespace", "@typescript-eslint/no-non-null-assertion", "@typescript-eslint/no-require-imports", "@typescript-eslint/no-this-alias", "@typescript-eslint/no-unnecessary-type-parameters", "@typescript-eslint/prefer-readonly", "@typescript-eslint/prefer-reduce-type-parameter", "@typescript-eslint/prefer-return-this-type", "@typescript-eslint/strict-boolean-expressions", "@typescript-eslint/triple-slash-reference", "@typescript-eslint/unified-signatures"]
-
-[eslint.presets.strict]
-package = "typescript-eslint"
-source = "configs.strictTypeChecked"
-
-[eslint.presets.untyped]
-package = "typescript-eslint"
-source = "configs.disableTypeChecked"
-
-[[tool_file]]
-fragment = true
-required_tools = ["typescript-eslint"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

@@ -1,6 +1,5 @@
-shared_prefixes = { prefixes = ["docker"] }
-
 allowed_words = ["Docker", "Trivy"]
+
 [configuration]
 description = "Dockerfiles and Compose files: hadolint, Compose parsing, a `.dockerignore` beside each Dockerfile, and Trivy scans."
 title = "Docker"
@@ -11,6 +10,9 @@ paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compo
 [files]
 paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "**/.dockerignore", "**/*.dockerignore"]
 
+[shared_prefixes]
+prefixes = ["docker"]
+
 [[tool]]
 brew = "hadolint"
 github = { name = "hadolint/hadolint", version = "v2.14.0" }
@@ -19,6 +21,7 @@ name = "hadolint"
 replace = [".hadolint.yaml", ".hadolint.yml"]
 scoop = "hadolint"
 version = "2.14.0"
+
 [[tool]]
 brew = "trivy"
 github = { name = "aquasecurity/trivy", version = "v0.69.3" }
@@ -26,6 +29,7 @@ mise = "trivy"
 name = "trivy"
 replace = ["trivy.yaml", ".trivyignore"]
 version = "0.69.3"
+
 [[tool]]
 install_hint = "install Docker Desktop or the docker engine"
 name = "docker"
