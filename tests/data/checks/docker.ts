@@ -57,7 +57,7 @@ export const DOCKERIGNORE_CASES = [
         scope: '',
     },
     {
-        name: 'native wildcard entries',
+        name: 'wildcard entries',
         settings: 'configurations = ["docker", "python", "javascript"]\n',
         text: `**/.git
 **/.env*

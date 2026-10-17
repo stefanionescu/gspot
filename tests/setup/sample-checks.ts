@@ -19,10 +19,10 @@ import type {
 } from '#tests/types/samples.ts';
 
 /**
- * Applies case changes, runs the selected check, and restores the repository.
+ * Write the sample, run its check, and restore the sandbox.
  * @param cwd the sandbox, already installed.
  * @param changes the sample.
- * @param environment the command environment, including its executable search path.
+ * @param environment variables for the command, including `PATH`.
  * @returns the exit code and the output of the check.
  */
 export async function checkChanges(
@@ -39,11 +39,11 @@ export async function checkChanges(
 }
 
 /**
- * Observe the sample and its fix, restoring each source edit before returning reports to the test.
- * @param repository the prepared sandbox and its child process.
+ * Run the check on the sample and then on its fix, and return both reports.
+ * @param repository the installed sandbox and how to run gspot in it.
  * @param entry the sample and expected finding.
- * @param plan the sandbox's default fix.
- * @returns the verified reports and process results.
+ * @param plan what the sandbox holds, with the default fix.
+ * @returns both process results and reports.
  */
 export async function runCheckSample(
     repository: Pick<Sandbox, 'root' | 'environment' | 'run'>,
@@ -65,7 +65,7 @@ export async function runCheckSample(
     return { failed: { ...failed, report: failedReport }, passed: { ...passed, report: passedReport } };
 }
 
-/** Return plain check outcomes for assertions in the owning test. */
+/** Reduce a sample result to exit codes and check results for assertions. */
 export function summarizeSample(result: SampleResult): SampleSummary {
     return {
         failed: { code: result.failed.code, checks: result.failed.report.checks },
@@ -95,7 +95,7 @@ export function expectedSummary(entry: CheckSample): SampleSummary {
     };
 }
 
-/** Prepare the Bash suite once and release its sandbox after the owning file's tests. */
+/** Create the Bash sandbox once for a test file and remove it after the tests of that file. */
 export function registerBashSandbox(): () => Sandbox {
     let sandbox: Sandbox;
     beforeAll(async () => {
@@ -110,7 +110,7 @@ export function registerBashSandbox(): () => Sandbox {
     return () => sandbox;
 }
 
-/** Calculate the corrected Bash sources and run the broken and corrected forms in the same sandbox. */
+/** Run a Bash sample and its fix in the same sandbox; the fix replaces each file with the clean script. */
 export async function runBashSample(sandbox: Sandbox, entry: CheckSample): Promise<SampleResult> {
     return await runCheckSample(sandbox, entry, {
         ...BASH_SANDBOX,

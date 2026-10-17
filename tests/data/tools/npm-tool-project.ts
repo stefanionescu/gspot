@@ -48,7 +48,7 @@ const TOOL_REQUIREMENTS = [
     { name: 'a non-Next exact pin is accepted', dependency: 'eslint', version: '9.39.5', accepted: true },
 ] as const;
 
-/** Root development requirements exclude production and workspace dependencies. */
+/** Only the root development dependencies count. Production and workspace dependencies do not. */
 const ROOT_DEPENDENCIES = [
     [
         'npm',
@@ -82,7 +82,7 @@ const ROOT_DEPENDENCIES = [
     ],
 ] as const;
 
-/** The package managers, manifest paths a package project test covers. */
+/** The package managers and dependency files that a package project test covers. */
 const PACKAGE_MANAGER_ROWS = [
     ['npm', 'package.json'],
     ['bun', 'package.json'],

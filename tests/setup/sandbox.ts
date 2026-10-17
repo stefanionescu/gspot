@@ -21,7 +21,7 @@ import type { Sandbox, SandboxPlan, SandboxFiles, InstalledSandboxPlan } from '#
 import { JSON_INDENT, REGISTRY_HOST, SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/data/test-setup.ts';
 import { rm, open, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
-/** Write the source and dependency declarations owned by a sandbox. */
+/** Write the files, package.json, and tsconfig.json of a sandbox. */
 async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     await createFileTree(root, {
         '.gitignore': SANDBOX_GITIGNORE,
@@ -60,7 +60,7 @@ async function createSandbox(plan: SandboxPlan): Promise<Sandbox> {
     };
 }
 
-/** Initialize and install the tools used by one integration test file. */
+/** Run init in a sandbox and install the tools of one integration test file. */
 async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<Record<string, string>> {
     await writeSandbox(root, plan);
     if (plan.dependencies !== undefined) await linkPackages(join(root, 'node_modules'), Object.keys(plan.dependencies));
@@ -104,7 +104,7 @@ function registerSharedSandbox(plan: InstalledSandboxPlan): () => Sandbox {
 }
 
 /**
- * Returns the index entries of the paths to the last commit, undoing what marking them executable staged.
+ * Resets the index entries of these paths to the last commit, which undoes what markExecutable staged on Windows.
  * @param cwd the sandbox.
  * @param paths the repository-relative files.
  */
@@ -156,7 +156,7 @@ async function removeParents(parents: string[]): Promise<void> {
         try {
             await rmdir(path);
         } catch (error) {
-            // Keep generated and native files for their owners to remove after restoring the sample.
+            // Keep a folder that still holds generated or tool files; their owners remove them after the restore.
             const code = (error as NodeJS.ErrnoException).code;
             if (code !== 'ENOENT' && code !== 'ENOTEMPTY') throw error;
         }
@@ -177,7 +177,7 @@ async function writeChanges(cwd: string, changes: SampleChanges, settings: strin
     await writeFile(join(cwd, 'gspot.toml'), settings);
 }
 
-// Preserve bytes and permissions before the first mutation, including setup that fails partway through.
+// Saves file bytes and modes before the first change, so a failed change still restores them.
 async function changeSandbox(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
     const tree = runGit(cwd, ['write-tree']).stdout.trim();
@@ -279,7 +279,7 @@ export {
     prepareInstalledSandbox,
 };
 
-/** Apply changed sample files and regenerate their tool files with one owned restoration. */
+/** Write the sample files and run apply; disposal restores the files and applies again. */
 export async function applySandboxChanges(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     resources.use(await updateSandbox(sandbox, changes));
@@ -288,7 +288,7 @@ export async function applySandboxChanges(sandbox: SandboxFiles, changes: Sample
     return resources.move();
 }
 
-/** Stage changed sample inputs before generation. Retain their original index and files for restoration. */
+/** Write and stage the sample files, then run apply; disposal restores the index and files. */
 export async function applyStagedSandboxChanges(
     sandbox: SandboxFiles,
     changes: SampleChanges,

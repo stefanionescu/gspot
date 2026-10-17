@@ -28,7 +28,7 @@ const installedSandbox = registerSharedSandbox({
     files: { 'package.json': '{"private":true}\n' },
 });
 
-/** Keep compiler-owned declarations out of the authored source changes for each level. */
+/** The standalone sources for one level; .gitignore keeps tool declarations out of the source changes. */
 function buildStandaloneSources(level: (typeof LEVELS)[number]): Record<string, string> {
     return {
         ...STANDALONE_TYPESCRIPT_FILES,

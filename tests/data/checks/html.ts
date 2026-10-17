@@ -1,6 +1,6 @@
 import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
 
-/** Decode executable resource addresses before checking their schemes. */
+/** Script URLs, plain and encoded, with the column of each finding. */
 export const ACTIVE_URLS = [
     { markup: '<a href="javascript:alert(1)">Link</a>', column: 4 },
     { markup: '<a href="jav&#x61;script&colon;alert(1)">Link</a>', column: 4 },
@@ -12,7 +12,7 @@ export const ACTIVE_URLS = [
     { markup: '<script src="data:text/javascript,alert(1)"></script>', column: 9 },
 ] as const;
 
-/** The same scheme text remains inert outside an executable context. */
+/** Scheme text in places that do not run it, with no finding. */
 export const INERT_MARKUP = [
     '<a href="/page">Link</a><script src="/app.js"></script>',
     '<a href="/page" title="javascript: is a scheme">Link</a>',
@@ -22,7 +22,7 @@ export const INERT_MARKUP = [
     '<script type="application/ld+json">{"name":"example"}</script>',
 ] as const;
 
-/** Source markup and built output share the same two independently located media findings. */
+/** A page with two autoplay findings at the same places in source and built output. */
 export const AUTOPLAY_PAGE = `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8" /><title>Example</title></head>
@@ -36,7 +36,7 @@ export const AUTOPLAY_PAGE = `<!doctype html>
 </html>
 `;
 
-/** The explicit correction leaves playback under the visitor's control. */
+/** The fix gives the visitor control of playback. */
 export const CONTROLLED_PLAYBACK_PAGE = `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8" /><title>Example</title></head>
@@ -50,10 +50,10 @@ export const CONTROLLED_PLAYBACK_PAGE = `<!doctype html>
 </html>
 `;
 
-/** Each selected site builds its authored page without changing the root source owner. */
+/** The app scope builds its own page; the root scope still checks its source HTML. */
 export const AUTOPLAY_SCOPE_SETTINGS = `[[scope]]\npath = "app"\nconfigurations = ["site"]\n[scope.site]\nbuild_command = ["node", "build.mjs"]\n`;
 
-/** Each public invocation selects one native reader and keeps its unrelated source unchanged. */
+/** Each command runs one HTML Validate check and leaves the other source file unchanged. */
 export const AUTOPLAY_CHECKS = [
     {
         check: 'html/html-validate',

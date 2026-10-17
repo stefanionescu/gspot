@@ -111,7 +111,7 @@ export const secret = 1;
         ],
     },
     {
-        name: 'native Node imports require explicit suffixes',
+        name: 'Node imports require explicit suffixes',
         scope: '',
         tables: '',
         files: {
@@ -206,7 +206,7 @@ export const receipt = formatter.format(total.amount);
 export const doubled = twice(wrong);
 `;
 
-/** An imported declaration supplies a program dependency outside its configuration root. */
+/** A project imports a declaration file from outside the folder of its jsconfig. */
 export const IMPORTED_AMBIENT_FILES = {
     'base.json':
         '{"compilerOptions":{"strict":true,"types":[],"allowJs":true,"checkJs":true,"noEmit":true,"baseUrl":".","paths":{"shared-api":["types/api.d.ts"]}}}',

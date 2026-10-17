@@ -1,4 +1,4 @@
-// Opens the selected check input and owns temporary compiler resources for tests.
+// Builds check inputs for tests and keeps compiler state in a temporary folder.
 import { spyOn } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { findScope } from '#cli/repository/scopes.ts';
@@ -18,8 +18,8 @@ import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 
 import type { Finding, CheckInput, RunnableCheck, CheckImplementations } from '#cli/types/checks/run/check.ts';
 
 /**
- * Keep compiler state in a test-owned folder and restore the cache boundary when the test ends.
- * @returns the disposable temporary directory and boundary spy.
+ * Keep compiler state in a temporary folder until the test ends.
+ * @returns a stack that removes the folder and the spy.
  */
 async function createCompilerCache(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
@@ -29,14 +29,14 @@ async function createCompilerCache(): Promise<AsyncDisposableStack> {
 }
 
 /**
- * Select one check and its source files while retaining the repository inventory for references.
- * @param session the authored settings and inventory opened by the test.
- * @param checkId the selected check ID.
- * @param options the scope, source paths, and resources owned by the test.
- * @param options.scope the scope path.
- * @param options.paths the selected source paths.
- * @param options.resources the resources owned by this check.
- * @returns the selected files and check with the full repository inventory for references.
+ * Build the input of one check, with its files and the full file list of the repository.
+ * @param session the sandbox the test opened.
+ * @param checkId for example bash/shellcheck.
+ * @param options which files to include and what to clean up.
+ * @param options.scope the scope path; the root by default.
+ * @param options.paths files to check; every file by default.
+ * @param options.resources what to dispose of with the check.
+ * @returns the check input.
  */
 function buildCheckInput(
     session: Session,
@@ -62,11 +62,11 @@ function buildCheckInput(
 }
 
 /**
- * Prepare one Swift check with test-owned compiler state and executable versions.
- * @param sandbox the directory disposed by the owning test.
- * @param checkId the selected check.
- * @param files the test's source and authored settings overrides.
- * @returns the opened input and session, with their preparation resources.
+ * Create a Swift sandbox and build the input of one check. The input uses fake tool versions and a temporary compiler cache.
+ * @param sandbox folder that the test removes.
+ * @param checkId for example swift/swiftlint.
+ * @param files paths and text to add or replace.
+ * @returns the input, the session, and what to dispose.
  */
 async function prepareSwiftInput(
     sandbox: TestdirResult,
@@ -90,7 +90,7 @@ async function prepareSwiftInput(
     return { session, input: buildCheckInput(session, checkId), resources: resources.move() };
 }
 
-/** Open the sandbox and run the selected built-in check with its actual input. */
+/** Open the sandbox, run one built-in check, and return its findings. */
 async function checkFindings(
     root: string,
     checkId: string,
@@ -115,7 +115,7 @@ async function checkFindings(
     return result.findings;
 }
 
-/** Select the implementation selected by the planned check, including generated-file checks. */
+/** Pick the check implementation to run, including the stale generator output check. */
 function selectCheckRunner(
     input: CheckInput,
     implementation: CheckImplementations[string] | undefined,
@@ -126,7 +126,7 @@ function selectCheckRunner(
     return runBuiltInCheck(implementation.check);
 }
 
-/** Open a session and own the pinned executable identities used by the selected tools. */
+/** Open a session with fake pinned versions of these tools. */
 async function openPinnedSession(
     root: string,
     toolNames: string[],

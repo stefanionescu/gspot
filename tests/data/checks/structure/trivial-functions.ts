@@ -125,7 +125,7 @@ def wrapper():
     },
 ] as const;
 
-/** Distinct source lines identify declarations, accessors, nested functions, and closures. */
+/** Declarations, accessors, nested functions, and closures, each on its own line. */
 export const ACCESSOR_DECLARATIONS = `class A {
     init() {}
     var value: Int {

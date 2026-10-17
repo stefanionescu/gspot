@@ -1,6 +1,6 @@
 import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
 
-/** Exact surviving paths for each declared spelling exclusion. both emitted configurations must report them. */
+/** The paths that each spelling exclusion leaves checked. Both generated tool files must report them. */
 export const SPELLING_EXCLUSIONS = [
     {
         patterns: ['nested/src/**'],

@@ -32,7 +32,7 @@ test('each lint-rule list names the pinned package version', () => {
     }
 });
 
-/** Read every installer pin under the name shared across configuration declarations. */
+/** List every version pin of a tool by installer and package name. */
 function listToolPins(tool: ToolDeclaration): (readonly [string, string])[] {
     return [
         ...(tool.version === undefined ? [] : [[`tool:${tool.name}`, tool.version] as const]),
@@ -55,7 +55,7 @@ test('configurations agree on every tool and installer pin', () => {
     expect(violations).toStrictEqual([]);
 });
 
-/** Compare an authored pin with its floor through the public version classification. */
+/** Whether the pin of a tool sits below its minimum version. */
 function hasOutdatedPin(tool: ToolDeclaration): boolean {
     return tool.version !== undefined && classifyToolVersion(tool.version, undefined, tool.min_version) === 'outdated';
 }

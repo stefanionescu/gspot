@@ -25,7 +25,7 @@ export const ASSET_SETTING_CASES = [
     },
 ] as const;
 
-/** Invalid resource documents report source findings rather than execution errors. */
+/** Invalid resource files give source findings, not run errors. */
 export const INVALID_RESOURCE_DOCUMENTS = [
     ['xcode/xcstrings', 'Localizable.xcstrings', 'null'],
     ['xcode/assets', 'Assets.xcassets/Logo.imageset/Contents.json', '{"images":"invalid"}'],
@@ -94,7 +94,7 @@ export const GROUPED_PBXPROJ = `// !$*UTF8*$!
 }
 `;
 
-/** Native build settings need no main group or source-path resolution. */
+/** Build settings need no main group or source paths. */
 export const BUILD_SETTINGS_PBXPROJ =
     '{rootObject=P;objects={P={isa=PBXProject;};D={isa=XCBuildConfiguration;buildSettings={SDKROOT=macosx;SWIFT_VERSION=6.0;};};};}';
 
@@ -174,7 +174,7 @@ export const SINGLE_FILE_PBXPROJ = GROUPED_PBXPROJ.replace('files = (B1, B2,);',
     '',
 );
 
-/** Native project syntax that the property-list reader must preserve. */
+/** Project file syntax that the property-list reader must keep. */
 export const PROJECT_SYNTAX_CASES = [
     { name: 'quoted keys', source: GROUPED_PBXPROJ.replace('rootObject = P;', '"rootObject" = P;') },
     {

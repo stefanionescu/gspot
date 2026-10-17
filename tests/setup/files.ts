@@ -1,4 +1,4 @@
-// Applies temporary file changes and restores their original contents and modes.
+// Reads file trees, checks paths, and builds zip archives for tests.
 import { join } from 'node:path';
 import { crc32 } from 'node:zlib';
 import { ZIP_LAYOUT } from '#tests/data/test-setup.ts';
@@ -6,8 +6,8 @@ import type { ZipEntry } from '#tests/types/samples.ts';
 import { open, lstat, access, readdir, readlink } from 'node:fs/promises';
 
 /**
- * Captures repository paths, file contents, and modes for write-preservation tests.
- * @param repositoryRoot the repository directory.
+ * Reads every path in a repository with its mode and contents, to check that a write kept them.
+ * @param repositoryRoot folder to read.
  * @returns each path and its mode and contents.
  */
 export async function readTree(repositoryRoot: string): Promise<Record<string, string>> {
@@ -33,8 +33,8 @@ export async function readTree(repositoryRoot: string): Promise<Record<string, s
 
 /**
  * Checks whether a filesystem path exists, following symbolic links.
- * @param path the file or directory.
- * @returns false when filesystem access fails, matching the filesystem existence contract.
+ * @param path the file or folder.
+ * @returns whether the path exists; false when access fails.
  */
 export function isOnDisk(path: string): Promise<boolean> {
     return access(path).then(
@@ -44,8 +44,8 @@ export function isOnDisk(path: string): Promise<boolean> {
 }
 
 /**
- * Encode test package entries as a stored archive with their Unix file modes.
- * @param entries the entry names, bytes, and optional file modes.
+ * Write files into an uncompressed zip archive with their Unix file modes.
+ * @param entries files to store.
  * @returns the archive bytes.
  */
 export function encodeZipArchive(entries: readonly ZipEntry[]): Buffer<ArrayBuffer> {

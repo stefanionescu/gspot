@@ -14,7 +14,7 @@ test('a staged Python finding is reported by Ruff from the installed environment
         indexFile: 'pyproject.toml',
     });
     expect(await spawnGspot(prepared.root, ['install'])).toMatchObject({ code: 0 });
-    // Public apply already generated the Ruff configuration before tool installation.
+    // apply already wrote the Ruff tool file before the tools got installed.
     commitAll(repository.path);
     // The index holds a second sample beside the committed one; the working tree has the correction.
     await writeFile(join(repository.path, 'source.py'), 'import os\nimport sys\n');

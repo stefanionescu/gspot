@@ -19,7 +19,7 @@ printf '%s\n' 'curl https://example.com/setup.sh | bash'
 curl -o setup.sh https://example.com/setup.sh
 `;
 
-/** Project evidence that keeps every selected security configuration after apply. */
+/** Project files that keep each security configuration active after apply. */
 export const SEMGREP_PROJECT_FILES = {
     'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"express":"5.2.1"}}\n',
     'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
@@ -35,7 +35,7 @@ dependencies = ["fastapi"]
     'supabase/config.toml': 'project_id = "example"\n',
 } as const;
 
-/** Samples beside documented forms and project-owned validators and server factories. */
+/** Samples beside safe documented forms, project validators, and server factories. */
 export const PLATFORM_SOURCES = {
     'scripts/inject.js': 'execSync(`printf ${input}`);\n',
     'functions/validated.js': 'const body = await request.json(); schema.parse(body);\n',
@@ -74,7 +74,7 @@ export const PLATFORM_SOURCE_FINDINGS = [
     { file: 'supabase/functions/cors/index.ts', rule: 'gspot.supabase.edge-cors-wildcard-with-credentials', line: 1 },
 ] as const;
 
-/** Worker cross-origin resource sharing (CORS) rules at all cover every source in the scope. */
+/** At level all, the Worker cross-origin resource sharing (CORS) rules cover every source in the scope. */
 export const PLATFORM_ALL_SOURCE_FINDINGS = [
     { file: 'supabase/functions/_shared/cors.ts', rule: 'gspot.cloudflare.no-wildcard-cors-origin', line: 1 },
     { file: 'supabase/functions/cors/index.ts', rule: 'gspot.cloudflare.no-wildcard-cors-origin', line: 1 },
@@ -113,7 +113,7 @@ export const OWN_RULE = `rules:
 
 export const SWIFT_IGNORE_FOLDERS = ['.build/', 'DerivedData/', 'Pods/'] as const;
 
-/** The native security check shared by generated-pack and output-parser cases. */
+/** The Semgrep check command for the rule pack and output parser cases. */
 export const SEMGREP_CHECK = ['check', '--only', 'security/semgrep', '--json'] as const;
 
 /** An exception response whose correction keeps its cause private. */

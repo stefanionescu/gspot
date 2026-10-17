@@ -3,11 +3,11 @@ import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 
 export const COMMITLINT_EXECUTABLE = '.bin/commitlint';
 
-/** Authored package fields that must survive replacement of the Commitlint field alone. */
+/** Package fields that must stay when gspot replaces only the Commitlint field. */
 export const COMMITLINT_PACKAGE =
     '{"name":"native-project","private":true,"commitlint":{"rules":{"type-enum":[2,"always",["special"]]}},"kept":[0,false,""]}\n';
 
-/** Repository-wide commit policy includes nested authored packages and leaves absent fields alone. */
+/** Commit rules come from nested packages too; a package without the field stays unchanged. */
 export const COMMITLINT_PROJECT = {
     'package.json': COMMITLINT_PACKAGE,
     'app/package.json': COMMITLINT_PACKAGE,
@@ -15,7 +15,7 @@ export const COMMITLINT_PROJECT = {
     'plain/package.json': '{"private":true}\n',
 } as const;
 
-/** Native commit messages that expose scope and conventional type ownership. */
+/** Commit messages and the Commitlint rule each one breaks, if any. */
 export const COMMIT_MESSAGES = [
     { message: 'fix(Core): repair the parser', rule: undefined },
     { message: 'fix: repair the parser', rule: undefined },

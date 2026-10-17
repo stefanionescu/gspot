@@ -35,7 +35,7 @@ async function prepareSecretHistory(root: string, files: Record<string, string>)
     return { base, tree, good, leaked, removed };
 }
 
-/** Routes native TruffleHog verification to a local provider. */
+/** Routes TruffleHog verification to a local provider. */
 async function createSecretVerifier(folder: string): Promise<SecretVerifier> {
     const { first: firstToken, second: secondToken } = VERIFIER_TOKENS;
     const requests: unknown[] = [];

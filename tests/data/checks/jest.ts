@@ -10,7 +10,7 @@ test("adds positive values", () => { expect(total([2, -1, 3])).toBe(5); });
 /** The second test covers the function left untested by the initial source. */
 export const FIXED_MATH_TEST_SOURCE = `${MATH_TEST_SOURCE}test("triples an integer", () => { expect(triple(2)).toBe(6); });\n`;
 
-/** Root coverage and load-refusal cases use the same preserved project files. */
+/** Project files for the coverage and load-failure cases, with files that must stay unchanged. */
 export const JEST_PROJECT_FILES = {
     'math.cjs': MATH_SOURCE,
     'authored.txt': 'preserved source\n',

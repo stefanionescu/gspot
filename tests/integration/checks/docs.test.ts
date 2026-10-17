@@ -12,7 +12,7 @@ import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 import { LINK_PAGE, DOCS_CASES, DOCS_SANDBOX, LINK_TEXT_CASES, LINK_SCOPE_SETTINGS } from '#tests/data/checks/docs.ts';
 
-// Every phase distinguishes root and child exits, statuses, and native source positions.
+// Checks the exit code, and the status and finding positions of the root and child scopes.
 async function assertLinkFailures(root: string, check: string, failures: readonly LinkFailure[]): Promise<void> {
     const checked = await spawnGspot(root, ['check', '--only', check, '--json'], { PATH: buildSandboxPath() });
     expect(checked.code, checked.stdout + checked.stderr).toBe(failures.length === 0 ? 0 : 1);
@@ -29,7 +29,7 @@ async function assertLinkFailures(root: string, check: string, failures: readonl
     );
 }
 
-// Native checks must reject a missing text fragment and accept its existing replacement.
+// The link check must reject a missing text fragment and accept one that exists.
 async function assertTextFragments(root: string, check: string, target: string): Promise<void> {
     for (const { fragment, failures } of LINK_TEXT_CASES) {
         await Bun.write(join(root, 'root.md'), `# Links\n\nRead [the page](${target}#:~:text=${fragment}).\n`);

@@ -35,7 +35,7 @@ export const FILES_CASES = [
     },
 ] as const;
 
-/** Scoped truthy policies must reach their matching native YAML configuration. */
+/** The truthy setting of each scope must reach the yamllint tool file of that scope. */
 export const YAML_SCOPE_SETTINGS = `[format]
 indent_width = 4
 [[format.override]]
@@ -50,7 +50,7 @@ configurations = []
 truthy = { allowed-values = ["no"] }
 `;
 
-/** Two-space formatting and consumer-owned on keys stay valid in each project. */
+/** Two-space indents and `on` keys pass in each project. */
 export const YAML_SCOPE_FILES = {
     'settings/project.yaml': `parent:
   enabled: yes
@@ -64,7 +64,7 @@ on:
 `,
 } as const;
 
-/** A child value accepted only by the root reveals leaked native options. */
+/** A child value that only the root accepts, to catch root options that leak into the child. */
 export const YAML_SCOPE_SAMPLE = `parent:
   enabled: yes
 on:

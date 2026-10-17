@@ -41,9 +41,7 @@ public  func greeting(for name: String) -> String {
     },
 ] as const;
 
-// The test Swift functions: one every check accepts, and one SwiftLint reports.
-/** A clean function that every Swift check accepts. */
-
+/** A Swift sandbox that holds one function every check accepts. */
 export const SWIFT_SANDBOX = {
     install: false,
     configurations: ['swift', 'naming'],

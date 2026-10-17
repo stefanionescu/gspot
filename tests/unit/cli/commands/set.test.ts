@@ -204,7 +204,7 @@ test('gspot set writes a list of tables typed the TOML way as tables, and the se
     const unreadable = await runGspot(sandbox.path, ['set', 'tools.eslint.restricted_imports', '[{name = ']);
     expect(unreadable.code).toBe(2);
     expect(unreadable.stdout + unreadable.stderr).toContain('is not a TOML inline value');
-    // A person can still type the quotes by hand, and the settings refuses that when it loads.
+    // A person can still type the quotes by hand; gspot refuses those settings when it loads them.
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         buildSettingsText(['docs', 'javascript'], {

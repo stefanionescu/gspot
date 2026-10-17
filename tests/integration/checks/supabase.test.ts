@@ -10,7 +10,6 @@ import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { SUPABASE_CASES, SUPABASE_SANDBOX } from '#tests/data/checks/supabase.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
-// The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))(
     'manual Supabase selection reports Deno secret logs in root and child scopes',
     async () => {
@@ -67,7 +66,6 @@ path = "child"
 
 const installedSandbox = registerSharedSandbox(SUPABASE_SANDBOX);
 
-// The pinned deno tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('deno')).each([...SUPABASE_CASES])(
     '$check reports $expected.file and passes after the fix',
     async (entry) => {

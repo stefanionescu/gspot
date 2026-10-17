@@ -217,7 +217,7 @@ indent_width = ${String(width)}
     expect(command.commandArguments[command.commandArguments.indexOf('-i') + 1]).toBe(expected);
 });
 
-/** Check that the public schema refuses an empty command setting. */
+/** Check that the settings schema refuses an empty command setting. */
 async function verifyEmptyCommand(root: string, settings: string): Promise<void> {
     await writeFile(join(root, 'gspot.toml'), settings);
     const empty = await runGspot(root, ['check', '--only', 'sandbox/arguments', '--json']);

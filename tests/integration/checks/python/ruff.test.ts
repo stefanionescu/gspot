@@ -227,7 +227,7 @@ TOTAL: int = 1
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-/** Check that pytest fixture rules affect only the scope selecting pytest. */
+/** Check that pytest fixture rules apply only in the scope that uses pytest. */
 async function verifyPytestSelection(root: string, sample: string): Promise<void> {
     const unselected = await spawnGspot(root, ['check', 'tests/test_example.py', '--only', 'python/ruff', '--json']);
     expect(unselected.code, unselected.stdout + unselected.stderr).toBe(0);

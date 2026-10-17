@@ -1,4 +1,4 @@
-/** Each workspace declaration carries its native malformed-input diagnostic. */
+/** Each workspace file with the parse error that its parser gives. */
 export const INVALID_WORKSPACE_FILES = [
     { path: 'pnpm-workspace.yaml', parseError: 'Flow map must end with a }' },
     { path: 'lerna.json', parseError: "JSON Parse error: Expected '}'" },
@@ -8,7 +8,7 @@ export const INVALID_WORKSPACE_FILES = [
     },
 ] as const;
 
-/** Paths retain literal Unicode, punctuation, and empty root or scope prefixes. */
+/** Paths keep literal Unicode, punctuation, and empty root or scope prefixes. */
 export const SCOPE_PATHS = [
     { scope: '', path: '', repositoryPath: '' },
     { scope: '', path: 'README.md', repositoryPath: 'README.md' },

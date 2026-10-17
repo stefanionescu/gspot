@@ -50,7 +50,7 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     },
 );
 
-// Both cancellation probes pause the selected Git call and delegate every other call to the real executable.
+// A fake git that pauses on the chosen call and passes every other call to the real git.
 async function fakeGit(
     folder: string,
     options: { operation: 'diff' | 'clone' | 'cat-file'; marker: string; pauseOnCall: number; executable: string },

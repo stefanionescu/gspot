@@ -27,13 +27,13 @@ export const SCRATCH_FAILURES = [
     { operation: 'read', message: 'EISDIR' },
 ] as const;
 
-/** Repository context and a nested policy's committed source for entry and push selection. */
+/** A file outside the scope and a committed source in the nested scope. The file selection and push tests use them. */
 export const NESTED_SCOPE_FILES = {
     'outside.txt': 'repository context',
     'nested policy/source.txt': 'committed',
 } as const;
 
-/** The real hook reports revision behavior and retained metadata from its inherited Git environment. */
+/** A Git hook that copies each revision and reports its files and Git metadata, with the inherited Git environment. */
 export const GIT_HOOK_SCRIPT = String.raw`
 import { join, resolve } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -81,7 +81,7 @@ writeFileSync(process.argv[6], JSON.stringify({
 }));
 `;
 
-/** The hook must preserve both revision views, explicit configuration, and source metadata. */
+/** The hook must keep both revision copies, the explicit Git setting, and the source metadata. */
 export const GIT_HOOK_REPORT = {
     reports: [
         {

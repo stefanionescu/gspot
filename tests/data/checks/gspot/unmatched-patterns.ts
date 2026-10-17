@@ -1,4 +1,4 @@
-/** Root-relative source selectors and output destinations have distinct roles. */
+/** Source path patterns, which must match a file, and output paths, which need not. */
 export const UNUSED_PATH_CASES = [
     {
         name: 'primitive lists and nested record paths',

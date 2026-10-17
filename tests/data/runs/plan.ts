@@ -1,7 +1,7 @@
 import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/data/settings/scopes.ts';
 
-/** A path ignore selects one check and preserves rule-specific findings for the others. */
+/** A path ignore applies to one check and keeps the rule findings of the others. */
 const PROJECT_PATH_IGNORES = [
     {
         name: 'a deleted ignored input',
@@ -100,7 +100,7 @@ const NEXT_INTL_PROJECTS = [
     },
 ] as const;
 
-/** Lockfile changes trigger the dependency advisory scan. Other inputs remain analysis-only. */
+/** Lockfile changes start the dependency advisory scan. Other inputs only feed the analysis. */
 const LOCKFILE_TRIGGER_NAMES = [
     'bun.lock',
     'package-lock.json',
@@ -123,7 +123,7 @@ version = "1.0.0"
 `,
 } as const;
 
-/** The tool runtime follows applicable npm checks, independently of the repository's language runtime. */
+/** The tool runtime follows the npm checks that apply, not the language runtime of the repository. */
 const NODE_REQUIREMENTS = [
     {
         name: 'Python with npm schema peers under mise',
@@ -133,7 +133,7 @@ const NODE_REQUIREMENTS = [
         node: true,
     },
     {
-        name: 'Python with native mise tools',
+        name: 'Python with only mise tools',
         tables: `${NPM_CHECK_IGNORES}[[ignore]]
 check = "python/basedpyright"
 reason = "This sandbox exercises Python without the npm type checker."
@@ -164,7 +164,7 @@ reason = "This sandbox exercises native tools without the license scanner."
     },
 ] as const;
 
-/** Native modules apply at both levels. Roles and selected test paths apply at all. */
+/** Modules apply at both levels. Roles and test paths apply at level all. */
 const ARCHITECTURE_REQUIREMENTS = [
     {
         name: 'root modules',
@@ -208,7 +208,7 @@ const COVERAGE_LIMITS = [
     },
 ] as const;
 
-/** Pushed checks selected by name still use native history metadata. */
+/** Pushed checks chosen by name still read the Git history. */
 const HISTORY_TABLES = `[[scope]]
 path = "app"
 configurations = ["commits", "secrets"]

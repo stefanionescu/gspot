@@ -11,7 +11,7 @@ import { DAY_MILLISECONDS, PUBLISH_TIME_APIS } from '#tests/data/tools/installat
 
 /**
  * Read when a tool's npm or PyPI version came out.
- * @param tool the tool, with its version.
+ * @param tool declaration with a version and installers.
  * @returns the publish time, or undefined when the tool has neither pin.
  */
 async function readPackagePublishTime(tool: ToolDeclaration): Promise<string | undefined> {
@@ -31,7 +31,7 @@ async function readPackagePublishTime(tool: ToolDeclaration): Promise<string | u
 
 /**
  * Read when a tool's GitHub release came out.
- * @param github the GitHub pin.
+ * @param github repository and release tag.
  * @returns the publish time.
  */
 async function readReleasePublishTime(github: InstallerPin & { version: string }): Promise<string> {
@@ -44,7 +44,7 @@ async function readReleasePublishTime(github: InstallerPin & { version: string }
 
 /**
  * Read when every pinned version of a tool came out.
- * @param tool the tool.
+ * @param tool declaration to look up.
  * @returns one publish time for each registry that pins the tool.
  * @throws when a registry has no such version.
  */

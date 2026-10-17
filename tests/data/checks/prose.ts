@@ -150,7 +150,7 @@ The other native branch.
     },
 ] as const;
 
-/** Currency notation in prose must not mistake source comment parameters for amounts. */
+/** The currency rule reports prices in prose but not `$1` parameters in source comments. */
 export const CURRENCY_CASES = [
     {
         path: 'prices.md',
@@ -170,7 +170,7 @@ The price is USD 5.
     { path: 'source.ts', source: '// Use $1 as the regular expression replacement.\nconst value = 1;\n', lines: [] },
 ] as const;
 
-/** Each style keeps its substantive prose check without treating source notation as a finding. */
+/** Each style rule still checks prose and does not report source notation. */
 export const STYLE_CASES = [
     {
         rule: 'file-paths',
@@ -246,7 +246,7 @@ export const VALE_INSTALL_FAILURES = [
         'tool_timeout_seconds = 1\n',
     ],
     [
-        'native error',
+        'its error',
         'console.error("Registry request failed: https://alex:synthetic-password@example.com/styles.zip"); process.exitCode = 7;',
         'Registry request failed: https://[redacted]@example.com/styles.zip',
         '',

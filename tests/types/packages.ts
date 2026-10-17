@@ -2,16 +2,16 @@ import type { Session } from '#cli/types/planning.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
-/** The working directory, environment, and limit owned by an installed-consumer command. */
+/** The working folder and environment of a command in a packed sandbox. */
 export type CommandOptions = Required<Pick<AsyncSpawnOptions, 'cwd' | 'env'>>;
 
-/** A fresh consumer of the release: its install, its folder, the command that runs gspot, and the options it runs with. */
+/** A new project that installs the packed gspot release. */
 export type PackedSandbox = {
     root: string;
     command: string[];
     /** Check commands cannot reach the network. */
     offlineOptions: CommandOptions;
-    /** Acquisition commands can reach the isolated registry and its upstream. */
+    /** Install commands can reach the local registry and its upstream. */
     onlineOptions: CommandOptions;
     workspace: string;
     [Symbol.asyncDispose]: () => Promise<void>;
@@ -27,13 +27,13 @@ export type RegistryPackage = {
     peerDependencies?: Record<string, string> | undefined;
 };
 
-/** A packed package transferred from the suite runner to its installation tests. */
+/** A packed package that the test run prepares for its install tests. */
 export type PackedPackage = Omit<RegistryPackage, 'source'> & { filename: string; integrity: string };
 
 /** Locally served package bytes, optionally protected by a credential. */
 export type NpmRegistry = AsyncDisposable & { url: string; npmrc: string; readonly requests: number };
 
-/** A package project in a sandbox: the project, its local registry, and the files the install reads. */
+/** A package project in a sandbox, with its own local registry. */
 export type PackageManagerSandbox = {
     root: string;
     artifacts: string;
@@ -45,7 +45,7 @@ export type PackageManagerSandbox = {
     [Symbol.asyncDispose](): Promise<void>;
 };
 
-/** Managed bytes and file mode captured before package installation. */
+/** Tool project files read before an install. */
 export type ToolProjectFiles = {
     manifest: Uint8Array;
     lockfilePath: string;
@@ -53,7 +53,7 @@ export type ToolProjectFiles = {
     mode: number;
 };
 
-/** Project bytes captured before a locked tool installation. */
+/** Tool project files read before a locked install. */
 export type LockedInputs = {
     session: Session;
     inputs?: ToolProjectFiles;
@@ -62,7 +62,7 @@ export type LockedInputs = {
     lockfile?: Buffer<ArrayBuffer>;
 };
 
-/** A Python project whose local index, authored bytes, and locked inputs have one lifetime. */
+/** A Python project and its local package index, disposed together. */
 export type IndexedPythonSandbox = AsyncDisposable & {
     rootProject: Buffer<ArrayBuffer>;
     rootConfiguration: Buffer<ArrayBuffer>;

@@ -18,5 +18,5 @@ const PYTEST_PYPROJECT = `[project]\nname = "example"\nversion = "1.0.0"\nrequir
 
 export { PYPROJECT, PYDOCLINT_GOOGLE, PYTEST_PYPROJECT, NESTED_PYTHON_SETTINGS };
 
-/** The public JSON command used for each docstring arrangement. */
+/** The JSON check command for each docstring case. */
 export const PYDOCLINT_CHECK_ARGUMENTS = ['check', '--only', 'python/pydoclint', '--json'] as const;

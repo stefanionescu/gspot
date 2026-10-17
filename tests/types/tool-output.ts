@@ -1,9 +1,9 @@
 import type { Linter } from 'eslint';
 import type { Finding } from '#cli/types/checks/run/check.ts';
 
-/** A native ESLint diagnostic projected onto its repository-relative source location. */
+/** An ESLint finding with its path from the repository root. */
 export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; line: Linter.LintMessage['line'] };
-/** The native link failure expected in one independently configured project. */
+/** A link failure that one scope must report. */
 export type LinkFailure = { scope: string; file: string; rule: string };
 
 export type TypecheckResult = { code: number; output: string; findings: Finding[] };
@@ -14,7 +14,7 @@ export type ParameterFinding = {
     location?: { row: number };
 };
 
-/** The normalized native ESLint configuration read by generation tests. */
+/** The parts of a calculated ESLint configuration that generation tests read. */
 export type EslintConfiguration = {
     rules: Record<string, [Linter.Severity, ...unknown[]]>;
     languageOptions: { globals: Record<string, string | boolean>; sourceType: string };
@@ -26,10 +26,10 @@ export type EslintConfiguration = {
 /** The report fields compared by CLI tests. */
 export type FindingRow = { file: string; line: number | undefined; rule: string | undefined };
 
-/** Source text and native findings for one retained ESLint case. */
+/** Source text and the findings of one rule for an ESLint case. */
 export type SourceRuleCase = { name?: string; source: string; rule: string; count: number };
 
-/** Expected native lint messages for a source sample at each supported level. */
+/** The findings a source sample must give at each level. */
 export type ScriptFindingCase = {
     file: string;
     recommended: readonly { ruleId: string | null; line: number }[];

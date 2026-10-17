@@ -66,7 +66,7 @@ paths = ["absent/**"]
 reason = "This path belongs to an external generated project."
 `;
 
-/** Public correction feedback uses a singular noun for one changed file. */
+/** The fix message uses a singular noun for one changed file. */
 const FIXER_FEEDBACK_CASES = [
     { name: 'no changes', paths: [], preview: 'No fixer changes anything.', applied: 'No fixer changed anything.' },
     {
@@ -101,7 +101,7 @@ const FIXER_FEEDBACK_CASES = [
     },
 ] as const;
 
-// Inputs and diagnostics for command refusal and working-tree preservation cases.
+// Options that the check command refuses, with each error; the working tree must stay unchanged.
 const FIX_REFUSALS = [
     [['--staged', '--fix'], '--fix cannot run with --staged'],
     [['--hook', 'pre-push', '--fix'], '--fix cannot run with --hook pre-push'],
@@ -139,7 +139,7 @@ const VERBOSITY_CASES = [
     { name: 'verbose output', flags: ['--verbose'], verbosity: 'verbose' },
 ] as const;
 
-/** The output sandbox exercises only its declared failure and successful neighbor. */
+/** Arguments that run only the failing and the passing check of the output sandbox. */
 const VERBOSITY_ARGUMENTS = ['check', '--only', 'example/findings', 'example/passing', '--changed', 'HEAD'] as const;
 
 const PUSH_CHECK_COMMAND = [...PUSH_CHECK_ARGUMENTS, 'origin', 'unused'] as const;

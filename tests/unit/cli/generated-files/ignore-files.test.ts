@@ -40,7 +40,7 @@ test.each([...PRETTIER_IGNORE_CASES])(
     },
 );
 
-/** Build a declared scoped ignore output from an actual repository and selected tool. */
+/** Generate the .semgrepignore of one scope from a sandbox. */
 async function generateIgnoreFile(settings: string, files: Record<string, string>, scope: string): Promise<string> {
     await using sandbox = await testdir({ ...files, 'gspot.toml': settings });
     const session = await openSession(sandbox.path);
@@ -64,7 +64,7 @@ async function generateIgnoreFile(settings: string, files: Record<string, string
     ).content;
 }
 
-/** Read one public ignore section without the generated comments around it. */
+/** Read the lines of one ignore section, without the comments around it. */
 function readIgnoreSection(content: string, title: string): string[] {
     const section = content.split(`# ${title}\n`, 2)[1];
     return section === undefined ? [] : section.split('\n\n', 1)[0]!.trimEnd().split('\n');

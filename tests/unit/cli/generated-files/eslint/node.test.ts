@@ -23,7 +23,7 @@ import {
     EXTENSIONLESS_SCRIPT_RULES,
 } from '#tests/data/generated-files/eslint/node-scripts.ts';
 
-test.each([...ENGINE_PHASES])('engines > native Node checks follow package engines (%j)', async (phase) => {
+test.each([...ENGINE_PHASES])('engines > Node checks follow package engines (%j)', async (phase) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...ENGINE_PACKAGES,

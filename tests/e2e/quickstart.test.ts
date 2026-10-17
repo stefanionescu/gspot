@@ -77,10 +77,9 @@ test.each(
 });
 
 /**
- * Link the installed pins into this tutorial's isolated mise directories.
- * @param tutorialRoot the tutorial repository.
- * @param environment the tutorial's isolated mise paths.
- * @returns after linking every supported pin.
+ * Link the installed tool pins into the mise folders of the tutorial.
+ * @param tutorialRoot repository that the quickstart test creates.
+ * @param environment mise folder variables for that repository.
  */
 async function linkQuickstartTools(tutorialRoot: string, environment: Record<string, string>): Promise<void> {
     for (const pin of listMisePins(

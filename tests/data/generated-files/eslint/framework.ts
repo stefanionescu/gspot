@@ -14,7 +14,7 @@ const SERVER_FILES = {
     'app/server/data.js': 'export const value = 1;\n',
 } as const;
 
-/** Real component and language sources used by their selected native parsers. */
+/** Component sources for each framework parser. */
 const COMPONENT_FILES = {
     'Card.vue': '<template><p>{{ count }}</p></template>\n<script setup lang="ts">const count: number = 1;</script>\n',
     'Card.svelte': '<script lang="ts">const count: number = 1;</script>\n<p>{count}</p>\n',
@@ -27,7 +27,7 @@ const count: number = 1;
     'source.js': 'export const count = 1;\n',
 } as const;
 
-/** Translate literal interface text outside the declared test files. */
+/** Literal interface text outside the test files, which the translation rule reports. */
 const I18N_SOURCE = 'export const element = <p>Hello there</p>;\n';
 
 // Each framework exposes the same security finding through its own markup syntax.
@@ -62,14 +62,14 @@ const RAW_HTML_CASES = [
     },
 ] as const;
 
-/** Sources that distinguish native text components from raw text in a view. */
+/** Text components and raw text in a view, for the React Native raw-text rule. */
 const TEXT_COMPONENTS = {
     'src/Label.jsx': 'export const Label = () => <ThemedText>label</ThemedText>;\n',
     'src/Raw.jsx': 'export const Raw = () => <View>label</View>;\n',
     'src/Native.jsx': 'export const Native = () => <Text>label</Text>;\n',
 } as const;
 
-/** Scoped React Native and Expo projects sharing no framework configuration. */
+/** React Native and Expo scopes that share no framework configuration. */
 const MOBILE_SETTINGS = `configurations = [ "javascript" ]
 
 [[scope]]

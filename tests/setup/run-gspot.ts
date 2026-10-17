@@ -19,13 +19,13 @@ export function listFindingRows(report: RunReport): FindingRow[] {
     return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
 }
 
-/** Resolve the source executable once for this checkout's test processes. */
+/** The CLI entry file in this checkout. */
 export const CLI_MAIN = join(CLI_SOURCE_PATH, 'main.ts');
 
 /**
- * Run registered command actions and capture their result before terminal formatting.
+ * Run a command through the CLI program and return its result before any terminal output.
  * @param cwd the sandbox in which the command starts.
- * @param commandArguments the public command and its arguments.
+ * @param commandArguments everything after gspot.
  * @returns the command result.
  * @throws the argument or command error when parsing or execution fails.
  */
@@ -45,10 +45,10 @@ export async function runRegisteredCommand(cwd: string, commandArguments: readon
 }
 
 /**
- * Runs gspot in this process over a directory with color off and CI set, capturing what it writes.
+ * Runs gspot in this process over a folder with color off and CI set, capturing what it writes.
  * @param cwd the sandbox.
- * @param commandArguments the command line after gspot.
- * @param environment verbatim variables, restored afterwards.
+ * @param commandArguments everything after gspot.
+ * @param environment extra variables, restored afterwards.
  * @param options byte input for commands that read standard input.
  * @returns the exit code and both streams.
  */
@@ -96,11 +96,11 @@ export async function runGspot(
 }
 
 /**
- * Capture a JSON check report while retaining the command's exit code and both streams.
+ * Run a check in this process and parse its JSON report. The result keeps the exit code and both streams.
  * @param cwd the sandbox.
- * @param commandArguments the test's complete check command, including JSON output.
- * @param environment the command's environment.
- * @returns the command evidence and its parsed report.
+ * @param commandArguments a full check call, with --json.
+ * @param environment extra variables.
+ * @returns the process output and its parsed report.
  */
 export async function checkReport(
     cwd: string,
@@ -112,14 +112,13 @@ export async function checkReport(
 }
 
 /**
- * Runs gspot as a child process in a directory with color off and CI set, through the product's child process.
+ * Run gspot as a child process in a folder with color off and CI set.
  * @param cwd the sandbox.
- * @param commandArguments the command line after gspot.
- * @param environment verbatim variables.
+ * @param commandArguments everything after gspot.
+ * @param environment extra variables for the child.
  * @param options stdin for the child process.
  * @returns the exit code and both streams.
  */
-
 export async function spawnGspot(
     cwd: string,
     commandArguments: readonly string[],
@@ -133,7 +132,7 @@ export async function spawnGspot(
     });
 }
 
-/** Run a public check command as a child and parse its JSON report. */
+/** Run a check command as a child process and parse its JSON report. */
 export async function spawnCheckReport(
     cwd: string,
     commandArguments: readonly string[],
@@ -143,13 +142,13 @@ export async function spawnCheckReport(
     return { ...result, report: JSON.parse(result.stdout) as RunReport };
 }
 
-/** Select the root check from an actual child-process JSON report. */
+/** Run one check as a child process and return its result for the root scope. */
 export async function spawnRootCheck(root: string, check: string): Promise<CheckResult> {
     const result = await spawnCheckReport(root, ['check', '--only', check, '--json']);
     return result.report.checks.find((entry) => entry.scope === '') as CheckResult;
 }
 
-/** Collect findings across the scopes reported by an actual public check command. */
+/** Run a check command as a child process and collect the findings of every scope. */
 export async function spawnCheckFindings(
     root: string,
     commandArguments: readonly string[],

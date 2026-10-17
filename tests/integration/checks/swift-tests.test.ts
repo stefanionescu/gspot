@@ -83,7 +83,7 @@ xcode_destination = "platform=macOS"
         }
     },
 );
-/** Prepare the shared SwiftLint source and generated test configuration for each scope. */
+/** Create a sandbox with the SwiftLint sources and the generated test tool file for one scope. */
 async function prepareSwiftScope(scope: string) {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(await testdir());
@@ -110,7 +110,6 @@ configurations = ["swift-tests"]
     return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
 }
 
-// The pinned swiftlint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     'SwiftLint $name reports the source lint rules and passes after the fix',
     async ({ scope }) => {
@@ -133,8 +132,6 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );
-// The pinned swiftlint tool has no build for some operating systems.
-// The pinned swiftlint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     'SwiftLint $name fixes source formatting with --fix',
     async ({ scope }) => {
@@ -149,7 +146,6 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         expect(await Bun.file(join(root, `${prefix}Sources/Value.swift`)).text()).toBe(FIXED_PARSER_SOURCE);
     },
 );
-// The pinned swiftlint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     'SwiftLint $name refuses a missing root tool file and names its path',
     async ({ scope }) => {
@@ -162,7 +158,6 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         expect(missing.stdout).toContain(`${prefix}.swiftlint.yml`);
     },
 );
-// The pinned swiftlint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
     'a swift-tests scope %s gets one complete SwiftLint tool file',
     async (scope) => {

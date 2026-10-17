@@ -25,7 +25,6 @@ import {
 const installedSandbox = registerSharedSandbox(SWIFT_SANDBOX);
 
 for (const entry of SWIFT_CASES) {
-    // The pinned tool for this case has no build for some operating systems.
     test.skipIf(!hasToolBuild(entry.check.split('/', 2)[1]!))(
         `${entry.check} reports ${entry.expected.rule} and passes after the fix`,
         async () => {
@@ -35,7 +34,6 @@ for (const entry of SWIFT_CASES) {
     );
 }
 
-// The pinned swiftformat tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header when it fixes spacing', async () => {
     const { root, environment } = installedSandbox();
 
@@ -68,7 +66,7 @@ async function readDocumentationFindings(root: string, code: 0 | 1, scope: strin
     return report.checks.flatMap(({ findings }) => findings.filter(({ rule }) => rule === 'blockComments'));
 }
 
-// SwiftFormat has no Windows build; Linux and macOS own these native diagnostics.
+// SwiftFormat has no Windows build.
 test.skipIf(!hasToolBuild('swiftformat'))('recommended leaves Swift block comments unchecked', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -196,7 +194,6 @@ path = "nested"
     },
 );
 
-// The pinned swiftlint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('swiftlint'))(
     'SwiftLint and SwiftFormat read the configuration of their scope, and the findings keep the scope path',
     async () => {

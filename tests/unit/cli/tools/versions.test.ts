@@ -123,7 +123,7 @@ test.each([
     expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
 });
 
-// The preceding numeric release exercises the actual declared floor without copying its value.
+// One release below the declared floor, computed so the test does not copy its value.
 function computeVersionBelow(floor: string): string {
     const parts = floor.split('.').map(Number);
     const index = parts.findLastIndex((part) => part > 0);

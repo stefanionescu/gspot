@@ -1,4 +1,4 @@
-/** Actual relative targets and aliases exercise the installed native rules. */
+/** Relative imports and aliases for the installed import rules. */
 export const IMPORT_FILES = {
     'package.json': '{"private":true,"type":"module","imports":{"#owner":"./src/owner.ts"}}\n',
     'tsconfig.json':

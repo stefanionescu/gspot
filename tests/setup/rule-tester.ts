@@ -16,9 +16,9 @@ RuleTester.describeSkip = describe.skip;
 
 /**
  * A rule tester using the TypeScript parser and a fixed repository root.
- * @param repositoryRoot the repository root the rules resolve paths against.
- * @param languageOptions language settings declared by the tested runtime.
- * @returns an ESLint rule runner with the TypeScript parser and gspot path settings.
+ * @param repositoryRoot folder the rules resolve paths against.
+ * @param languageOptions settings for the runtime under test.
+ * @returns the rule tester.
  */
 export function createRuleTester(
     repositoryRoot = RULE_TESTER_ROOT,

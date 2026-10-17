@@ -36,7 +36,7 @@ test('the installed ESLint plugin loads through import and require and enforces 
     const consumer = join(workspace.path, 'consumer');
     await mkdir(consumer);
     await writeFile(join(consumer, 'package.json'), '{"name":"plugin-consumer","private":true,"type":"module"}\n');
-    // The consumer installs tools separately from the plugin's runtime dependencies.
+    // The consumer installs tools separately from the runtime dependencies of the plugin.
     const peerPackages = [
         `eslint@${eslintPluginPackage.devDependencies.eslint}`,
         `typescript@${testsPackage.devDependencies.typescript}`,

@@ -1,4 +1,4 @@
-/** A generated GitHub workflow step inspected or executed by provider tests. */
+/** A generated GitHub workflow step that the CI tests read and run. */
 type WorkflowStep = {
     name?: string;
     run?: string;
@@ -15,8 +15,8 @@ export type GithubWorkflow = {
     jobs: Record<string, { steps: WorkflowStep[] }>;
 };
 
-/** The generated GitLab job that provider tests execute. */
+/** The generated GitLab job that the CI tests run. */
 export type GitlabPipeline = { gspot: { script: string[] } };
 
-/** One generated provider document, with its provider-specific keys. */
+/** A generated CI file of either provider. */
 export type CiDocument = GithubWorkflow | GitlabPipeline;

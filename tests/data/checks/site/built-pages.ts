@@ -1,6 +1,6 @@
 import { STATIC_SITE_FILES } from '#tests/data/checks/site/project.ts';
 
-/** Built-output checks run without acquiring tools. */
+/** Built-output checks run without installing tools. */
 const BUILT_PAGE_CASES = [
     {
         check: 'site/size',

@@ -12,14 +12,14 @@ import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/packed-san
 
 /**
  * Run the installed CLI on one sample and parse its report.
- * @param installation the installed CLI command.
- * @param options the isolated repository and command environment.
- * @param check the sample and its fix.
- * @param check.only the check identifier.
- * @param check.path the sample path.
- * @param check.sample the invalid sample text.
- * @param check.findings the expected findings.
- * @param check.corrected the corrected sample text.
+ * @param installation the packed CLI to run.
+ * @param options the sandbox folder and environment.
+ * @param check the sample, its fix, and the findings to expect.
+ * @param check.only the check to run.
+ * @param check.path where the sample goes.
+ * @param check.sample text that holds the finding.
+ * @param check.findings what the report must hold.
+ * @param check.corrected text without the finding.
  * @returns the process output and parsed report.
  */
 async function runPackedCheck(
@@ -36,7 +36,7 @@ async function runPackedCheck(
     const accepted = JSON.parse(passed.stdout) as RunReport;
     return { failed: { ...failed, report }, passed: { ...passed, report: accepted } };
 }
-// Install the selected configurations and write their project vocabulary.
+// Install the configurations and write their project vocabulary.
 async function prepareLanguages(installation: PackedSandbox): Promise<void> {
     const { command, onlineOptions } = installation;
     await writeFile(join(installation.root, 'entry.py'), 'answer = "example"\n');
@@ -59,7 +59,7 @@ async function prepareLanguages(installation: PackedSandbox): Promise<void> {
     expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);
 }
 
-// SQL discovery and its embedded parser work after installation without checkout dependencies.
+// After install, gspot finds and parses SQL without the dependencies of this checkout.
 async function assertInstalledSql(installation: PackedSandbox): Promise<void> {
     const { root, command, offlineOptions, onlineOptions } = installation;
     await writeFile(join(root, 'query.sql'), 'SELECT 1;\n');

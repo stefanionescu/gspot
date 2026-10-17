@@ -1,4 +1,4 @@
-/** Framework parser packages require an active stylesheet consumer. */
+/** Component files need the HTML parser package only when Stylelint checks their styles. */
 export const STYLESHEET_CASES = [
     { name: 'plain CSS', configurations: ['css'], files: { 'site.css': 'a { color: red; }' }, needsHtmlParser: false },
     {
@@ -27,7 +27,7 @@ export const STYLESHEET_CASES = [
     },
 ] as const;
 
-/** Each scope owns its component dialect and nearest declared Tailwind dependency. */
+/** Each scope gets its own component syntax and the Tailwind dependency of the nearest package. */
 export const STYLELINT_SCOPE_TABLES = `[[scope]]\npath = "vue"\nconfigurations = ["css", "vue"]\n[[scope]]\npath = "svelte"\n\nconfigurations = ["css", "svelte"]\n[[scope]]\npath = "mixed"\n\nconfigurations = ["css", "vue", "svelte"]\n`;
 
 export const STYLELINT_SCOPE_FILES = {
@@ -51,7 +51,7 @@ export const STYLELINT_PACKAGE_JSON = `{
 }
 `;
 
-/** Shared authored files that must survive managed native configuration changes. */
+/** Authored files that must stay unchanged when gspot changes the Stylelint tool file. */
 export const STYLELINT_FILES = {
     'package.json': STYLELINT_PACKAGE_JSON,
     'source.css': 'a { opacity: 1; }\n',
@@ -62,7 +62,7 @@ export const STYLELINT_FILES = {
     'plain/package.json': '{"private":true}\n',
 } as const;
 
-/** Unowned shared sections remain reviewable without suggesting deletion of their packages. */
+/** For a Stylelint section that gspot does not own, the suggestion deletes the section, not its package. */
 export const STYLELINT_SUGGESTIONS = [
     {
         path: 'app/child/package.json',
@@ -74,7 +74,7 @@ export const STYLELINT_SUGGESTIONS = [
     },
 ] as const;
 
-/** Authored source names do not prove build output; both stylesheets remain lint inputs. */
+/** A build folder name does not mark a stylesheet as build output; Stylelint checks both. */
 export const STYLESHEETS = {
     'build/site.css': `a {
     color: #ff0000;
@@ -90,10 +90,10 @@ export const STYLESHEETS = {
 `,
 } as const;
 
-/** Active rule options inherit across scopes. Inactive native options cannot add checks. */
+/** Scopes inherit the options of active rules. Options of inactive rules add no checks. */
 export const STYLELINT_SETTINGS = `[tools.stylelint.rules]\ncolor-hex-length = "short"\nnumber-max-precision = 0\nselector-max-id = 0\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-hex-length = "long"\n`;
 
-/** Standard properties and scoped color options correct all selected-level findings. */
+/** Standard properties and the scoped color option fix every finding at the level. */
 export const FIXED_STYLESHEETS = {
     'build/site.css': `a {
     color: #f00;
@@ -109,7 +109,7 @@ export const FIXED_STYLESHEETS = {
 `,
 } as const;
 
-/** Tailwind syntax follows the declaring package boundary. */
+/** Tailwind syntax applies only inside the package that declares Tailwind. */
 export const TAILWIND_FILES = {
     'package.json': '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
     'build/site.css': `@tailwind utilities;
@@ -136,7 +136,7 @@ a {
 
 export const TAILWIND_SETTINGS = `[[scope]]\npath = "app"\n\nconfigurations = ["css"]\n[[scope]]\npath = "other"\n\nconfigurations = ["css"]\n`;
 
-/** A property the native Stylelint owner must reject at both levels. */
+/** A property Stylelint rejects at both levels. */
 export const INVALID_CSS = `a {
     invalid-property: 1;
 }

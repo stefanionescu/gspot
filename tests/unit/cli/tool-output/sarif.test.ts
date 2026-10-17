@@ -14,7 +14,7 @@ import {
     POSITIONLESS_REGIONS,
 } from '#tests/data/tool-output.ts';
 
-/** Apply the same check identity and path context to each `SARIF` report. */
+/** Parse a Static Analysis Results Interchange Format (SARIF) report with the same check and paths for each case. */
 function parseSarifReport(report: unknown, root: string): Finding[] {
     return parseOutput(
         { name: 'docker/trivy-config', help: 'Correct the defect.', output: outputSchema.parse({ format: 'sarif' }) },

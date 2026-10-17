@@ -1,4 +1,4 @@
-/** Each directory table refuses a forbidden path. */
+/** Each folder setting refuses these unsafe paths. */
 export const UNSAFE_FOLDERS = [
     '../outside',
     '/outside',
@@ -10,7 +10,7 @@ export const UNSAFE_FOLDERS = [
     '',
 ] as const;
 
-/** Native expiry values contain valid calendar dates. */
+/** Expiry values, and whether each one holds a valid TOML date. */
 export const UNTIL_DATE_CASES = [
     { name: 'ordinary date', literal: '2026-12-31', valid: true, date: '2026-12-31' },
     { name: 'quoted date', literal: '"2026-12-31"', valid: false },
@@ -19,7 +19,7 @@ export const UNTIL_DATE_CASES = [
     { name: 'local time', literal: '00:00:00', valid: false },
 ] as const;
 
-/** Inputs with refinements that the published schema must retain. */
+/** Inputs with refinements that the published schema must keep. */
 export const PUBLISHED_SCHEMA_CASES = [
     {
         name: 'an empty command',
@@ -70,7 +70,7 @@ export const PUBLISHED_SCHEMA_CASES = [
         valid: false,
     },
     {
-        name: 'a reviewed native formatter option',
+        name: 'a reviewed formatter option',
         input: {
             tools: {
                 prettier: { extra: { value: { printWidth: 96 }, reason: 'The formatter owns this project option.' } },
@@ -79,7 +79,7 @@ export const PUBLISHED_SCHEMA_CASES = [
         valid: true,
     },
     {
-        name: 'a forbidden native YAML extra table',
+        name: 'a forbidden YAML extra table',
         input: {
             tools: { yamllint: { extra: { value: { enabled: false }, reason: 'Reviewed the native YAML option.' } } },
         },

@@ -28,7 +28,6 @@ import {
 // Systems without a semgrep build skip every test here, so they install nothing.
 const installedSandbox = hasToolBuild('semgrep') ? registerSharedSandbox(SEMGREP_SANDBOX) : undefined;
 
-// The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))(
     'Semgrep reports a Bash file it cannot parse as a finding at its position',
     async () => {
@@ -57,7 +56,6 @@ test.skipIf(!hasToolBuild('semgrep'))(
     },
 );
 
-// The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async () => {
     const sandbox = installedSandbox!();
     const sourceFiles = {
@@ -107,7 +105,6 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async ()
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
 });
 
-// The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
     '%s security packs report raw inputs once, accept documented forms, and pass after fixes',
     async (level) => {
@@ -146,7 +143,6 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
     },
 );
 
-// The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))('repository security rules report findings and pass after fixes', async () => {
     const sandbox = installedSandbox!();
     const sourceFiles = {
@@ -177,7 +173,7 @@ export const four = double(2);
     expect(corrected.report.checks).toMatchObject([{ check: 'security/semgrep', status: 'passed', findings: [] }]);
 });
 
-// The Next.js configuration rules run through the same native Semgrep command as other shipped packs.
+// The Next.js configuration rules run through the same Semgrep command as the other shipped packs.
 test.skipIf(!hasToolBuild('semgrep')).each([...NEXT_CONFIG_CASES])(
     'Semgrep checks next.config literals: $name',
     async ({ source, expected }) => {

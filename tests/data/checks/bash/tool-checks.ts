@@ -27,7 +27,7 @@ main "$@"
     },
 ] as const;
 
-/** Native cases include dialect findings and temporary cleanup in root and nested scopes. */
+/** Scripts with dialect findings and temporary-folder cleanup in the root and a nested scope. */
 export const DIALECT_SOURCES = {
     'posix.sh': String.raw`#!/bin/sh
 if [[ -n "$1" ]]; then
@@ -92,7 +92,7 @@ fi
 `,
 } as const;
 
-/** Native file selection and syntax diagnostics for each interpreter. */
+/** File selection and syntax findings for each interpreter. */
 export const SYNTAX_CASES = [
     // Zsh reports a parse error at the end of this one-line input, on line 2.
     {
@@ -120,7 +120,7 @@ export const SHELLCHECK_RC = '.gspot/config/shellcheckrc';
 
 export const NESTED_CONDITION = 'if [[ -n "$1" ]]; then';
 
-/** A user command check used by repository and revision tests. */
+/** A command check for repository and revision tests. */
 export const BASH_SYNTAX_CHECK = String.raw`[[command_check]]
 name = "project/bash-syntax"
 command = ["bash", "-n", "{file}"]

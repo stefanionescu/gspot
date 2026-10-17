@@ -3,7 +3,7 @@ import type { Finding } from '#cli/types/checks/run/check.ts';
 import { parseJsonFindings } from '#cli/parsers/output/json.ts';
 import { parseOutput, outputSchema } from '#cli/parsers/output/formats.ts';
 
-/** Parse reports with the same local paths and help used by these JSON cases. */
+/** Parse a JSON report with the paths and help text that these cases share. */
 function parseJsonReport(check: string, output: unknown, stdout: string): Finding[] {
     return parseJsonFindings({
         check,

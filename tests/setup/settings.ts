@@ -7,16 +7,16 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import type { WrittenSettings } from '#cli/types/settings/file.ts';
 
 /**
- * Write settings with explicit configuration choices and TOML tables.
- * @param configurations the configurations selected by the sandbox.
- * @param options the level, tables, and selection of the shipped rule files.
- * @param options.level the selected check detail.
- * @param options.tables the additional TOML tables.
- * @param options.rules whether to emit the agent rules.
- * @param options.ignore the ignored checks and their reason.
- * @param options.ignore.checks the check identifiers to ignore.
- * @param options.ignore.reason why to ignore these checks.
- * @returns the sandbox's gspot.toml bytes.
+ * Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
+ * @param configurations what the sandbox turns on.
+ * @param options extra settings to write.
+ * @param options.level `recommended` or `all`.
+ * @param options.tables more TOML to append.
+ * @param options.rules whether to write the agent rules.
+ * @param options.ignore checks to ignore.
+ * @param options.ignore.checks their check IDs.
+ * @param options.ignore.reason the reason to write.
+ * @returns the gspot.toml text.
  */
 export function buildSettingsText(
     configurations: readonly string[],
@@ -46,9 +46,9 @@ export function buildSettingsText(
 
 /**
  * Parses settings text and returns its errors, or none when it parses.
- * @param text the gspot.toml text.
- * @param repositoryRoot the repository the settings describe, when a problem depends on the tree.
- * @returns the problem messages.
+ * @param text gspot.toml content to parse.
+ * @param repositoryRoot folder the settings describe, for errors that depend on its files.
+ * @returns the error messages.
  */
 export function validateSettingsText(text: string, repositoryRoot?: string): string[] {
     try {
@@ -61,9 +61,9 @@ export function validateSettingsText(text: string, repositoryRoot?: string): str
 }
 
 /**
- * Build a check that reports each selected path and fails.
- * @param options the selected paths and check stage.
- * @returns the command and its line output.
+ * Build a command check that prints each path it gets and fails.
+ * @param options which files and stage the check covers.
+ * @returns the command check record.
  */
 export function buildReportingCheck(
     options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'paths' | 'stage'> & { name?: string },

@@ -5,10 +5,10 @@ import { isWindows } from '#tests/setup/system.ts';
 import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
 import { mkdir, readdir, symlink, readFile, realpath } from 'node:fs/promises';
 
-/** The installed workspace store keeps each package beside its own dependencies. */
+/** The node_modules folder of the repository root, where each package sits beside its dependencies. */
 const installedModules = join(import.meta.dir, '../../node_modules');
 
-/** The tests package owns its isolated executable and package links. */
+/** The node_modules folder of the tests package. It holds the package programs and links. */
 const testModules = join(import.meta.dir, '../node_modules');
 
 /**
@@ -32,9 +32,9 @@ async function listPackageNames(store: string): Promise<string[]> {
 
 /**
  * Link test packages before workspace packages, with their .bin and the workspace .bun store.
- * Canonical package links preserve relative dependencies that Windows store junctions break.
- * Copied sandboxes retain the installed dependency layout.
- * @param target the node_modules directory to create.
+ * Links to the real package folders keep relative dependencies that Windows store junctions break.
+ * Copied sandboxes keep the installed dependency layout.
+ * @param target the node_modules folder to create.
  */
 async function linkInstalledModules(target: string): Promise<void> {
     const kind = isWindows ? 'junction' : 'dir';
@@ -57,7 +57,7 @@ async function linkInstalledModules(target: string): Promise<void> {
  * Link declared packages and the installed packages they depend on, so a scratch copy of node_modules holds only those.
  * A test package wins over a workspace package of the same name, as in linkInstalledModules.
  * @param target the node_modules folder to create.
- * @param names the package names the sandbox project declares.
+ * @param names packages that the sandbox project declares.
  */
 async function linkPackages(target: string, names: readonly string[]): Promise<void> {
     const kind = isWindows ? 'junction' : 'dir';

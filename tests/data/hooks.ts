@@ -1,4 +1,4 @@
-/** The authored hook providers and the Git-local script that init must retain. */
+/** The authored hook managers and the local Git hook script that init must keep. */
 export const HOOK_REPOSITORIES = [
     {
         name: 'another hooks folder',

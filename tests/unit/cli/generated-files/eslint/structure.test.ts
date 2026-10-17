@@ -22,7 +22,7 @@ import {
     LEVEL_REEXPORT_CASES,
 } from '#tests/data/generated-files/eslint/structure.ts';
 
-// The files and rules the generated configuration reports among the two rules about trivial code.
+// The files and rules that the generated ESLint tool file reports for the two trivial-code rules.
 async function collectTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);
     const eslint = await createEslint(root);
@@ -225,7 +225,7 @@ test.each(LEVEL_REEXPORT_CASES)(
     },
 );
 
-/** Check each retained native rule case in the supplied source files. */
+/** Check each rule case against these source files. */
 async function assertSourceRules(
     eslint: ESLint,
     root: string,

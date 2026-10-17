@@ -73,7 +73,7 @@ test.each(['relative', 'absolute', 'namespaced'])(
     },
 );
 
-/** Prepare the managed jscpd inputs once for either output failure or clone-path assertions. */
+/** Create a jscpd sandbox and apply its settings for the output failure and clone path tests. */
 async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promise<string> {
     const folder = resources.use(await testdir());
     await fakeNpmTool(folder.path, 'jscpd');

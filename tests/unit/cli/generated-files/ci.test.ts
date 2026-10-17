@@ -136,7 +136,7 @@ test.each(SETUP_CASES)(
     },
 );
 
-/** Build each test's pipeline from its own prepared session and keep the sandbox alive for that test. */
+/** Build the CI pipeline in a new sandbox that lives until the test ends. */
 async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline> {
     const sandbox = resources.use(
         await testdir({

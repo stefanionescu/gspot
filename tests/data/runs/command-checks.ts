@@ -1,4 +1,4 @@
-// A check that records what it saw and passes corrected inputs, and a fixer that corrects them.
+// A check that records its inputs and passes corrected ones, and a fixer that corrects them.
 export const QUALITY_COMMAND = [
     'node',
     '-e',
@@ -15,7 +15,7 @@ export const QUALITY_FIX = [
     '{files}',
 ] as const;
 
-/** Publish readiness after writing the complete child process identifier. */
+/** Marks the program ready only after the full process ID gets written. */
 export const SLOW_TOOL_PROGRAM =
     'require("node:fs").writeFileSync("started.tmp", String(process.pid)); require("node:fs").renameSync("started.tmp", "started.pid"); await Bun.sleep(60_000);';
 

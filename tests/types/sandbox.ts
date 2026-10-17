@@ -1,10 +1,10 @@
 import type { Level } from '#cli/types/configurations.ts';
 import type { GspotCall, SampleFix, CheckSample } from '#tests/types/samples.ts';
 
-/** Settings choices computed before a sandbox installs applicable tools. */
+/** Settings that installSandbox applies before it installs tools. */
 export type SandboxSettings = Pick<InstalledSandboxPlan, 'without' | 'level' | 'install'>;
 
-/** Settings and files owned by one isolated sandbox. */
+/** What one sandbox holds and how to prepare it. */
 export type SandboxPlan = {
     configurations: readonly string[];
     dependencies?: Readonly<Record<string, string>>;
@@ -44,5 +44,5 @@ export type RuntimeDetectionRow = {
     toolProjectManifest?: { engines: Record<string, string> };
 };
 
-/** The file mutation and command capabilities needed to restore an installed sandbox. */
+/** What changeSandbox needs to edit and restore an installed sandbox. */
 export type SandboxFiles = Pick<Sandbox, 'root' | 'environment' | 'run'>;

@@ -1,4 +1,4 @@
-// Reads generated tool configurations and ESLint findings for tests.
+// Reads generated tool files and ESLint findings for tests.
 import ts from 'typescript';
 import { ESLint } from 'eslint';
 import { parse as parseIni } from 'ini';
@@ -19,7 +19,7 @@ import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { LintFinding, ScriptFindingCase, EslintConfiguration } from '#tests/types/tool-output.ts';
 
-/** Native ESLint messages limited to the rules a retained test checks. */
+/** Lint the files and keep the findings of these rules and fatal errors, sorted. */
 async function collectLintFindings(
     eslint: ESLint,
     root: string,
@@ -40,13 +40,10 @@ async function collectLintFindings(
         .toSorted(compareFindings);
 }
 
-// What sandbox settings generate: the files its selected configurations write, and the ESLint instance its
-// configuration produces.
-
 /**
- * Links installed test packages, writes outputs through the managed lifecycle, and loads the ESLint configuration.
- * @param sandboxRoot the sandbox with its gspot.toml.
- * @returns ESLint reading the generated configuration.
+ * Links the test packages, runs apply, and loads the generated ESLint tool file.
+ * @param sandboxRoot folder with a gspot.toml.
+ * @returns ESLint set up with the generated tool file.
  */
 async function createEslint(sandboxRoot: string, options?: ESLint.Options): Promise<ESLint> {
     await linkInstalledModules(join(sandboxRoot, 'node_modules'));
@@ -70,8 +67,8 @@ async function createEslint(sandboxRoot: string, options?: ESLint.Options): Prom
 /**
  * Creates a repository with the settings and files, and returns the content of one generated file.
  * @param settings the gspot.toml text.
- * @param path the generated path to read.
- * @param files further files the repository holds.
+ * @param path generated file to read.
+ * @param files other content for the repository.
  * @returns the generated content.
  */
 async function generateFile(settings: string, path: string, files: Record<string, string>): Promise<string> {
@@ -84,7 +81,7 @@ async function generateFile(settings: string, path: string, files: Record<string
     return file.content;
 }
 
-/** Compare native findings by file, line, and rule for stable assertions. */
+/** Sort findings by file, line, and rule. */
 function compareFindings(left: LintFinding, right: LintFinding): number {
     return (
         left.file.localeCompare(right.file) ||
@@ -92,7 +89,7 @@ function compareFindings(left: LintFinding, right: LintFinding): number {
         (left.rule ?? '').localeCompare(right.rule ?? '')
     );
 }
-/** Find the generated file selected for a tool and scope. */
+/** Find the generated tool file for a tool and scope. */
 function toolFileFor(session: Session, tool: string, scope = ''): string {
     const declaration = session.scopes
         .find((selection) => selection.scope.path === scope)
@@ -115,7 +112,7 @@ function parseModule(text: string, path: string): void {
     if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
 }
 
-/** Parse a generated tool file with its native syntax reader. */
+/** Parse a generated tool file with the parser for its extension. */
 function parseToolFile(text: string, path: string): void {
     const parsers: Record<string, (text: string, path: string) => void> = {
         '.cfg': (text) => {
@@ -160,14 +157,14 @@ export async function readEslintRules(
     );
 }
 
-/** List distinct native rule names in stable order for level-specific assertions. */
+/** List each rule name once, sorted. */
 export function listFindingRules(findings: readonly LintFinding[]): (string | null)[] {
     return [...new Set(findings.map(({ rule }) => rule))].toSorted((left, right) =>
         (left ?? '').localeCompare(right ?? ''),
     );
 }
 
-/** Project each source sample's level-specific native findings into report order. */
+/** List the findings each source sample expects at this level, in report order. */
 export function listScriptFindings(cases: readonly ScriptFindingCase[], level: Level): LintFinding[] {
     return cases
         .flatMap((entry) =>

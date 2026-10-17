@@ -1,4 +1,4 @@
-// Packs packages, serves their registry, and installs sandbox tool projects.
+// Installs sandbox tools and runtimes and prepares locked tool projects.
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { join, delimiter } from 'node:path';
@@ -28,7 +28,7 @@ import type { LockedInputs, ToolProjectFiles } from '#tests/types/packages.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { MISE_TRUST, PINNED_TOOLS_FILE, TEST_RUN_FOLDER_NAME } from '#tests/data/test-setup.ts';
 
-/** Give real hook repositories the same authored runtime pins as this repository. A clone keeps its committed file. */
+/** Give a hook repository the Bun and Node pins of this repository; a clone keeps its committed file. */
 async function installRuntimes(root: string): Promise<void> {
     if (!(await Bun.file(join(root, PINNED_TOOLS_FILE)).exists())) {
         const runtimeSettings: unknown = parse(
@@ -41,25 +41,25 @@ async function installRuntimes(root: string): Promise<void> {
     if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
 }
 
-/** Resolve the installed test package executables before system tools. */
+/** A `PATH` that puts the installed test package programs before system tools. */
 function buildToolsPath(): string {
     return [join(testModules, '.bin'), join(installedModules, '.bin'), readEnvironmentVariable('PATH') ?? ''].join(
         delimiter,
     );
 }
 
-/** Return the folder that holds the current test run's packages and tool paths. */
+/** The folder that holds the packages and tool paths of this test run. */
 function testRunFolder(): string {
     return join(tmpdir(), TEST_RUN_FOLDER_NAME);
 }
 
-/** Resolve the integration preload command before installed tools. */
+/** A `PATH` with the test run launcher first, then the installed tools. */
 function buildSandboxPath(): string {
     const folder = testRunFolder();
     return [join(folder, 'bin'), buildToolsPath()].join(delimiter);
 }
 
-/** Initialize a sandbox and install the tools selected for its integration tests. */
+/** Run init in a sandbox, set its level and configurations, and install its tools. */
 async function installSandbox(
     root: string,
     commandArguments: string[],
@@ -77,7 +77,7 @@ async function installSandbox(
     if (settings.install !== false) await runSandboxStep(root, ['install'], environment, 'install');
 }
 
-/** Run a public setup step and report its captured output when it fails. */
+/** Run one gspot command in a sandbox and throw with its output when it fails. */
 async function runSandboxStep(
     root: string,
     commandArguments: string[],
@@ -88,7 +88,7 @@ async function runSandboxStep(
     if (result.code !== 0) throw new Error(`Sandbox ${step} failed: ${result.stdout}${result.stderr}`);
 }
 
-/** Generate the sandbox's tool files and install its tools through the public CLI commands. */
+/** Run apply and install in a sandbox. */
 async function installToolProjects(root: string): Promise<void> {
     const applied = await spawnGspot(root, ['apply']);
     if (applied.code !== 0) throw new Error(`Sandbox apply failed: ${applied.stdout}${applied.stderr}`);
@@ -96,7 +96,7 @@ async function installToolProjects(root: string): Promise<void> {
     if (installed.code !== 0) throw new Error(`Sandbox install failed: ${installed.stdout}${installed.stderr}`);
 }
 
-/** Check that a refused install reports its reason before making another registry request. */
+/** Run an install that must fail, and return its message and the registry requests it made. */
 async function captureInstallRefusal(
     root: string,
     tools: Iterable<ToolDeclaration>,
@@ -112,7 +112,7 @@ async function captureInstallRefusal(
     return { message: await captureRejection(installation), requests: registry.requests - requests };
 }
 
-/** Resolve and write the selected project inputs before exercising locked installation. */
+/** Apply, then write the tool project files and lockfiles for a locked install test. */
 async function writeLockedInputs(root: string, suppliedLog?: Writer): Promise<LockedInputs> {
     using resources = new DisposableStack();
     const applied = await runGspot(root, ['apply']);
@@ -151,7 +151,7 @@ async function installCompiler(root: string, folder = join(root, 'node_modules')
     return [join(folder, '.bin'), readEnvironmentVariable('PATH') ?? ''].join(delimiter);
 }
 
-/** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */
+/** Read the package.json, lockfile, and lockfile mode of the tool project before an install test. */
 async function readToolProjectFiles(root: string, packageManager: PackageManager['name']): Promise<ToolProjectFiles> {
     const lockfilePath = join(root, '.gspot', selectLockfileName(packageManager));
     await using lockfile = await open(lockfilePath, 'r');
@@ -165,10 +165,10 @@ async function readToolProjectFiles(root: string, packageManager: PackageManager
 }
 
 /**
- * Build the install state from an open sandbox session and its repository writer.
- * @param session the open sandbox session.
- * @param writer the locked sandbox writer.
- * @returns generated inputs, selected tools, and an empty install command log.
+ * Build the install state for a sandbox.
+ * @param session the open sandbox.
+ * @param writer holds the repository lock and saves files.
+ * @returns the install state.
  */
 function buildInstallContext(session: Session, writer: Writer): InstallContext {
     return {

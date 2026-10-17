@@ -19,8 +19,8 @@ import { PROJECT_OPTIONS, PROJECT_TRIGGERS } from '#tests/data/runs/plan.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 /**
- * Plant project and file checks on the real selected child scopes.
- * @param session the test-owned session whose selected checks to replace.
+ * Put fake project and file checks into the child scopes of the session.
+ * @param session sandbox whose checks to replace.
  */
 async function fakeProjectChecks(session: Session): Promise<void> {
     await fakeTool(session.root, '.gspot/mock-tsc', "console.log('Project finding'); process.exitCode = 1");

@@ -25,9 +25,9 @@ import {
 } from '#tests/data/checks/nextjs.ts';
 
 /**
- * Replace executable lookup and both process runners until disposal. Simulate generated files and diagnostics.
- * @param runCallback the native command result for tests with a different process outcome.
- * @returns captured commands and a disposer that restores the mocked boundaries.
+ * Fake executable lookup and both process functions until disposal. The fakes return the output and files that Next.js writes.
+ * @param runCallback fake process result for tests that need another one.
+ * @returns the recorded commands and a disposer that removes the fakes.
  */
 function mockNextjsCommands(
     runCallback?: (command: readonly string[], options: AsyncSpawnOptions) => Promise<SpawnResult>,
@@ -162,13 +162,11 @@ test("a failed type generation removes the scratch copy and keeps the developer'
     expect(await isOnDisk(join(folder.path, 'next-env.d.ts'))).toBe(false);
 });
 
-// Next.js projects for disposable build verification.
-
 /**
- * Prepare tracked and untracked output for disposable Next.js build checks.
- * @param sandboxRoot the directory that receives tracked source and retained build outputs.
- * @param scope the selected project path.
- * @returns the repository session with native generated configurations.
+ * Create a Next.js project with tracked source and untracked build output, for the scratch build checks.
+ * @param sandboxRoot folder for the project.
+ * @param scope folder of the Next.js project.
+ * @returns the session after apply and commit.
  */
 async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<Session> {
     const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;

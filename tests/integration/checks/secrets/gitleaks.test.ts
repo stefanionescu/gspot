@@ -68,7 +68,7 @@ async function prepareHistory(root: string, environment: Record<string, string>)
     return { base, leaked, removed };
 }
 
-// All three native scan modes must preserve both findings, usable columns, and redaction.
+// Each of the three scan modes must keep both findings, usable columns, and redaction.
 function assertSecretFindings(check: CheckResult | undefined, output: string, prefix: string): void {
     expect(check?.status).toBe('failed');
     expect(

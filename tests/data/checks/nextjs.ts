@@ -9,7 +9,7 @@ const config = { reactStrictMode: true };
 export default config;
 `;
 
-/** The home page emitted by the test application. */
+/** The home page of the test application. */
 const NEXT_PAGE = `// The home page.
 
 /**
@@ -54,7 +54,7 @@ const NEXT_PACKAGE = {
     },
 } as const;
 
-/** Locale messages shared by native Next.js configuration scenarios. */
+/** Locale messages for the Next.js configuration tests. */
 const NEXT_MESSAGES = {
     'messages/en.json': `{
     "home": { "title": "Home", "greeting": "Hello {name}" }

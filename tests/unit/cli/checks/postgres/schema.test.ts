@@ -75,12 +75,11 @@ test('an unnamed foreign key gets the PostgreSQL default name and does not count
 
 /**
  * A migration under migrations/, parsed.
- * @param name the file name.
+ * @param name file under migrations/.
  * @param text the SQL.
- * @param version the version the name carries; its first character unless given.
+ * @param version defaults to the first character of the name.
  * @returns the migration.
  */
-
 async function parseMigration(name: string, text: string, version = name.slice(0, 1)): Promise<Migration> {
     const parsed = await parseSqlFile(text);
     return { path: `migrations/${name}`, name, version, text, statements: parsed.statements };

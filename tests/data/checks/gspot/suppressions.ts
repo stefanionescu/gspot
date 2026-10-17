@@ -3,7 +3,7 @@ export const TYPESCRIPT_SUPPRESSIONS = ['ignore', 'expect-error', 'nocheck'] as 
 
 export const COMPILER_REASON = 'A separate sandbox checks the external declaration.';
 
-/** Native ESLint comment recognition cases shared by planting and assertions. */
+/** ESLint comments, and whether ESLint reads each one as a directive. */
 export const ESLINT_SUPPRESSIONS = [
     ['// Example eslint-disable-next-line no-console', false],
     ['// eslint-disable no-console', false],
@@ -18,7 +18,7 @@ export const ESLINT_SUPPRESSIONS = [
     ['/*eslint-disable-unknown*/', false],
 ] as const;
 
-/** Native Stylelint directive recognition cases. */
+/** Stylelint comments, and whether Stylelint reads each one as a directive. */
 export const STYLELINT_SUPPRESSIONS = [
     ['/* stylelint-disable color-no-invalid-hex */', true],
     ['/*stylelint-disable*/', true],
@@ -30,7 +30,7 @@ export const STYLELINT_SUPPRESSIONS = [
     ['/* STYLELINT-DISABLE color-no-invalid-hex */', false],
 ] as const;
 
-/** Native HTML Validate directive recognition cases. */
+/** HTML Validate comments, and whether HTML Validate reads each one as a directive. */
 export const HTML_VALIDATE_SUPPRESSIONS = [
     ['<!-- html-validate-disable wcag/h37 -->', true],
     ['<!-- html-validate-disable-next wcag/h37 -->', true],
@@ -41,7 +41,7 @@ export const HTML_VALIDATE_SUPPRESSIONS = [
     ['<!-- [html-validate-disable wcag/h37] -->', true],
 ] as const;
 
-/** Exact native directive reason cases shared by planting and observations. */
+/** Reason comments above suppressions, and the lines the check reports for a missing reason. */
 export const SUPPRESSION_REASON_CASES = [
     [
         'source.ts',
@@ -87,7 +87,7 @@ console.log(1);
     ],
 ] as const;
 
-/** Native suppression comments and the exact authored reasons their patterns must capture. */
+/** Suppression comments and the exact reasons their patterns must capture. */
 export const SUPPRESSION_REASONS = [
     [
         'sql',

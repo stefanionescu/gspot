@@ -20,7 +20,7 @@ export const SWIFT_CHECK = {
     findings: [{ line: 1, rule: 'banned-word' }],
 } as const;
 
-/** Authored input replaced or inspected by the delivered launcher scenario. */
+/** Starting files that the packed launcher test replaces or reads. */
 export const STARTING_FILES = {
     '.editorconfig': `root = true
 [*]
@@ -40,7 +40,7 @@ Run the tests.
 `,
 } as const;
 
-/** Exact ShellCheck diagnostics for the launcher's syntax sample. */
+/** The exact ShellCheck findings for the syntax sample of the launcher test. */
 export const SHELLCHECK_SYNTAX_FINDINGS = [
     {
         check: 'bash/shellcheck',

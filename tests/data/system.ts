@@ -22,7 +22,7 @@ export const ASSET_READER_SCRIPT = `import { readAsset, listAssets } from './pac
 console.log(JSON.stringify({ text: readAsset('configurations/language/bash/manifest.toml'), files: listAssets('configurations') }));
 `;
 
-// Authored marker cases cover every malformed delimiter layout in both supported file formats.
+// Authored markers in every malformed layout, in both supported file formats.
 export const BLOCK_FORMATS = [
     {
         path: 'AGENTS.md',
@@ -123,7 +123,7 @@ export const LINKED_MISE_FOLDERS = [
     { link: '.config', target: '../outside', pattern: '.config/sub/tool.toml' },
 ] as const;
 
-/** Fixed files exercising glob inclusion and exclusions. */
+/** Files for the glob include and exclude tests. */
 export const GLOB_FILES = {
     'src/a.ts': '',
     'src/.leaf.ts': '',

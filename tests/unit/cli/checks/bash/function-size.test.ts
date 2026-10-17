@@ -17,7 +17,7 @@ import {
 } from '#tests/data/checks/bash/function-checks.ts';
 
 /**
- * Read the declared boundary used by the installed configuration.
+ * Read the shipped default of a Bash size limit.
  * @param name the Bash size setting.
  * @returns its declared numeric default.
  */

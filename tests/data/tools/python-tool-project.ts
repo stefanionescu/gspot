@@ -47,7 +47,7 @@ name = "local"
 url = "packages"
 `;
 
-/** Captured project manifests distinguish declared scopes from workspace-only members. */
+/** pyproject.toml files, to tell declared scopes from uv workspace members. */
 export const PYTHON_WORKSPACE_FILES = {
     'pyproject.toml': `[project]
 dependencies = ["fastapi>=1"]

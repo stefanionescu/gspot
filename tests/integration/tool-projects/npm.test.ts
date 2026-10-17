@@ -97,7 +97,7 @@ async function assertCloneInstallation(project: PackageManagerSandbox, inputs: T
     const { root, artifacts } = project;
     const { manifest, lockfile } = inputs;
     const clone = join(artifacts, 'clone');
-    // Preserve native package-manager line endings through Git before testing installation byte preservation.
+    // Keep the line endings of the package manager through Git, so the install test can compare bytes.
     await appendFile(join(root, '.gitattributes'), TOOL_PROJECT_BYTE_ATTRIBUTES);
     commitAll(root);
     readGitOutput(root, ['clone', '--quiet', '--no-local', root, clone]);
@@ -153,7 +153,7 @@ test.each([...PACKAGE_MANAGER_ROWS])(
         // A reinstall replaces an edited installed file with the locked one, and the tool stays ready.
         const readmePath = join(root, '.gspot/node_modules/prettier/README.md');
         const readme = await readFile(readmePath);
-        // Replace the file so native package-manager hardlinks do not edit its shared cache.
+        // Replace the file so that the edit does not reach the shared cache through package manager hardlinks.
         await unlink(readmePath);
         await writeFile(readmePath, 'authored later');
         const reinstalled = await spawnGspot(root, ['install']);
@@ -175,7 +175,7 @@ test.each([...PACKAGE_MANAGER_ROWS])(
     },
 );
 
-// Own the authenticated registry's requests and lifetime for its real package manager.
+// Serves an authenticated registry for a real package manager and counts its requests.
 function createAuthenticatedRegistry(token: string) {
     const requests = { rejected: 0, authenticated: 0 };
     const server = Bun.serve({

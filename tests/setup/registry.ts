@@ -36,7 +36,7 @@ export async function runNpmPack(work: string, declarations: readonly RegistryPa
     return manifest;
 }
 
-/** Serve packed npm packages and the additional packages selected by a credential test. */
+/** Serve the packed npm packages and any extra packages that a credential test asks for. */
 export async function createNpmRegistry(
     work: string,
     options: { declarations: readonly RegistryPackage[]; token?: string },

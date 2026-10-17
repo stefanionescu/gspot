@@ -129,13 +129,13 @@ PORT=4000
     },
 ] as const;
 
-/** An inert high-entropy API token exercises redacted generic-key reports. */
+/** A harmless high-entropy API token, for the redacted generic-key report. */
 const API_TOKEN = 'n3K5p7R9' + 't2V4w6Y8' + 'z1A3c5E7' + 'g9I2m4O6';
 
 // Build the scanner sample from halves so repository scans do not read a credential here.
 const AWS_KEY_ID = 'AKIA' + 'IOSFODNN7' + 'EXAMPLA';
 
-/** A settings file containing the test credential. */
+/** An Amazon Web Services (AWS) credentials file that holds the test credential. */
 const AWS_CREDENTIALS = `aws_access_key_id = "${AWS_KEY_ID}"\n`;
 
 const SECRET_FILES = {
@@ -148,7 +148,7 @@ const FIXED_SECRET_FILES = {
     'identity.py': 'import os\naws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]\n',
 } as const;
 
-/** Inert tokens recognized only by the loopback provider's custom detector. */
+/** Harmless tokens that only the custom detector of the local provider finds. */
 const VERIFIER_TOKENS = {
     first: 'gspot-acceptance-token-first',
     second: 'gspot-acceptance-token-second',

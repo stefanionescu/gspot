@@ -128,7 +128,7 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
     await Bun.write(join(sandbox.path, 'app/jsconfig.json'), '{');
     const invalid = await spawnGspot(sandbox.path, command, env);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
-    // The scope with the unreadable configuration errors alone; the other scope keeps its result.
+    // The scope with the unreadable jsconfig.json errors alone; the other scopes keep their results.
     expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
         { scope: '', status: 'passed' },
         { scope: 'app', status: 'error', note: matchSubstring(join('app', 'jsconfig.json')) },

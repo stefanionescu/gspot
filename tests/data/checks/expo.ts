@@ -1,4 +1,4 @@
-/** The complete issue text of each failed SDK check, excluding Doctor's advice. */
+/** The full text of each failed SDK check, without the advice of Expo Doctor. */
 const DOCTOR_FINDING_MESSAGES = [
     'Check that packages match versions required by installed Expo SDK The following packages should be updated for best compatibility with the installed expo version: react-native@0.81.4 - expected version: 0.81.5',
     'Check for app config fields that may not be synced in a non-CNG project This project contains native project folders but also has native configuration properties in app.json.',

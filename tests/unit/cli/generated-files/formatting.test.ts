@@ -33,7 +33,7 @@ test('format.indent_width reaches EditorConfig, Prettier and each tool file', as
     });
     const session = await openSession(folder.path);
     const generated = new Map(generate(session).files.map((file) => [file.path, file.content]));
-    // Isolate EditorConfig discovery from the Prettier generated configuration for this native consumer.
+    // Write only .editorconfig, so Prettier resolves its options from EditorConfig alone.
     await Bun.write(join(folder.path, '.editorconfig'), generated.get('.editorconfig')!);
     const path = join(folder.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });

@@ -1,7 +1,7 @@
 import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
 import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/data/checks/python/project.ts';
 
-/** Native diagnostics distinguish Python correctness from conventions at each level. */
+/** One correctness finding and one convention finding, to tell the levels apart. */
 const RUFF_RULE_SOURCE = 'answer = missing_name\nprint(answer)\n';
 
 /** This function exceeds thirty statements while staying below sixty code lines. */
@@ -16,7 +16,7 @@ ${Array.from({ length: FUNCTION_INCREMENT_COUNT }, () => '    value += 1').join(
     return value
 `;
 
-/** Editor discovery must use each scope's formatter settings. */
+/** An editor that runs Ruff must find the tool file of each scope. */
 const RUFF_FORMAT_CASES = [
     { file: 'sample.py', config: '.gspot/config/ruff.toml', formatted: "VALUE = 'example'\r\n" },
     { file: 'app/sample.py', config: '.gspot/config/ruff/app/ruff.toml', formatted: 'VALUE = "example"\n' },
@@ -40,7 +40,7 @@ def retain(values: Optional[List[int]]) -> Optional[List[int]]:
     return values
 `;
 
-/** Ruff owns unused imports; basedpyright retains the independent assignment error. */
+/** Ruff reports the unused import; basedpyright still reports the assignment error. */
 const DUPLICATE_IMPORT_SOURCE = `"""An example module."""
 
 import math

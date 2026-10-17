@@ -8,7 +8,7 @@ export const BASH_COMMENT_CASES = [
     [String.raw`x=1 \# y`, String.raw`x=1 \# y`],
 ] as const;
 
-/** Exact cleanup bindings exclude unrelated paths, reassignment, and compound values. */
+/** Only a trap that removes the same mktemp path counts; other paths, reassignment, and compound values do not. */
 export const MKTEMP_CLEANUP_CASES = [
     {
         source: 'tmp=$(mktemp)\ntrap \'tmp=/etc; rm -rf "$tmp"\' EXIT\n',

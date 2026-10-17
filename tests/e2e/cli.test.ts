@@ -11,7 +11,7 @@ import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/packed-sandbox.ts';
 import { STARTING_FILES, CLAUDE_REFERENCE_BLOCK, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/data/packed-install.ts';
 
-// Assert the delivered takeover contract before inspecting the check report.
+// Checks what init replaced and kept, before the test reads the check report.
 async function assertReplacedFiles(root: string, output: string): Promise<void> {
     expect((JSON.parse(output) as InitJson).plan?.delete.map(({ path }) => path)).toStrictEqual([
         'prettier.config.mjs',

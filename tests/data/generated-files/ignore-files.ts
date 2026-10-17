@@ -1,4 +1,4 @@
-/** Inventory declarations and check path ignores reach native Prettier patterns. */
+/** Declared file kinds and check path ignores must reach the Prettier ignore patterns. */
 export const PRETTIER_IGNORE_SETTINGS = {
     configurations: ['format', 'javascript'],
     ignore: [
@@ -10,7 +10,7 @@ export const PRETTIER_IGNORE_SETTINGS = {
     ],
 } as const;
 
-/** Shared build folders, declarations, and selected lockfiles stay excluded while other source files remain eligible. */
+/** Build folders, declarations, and some lockfiles stay ignored; other source files get formatted. */
 export const PRETTIER_IGNORE_CASES = [
     { file: 'tests/build/Scenario.ts', ignored: true },
     { file: 'src/dist/source.ts', ignored: true },
@@ -63,7 +63,7 @@ configurations = ["javascript"]
     },
 ] as const;
 
-/** Check-specific file ignores reach the native discovery owners that read them. */
+/** Path ignores for one check reach the tool file that the tool reads. */
 export const PATH_IGNORE_CASES = [
     {
         configuration: 'spelling',

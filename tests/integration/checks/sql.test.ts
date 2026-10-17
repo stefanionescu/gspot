@@ -7,7 +7,7 @@ import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 import { SQL_CASES, SQL_SANDBOX, SQL_DUCKDB_SOURCE, SQL_FUNCTION_SOURCE } from '#tests/data/checks/sql.ts';
 
-/** Apply the Sql sources and restore them when their scenario finishes. */
+/** Write the SQL sources, apply, and restore them when the test ends. */
 async function prepareSqlFiles(files: Record<string, string>): Promise<AsyncDisposable> {
     const sandbox = installedSandbox();
     await using resources = new AsyncDisposableStack();
@@ -142,7 +142,7 @@ test.each([...SQL_CASES])('$check reports $expected.file and passes after the fi
     expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });
 
-/** Identify SQL parser diagnostics in the public check report. */
+/** Find SQL parse errors in the check report. */
 function hasSqlParseError(stdout: string): boolean {
     return (JSON.parse(stdout) as RunReport).checks
         .flatMap((check) => check.findings)

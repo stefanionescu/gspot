@@ -1,4 +1,4 @@
-/** Setup commands and expected statuses shared by both unformatted tutorial scaffolds. */
+/** Commands and exit codes for both unformatted tutorial projects. */
 export const QUICKSTART_COMMANDS = [
     { command: ['mise', 'exec', '--', 'gspot', 'install'], code: 0 },
     { command: ['mise', 'exec', '--', 'gspot', 'check'], code: 1 },

@@ -1,4 +1,4 @@
-/** Syntax, comments and strings have distinct Swift test-detection outcomes. */
+/** Swift sources, and whether each one counts as test code; comments and strings do not. */
 export const SWIFT_TEST_SAMPLES = [
     { name: 'XCTest import', source: 'import XCTest\n', selected: true },
     { name: 'qualified Testing attribute', source: '@Testing.Test func checks() {}\n', selected: true },
@@ -22,7 +22,7 @@ let package = Package(name: "App", targets: [.testTarget(name: "Checks")])
     },
 ] as const;
 
-/** Only the scoped Prisma schema's actual provider assignment supplies Postgres evidence. */
+/** Only a real provider line in the Prisma schema of the scope marks a project as Postgres. */
 export const PRISMA_CONTENT_CASES = [
     {
         name: 'Postgres provider',
@@ -97,7 +97,7 @@ export const JEST_CASES = [
     { scope: 'app', tests: [], expected: ['app/jest.config.js'] },
 ] as const;
 
-/** Nearest manual configuration choices apply to descendants, with sibling isolation. */
+/** The nearest configuration choices apply to child folders, and siblings stay apart. */
 export const PROJECT_CHOICES = {
     configurations: ['nextjs', 'javascript'],
     removed_configurations: [],
@@ -108,7 +108,7 @@ export const PROJECT_CHOICES = {
     ],
 } as const;
 
-/** Root inheritance, removal, deeper restoration, sibling independence, and required dependencies. */
+/** Inheritance from the root, removal, restoring in a deeper scope, separate siblings, and required dependencies. */
 export const PROJECT_SELECTIONS = [
     ['', 'nextjs', true],
     ['app', 'nextjs', false],

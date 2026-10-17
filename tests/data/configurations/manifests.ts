@@ -48,7 +48,7 @@ per_scope = true
 when = { configuration = "security" }
 `;
 
-/** Authored rule-name lists whose metadata must follow their package pins. */
+/** Rule-name lists whose metadata must match the pinned package versions. */
 export const RULE_NAME_FILES = [
     'configurations/language/javascript/eslint-rule-names.json',
     'configurations/language/javascript/eslint-runtime-names.json',
@@ -62,7 +62,7 @@ version = "1.0.0"
 file = "package.json"
 `;
 
-/** Declared installer combinations and their tool project installations. */
+/** Installer combinations that a tool declares, and what each one installs in the tool project. */
 export const TOOL_PROJECT_PACKAGES = [
     {
         name: 'npm',

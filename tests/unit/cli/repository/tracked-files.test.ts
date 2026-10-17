@@ -129,7 +129,7 @@ test('on Windows the executable bit comes from the Git index', async () => {
         ['update-index', '--chmod=+x', 'indexed.sh'],
     ])
         readGitOutput(sandbox.path, commandArguments);
-    // Only the file system knows this bit, and Windows file systems keep none.
+    // Only the file system holds this bit, and Windows file systems keep none.
     await chmod(join(sandbox.path, 'local.sh'), 0o700);
     using resources = new DisposableStack();
     resources.use(simulateOperatingSystem('win32'));

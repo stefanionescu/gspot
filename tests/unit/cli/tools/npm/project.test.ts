@@ -17,7 +17,7 @@ import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/tools/npm/project.ts';
 import { INSTALL_FAILURES, TOOL_REQUIREMENTS } from '#tests/data/tools/npm-tool-project.ts';
 
-/** Give each npm preparation the same generated project declaration. */
+/** Wrap package.json text as the generated tool project file. */
 function buildNpmToolFile(content: string): GeneratedFile {
     return { path: '.gspot/package.json', content, kind: 'tool_file' };
 }

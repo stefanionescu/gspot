@@ -6,7 +6,7 @@ import * as systemEnvironment from 'std-env';
 /**
  * Sets or clears one environment variable for this process and the tools it spawns.
  * @param name the key in process.env to set or remove.
- * @param value the new value, or undefined to clear it.
+ * @param value text to set, or undefined to clear.
  */
 function setEnvironmentVariable(name: string, value: string | undefined): void {
     if (value === undefined) Reflect.deleteProperty(process.env, name);
@@ -14,9 +14,9 @@ function setEnvironmentVariable(name: string, value: string | undefined): void {
 }
 
 /**
- * Restore test-owned variables when the test scope ends, including after failures.
+ * Set environment variables for a test and restore them when the scope ends, even after a failure.
  * @param variables values to set or clear for this scope.
- * @returns the restoration resource.
+ * @returns a resource that restores the old values.
  */
 export function overrideEnvironment(variables: Record<string, string | undefined>): Disposable {
     const previous = Object.fromEntries(Object.keys(variables).map((name) => [name, process.env[name]]));
@@ -28,7 +28,7 @@ export function overrideEnvironment(variables: Record<string, string | undefined
     };
 }
 
-/** Restore the external CI reader and terminal descriptors after a prompt scenario. */
+/** Make the terminal look interactive and not CI, until the returned resource gets disposed. */
 export async function simulateInteractiveTerminal(): Promise<AsyncDisposable> {
     const resources = new AsyncDisposableStack();
     const previousEnvironment = { ...systemEnvironment };

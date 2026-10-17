@@ -8,7 +8,7 @@ import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { installSandbox, buildSandboxPath } from '#tests/setup/install.ts';
 
-/** Run the selected check and verify its contractual exit before reading its report. */
+/** Run the jscpd check, check its exit code, and return its report. */
 async function checkDuplication(root: string, environment: Record<string, string>, code: number): Promise<RunReport> {
     const result = await spawnGspot(root, ['check', '--only', 'duplication/jscpd', '--json'], environment);
     expect(result.code, result.stdout + result.stderr).toBe(code);

@@ -8,7 +8,7 @@ export const BUILD_OUTPUT_CHECKS = [
     'site/sitemap',
 ] as const;
 
-/** Package manager inputs used for the resolved site build default. */
+/** Package manager files, and the package manager that the default site build uses. */
 export const SITE_PACKAGE_MANAGER_CASES = [
     ['npm fallback', {}, 'npm'],
     ['declared Bun', { 'package.json': '{"packageManager":"bun@1.4.2"}' }, 'bun'],
@@ -33,7 +33,7 @@ mkdirSync('dist', { recursive: true });
 copyFileSync('page.html', 'dist/index.html');
 `;
 
-/** The root owns HTML; two sites own their builds and one whole-scope accessibility exception. */
+/** The root checks HTML; two site scopes run their own builds, and one accessibility ignore covers the app scope. */
 export const TWO_SITE_SCOPES = `[[ignore]]
 check = "site/html-validate"
 rule = "wcag/h37"
@@ -51,7 +51,7 @@ site.build_command = ["node", "build.mjs"]
 site.build_folder = "other/dist"
 `;
 
-/** Site-only scopes and sites below an HTML owner both keep native rule exceptions confined. */
+/** Rule ignores stay inside their site, with or without an HTML configuration at the root. */
 export const BUILT_HTML_SITES = [
     { name: 'a root HTML configuration', configurations: ['html'], files: { 'index.html': ALT_TEXT_PAGE } },
     { name: 'site-only child configurations', configurations: [], files: {} },

@@ -26,7 +26,7 @@ import type { ToolDeclaration, ManifestDeclaration } from '#cli/types/configurat
 import { EXPO_DEPENDENCIES, REACT_NATIVE_DEPENDENCIES } from '#tests/data/checks/react.ts';
 import { NAMING_TEST_LIMITS, NAMING_TEST_SETTINGS } from '#tests/data/checks/naming/settings.ts';
 
-/** Select the configurations used by an unattended test initialization. */
+/** The init arguments for a test run without prompts. */
 export function buildInitArguments(configurations: readonly string[], options: { json?: boolean } = {}): string[] {
     return [
         'init',
@@ -36,19 +36,18 @@ export function buildInitArguments(configurations: readonly string[], options: {
     ];
 }
 
-/** Construct the external process result used by check tests. */
+/** A process result for check tests, with these fields changed. */
 export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnResult {
     return { code: 0, stdout: '', stderr: '', missing: false, duration: 1, ...overrides };
 }
 
 /**
- * A program pin with an optional npm package installation.
- * @param name the executable name.
- * @param version the pinned version.
- * @param npm the npm package that ships it.
+ * A program pin, with an npm installer when npm names a package.
+ * @param name executable to pin.
+ * @param version release to pin.
+ * @param npm package that ships the program.
  * @returns the pin.
  */
-
 export function buildProgramPin(name: string, version: string, npm?: string): ToolDeclaration {
     return {
         name,
@@ -59,12 +58,14 @@ export function buildProgramPin(name: string, version: string, npm?: string): To
 }
 
 /**
- * Parse an isolated configuration with the declarations its test needs.
- * @param name the configuration name.
- * @param project the extra declarations, required configurations, and configuration group.
+ * Parse a configuration manifest for one test.
+ * @param name what to call the configuration.
+ * @param project extra manifest tables and fields.
+ * @param project.requires configurations that it needs.
+ * @param project.tables extra TOML for the manifest.
+ * @param project.group the group folder.
  * @returns the parsed manifest.
  */
-
 export function buildManifest(
     name: string,
     project: { requires?: string[]; tables?: string; group?: ManifestDeclaration['configuration']['group'] } = {},
@@ -87,31 +88,27 @@ export function buildManifest(
 }
 
 /**
- * The options of an in-process run: every stage, the built-in checks, nothing skipped, no fixes, and a real run.
- * @param overrides the options a test changes, such as the checks it runs with only.
+ * Options for an in-process run of every stage, with no fixes.
+ * @param overrides what the test changes.
  * @returns the run options.
  */
-
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
     return { stage: 'all', fix: false, isDryRun: false, ...overrides };
 }
-// Builds repository file entries for test source samples.
 
 /**
  * One tracked source file of one byte with no captured prefix.
- * @param path the root-relative path.
- * @param tags the tags its extension gives it.
+ * @param path location from the repository root.
+ * @param tags labels that the file extension gives.
  * @returns the tracked file.
  */
-
 export function buildTrackedFile(path: string, tags: string[] = ['text']): TrackedFile {
     return { path, kind: 'source', tags, executable: false, size: 1 };
 }
-// Builds the settings and plan for a test fixer.
 
 /**
  * The planned fixer of the sandbox with its command replaced by a script.
- * @param session the open sandbox session.
+ * @param session the open sandbox.
  * @param script the JavaScript the fixer runs.
  * @returns the planned check.
  */
@@ -122,9 +119,9 @@ export function planFixer(session: Session, script: string): PlannedCheck {
 }
 
 /**
- * Build the shared fixer settings with the executable of the current test process.
- * @param paths the source paths owned by the fixer.
- * @returns the settings for an isolated fixer plan.
+ * Build fixer settings that run the executable of this test process.
+ * @param paths files the fixer covers.
+ * @returns the gspot.toml text.
  */
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []
@@ -136,7 +133,7 @@ paths = ${JSON.stringify(paths)}
 stage = "commit"
 `;
 }
-/** Build the read state for installed tool inspection. */
+/** The tool search state for tests that inspect installed tools. */
 export function inspectionContext(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return { root, timeoutSeconds: SETTING_DEFAULTS.tool_timeout_seconds, inspections: new Map(), ...fields };
 }
@@ -162,7 +159,7 @@ export function buildNamingSettings(): NamingSettings {
     };
 }
 
-/** Read effective naming settings from one authored settings text and scope. */
+/** Read the naming settings that apply in one scope of this settings text. */
 export function namingSettingsFor(text: string, scope = ''): NamingSettings {
     const reads = createReadCache(process.cwd());
     const settings = parseSettings(text, undefined, reads);
@@ -175,7 +172,7 @@ export function namingSettingsFor(text: string, scope = ''): NamingSettings {
     });
 }
 
-/** Replace a sample's default sources while retaining the sandbox's ignore file. */
+/** Changes that replace the default sources of a sample but keep .gitignore. */
 export function buildSandboxChanges(
     originalFiles: Readonly<Record<string, string>>,
     files: Record<string, string>,
@@ -187,7 +184,7 @@ export function buildSandboxChanges(
     };
 }
 
-/** Read a sandbox inventory with the shipped manifests and no authored scope or generated declarations. */
+/** Read the files of a sandbox with the shipped manifests, no scopes, and no declarations. */
 export function readTestRepository(root: string): Promise<Repository> {
     return readRepository(createReadCache(root), {
         declarations: [],

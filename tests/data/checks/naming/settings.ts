@@ -61,13 +61,13 @@ export const SCOPE_LIMITS = [
 
 export const NAMING_LANGUAGES = ['typescript', 'javascript', 'python', 'swift', 'bash', 'sql'] as const;
 
-/** Native case and length ownership leaves the other naming rules active. */
+/** Categories where the linter checks case and length itself; the other naming rules stay active. */
 export const LINTER_CHECKED_CATEGORIES = [
     { language: 'swift', category: 'types', native: true },
     { language: 'swift', category: 'functions', native: false },
 ] as const;
 
-// Native spellings exercise the public naming contracts independently of the shipped assets.
+// Names that frameworks require, written out here so the test does not read them from the shipped files.
 export const FRAMEWORK_NAMES = [
     {
         configuration: 'nextjs',

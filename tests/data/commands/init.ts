@@ -1,7 +1,7 @@
 import { COMMITLINT_PACKAGE } from '#tests/data/checks/commits.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 
-/** Native Python project tables retained when generated configuration takes over. */
+/** pyproject.toml tables that init leaves in place while a generated tool file takes over. */
 const REPLACED_PYPROJECT_TABLES = [
     {
         configuration: 'python',
@@ -26,7 +26,7 @@ const REPLACED_PYPROJECT_TABLES = [
     },
 ] as const;
 
-/** Existing files that inactive all-level checks must leave authored at recommended. */
+/** Existing tool files that checks for level all must leave alone at level recommended. */
 const INACTIVE_CONFIGURATIONS = {
     '.commitlintrc.json': '{"rules":{}}\n',
     '.commitlintrc.mts': 'export default { rules: {} };\n',
@@ -35,7 +35,7 @@ const INACTIVE_CONFIGURATIONS = {
     'package.json': COMMITLINT_PACKAGE,
 } as const;
 
-/** Native Stylelint discovery without an explicit configuration argument. */
+/** A script that runs Stylelint without a path to a tool file, so Stylelint finds one itself. */
 const STYLELINT_LOOKUP_SCRIPT = `
 import stylelint from './.gspot/node_modules/stylelint/lib/index.mjs';
 const result = await stylelint.lint({ files: [process.argv[1]], cwd: process.cwd() });
@@ -54,7 +54,7 @@ const KNIP_FILES = [
     { file: 'knip.js', source: 'export default { entry: ["main.js"], project: ["*.js"] };\n' },
 ] as const;
 
-/** Authored lint jobs that suppress automatic CI selection but must not override a provider flag. */
+/** Authored lint jobs that stop init from adding CI by itself, but not when a provider flag asks for it. */
 const LINT_JOBS = [
     { name: 'a GitLab lint job', path: '.gitlab-ci.yml', content: 'quality:\n  script: npm run lint\n' },
     {
@@ -258,7 +258,7 @@ const INIT_FILES = {
     'quality/lint.sh': CLEAN_BASH_SCRIPT,
 } as const;
 
-/** Empty and named manual language lists both retain common checks. */
+/** Empty and named language lists both keep the common checks. */
 const CONFIGURATION_CHOICES = [
     { configurations: undefined },
     { configurations: [] },

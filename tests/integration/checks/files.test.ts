@@ -123,7 +123,7 @@ url = "${server.url.toString()}schema.json"
     );
     const applied = await spawnGspot(root, ['apply'], environment);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    // A conflicting authored config must not replace the generated configuration.
+    // An authored .v8rrc.yml must not replace the generated tool file.
     await Bun.write(join(root, '.v8rrc.yml'), 'invalid: [\n');
     const path = join(root, 'settings/café.json');
     await Bun.write(path, JSON.stringify({ count: 'invalid' }));
@@ -196,7 +196,7 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
     expect(requests).toBe(0);
 });
 
-// Every phase checks the root and child independently through the same native contract.
+// Checks the root and child scopes separately with yamllint.
 async function assertYamlFiles(root: string, rule?: string): Promise<void> {
     const checked = await spawnGspot(root, ['check', '--only', 'files/yamllint', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);

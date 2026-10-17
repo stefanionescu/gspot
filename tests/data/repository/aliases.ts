@@ -1,4 +1,4 @@
-/** Each source names its malformed-input diagnostic and a supported direct alias. */
+/** Each file with its parse error message, and a direct alias it supports. */
 export const ALIAS_FILES = [
     {
         path: 'package.json',
@@ -12,7 +12,7 @@ export const ALIAS_FILES = [
     },
 ] as const;
 
-/** Conflicting root and child declarations prove scope ownership and compiler precedence. */
+/** Root and child alias declarations that conflict. The tests check which declaration wins. */
 export const ALIAS_PROJECT = {
     'package.json': '{"imports":{"#app/*":"./src/*","#root/*":"./root/*","#shared/*":"./package/*"}}',
     'tsconfig.json': '{"compilerOptions":{"paths":{"@root/*":["./typed/*"],"#shared/*":["./compiler/*"]}}}',

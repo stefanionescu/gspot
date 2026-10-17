@@ -100,10 +100,10 @@ export const AGE_CASES = [
     { name: 'stricter', source: '[install]\nminimumReleaseAge = 1209600\n', expected: TWO_WEEKS_SECONDS },
 ] as const;
 
-/** The two gspot packages, which every installer leaves out of the hold. */
+/** The two gspot packages, which every package manager leaves out of the hold. */
 export const OWN_PACKAGES = ['@gspothq/cli', '@gspothq/eslint-plugin'] as const;
 
-/** The file that shows each installer in use, and the hold that gspot writes for it at the default seven days. */
+/** The file that shows each package manager in use, and the hold that gspot writes for it at the default seven days. */
 export const HOLD_CASES = [
     {
         installer: 'Bun',

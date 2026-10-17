@@ -1,4 +1,4 @@
-/** Native source, command, and fixed failure status for each parameter-limit tool. */
+/** The source, command, and failure exit code of each parameter-limit tool. */
 export const PARAMETER_LIMIT_TOOLS = [
     {
         language: 'python',

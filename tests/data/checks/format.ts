@@ -1,4 +1,4 @@
-/** Only the native EditorConfig check consumes formatting configuration. */
+/** Only the EditorConfig check reads the format settings. */
 export const EDITORCONFIG_SETTINGS = `configurations = ["format"]
 [[ignore]]
 check = "format/prettier"
@@ -7,14 +7,13 @@ reason = "This sandbox uses EditorConfig without Prettier."
 enabled = false
 `;
 
-/** Native EditorConfig findings that formatters do not replace. */
+/** EditorConfig findings that formatters do not replace. */
 export const EDITORCONFIG_SAMPLES = [
     { file: 'line-endings.txt', broken: 'content\r\n', corrected: 'content\n' },
     { file: 'final-newline.txt', broken: 'content', corrected: 'content\n' },
     { file: 'trailing-whitespace.txt', broken: 'content \n', corrected: 'content\n' },
 ] as const;
 
-// The formatter overrides of a sandbox and what each file resolves to.
 /** A policy with formatter overrides at the root, for a path, and in nested scopes. */
 export const FORMAT_OVERRIDES_SETTINGS = `level = "all"\nconfigurations = ["format", "javascript"]\n[rules]\nenabled = false\n[format]\nindent_width = 2\nquotes = "double"\nsemicolons = false\n[[format.override]]\npaths = ["tests/**"]\nquotes = "single"\nsemicolons = true\n[[format.override]]\npaths = ["apps/web/**", "!apps/web/exempt.js"]\nquotes = "single"\n[[format.override]]\npaths = ["apps/web/admin/**"]\nquotes = "double"\nsemicolons = true\nline_ending = "crlf"\n[[scope]]\npath = "apps/web"\n[scope.format]\nindent_width = 4\n[[scope]]\npath = "apps/web/admin"\n[scope.format]\nindent_width = 8\n`;
 
@@ -53,7 +52,7 @@ reason = "These files retain generated formatting."
 
 export const NON_RECORD_JSON = ['null', '[]', '42'];
 
-/** A staged formatter keeps its root target before a later apply writes a scoped target. */
+/** A staged format check uses the root tool file until a later apply writes the scope tool file. */
 export const STAGED_FORMAT_FILES = {
     'gspot.toml': `configurations = ["format"]
 [format]

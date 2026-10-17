@@ -29,7 +29,7 @@ export const GSPOT_ENVIRONMENT = { NO_COLOR: '1', CI: '1' } as const;
 /** Seconds at process boundaries and milliseconds in the test deadline. */
 export const MILLISECONDS_PER_SECOND = 1000;
 
-/** Metadata for the npm packages packed before the test workers start. */
+/** The folder for the npm packages packed before the test workers start. */
 export const TEST_RUN_FOLDER_NAME = 'gspot-test-run';
 
 export const TOOL_PATHS_FILE = 'tool-paths.txt';
@@ -82,7 +82,7 @@ export const NPM_SANDBOX_FILES = {
     'node_modules/authored.txt': 'keep project dependencies',
 } as const;
 
-/** Package-manager sandboxes exercise Prettier and native EditorConfig installation, not application analyzers. */
+/** Package manager sandboxes test the Prettier and EditorConfig installs, not the code analyzers. */
 export const NPM_SANDBOX_IGNORES = ['files/v8r', 'javascript/eslint', 'javascript/tsc', 'javascript/knip'] as const;
 
 export const NPM_REGISTRY_TOKEN = 'synthetic-package-install-token';
@@ -100,10 +100,10 @@ export const YARN_VERSION_THRESHOLD = 2;
 
 export const JSON_INDENT = 4;
 
-/** Report selected paths and fail. */
+/** Prints each path it gets, then fails. */
 export const REPORT_PROGRAM = 'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;';
 
-/** Authored source and conflicting working-tree bytes used by native and command push selection. */
+/** Committed source and different working-tree bytes for the built-in and command check push tests. */
 export const PUSH_CONTENT = {
     base: 'echo base\n',
     reviewed: 'echo reviewed\n',

@@ -61,7 +61,7 @@ test('tsconfig: a missing inherited configuration cannot be replaced by empty co
         'tsconfig.json': '{"extends":"./missing.json","compilerOptions":{"strict":true}}',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
-    // TypeScript prints the inherited path with forward slashes on every platform.
+    // TypeScript prints the inherited path with forward slashes on every system.
     expect(() => CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input)).toThrow(
         `Cannot read file '${convertToPosixPath(join(sandbox.path, 'missing.json'))}'`,
     );

@@ -13,7 +13,7 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectRunner, buildHookFiles } from '#cli/generation/hooks.ts';
 import { HOOK_CASES, HOOK_PROGRAM, START_COMMANDS } from '#tests/data/hooks.ts';
 
-/** Build independent hook-enabled settings for each script execution. */
+/** Build new settings with hooks on, for each script run. */
 function buildHookSettings(): Settings {
     return parseSettings(
         buildSettingsText([], { rules: true, tables: '[hooks]\nenabled = true\n' }),

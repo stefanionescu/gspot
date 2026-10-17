@@ -118,7 +118,7 @@ export const REPORT_ERRORS = [
     },
     {
         configuration: 'spelling',
-        name: 'native error',
+        name: 'error output',
         output: { type: 'error', message: 'Read failed.' },
         message: 'Typos returned invalid structured findings.',
     },
@@ -230,7 +230,7 @@ export const POSITIONLESS_REGIONS = [
     { name: 'large offset', region: { charOffset: 1000 } },
 ] as const;
 
-/** Native rule match and partial source parse error from the pinned Semgrep JSON contract. */
+/** A rule match and a partial parse error in the JSON format of the pinned Semgrep. */
 export const SEMGREP_MATCH = {
     check_id: 'gspot.bash.eval',
     path: 'scripts/café build.sh',

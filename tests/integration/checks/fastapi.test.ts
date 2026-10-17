@@ -16,7 +16,6 @@ import {
 // Systems without a semgrep build skip every test here, so they install nothing.
 const installedSandbox = hasToolBuild('semgrep') ? registerSharedSandbox(CHECKS_FASTAPI_INSTALLED_SANDBOX) : undefined;
 
-// The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))(
     'the FastAPI pack reports exception responses and accepts a stable replacement',
     async () => {

@@ -1,4 +1,4 @@
-// Bun creates isolated Python sandboxes and serves their authenticated package index.
+// Creates isolated Python sandboxes and serves their authenticated package index.
 import { createHash } from 'node:crypto';
 import { createFileTree } from 'testdirs';
 import { join, basename } from 'node:path';
@@ -24,7 +24,7 @@ import {
     PYTHON_INDEX_CREDENTIALS,
 } from '#tests/data/test-setup.ts';
 
-/** Creates an authored Python project, generated lockfile, and isolated uv environment selectors. */
+/** Creates a Python project with a lockfile and points the uv variables at the sandbox. */
 async function createPythonSandbox(
     root: string,
     options: { indexFile: 'pyproject.toml' | 'uv.toml'; indexUrl?: string },
@@ -179,7 +179,7 @@ Tag: py3-none-any
     entries.push([`${metadata}/RECORD`, Buffer.from(`${record}${metadata}/RECORD,,\r\n`)]);
     return entries;
 }
-/** Own the local index and authored project while preparing its real locked inputs. */
+/** Create a local package index and a Python project, then write its locked inputs. */
 async function createIndexedPythonSandbox(
     root: string,
     work: string,

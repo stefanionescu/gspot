@@ -15,7 +15,7 @@ import { buildSandboxPath, installToolProjects } from '#tests/setup/install.ts';
 import { PARAMETER_LIMIT_TOOLS } from '#tests/data/checks/structure/parameters.ts';
 import { RUFF_SUPPRESSIONS, VALE_SUPPRESSIONS } from '#tests/data/checks/gspot/suppressions.ts';
 
-/** Compare file suppression results from each tool with public gspot directive findings. */
+/** For each path: whether the tool suppressed it, and the directive findings that gspot reports. */
 async function readSuppressionResults(root: string, paths: string[], reported: Set<string>) {
     const checked = await spawnGspot(root, ['check', '--only', 'gspot/suppressions', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);

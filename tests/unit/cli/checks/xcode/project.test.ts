@@ -5,7 +5,7 @@ import { checkReport } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { GROUPED_PBXPROJ, SINGLE_FILE_PBXPROJ, DEEPEST_SCOPE_SETTINGS } from '#tests/data/checks/xcode.ts';
 
-/** Build a one-file project whose only source has the given name. */
+/** Build a one-file project whose only source has this name. */
 function buildPbxproj(name: string): string {
     return SINGLE_FILE_PBXPROJ.replace('path = Root.swift;', `path = ${name}.swift;`);
 }

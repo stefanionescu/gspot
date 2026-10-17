@@ -67,7 +67,7 @@ describe.each([
             expect(findings).toHaveLength(active ? 0 : 1);
         },
     },
-])('suppression comments match native $name', ({ configuration, extension, form, rows, body, toolResult }) => {
+])('suppression comments match $name', ({ configuration, extension, form, rows, body, toolResult }) => {
     const sources = rows.map(([comment, active], index) => ({
         comment,
         active,

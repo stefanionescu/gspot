@@ -1,4 +1,4 @@
-/** Two independent accepted ShellCheck findings for verifying selective removal. */
+/** Two ignore records for ShellCheck findings, to test removing only one. */
 export const TWO_IGNORE_RECORDS = `configurations = ["bash"]
 [rules]
 enabled = false
@@ -12,7 +12,7 @@ rule = "SC2034"
 reason = "The variables are read by sourcing scripts."
 `;
 
-/** Removal must retain apply feedback even when it only deletes an empty authored list. */
+/** Removal still reports a result when it only deletes an empty authored list. */
 export const UNIGNORE_CASES = [
     [
         'an authored entry',

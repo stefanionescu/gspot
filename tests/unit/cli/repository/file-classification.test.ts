@@ -38,8 +38,6 @@ describe('generated-header', () => {
     });
 });
 
-/** Generated text formats whose public pointers sit outside the private directory. */
-
 test('generated Gradle and Maven launchers are classified generated and never select Bash', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { ...GENERATED_LAUNCHERS, 'gspot.toml': buildSettingsText([]) });

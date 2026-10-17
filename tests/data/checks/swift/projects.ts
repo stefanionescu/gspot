@@ -50,7 +50,7 @@ reason = "This sandbox has no Xcode project."
 enabled = false
 `;
 
-/** Root and nested native package headers determine their own formatter versions. */
+/** The swift-tools-version header of each package sets the Swift version its formatter uses. */
 export const SWIFT_VERSION_FILES = {
     'gspot.toml': `configurations = ["swift"]
 [[scope]]

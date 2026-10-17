@@ -3,7 +3,7 @@ import { expect } from 'bun:test';
 
 /**
  * Awaits a promise that must reject with an error.
- * @param promise the promise expected to reject.
+ * @param promise what must reject.
  * @returns the message of the error it rejected with.
  */
 export async function captureRejection(promise: Promise<unknown>): Promise<string> {
@@ -21,17 +21,15 @@ export async function captureRejection(promise: Promise<unknown>): Promise<strin
  * @param shape the properties the compared object must hold.
  * @returns the matcher.
  */
-
 export function matchFields<T>(shape: NoInfer<Partial<T>>): T {
     return expect.objectContaining(shape) as T;
 }
 
 /**
  * An array that must hold these items, typed as the compared value.
- * @param items the items the compared array must hold.
+ * @param items what the compared array must hold.
  * @returns the matcher.
  */
-
 export function matchItems<T>(items: NoInfer<T[]>): T[] {
     return expect.arrayContaining(items) as T[];
 }
@@ -41,7 +39,6 @@ export function matchItems<T>(items: NoInfer<T[]>): T[] {
  * @param part the text the compared string must hold.
  * @returns the matcher.
  */
-
 export function matchSubstring(part: string): string {
     return expect.stringContaining(part) as string;
 }

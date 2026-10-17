@@ -101,7 +101,7 @@ async function prepareTemplate(path: string, environment: Record<string, string>
     expect(await Bun.file(settingsPath).text()).toBe(sourceText);
 }
 
-/** Verify that exporting copied settings again preserves their content and native formatting. */
+/** Check that a second export of the copied settings keeps their content and formatting. */
 async function verifyRepeatedExport(path: string, source: string, environment: Record<string, string>): Promise<void> {
     const copied = await Bun.file(join(path, 'gspot.toml')).text();
     const repeated = await spawnGspot(path, ['export', TEMPLATE_FILE], environment);

@@ -109,7 +109,7 @@ export const ENVIRONMENT_CASES = [
 
 export const ENVIRONMENT_COMPOSED = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";
 
-// Authored test globs extend defaults and scope exclusions while production imports stay checked.
+// Authored test globs add to the defaults and scope exclusions; production imports stay checked.
 export const QA_MODULE_TABLES = `test_files = ["app/qa/**"]
 
 [[architecture.module]]

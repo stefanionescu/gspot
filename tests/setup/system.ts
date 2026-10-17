@@ -1,4 +1,4 @@
-// Selects tool builds and temporarily changes the reported operating system.
+// Reports the system and its tool builds, and fakes the system for tests.
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -17,7 +17,7 @@ export const isMacos = process.platform === 'darwin';
 
 /**
  * Whether the pinned tool has a build for this machine.
- * @param name the tool name as its manifest pins it.
+ * @param name tool as its manifest pins it.
  * @returns whether a tool test may run it here.
  */
 export function hasToolBuild(name: string): boolean {
@@ -27,9 +27,9 @@ export function hasToolBuild(name: string): boolean {
 }
 
 /**
- * Restore the complete operating-system descriptor after a simulated operating-system test.
- * @param name the operating system to simulate.
- * @returns the restoration resource.
+ * Make process.platform report another system until disposal.
+ * @param name system to report.
+ * @returns a resource that restores the real value.
  */
 export function simulateOperatingSystem(name: NodeJS.Platform): Disposable {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Node defines process.platform on the process object.

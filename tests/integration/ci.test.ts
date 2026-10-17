@@ -20,7 +20,7 @@ function commitChanges(root: string, text: string): string {
     return readGitOutput(root, ['rev-parse', 'HEAD']);
 }
 
-/** Creates authored provider jobs and their check settings before the shared tool installation. */
+/** Creates the CI jobs of one provider and their check settings, before the shared tool install. */
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     readGitOutput(root, ['init', '-q']);
     const pipelinePath = provider === 'gitlab' ? '.gitlab-ci.yml' : '.github/workflows/application.yml';
@@ -46,7 +46,7 @@ async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 }
 
-/** Commit the installed project and a changed object with a deliberate shell syntax error. */
+/** Commit the installed project, then a change with a shell syntax error. */
 async function commitCiChanges(root: string, provider: 'gitlab' | 'github') {
     const base = commitChanges(root, 'base');
     await writeFile(join(root, 'changed.sh'), 'if then\n');
@@ -56,7 +56,7 @@ async function commitCiChanges(root: string, provider: 'gitlab' | 'github') {
     return { base, generated };
 }
 
-/** A fake mise executes the source CLI and can refuse its npm package installation. */
+/** A fake mise that runs the source CLI and can refuse to install the npm package. */
 async function createCiInstall(folder: string) {
     const nativeMise = Bun.which('mise')!;
     const failure = join(folder, 'mise-fails');
@@ -85,7 +85,7 @@ process.exit(child.exitCode);
     return () => writeFile(failure, '');
 }
 
-/** Executes the generated provider script with its documented comparison and artifact environment. */
+/** Runs the generated CI script with the comparison and artifact variables that the provider documents. */
 async function runCiJob(
     root: string,
     generated: CiDocument,

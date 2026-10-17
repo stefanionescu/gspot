@@ -20,7 +20,6 @@ import {
 // Systems without a semgrep build skip every test here, so they install nothing.
 const installedSandbox = hasToolBuild('semgrep') ? registerSharedSandbox(CHECKS_EXPRESS_INSTALLED_SANDBOX) : undefined;
 
-// The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))('the Express rules stay within inherited scopes', async () => {
     const sandbox = { path: installedSandbox!().root };
     const sourceFiles = {
@@ -52,7 +51,6 @@ test.skipIf(!hasToolBuild('semgrep'))('the Express rules stay within inherited s
     );
 });
 
-// The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))(
     'the Express pack reports SQL interpolation and raw response fields without misreporting positive cases',
     async () => {

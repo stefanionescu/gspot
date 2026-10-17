@@ -11,7 +11,7 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { COMMITLINT_FILES, COMMITLINT_PACKAGE, COMMITLINT_EXECUTABLE } from '#tests/data/checks/commits.ts';
 
-/** Check the authored commit contract before init replaces it with the imported settings. */
+/** Check that the authored Commitlint rules pass, then run init with the imported settings. */
 async function replaceCommitlint(
     root: string,
     command: string[],

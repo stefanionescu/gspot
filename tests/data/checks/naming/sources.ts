@@ -58,7 +58,7 @@ enum Mode { Fast, Slow = 2 }
 const table = { keyOne: 1 };
 `;
 
-/** Declaration spellings grouped by each language's actual naming categories. */
+/** Declared names, grouped by the naming categories of each language. */
 export const EXPECTED_TYPESCRIPT_NAMES = {
     functions: ['parseHttpUrl'],
     parameters: ['rawInput', 'retries', 'rest', 'first', 'second', 'event', 'baseUrl', 'body'],

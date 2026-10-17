@@ -1,4 +1,4 @@
-/** Runtime distinctions that catch merged globals and serviceworker substitution. */
+/** Globals that each runtime has and lacks, to catch merged globals and a serviceworker mixed up with a worker. */
 export const RUNTIME_CASES = [
     {
         runtime: 'browser',
@@ -22,7 +22,7 @@ export const RUNTIME_CASES = [
     },
 ] as const;
 
-/** Presets with their own globals must still respect an authored runtime. */
+/** Presets with their own globals must still follow an authored runtime. */
 export const FRAMEWORK_RUNTIME_CASES = [
     {
         configuration: 'vue',
@@ -36,8 +36,7 @@ export const FRAMEWORK_RUNTIME_CASES = [
     },
 ] as const;
 
-// A JavaScript settings with ESLint rules and overrides at the root, in a nested scope, and in a scope inside it.
-/** Rule settings and overrides that the generated configuration and an exported template both read. */
+/** ESLint rules and overrides at the root and in two nested scopes. The generated tool file and a template read them. */
 export const ESLINT_OVERRIDES_SETTINGS = `configurations = [ "javascript" ]
 
 [rules]

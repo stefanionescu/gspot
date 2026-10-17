@@ -16,7 +16,7 @@ import { NPM_TOOL_FOLDER } from '#tests/data/tools/installation.ts';
 /**
  * Replace one child command and run the others normally.
  * @param name the executable to replace.
- * @param result the replacement command result calculation.
+ * @param result function that returns the fake run.
  * @returns a spy whose disposal restores command execution.
  */
 export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typeof spawnProcess> {
@@ -27,8 +27,8 @@ export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typ
 }
 
 /**
- * Replace executable lookup and version processes while a test owns command output.
- * @param tools the actual declared tools whose versions the test accepts.
+ * Fake the lookup and version output of these tools.
+ * @param tools declarations whose pinned versions the fakes print.
  * @returns the disposable mocks.
  */
 export function fakePinnedExecutables(tools: ToolDeclaration[]): DisposableStack {
@@ -63,10 +63,10 @@ export function fakePinnedExecutables(tools: ToolDeclaration[]): DisposableStack
 
 /**
  * Write a child script and its launchers.
- * @param sandboxRoot the directory that receives the executable and its platform launchers.
+ * @param sandboxRoot folder that gets the script and launchers.
  * @param name the executable path without a Windows suffix.
- * @param script the Bun program, retained verbatim.
- * @returns the directory for executable lookup.
+ * @param script the Bun program, written unchanged.
+ * @returns the folder to put on `PATH`.
  */
 export async function fakeTool(sandboxRoot: string, name: string, script: string): Promise<string> {
     const target = join(sandboxRoot, name);
@@ -80,7 +80,7 @@ export async function fakeTool(sandboxRoot: string, name: string, script: string
     return folder;
 }
 
-/** Write the selected npm tool's pinned package metadata and version executable. */
+/** Write the package.json and a version program for the pinned npm tool. */
 export async function fakeNpmTool(root: string, tool: string): Promise<ToolDeclaration> {
     const declaration = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), tool);
     const installer = declaration.installers['npm'];

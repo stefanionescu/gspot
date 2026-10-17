@@ -77,7 +77,6 @@ test.skipIf(!isLinux)(
     },
 );
 
-// The pinned gixy tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('gixy'))('gixy finds the forged proxy target and passes after the fix', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'proxy/nginx.conf': CLEAN_NGINX_CONFIG });

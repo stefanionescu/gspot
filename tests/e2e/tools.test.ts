@@ -8,7 +8,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/packed-sandbox.ts';
 
-/** Prepare package data and private formatter inputs with the declared mise executable first. */
+/** Install the format configuration in a package project, with a fake mise first on the path. */
 async function prepareFormatterSandbox(installation: PackedSandbox) {
     const toolConsumer = join(installation.workspace, 'tool-consumer');
     const systemTools = join(installation.workspace, 'system-tools');

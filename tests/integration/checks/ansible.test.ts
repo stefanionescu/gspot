@@ -9,7 +9,6 @@ import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { ANSIBLE_SANDBOX, ANSIBLE_PLAYBOOK, COMMAND_PLAYBOOK } from '#tests/data/checks/ansible.ts';
 
-// The pinned ansible-lint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint checks each scope without ansible.cfg', async () => {
     const level = 'all' as const;
     const sandbox = { path: installedSandbox!().root };
@@ -52,7 +51,6 @@ configurations = ["ansible"]
     expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
 });
 
-// The pinned ansible-lint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('ansible-lint')).each([...LEVELS])(
     'ansible-lint uses the profile of level %s next to the root and scope ansible.cfg files',
     async (level) => {
@@ -98,5 +96,5 @@ configurations = ["ansible"]
     },
 );
 
-// Systems without a ansible-lint build skip every test here, so they install nothing.
+// Systems without an ansible-lint build skip every test here, so they install nothing.
 const installedSandbox = hasToolBuild('ansible-lint') ? registerSharedSandbox(ANSIBLE_SANDBOX) : undefined;

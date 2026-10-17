@@ -1,4 +1,4 @@
-/** Native import forms retain their line locations and type-only counterparts. */
+/** Import and export forms, with the line of each finding. */
 export const TRPC_IMPORTS = [
     { source: 'import { router } from "./private/router.js";', line: 2 },
     { source: 'import {\n router\n} from "./private/router.js";', line: 4 },
@@ -22,7 +22,7 @@ export { type router as SpecifierExport } from "./private/router.js";
 export type * from "./private/router.js";
 `;
 
-/** Explicit server modules own router and adapter paths; other authored import policies stay effective. */
+/** The server module holds the router and adapter paths; the other authored import rules still apply. */
 export const TRPC_MODULES = `[[architecture.module]]
 name = "server"
 paths = ["private/**", "app/api/trpc/**"]
@@ -45,7 +45,7 @@ export const TRPC_FAILURES = {
     'flat/client.ts': 1,
 } as const;
 
-/** Real sources and project declarations consumed by the generated native rule. */
+/** Sources and project files that the generated rule reads. */
 export const TRPC_FILES = {
     'tsconfig.json':
         '{"compilerOptions":{"allowJs":true,"paths":{"@private/*":["./private/*"]}},"include":["**/*.ts"]}',

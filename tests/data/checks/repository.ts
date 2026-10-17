@@ -1,4 +1,4 @@
-/** Selected and unselected paths for the native repository index contract. */
+/** Paths that the tracked-file list allows, refuses, or takes only from the Git index. */
 export const TRACKED_PATTERNS = {
     indexOnly: ['.env.'],
     refused: [

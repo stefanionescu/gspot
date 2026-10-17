@@ -8,5 +8,5 @@ export type SecretVerifier = AsyncDisposable & {
     requests: unknown[];
 };
 
-/** Native commit identities used by history reports and exact fingerprint ignores. */
+/** Commit hashes for the history reports and the exact fingerprint ignores. */
 export type GitleaksHistory = { base: string; leaked: string; removed: string };

@@ -1,4 +1,4 @@
-/** Distinct native Python manifest forms retain their own input and expected dependency behavior. */
+/** Each Python dependency file form: its input and the dependencies it gives. */
 export const PYTHON_DEPENDENCY_CASES = [
     {
         name: 'PEP 621 table',
@@ -54,7 +54,7 @@ export const PACKAGE_FIELDS = {
     customSettings: { enabled: true },
 } as const;
 
-/** npm project boundaries separate framework-specific dependency contracts. */
+/** Each package.json gives its own framework dependencies. */
 export const PROJECT_DEPENDENCY_FILES = {
     'package.json': '{"dependencies":{"@nestjs/swagger":"11.2.3"}}',
     'app/package.json': '{"devDependencies":{"tailwindcss":"4.1.13"}}',
@@ -73,7 +73,7 @@ export const PROJECT_DEPENDENCY_SCOPES = [
     { scope: 'empty/src', dependencies: {} },
 ] as const;
 
-/** Distinct native Python manifest forms retain their own input and expected dependency behavior. */
+/** Invalid Python dependency declarations in each file form. */
 export const INVALID_PYTHON_DEPENDENCIES = [
     { name: 'Poetry numeric dependency', path: 'pyproject.toml', source: '[tool.poetry.dependencies]\nFastAPI = 7\n' },
     {
@@ -84,7 +84,7 @@ export const INVALID_PYTHON_DEPENDENCIES = [
     { name: 'Pipfile numeric dependency', path: 'Pipfile', source: '[packages]\nFastAPI = 7\n' },
 ] as const;
 
-/** Invalid authored fields remain manifest-reader errors. */
+/** Invalid package.json fields stay errors of the dependency file reader. */
 export const INVALID_DEPENDENCY_FILES = [
     ['package.json', '{"dependencies":{"typescript":7}}'],
     ['package.json', '{"scripts":{"lint":false}}'],
@@ -93,7 +93,7 @@ export const INVALID_DEPENDENCY_FILES = [
     ['pyproject.toml', '[project]\ndependencies = [7]\n'],
 ] as const;
 
-/** Distinct root and child package facts belong to the same captured source inventory. */
+/** Root and child packages with different dependencies, read in one repository scan. */
 export const REACT_VUE_PACKAGES = {
     'package.json': '{"name":"root-sandbox","private":true,"dependencies":{"react":"19.0.0"}}',
     'app/package.json': '{"name":"child-sandbox","private":true,"dependencies":{"vue":"3.5.0"}}',

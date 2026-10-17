@@ -10,7 +10,7 @@ export function twice(value) {
 }
 `;
 
-/** A JavaScript repository with no TypeScript source or compiler config file. */
+/** A JavaScript repository with no TypeScript source or tsconfig.json. */
 export const ESLINT_SANDBOX = {
     configurations: ['javascript'],
 

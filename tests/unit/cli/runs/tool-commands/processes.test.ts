@@ -17,8 +17,6 @@ import { TWO_SCOPES_SETTINGS } from '#tests/data/settings/scopes.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 import { runCheckCommand, buildCommandEnvironment } from '#cli/checks/run/command/check.ts';
 
-// A checker that passes, and one that fails.
-
 test('a check command accepts a configuration input linked inside the repository', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

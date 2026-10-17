@@ -7,8 +7,6 @@ import { runGspot } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { FIXER_FEEDBACK_CASES } from '#tests/data/commands/check.ts';
 
-/** New language evidence stays authored until the owner runs apply. */
-
 test.each([...FIXER_FEEDBACK_CASES])(
     'check --fix reports $name, and --dry-run writes nothing',
     async ({ paths, preview, applied }) => {

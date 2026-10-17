@@ -1,4 +1,4 @@
-/** The setting applies only after native pydoclint style and the scoped Ruff convention. */
+/** The docstring setting applies only when the project sets no pydoclint style and no Ruff convention. */
 const DOCSTRING_STYLES = [
     {
         name: 'uses the Google setting without project configuration',
@@ -34,7 +34,7 @@ skip-checking-raises = true
     },
 ] as const;
 
-/** Unconfigured Google and NumPy docstrings must use the style of each source file. */
+/** Google and NumPy docstrings with no project style; the check must apply the style of each file. */
 const DOCSTRING_MODULES = {
     'google.py': `def double(value: int) -> int:
     """Double a number.

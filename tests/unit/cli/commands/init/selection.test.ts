@@ -42,7 +42,7 @@ test.each([...CONFIGURATION_CHOICES])(
     },
 );
 
-// The same public plan must select languages from sources while retaining package boundaries.
+// The init plan picks languages from the sources and keeps package boundaries.
 test.each([...NON_JAVASCRIPT_PROJECTS])(
     'a root package.json with only tool dependencies leaves JavaScript to the scope with Node source (%s)',
     async (language, file, source) => {

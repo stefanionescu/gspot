@@ -25,7 +25,7 @@ import {
 
 const installedSandbox = registerSharedSandbox(TYPESCRIPT_PROJECTS_SANDBOX);
 
-/** Apply one authored compiler project and restore the shared installation after the scenario. */
+/** Write one compiler project, apply, and restore the shared sandbox after the test. */
 async function prepareCompilerSources(files: Record<string, string>): Promise<AsyncDisposable> {
     const sandbox = installedSandbox();
     await using resources = new AsyncDisposableStack();
@@ -53,7 +53,7 @@ test('typescript/tsc checks an authored project without files or include', async
 });
 
 // The installed TypeScript compiler checks project references, authored compiler settings, and build output bounds.
-// Apply authored compiler settings through the same pipeline used by repositories.
+// Writes the settings, if any, and runs apply the same way a repository does.
 async function runGspotApply(root: string, settings?: string): Promise<void> {
     if (settings !== undefined) await Bun.write(join(root, 'gspot.toml'), settings);
     const applied = await spawnGspot(root, ['apply']);

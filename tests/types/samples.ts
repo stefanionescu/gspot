@@ -18,14 +18,14 @@ export type CheckSample = SampleChanges & {
     corrected?: SampleFix;
 };
 
-/** A CLI invocation selected by the test that owns the scenario. */
+/** How a test runs gspot: in this process or as a child. */
 export type GspotCall = (
     cwd: string,
     commandArguments: readonly string[],
     environment: Record<string, string>,
 ) => Promise<ProcessOutput>;
 
-/** Process outcomes and reports for the finding and its clean rerun. */
+/** Process results and reports for the failing run and its clean rerun. */
 export type SampleResult = {
     failed: ProcessOutput & { report: RunReport };
     passed: ProcessOutput & { report: RunReport };
@@ -46,7 +46,7 @@ export type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | {
 /** One stored archive entry and its optional Unix file mode. */
 export type ZipEntry = readonly [name: string, data: Buffer, mode?: number];
 
-/** Exit codes and public check rows compared after the broken and corrected samples. */
+/** Exit codes and check results of the broken and corrected samples. */
 export type SampleSummary = {
     failed: { code: number; checks: readonly CheckResult[] };
     passed: { code: number; checks: readonly CheckResult[] };

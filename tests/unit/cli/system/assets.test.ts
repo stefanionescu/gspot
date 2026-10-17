@@ -6,8 +6,8 @@ import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { BASH_MANIFEST, PACKAGE_FOLDER, ASSET_READER_SCRIPT, PACKAGE_FOLDER_FILES } from '#tests/data/system.ts';
 
 /**
- * Writes the copied checkout whose native asset reader both cases execute.
- * @param folder the sandbox folder.
+ * Writes a copy of the checkout whose asset reader both tests run.
+ * @param folder where the copy goes.
  * @returns the copied checkout folder.
  */
 async function writePackageFolder(folder: string): Promise<string> {

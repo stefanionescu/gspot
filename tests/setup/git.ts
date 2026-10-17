@@ -22,11 +22,10 @@ import {
 /**
  * Runs git with a throwaway identity, keeping the line endings the sandbox specifies.
  * @param cwd the sandbox.
- * @param commandArguments the command line after git.
- * @param environment verbatim variables.
+ * @param commandArguments everything after git.
+ * @param environment extra variables for git.
  * @returns the exit code and both streams.
  */
-
 export function runGit(
     cwd: string,
     commandArguments: readonly string[],
@@ -40,9 +39,9 @@ export function runGit(
 }
 
 /**
- * Runs git and returns what it printed, for a command a test needs the answer of.
+ * Runs git and returns what it printed; throws when git fails.
  * @param cwd the sandbox.
- * @param commandArguments the command line after git.
+ * @param commandArguments everything after git.
  * @returns the trimmed standard output.
  */
 export function readGitOutput(cwd: string, commandArguments: readonly string[]): string {
@@ -53,7 +52,7 @@ export function readGitOutput(cwd: string, commandArguments: readonly string[]):
 }
 
 /**
- * Makes the test directory a git repository with one commit, the state init expects.
+ * Makes the test folder a Git repository with one commit, the state init expects.
  * @param cwd the sandbox.
  */
 export function commitAll(cwd: string): void {
@@ -64,8 +63,8 @@ export function commitAll(cwd: string): void {
 }
 
 /**
- * Marks a test file executable where each platform keeps the bit: the file mode, and on Windows, whose file systems
- * keep none, the Git index.
+ * Marks a test file executable in the file mode and, on Windows, whose file systems keep no mode bits, in the Git
+ * index.
  * @param cwd the sandbox.
  * @param path the repository-relative file.
  */
@@ -84,9 +83,9 @@ export async function markExecutable(cwd: string, path: string): Promise<void> {
 }
 
 /**
- * Creates committed source and conflicting working-tree bytes for built-in and command push selection.
- * @param sandboxRoot the directory that holds the reviewed commit and conflicting working files.
- * @returns the commit objects and the zero object for a new ref.
+ * Creates base, reviewed, and broken commits, plus different working-tree bytes, for the push tests.
+ * @param sandboxRoot folder for the repository.
+ * @returns the commit hashes and the zero hash for a new ref.
  */
 export async function preparePushRepository(
     sandboxRoot: string,
@@ -112,7 +111,7 @@ export async function preparePushRepository(
     return { base, reviewed, broken, zero: '0'.repeat(base.length) };
 }
 
-/** Create nested settings with committed, staged, and working source bytes for revision selection tests. */
+/** Create a repository with a nested scope whose source differs in the commit, the index, and the working tree. */
 export async function prepareNestedRepository(
     root: string,
 ): Promise<{ project: string; base: string; commitId: string }> {
@@ -133,8 +132,9 @@ export async function prepareNestedRepository(
     return { project, base, commitId };
 }
 
-/** Create and commit the generated files used by the fresh-clone command cases.
- * @param sourceRoot the source repository to initialize.
+/**
+ * Create a Bash repository, apply, and commit the generated files for the fresh-clone tests.
+ * @param sourceRoot folder to initialize.
  */
 export async function prepareAppliedBashRepository(sourceRoot: string): Promise<void> {
     await createFileTree(sourceRoot, {

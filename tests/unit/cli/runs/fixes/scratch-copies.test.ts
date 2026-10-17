@@ -141,7 +141,7 @@ test.each([...SCRATCH_FAILURES])(
         using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
         expect(await captureRejection(runFixers(session, [planned], { isDryRun: true }))).toContain(message);
         expect(await readdir(temporary)).toStrictEqual([]);
-        // The copy row replaces the source with a directory before the run.
+        // The copy row replaces the source with a folder before the run.
         if (operation === 'copy') {
             const attributes = await stat(join(sandbox.path, 'source.txt'));
             expect(attributes.isDirectory()).toBe(true);

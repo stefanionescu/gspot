@@ -1,4 +1,4 @@
-/** Policy statements that distinguish native bucket literals from unrelated source text. */
+/** Storage policy statements, and whether each one names a bucket in a real policy and not in other text. */
 const STORAGE_POLICIES = [
     {
         name: 'comment only',
@@ -59,7 +59,7 @@ const SECRET_KEY_READS = [
 
 const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
 
-/** A native Deno handler shared by Supabase configuration scenarios. */
+/** A Deno handler for the Supabase configuration tests. */
 const HELLO_EDGE_FUNCTION = 'Deno.serve(() => new Response("hello"));\n';
 
 const SUPABASE_SANDBOX = {

@@ -6,7 +6,7 @@ path = "api"
 configurations = ["bash"]
 `;
 
-/** Native option addresses use the selected tool settings at the authored scope. */
+/** The root and a child scope, where set writes extra Taplo options. */
 const EXTRA_OPTION_SCOPES = [
     { name: 'root', scope: '', source: 'gspot.toml' },
     { name: 'child', scope: 'app', source: '[scope "app"]' },
@@ -15,7 +15,7 @@ const EXTRA_OPTION_SCOPES = [
 /** Project names shared by settings exceptions and generated Vale words. */
 const PROJECT_WORDS = ['NebulaConfiguration', 'OrbitalLedger'] as const;
 
-/** Primitive exceptions share saved reasons and public mutation semantics. */
+/** List settings that loosen a check; each needs a reason, and set and unset edit them the same way. */
 const LOOSENED_SETTINGS = [
     {
         key: 'site.allowed_unlisted_pages',
@@ -44,7 +44,7 @@ const RESTRICTED_IMPORTS = `[{name = "unreviewed-module", message = "Import the 
 
 const SETTING_REASON = 'The project contract requires this reviewed exception.';
 
-/** Native TOML options shared by setter and explanation command sandboxes. */
+/** Taplo options for the set and explain command tests. */
 const TAPLO_OPTIONS = { compact_inline_tables: true } as const;
 
 const TAPLO_REASON = 'The project uses compact inline tables in TOML.';

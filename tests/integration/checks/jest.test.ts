@@ -24,7 +24,7 @@ function buildJestFiles(): Record<string, string> {
     return { ...JEST_PROJECT_FILES, 'package.json': JSON.stringify(manifest) + '\n' };
 }
 
-// Coverage findings and load failures share the native root project inputs.
+// The coverage and load-failure tests share these root project files.
 function prepareJest(root: string, testSource: string) {
     return createFileTree(root, {
         'gspot.toml': buildSettingsText(['jest'], {

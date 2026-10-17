@@ -12,7 +12,7 @@ import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
 import { installPythonTools, preparePythonLockfile } from '#cli/tools/python/project.ts';
 import { UV_TOML, PYTHON_TOOL_PROJECT, PYTHON_TOOL_LOCKFILE } from '#tests/data/tools/python-tool-project.ts';
 
-/** Resolve the selected Python version in the shared installed-project arrangement. */
+/** The Python tool project files with the Python version filled in. */
 function buildPythonProjectFiles(): Record<string, string> {
     return {
         'gspot.toml': buildSettingsText([]),

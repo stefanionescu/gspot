@@ -1,7 +1,7 @@
 /** The folder that holds the npm tools of a repository. */
 export const NPM_TOOL_FOLDER = '.gspot/node_modules';
 
-/** Whole logged installations share refusal, recovery, and pruning contracts. */
+/** Tool folders installed as a whole, which refuse, recover, and prune the same way. */
 export const TOOL_FOLDERS = [
     { kind: 'npm', folder: NPM_TOOL_FOLDER },
     { kind: 'vale', folder: '.gspot/vale' },
@@ -19,7 +19,7 @@ export const LEAKED_LOCKFILES = [
     ['url = "https://alex:synthetic%2Fpassword%2Bwith%20spaces@example.com/simple"'],
 ] as const;
 
-/** Package identity and version fields require strings at the installed-file boundary. */
+/** Installed package metadata with a name or version that holds no string. */
 export const PACKAGE_METADATA_FAILURES = [
     { field: 'name', manifest: { name: false, version: '5.0.1' } },
     { field: 'version', manifest: { name: 'teller', version: false } },
@@ -55,7 +55,7 @@ export const SYSTEM_PLUGIN_REPORTS = [
     { name: 'missing', stdout: '', code: 0, missing: true, state: 'missing' },
 ] as const;
 
-/** Native version-process bytes and their inspection outcomes. */
+/** Version command output and the result of reading it. */
 export const VERSION_OUTPUTS = [
     [
         'console.log("3.8.1"); process.exitCode = 7;',

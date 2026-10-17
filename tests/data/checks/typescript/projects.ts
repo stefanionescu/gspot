@@ -67,7 +67,7 @@ const YOUR_TSCONFIG = `{
     "include": ["src"],
 }\n`;
 
-/** Native compiler output boundaries have distinct exit contracts. */
+/** outDir settings that point outside the project, and what each one writes. */
 const OUTDIR_CASES = [
     { name: 'an absolute outDir outside the project writes no output', kind: 'absolute' },
     { name: 'an outDir through a linked node_modules writes nothing outside the repository', kind: 'symlink' },
@@ -120,7 +120,7 @@ const STANDALONE_TYPESCRIPT_FINDINGS = {
     ],
 } as const;
 
-// One authored ancestor includes each scope without giving each scope another compiler project.
+// One tsconfig in a parent folder includes each scope, so no scope gets its own compiler project.
 const ANCESTOR_TYPESCRIPT_FILES = {
     '.gitignore': 'node_modules/\n.gspot/\n',
     'source.ts': 'export const rootValue = 1;\n',

@@ -2,7 +2,7 @@ import { GUIDE, README, LICENSE } from '#tests/data/checks/docs.ts';
 
 export const MARKDOWNLINT_EXECUTABLE = '.gspot/node_modules/.bin/markdownlint-cli2';
 
-/** Native Markdown inputs exercise root and scoped configuration discovery without extra tool installation. */
+/** Markdown files in the root and a scope, to test which tool file applies, with no extra tools to install. */
 export const MARKDOWN_FILES = {
     'root.md': `# Root
 
@@ -31,10 +31,10 @@ Long prose stays with the formatter. Long prose stays with the formatter. Long p
 `,
 } as const;
 
-/** Options for inactive rules must not enable them; scope options replace their own rule's values only. */
+/** Options of an inactive rule do not turn it on; scope options replace only the values of their own rule. */
 export const MARKDOWNLINT_SETTINGS = `[format]\nindent_width = 6\n[tools.markdownlint.rules]\nMD044 = { names = ["Root label"], code_blocks = false }\nMD041 = {}\nMD013 = { line_length = 10 }\nMD033 = {}\nMD060 = { style = "aligned" }\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.markdownlint.rules]\nMD044 = { names = ["Nested label"] }\n`;
 
-/** A table with columns that match none of the native Markdown styles. */
+/** A table whose columns match none of the markdownlint table styles. */
 export const TABLE_COLUMN_SAMPLE = `# Table
 
 | Name | Value |

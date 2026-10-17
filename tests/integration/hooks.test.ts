@@ -13,7 +13,7 @@ import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { installRuntimes, buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText, buildReportingCheck } from '#tests/setup/settings.ts';
 
-// A fresh clone installs immutable tools and rejects then accepts a real staged commit.
+// A fresh clone installs the locked tools, then rejects and accepts a real staged commit.
 async function assertCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
     await using cloneRoot = await testdir();
     const clone = join(cloneRoot.path, 'clone');
@@ -74,7 +74,7 @@ test('installed and freshly cloned repositories enforce staged findings through 
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
     await using sandbox = await testdir();
-    // Explicit hook selection enables the default Git hook integration.
+    // hooks.enabled turns on the default Git hooks.
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText([], { tables: '[hooks]\nenabled = true\n' }),
     });

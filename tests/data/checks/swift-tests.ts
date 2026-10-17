@@ -138,7 +138,7 @@ export const SKIP_REASON_CASES = [
 
 export const SWIFTLINT_COMMAND = ['check', '--only', 'swift/swiftlint', '--json'];
 
-/** The same application and library coverage used with different configured limits. */
+/** One coverage report for the app and library targets, checked against different limits. */
 export const SWIFT_TARGET_COVERAGE_REPORT = {
     targets: [
         { name: 'App', lineCoverage: 0.6 },

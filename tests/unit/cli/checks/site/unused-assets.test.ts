@@ -82,7 +82,7 @@ test('an unstaged deletion removes the reference without failing the asset check
     ]);
 });
 
-/** Commit each scenario's asset references in the same declared documentation scope. */
+/** Commit the asset files of one test in the docs site scope. */
 async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
     const sandbox = resources.use(
         await testdir({

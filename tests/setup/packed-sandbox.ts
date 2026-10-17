@@ -54,7 +54,7 @@ export async function createPackedSandbox(): Promise<PackedSandbox> {
     };
 }
 
-/** Initialize and install the configurations selected by a packed CLI test. */
+/** Run init with these configurations, set the level, and install, with the packed CLI. */
 export async function setUpPackedSandbox(
     installation: PackedSandbox,
     options: { cwd: string; configurations: readonly string[]; level?: 'recommended' | 'all' },

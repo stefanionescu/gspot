@@ -22,7 +22,6 @@ for (const entry of XCODE_CASES) {
     });
 }
 
-// The pinned plutil tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('plutil'))(
     'xcode/plutil reports mixed parse and input failures as execution errors',
     async () => {

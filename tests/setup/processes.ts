@@ -16,10 +16,10 @@ import {
 let timeoutAt: number | undefined;
 
 /**
- * Clamp a child command to the test's remaining timeout and retain its timeout context.
+ * Limit a child command to the time the test has left, and build the text a timeout error shows.
  * @param command the child executable and arguments.
- * @param options the requested working directory, environment, and time limit.
- * @returns bounded options and diagnostic context for a child process.
+ * @param options how to run it, including its own time limit.
+ * @returns the limited options and text that names the command.
  */
 function prepareCommand(
     command: readonly string[],
@@ -96,7 +96,7 @@ function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptio
 
 /**
  * Wait within the remaining test time, then kill a child that remains alive.
- * @param pid the owned child process ID.
+ * @param pid child that the test started.
  */
 async function waitForExit(pid: number): Promise<void> {
     if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid child PID: ${String(pid)}.`);
@@ -114,7 +114,7 @@ async function waitForExit(pid: number): Promise<void> {
     throw new Error(`Owned child ${String(pid)} remained alive after supervision ended.`);
 }
 
-/** Polls a child-written readiness marker until its bounded startup deadline. */
+/** Wait until a child writes its ready file, or the test runs out of time. */
 async function waitForFile(path: string): Promise<boolean> {
     const deadline = performance.now() + computeTimeLeft();
     while (!(await Bun.file(path).exists()) && performance.now() < deadline) await Bun.sleep(READY_POLL_MILLISECONDS);
@@ -165,7 +165,7 @@ export {
     runCommandBlocking,
 };
 
-/** Replace executable lookup while a unit test owns its executable path. */
+/** Make executable lookup return this path. */
 export function useExecutable(path: string | null): Mock<typeof executables.sync> {
     return spyOn(executables, 'sync').mockImplementation(((_name: string, options?: executables.Options) =>
         options?.all === true
@@ -187,7 +187,7 @@ export async function captureProcess(
     return { ...result, stdout: Buffer.concat(chunks) };
 }
 
-/** Exercise both native process implementations with the shared test timeout. */
+/** Both process functions, asynchronous and blocking, with the shared test timeout. */
 export function buildProcessBackends(): ProcessBackend[] {
     return [
         {

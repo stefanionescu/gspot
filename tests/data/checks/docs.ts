@@ -1,4 +1,4 @@
-/** Independent scoped definitions exercise native runner ownership and inheritance. */
+/** The mise tasks and package scripts of each scope, and documents that run them. */
 export const DOC_TASK_FILES = {
     'root.md': `Run \`mise run root-mise\`, \`npm run root-js\`, \`pnpm run root-js\`, \`yarn run root-js\`, and \`bun run root-js\`.
 Run \`mise run root-js\`, \`bun run root-mise\`, and \`npm run child-js\`.
@@ -17,7 +17,7 @@ Run \`npm run root-js\` and \`bun run sibling-js\`.
     'sibling/package.json': '{"private":true,"scripts":{"sibling-js":"true"}}\n',
 } as const;
 
-/** Scope membership follows authored project boundaries. */
+/** One scope for each project folder. */
 export const DOC_TASK_SCOPES = `[[scope]]
 path = "app"
 
@@ -36,7 +36,7 @@ path = "sibling"
 configurations = []
 `;
 
-/** Each rejected command identifies its own source document and line. */
+/** Each rejected command and the document line that holds it. */
 export const DOC_TASK_FINDINGS = [
     { file: 'root.md', line: 2, command: 'mise run root-js' },
     { file: 'root.md', line: 2, command: 'bun run root-mise' },
@@ -48,7 +48,7 @@ export const DOC_TASK_FINDINGS = [
     { file: 'sibling/guide.md', line: 2, command: 'mise run child-mise' },
 ] as const;
 
-/** Only untitled command bodies report paths. */
+/** Only command blocks without a title report paths. */
 export const DOC_FENCE_PATH_CASES = [
     { metadata: 'title="example.sh"', language: 'sh', reported: false },
     { metadata: 'title="example.sql"', language: 'sql', reported: false },
@@ -65,7 +65,7 @@ export const LINK_PAGE = `<!doctype html>
 <html lang="en"><head><title>Setup</title></head><body><h1 id="setup">Setup</h1><p>Current setup.</p></body></html>
 `;
 
-/** Child URL exceptions extend root policy without exempting root links. */
+/** Child URL exceptions add to the root list but do not cover root links. */
 export const LINK_SCOPE_SETTINGS = `[docs]
 allowed_urls = { value = ["/root-only$"], reason = "The root guide describes an unavailable endpoint." }
 [[scope]]
@@ -75,13 +75,13 @@ configurations = []
 allowed_urls = { value = ["/child-only$"], reason = "The child guide describes an unavailable endpoint." }
 `;
 
-/** Text-fragment failures and their independently valid correction. */
+/** A missing text fragment, and a fragment that matches the page. */
 export const LINK_TEXT_CASES = [
     { fragment: 'absent', failures: [{ scope: '', file: 'root.md', rule: 'ERROR' }] },
     { fragment: 'Current%20setup', failures: [] },
 ] as const;
 
-// Shared authored documents for native-tool and in-process document tests.
+// Documents for both the tool checks and the built-in checks.
 export const README = `# Test
 
 A sandbox that holds documents and nothing else.

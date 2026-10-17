@@ -1,6 +1,6 @@
 import { NEXT_MESSAGES } from '#tests/data/checks/nextjs.ts';
 
-/** The translations settings naming the message directory and base locale. */
+/** The translations settings that name the message folder and base locale. */
 const NEXT_TRANSLATIONS = `[translations]
 messages_folder = "messages"
 base_locale = "en"

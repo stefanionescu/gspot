@@ -16,7 +16,7 @@ path = "sibling"
 
 `;
 
-/** Express project evidence and inherited source paths for the scoped security test. */
+/** An Express package and sources inside and outside its folder, for the scoped security test. */
 export const EXPRESS_SCOPE_FILES = {
     'app/package.json': '{"name":"security-app","private":true,"dependencies":{"express":"5.2.1"}}',
     'source.js': 'res.send(req.body.message);\n',
@@ -28,7 +28,7 @@ export const EXPRESS_SCOPE_FILES = {
     'sibling/ignored.js': 'eval(input);\n',
 } as const;
 
-/** Samples and positive source cases run together under the shipped Express pack. */
+/** Samples and sources with findings, run together under the shipped Express rules. */
 export const EXPRESS_SOURCES = {
     'logger.js': 'logger.info(`User ${req.query.name}`);\n',
     'json.js': 'res.json({ name: req.query.name });\n',
@@ -47,7 +47,7 @@ export const EXPRESS_SOURCE_FINDINGS = [
     { file: 'response-template.js', rule: 'gspot.express.res-send-raw-input', line: 1 },
 ] as const;
 
-/** Exact source ownership for the three findings in inherited framework scopes. */
+/** The scope and file of each finding in the scopes that inherit Express. */
 export const EXPRESS_SCOPE_FINDINGS = [
     { scope: 'app', file: 'app/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
     { scope: 'app/child', file: 'app/child/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },

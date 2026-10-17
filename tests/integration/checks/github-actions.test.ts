@@ -60,7 +60,7 @@ test('the generated GitHub workflow passes actionlint', async () => {
         { check: 'github-actions/actionlint', status: 'passed', findings: [] },
     ]);
 });
-// Runs the pinned Actionlint check over the repository's current authored workflows.
+// Runs the actionlint check over the workflows in the repository.
 async function runActionlint(root: string) {
     const result = await spawnGspot(root, ['check', '--only', 'github-actions/actionlint', '--json']);
     return (JSON.parse(result.stdout) as RunReport).checks[0]!;

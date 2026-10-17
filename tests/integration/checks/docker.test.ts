@@ -117,7 +117,7 @@ configurations = ["docker"]
     },
 );
 
-// Each tag owns an explicit payload, so a clean image never depends on loop position.
+// Each tag gets its own payload, so a clean image never depends on the loop order.
 async function importImage(root: string, tag: string, payload: string | Buffer): Promise<void> {
     await writeFile(join(root, 'payload.pem'), payload);
     const archive = runCommandBlocking(['tar', '-cf', 'payload.tar', 'payload.pem'], { cwd: root });

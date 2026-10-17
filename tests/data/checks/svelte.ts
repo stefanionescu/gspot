@@ -23,7 +23,7 @@ path = "app"
     },
 ] as const;
 
-/** Native diagnostics with errors, warnings, and source locations. */
+/** svelte-check output with errors, warnings, and source locations. */
 export const SVELTE_CHECK_OUTPUT = `1758823456789 START "/repo"
 1758823456790 {"type":"ERROR","filename":"src/Count.svelte","start":{"line":1,"character":10},"end":{"line":1,"character":15},"message":"Type 'string' is not assignable to type 'number'.","code":2322,"source":"ts"}
 1758823456791 {"type":"WARNING","filename":"src/Product.svelte","start":{"line":4,"character":0},"end":{"line":4,"character":20},"message":"\`<img>\` element should have an alt attribute","code":"a11y_missing_attribute","source":"svelte"}
@@ -135,7 +135,7 @@ const answer = 42;
         },
     },
     {
-        // Stylelint reads the style block and knows the scoping pseudo-class of Svelte.
+        // Stylelint reads the style block and accepts the scoping pseudo-class of Svelte.
         check: 'css/stylelint',
         files: {
             'src/Card.svelte': `<p class="card">card</p>

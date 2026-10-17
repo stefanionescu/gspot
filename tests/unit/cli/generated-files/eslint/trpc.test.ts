@@ -6,7 +6,7 @@ import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { TRPC_FILES, TRPC_TYPES, TRPC_IMPORTS, TRPC_MODULES, TRPC_FAILURES } from '#tests/data/checks/trpc.ts';
 
 describe('trpc', () => {
-    test('the generated native tRPC rule composes server value boundaries', async () => {
+    test('the generated tRPC rule composes server value boundaries', async () => {
         await using sandbox = await testdir();
         const settings = buildSettingsText(['trpc', 'typescript'], {
             level: 'all',

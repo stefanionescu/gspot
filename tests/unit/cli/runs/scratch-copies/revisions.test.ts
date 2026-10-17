@@ -66,7 +66,7 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
     expect(await Bun.file(join(outside.path, 'source.txt')).text()).toBe('outside source');
 });
 
-// Run the hook with its actual module entry points and inherited Git environment.
+// Run the hook with the real module entry points and the inherited Git environment.
 async function runGitHook(worktree: string, index: string, folder: string, report: string) {
     const revision = pathToFileURL(await Bun.resolve('#cli/checks/run/copy/revision.ts', import.meta.dir)).href;
     const owner = pathToFileURL(await Bun.resolve('#cli/system/git.ts', import.meta.dir)).href;

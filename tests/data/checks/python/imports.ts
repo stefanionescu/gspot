@@ -1,6 +1,6 @@
 import { PYPROJECT } from '#tests/data/checks/python/project.ts';
 
-// Native import-linter output keeps two broken contracts and their distinct dependency chains.
+// import-linter output with two broken contracts, each with its own import chain.
 const IMPORT_CONTRACT_REPORT = `Contracts
 ---------
 
@@ -28,7 +28,7 @@ source_modules = example.low
 forbidden_modules = example.high
 `;
 
-/** Native import-linter configuration formats, with the same forbidden dependency. */
+/** Each file format that import-linter reads, with the same forbidden import. */
 const IMPORT_CONFIGURATIONS = [
     {
         file: 'setup.cfg',

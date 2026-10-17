@@ -61,7 +61,7 @@ export const ALLOWED_PACKAGE_CASES = [
     },
 ] as const;
 
-/** JavaScript identities stay exact while Python identities normalize in their own reports. */
+/** JavaScript package names stay as written; Python package names get normalized in their own reports. */
 export const EXPECTED_SCAN_FINDINGS = [
     { file: 'package.json', message: 'unknown@1.0.0 uses UNKNOWN' },
     { file: 'package.json', message: 'python.package@2.0.0 uses GPL-3.0-only' },

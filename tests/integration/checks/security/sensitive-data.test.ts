@@ -14,7 +14,6 @@ import {
     FIXED_SENSITIVE_FILES,
 } from '#tests/data/checks/security/sensitive-data.ts';
 
-// The pinned semgrep tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('semgrep'))(
     'Semgrep reports secrets in log calls and UserDefaults, and passes after the fix',
     async () => {

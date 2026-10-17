@@ -1,6 +1,6 @@
 import { TYPO } from '#tests/data/checks/spelling.ts';
 
-/** Native fixes leave an unresolved finding for the repeated fix and manual correction. */
+/** Tool fixes that leave one finding for the second fix pass and a manual fix. */
 export const PARTIAL_FIX_CASES = [
     {
         configuration: 'sql',
@@ -22,7 +22,7 @@ export const PARTIAL_FIX_CASES = [
     },
 ] as const;
 
-/** Each correction outcome includes its exit code and resulting file bytes. */
+/** Each fixer result: its exit code and the file bytes it leaves. */
 export const FIXER_RESULTS = [
     {
         name: 'finding exit with original bytes',
