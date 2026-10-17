@@ -3,6 +3,8 @@ import { spyOn } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { type Session } from '#cli/types/planning.ts';
+import { selectCheckRun } from '#cli/checks/run/run.ts';
+import { checkInput } from '#cli/checks/run/built-in.ts';
 import * as environment from '#cli/system/environment.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -11,11 +13,8 @@ import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
-import { checkInput, runBuiltInCheck } from '#cli/checks/run/built-in.ts';
-import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
+import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
-import type { Finding, CheckInput, RunnableCheck, CheckImplementations } from '#cli/types/checks/run/check.ts';
 
 /**
  * Keep compiler state in a temporary folder until the test ends.
@@ -105,25 +104,11 @@ async function checkFindings(
     );
     if (planned === undefined)
         throw new Error(`The sandbox does not plan ${checkId} in ${input.selection.scope.path || 'the root'}.`);
-    const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
-    const implementation = implementations[checkId];
-    const run = selectCheckRunner(input, implementation);
-    const result = await run(
+    const result = await selectCheckRun(input.check)(
         { ...session, resources: options.resources ?? resources },
         { ...planned, files: input.files },
     );
     return result.findings;
-}
-
-/** Pick the check implementation to run, including the stale generator output check. */
-function selectCheckRunner(
-    input: CheckInput,
-    implementation: CheckImplementations[string] | undefined,
-): RunnableCheck['run'] {
-    if (input.check.generator_outputs !== undefined) return runBuiltInCheck(checkStaleGeneratorOutputs);
-    if (implementation?.check === undefined)
-        return (implementation as Extract<CheckImplementations[string], { run: unknown }>).run;
-    return runBuiltInCheck(implementation.check);
 }
 
 /** Open a session with fake pinned versions of these tools. */
