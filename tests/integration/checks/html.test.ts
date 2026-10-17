@@ -18,8 +18,9 @@ import {
 
 const installedSandbox = registerSharedSandbox(CHECKS_HTML_INSTALLED_SANDBOX);
 
-for (const entry of AUTOPLAY_CHECKS)
-    test(`${entry.check} reports audio and video autoplay and accepts user-controlled playback`, async () => {
+test.each([...AUTOPLAY_CHECKS])(
+    '$check reports audio and video autoplay and accepts user-controlled playback',
+    async (entry) => {
         const sandbox = { path: installedSandbox().root };
         const skippedChecks =
             entry.scope === ''
@@ -63,4 +64,5 @@ for (const entry of AUTOPLAY_CHECKS)
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
         expect(await readFile(join(sandbox.path, entry.preserved), 'utf8')).toBe(AUTOPLAY_PAGE);
         expect(await readFile(join(sandbox.path, 'app/build.mjs'), 'utf8')).toBe(COPY_PAGE_BUILD);
-    });
+    },
+);

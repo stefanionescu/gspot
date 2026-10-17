@@ -95,9 +95,7 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
 
 const installedSandbox = registerSharedSandbox(SHELLCHECK_SANDBOX);
 
-for (const entry of SHELLCHECK_CASES) {
-    test(`${entry.check} reports ${entry.expected.file} and passes after the fix`, async () => {
-        const result = await runCheckSample(installedSandbox(), entry, SHELLCHECK_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
-}
+test.each([...SHELLCHECK_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
+    const result = await runCheckSample(installedSandbox(), entry, SHELLCHECK_SANDBOX);
+    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+});

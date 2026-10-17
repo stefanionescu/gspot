@@ -36,9 +36,7 @@ test('Prettier reports and fixes a Svelte component through the Svelte plugin', 
     expect(await Bun.file(path).text()).toBe(SVELTE_CLEAN);
 });
 
-for (const entry of SVELTE_CASES) {
-    test(`${entry.check} reports ${entry.expected.file} and passes after the fix`, async () => {
-        const result = await runCheckSample(installedSandbox(), entry, SVELTE_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
-}
+test.each([...SVELTE_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
+    const result = await runCheckSample(installedSandbox(), entry, SVELTE_SANDBOX);
+    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+});

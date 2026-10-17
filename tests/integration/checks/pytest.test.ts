@@ -19,12 +19,10 @@ const installedSandbox = registerSharedSandbox({
     },
 });
 
-for (const entry of PYTEST_CASES) {
-    test(`${entry.check} reports the required coverage and passes after the fix`, async () => {
-        const result = await runCheckSample(installedSandbox(), entry, PYTEST_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
-}
+test.each([...PYTEST_CASES])('$check reports the required coverage and passes after the fix', async (entry) => {
+    const result = await runCheckSample(installedSandbox(), entry, PYTEST_SANDBOX);
+    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+});
 
 test.each([80, 0])(
     "pytest/coverage with a %i limit uses the project's Python and needs pytest-cov only above 0",

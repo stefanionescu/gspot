@@ -14,13 +14,14 @@ import { XCODE_CASES, XCODE_SANDBOX } from '#tests/data/checks/xcode.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
 const sandbox = registerSharedSandbox(XCODE_SANDBOX);
-for (const entry of XCODE_CASES) {
-    // This check needs the Xcode toolchain supplied by macOS.
-    test.skipIf(!isMacos)(`${entry.check} reports ${entry.expected.file} and passes after the fix`, async () => {
+// This check needs the Xcode toolchain supplied by macOS.
+test.skipIf(!isMacos).each([...XCODE_CASES])(
+    '$check reports $expected.file and passes after the fix',
+    async (entry) => {
         const result = await runCheckSample(sandbox(), entry, XCODE_SANDBOX);
         expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
-}
+    },
+);
 
 test.skipIf(!hasToolBuild('plutil'))(
     'xcode/plutil reports mixed parse and input failures as execution errors',

@@ -199,9 +199,7 @@ configurations = ["github-actions"]
 
 const installedSandbox = registerSharedSandbox(GITHUB_ACTIONS_SANDBOX);
 
-for (const entry of GITHUB_ACTIONS_CASES) {
-    test(`${entry.check} reports ${entry.expected.file} and passes after the fix`, async () => {
-        const result = await runCheckSample(installedSandbox(), entry, GITHUB_ACTIONS_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
-}
+test.each([...GITHUB_ACTIONS_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
+    const result = await runCheckSample(installedSandbox(), entry, GITHUB_ACTIONS_SANDBOX);
+    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+});

@@ -47,9 +47,7 @@ test('typos keeps its excluded paths for a file named on the command line', asyn
         { check: 'spelling/typos', status: 'passed', fileCount: 1 },
     ]);
 });
-for (const entry of TYPESCRIPT_CASES) {
-    test(`${entry.check} reports ${entry.expected.file} and passes after the fix`, async () => {
-        const result = await runCheckSample(installedSandbox(), entry, TYPESCRIPT_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
-}
+test.each([...TYPESCRIPT_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
+    const result = await runCheckSample(installedSandbox(), entry, TYPESCRIPT_SANDBOX);
+    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+});

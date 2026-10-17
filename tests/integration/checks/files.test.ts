@@ -18,12 +18,10 @@ import {
 
 const installedSandbox = registerSharedSandbox(FILES_SANDBOX);
 
-for (const entry of FILES_CASES) {
-    test(`${entry.check} reports ${entry.expected.file} and passes after the fix`, async () => {
-        const result = await runCheckSample(installedSandbox(), entry, FILES_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
-}
+test.each([...FILES_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
+    const result = await runCheckSample(installedSandbox(), entry, FILES_SANDBOX);
+    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+});
 
 test('Taplo fixes inline table spacing', async () => {
     const { root, environment } = installedSandbox();

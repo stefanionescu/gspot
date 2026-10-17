@@ -53,9 +53,7 @@ test("Squawk uses each scope's assume_in_transaction setting, and false under Su
 
 const installedSandbox = registerSharedSandbox(POSTGRES_SANDBOX);
 
-for (const entry of POSTGRES_CASES) {
-    test(`${entry.check} reports ${entry.expected.file} and passes after the fix`, async () => {
-        const result = await runCheckSample(installedSandbox(), entry, POSTGRES_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
-}
+test.each([...POSTGRES_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
+    const result = await runCheckSample(installedSandbox(), entry, POSTGRES_SANDBOX);
+    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+});
