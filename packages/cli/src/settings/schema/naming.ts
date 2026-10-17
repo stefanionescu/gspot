@@ -4,21 +4,40 @@ import { SETTING_LANGUAGES } from '#cli/config/settings/schema.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { namingOverrideSchema } from '#cli/configurations/schema/naming.ts';
 import { nonemptyPaths, namingCategorySchema } from '#cli/settings/schema/parts.ts';
-import { type TableSettings, type NamingCategory, type SettingLanguage } from '#cli/types/settings/tables.ts';
+import { type TableSettings, type NamingCategory } from '#cli/types/settings/tables.ts';
 import { type WrittenNaming, type ParsedNamingOverride, type WrittenNamingOverride } from '#cli/types/settings/file.ts';
 
-const namingLanguageSchema = namingCategorySchema.extend({
+// Each language table accepts the categories that its name reader reports, as NAMING_LANGUAGE_CATEGORIES lists them.
+const pathCategories = {
     files: namingCategorySchema.optional(),
     folders: namingCategorySchema.optional(),
+};
+
+const namingLanguageSchema = namingCategorySchema.extend({
+    ...pathCategories,
     types: namingCategorySchema.optional(),
     functions: namingCategorySchema.optional(),
     parameters: namingCategorySchema.optional(),
     variables: namingCategorySchema.optional(),
     properties: namingCategorySchema.optional(),
 } satisfies SchemaShape<
-    Pick<NonNullable<TableSettings<'naming'>[SettingLanguage]>, NamingCategory>,
-    Pick<NonNullable<WrittenNaming[SettingLanguage]>, NamingCategory>
+    Pick<NonNullable<TableSettings<'naming'>['typescript']>, NamingCategory>,
+    Pick<NonNullable<WrittenNaming['typescript']>, NamingCategory>
 >);
+
+const bashNamingSchema = namingCategorySchema.extend({
+    ...pathCategories,
+    functions: namingCategorySchema.optional(),
+    variables: namingCategorySchema.optional(),
+});
+
+const sqlNamingSchema = namingCategorySchema.extend({
+    ...pathCategories,
+    functions: namingCategorySchema.optional(),
+    parameters: namingCategorySchema.optional(),
+});
+
+const pathNamingSchema = namingCategorySchema.extend(pathCategories);
 
 namingLanguageSchema.register(z.globalRegistry, { id: 'namingLanguage' });
 
@@ -50,11 +69,11 @@ const namingSchema = z.strictObject({
     typescript: namingLanguageSchema.optional(),
     javascript: namingLanguageSchema.optional(),
     python: namingLanguageSchema.optional(),
-    bash: namingLanguageSchema.optional(),
     swift: namingLanguageSchema.optional(),
-    sql: namingLanguageSchema.optional(),
-    css: namingLanguageSchema.optional(),
-    html: namingLanguageSchema.optional(),
+    bash: bashNamingSchema.optional(),
+    sql: sqlNamingSchema.optional(),
+    css: pathNamingSchema.optional(),
+    html: pathNamingSchema.optional(),
 } satisfies SchemaShape<TableSettings<'naming'>, WrittenNaming>);
 
 export { namingSchema };

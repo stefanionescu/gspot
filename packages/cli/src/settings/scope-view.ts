@@ -3,12 +3,11 @@ import { isScopeCovered } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 import { ISO_DATE_LENGTH } from '#cli/config/settings/values.ts';
-import { SETTING_LANGUAGES } from '#cli/config/settings/schema.ts';
 import { tableValuesSchema } from '#cli/settings/schema/tables.ts';
-import { NAMED_CATEGORIES } from '#cli/config/checks/general/naming.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { limitTableSchema, namingCategorySchema } from '#cli/settings/schema/parts.ts';
+import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { listSettings, getSettingValue, getSettingTable, listApplicableTables } from '#cli/settings/inherit.ts';
 
 import {
@@ -23,7 +22,7 @@ function listNamingVariants(known: KnownSettings, settings: Settings, scope: str
     return SETTING_LANGUAGES.flatMap((language) =>
         Object.keys(namingCategorySchema.shape).flatMap((field) => [
             `naming.${language}.${field}`,
-            ...NAMED_CATEGORIES.map((category) => `naming.${language}.${category}.${field}`),
+            ...NAMING_LANGUAGE_CATEGORIES[language].map((category) => `naming.${language}.${category}.${field}`),
         ]),
     )
         .filter((key) => !known.declarations.has(key))

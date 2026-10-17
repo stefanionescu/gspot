@@ -8,6 +8,7 @@ import type { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts'
 import type { ParsedXcode, ParsedOpenapi } from '#cli/types/checks/infrastructure.ts';
 import type { ParsedDrizzle, ParsedTranslations } from '#cli/types/checks/library.ts';
 import type { ParsedSupabase, ParsedCloudflare } from '#cli/types/checks/platform.ts';
+import type { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declarations.ts';
 import type { ArchitectureModule, ParsedNamingOverride } from '#cli/types/settings/file.ts';
 
 import type {
@@ -19,6 +20,7 @@ import type {
     SETTING_LANGUAGES,
     FORMAT_INDENT_STYLES,
     NAMING_TABLE_CATEGORIES,
+    NAMING_LANGUAGE_CATEGORIES,
 } from '#cli/config/settings/schema.ts';
 import {
     type ParsedDocs,
@@ -108,10 +110,39 @@ type NamingFields<NumberValue, CaseValue> = {
     cases?: CaseValue | undefined;
 };
 
-type NamingLanguageFields<NumberValue, CaseValue> = NamingFields<NumberValue, CaseValue> &
-    Partial<Record<NamingCategory, NamingFields<NumberValue, CaseValue> | undefined>>;
+/** The naming categories that one language's table accepts. */
+type NamingLanguageCategory<Language extends SettingLanguage> = (typeof NAMING_LANGUAGE_CATEGORIES)[Language][number];
+
+type NamingLanguageFields<NumberValue, CaseValue, Language extends SettingLanguage = SettingLanguage> = NamingFields<
+    NumberValue,
+    CaseValue
+> &
+    Partial<Record<NamingLanguageCategory<Language>, NamingFields<NumberValue, CaseValue> | undefined>>;
 
 type LimitFields<NumberValue> = Partial<Record<keyof ParsedLimitFields, NumberValue | undefined>>;
+
+type LimitDeclaration = (typeof LIMITS_DECLARATIONS)[keyof typeof LIMITS_DECLARATIONS];
+
+/** The languages that at least one limit reads. */
+type LimitLanguage = Extract<LimitDeclaration, { languages: readonly string[] }>['languages'][number];
+
+/** The limits that some code reads for one language. */
+type LanguageLimitField<Language extends LimitLanguage> = {
+    [Key in keyof typeof LIMITS_DECLARATIONS]: (typeof LIMITS_DECLARATIONS)[Key] extends {
+        languages: readonly (infer Languages)[];
+    }
+        ? Language extends Languages
+            ? Key extends `limits.${infer Field}`
+                ? Field
+                : never
+            : never
+        : never;
+}[keyof typeof LIMITS_DECLARATIONS];
+
+/** One language's limit table: only the limits that the language reads, each inherited from the root when unset. */
+type LanguageLimitFields<Language extends LimitLanguage, NumberValue> = Partial<
+    Record<LanguageLimitField<Language>, NumberValue | undefined>
+>;
 
 type ParsedLimitFields = {
     file_lines: number;
@@ -132,17 +163,21 @@ type ParsedLimitFields = {
     shared_prefix_files: number;
 };
 
-type ParsedLimits = ParsedLimitFields & Partial<Record<SettingLanguage, ParsedLimitFields | undefined>>;
+type ParsedLimits = ParsedLimitFields & {
+    [Language in LimitLanguage]?: LanguageLimitFields<Language, number> | undefined;
+};
 
 type ParsedNamingFields = { max_characters: number; max_words: number; cases: NamingCase[] };
 
-type ParsedNamingLanguageFields = ParsedNamingFields & Partial<Record<NamingCategory, ParsedNamingFields | undefined>>;
+type ParsedNamingLanguageFields<Language extends SettingLanguage = SettingLanguage> = ParsedNamingFields &
+    Partial<Record<NamingLanguageCategory<Language>, ParsedNamingFields | undefined>>;
 
-type ParsedNaming = ParsedNamingFields &
-    Partial<Record<SettingLanguage, ParsedNamingLanguageFields | undefined>> & {
-        banned_words: string[];
-        override: ParsedNamingOverride[];
-    };
+type ParsedNaming = ParsedNamingFields & {
+    [Language in SettingLanguage]?: ParsedNamingLanguageFields<Language> | undefined;
+} & {
+    banned_words: string[];
+    override: ParsedNamingOverride[];
+};
 
 type ParsedArchitecture = {
     module: ArchitectureModule[];
@@ -207,11 +242,15 @@ export type {
     ParsedNaming,
     ParsedFormat,
     TableSettings,
+    LimitLanguage,
     NamingCategory,
     SettingLanguage,
     ParsedStructure,
     SettingDeclaration,
+    LanguageLimitField,
     ParsedNamingFields,
     ParsedArchitecture,
+    LanguageLimitFields,
     NamingLanguageFields,
+    ParsedNamingLanguageFields,
 };

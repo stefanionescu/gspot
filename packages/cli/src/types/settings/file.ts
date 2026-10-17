@@ -34,9 +34,11 @@ import type {
     ParsedLimits,
     ParsedNaming,
     ParsedFormat,
+    LimitLanguage,
     SettingLanguage,
     ParsedStructure,
     ParsedArchitecture,
+    LanguageLimitFields,
     NamingLanguageFields,
 } from '#cli/types/settings/tables.ts';
 
@@ -77,8 +79,9 @@ export type SettingValue<Value> = Value | ReasonedValue<Value>;
 
 export type WrittenLicenses = Optional<ParsedLicenses>;
 
-export type WrittenLimits = LimitFields<SettingValue<number>> &
-    Optional<Record<SettingLanguage, LimitFields<SettingValue<number>> | undefined>>;
+export type WrittenLimits = LimitFields<SettingValue<number>> & {
+    [Language in LimitLanguage]?: LanguageLimitFields<Language, SettingValue<number>> | undefined;
+};
 
 export type ParsedNamingOverride = {
     paths: string[];
@@ -94,13 +97,14 @@ export type ParsedNamingOverride = {
 
 export type WrittenNamingOverride = Optional<Omit<ParsedNamingOverride, 'reason'>> & { reason: string };
 
-export type WrittenNaming = NamingFields<SettingValue<number>, SettingValue<NamingCase[]>> &
-    Optional<
-        Record<SettingLanguage, NamingLanguageFields<SettingValue<number>, SettingValue<NamingCase[]>> | undefined>
-    > & {
-        banned_words?: string[] | undefined;
-        override?: WrittenNamingOverride[] | undefined;
-    };
+export type WrittenNaming = NamingFields<SettingValue<number>, SettingValue<NamingCase[]>> & {
+    [Language in SettingLanguage]?:
+        | NamingLanguageFields<SettingValue<number>, SettingValue<NamingCase[]>, Language>
+        | undefined;
+} & {
+    banned_words?: string[] | undefined;
+    override?: WrittenNamingOverride[] | undefined;
+};
 
 export type WrittenArchitecture = {
     module?: { name: string; paths: string[]; may_import?: string[] | undefined }[] | undefined;

@@ -5,6 +5,7 @@ import type { ScopeView } from '#cli/types/settings/values.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import type { CheckInput } from '#cli/types/checks/run/check.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
+import type { ParsedNamingLanguageFields } from '#cli/types/settings/tables.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY, CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
 
@@ -38,7 +39,9 @@ function compileOverride(rule: NamingOverride, source: string): CompiledOverride
 function getNamingLimits(view: Pick<ScopeView, 'options'>, language: string, category: string) {
     const root = view.options('naming');
     const languageKey = SETTING_LANGUAGES.find((name) => name === language);
-    const languageTable = languageKey === undefined ? undefined : root[languageKey];
+    // Every category of every language, so a category that a language lacks reads as unset.
+    const languageTable: ParsedNamingLanguageFields | undefined =
+        languageKey === undefined ? undefined : root[languageKey];
     const categoryKey = NAMING_TABLE_CATEGORIES.find((name) => name === category);
     const categoryTable = categoryKey === undefined ? undefined : languageTable?.[categoryKey];
     return {

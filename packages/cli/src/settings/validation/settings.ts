@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import { formatCodeList } from '#cli/system/text.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
@@ -12,10 +13,20 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
+import { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declarations.ts';
 import { type Settings, type KnownSettings } from '#cli/types/settings/values.ts';
 import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
 import { listCheckIds, readManifests, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { validateScopePaths, validateExtraOptions, validateDisabledRules } from '#cli/settings/validation/values.ts';
+
+// The limit fields that some code reads for one language.
+function listLanguageLimits(language: string): string[] {
+    return Object.entries(LIMITS_DECLARATIONS).flatMap(([key, declaration]) =>
+        'languages' in declaration && (declaration.languages as readonly string[]).includes(language)
+            ? [key.slice(key.indexOf('.') + 1)]
+            : [],
+    );
+}
 
 /**
  * Name the invalid setting, and keep the message of the validator.
@@ -38,19 +49,27 @@ function formatSettingsIssue(path: string, issue: z.core.$ZodIssue): string[] {
         );
     const segments = issue.path.filter((part): part is KeyPath[number] => typeof part !== 'symbol');
     if (issue.code !== 'unrecognized_keys') return formatZodIssue(issue).map((line) => `${path}: ${line}`);
+    return issue.keys.map((key) => `${path}: ${formatUnknownKey(segments, key)}`);
+}
+
+// Name one key that a table does not accept. Say where it belongs, or which keys the table has.
+function formatUnknownKey(segments: KeyPath, key: string): string {
+    const [record, , ...scopeFields] = segments;
+    const [table, language] = record === 'scope' ? scopeFields : segments;
+    if (table === 'limits' && typeof language === 'string')
+        return `\`limits.${language}.${key}\` is not a limit any check reads. The limits that ${language} reads are ${formatCodeList(listLanguageLimits(language))}.`;
+    const fields: Readonly<Record<string, readonly string[]>> = RECORD_FIELDS;
+    const recordName = [...scopeFields, key].map(String).join('.');
+    if (record === 'scope' && Object.hasOwn(fields, recordName))
+        return `Write [[${recordName}]] at the root.${fields[recordName]?.includes('paths') === true ? ' Its paths say where it applies.' : ''}`;
+    return `${describeKeyPlace(segments)}: \`${key}\` is not a gspot.toml setting. See ${SETTINGS_REFERENCE_URL} for every key.`;
+}
+
+function describeKeyPlace(segments: KeyPath): string {
     const [record, scopeIndex, ...scopeFields] = segments;
-    let where = segments.length === 0 ? 'the top level' : `[${segments.map(String).join('.')}]`;
-    if (record === 'scope') {
-        const section = scopeFields.length === 0 ? '' : ` [${scopeFields.map(String).join('.')}]`;
-        where = `[[scope]] record ${String(Number(scopeIndex) + 1)}${section}`;
-    }
-    return issue.keys.map((key) => {
-        const record = [...scopeFields, key].map(String).join('.');
-        const fields: Readonly<Record<string, readonly string[]>> = RECORD_FIELDS;
-        if (segments[0] === 'scope' && Object.hasOwn(fields, record))
-            return `${path}: Write [[${record}]] at the root.${fields[record]?.includes('paths') === true ? ' Its paths say where it applies.' : ''}`;
-        return `${path}: ${where}: \`${key}\` is not a gspot.toml setting. See ${SETTINGS_REFERENCE_URL} for every key.`;
-    });
+    if (record !== 'scope') return segments.length === 0 ? 'the top level' : `[${segments.map(String).join('.')}]`;
+    const section = scopeFields.length === 0 ? '' : ` [${scopeFields.map(String).join('.')}]`;
+    return `[[scope]] record ${String(Number(scopeIndex) + 1)}${section}`;
 }
 
 function throwErrors(errors: SettingsError[]): never {
