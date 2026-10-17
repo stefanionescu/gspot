@@ -1,5 +1,3 @@
-import { GspotError } from '#cli/system/errors.ts';
-import { writePlans } from '#cli/ownership/writer.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { listExpectedPaths } from '#cli/apply/stale.ts';
@@ -7,6 +5,8 @@ import type { FileContents } from '#cli/types/system/files.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { listStaleLockfiles } from '#cli/tools/project-lockfiles.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import { HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
+import { writePlans, buildPreservedFilesError } from '#cli/ownership/writer.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { planBlock, planRemoval, listStrayPaths, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
 
@@ -17,18 +17,6 @@ import {
     INSTALLED_TOOL_FOLDERS,
     PYTHON_TOOL_PROJECT_FILE,
 } from '#cli/config/system/locations.ts';
-
-/**
- * Explain which files need review before gspot replaces them.
- * @param paths the files with unreviewed authored content.
- * @returns the refusal, with the apply command to retry.
- */
-function buildPreservedFilesError(paths: string[]): GspotError {
-    return new GspotError(
-        'writing',
-        `These files were not overwritten by gspot: ${paths.join(', ')}. Move them aside, then run gspot apply.`,
-    );
-}
 
 function removeUnusedToolFolders(writer: Writer, paths: ReadonlySet<string>): void {
     for (const [path, keep] of [
@@ -47,7 +35,7 @@ function addInstallationNote(session: Session, generated: GenerationResult, repo
             (file.kind === 'lock' || [NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE].includes(file.path)),
     );
     const hasDrift = listStaleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
-    if (dependenciesChanged || hasDrift) report.notes.push('Tool dependencies need installation. Run: gspot install');
+    if (dependenciesChanged || hasDrift) report.notes.push(INSTALL_NEEDED_NOTE);
 }
 
 function buildReplacementPlans(
@@ -123,7 +111,7 @@ export function writeGeneratedFiles(
     );
     report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
     if ([...report.removed, ...report.written].some((path) => path.startsWith(`${HOOKS_PATH}/`)))
-        report.notes.push('Git hooks changed. Run: gspot install');
+        report.notes.push(HOOKS_CHANGED_NOTE);
     if (conflicts.length > 0) throw buildPreservedFilesError(conflicts);
     addInstallationNote(session, generated, report);
     if (generated.fileEdits.length > 0)

@@ -1,8 +1,21 @@
 // Write each changed regular file under the writer lock.
+import { GspotError } from '#cli/system/errors.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/ownership.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { openFiles, removeEmptyFolders } from '#cli/system/files/open.ts';
+
+/**
+ * Explain which files need review before gspot replaces them.
+ * @param paths the files with content that gspot did not write.
+ * @returns the refusal.
+ */
+function buildPreservedFilesError(paths: string[]): GspotError {
+    return new GspotError(
+        'writing',
+        `These files were not overwritten by gspot: ${paths.join(', ')}. Move them aside, then run the command again.`,
+    );
+}
 
 function writeBatch(writer: Writer, plans: WritePlan[]): void {
     for (const { path, before, after } of plans) {
@@ -34,13 +47,12 @@ export function openWriter(repositoryRoot: string): Writer {
  * @param plans one write or removal for each file.
  */
 export function writePlans(writer: Writer, plans: WritePlan[]): void {
-    const conflict = plans.find((plan) => plan.status === 'preserved');
-    if (conflict !== undefined)
-        throw new Error(
-            `These files were not overwritten by gspot: ${conflict.path}. Move them aside, then retry the command.`,
-        );
+    const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
+    if (conflicts.length > 0) throw buildPreservedFilesError(conflicts);
     writeBatch(
         writer,
         plans.filter((plan) => plan.status === 'changed'),
     );
 }
+
+export { buildPreservedFilesError };

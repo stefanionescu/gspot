@@ -1,4 +1,5 @@
 import { HOOKS_PATH } from '#cli/config/system/locations.ts';
+import { HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 
 export const COLUMN_GAP = 2;
@@ -53,7 +54,4 @@ export const INIT_TEMPLATE_DEFAULTS = {
 
 export const EDITORCONFIG_SECTION = /^\s*\[(.+)\]\s*$/u;
 
-export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([
-    'Git hooks changed. Run: gspot install',
-    'Tool dependencies need installation. Run: gspot install',
-]);
+export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE]);
