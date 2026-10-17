@@ -50,7 +50,7 @@ export function checkXcconfig(input: CheckInput): Finding[] {
  * @returns the findings.
  */
 export function checkXcodeEntitlements(input: CheckInput): Finding[] {
-    const allowed = new Set(input.scope.view.options('xcode').allowed_entitlements);
+    const allowed = new Set(input.selection.view.options('xcode').allowed_entitlements);
     return listSourcePaths(input.files, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
         const text = readCachedBytes(input.reads, path).toString('utf8');
         return text

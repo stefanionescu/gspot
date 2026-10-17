@@ -13,7 +13,7 @@ import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
  * @returns the repository-relative paths.
  */
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
-    const { selected, scope, view } = planned.scope;
+    const { selected, scope, view } = planned.selection;
     const declared = selected.flatMap((manifest) =>
         manifest.toolFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))

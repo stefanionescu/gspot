@@ -175,13 +175,14 @@ async function runTsc(
     metadataRoot: string,
     project: TypeScriptProject | undefined,
 ): Promise<CheckResult> {
-    const required = selectCheckedTsconfigOptions(session.settingsFile.settings.level, planned.scope);
-    const target = project === undefined ? join(session.root, planned.scope.scope.path, TSCONFIG_FILE) : project.path;
+    const required = selectCheckedTsconfigOptions(session.settingsFile.settings.level, planned.selection);
+    const target =
+        project === undefined ? join(session.root, planned.selection.scope.path, TSCONFIG_FILE) : project.path;
     if (
         isProjectChecked(session.reads, {
             check: planned.check.name,
             path: target,
-            scope: planned.scope.scope.path,
+            scope: planned.selection.scope.path,
             required: required,
         })
     )
@@ -194,8 +195,8 @@ async function runTsc(
     if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {
         command.push(...TSC_BUILD_COMMAND, project.path);
     } else {
-        const generatedPath = join(metadataRoot, TOOL_FILES_FOLDER, planned.scope.scope.path, TSCONFIG_FILE);
-        writeScopeTsconfig(session, planned.scope, generatedPath);
+        const generatedPath = join(metadataRoot, TOOL_FILES_FOLDER, planned.selection.scope.path, TSCONFIG_FILE);
+        writeScopeTsconfig(session, planned.selection, generatedPath);
         command.push(...TSC_PROJECT_COMMAND, generatedPath);
         appendBuildMetadata(command, project?.config.options, metadataRoot, TSCONFIG_TSBUILDINFO);
     }
@@ -329,7 +330,7 @@ function selectCheckedTsconfigOptions(level: Level, selection: ScopeSelection): 
 /**
  * Writes the tsconfig for a scope, extending its authored tsconfig.
  * @param session the repository and read cache.
- * @param scope where tsc runs, with its settings.
+ * @param selection where tsc runs, with its settings.
  * @param target where to write the tsconfig.
  * @returns the absolute path.
  */
@@ -337,7 +338,7 @@ function writeScopeTsconfig(
     session: Pick<Session, 'root' | 'installedRoot' | 'reads' | 'settingsFile'> & {
         repository: Pick<Session['repository'], 'files' | 'scopes'>;
     },
-    scope: ScopeSelection,
+    selection: ScopeSelection,
     target: string,
 ): string {
     return writeTsconfig({
@@ -345,10 +346,10 @@ function writeScopeTsconfig(
         typeRootsFolder: session.installedRoot,
         reads: session.reads,
         target: convertToPosixPath(relative(session.root, target)),
-        scope: scope.scope.path,
+        scope: selection.scope.path,
         files: session.repository.files,
         scopes: session.repository.scopes,
-        options: selectCheckedTsconfigOptions(session.settingsFile.settings.level, scope),
+        options: selectCheckedTsconfigOptions(session.settingsFile.settings.level, selection),
     });
 }
 

@@ -183,7 +183,7 @@ function buildPointerFieldEdits(
     const tools = scopes.flatMap((selection) => {
         const required = new Set(
             session.configuredChecks
-                .filter((check) => check.scope.scope.path === selection.scope.path || check.check.runs === 'once')
+                .filter((check) => check.selection.scope.path === selection.scope.path || check.check.runs === 'once')
                 .flatMap((element) => listRequiredTools(element)),
         );
         return selection.selected.flatMap((manifest) =>

@@ -50,7 +50,7 @@ test.each(ARCHITECTURE_REQUIREMENTS.flatMap((entry) => LEVELS.map((level) => ({ 
         expect(names.includes('eslint-plugin-boundaries')).toBe(boundary[level]);
         const checks = planRun(session, { stage: 'all', only: ['javascript/eslint'] });
         for (const check of checks) {
-            expect(checkCompanions(check.scope, check.check).includes('eslint-plugin-boundaries')).toBe(
+            expect(checkCompanions(check.selection, check.check).includes('eslint-plugin-boundaries')).toBe(
                 boundary[level],
             );
             expect(listRequiredTools(check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
@@ -74,9 +74,9 @@ describe.each([...COVERAGE_LIMITS])(
         });
         afterAll(() => resources.disposeAsync());
         test.each(['', 'app'])('scope %s needs the provider and lists it as a companion', (scope) => {
-            const check = checks.find((planned) => planned.scope.scope.path === scope)!;
+            const check = checks.find((planned) => planned.selection.scope.path === scope)!;
             expect(listRequiredTools(check).includes(provider)).toBe(lines !== 0);
-            expect(checkCompanions(check.scope, check.check, check.check.command)).toContain(provider);
+            expect(checkCompanions(check.selection, check.check, check.check.command)).toContain(provider);
         });
     },
 );

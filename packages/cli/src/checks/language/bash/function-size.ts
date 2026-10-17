@@ -11,7 +11,7 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
  */
 export async function checkBashFunctionSize(input: CheckInput): Promise<Finding[]> {
     const scripts = await readScripts(input);
-    const limit = input.scope.view.limit('function_lines', 'bash');
+    const limit = input.selection.view.limit('function_lines', 'bash');
     const lines = scripts.flatMap((file) =>
         file.functions.flatMap((entry) => {
             const count = listCodeLines(entry.body).length;
@@ -27,7 +27,7 @@ export async function checkBashFunctionSize(input: CheckInput): Promise<Finding[
         }),
     );
     const counted = COUNT_LIMITS.flatMap((rule) => {
-        const limit = input.scope.view.limit(rule.limit, 'bash');
+        const limit = input.selection.view.limit(rule.limit, 'bash');
         return scripts.flatMap((file) =>
             file.functions.flatMap((entry) => {
                 const count = entry[rule.property];

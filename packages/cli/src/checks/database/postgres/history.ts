@@ -97,7 +97,7 @@ export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Fi
  * @returns the findings.
  */
 export async function checkPostgresEditedMigrations(input: CheckInput): Promise<Finding[]> {
-    const through = input.scope.view.options('postgres')['frozen_through'];
+    const through = input.selection.view.options('postgres')['frozen_through'];
     if (through === FROZEN_NONE) return [];
     const { migrations, findings: syntax } = await readMigrations(input);
     if (syntax.length > 0) return syntax;

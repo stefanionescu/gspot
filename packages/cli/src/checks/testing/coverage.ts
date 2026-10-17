@@ -72,7 +72,7 @@ async function measureCoverage(input: CheckInput): Promise<CoverageReport> {
     const plan = buildPlan(input, { purpose: 'coverage' });
     const prepared = prepareBuild(input, plan.folder);
     using files = prepared.files;
-    const cwd = join(prepared.source, input.scope.scope.path);
+    const cwd = join(prepared.source, input.selection.scope.path);
     files.deleteTree(COVERAGE_BUNDLE);
     return plan.commandArguments[0] === SWIFT_PROGRAM
         ? await measurePackageCoverage(input, plan, files, cwd)
@@ -156,15 +156,15 @@ function listCoverageShortfalls(
  * @returns the findings.
  */
 async function checkSwiftTestsCoverage(input: CheckInput): Promise<Finding[]> {
-    const settings = input.scope.view.options('coverage');
+    const settings = input.selection.view.options('coverage');
     const report = await measureCoverage(input);
     return listCoverageShortfalls(report, settings).map((text) =>
         buildFinding(
             input,
             {
                 file:
-                    input.scope.view.options('swift').xcode_project ??
-                    posix.join(input.scope.scope.path, PACKAGE_SWIFT),
+                    input.selection.view.options('swift').xcode_project ??
+                    posix.join(input.selection.scope.path, PACKAGE_SWIFT),
                 line: 1,
             },
             'coverage',

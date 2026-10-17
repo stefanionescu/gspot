@@ -55,7 +55,7 @@ function buildCheckInput(
             (paths === undefined || paths.includes(file.path)),
     );
     return {
-        ...checkInput(session, { scope, check, files }),
+        ...checkInput(session, { selection: scope, check, files }),
         repositoryFiles: session.repository.files,
         ...(options.resources === undefined ? {} : { resources: options.resources }),
     };
@@ -101,10 +101,10 @@ async function checkFindings(
     resources.use(session.resources);
     const input = buildCheckInput(session, checkId, { ...options, resources: options.resources ?? resources });
     const planned = session.configuredChecks.find(
-        (entry) => entry.check.name === checkId && entry.scope.scope.path === input.scope.scope.path,
+        (entry) => entry.check.name === checkId && entry.selection.scope.path === input.selection.scope.path,
     );
     if (planned === undefined)
-        throw new Error(`The sandbox does not plan ${checkId} in ${input.scope.scope.path || 'the root'}.`);
+        throw new Error(`The sandbox does not plan ${checkId} in ${input.selection.scope.path || 'the root'}.`);
     const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
     const implementation = implementations[checkId];
     const run = selectCheckRunner(input, implementation);

@@ -48,7 +48,7 @@ export async function checkRowLevelSecurity(input: CheckInput): Promise<Finding[
     const { migrations, findings: syntax } = await readMigrations(input);
     if (syntax.length > 0) return syntax;
     const schema = buildSchema(migrations);
-    const schemas = new Set(input.scope.view.options('postgres')['client_schemas']);
+    const schemas = new Set(input.selection.view.options('postgres')['client_schemas']);
     return schema.tables
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))) && !schema.secured.has(table))
@@ -73,7 +73,7 @@ export async function checkPostgresGrants(input: CheckInput): Promise<Finding[]>
     if (syntax.length > 0) return syntax;
     const frozen = selectFrozenMigrations(
         migrations.map(({ path }) => path),
-        input.scope.view.options('postgres').frozen_through,
+        input.selection.view.options('postgres').frozen_through,
     );
     return checkStatements(
         input,

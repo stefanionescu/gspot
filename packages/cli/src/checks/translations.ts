@@ -33,7 +33,7 @@ function validateMessage(text: string): string | undefined {
  * @returns the findings.
  */
 function checkTranslationMessages(input: CheckInput): Finding[] {
-    const options = input.scope.view.options('translations');
+    const options = input.selection.view.options('translations');
     const folder = options.messages_folder as string;
     const base = options.base_locale;
     const files = input.files

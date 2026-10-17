@@ -83,7 +83,7 @@ async function runSwiftBuild(input: CheckInput, plan: SwiftBuildPlan): Promise<S
         using files = prepared.files;
         const { source } = prepared;
         if (plan.scratch !== undefined) files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
-        const cwd = join(source, input.scope.scope.path);
+        const cwd = join(source, input.selection.scope.path);
         const result = await runCheckTool(input, plan.commandArguments, { cwd });
         // Match SwiftLint paths and expose response-file sources in the compiler log.
         const output = `${result.stdout}\n${result.stderr}`
@@ -123,7 +123,7 @@ export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[
     const plan = buildPlan(input, { purpose: 'analyze' });
     const build = await runSwiftBuild(input, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const toolFile = join(input.root, TOOL_FILES_FOLDER, input.scope.scope.path, SWIFTLINT_YML);
+    const toolFile = join(input.root, TOOL_FILES_FOLDER, input.selection.scope.path, SWIFTLINT_YML);
     const commandArguments = [
         ...SWIFTLINT_ANALYZE_COMMAND,
         SWIFTLINT_CONFIG_FLAG,
@@ -132,7 +132,7 @@ export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[
         plan.log,
     ];
     const { source } = build;
-    const result = await runCheckTool(input, commandArguments, { cwd: join(source, input.scope.scope.path) });
+    const result = await runCheckTool(input, commandArguments, { cwd: join(source, input.selection.scope.path) });
     const output = `${result.stdout}\n${result.stderr}`.replaceAll(source, input.root);
     const found = parseOutputFindings(input, output, { levels: REPORTED_LEVELS, defaultRule: 'analyzer' });
     return assertToolFindings(result, found, 'swiftlint');
@@ -145,12 +145,12 @@ export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[
  */
 export async function checkSwiftPeriphery(input: CheckInput): Promise<Finding[]> {
     const folder = getScopeBuildFolder(input, 'periphery');
-    const toolFile = join(input.root, TOOL_FILES_FOLDER, input.scope.scope.path, PERIPHERY_YML);
+    const toolFile = join(input.root, TOOL_FILES_FOLDER, input.selection.scope.path, PERIPHERY_YML);
     const commandArguments = [...PERIPHERY_COMMAND, toolFile];
     const prepared = prepareBuild(input, folder);
     using files = prepared.files;
     const source = files.readRealPath(BUILD_SOURCE_FOLDER);
-    const result = await runCheckTool(input, commandArguments, { cwd: join(source, input.scope.scope.path) });
+    const result = await runCheckTool(input, commandArguments, { cwd: join(source, input.selection.scope.path) });
     const output = `${result.stdout}\n${result.stderr}`.replaceAll(source, input.root);
     const found = parseOutputFindings(input, output, { levels: REPORTED_LEVELS, defaultRule: 'unused' });
     return assertToolFindings(result, found, 'periphery');
@@ -163,17 +163,17 @@ export async function checkSwiftPeriphery(input: CheckInput): Promise<Finding[]>
  */
 export function listSwiftlintToolFiles(input: CheckInput): string[] {
     const paths = [
-        posix.join(input.scope.scope.path, SWIFTLINT_CONFIG_FILE),
+        posix.join(input.selection.scope.path, SWIFTLINT_CONFIG_FILE),
         ...input.manifests
             .values()
             .flatMap((manifest) => manifest.toolFiles)
             .filter((toolFile) => !toolFile.fragment && toolFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
-            .map((toolFile) => buildScopeTarget(input.scope.scope.path, toolFile, input.toolFiles().targets)),
+            .map((toolFile) => buildScopeTarget(input.selection.scope.path, toolFile, input.toolFiles().targets)),
     ];
     for (const file of input.files) {
         for (
             let folder = posix.dirname(file.path);
-            folder !== '.' && folder !== input.scope.scope.path;
+            folder !== '.' && folder !== input.selection.scope.path;
             folder = posix.dirname(folder)
         ) {
             const path = posix.join(folder, SWIFTLINT_CONFIG_FILE);

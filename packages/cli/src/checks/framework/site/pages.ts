@@ -111,7 +111,7 @@ export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]>
             stdin: JSON.stringify({
                 paths,
                 origin: location === undefined ? undefined : new URL(location).origin,
-                skipped: input.scope.view.options('docs').allowed_urls,
+                skipped: input.selection.view.options('docs').allowed_urls,
             }),
         },
     );
@@ -219,7 +219,7 @@ export async function checkSitePurgecss(input: CheckInput): Promise<Finding[]> {
  * @returns one finding per exceeded limit.
  */
 export async function checkSiteSize(input: CheckInput): Promise<Finding[]> {
-    const limits = input.scope.view.options('site').size_limit;
+    const limits = input.selection.view.options('site').size_limit;
     const build = await getSuccessfulBuild(input);
     const files = listBuiltFiles(build.folder);
     return limits.flatMap((limit) => {
@@ -253,7 +253,7 @@ export async function checkSiteSitemap(input: CheckInput): Promise<Finding[]> {
     if (sitemapFile === undefined) return [];
     const urls = readSitemapUrls(build.folder, files);
     const listed = new Set(urls.flatMap((url) => listCandidatePages(new URL(url).pathname)));
-    const isLeftOut = buildPathMatcher(input.scope.view.options('site').allowed_unlisted_pages);
+    const isLeftOut = buildPathMatcher(input.selection.view.options('site').allowed_unlisted_pages);
     const missing = urls
         .filter((url) => listCandidatePages(new URL(url).pathname).every((page) => !files.has(page)))
         .map((url) =>

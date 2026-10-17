@@ -65,7 +65,7 @@ export type CheckCandidate = { check: CheckDeclaration; manifest?: Manifest };
 /** What planning one scope needs. */
 export type PlanInputs = {
     session: Session;
-    scope: ScopeSelection;
+    selection: ScopeSelection;
     options: PlanOptions;
     platform: string;
     narrow: Set<string> | undefined;
@@ -83,7 +83,7 @@ export type ToolIgnore = { file: string; matches: (path: string) => boolean };
 export type PlannedCheck = {
     base?: string;
     commits?: string[];
-    scope: ScopeSelection;
+    selection: ScopeSelection;
     check: CheckDeclaration;
     manifest?: Manifest;
     files: TrackedFile[];

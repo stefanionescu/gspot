@@ -41,13 +41,13 @@ import {
 
 function listGeneratorPaths(input: CheckInput): string[] {
     const paths: string[] = [];
-    const generatorOutputs = input.scope.selected.flatMap((manifest) =>
+    const generatorOutputs = input.selection.selected.flatMap((manifest) =>
         manifest.checks.flatMap((check) => check.generator_outputs ?? []),
     );
     for (const output of generatorOutputs) {
         if (output.kind === 'pattern') continue;
         const path = output.path.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-            const value = input.scope.view.settings[name];
+            const value = input.selection.view.settings[name];
             return typeof value === 'string' ? value : '';
         });
         if (path !== '') paths.push(path);
@@ -59,7 +59,8 @@ function listKnownPaths(input: CheckInput): Set<string> {
     const known = includeParentFolders(input.repositoryFiles.map((file) => file.path));
     for (const path of includeParentFolders([...input.generatedPaths()])) known.add(path);
     for (const path of includeParentFolders([...OPTIONAL_GENERATED_PATHS])) known.add(path);
-    for (const toolFile of input.scope.selected.flatMap((manifest) => manifest.toolFiles)) known.add(toolFile.target);
+    for (const toolFile of input.selection.selected.flatMap((manifest) => manifest.toolFiles))
+        known.add(toolFile.target);
     for (const path of listGeneratorPaths(input)) known.add(path);
     const ignored = input.repositoryFiles
         .filter((file) => posix.basename(file.path) === '.gitignore')
@@ -246,18 +247,18 @@ export function checkDocsMissingPaths(input: CheckInput): Finding[] {
  */
 export function checkDocsRequiredFiles(input: CheckInput): Finding[] {
     const findings: Finding[] = [];
-    const readme = joinScope(input.scope.scope.path, README_FILE);
+    const readme = joinScope(input.selection.scope.path, README_FILE);
     if (statSync(join(input.root, readme), { throwIfNoEntry: false }) === undefined)
         findings.push(
             buildFinding(
                 input,
                 { file: readme },
                 'missing-readme',
-                `The scope ${formatScopeLabel(input.scope.scope.path)} has no README.md.`,
+                `The scope ${formatScopeLabel(input.selection.scope.path)} has no README.md.`,
             ),
         );
     if (
-        input.scope.scope.path === '' &&
+        input.selection.scope.path === '' &&
         !readdirSync(input.root).some((name) => LICENSE_FILE.test(name) && statSync(join(input.root, name)).isFile())
     )
         findings.push(buildFinding(input, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'));

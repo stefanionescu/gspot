@@ -13,7 +13,7 @@ import { listCodeFiles, buildFolderTree, isDependencyFolder } from '#cli/checks/
 export function checkLoneFiles(input: CheckInput): Finding[] {
     const files = listCodeFiles(input);
     const tree = buildFolderTree(input.files);
-    const extensions = filterSourceConfigurations(input.scope.selected).flatMap(
+    const extensions = filterSourceConfigurations(input.selection.selected).flatMap(
         (manifest) => manifest.files.extensions,
     );
     const checked = new Set(files.map((file) => extractParentFolder(file.path)));

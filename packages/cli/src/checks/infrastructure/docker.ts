@@ -107,7 +107,7 @@ function readComposeDocuments(input: CheckInput): ComposeDocuments {
 async function scanImage(input: CheckInput, image: string, path: string): Promise<Finding[]> {
     const result = await runCheckTool(
         input,
-        [...TRIVY_IMAGE_COMMAND, join(input.root, TOOL_FILES_FOLDER, input.scope.scope.path, TRIVY_YML), image],
+        [...TRIVY_IMAGE_COMMAND, join(input.root, TOOL_FILES_FOLDER, input.selection.scope.path, TRIVY_YML), image],
         { cwd: input.root },
     );
     if (result.code !== 0 && result.code !== TRIVY_EXIT) {
@@ -245,7 +245,7 @@ export async function checkDockerCompose(session: Session, planned: PlannedCheck
                 part === FILE_PLACEHOLDER
                     ? [
                           ...before.flatMap(({ path }) => [
-                              posix.relative(planned.scope.scope.path, path),
+                              posix.relative(planned.selection.scope.path, path),
                               COMPOSE_FILE_FLAG,
                           ]),
                           part,

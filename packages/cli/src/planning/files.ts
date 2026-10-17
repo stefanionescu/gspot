@@ -19,7 +19,7 @@ function listScopeFiles(context: PlanInputs, scopePath: string, runs: CheckDecla
 // List the files of a project-wide check: the scope tree, when the check files match anything in it.
 function listProjectCheckFiles(context: PlanInputs, entry: CheckCandidate, scopePath: string): TrackedFile[] {
     const { check, manifest } = entry;
-    const { scope } = context;
+    const { selection: scope } = context;
     const owners = check.files ?? (manifest?.configuration.group === 'language' ? manifest.files : undefined);
     const candidates = listScopeFiles(context, scopePath, check.runs);
     const applicationInputs =
@@ -38,7 +38,7 @@ function listProjectCheckFiles(context: PlanInputs, entry: CheckCandidate, scope
 
 // Per-file checks select their owners. Project checks keep all inputs after a declared trigger matches.
 function listCoveredFiles(context: PlanInputs, entry: CheckCandidate, scopePath: string): TrackedFile[] {
-    const { session, scope } = context;
+    const { session, selection: scope } = context;
     const { check, manifest } = entry;
     if (check.runs !== 'files') return listProjectCheckFiles(context, entry, scopePath);
     if (!manifest)
@@ -82,7 +82,7 @@ function filterNarrowedFiles(context: PlanInputs, entry: CheckCandidate, files: 
 function listDeletedTriggers(context: PlanInputs, entry: CheckCandidate, scopePath: string): string[] {
     const { check, manifest } = entry;
     if (check.runs === 'files' || context.narrow === undefined) return [];
-    const { session, children, scope } = context;
+    const { session, children, selection: scope } = context;
     const readable = new Set(session.repository.files.map((file) => file.path));
     const paths = [...context.narrow].filter(
         (path) =>
@@ -109,12 +109,12 @@ function listDeletedTriggers(context: PlanInputs, entry: CheckCandidate, scopePa
  * List the scopes nested inside a scope. Their files belong to them, not to it.
  *
  * @param session the scopes of this run.
- * @param scope the parent selection.
+ * @param selection the parent selection.
  *
  * @returns the child scope paths.
  */
-export function listChildScopes(session: Pick<Session, 'scopes'>, scope: ScopeSelection): string[] {
-    const own = scope.scope.path;
+export function listChildScopes(session: Pick<Session, 'scopes'>, selection: ScopeSelection): string[] {
+    const own = selection.scope.path;
     return session.scopes
         .map((entry) => entry.scope.path)
         .filter((path) => path !== '' && path !== own && isInScope(path, own));
@@ -153,10 +153,10 @@ export function selectCheckFiles(
     context: PlanInputs,
     entry: CheckCandidate,
 ): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'> {
-    const { scope, children } = context;
+    const { selection, children } = context;
     const { check, manifest } = entry;
     const isRootCheck = check.runs === 'once' || check.runs === 'history';
-    const scopePath = isRootCheck ? '' : scope.scope.path;
+    const scopePath = isRootCheck ? '' : selection.scope.path;
     const triggerPaths = listDeletedTriggers(context, entry, scopePath);
     const keepsChildScopes = check.runs !== 'files' || isRootOnlyCheck(manifest, check);
     let files =
@@ -165,8 +165,8 @@ export function selectCheckFiles(
             : listScopeFiles(context, scopePath, check.runs);
     if (!keepsChildScopes) files = files.filter((file) => isOutsideChildren(file.path, children));
     if (check.runs === 'files' && triggerPaths.length === 0)
-        return { ...stripIgnoredFiles(filterNarrowedFiles(context, entry, files), check, scope), triggerPaths };
-    const selected = stripIgnoredFiles(files, check, scope);
+        return { ...stripIgnoredFiles(filterNarrowedFiles(context, entry, files), check, selection), triggerPaths };
+    const selected = stripIgnoredFiles(files, check, selection);
     return { ...selected, triggerPaths };
 }
 

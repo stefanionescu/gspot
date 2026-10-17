@@ -10,7 +10,7 @@ import { readTsconfig, buildCompilerHost } from '#cli/parsers/tsconfig.ts';
 import { EXPORTED_FUNCTION_EXTENSIONS } from '#cli/config/checks/general/structure.ts';
 
 function buildExportProgram(input: CheckInput, paths: string[]): ts.Program {
-    const scope = input.scope.scope.path;
+    const scope = input.selection.scope.path;
     const config =
         readTsconfig(input.root, join(input.root, scope, 'tsconfig.json'), input.reads) ??
         readTsconfig(input.root, join(input.root, scope, 'jsconfig.json'), input.reads);

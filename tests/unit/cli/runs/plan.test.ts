@@ -92,9 +92,9 @@ reason = "The API check is provided by its own native build pipeline."
         });
         const session = await openSession(sandbox.path);
         const planned = planRun(session, { stage: 'all', only: ['nextjs/tsc', 'typescript/tsc'] });
-        const scopes = planned.filter((check) => ['api', 'web'].includes(check.scope.scope.path));
+        const scopes = planned.filter((check) => ['api', 'web'].includes(check.selection.scope.path));
         const results = new Map(
-            scopes.map((check) => [`${check.scope.scope.path}:${check.check.name}`, check.skip?.cause]),
+            scopes.map((check) => [`${check.selection.scope.path}:${check.check.name}`, check.skip?.cause]),
         );
         expect(results).toStrictEqual(
             new Map([
@@ -214,7 +214,7 @@ stage = "push"
     expect(planned.filter((check) => check.check.runs === 'history').map((check) => check.check.name)).toStrictEqual(
         names,
     );
-    expect(planned.map((check) => check.scope.scope.path)).toStrictEqual([...names.map(() => ''), '']);
+    expect(planned.map((check) => check.selection.scope.path)).toStrictEqual([...names.map(() => ''), '']);
     expect(planned.map((check) => isActive(check))).toStrictEqual([...names.map(() => true), false]);
     expect(
         planRun(session, { stage: 'push', only: names, staged: [], commits: [] }).map((check) => isActive(check)),
@@ -261,7 +261,7 @@ test('Expo Doctor is planned only in the scope that selects Expo', async () => {
     expect(
         listConfiguredChecks(session)
             .filter((check) => check.check.name === 'expo/expo-doctor')
-            .map((check) => check.scope.scope.path),
+            .map((check) => check.selection.scope.path),
     ).toStrictEqual(['expo-app']);
 });
 

@@ -88,7 +88,7 @@ export type CheckInput = {
     index: Repository['index'];
     installedRoot: string;
     settingsFile: SettingsFile;
-    scope: ScopeSelection;
+    selection: ScopeSelection;
     manifests: Map<string, Manifest>;
     inspections: ToolSearch['inspections'];
     miseBinPaths: string[];

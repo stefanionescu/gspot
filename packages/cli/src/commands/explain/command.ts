@@ -153,8 +153,10 @@ function formatUnknownSubject(session: Session | undefined, subject: string, rea
     const candidates = [
         ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks), reads),
         ...readManifests(reads).keys(),
-        ...(session?.scopes.flatMap((scope) =>
-            listSettings(scope.known, session.settingsFile.settings, scope.scope.path).map((setting) => setting.key),
+        ...(session?.scopes.flatMap((selection) =>
+            listSettings(selection.known, session.settingsFile.settings, selection.scope.path).map(
+                (setting) => setting.key,
+            ),
         ) ?? []),
     ];
     const near = selectSimilarNames(subject, [...new Set(candidates)]);

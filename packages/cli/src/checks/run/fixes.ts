@@ -42,7 +42,7 @@ async function runFix(session: Session, planned: PlannedCheck, prepared: Prepare
                 ...prepared,
                 cancelSignal: session.cancelSignal,
             },
-            planned.scope.view,
+            planned.selection.view,
             planned.check.name,
         );
         note = failure?.note ?? fixFailure(planned, result);

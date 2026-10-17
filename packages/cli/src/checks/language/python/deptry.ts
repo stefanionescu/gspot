@@ -32,17 +32,17 @@ const deptrySchema = z.object({
  * @returns the check result.
  */
 export async function checkDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const text = readText(session.root, posix.join(planned.scope.scope.path, PYPROJECT_TOML));
+    const text = readText(session.root, posix.join(planned.selection.scope.path, PYPROJECT_TOML));
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
     return await runCheckCommand(session, planned, {
-        command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.scope.path), [
+        command: buildUvRunCommand(planned.selection, join(session.root, planned.selection.scope.path), [
             ...DEPTRY_COMMAND,
             ...[
                 String.raw`(^|.*[/\\])${RegExp.escape(DOT_GSPOT)}([/\\]|$)`,
-                ...listChildScopes(session, planned.scope).map((path) => {
+                ...listChildScopes(session, planned.selection).map((path) => {
                     const child = posix
-                        .relative(planned.scope.scope.path, path)
+                        .relative(planned.selection.scope.path, path)
                         .split('/')
                         .map((part) => RegExp.escape(part))
                         .join(String.raw`[/\\]`);

@@ -58,7 +58,7 @@ test("a built-in check sees its scope's files, and a once-per-repository check a
         only: ['jest/coverage', 'docs/missing-paths'],
     });
     const project = planned.find(
-        (entry) => entry.check.name === 'jest/coverage' && entry.scope.scope.path === 'apps/web',
+        (entry) => entry.check.name === 'jest/coverage' && entry.selection.scope.path === 'apps/web',
     )!;
     const scopeInput = checkInput(session, project);
     const rootCheck = planned.find((entry) => entry.check.name === 'docs/missing-paths')!;

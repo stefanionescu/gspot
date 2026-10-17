@@ -71,14 +71,14 @@ async function readMigrations(input: CheckInput): Promise<MigrationRead> {
  * @returns the root-relative paths.
  */
 function listMigrationPaths(input: CheckInput): string[] {
-    const migrations = input.scope.selected.flatMap((manifest) =>
+    const migrations = input.selection.selected.flatMap((manifest) =>
         manifest.checks
             .filter((check) => check.name === 'postgres/squawk')
             .flatMap((check) =>
                 listCoveredFiles(check.files ?? manifest.files, input.files, {
-                    selected: input.scope.selected,
-                    scope: input.scope.scope.path,
-                    view: input.scope.view,
+                    selected: input.selection.selected,
+                    scope: input.selection.scope.path,
+                    view: input.selection.view,
                 }),
             ),
     );

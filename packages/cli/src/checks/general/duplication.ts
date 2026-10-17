@@ -52,11 +52,11 @@ export async function checkJscpd(input: CheckInput): Promise<Finding[]> {
     const work = workFolder.path;
     const owned = [
         ...new Set(
-            filterSourceConfigurations(input.scope.selected).flatMap((manifest) =>
+            filterSourceConfigurations(input.selection.selected).flatMap((manifest) =>
                 listCoveredFiles(manifest.files, input.files, {
-                    selected: input.scope.selected,
-                    scope: input.scope.scope.path,
-                    view: input.scope.view,
+                    selected: input.selection.selected,
+                    scope: input.selection.scope.path,
+                    view: input.selection.view,
                 })
                     .filter((file) => file.kind === 'source')
                     .map((file) => file.path),

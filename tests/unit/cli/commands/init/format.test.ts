@@ -47,11 +47,11 @@ test.each([...SCOPE_FORMAT_CASES])(
             text,
         });
         expect(
-            session.scopes.map((scope) => [
-                scope.scope.path,
-                scope.view.options('format').indent_width,
-                scope.view.options('format').print_width,
-                scope.view.options('format').quotes,
+            session.scopes.map((selection) => [
+                selection.scope.path,
+                selection.view.options('format').indent_width,
+                selection.view.options('format').print_width,
+                selection.view.options('format').quotes,
             ]),
         ).toEqual(expected.map((row) => [...row]));
         for (const [path, source] of Object.entries(SCOPE_FORMAT_FILES))

@@ -57,7 +57,7 @@ function buildGeneratorInputs(input: CheckInput):
       }
     | undefined {
     const planned = input;
-    const values = buildCommandSubstitutions(input, input, join(input.root, input.scope.scope.path));
+    const values = buildCommandSubstitutions(input, input, join(input.root, input.selection.scope.path));
     const declaration = input.check.command ?? [];
     const command = expandCommand(input, planned, declaration, values);
     if (command.length === 0) return undefined;
@@ -65,11 +65,11 @@ function buildGeneratorInputs(input: CheckInput):
     const declared = (input.check.generator_outputs ?? []).flatMap((entry): GeneratorOutput[] => {
         const { kind, path: original } = entry;
         let path = replacePlaceholders(input, planned, original, values);
-        if (kind === 'pattern' && original.includes('{setting:') && input.scope.scope.path !== '') {
+        if (kind === 'pattern' && original.includes('{setting:') && input.selection.scope.path !== '') {
             const prefix = path.startsWith('**/') ? '**/' : '';
             const scopePath = path.slice(prefix.length);
-            if (scopePath.startsWith(`${input.scope.scope.path}/`))
-                path = `${prefix}${scopePath.slice(input.scope.scope.path.length + 1)}`;
+            if (scopePath.startsWith(`${input.selection.scope.path}/`))
+                path = `${prefix}${scopePath.slice(input.selection.scope.path.length + 1)}`;
         }
         return path === '' ? [] : [{ kind, path }];
     });
@@ -79,7 +79,7 @@ function buildGeneratorInputs(input: CheckInput):
     const patterns = declared.filter((entry) => entry.kind === 'pattern').map((entry) => entry.path);
     const isMatched = buildPathMatcher(patterns);
     const selected = input.files
-        .map((file) => posix.relative(input.scope.scope.path, file.path))
+        .map((file) => posix.relative(input.selection.scope.path, file.path))
         .filter((path) => isMatched(path));
 
     if (targets.length === 0 && selected.length === 0) return undefined;
@@ -104,8 +104,8 @@ export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Fin
             targets.map((entry) => entry.path),
         ),
     );
-    const cwd = join(folder.path, input.scope.scope.path);
-    const before = readOutputContents(folder.path, input.scope.scope.path, patterns, targets);
+    const cwd = join(folder.path, input.selection.scope.path);
+    const before = readOutputContents(folder.path, input.selection.scope.path, patterns, targets);
     const commandArguments = expandCommand({ ...input, root: folder.path }, planned, declaration, {
         ...values,
         root: folder.path,
@@ -117,7 +117,7 @@ export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Fin
         if (result.code !== 0) throw new Error(`The generator command failed: ${formatOutputTail(result)}`);
         stdout = result.stdout;
     }
-    const after = readOutputContents(folder.path, input.scope.scope.path, patterns, targets);
+    const after = readOutputContents(folder.path, input.selection.scope.path, patterns, targets);
     const trimmed = new Set(targets.filter((entry) => entry.kind === 'stdout').map((entry) => entry.path));
     for (const path of trimmed) after.set(path, Buffer.from(stdout.trim()));
     return [...new Set([...before.keys(), ...after.keys()])]

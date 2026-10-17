@@ -166,7 +166,7 @@ export function namingSettingsFor(text: string, scope = ''): NamingSettings {
     const selected = selectForScope(settings, scope, readManifests(reads));
     const view = buildScopeView(buildKnownSettings(selected), settings, selected, scope);
     return readNamingSettings({
-        scope: { view, scope: { path: scope }, selected },
+        selection: { view, scope: { path: scope }, selected },
         settingsFile: { settings },
         reads,
     });

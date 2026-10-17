@@ -38,7 +38,7 @@ export function readScripts(input: CheckInput): Promise<ScriptFile[]> {
     const files = input.files.filter(
         (file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG) && !isInGspotFolder(file.path),
     );
-    const key = JSON.stringify([input.scope.scope.path, files.map((file) => file.path)]);
+    const key = JSON.stringify([input.selection.scope.path, files.map((file) => file.path)]);
     return getCachedMapValue(input.reads, SCRIPT_MEMO, key, async () => {
         const scripts: ScriptFile[] = [];
         for (const file of files) scripts.push(await readScript(input, file));

@@ -79,16 +79,18 @@ export function groupFragmentSelectors(
     reexports: Settings['structure']['reexports'],
 ): SelectorGroup[] {
     const scopePaths = scopes.map((entry) => entry.scope.path);
-    return scopes.flatMap((scope) => {
-        const prefix = escapeGlob(scope.scope.path);
-        const declarations = scope.selected.flatMap((manifest) => (isAll ? manifest.eslint.selectors : []));
+    return scopes.flatMap((selection) => {
+        const prefix = escapeGlob(selection.scope.path);
+        const declarations = selection.selected.flatMap((manifest) => (isAll ? manifest.eslint.selectors : []));
         const applied: SelectorPaths[] = [
             ...new Map(declarations.map((entry) => [entry.selector, entry])).values(),
         ].map((entry) => {
             const files =
                 entry.role === undefined
                     ? undefined
-                    : Object.entries(scope.view.roles).flatMap(([name, paths]) => (name === entry.role ? paths : []));
+                    : Object.entries(selection.view.roles).flatMap(([name, paths]) =>
+                          name === entry.role ? paths : [],
+                      );
             return {
                 selector: entry.selector,
                 message: entry.message,
@@ -106,9 +108,9 @@ export function groupFragmentSelectors(
                 })),
             );
         }
-        const owners = scope.view.roles.environment_readers;
+        const owners = selection.view.roles.environment_readers;
         if (isAll && owners.length > 0) applied.push({ ...ENVIRONMENT_SELECTOR, except: owners });
-        const styles = scope.view.values[ESLINT_SETTINGS_TABLE]?.import_extension;
+        const styles = selection.view.values[ESLINT_SETTINGS_TABLE]?.import_extension;
         if (styles !== undefined)
             applied.push({
                 ...ALIAS_IMPORT_SELECTORS[styles === 'extensionless' ? 'never' : 'always'],
@@ -116,8 +118,8 @@ export function groupFragmentSelectors(
             });
         return groupSelectors(applied).map((group) => ({
             ...group,
-            scope: scope.scope.path,
-            ignoredScopes: listNestedScopes(scopePaths, scope.scope.path),
+            scope: selection.scope.path,
+            ignoredScopes: listNestedScopes(scopePaths, selection.scope.path),
         }));
     });
 }

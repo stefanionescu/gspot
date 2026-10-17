@@ -131,7 +131,7 @@ function stripDeclaration(code: string): string {
  * @returns the findings.
  */
 export async function checkBashScriptLayout(input: CheckInput): Promise<Finding[]> {
-    const isEnvironmentReader = buildPathMatcher(input.scope.view.roles[ENVIRONMENT_READERS_ROLE]);
+    const isEnvironmentReader = buildPathMatcher(input.selection.view.roles[ENVIRONMENT_READERS_ROLE]);
     const scripts = await readScripts(input);
     return scripts
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))

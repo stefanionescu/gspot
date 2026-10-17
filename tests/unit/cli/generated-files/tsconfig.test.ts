@@ -55,13 +55,13 @@ test('projects without tsconfig.json get required options and framework options 
     });
     const session = await openSession(sandbox.path);
     const projects = await Promise.all(
-        session.scopes.map(async (scope) => {
+        session.scopes.map(async (selection) => {
             const path = writeScopeTsconfig(
                 session,
-                scope,
-                join(sandbox.path, '.gspot/state', scope.scope.path, 'tsconfig.json'),
+                selection,
+                join(sandbox.path, '.gspot/state', selection.scope.path, 'tsconfig.json'),
             );
-            return { scope: scope.scope.path, config: parseJsonFile(path, await readFile(path, 'utf8')) };
+            return { scope: selection.scope.path, config: parseJsonFile(path, await readFile(path, 'utf8')) };
         }),
     );
     for (const { config } of projects) {

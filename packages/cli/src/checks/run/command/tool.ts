@@ -120,10 +120,10 @@ export async function runCheckTool(
         commandArguments,
         {
             ...options,
-            env: buildCompanionEnvironment(input, checkCompanions(input.scope, input.check), env),
+            env: buildCompanionEnvironment(input, checkCompanions(input.selection, input.check), env),
             cancelSignal: input.cancelSignal,
         },
-        input.scope.view,
+        input.selection.view,
         name,
     );
     if (failure?.status === 'missing') throw new GspotError('tool', failure.note);

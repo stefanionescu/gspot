@@ -117,7 +117,7 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
         if (written === undefined) continue;
         const expected = buildJsconfig({
             session,
-            selection: planned.scope,
+            selection: planned.selection,
             manifest: planned.manifest as Manifest,
             scopes: session.scopes,
             files: session.repository.files,
@@ -140,7 +140,7 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
 export async function checkTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
         session.root,
-        planned.scope.scope.path,
+        planned.selection.scope.path,
         listCoveredInputs(session, planned)
             .filter((file) => file.tags.includes('typescript'))
             .map((file) => file.path),
@@ -189,7 +189,7 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
  * @returns the check result.
  */
 export async function checkJavascriptTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const scope = planned.scope.scope.path;
+    const scope = planned.selection.scope.path;
     if (listCoveredInputs(session, planned).length === 0) return { ...buildBaseResult(planned, session), fileCount: 0 };
     const target = findJavascriptProject(session, planned);
     const generated = readTsconfig(session.root, join(session.root, target), session.reads);

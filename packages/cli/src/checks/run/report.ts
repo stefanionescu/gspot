@@ -26,7 +26,7 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
 export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 'scopes'>): CheckResult {
     return {
         check: planned.check.name,
-        scope: planned.scope.scope.path,
+        scope: planned.selection.scope.path,
         status: 'passed',
         fileCount: listCoveredInputs(session, planned).length,
         duration: 0,

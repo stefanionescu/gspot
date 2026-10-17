@@ -103,13 +103,13 @@ function openBuildCache(folder: string): Files {
  * @param purpose the tool whose outputs stay separate.
  * @returns the cache folder path.
  */
-export function getScopeBuildFolder(input: Pick<CheckInput, 'root' | 'scope'>, purpose: SwiftBuildPurpose): string {
+export function getScopeBuildFolder(input: Pick<CheckInput, 'root' | 'selection'>, purpose: SwiftBuildPurpose): string {
     return join(
         computeBuildFolder(input.root),
         SWIFT_BUILD_FOLDER,
-        input.scope.scope.path === ''
+        input.selection.scope.path === ''
             ? ROOT_BUILD_FOLDER
-            : `${SCOPE_FOLDER_PREFIX}${Buffer.from(input.scope.scope.path).toString('hex')}`,
+            : `${SCOPE_FOLDER_PREFIX}${Buffer.from(input.selection.scope.path).toString('hex')}`,
         purpose,
     );
 }
@@ -131,9 +131,9 @@ export function buildPlan(
         xcode_project: project,
         xcode_scheme: scheme,
         xcode_destination: destination,
-    } = input.scope.view.options('swift');
+    } = input.selection.view.options('swift');
     if (project === undefined) {
-        if (!input.repositoryFiles.some(({ path }) => path === posix.join(input.scope.scope.path, PACKAGE_SWIFT)))
+        if (!input.repositoryFiles.some(({ path }) => path === posix.join(input.selection.scope.path, PACKAGE_SWIFT)))
             throw new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.');
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {
@@ -150,7 +150,7 @@ export function buildPlan(
         XCODEBUILD_PROGRAM,
         ...XCODE_COMMANDS[purpose],
         container,
-        posix.relative(input.scope.scope.path, project),
+        posix.relative(input.selection.scope.path, project),
         XCODE_SCHEME_FLAG,
         scheme,
         XCODE_DESTINATION_FLAG,

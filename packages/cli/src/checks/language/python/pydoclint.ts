@@ -110,8 +110,8 @@ function parsePydoclintOptions(text: string, convention: unknown): PydoclintOpti
  */
 export async function checkPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const configured = parsePydoclintOptions(
-        readText(session.root, posix.join(planned.scope.scope.path, PYPROJECT_TOML)) ?? '',
-        planned.scope.view.values['tools.ruff']?.docstring_convention,
+        readText(session.root, posix.join(planned.selection.scope.path, PYPROJECT_TOML)) ?? '',
+        planned.selection.view.values['tools.ruff']?.docstring_convention,
     );
     const groups = await groupByDocstringStyle(session, planned.files, configured.style);
     return runCommandGroups(

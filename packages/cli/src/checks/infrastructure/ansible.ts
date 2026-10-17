@@ -48,7 +48,7 @@ export async function checkAnsibleLint(input: CheckInput): Promise<Finding[]> {
         .filter((path) => path === ANSIBLE_CFG || path.endsWith(`/${ANSIBLE_CFG}`))
         .map((path) => (path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''));
     const findings: Finding[] = [];
-    for (const folder of folders.length > 0 ? folders : [input.scope.scope.path])
+    for (const folder of folders.length > 0 ? folders : [input.selection.scope.path])
         findings.push(...(await lintProject(input, folder)));
     return findings;
 }

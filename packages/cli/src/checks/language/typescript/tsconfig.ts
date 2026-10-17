@@ -17,13 +17,13 @@ import { isProjectChecked, selectRequiredTsconfigOptions } from '#cli/checks/lan
 export function checkTypescriptTsconfig(input: CheckInput): Finding[] {
     const project = readTsconfigProject(
         input.root,
-        input.scope.scope.path,
+        input.selection.scope.path,
         input.files.filter((file) => file.tags.includes(TYPESCRIPT_TAG)).map((file) => file.path),
         input.reads,
     );
     const scopeTsconfig =
         project === undefined
-            ? joinScope(input.scope.scope.path, TSCONFIG_FILE)
+            ? joinScope(input.selection.scope.path, TSCONFIG_FILE)
             : convertToPosixPath(relative(input.root, project.path));
     const candidates = new Set([
         scopeTsconfig,
@@ -34,7 +34,7 @@ export function checkTypescriptTsconfig(input: CheckInput): Finding[] {
                 return TSCONFIG_NAME.test(name);
             }),
     ]);
-    const required = selectRequiredTsconfigOptions(input.settingsFile.settings.level, input.scope.selected);
+    const required = selectRequiredTsconfigOptions(input.settingsFile.settings.level, input.selection.selected);
     const projects = [...candidates].flatMap((path) => {
         const parsed = readTsconfig(input.root, join(input.root, path), input.reads);
         return parsed === undefined ? [] : [{ path, parsed }];
@@ -44,7 +44,7 @@ export function checkTypescriptTsconfig(input: CheckInput): Finding[] {
             !isProjectChecked(input.reads, {
                 check: input.check.name,
                 path: join(input.root, path),
-                scope: input.scope.scope.path,
+                scope: input.selection.scope.path,
                 required: required,
             }),
     );

@@ -16,7 +16,7 @@ export async function checkLongFiles(input: CheckInput): Promise<Finding[]> {
             : file.tags.find((tag) => Object.hasOwn(COMMENT_MARKERS, tag));
         return language === undefined
             ? []
-            : [{ file, language, limit: input.scope.view.limit('file_lines', language) }];
+            : [{ file, language, limit: input.selection.view.limit('file_lines', language) }];
     });
     const findings = await Promise.all(
         sources.map(async ({ file, language, limit }) => {

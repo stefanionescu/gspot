@@ -53,7 +53,7 @@ test('a nested Next.js check replaces TypeScript only in its own scope', async (
     });
     const configured = listConfiguredChecks(await openSession(sandbox.path))
         .filter((entry) => ['typescript/tsc', 'nextjs/tsc'].includes(entry.check.name))
-        .map((entry) => [entry.scope.scope.path, entry.check.name]);
+        .map((entry) => [entry.selection.scope.path, entry.check.name]);
     expect(configured).toStrictEqual([
         ['', 'typescript/tsc'],
         ['app', 'nextjs/tsc'],

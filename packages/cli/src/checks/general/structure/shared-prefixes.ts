@@ -34,16 +34,16 @@ function extractPrefix(stem: string): string {
  * @returns the findings.
  */
 export function checkSharedPrefixes(input: CheckInput): Finding[] {
-    const limit = input.scope.view.options('limits').shared_prefix_files;
-    const prefixes = new Set(input.scope.selected.flatMap((manifest) => manifest.shared_prefixes.prefixes));
-    const kinds = new Set(input.scope.selected.flatMap((manifest) => manifest.shared_prefixes.kinds));
+    const limit = input.selection.view.options('limits').shared_prefix_files;
+    const prefixes = new Set(input.selection.selected.flatMap((manifest) => manifest.shared_prefixes.prefixes));
+    const kinds = new Set(input.selection.selected.flatMap((manifest) => manifest.shared_prefixes.kinds));
     const tree = buildFolderTree(input.files);
     const seen = new Set<string>();
 
     const files = listCodeFiles(input).filter((file) => {
         const folder = extractParentFolder(file.path);
         return (
-            !HOOK_FOLDERS.some((hook) => isInScope(folder, posix.join(input.scope.scope.path, hook))) &&
+            !HOOK_FOLDERS.some((hook) => isInScope(folder, posix.join(input.selection.scope.path, hook))) &&
             !isDependencyFolder(folder)
         );
     });

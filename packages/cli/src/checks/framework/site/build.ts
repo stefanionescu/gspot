@@ -14,9 +14,9 @@ import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.t
 const SITE_BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 
 async function runSiteBuild(input: CheckInput, scratch: string): Promise<SiteBuild> {
-    const site = input.scope.view.options('site');
+    const site = input.selection.view.options('site');
     const folderPath = site['build_folder'];
-    const cwd = join(scratch, input.scope.scope.path);
+    const cwd = join(scratch, input.selection.scope.path);
     const command = site['build_command'];
     const result = await runCheckTool(input, command, { cwd });
     const folder = join(scratch, folderPath);
@@ -39,7 +39,7 @@ async function runSiteBuild(input: CheckInput, scratch: string): Promise<SiteBui
  * @returns the build, shared by every caller.
  */
 function getSiteBuild(input: CheckInput): Promise<SiteBuild> {
-    const key = join(input.root, input.scope.scope.path);
+    const key = join(input.root, input.selection.scope.path);
     const scopeBuilds = getCachedValue(input.reads, SITE_BUILD_MEMO);
     const held = scopeBuilds.get(key);
     if (held !== undefined) return held;
@@ -83,13 +83,13 @@ export function listBuiltFiles(folder: string): string[] {
  * @returns the repository-relative path.
  */
 export function deriveBuiltFilePath(
-    input: Pick<CheckInput, 'scope'>,
+    input: Pick<CheckInput, 'selection'>,
     build: Pick<SiteBuild, 'folder'>,
     absolute: string,
 ): string {
     const path = convertToPosixPath(relative(build.folder, absolute));
 
-    return `${input.scope.view.options('site')['build_folder']}/${path}`;
+    return `${input.selection.view.options('site')['build_folder']}/${path}`;
 }
 
 /**

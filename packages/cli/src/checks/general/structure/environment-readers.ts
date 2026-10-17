@@ -16,11 +16,11 @@ import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sou
  * @returns one finding per reading line.
  */
 export async function checkEnvironmentReaders(input: CheckInput): Promise<Finding[]> {
-    const readerPaths = input.scope.view.roles[ENVIRONMENT_READERS_ROLE];
+    const readerPaths = input.selection.view.roles[ENVIRONMENT_READERS_ROLE];
     if (readerPaths.length === 0) return [];
     const isReader = buildPathMatcher(readerPaths);
-    const readers = input.scope.view.configurations.includes('secrets')
-        ? input.scope.view.options('secrets').environment_functions
+    const readers = input.selection.view.configurations.includes('secrets')
+        ? input.selection.view.options('secrets').environment_functions
         : [];
     const parsed = await parseCached(input, CONVENTION_SOURCES);
     const owned = new Set(

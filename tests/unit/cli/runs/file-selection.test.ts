@@ -42,7 +42,7 @@ test("a file named on the command line runs its scope's project check on every f
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { ...PROJECT_OPTIONS, only: [...PROJECT_OPTIONS.only], paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);
-    expect(affected.map((check) => check.scope.scope.path)).toStrictEqual(['api']);
+    expect(affected.map((check) => check.selection.scope.path)).toStrictEqual(['api']);
     expect(affected[0]?.files.map((file) => file.path)).toStrictEqual([
         'api/caller.ts',
         'api/source.ts',

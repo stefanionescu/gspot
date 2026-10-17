@@ -83,7 +83,7 @@ export type CommandInputs = Pick<
     'root' | 'reads' | 'manifests' | 'settingsFile' | 'generatedPaths' | 'toolFiles'
 >;
 
-export type SubstitutionCheck = Pick<PlannedCheck, 'check' | 'scope' | 'files'> & {
+export type SubstitutionCheck = Pick<PlannedCheck, 'check' | 'selection' | 'files'> & {
     messageFile?: PlannedCheck['messageFile'];
 };
 

@@ -18,9 +18,9 @@ function isStageWanted(filter: PlanOptions['stage'], stage: Stage): boolean {
     return filter === stage;
 }
 
-function listCheckCandidates(session: Session, scope: ScopeSelection): CheckCandidate[] {
-    const isRoot = scope.scope.path === '';
-    const entries = scope.selected.flatMap((manifest) =>
+function listCheckCandidates(session: Session, selection: ScopeSelection): CheckCandidate[] {
+    const isRoot = selection.scope.path === '';
+    const entries = selection.selected.flatMap((manifest) =>
         manifest.checks
             .map((check) => ({ check, manifest }))
             .filter((entry) => isRoot || !isRootOnlyCheck(manifest, entry.check)),
@@ -38,7 +38,7 @@ function isWanted(check: CheckDeclaration, options: PlanOptions): boolean {
 }
 
 function planOne(context: PlanInputs, entry: CheckCandidate): PlannedCheck {
-    const { session, scope, options } = context;
+    const { session, selection: scope, options } = context;
     const { check, manifest } = entry;
     const isRootCheck = check.runs === 'once' || check.runs === 'history';
     // Repository inventory always places the root scope first.
@@ -46,7 +46,7 @@ function planOne(context: PlanInputs, entry: CheckCandidate): PlannedCheck {
     const name = getToolName(check);
     const tool = name === undefined ? undefined : getToolDeclaration(session.manifests.values(), name, manifest);
     const planned: PlannedCheck = {
-        scope: isRootCheck ? rootScope : scope,
+        selection: isRootCheck ? rootScope : scope,
         check,
         ...selectCheckFiles(context, entry),
         ...stripUndefined({
@@ -85,7 +85,7 @@ function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
 
 function planScope(context: PlanInputs, wholeSeen: Set<string>): PlannedCheck[] {
     const planned: PlannedCheck[] = [];
-    const entries = listCheckCandidates(context.session, context.scope).filter((entry) =>
+    const entries = listCheckCandidates(context.session, context.selection).filter((entry) =>
         isWanted(entry.check, context.options),
     );
     for (const entry of entries) {
@@ -106,7 +106,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     return session.scopes.map((scope) => {
         const context: PlanInputs = {
             session,
-            scope,
+            selection: scope,
             options,
             platform,
             narrow,
@@ -156,14 +156,14 @@ export function listConfiguredChecks(session: Session): PlannedCheck[] {
  */
 export function listCoveredInputs(session: Pick<Session, 'scopes'>, check: PlannedCheck): TrackedFile[] {
     const owners = check.check.files ?? check.manifest?.files;
-    const children = check.check.runs === 'scope' ? listChildScopes(session, check.scope) : [];
+    const children = check.check.runs === 'scope' ? listChildScopes(session, check.selection) : [];
     const files = check.files.filter((file) => isOutsideChildren(file.path, children));
     return owners === undefined
         ? []
         : listCoveredFiles(owners, files, {
-              selected: check.scope.selected,
-              scope: check.scope.scope.path,
-              view: check.scope.view,
+              selected: check.selection.selected,
+              scope: check.selection.scope.path,
+              view: check.selection.view,
           });
 }
 
@@ -197,14 +197,14 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
  * @returns the command, with coverage only when a floor needs it.
  */
 export function stripCoverageArguments(
-    planned: Pick<PlannedCheck, 'check' | 'scope' | 'manifest'>,
+    planned: Pick<PlannedCheck, 'check' | 'selection' | 'manifest'>,
     options: Pick<CheckDeclaration, 'command'>,
 ): string[] | undefined {
     const command = options.command ?? planned.check.command;
     if (command === undefined || options.command !== undefined || planned.manifest === undefined) return command;
     const flags = command.map((part) => COVERAGE_FLAGS.has(part.replace(FLAG_VALUE, '')));
     if (!flags.some(Boolean)) return command;
-    const coverage = planned.scope.view.options('coverage');
+    const coverage = planned.selection.view.options('coverage');
     return COVERAGE_DIMENSIONS.every((name) => coverage[name] === 0)
         ? command.filter((_, index) => flags[index] !== true)
         : command;

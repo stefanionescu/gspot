@@ -47,7 +47,7 @@ function expandEachPlaceholder(planned: SubstitutionCheck, part: string): string
     const groups = EACH_PLACEHOLDER.exec(part)?.groups;
     if (groups === undefined) return undefined;
     const name = groups['setting'] ?? '';
-    const held = planned.scope.view.settings[name];
+    const held = planned.selection.view.settings[name];
     const items = held ?? [];
     return assertArgumentList(items, name).flatMap((item) => [groups['flag'] ?? '', convertToSystemPath(item)]);
 }
@@ -69,7 +69,7 @@ function expandExistingPlaceholder(repositoryRoot: string, part: string): string
 
 function listToolFiles(session: CommandInputs, planned: SubstitutionCheck): ToolFileDeclaration[] {
     // The own targets of the check come first, because readToolFileDeclaration takes the first match.
-    const own = planned.scope.selected
+    const own = planned.selection.selected
         .filter((manifest) => manifest.checks.some((check) => check.name === planned.check.name))
         .flatMap((manifest) => manifest.toolFiles);
     const every = session.manifests
@@ -134,7 +134,7 @@ export function readToolFileDeclaration(
  */
 export function selectToolFilePath(session: CommandInputs, planned: SubstitutionCheck, name: string): string {
     const target = readToolFileDeclaration(session, planned, name);
-    return buildScopeTarget(planned.scope.scope.path, target, session.toolFiles().targets);
+    return buildScopeTarget(planned.selection.scope.path, target, session.toolFiles().targets);
 }
 
 /**
@@ -150,7 +150,7 @@ export function listCommandToolFiles(
     command: readonly string[],
 ): string[] {
     const parts = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
-    const scope = planned.scope.scope.path;
+    const scope = planned.selection.scope.path;
     return [
         ...new Set(
             parts.flatMap((part) => {
@@ -181,7 +181,7 @@ export function listScratchFiles(
     planned: SubstitutionCheck & Pick<PlannedCheck, 'manifest'>,
     command: string[],
 ): string[] {
-    const scope = planned.scope.scope.path;
+    const scope = planned.selection.scope.path;
     const owned = (planned.manifest?.toolFiles ?? [])
         .filter((toolFile) => !toolFile.fragment)
         .map((toolFile) => buildScopeTarget(scope, toolFile, session.toolFiles().targets));
@@ -213,7 +213,7 @@ export function replacePlaceholders(
             session.settingsFile.settings.level === 'all' ? all : recommended,
         )
         .replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-            const found = planned.scope.view.settings[name];
+            const found = planned.selection.view.settings[name];
             if (Array.isArray(found)) throw new Error(`List setting ${name} must occupy a whole command argument.`);
             return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
                 ? String(found)
@@ -248,7 +248,7 @@ export function expandCommand(
     return command.flatMap((part) => {
         const name = WHOLE_SETTING_PLACEHOLDER.exec(part)?.groups?.['name'];
         if (name !== undefined) {
-            const value = planned.scope.view.settings[name];
+            const value = planned.selection.view.settings[name];
             if (Array.isArray(value)) return assertArgumentList(value, name);
         }
 

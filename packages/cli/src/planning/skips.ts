@@ -12,14 +12,14 @@ import type { Skip, System, Session, ToolIgnore, PlanInputs, PlannedCheck, Setti
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
 function findConditionSkip(check: PlannedCheck, hasGit: boolean, dependencyFiles: DependencyFile[]): Skip {
     const { configuration, git, dependencies } = { ...check.manifest?.configuration.when, ...check.check.when };
-    if (configuration !== undefined && !check.scope.view.configurations.includes(configuration))
+    if (configuration !== undefined && !check.selection.view.configurations.includes(configuration))
         return {
             cause: 'condition',
             note: `Needs the ${configuration} configuration, which this scope does not select.`,
         };
     if (
         dependencies !== undefined &&
-        !dependencies.some((name) => name in getProjectDependencies(dependencyFiles, check.scope.scope.path))
+        !dependencies.some((name) => name in getProjectDependencies(dependencyFiles, check.selection.scope.path))
     )
         return { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
     if (git !== true || hasGit) return undefined;
@@ -30,12 +30,13 @@ function findConditionSkip(check: PlannedCheck, hasGit: boolean, dependencyFiles
 }
 
 // Find the skip that an ignore record without a rule or paths causes: the whole check turns off.
-function findIgnoreSkip(scope: ScopeSelection, check: CheckDeclaration): SettingsSkip | undefined {
-    const ignored = scope.view
+function findIgnoreSkip(selection: ScopeSelection, check: CheckDeclaration): SettingsSkip | undefined {
+    const ignored = selection.view
         .ignoresFor(check.name)
         .find(
             (entry) =>
-                entry.rule === undefined && (entry.paths.length === 0 || isScopeCovered(entry.paths, scope.scope.path)),
+                entry.rule === undefined &&
+                (entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path)),
         );
     if (ignored === undefined) return undefined;
     const reason = `: ${ignored.reason}`;
@@ -128,7 +129,7 @@ export function findFirstSkip(check: PlannedCheck, inputs: PlanInputs): Skip {
     const settings = session.settingsFile.settings;
     const hasGit = session.repository.hasGit;
     const host = { platform, arch: process.arch };
-    const selected = findSettingsSkip(settings, check.scope, check.check);
+    const selected = findSettingsSkip(settings, check.selection, check.check);
     if (selected !== undefined) return selected;
     const condition = findConditionSkip(check, hasGit, dependencyFiles);
     if (condition !== undefined) return condition;

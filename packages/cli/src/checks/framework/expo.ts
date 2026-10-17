@@ -57,15 +57,15 @@ function parseExpoDoctor(stdout: string): string[] {
  * @returns one finding per failed Doctor check.
  */
 export async function checkExpoDoctor(input: CheckInput): Promise<Finding[]> {
-    const path = joinScope(input.scope.scope.path, 'package.json');
+    const path = joinScope(input.selection.scope.path, 'package.json');
     // Doctor exits 0 without reading a project whose expo package does not exist, so check the project first.
-    if (!hasInstalledExpo(join(input.root, input.scope.scope.path)))
+    if (!hasInstalledExpo(join(input.root, input.selection.scope.path)))
         throw new GspotError(
             'tool',
             'Expo is not installed in this scope; Expo Doctor reads an installed Expo project.',
         );
     const result = await runCheckTool(input, EXPO_DOCTOR_COMMAND, {
-        cwd: join(input.root, input.scope.scope.path),
+        cwd: join(input.root, input.selection.scope.path),
     });
     const findings = parseExpoDoctor(result.stdout).map((message) =>
         buildFinding(input, { file: path, line: 1 }, 'failed-check', message),

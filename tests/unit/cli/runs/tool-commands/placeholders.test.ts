@@ -85,7 +85,7 @@ test('tool file inputs of a nested scope stop at the scope folder and follow a l
     });
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] });
-    const planned = plans.find((plan) => plan.scope.scope.path === 'app')!;
+    const planned = plans.find((plan) => plan.selection.scope.path === 'app')!;
     expect(listSwiftlintToolFiles(checkInput(session, planned))).toStrictEqual([
         '.gspot/config/swiftlint.yml',
         'app/.swiftlint.yml',

@@ -57,7 +57,7 @@ function parseSvelteCheckFindings(input: CheckInput, stdout: string): Finding[] 
             buildFinding(
                 input,
                 {
-                    file: joinScope(input.scope.scope.path, normalizeOutputPath(reported.filename)),
+                    file: joinScope(input.selection.scope.path, normalizeOutputPath(reported.filename)),
                     line: reported.start.line + 1,
                     column: reported.start.character + 1,
                 },
@@ -75,7 +75,7 @@ function parseSvelteCheckFindings(input: CheckInput, stdout: string): Finding[] 
  */
 export async function runSvelteCheck(input: CheckInput): Promise<Finding[]> {
     using runtime = createScratchFolder();
-    const target = join(runtime.path, TOOL_FILES_FOLDER, input.scope.scope.path, TSCONFIG_FILE);
+    const target = join(runtime.path, TOOL_FILES_FOLDER, input.selection.scope.path, TSCONFIG_FILE);
     const tsconfigPath = writeScopeTsconfig(
         {
             root: input.root,
@@ -84,11 +84,11 @@ export async function runSvelteCheck(input: CheckInput): Promise<Finding[]> {
             repository: { files: input.repositoryFiles, scopes: input.scopes },
             settingsFile: input.settingsFile,
         },
-        input.scope,
+        input.selection,
         target,
     );
     const command = [...SVELTE_CHECK_COMMAND, SVELTE_TSCONFIG_FLAG, tsconfigPath];
-    const result = await runCheckTool(input, command, { cwd: join(input.root, input.scope.scope.path) });
+    const result = await runCheckTool(input, command, { cwd: join(input.root, input.selection.scope.path) });
     const findings = parseSvelteCheckFindings(input, result.stdout);
     return assertToolFindings(result, findings, 'svelte-check');
 }

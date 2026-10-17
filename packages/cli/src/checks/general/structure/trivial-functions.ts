@@ -187,7 +187,7 @@ async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
     const parsed = await parseCached(input, CONVENTION_SOURCES);
     const files: Finding[] = [];
     const functions = parsed.flatMap((source) => {
-        const limit = input.scope.view.limit('trivial_function_statements', source.language);
+        const limit = input.selection.view.limit('trivial_function_statements', source.language);
         const findings = (source.captures.get('function') ?? []).flatMap((node) => {
             const body = extractFunctionBody(node, source.language);
             const count = countExecutableStatements(body, source.language);

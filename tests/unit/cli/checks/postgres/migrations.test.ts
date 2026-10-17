@@ -66,7 +66,7 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
     expect(migrations.map(({ name }) => name)).toStrictEqual(['1_first.sql', '2_second.sql', '3_third.sql']);
     expect(
         planRun(session, { stage: 'commit', only: ['postgres/squawk'] })
-            .find((plan) => plan.scope.scope.path === scope)!
+            .find((plan) => plan.selection.scope.path === scope)!
             .files.map(({ path }) => basename(path))
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['1_first.sql', '2_second.sql', '3_third.sql', '4_rollback.down.sql']);
@@ -81,7 +81,7 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
     expect(replacedMigrations.map(({ name }) => name)).toStrictEqual(['5_custom.sql']);
     expect(
         planRun(replacedSession, { stage: 'commit', only: ['postgres/squawk'] })
-            .find((plan) => plan.scope.scope.path === scope)!
+            .find((plan) => plan.selection.scope.path === scope)!
             .files.map(({ path }) => basename(path)),
     ).toStrictEqual(['5_custom.sql']);
 });

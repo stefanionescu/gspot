@@ -61,7 +61,7 @@ function parseDenoCheckError(input: CheckInput, folder: string, stderr: string):
  * @returns the parsed file, its parse error, or undefined without a file.
  */
 function readProjectFile(input: CheckInput): Parsed<SupabaseConfiguration> | undefined {
-    const local = posix.join(input.scope.scope.path, SUPABASE_CONFIG_TOML);
+    const local = posix.join(input.selection.scope.path, SUPABASE_CONFIG_TOML);
     const text = readCachedText(input.reads, local);
     if (text === undefined) return undefined;
     try {
@@ -106,7 +106,7 @@ const denoLintReportSchema = z.object({
  * @returns the entry file paths, repository-relative.
  */
 function listFunctionEntries(input: CheckInput): string[] {
-    const base = input.scope.view.options('supabase').functions_folder;
+    const base = input.selection.view.options('supabase').functions_folder;
     const entries = new Map<string, string>();
     for (const { path } of input.files) {
         const folder = posix.dirname(path);
@@ -129,7 +129,7 @@ function listFunctionEntries(input: CheckInput): string[] {
  */
 export async function checkSupabaseStoragePolicies(input: CheckInput): Promise<Finding[]> {
     const read = readProjectFile(input);
-    const at = { file: posix.join(input.scope.scope.path, SUPABASE_CONFIG_TOML), line: 1 };
+    const at = { file: posix.join(input.selection.scope.path, SUPABASE_CONFIG_TOML), line: 1 };
     if (read === undefined || 'error' in read) return []; // files/taplo-format reports project syntax errors.
     const { value: config } = read;
     const { migrations, findings: syntax } = await readMigrations(input);
@@ -176,7 +176,9 @@ export async function checkSupabaseDenoLint(input: CheckInput): Promise<Finding[
             ...buildDenoJsonArguments(input.root, folder),
             join(input.root, folder),
         ];
-        const result = await runCheckTool(input, commandArguments, { cwd: join(input.root, input.scope.scope.path) });
+        const result = await runCheckTool(input, commandArguments, {
+            cwd: join(input.root, input.selection.scope.path),
+        });
         let report: DenoLintReport;
         try {
             report = denoLintReportSchema.parse(JSON.parse(result.stdout));
@@ -220,7 +222,9 @@ export async function checkSupabaseDenoTypes(input: CheckInput): Promise<Finding
             ...buildDenoJsonArguments(input.root, folder),
             join(input.root, entry),
         ];
-        const result = await runCheckTool(input, commandArguments, { cwd: join(input.root, input.scope.scope.path) });
+        const result = await runCheckTool(input, commandArguments, {
+            cwd: join(input.root, input.selection.scope.path),
+        });
         if (result.code !== 0) findings.push(parseDenoCheckError(input, folder, result.stderr));
     }
     return findings;
@@ -232,8 +236,8 @@ export async function checkSupabaseDenoTypes(input: CheckInput): Promise<Finding
  * @returns the findings.
  */
 export function checkServiceRoleKey(input: CheckInput): Finding[] {
-    const folder = input.scope.view.options('supabase').functions_folder;
-    const tests = input.scope.view.test_files;
+    const folder = input.selection.view.options('supabase').functions_folder;
+    const tests = input.selection.view.test_files;
     const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);
     const extensions = [...listTaggedExtensions(...ADMIN_KEY_TAGS), ...ADMIN_KEY_EXTENSIONS];
     const files = input.files.filter(

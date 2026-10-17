@@ -50,7 +50,7 @@ test.each([...SWIFT_PROJECT_SELECTION_CASES])(
         await createFileTree(sandbox.path, { ...files, 'gspot.toml': buildSettingsText(['swift'], { tables }) });
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'swift/build', { scope });
-        expect(input.scope.view.options('swift').xcode_project).toBe(project);
+        expect(input.selection.view.options('swift').xcode_project).toBe(project);
         const plan = buildPlan(input);
         const container = project.endsWith('.xcworkspace') ? '-workspace' : '-project';
         expect(plan.commandArguments[plan.commandArguments.indexOf(container) + 1]).toBe(argument);

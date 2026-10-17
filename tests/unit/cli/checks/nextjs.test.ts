@@ -92,7 +92,7 @@ describe.each(['', 'app'])('%s', (scope) => {
         const session = await prepareNextjsBuild(folder.path, scope);
 
         const planned = planRun(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-            (entry) => entry.scope.scope.path === scope,
+            (entry) => entry.selection.scope.path === scope,
         )!;
         const untracked = join(folder.path, join(scope, '.next/local-cache.bin'));
         const config = join(folder.path, join(scope, 'tsconfig.json'));
@@ -206,7 +206,7 @@ test.each(['', 'apps/web'])(`Next.js reference compilation keeps the type genera
     );
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-        (entry) => entry.scope.scope.path === scope,
+        (entry) => entry.selection.scope.path === scope,
     )!;
     using read = mockNextjsCommands(async (command, options) => {
         if (command[1] === 'typegen')

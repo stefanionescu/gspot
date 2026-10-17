@@ -37,8 +37,8 @@ async function fakeProjectChecks(session: Session): Promise<void> {
         fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
     const fileCheck = { ...check, name: 'files/v8r', runs: 'files' as const };
-    for (const scope of session.scopes) {
-        if (scope.scope.path !== '') scope.selected = [{ ...manifest, tools: [], checks: [check, fileCheck] }];
+    for (const selection of session.scopes) {
+        if (selection.scope.path !== '') selection.selected = [{ ...manifest, tools: [], checks: [check, fileCheck] }];
     }
 }
 test.each([...PROJECT_TRIGGERS])(
@@ -61,7 +61,7 @@ test.each([...PROJECT_TRIGGERS])(
                 ? await readStagedPaths(sandbox.path).then(({ staged }) => ({ staged }))
                 : await readChangedPaths(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
         const planned = planRun(session, { ...PROJECT_OPTIONS, only: [...PROJECT_OPTIONS.only], ...revision });
-        const api = planned.find((check) => check.scope.scope.path === 'api')!;
+        const api = planned.find((check) => check.selection.scope.path === 'api')!;
         expect(api.files).toStrictEqual([]);
         expect(api.triggerPaths).toContain('api/source.ts');
         const fileChecks = planRun(session, { ...PROJECT_OPTIONS, only: ['files/v8r'], ...revision });
@@ -124,9 +124,9 @@ configurations = []
     expect(
         planned
             .filter((check) => check.triggerPaths.length > 0)
-            .map((check) => [check.scope.scope.path, check.triggerPaths]),
+            .map((check) => [check.selection.scope.path, check.triggerPaths]),
     ).toStrictEqual([['api/nested', ['api/nested/removed.ts']]]);
-    expect(planned.find((check) => check.scope.scope.path === 'api')?.files).toStrictEqual([]);
+    expect(planned.find((check) => check.selection.scope.path === 'api')?.files).toStrictEqual([]);
 });
 test.each(['gspot.toml', '.gspot/config/lychee.toml'])(
     'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
@@ -142,7 +142,7 @@ test.each(['gspot.toml', '.gspot/config/lychee.toml'])(
         const planned = planRun(session, { stage: 'commit', staged: [path], only: ['docs/lychee'] });
         expect(
             planned.map((entry) => ({
-                scope: entry.scope.scope.path,
+                scope: entry.selection.scope.path,
                 files: entry.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
             })),
         ).toStrictEqual([

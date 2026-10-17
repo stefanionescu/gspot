@@ -200,13 +200,13 @@ export function recordInvocation(
     state: CommandRunState,
 ): void {
     const { invocation, result, findings } = output;
-    const { check, scope } = planned;
+    const { check, selection } = planned;
     const parsed =
         findings.length === 0 && result.code !== 0 && invocation.file !== undefined
             ? [buildUnexplainedFailure(check, tool, result, invocation.file)]
             : findings.map((finding) => ({ ...finding }));
     setFindingFiles(parsed, invocation, check);
-    if (scope.scope.path !== '' && state.cwd !== state.root) joinScopePaths(parsed, scope.scope.path);
+    if (selection.scope.path !== '' && state.cwd !== state.root) joinScopePaths(parsed, selection.scope.path);
     state.findings.push(...parsed);
     markFailure(check, { tool, result, parsed, state });
 }

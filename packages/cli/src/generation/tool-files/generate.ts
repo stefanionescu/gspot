@@ -45,7 +45,7 @@ function listScopeDeclarations(
     repository: NeededToolFiles,
 ): ToolFileSelection[] {
     const checks = session.configuredChecks.filter(
-        (planned) => planned.scope.scope.path === selection.scope.path || planned.check.runs === 'once',
+        (planned) => planned.selection.scope.path === selection.scope.path || planned.check.runs === 'once',
     );
     const needed = {
         tools: new Set(checks.flatMap((planned) => listRequiredTools(planned))),

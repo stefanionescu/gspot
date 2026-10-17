@@ -47,7 +47,7 @@ export function buildBuiltInResult(
  * @param planned the check to run.
  * @returns the input.
  */
-export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope' | 'check' | 'files'>): CheckInput {
+export function checkInput(session: Session, planned: Pick<PlannedCheck, 'selection' | 'check' | 'files'>): CheckInput {
     return {
         generatedPaths: session.generatedPaths,
         toolFiles: session.toolFiles,
@@ -55,7 +55,7 @@ export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope'
         dependencyFiles: () =>
             listWorkspaceDependencyFiles(
                 session.root,
-                planned.scope.scope.path,
+                planned.selection.scope.path,
                 session.repository.files,
                 session.reads,
             ),
@@ -63,7 +63,7 @@ export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope'
         check: planned.check,
         files: planned.files,
         settingsFile: session.settingsFile,
-        scope: planned.scope,
+        selection: planned.selection,
         selections: session.scopes,
         manifests: session.manifests,
         inspections: session.inspections,

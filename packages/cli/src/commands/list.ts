@@ -43,16 +43,19 @@ function buildConfigurationsResult(session: Session): CommandResult {
     const manifests = listSelectedManifests(session.scopes);
     const names = new Set(manifests.map((manifest) => manifest.configuration.name));
     const planned = new Map(
-        planRun(session, { stage: 'any' }).map((check) => [`${check.scope.scope.path}\0${check.check.name}`, check]),
+        planRun(session, { stage: 'any' }).map((check) => [
+            `${check.selection.scope.path}\0${check.check.name}`,
+            check,
+        ]),
     );
     const selected = manifests.map((manifest) => ({
         name: manifest.configuration.name,
-        checks: session.scopes.flatMap((scope) =>
-            scope.selected.includes(manifest)
+        checks: session.scopes.flatMap((selection) =>
+            selection.selected.includes(manifest)
                 ? manifest.checks.map((check) => ({
                       name: check.name,
-                      scope: scope.scope.path,
-                      state: formatCheckStatus(planned.get(`${scope.scope.path}\0${check.name}`)),
+                      scope: selection.scope.path,
+                      state: formatCheckStatus(planned.get(`${selection.scope.path}\0${check.name}`)),
                   }))
                 : [],
         ),

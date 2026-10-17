@@ -94,8 +94,8 @@ function compileBannedWords(
  */
 export function readNamingSettings(
     input: Pick<CheckInput, 'reads'> & {
-        scope: Pick<CheckInput['scope'], 'view' | 'selected'> & {
-            scope: Pick<CheckInput['scope']['scope'], 'path'>;
+        selection: Pick<CheckInput['selection'], 'view' | 'selected'> & {
+            scope: Pick<CheckInput['selection']['scope'], 'path'>;
         };
         settingsFile: Pick<CheckInput['settingsFile'], 'settings'>;
     },
@@ -104,7 +104,7 @@ export function readNamingSettings(
         view,
         selected: manifests,
         scope: { path: scope },
-    } = input.scope;
+    } = input.selection;
     const settings = input.settingsFile.settings;
     const reads = input.reads;
     const shipped = readNamingDefaults(reads);

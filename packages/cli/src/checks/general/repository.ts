@@ -12,7 +12,7 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
  * @returns the findings.
  */
 export function checkLargeFiles(input: CheckInput): Finding[] {
-    const limitKilobytes = input.scope.view.options('repository').max_file_kilobytes;
+    const limitKilobytes = input.selection.view.options('repository').max_file_kilobytes;
     return input.repositoryFiles
         .filter(
             (file) =>

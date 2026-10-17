@@ -110,14 +110,14 @@ export async function checkSecretsTrufflehogPushed(session: Session, planned: Pl
  * @returns the findings.
  */
 export async function checkSecretsEnvExamples(input: CheckInput): Promise<Finding[]> {
-    const { env_examples: names, environment_functions: readers } = input.scope.view.options('secrets');
+    const { env_examples: names, environment_functions: readers } = input.selection.view.options('secrets');
     // Env examples list the names, and code anywhere in the scope reads them.
-    const inScope = input.files.filter((file) => isInScope(file.path, input.scope.scope.path));
+    const inScope = input.files.filter((file) => isInScope(file.path, input.selection.scope.path));
     const examples = inScope.filter((file) => names.includes(posix.basename(file.path)));
     if (examples.length === 0)
         throw new GspotError(
             'skip',
-            `No example environment file exists in ${input.scope.scope.path === '' ? 'the repository root' : input.scope.scope.path}. Declare the example environment files under secrets.env_examples.`,
+            `No example environment file exists in ${input.selection.scope.path === '' ? 'the repository root' : input.selection.scope.path}. Declare the example environment files under secrets.env_examples.`,
         );
     const known = new Set(
         examples.flatMap((file) => {

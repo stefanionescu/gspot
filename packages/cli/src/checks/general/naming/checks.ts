@@ -17,7 +17,7 @@ import {
 } from '#cli/checks/general/naming/identifiers.ts';
 
 function listNamedFiles(input: CheckInput): NamedFile[] {
-    const languages = input.scope.selected
+    const languages = input.selection.selected
         .filter((manifest) => manifest.configuration.group === 'language')
         .map((manifest) => ({
             manifest,
@@ -33,7 +33,7 @@ function listNamedFiles(input: CheckInput): NamedFile[] {
 }
 
 function checkIdentifiers(input: CheckInput, settings: NamingSettings, identifiers: Identifier[]): Finding[] {
-    const isTestFile = buildPathMatcher(input.scope.view.test_files);
+    const isTestFile = buildPathMatcher(input.selection.view.test_files);
     return identifiers.flatMap((identifier) =>
         checkIdentifier(identifier, {
             check: input.check,
@@ -71,7 +71,7 @@ async function readDeclaredNames(input: CheckInput): Promise<{ files: FileNames[
     for (const selection of input.selections) {
         const scopeInput = {
             ...input,
-            scope: selection,
+            selection,
             files: input.files.filter((file) => findScope(file.path, input.scopes).path === selection.scope.path),
         };
         const paths = listPathIdentifiers(scopeInput);
@@ -127,7 +127,7 @@ export async function checkNamingAllowedNames(input: CheckInput): Promise<Findin
         .flatMap((selection) =>
             listPathIdentifiers({
                 ...input,
-                scope: selection,
+                selection: selection,
                 files: input.repositoryFiles.filter(
                     (file) => findScope(file.path, input.scopes).path === selection.scope.path,
                 ),

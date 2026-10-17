@@ -256,7 +256,7 @@ function parseNginxDirectives(text: string): [string, ...string[]][] {
  * @returns one finding for each file nginx refuses.
  */
 export async function checkNginxSyntax(input: CheckInput): Promise<BuiltInCheckResult> {
-    const image = input.scope.view.options('tools.nginx')['image'];
+    const image = input.selection.view.options('tools.nginx')['image'];
     const paths = input.files
         .map((file) => file.path)
         .filter((path) => path === NGINX_CONF || path.endsWith(`/${NGINX_CONF}`));

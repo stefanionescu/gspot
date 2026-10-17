@@ -66,7 +66,7 @@ path = "sibling"
     });
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'push', only: ['translations/messages'] });
-    const check = planned.find((entry) => entry.scope.scope.path === scope)!;
+    const check = planned.find((entry) => entry.selection.scope.path === scope)!;
     expect(check.skip).toStrictEqual(
         selected ? undefined : { cause: 'condition', note: 'Needs a project dependency: next-intl.' },
     );

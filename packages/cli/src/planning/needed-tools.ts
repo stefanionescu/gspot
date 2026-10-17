@@ -62,7 +62,10 @@ function listPrettierPluginNames(scopes: ScopeSelection[], programs: ReadonlySet
  */
 export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, command?: string[]): string[] {
     const manifest = scope.selected.find((owner) => owner.checks.includes(check));
-    const gated = stripCoverageArguments({ scope, check, ...(manifest === undefined ? {} : { manifest }) }, {});
+    const gated = stripCoverageArguments(
+        { selection: scope, check, ...(manifest === undefined ? {} : { manifest }) },
+        {},
+    );
     const withoutCoverage =
         gated !== check.command && command?.some((part) => COVERAGE_FLAGS.has(part.replace(FLAG_VALUE, ''))) !== true;
     const tools = new Set([
@@ -99,13 +102,13 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, 
  */
 export function listRequiredTools(check: PlannedCheck): string[] {
     const names = new Set(
-        [check.tool?.name, ...checkCompanions(check.scope, check.check), check.check.fix?.[0]].filter(
+        [check.tool?.name, ...checkCompanions(check.selection, check.check), check.check.fix?.[0]].filter(
             (name) => name !== undefined,
         ),
     );
     for (const name of names)
         for (const required of new Set(
-            findToolProjectPackage(getToolDeclaration(check.scope.selected, name))?.requires,
+            findToolProjectPackage(getToolDeclaration(check.selection.selected, name))?.requires,
         ))
             names.add(required);
     return [...names];

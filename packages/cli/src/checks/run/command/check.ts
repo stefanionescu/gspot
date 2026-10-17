@@ -58,7 +58,7 @@ async function runCommands(
                 ...prepared,
                 cancelSignal: session.cancelSignal,
             },
-            planned.scope.view,
+            planned.selection.view,
             tool.name,
         );
         if (failure !== undefined)
@@ -130,7 +130,7 @@ async function runInScratch(run: CommandRun, scratchCopyFolder: string | undefin
     }
     prepared.env = buildCompanionEnvironment(
         session,
-        checkCompanions(planned.scope, planned.check, command),
+        checkCompanions(planned.selection, planned.check, command),
         prepared.env,
     );
     const result = await runCommands(planned, { session: scratchSession, tool, prepared, base });
@@ -146,7 +146,7 @@ function findUnavailableCompanion(
     command: string[],
     cwd: string,
 ): ExecutionFailure | undefined {
-    for (const name of checkCompanions(planned.scope, planned.check, command)) {
+    for (const name of checkCompanions(planned.selection, planned.check, command)) {
         const required = getToolDeclaration(session.manifests.values(), name);
         const availability = findTool(session, cwd, required);
         if ('status' in availability) return availability;
@@ -208,9 +208,9 @@ export function buildCommandEnvironment(
     planned: PlannedCheck,
     options: CheckRunOptions,
 ): CommandEnvironment {
-    const { check, scope } = planned;
+    const { check, selection } = planned;
     const runsInScope = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
-    const cwd = runsInScope ? join(session.root, scope.scope.path) : session.root;
+    const cwd = runsInScope ? join(session.root, selection.scope.path) : session.root;
     const substitutions = buildCommandSubstitutions(session, planned, cwd);
     const files = substitutions.files;
     if (options.arguments !== undefined) substitutions.files = options.arguments(checkInput(session, planned));
@@ -237,9 +237,9 @@ export function buildCommandSubstitutions(
 ): Substitutions {
     const substitutions: Substitutions = {
         files: planned.files.map((file) => convertToPosixPath(relative(cwd, join(source.root, file.path)))),
-        scope: planned.scope.scope.path,
+        scope: planned.selection.scope.path,
         root: source.root,
-        indent: planned.scope.view.format.indent_style === 'space' ? planned.scope.view.format.indent_width : 0,
+        indent: planned.selection.view.format.indent_style === 'space' ? planned.selection.view.format.indent_width : 0,
     };
     if (planned.messageFile !== undefined) substitutions.messageFile = planned.messageFile;
     return substitutions;
