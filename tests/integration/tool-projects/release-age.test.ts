@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { test, expect } from 'bun:test';
+import { commitAll } from '#tests/setup/git.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { runCommand } from '#tests/setup/processes.ts';
+import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
@@ -88,4 +93,18 @@ test('every pinned tool version is older than the default release hold, except o
         }),
     );
     expect(ages.filter(({ days }) => days < SETTING_DEFAULTS.min_release_age_days)).toStrictEqual([]);
+});
+
+test('npm reads both gspot packages from the release hold excludes that apply writes', async () => {
+    await using repository = await testdir();
+    await createFileTree(repository.path, {
+        'gspot.toml': buildSettingsText(['dependencies']),
+        'package.json': '{"private":true}\n',
+        'package-lock.json': '{"lockfileVersion":3,"packages":{}}\n',
+    });
+    commitAll(repository.path);
+    const applied = await spawnGspot(repository.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const excludes = await runCommand(['npm', 'config', 'get', 'min-release-age-exclude'], { cwd: repository.path });
+    expect(excludes.stdout.trim().split(',')).toStrictEqual([...GSPOT_PACKAGES]);
 });

@@ -8,7 +8,7 @@ test('an .npmrc edit reads a [] list, keeps Windows line endings and comments, a
     file.set(['min-release-age-exclude'], ['@acme/tools', '@gspothq/cli']);
     file.set(['min-release-age'], '7');
     expect(file.getText()).toBe(
-        '; registry settings\r\nmin-release-age-exclude=@acme/tools\r\nmin-release-age-exclude=@gspothq/cli\r\nregistry=https://registry.npmjs.org/\r\nmin-release-age=7\r\n',
+        '; registry settings\r\nmin-release-age-exclude[]=@acme/tools\r\nmin-release-age-exclude[]=@gspothq/cli\r\nregistry=https://registry.npmjs.org/\r\nmin-release-age=7\r\n',
     );
     file.set(['min-release-age'], undefined);
     expect(file.getValue(['min-release-age'])).toBeUndefined();

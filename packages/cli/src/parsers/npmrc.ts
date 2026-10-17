@@ -57,7 +57,9 @@ export function openNpmrcFile(path: string, source: string): EditableFile {
             const first = lines.findIndex((line) => !isOther(line));
             const kept = lines.filter((line) => isOther(line));
             const items: unknown[] = Array.isArray(value) ? value : [value];
-            const written = value === undefined ? [] : items.map((item) => `${key}=${String(item)}`);
+            // npm reads a list only from `key[]=` lines. Repeated `key=` lines keep the last value.
+            const name = Array.isArray(value) ? `${key}${NPMRC_LIST_SUFFIX}` : key;
+            const written = value === undefined ? [] : items.map((item) => `${name}=${String(item)}`);
             const at = first === -1 ? kept.length : lines.slice(0, first).filter((line) => isOther(line)).length;
             lines = [...kept.slice(0, at), ...written, ...kept.slice(at)];
         },

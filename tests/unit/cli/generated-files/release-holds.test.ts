@@ -70,7 +70,7 @@ test('npm in a scope keeps a longer hold, your own excludes, and the token line'
     ]);
     using log = openWriter(repository.path);
     writePlans(log, [planManagedKeys(log, generated.path, generated.changes)]);
-    const excludes = ['@acme/tools', ...OWN_PACKAGES].map((name) => `min-release-age-exclude=${name}\n`).join('');
+    const excludes = ['@acme/tools', ...OWN_PACKAGES].map((name) => `min-release-age-exclude[]=${name}\n`).join('');
     const token = '//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n';
     expect(await readFile(join(repository.path, 'apps/api/.npmrc'), 'utf8')).toBe(
         `min-release-age=14\n${excludes}${token}`,
