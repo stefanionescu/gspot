@@ -15,15 +15,6 @@ import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/sc
 import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
 import {
-    ALLOWED_WORD,
-    LEVEL_SUMMARY,
-    ALL_LEVEL_SUMMARY,
-    SETTINGS_EXAMPLES,
-    JSON_SCHEMA_DIALECT,
-    DEFAULT_TEST_PATTERNS,
-    INTERNAL_SCHEMA_METADATA,
-} from '#cli/config/settings/schema.ts';
-import {
     formatSchema,
     relativePath,
     relativePaths,
@@ -33,6 +24,16 @@ import {
     calendarDateSchema,
     unwrapSettingSchema,
 } from '#cli/settings/schema/parts.ts';
+import {
+    ALLOWED_WORD,
+    LEVEL_SUMMARY,
+    ALL_LEVEL_SUMMARY,
+    SETTINGS_EXAMPLES,
+    TABLE_DESCRIPTIONS,
+    JSON_SCHEMA_DIALECT,
+    DEFAULT_TEST_PATTERNS,
+    INTERNAL_SCHEMA_METADATA,
+} from '#cli/config/settings/schema.ts';
 
 const ignoreSchema = z.strictObject({
     check: z.string().describe(SETTING_DECLARATIONS['ignore.check'].description),
@@ -229,12 +230,18 @@ const settingsSchema = z
  * @returns the JSON Schema document.
  */
 function buildJsonSchema(): Record<string, unknown> {
+    const converted = convertToJsonSchema(settingsSchema);
+    // The tables carry no description of their own; editors show this one on hover.
+    const properties = Object.entries(converted.properties as Record<string, z.core.JSONSchema.JSONSchema>).map(
+        ([name, node]) => [name, { ...node, description: node.description ?? TABLE_DESCRIPTIONS[name] }],
+    );
     return {
         $schema: JSON_SCHEMA_DIALECT,
         $id: SCHEMA_URL,
         title: SETTINGS_FILE,
         description: 'The settings of gspot for one repository.',
-        ...convertToJsonSchema(settingsSchema),
+        ...converted,
+        properties: Object.fromEntries(properties),
     };
 }
 
