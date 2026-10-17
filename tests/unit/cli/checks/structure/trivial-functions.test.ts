@@ -1,6 +1,5 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import type { Sandbox } from '#tests/types/sandbox.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
@@ -147,12 +146,9 @@ test('exported JavaScript and TypeScript expressions with one importing file are
     ]);
 });
 
-let bashSandbox: Sandbox;
-registerBashSandbox((sandbox) => {
-    bashSandbox = sandbox;
-});
+const bashSandbox = registerBashSandbox();
 test.each([...BASH_TRIVIAL_FUNCTION_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runBashSample(bashSandbox, entry);
+    const result = await runBashSample(bashSandbox(), entry);
     expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });
 

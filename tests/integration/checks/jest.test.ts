@@ -18,12 +18,11 @@ import {
     JEST_COVERAGE_SETTINGS,
 } from '#tests/data/checks/jest.ts';
 
-const files = {
-    ...JEST_PROJECT_FILES,
-    'package.json':
-        JSON.stringify({ name: 'jest-acceptance', private: true, devDependencies: { jest: jestManifest.version } }) +
-        '\n',
-};
+/** The Jest project, with the pinned Jest version in its package.json. */
+function buildJestFiles(): Record<string, string> {
+    const manifest = { name: 'jest-acceptance', private: true, devDependencies: { jest: jestManifest.version } };
+    return { ...JEST_PROJECT_FILES, 'package.json': JSON.stringify(manifest) + '\n' };
+}
 
 // Coverage findings and load failures share the native root project inputs.
 function prepareJest(root: string, testSource: string) {
@@ -32,7 +31,7 @@ function prepareJest(root: string, testSource: string) {
             tables: JEST_COVERAGE_SETTINGS,
             level: 'all',
         }),
-        ...files,
+        ...buildJestFiles(),
         'math.test.cjs': testSource,
     });
 }
@@ -142,9 +141,9 @@ path = "app"
 configurations = ["jest"]
 `,
         }),
-        ...files,
+        ...buildJestFiles(),
         'math.test.cjs': MATH_TEST_SOURCE,
-        'app/package.json': files['package.json'],
+        'app/package.json': buildJestFiles()['package.json'],
         'app/math.cjs': MATH_SOURCE,
         'app/math.test.cjs': MATH_TEST_SOURCE,
         'app/authored.txt': 'preserved nested source\n',

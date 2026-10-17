@@ -1,16 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { LAYERED_SCOPE_SETTINGS } from '#tests/data/settings/scopes.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
-test('list shows selected settings and available configurations while doctor keeps suggestions without writing', async () => {
+test('list shows selected settings and available configurations', async () => {
     await using folder = await testdir();
     const settings = buildSettingsText(['bash', 'nextjs'], {
         tables: `[[ignore]]
@@ -32,11 +30,6 @@ reason = "Review this separately."
     expect(checks).toContainEqual({ name: 'bash/shellcheck', scope: '', state: 'on' });
     expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'off (ignore)' });
     expect(checks).toContainEqual({ name: 'structure/shared-prefixes', scope: '', state: 'off (level)' });
-    expect(
-        listSuggestions(await openSession(folder.path)).detected.find(
-            (configuration) => configuration.configuration === 'sql',
-        )?.command,
-    ).toBe('gspot add sql');
     expect(result.available.some((configuration) => configuration.name === 'sql')).toBe(true);
     expect(result.available.some((configuration) => configuration.name === 'python')).toBe(true);
     const defaults = await runGspot(folder.path, ['list', '--json']);

@@ -5,6 +5,7 @@ import { openSession } from '#cli/session.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { quoteArgument } from '#cli/system/text.ts';
+import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { type Pipeline } from '#cli/types/generation/ci.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
@@ -52,9 +53,7 @@ test.each(['docs/lychee-external', 'project/audit'])(
         const cli = quoteArgument(`npm:@gspothq/cli@${pipeline.version}`);
         expect(
             runs.some((run) =>
-                run.includes(
-                    `mise exec ${quoteArgument('node@24')} ${cli} -- gspot check --only ${quoteArgument(name)}`,
-                ),
+                run.includes(`mise exec ${quoteArgument(CI_NODE)} ${cli} -- gspot check --only ${quoteArgument(name)}`),
             ),
         ).toBe(true);
         expect(workflow.jobs['check-linux']!.steps.some((step) => step.run?.includes('--only') === true)).toBe(false);

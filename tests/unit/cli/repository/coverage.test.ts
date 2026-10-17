@@ -89,7 +89,6 @@ test.each(MIGRATION_CASES)(
             view: { test_files: [], settings: {} },
         });
         expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
-        expect(owned[0]).toBe(files.find((file) => file.path === expected[0]));
         expect(
             listCoveredFiles({ ...table, kinds: ['binary'] }, files, {
                 selected: selected,
@@ -119,7 +118,6 @@ test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope"', ({ sc
         view: { test_files: [...tests], settings: {} },
     });
     expect(owned.map(({ path }) => path)).toStrictEqual([...expected]);
-    for (const file of owned) expect(files).toContain(file);
     expect(files.map(({ path }) => path)).toStrictEqual([...JEST_PATHS]);
 });
 

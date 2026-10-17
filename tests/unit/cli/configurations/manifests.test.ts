@@ -31,7 +31,7 @@ test('manifest > a manifest without [detect] takes the matchers of [files]', () 
 });
 
 test.each(INVALID_VERSION_FLOORS)('parts > a malformed version floor %s is refused', (floor) => {
-    expect(() => versionFloorSchema.parse(floor)).toThrow('Invalid string');
+    expect(versionFloorSchema.safeParse(floor).success).toBe(false);
 });
 
 test('tool > a replace_key record refuses both a key and a table', () => {

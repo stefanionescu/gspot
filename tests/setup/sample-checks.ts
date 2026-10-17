@@ -96,18 +96,18 @@ export function expectedSummary(entry: CheckSample): SampleSummary {
 }
 
 /** Prepare the Bash suite once and release its sandbox after the owning file's tests. */
-export function registerBashSandbox(receive: (sandbox: Sandbox) => void): void {
+export function registerBashSandbox(): () => Sandbox {
     let sandbox: Sandbox;
     beforeAll(async () => {
         sandbox = await createSandbox(BASH_SANDBOX);
         for (const path of Object.keys(BASH_SANDBOX.files).filter((path) => path.endsWith('.sh'))) {
             await markExecutable(sandbox.root, path);
         }
-        receive(sandbox);
     });
     afterAll(async () => {
         await sandbox[Symbol.asyncDispose]();
     });
+    return () => sandbox;
 }
 
 /** Calculate the corrected Bash sources and run the broken and corrected forms in the same sandbox. */

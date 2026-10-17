@@ -101,7 +101,7 @@ test('a file path reports its scope, checks, and ignores', async () => {
         ],
     });
 });
-test('a missing ./ path fails', async () => {
+test('explain of a missing ./ path fails with an arguments error that names the path', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': EXPLAIN_SETTINGS, 'api/build.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);

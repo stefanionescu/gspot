@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import type { Sandbox } from '#tests/types/sandbox.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
@@ -98,10 +97,7 @@ test('script-layout: script-layout permits top-level commands in an environment 
     expect(await checkFindings(sandbox.path, 'bash/script-layout', { scope: 'tools' })).toStrictEqual([]);
 });
 
-let bashSandbox: Sandbox;
-registerBashSandbox((sandbox) => {
-    bashSandbox = sandbox;
-});
+const bashSandbox = registerBashSandbox();
 test.each([
     ...DOC_COMMENT_CASES,
     ...INLINE_SCRIPT_CASES,
@@ -111,6 +107,6 @@ test.each([
     ...UNUSED_FUNCTION_CASES,
     ...SINGLE_CALL_CASES,
 ])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runBashSample(bashSandbox, entry);
+    const result = await runBashSample(bashSandbox(), entry);
     expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });
