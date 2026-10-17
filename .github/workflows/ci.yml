@@ -5,9 +5,10 @@ on:
         branches: [main]
 permissions:
     contents: read
+# A newer push to main replaces the running tests: the release needs a green run on its own commit only.
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: false
+    cancel-in-progress: true
 jobs:
     test:
         name: ${{ matrix.suite }} (${{ matrix.os }})
