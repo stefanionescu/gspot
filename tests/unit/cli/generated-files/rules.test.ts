@@ -154,7 +154,6 @@ async function buildManagedBlock(root: string): Promise<string> {
             path,
             keys: changes.map((change) => change.path.join('.')),
         })),
-        level,
         files: selectRuleFiles({
             ...session,
             scopes: [{ ...session.scopes[0]!, selected: selected }],

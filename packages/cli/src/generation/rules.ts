@@ -158,34 +158,24 @@ function selectRuleFiles(
 }
 
 /**
- * Build the managed block for the rules and the level.
+ * Build the managed block for the rules.
  *
  * @param inputs what the block lists.
  * @param inputs.files the rules with their content.
  * @param inputs.generatedPaths the files gspot writes outside .gspot, with managed keys.
  * @param inputs.fileEdits the keys that gspot manages inside authored tool files.
- * @param inputs.level recommended or all.
  * @param inputs.hasChecks whether any configuration runs a check.
  * @param inputs.startCommand the command that starts gspot.
  *
  * @returns the heading, rule index, and instructions for changing settings.
  */
-function buildAgentsBlock({
-    files,
-    generatedPaths,
-    fileEdits,
-    level,
-    hasChecks,
-    startCommand,
-}: AgentsBlockInput): string {
+function buildAgentsBlock({ files, generatedPaths, fileEdits, hasChecks, startCommand }: AgentsBlockInput): string {
     const index = files.length > 0 ? formatRulesIndex(files) : [];
     const outside = [...new Set(generatedPaths)]
         .toSorted((first, second) => first.localeCompare(second))
         .map((path) => `- \`${path}\``);
     return [
         RULES_HEADING,
-        '',
-        `Level: \`${level}\`.`,
         '',
         ...index,
         ...(hasChecks ? ['## Before you commit', '', `Run \`${startCommand} check --staged\`.`, ''] : []),

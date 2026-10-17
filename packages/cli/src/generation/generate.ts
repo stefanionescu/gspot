@@ -117,7 +117,6 @@ function addManagedBlocks(
         })),
         startCommand: session.startRunner.command,
         files: rules,
-        level: settings.level,
         hasChecks: manifests.some((manifest) => manifest.checks.length > 0),
     });
     generated.blocks.push({ path: AGENTS_FILE, block, style: 'markdown' });

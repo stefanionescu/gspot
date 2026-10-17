@@ -114,7 +114,7 @@ test.each([...LEVELS])(
         expect(corrected).toStrictEqual({ layout: [], findings: [] });
     },
 );
-test('switching the level and back writes the same files and the AGENTS.md level', async () => {
+test('switching the level and back writes the same files', async () => {
     await using sandbox = await testdir();
     await Bun.write(join(sandbox.path, 'source.js'), 'export const value = 1;\n');
     const outputs: string[] = [];
@@ -126,8 +126,6 @@ test('switching the level and back writes the same files and the AGENTS.md level
         const config = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!;
         using log = openWriter(sandbox.path);
         writeGeneratedFiles(session, output, log);
-        const block = output.blocks.find((block) => block.path === 'AGENTS.md')!.block;
-        expect(block).toContain(`Level: \`${level}\``);
         outputs.push(config.content);
     }
     expect(outputs[0]).not.toBe(outputs[1]);

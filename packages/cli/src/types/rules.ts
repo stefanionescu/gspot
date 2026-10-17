@@ -1,4 +1,4 @@
-import type { Level, Manifest } from '#cli/types/configurations.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 
 /** The destination, final text, and path in the rules folder of one rule. */
 export type RuleFile = {
@@ -14,7 +14,6 @@ export type AgentsBlockInput = {
     files: RuleFile[];
     generatedPaths: string[];
     fileEdits: { path: string; keys: string[] }[];
-    level: Level;
     hasChecks: boolean;
     startCommand: string;
 };
