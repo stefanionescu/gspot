@@ -70,7 +70,7 @@ export type EslintBoundaryContext = {
     trpcPaths: string[];
 };
 
-/** The parts of the ESLint configuration that the settings and the selected scope decide. */
+/** The parts of the ESLint configuration that the settings and the scope decide. */
 export type EslintParts = {
     projects: string[];
     nodeFiles: string[];
@@ -101,7 +101,7 @@ export type EslintFileSelector =
     | { component: 'vue' | 'svelte' }
     | { runtime: { declarations: EslintRuntimeBlock[]; index: number } };
 
-/** Serializable rule fields shared by emission and the last successful apply baseline. */
+/** Serializable rule fields that generation and the baseline of the last apply share. */
 export type EslintSettingsBlock = {
     files?: readonly (EslintFileSelector | EslintFileSelector[])[];
     ignores?: string[];
@@ -109,12 +109,12 @@ export type EslintSettingsBlock = {
     rules?: Record<string, unknown>;
 };
 
-/** The actual default blocks and an emitter bound to the owning scope. */
+/** A block writer bound to its scope. */
 export type BlockWriter = {
     block: (block: EslintSettingsBlock, runtime?: string, preset?: EslintRuleExpression) => string;
 };
 
-/** Selected component patterns, detected Node files, and your test or script patterns. */
+/** Component patterns, detected Node files, and your test or script patterns. */
 export type EslintFileInputs = {
     components: Manifest[];
     tests: string[];
@@ -211,7 +211,7 @@ export type StylelintComponent = {
     functions?: readonly string[];
 };
 
-/** Imports and configuration blocks produced by one selected ESLint fragment. */
+/** The imports and blocks that one ESLint fragment produces. */
 export type EslintFragment = { imports: string[]; blocks: string };
 
 /** Relative-import enforcement with explicit project folders and import aliases. */

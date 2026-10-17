@@ -1,4 +1,4 @@
-// Read and write contained files through verified directory paths.
+// Read and write contained files through verified folder paths.
 import { posix } from 'node:path';
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import type { Files, FilesState } from '#cli/types/system/files.ts';
@@ -81,8 +81,8 @@ export function openFiles(baseFolder: string): Files {
 
 /**
  * Remove empty parent folders left by a removed file, stopping at the root.
- * @param files the root's file handle.
- * @param path the removed file's path.
+ * @param files the file handle of the root.
+ * @param path the removed file.
  */
 export function removeEmptyFolders(files: Files, path: string): void {
     for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
@@ -92,7 +92,7 @@ export function removeEmptyFolders(files: Files, path: string): void {
 }
 
 /**
- * Visits every entry under a folder of a root, and enters each one the visitor selects for traversal.
+ * Visit every entry under a folder, and walk into each one that the visitor picks.
  * @param files the root.
  * @param start the folder, with forward slashes, or '' for the root itself.
  * @param visit called with the path of each entry; returns whether to walk into it.

@@ -12,10 +12,10 @@ export const UV_LOCKFILE = `${DOT_GSPOT}/uv.lock`;
 
 export const VALE_TOOL_FILE_PATH = `${TOOL_FILES_FOLDER}/vale.ini`;
 
-/** The style directory Vale reads, where Vale packages land beside the gspot style. */
+/** The styles folder that Vale reads. Vale packages land next to the gspot style. */
 export const VALE_STYLES_PATH = `${TOOL_FILES_FOLDER}/vale/styles`;
 
-/** Track upstream Vale packages apart from generated and written styles. */
+/** Keep upstream Vale packages apart from generated and authored styles. */
 export const VALE_PACKAGES_PATH = `${DOT_GSPOT}/vale`;
 
 export const GSPOT_NODE_MODULES_PATH = `${DOT_GSPOT}/${NODE_MODULES}`;
@@ -46,7 +46,7 @@ export const INSTALLED_TOOL_FOLDERS = {
     vale: VALE_PACKAGES_PATH,
 } as const;
 
-/** The lifecycle state folder never enters command checks or generated plans. */
+/** Command checks and generated plans never include the state folder. */
 export const STATE_FOLDER_PATTERN = new RegExp(`(?:^|/)\\${STATE_PATH}(?:/|$)`, 'iu');
 
 /** The prefix of generated tool file paths. */

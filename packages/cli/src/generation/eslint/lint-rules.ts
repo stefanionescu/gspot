@@ -34,11 +34,11 @@ import {
 } from '#cli/config/generation/eslint.ts';
 
 /**
- * Build option declarations and ordered path overrides, each restricted to its project.
+ * Build the lint rule options and the path overrides in order, each for its own project.
  *
- * @param settings the repository settings.
+ * @param settings the parsed gspot.toml.
  *
- * @returns one option block per scope and path override, in application order.
+ * @returns one option block per scope and path override, in the order they apply.
  */
 function buildRuleOptions(settings: Settings): EslintRuleOptions[] {
     const tables = listSettingsTables(settings).toSorted((first, second) =>
@@ -59,11 +59,11 @@ function buildRuleOptions(settings: Settings): EslintRuleOptions[] {
 }
 
 /**
- * Apply accepted findings after generated defaults and option declarations.
+ * Build the ignore blocks that follow the generated defaults and options.
  *
- * @param settings the repository settings.
+ * @param settings the parsed gspot.toml.
  *
- * @returns explicit rule ignores with their path selectors.
+ * @returns the lint rule ignores with their path selectors.
  */
 function buildIgnoreBlocks(settings: Settings): EslintRuleBlock[] {
     return listActiveIgnores(settings).flatMap((entry): EslintRuleBlock[] =>
@@ -82,11 +82,12 @@ function buildIgnoreBlocks(settings: Settings): EslintRuleBlock[] {
 }
 
 /**
- * The blocks that turn off reasoned manifest exclusions after structural defaults and before your own settings.
+ * Build the blocks that turn off the lint rules that a manifest excludes with a reason.
+ * They follow the structure defaults and come before your own settings.
  *
- * @param scopes the selected configurations and their owning scopes.
+ * @param scopes every project and its configurations.
  *
- * @returns rule blocks that exclude every nested scope.
+ * @returns lint blocks that leave out every nested scope.
  */
 function buildRulesOffBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
     return scopes.flatMap((selection) => {
@@ -107,14 +108,14 @@ function buildRulesOffBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
 }
 
 /**
- * Calculate ESLint limit options directly from the settings.
+ * Calculate the ESLint limit options from the settings.
  *
- * @param view the configured ESLint limits and tool options.
- * @param view.limit the configured numeric limit reader.
- * @param view.options the reader for each tool’s configured options.
- * @param selectors the rule selectors and their paths.
+ * @param view the settings that the limits read.
+ * @param view.limit reads one numeric setting.
+ * @param view.options reads the extra settings of a tool.
+ * @param selectors the syntax patterns and their paths.
  *
- * @returns the rules selected at this level.
+ * @returns the lint rules at this level.
  */
 function buildLevelRules(
     view: Pick<ScopeView, 'limit' | 'options'>,
@@ -151,11 +152,11 @@ function buildLevelRules(
 }
 
 /**
- * Apply your accepted findings and options separately to code and package metadata files.
+ * Build your ignore and option blocks. Code files and package metadata files stay apart.
  *
- * @param base the initial check result.
+ * @param base the settings blocks and the ESLint file sets.
  *
- * @returns the emitted rule blocks with resolved file selectors.
+ * @returns the lint blocks with resolved file selectors.
  */
 function buildSelectedBlocks(base: Pick<EslintContext, 'settingsBlocks' | 'eslintFiles'>): EslintSettingsBlock[] {
     const result: EslintSettingsBlock[] = [];
@@ -182,12 +183,12 @@ function buildSelectedBlocks(base: Pick<EslintContext, 'settingsBlocks' | 'eslin
 }
 
 /**
- * Find the nearest enclosing selected scope.
+ * Find the nearest scope that holds a path.
  *
- * @param scopes the selected project scopes.
+ * @param scopes every project selection.
  * @param path the repository-relative destination.
  *
- * @returns the enclosing selection, or undefined at the root.
+ * @returns the scope, or undefined at the root.
  */
 function findParentSelection(scopes: ScopeSelection[], path: string): ScopeSelection | undefined {
     return scopes
@@ -197,11 +198,11 @@ function findParentSelection(scopes: ScopeSelection[], path: string): ScopeSelec
 }
 
 /**
- * Environment restrictions and trivial-code limits for each project.
+ * Build the environment limits and trivial-code limits for each project.
  *
- * @param input the selected scopes, structural settings, and detected Node file paths.
+ * @param input what the lint rules cover.
  *
- * @returns environment and structural rules at all, otherwise no blocks.
+ * @returns the lint blocks at level all, or none.
  */
 function buildEnvironmentRuleBlocks(
     input: Pick<EslintContext, 'scopes' | 'repositorySettings' | 'nodeFiles'>,
@@ -238,11 +239,11 @@ function buildEnvironmentRuleBlocks(
 }
 
 /**
- * Calculate changed trivial-code limits for each selected project.
+ * Calculate the trivial-code limits for each project.
  *
- * @param input the source values.
+ * @param input what the limits cover.
  *
- * @returns the lint rules that detect unnecessary forwarding functions.
+ * @returns the lint rules that detect needless forwarding functions.
  */
 function buildTrivialRuleBlocks(
     input: Pick<EslintContext, 'scopes' | 'repositorySettings' | 'nodeFiles'>,

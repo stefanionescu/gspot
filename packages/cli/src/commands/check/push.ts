@@ -1,4 +1,4 @@
-// Checking every revision a push sends, each in its own copy, with one report for the push.
+// Check each revision that a push sends in its own scratch copy, and write one report for the push.
 
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
@@ -9,7 +9,7 @@ import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { type PushReport, type CheckOptions } from '#cli/types/commands/check.ts';
 import { type PushRevision, type PushSelection } from '#cli/types/repository/revisions.ts';
 
-// Checks one pushed commit in a copy of it, or undefined when the signal stopped the run.
+// Check one pushed commit in a scratch copy. Return undefined when the signal stops the run.
 async function checkRevision(
     root: string,
     options: CheckOptions,
@@ -38,7 +38,7 @@ async function checkRevision(
     }
 }
 
-// The push report: every checked revision, the updates no check applies to, and what a cancellation left.
+// Build the push report: the checked revisions, the updates that no check covers, and the refs that a cancellation left.
 function buildPushReport(selected: PushSelection, revisions: PushReport['revisions'], signal: AbortSignal): PushReport {
     const pendingRefs = selected.revisions.slice(revisions.length).flatMap((revision) => revision.refs);
     const exitCode = Math.max(
@@ -54,11 +54,11 @@ function buildPushReport(selected: PushSelection, revisions: PushReport['revisio
 }
 
 /**
- * Checks the revisions Git's pre-push protocol names, each in an exact copy.
- * @param repositoryRoot the working tree that supplies settings and receives the push report.
+ * Check each revision that the pre-push input names, each in a scratch copy.
+ * @param repositoryRoot the working tree that gives the settings and gets the push report.
  * @param options the parsed flags, with the pre-push input.
- * @param signal cancellation for the run.
- * @returns the text to print, the push report, and the exit code.
+ * @param signal stops the run.
+ * @returns the command result for the push.
  */
 export async function checkPush(
     repositoryRoot: string,

@@ -1,4 +1,4 @@
-// Add written configuration choices through the settings transaction.
+// The add command: add configurations to gspot.toml.
 
 import { findScopeTable } from '#cli/settings/edit.ts';
 import { stripUndefined } from '#cli/system/values.ts';
@@ -12,9 +12,9 @@ import { saveSettings, startConfigurationEdit } from '#cli/apply/save-settings.t
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 /**
- * gspot add: appends configurations to the root list or to one scope's list.
- * @param options the parsed flags
- * @returns the command result
+ * Add configurations to the root list or to the list of one scope.
+ * @param options the parsed flags.
+ * @returns the command result.
  */
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input, settings } = startConfigurationEdit(options.cwd, options.configurations);
@@ -49,8 +49,8 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
 
 /**
  * Register the add command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 export function registerAdd(program: Command, onResult: CommandCompletion): void {
     program

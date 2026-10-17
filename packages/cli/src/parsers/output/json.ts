@@ -15,7 +15,7 @@ function listAt(value: unknown, path: string | undefined): unknown[] {
     return found;
 }
 
-// Every chain of nodes under one node, nearest first: each key of the path names a list one level further down.
+// List every chain of nodes under one node, nearest first: each key of the path names a list one level further down.
 function listChains(chain: unknown[], keys: string[]): unknown[][] {
     const [key, ...rest] = keys;
     if (key === undefined) return [chain];
@@ -70,9 +70,10 @@ function buildFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
 }
 
 /**
- * Reads JSON findings from the dotted `items` path. Each `children` key descends into another nested list. Missing leaf fields inherit from ancestor nodes.
+ * Read JSON findings from the dotted `items` path. Each `children` key goes one list deeper. A leaf without a field
+ * takes it from its parent nodes.
  *
- * @param input the check, report text, source paths, and output declaration.
+ * @param input the tool output to read.
  * @returns the findings from a valid report.
  */
 export function parseJsonFindings(input: ReportInput): Finding[] {

@@ -9,7 +9,7 @@ export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|va
 
 export const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
 
-/** Selected source copies shared by the compiler, analyzer, Periphery, and coverage. */
+/** The folder of source copies that the compiler, analyzer, Periphery, and coverage share. */
 export const BUILD_SOURCE_FOLDER = 'source';
 
 /** Package commands for each Swift build task. */

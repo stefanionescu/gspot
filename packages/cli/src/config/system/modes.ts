@@ -1,4 +1,4 @@
-// File modes for repository entries and temporary folders.
+// File modes for repository files and temporary folders.
 
 /** Read and written by the owner alone: the mode of a private file. */
 export const PRIVATE_FILE = 0o600;
@@ -24,7 +24,7 @@ export const EXECUTABLE_FILE = 0o755;
 /** The permission bits of a mode, without the file type. */
 export const PERMISSION_BITS = 0o777;
 
-/** Entered, read, and written by the owner alone: the mode of a private directory. */
+/** Entered, read, and written by the owner alone: the mode of a private folder. */
 export const PRIVATE_FOLDER = 0o700;
 
 export const OWNER_WRITABLE_FOLDER = 0o755;

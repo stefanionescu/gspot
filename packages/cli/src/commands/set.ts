@@ -1,4 +1,4 @@
-// Write settings through the same validation and mutation.
+// The set command: validate and write one setting.
 
 import { GspotError } from '#cli/system/errors.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
@@ -131,9 +131,9 @@ async function writeSetting({
 }
 
 /**
- * Writes a setting, adds list items, or changes table entries.
- * @param options the parsed flags
- * @returns the command result
+ * Write a setting, add list items, or change table entries.
+ * @param options the parsed flags.
+ * @returns the command result.
  */
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     if (Object.hasOwn(RECORD_FIELDS, options.key))
@@ -150,8 +150,8 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
 
 /**
  * Register the set command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 export function registerSet(program: Command, onResult: CommandCompletion): void {
     program

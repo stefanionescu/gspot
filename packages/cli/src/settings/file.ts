@@ -13,11 +13,11 @@ import { PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
 import type { TomlTable, SettingsFileContents } from '#cli/types/settings/file.ts';
 
 /**
- * Read written settings or template values while retaining TOML date kinds and source locations.
- * @param text the written TOML
- * @param path the source file or URL
- * @param kind the document to name in the error
- * @returns the parsed table without execution defaults
+ * Parse written settings or a template, and keep TOML date kinds and source locations.
+ * @param text the written TOML.
+ * @param path the source file or URL.
+ * @param kind the document to name in the error.
+ * @returns the parsed table, without defaults.
  */
 function parseTomlText(text: string, path: string, kind: 'settings' | 'template'): TomlTable {
     try {
@@ -47,10 +47,10 @@ function readSettingsFile(repositoryRoot: string): SettingsFileContents {
 }
 
 /**
- * Write settings bytes only while the captured file identity matches.
+ * Write gspot.toml only while the file on disk still matches the one that the edit read.
  * @param log the file writer for settings.
- * @param text the settings text to write
- * @param original the captured file bytes and mode
+ * @param text the new gspot.toml contents.
+ * @param original the captured file bytes and mode.
  */
 function writeSettings(log: Writer, text: string, original: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: original?.mode ?? OWNER_WRITABLE_FILE };

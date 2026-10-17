@@ -43,9 +43,9 @@ function refuseRequirements(configurations: string[], kept: string[], manifests:
 }
 
 /**
- * gspot remove: drops configurations from the root list or from one scope's list.
- * @param options the parsed flags
- * @returns the command result
+ * Remove configurations from the root list or from the list of one scope.
+ * @param options the parsed flags.
+ * @returns the command result.
  */
 async function runRemoveCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input, settings, manifests } = startConfigurationEdit(options.cwd, options.configurations);
@@ -81,8 +81,8 @@ async function runRemoveCommand(options: ConfigurationsOptions): Promise<Command
 
 /**
  * Register the remove command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 function registerRemove(program: Command, onResult: CommandCompletion): void {
     program
@@ -103,11 +103,11 @@ function registerRemove(program: Command, onResult: CommandCompletion): void {
 }
 
 /**
- * The chain of requirements from one configuration to another, without revisiting a declaration.
+ * Find the chain of requirements from one configuration to another, and visit each one once.
  * @param target the required configuration.
- * @param from the configuration the chain starts at.
+ * @param from the configuration where the chain starts.
  * @param manifests every configuration manifest.
- * @returns the configuration names along the chain from the starting configuration to the target, or undefined when no chain exists.
+ * @returns the names along the chain, or undefined when no chain exists.
  */
 function findRequirementChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
     const seen = new Set<string>();

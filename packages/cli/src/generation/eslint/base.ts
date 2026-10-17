@@ -21,13 +21,13 @@ import {
 } from '#cli/types/generation/eslint.ts';
 
 /**
- * Default code rules, pinned presets, and project settings preceding fragment blocks.
+ * Build the blocks before the fragment blocks: default lint rules, pinned presets, and project settings.
  *
- * @param base the initial check result.
+ * @param base the ESLint context of the scope.
  * @param view the resolved scope settings.
- * @param plugins the selected formatter plugins.
+ * @param plugins the import names and packages to load.
  *
- * @returns the blocks for source syntax and code rules.
+ * @returns the blocks for source syntax and lint rules.
  */
 function buildBlocksBeforeFragments(
     base: EslintContext,
@@ -82,11 +82,11 @@ function buildBlocksBeforeFragments(
 }
 
 /**
- * Runtime, selector, test, script and final pinned rules following fragment blocks.
+ * Build the blocks after the fragment blocks: runtime, selector, test, script, and final pinned rules.
  *
- * @param base the initial check result.
+ * @param base the ESLint context of the scope.
  * @param view the resolved scope settings.
- * @param fragmentSelectors the selectors contributed by configuration fragments.
+ * @param fragmentSelectors the selectors that fragments add.
  *
  * @returns the blocks for package and file conventions.
  */
@@ -147,11 +147,11 @@ function buildBlocksAfterFragments(
 }
 
 /**
- * Choose the plugin imports and registration names used by both module emission and code blocks.
+ * Choose the plugin imports and names for the module header and the lint blocks.
  *
- * @param base the initial check result.
+ * @param base the ESLint context of the scope.
  *
- * @returns the ESLint plugin declarations required by this configuration.
+ * @returns the ESLint plugins to load.
  */
 function selectPlugins(base: EslintContext): EslintPlugins {
     const { isAll, repositorySettings } = base;

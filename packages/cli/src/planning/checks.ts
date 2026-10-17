@@ -67,7 +67,7 @@ function buildNarrowedPaths(options: PlanOptions): Set<string> | undefined {
     return new Set(options.paths.filter((path) => changed === undefined || changed.includes(path)));
 }
 
-// Only an active replacement in this execution plan can own another check's work.
+// Only an active replacement in this plan can take over the work of another check.
 function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
     const replacers = new Map(
         planned.flatMap((check): [string, string][] =>
@@ -118,9 +118,9 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
 }
 
 /**
- * Whether a planned check has source input, a deleted trigger, or a commit message to inspect.
+ * Check whether a planned check has source input, a deleted trigger, or a commit message to read.
  *
- * @param check the planned check.
+ * @param check the plan to inspect.
  *
  * @returns whether the check has something to run over.
  */
@@ -134,11 +134,11 @@ export function isActive(check: PlannedCheck): boolean {
 }
 
 /**
- * List settings-enabled checks for each applicable scope.
+ * List the checks that the settings turn on, in each scope.
  *
- * @param session the open session.
+ * @param session the repository and its scopes.
  *
- * @returns every check the settings turns on, in each scope it applies to.
+ * @returns the planned checks.
  */
 export function listConfiguredChecks(session: Session): PlannedCheck[] {
     return planScopes(session, { stage: 'any' })
@@ -147,12 +147,12 @@ export function listConfiguredChecks(session: Session): PlannedCheck[] {
 }
 
 /**
- * Source owners of a planned check, separate from inputs supplied to project-wide analysis.
+ * List the files that the configurations of a check own, apart from the inputs of a project-wide run.
  *
- * @param session the open session.
- * @param check the planned check.
+ * @param session the scopes.
+ * @param check the plan to read.
  *
- * @returns the files the check's owners select.
+ * @returns the files that the owners of the check select.
  */
 export function listCoveredInputs(session: Pick<Session, 'scopes'>, check: PlannedCheck): TrackedFile[] {
     const owners = check.check.files ?? check.manifest?.files;
@@ -168,10 +168,10 @@ export function listCoveredInputs(session: Pick<Session, 'scopes'>, check: Plann
 }
 
 /**
- * Plans every check for the run.
+ * Plan every check for the run.
  *
- * @param session the installed manifests, repository reads, and selected scopes.
- * @param options stage, paths, only, skips, and the staged or ref-relative file sets.
+ * @param session the repository to check.
+ * @param options what the run narrows to.
  *
  * @returns the planned checks in scope order.
  */
@@ -189,12 +189,12 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
 }
 
 /**
- * Keep authored commands and omit shipped coverage arguments when no floor requires them.
+ * Keep authored commands, and drop shipped coverage arguments when no floor needs them.
  *
- * @param planned the selected declaration and its scope settings.
- * @param options the supplied command and workspace.
+ * @param planned the check and its scope settings.
+ * @param options the command and workspace.
  *
- * @returns the command with coverage enabled only when a floor requires it.
+ * @returns the command, with coverage only when a floor needs it.
  */
 export function stripCoverageArguments(
     planned: Pick<PlannedCheck, 'check' | 'scope' | 'manifest'>,

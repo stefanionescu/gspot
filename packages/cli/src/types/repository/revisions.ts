@@ -17,7 +17,7 @@ export type PushSelection = {
 
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };
 
-/** Git's pre-push protocol input and the remote name supplied to the hook. */
+/** The Git pre-push input, and the remote name that the hook gets. */
 export type PushInput = { stdin: string; remote?: string };
 
 export type Comparison = { base: string; changed: string[] | undefined; range: string[] };
@@ -34,5 +34,5 @@ export type ChangedPaths = { reference: string; paths: string[]; commits?: strin
 
 export type StagedPaths = { staged: string[]; unstaged: number };
 
-/** Selected commit objects or the Git diagnostic that prevented their selection. */
+/** The commit objects, or the Git error that stopped their selection. */
 export type CommitSelection = string[] | { error: string };

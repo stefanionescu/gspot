@@ -45,7 +45,7 @@ export type DependencyFile = {
     runtimes?: Record<string, string>;
 };
 
-/** Pure parser selected by a supported repository manifest name. */
+/** A pure parser that the name of a dependency file selects. */
 export type DependencyFileParser = (path: string, text: string) => DependencyFile | Promise<DependencyFile>;
 
 export type Pyproject = {

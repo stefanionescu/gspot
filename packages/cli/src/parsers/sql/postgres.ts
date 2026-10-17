@@ -52,9 +52,9 @@ async function parseSqlText(text: string): Promise<SqlFile> {
 }
 
 /**
- * Parses SQL text and retains syntax diagnostics without hiding parser-loading failures.
+ * Parse SQL text, and keep syntax errors without hiding parser load failures.
  * @param text the SQL.
- * @returns the tree, or its zero-based Unicode diagnostic offset.
+ * @returns the tree, or the error with its zero-based Unicode offset.
  */
 async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
     const { SqlError, parse: parseSql } = await import('libpg-query');
@@ -67,10 +67,10 @@ async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: 
 }
 
 /**
- * Selects one payload from PostgreSQL's one-key node union.
- * @param node the node, when present.
- * @param kind the wanted kind.
- * @returns that kind's typed fields, or nothing for a different kind.
+ * Select one payload from the one-key node union of PostgreSQL.
+ * @param node the parse tree item, if any.
+ * @param kind the payload type to select.
+ * @returns the typed fields of that kind, or undefined for another kind.
  */
 export function getNodeFields<Kind extends keyof SqlNodeFields>(
     node: Node | undefined,
@@ -81,9 +81,9 @@ export function getNodeFields<Kind extends keyof SqlNodeFields>(
 }
 
 /**
- * Selects the typed payloads of one kind from a node list.
- * @param list the optional node list.
- * @param kind the wanted kind.
+ * Select the typed payloads of one kind from a node list.
+ * @param list the nodes, if any.
+ * @param kind the payload type to select.
  * @returns the matching payloads in source order.
  */
 export function listNodeFields<Kind extends keyof SqlNodeFields>(
@@ -97,11 +97,11 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
 }
 
 /**
- * Dispatches a correlated statement to its typed reader.
- * @param statement the parsed statement and source offset.
- * @param readers the readers indexed by kind.
- * @param readerArguments the required reader context.
- * @returns the reader result, or nothing for a kind without a reader.
+ * Pass a parsed statement to the reader for its kind.
+ * @param statement the parse result and source offset.
+ * @param readers the functions for each kind.
+ * @param readerArguments the extra values to pass on.
+ * @returns the result, or undefined for a kind without a reader.
  */
 export function readStatement<Result, Arguments extends unknown[]>(
     statement: SqlStatementView,
@@ -115,8 +115,8 @@ export function readStatement<Result, Arguments extends unknown[]>(
 }
 
 /**
- * Reads the text parts of a qualified name.
- * @param list the optional list of String nodes.
+ * Read the text parts of a qualified name.
+ * @param list the String nodes, if any.
  * @returns each part in source order.
  */
 export function listNameParts(list: Node[] | undefined): string[] {
@@ -124,10 +124,10 @@ export function listNameParts(list: Node[] | undefined): string[] {
 }
 
 /**
- * Reuses a PostgreSQL file parse within one source read lifetime.
+ * Parse a PostgreSQL file once per run.
  * @param text the original SQL, including supported psql syntax.
- * @param reads the execution reads, omitted for standalone parsing.
- * @returns statements and original diagnostic positions.
+ * @param reads the run cache, absent for a standalone parse.
+ * @returns the statements and the original error positions.
  */
 export function parseSqlFile(text: string, reads?: ReadCache): Promise<SqlFile> {
     if (reads === undefined) return parseSqlText(text);
@@ -142,7 +142,7 @@ export function parseSqlFile(text: string, reads?: ReadCache): Promise<SqlFile> 
 
 /**
  * Visit every named field in an SQL parse tree.
- * @param value the parsed value.
+ * @param value the parse tree to walk.
  * @param visit the callback for each field and its value.
  */
 export function walkSqlTree(value: unknown, visit: (key: string, child: unknown) => void): void {

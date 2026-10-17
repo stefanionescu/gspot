@@ -30,8 +30,8 @@ export function openWriter(repositoryRoot: string): Writer {
 
 /**
  * Validate all destinations and write the changed plans under one lock.
- * @param writer the locked file writer.
- * @param plans the plans for distinct files.
+ * @param writer the locked repository handle.
+ * @param plans one write or removal for each file.
  */
 export function writePlans(writer: Writer, plans: WritePlan[]): void {
     const conflict = plans.find((plan) => plan.status === 'preserved');

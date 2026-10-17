@@ -55,9 +55,9 @@ function buildInitAnswers(root: string, options: InitOptions, existingTools: Exi
 }
 
 /**
- * Detect configurations, show the plan, and write the files after acceptance.
- * @param options the command flags and settings edit choices.
- * @returns the text, the JSON report, and the exit code
+ * Detect configurations, show the plan, and write the files after you accept it.
+ * @param options the flags and the settings edit choices.
+ * @returns the command result.
  */
 async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
     const root = findRoot(options.cwd);
@@ -96,8 +96,8 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
 
 /**
  * Register the init command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 function registerInit(program: Command, onResult: CommandCompletion): void {
     program
@@ -130,10 +130,10 @@ function registerInit(program: Command, onResult: CommandCompletion): void {
 }
 
 /**
- * Read the repository and build the plan init shows before writing.
- * @param repositoryRoot the folder whose files determine configuration detection and tool replacement.
- * @param options the init options, with a template's answers folded in
- * @returns the plan, the settings text, and the files it read
+ * Read the repository and build the plan that init shows before it writes.
+ * @param repositoryRoot the folder whose files decide detection and tool replacement.
+ * @param options the flags, with the answers of a template folded in.
+ * @returns the plan, the settings text, and the files it read.
  */
 async function planInit(repositoryRoot: string, options: InitOptions): Promise<InitPrepared> {
     const reads = createReadCache(repositoryRoot);
@@ -202,7 +202,7 @@ async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
     return answer;
 }
 
-// Deletes replaced files only when their bytes still match the plan.
+// Delete a replaced file only when its bytes still match the plan.
 function deleteReplacedFiles(
     log: Writer,
     removed: InitPrepared['deleted'],
@@ -229,10 +229,10 @@ function deleteReplacedFiles(
 }
 
 /**
- * Write settings and generated files and delete the replaced tool files.
- * @param repositoryRoot the folder where init writes the accepted file changes.
- * @param prepared what init prepared
- * @returns the lines to print
+ * Write the settings and generated files, and delete the replaced tool files.
+ * @param repositoryRoot the folder where init writes the accepted changes.
+ * @param prepared the plan and file reads from planInit.
+ * @returns the lines to print.
  */
 function writeInitFiles(repositoryRoot: string, prepared: InitPrepared): string[] {
     using log = openWriter(repositoryRoot);

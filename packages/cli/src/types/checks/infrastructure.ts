@@ -1,6 +1,6 @@
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 
-/** One authored service declaration retains its service name and finding path. */
+/** One authored service declaration: its service name and finding path. */
 type ComposeDeclaration = { name: string; path: string; service: ComposeService };
 
 /** One ordered Compose invocation, with the final file owned by output attribution. */

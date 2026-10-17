@@ -5,7 +5,7 @@ import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import type { StartRunner, GenerationResult } from '#cli/types/generation/files.ts';
 
-/** The installation commands, summary, and exit code. */
+/** The install commands, summary, and exit code. */
 export type InstallationResult = { note: string; exitCode: number; steps: readonly (readonly string[])[] };
 
 /** Settings and repository evidence for installing and inspecting clone-local Git hooks. */
@@ -15,7 +15,7 @@ export type HookStatus = { ready: boolean; text: string };
 /** The Git setting to write, or instructions for hooks already owned by the repository. */
 export type HookPlan = { path: string; command?: readonly string[]; note: string };
 
-/** Shared state and attempted commands for installing the selected tools. */
+/** Shared state and attempted commands for installing the tools. */
 export type InstallContext = {
     cancelSignal?: AbortSignal;
     session: Session;
@@ -26,5 +26,5 @@ export type InstallContext = {
     steps: (readonly string[])[];
 };
 
-/** The successful JSON result of installing the selected tools. */
+/** The successful JSON result of installing the tools. */
 export type InstallCommandJson = { installed: boolean; steps: readonly (readonly string[])[] };

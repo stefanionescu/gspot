@@ -1,4 +1,4 @@
-/** Compiler flags that add diagnostics without changing module resolution or emitted JavaScript. */
+/** Compiler flags that add errors and change neither module resolution nor the JavaScript output. */
 export const RECOMMENDED_OPTIONS = {
     strict: true,
     noUncheckedIndexedAccess: true,
@@ -7,14 +7,14 @@ export const RECOMMENDED_OPTIONS = {
     noFallthroughCasesInSwitch: true,
 } as const;
 
-/** Additional compiler diagnostics required at all. */
+/** More compiler checks at level all. */
 export const COMPILER_OPTIONS = {
     ...RECOMMENDED_OPTIONS,
     noImplicitReturns: true,
     noPropertyAccessFromIndexSignature: true,
 } as const;
 
-/** JavaScript source checks preserve resolution from the author's existing jsconfig. */
+/** JavaScript checks keep the module resolution of an existing jsconfig. */
 export const JAVASCRIPT_OPTIONS = {
     checkJs: true,
     allowJs: true,
@@ -47,7 +47,7 @@ export const TYPESCRIPT_DEFAULTS = {
     noEmit: true,
 } as const;
 
-/** Bundled JavaScript resolves imports without requiring emitted Node suffixes. */
+/** JavaScript for a bundler resolves imports without Node file suffixes. */
 export const JAVASCRIPT_BUNDLED_IMPORTS = { module: 'ESNext', moduleResolution: 'Bundler' } as const;
 
 export const NESTJS_COMPILER_OPTIONS = { experimentalDecorators: true, emitDecoratorMetadata: true } as const;

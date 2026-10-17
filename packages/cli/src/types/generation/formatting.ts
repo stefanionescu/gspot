@@ -7,7 +7,7 @@ export type FormatOverride<Options = Record<string, unknown>> = {
     options: Options;
 };
 
-/** A Prettier plugin a selected manifest ships: its npm name, its entry file, and the overrides its files need. */
+/** A Prettier plugin that a manifest ships: its npm name, its entry file, and the overrides its files need. */
 export type PrettierPlugin = {
     name: string;
     entry: string;

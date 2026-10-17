@@ -17,12 +17,12 @@ import {
 } from '#cli/config/generation/eslint.ts';
 
 /**
- * Build relative-import rules for each selected project and path style.
+ * Build the relative-import lint rules for each project and path style.
  *
- * @param scopes selected projects and their import styles.
- * @param nodeFiles your own files selected for Node.js execution.
+ * @param scopes the projects and their import styles.
+ * @param nodeFiles your own scripts that run on Node.js.
  *
- * @returns rule and TypeScript-extension settings restricted to each project.
+ * @returns the lint rule and TypeScript extension settings for each project.
  */
 function buildImportStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[]): EslintBlock[] {
     const changed = scopes.filter((entry) => {
@@ -61,9 +61,9 @@ function buildImportStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[]): 
 
 /**
  * Build one relative-import boundary rule from the project folders and aliases.
- * Root and nested rules share the same boundary folders and their project's aliases.
- * @param scopes the selected projects and their effective settings.
- * @param aliases the repository-relative import alias destinations.
+ * The root and nested rules share the boundary folders and the aliases of their project.
+ * @param scopes the projects and their settings.
+ * @param aliases the repository-relative alias targets.
  * @returns the relative-import rule setting with its folders and aliases.
  */
 function buildImportBoundariesRule(
@@ -76,7 +76,7 @@ function buildImportBoundariesRule(
 
 /**
  * Resolve nested project boundaries against the aliases of each project.
- * @param context the repository root, read cache, selected scopes, and Node.js script paths.
+ * @param context the scopes and Node.js script paths to cover.
  * @returns the boundary-rule blocks with the aliases of each project.
  */
 function buildScopeImportBlocks(

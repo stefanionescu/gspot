@@ -111,7 +111,7 @@ function findSessionMisePaths(
     return readMiseBinPaths(installedRoot, [...new Set(tools)], timeoutSeconds, []);
 }
 
-// Resolves every scope: its selected configurations, known settings, and merged view.
+// Resolve every scope: its configurations, known settings, and merged view.
 async function buildScopeSelections(
     settings: Settings,
     repository: Repository,
@@ -149,7 +149,7 @@ async function buildScopeSelections(
     return [selections, getPackageManagerIdentity];
 }
 
-// Read the selected file declarations and include settings that init has not written yet.
+// Read the file declarations, and include settings that init has not written yet.
 async function readSessionRepository({
     root,
     settings,
@@ -199,11 +199,11 @@ async function readSessionRepository({
  * Open a repository session. Refuse invalid settings or configuration choices.
  *
  * @param rootPath the repository root.
- * @param input the supplied settings, or settings read from the repository.
- * @param options the repository with installed tools for this source tree.
+ * @param input the settings to use, or none to read them from the repository.
+ * @param options where the tools sit, and what the run already read.
  * @param options.installedRoot the working repository with the installed tools.
- * @param options.reads the file reads already collected for this run.
- * @returns validated selections with shared source reads and disposable resources.
+ * @param options.reads the run cache.
+ * @returns the validated session.
  */
 export async function openSession(
     rootPath: string,

@@ -7,11 +7,11 @@ import type { StartRunner, ToolFileGeneration } from '#cli/types/generation/file
 import type { PackageManager, DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Stage, Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
-/** Settings, repository inventory, and selected configurations shared by planning and generation. */
+/** Settings, repository inventory, and configurations shared by planning and generation. */
 export type Session = {
     toolFiles: () => ToolFileGeneration;
     generatedPaths: () => ReadonlySet<string>;
-    /** Settings-enabled checks across supported operating systems, planned once at session creation. */
+    /** The checks that the settings turn on, across supported systems, planned once when the session opens. */
     configuredChecks: PlannedCheck[];
     neededToolManifests: Manifest[];
     timeoutSeconds: number;
@@ -20,7 +20,7 @@ export type Session = {
     inspections: Map<string, ToolInspection>;
     miseBinPaths: string[];
     startRunner: StartRunner;
-    /** The verified working installation for a revision copy. */
+    /** The verified working tree with the installed tools, for a scratch copy of a revision. */
     installedRoot: string;
     reads: ReadCache;
     resources: DisposableStack;
@@ -35,14 +35,14 @@ export type Session = {
     settingsFile: SettingsFile;
     manifests: Map<string, Manifest>;
     repository: Repository;
-    /** Package manifests parsed from this session's source inventory. */
+    /** The dependency files parsed from the source inventory of this session. */
     dependencyFiles: DependencyFile[];
     scopes: ScopeSelection[];
 };
 
 export type Skip = PlannedCheck['skip'];
 
-/** The operating system name and architecture for a run. */
+/** The system name and architecture for a run. */
 export type System = { platform: string; arch: string };
 
 export type PlanOptions = {
@@ -54,7 +54,7 @@ export type PlanOptions = {
     staged?: string[];
     changed?: string[];
     only?: string[];
-    /** Root-relative paths selected by positional file and directory arguments. */
+    /** Root-relative paths that the positional file and folder arguments name. */
     paths?: string[];
     messageFile?: string;
 };
@@ -99,7 +99,7 @@ export type PlannedCheck = {
 
 export type StageFilter = Stage | 'all';
 
-/** A selected installed consumer and the effective license settings governing its report. */
+/** An installed project and the license settings for its report. */
 export type LicenseProject = {
     dependencyFile: string;
     selection: ScopeSelection;

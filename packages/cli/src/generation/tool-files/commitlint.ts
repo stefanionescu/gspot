@@ -3,8 +3,8 @@ import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Build commitlint file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the commitlint file from the settings.
+ * @param context the tool file to build.
  * @returns the Commitlint rules with the allowed types and scopes of the repository.
  */
 function buildCommitlintFile(context: ToolFileContext): string {

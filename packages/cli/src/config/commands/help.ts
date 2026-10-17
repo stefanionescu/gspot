@@ -7,7 +7,7 @@ export const COMMAND_HELP = {
             'Find the configurations this repository needs and print a plan. When you accept the plan, gspot writes\ngspot.toml, the tool files, the rules for coding agents, the Git hooks, and the CI workflow.\ninit deletes the tool files that gspot replaces. Git keeps their old content.\ninit installs no tools and runs no checks. Run gspot install next.',
         arguments: {},
         options: {
-            '--yes': 'Accept the plan without a question (needed when there is no terminal)',
+            '--yes': 'Accept the plan without a question (needed without a terminal)',
             '--dry-run': 'Print the plan and write nothing',
             '--from <template>': 'Start from a template: a file path, an https URL, or github:owner/repo[/path][@ref]',
             '--configurations <names...>': 'Use these configurations at the root instead of the detected ones',
@@ -23,7 +23,7 @@ export const COMMAND_HELP = {
         summary: 'Install the tools and turn on the Git hooks in this clone',
         group: 'Set up a repository:',
         description:
-            'Install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from .gspot/package-lock.json\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - programs with mise, from .gspot/mise.toml (gspot runs mise trust for this file)\ninstall writes a lockfile when it is missing or out of date. Commit the lockfiles.\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when hooks.enabled is false.\nWithout mise, install names the programs that you must install yourself.',
+            'Install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from .gspot/package-lock.json\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - programs with mise, from .gspot/mise.toml (gspot runs mise trust for this file)\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false.\nWithout mise, install names the programs that you must install yourself.',
         arguments: {},
         options: {
             '--json': 'Print the result as JSON',
@@ -201,7 +201,7 @@ export const COMMAND_HELP = {
         summary: 'Explain a check, lint rule, configuration, setting, or file',
         group: 'Look up:',
         description:
-            'Explain one thing: what it is, its state in this repository, and the commands that change it.\nexplain changes nothing.',
+            'Explain one thing: what it means, its state in this repository, and the commands that change it.\nexplain changes nothing.',
         arguments: {
             subject:
                 'A check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts)',
@@ -217,7 +217,7 @@ export const COMMAND_HELP = {
         summary: 'Find setup problems and print the command that fixes each one',
         group: 'Look up:',
         description:
-            'Find setup problems: missing or wrong tool versions, Git hooks that are off, generated files that are\nout of date, and configurations that the repository needs but does not select.\nEach problem line shows the command that fixes it. doctor changes nothing.',
+            'Find setup problems: missing or wrong tool versions, Git hooks that do not run, outdated generated files,\nand configurations that the repository needs but does not select.\nEach problem line shows the command that fixes it. doctor changes nothing.',
         arguments: {},
         options: {
             '--json': 'Print the full report as JSON, with the tools that are ready',

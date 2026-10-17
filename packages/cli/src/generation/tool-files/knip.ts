@@ -1,4 +1,4 @@
-// The entry files of a folder: what the settings declares for it, then what the configurations of the deepest scope around it know.
+// Find the entry files of a folder: the ones in the settings, then the ones that the configurations of the nearest scope know.
 
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { listPointerPaths } from '#cli/generation/pointers.ts';
@@ -20,11 +20,11 @@ import {
 } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Select your own and declared entry files for their effective scope.
+ * Select your own and the declared entry files for each scope.
  *
- * @param settings your settings.
- * @param scopes the effective selections.
- * @param scope the owning path.
+ * @param settings the parsed gspot.toml.
+ * @param scopes every scope.
+ * @param scope the folder to select for.
  *
  * @returns entry patterns for each scope.
  */
@@ -55,9 +55,9 @@ function selectEntryFiles(settings: Settings, scopes: ScopeSelection[], scope: s
 /**
  * Build Knip workspace entries and scoped dependency exclusions.
  *
- * @param repositoryRoot the folder whose package manifests declare the workspace layout.
- * @param settings the validated settings.
- * @param scopes the selected project scopes.
+ * @param repositoryRoot the folder whose package.json files declare the workspaces.
+ * @param settings the validated gspot.toml.
+ * @param scopes every project selection.
  *
  * @returns the workspace settings.
  */
@@ -79,8 +79,8 @@ function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Sco
     );
 }
 /**
- * Build knip file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Knip file from the settings.
+ * @param context the tool file to build.
  * @returns the workspace entry points, project selectors, and dependency exclusions.
  */
 function buildKnipFile(context: ToolFileContext): string {

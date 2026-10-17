@@ -12,5 +12,5 @@ export type PythonModule = {
 /** One named function or lambda, with its docstring omitted from the body. */
 export type PythonFunction = { path: string; name: string; node: Node; body: Node[] };
 
-/** Python observations borrowed while a parser visitor runs. */
+/** The Python modules and functions, lent while a parser visitor runs. */
 export type PythonFiles = { modules: PythonModule[]; functions: PythonFunction[] };

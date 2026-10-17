@@ -10,9 +10,9 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 import { saveSettings, startSettingsEdit, findSettingDeclaration } from '#cli/apply/save-settings.ts';
 
 /**
- * Register deletion of a written setting or selected list items and table entries.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * Register the unset command.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 function registerUnset(program: Command, onResult: CommandCompletion): void {
     program
@@ -36,8 +36,8 @@ function registerUnset(program: Command, onResult: CommandCompletion): void {
 
 /**
  * Run the unset command and return its output.
- * @param options the command flags and settings edit choices.
- * @returns the settings edit result and generated file changes.
+ * @param options the flags and the settings edit choices.
+ * @returns the edit result and the generated file changes.
  */
 async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { key: setting, items } = options;

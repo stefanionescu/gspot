@@ -8,7 +8,7 @@ const ROOT_KEYS = [
     'tool_timeout_seconds',
 ] as const;
 
-/** Concern tables before tool options and written exceptions. */
+/** The topic tables, which come before tool options and exceptions. */
 const FIRST_TABLES = [
     'hooks',
     'ci',
@@ -24,13 +24,13 @@ const FIRST_TABLES = [
     'spelling',
 ] as const;
 
-/** The final sections keep declarations and custom checks before ignores. */
+/** The last tables, with command checks before ignores. */
 const LAST_TABLES = ['tools', 'scope', 'command_check', 'ignore'] as const;
 
-/** Value encoding and concrete syntax tree array layout. */
+/** How the TOML writer orders keys and lays out arrays. */
 const TOML_FORMAT = { updateOrder: true, bracketSpacing: true, trailingComma: false } as const;
 
-/** Parse diagnostics show the location, source line, and caret. */
+/** Parse errors show the location, the source line, and a caret. */
 const PARSE_CONTEXT_LINES = 3;
 
 const TEMPLATE_COMMENT_PREFIX = '# Copied from template ';

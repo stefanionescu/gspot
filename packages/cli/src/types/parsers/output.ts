@@ -43,7 +43,7 @@ export type OutputInput = {
     message?: string | undefined;
 };
 
-/** Output patterns after the parsing schema supplies each format's defaults. */
+/** Output patterns after the parsing schema supplies the defaults of each format. */
 export type OutputSpec = Omit<OutputInput, 'format' | 'pattern' | 'file_pattern' | 'file_type'> & {
     file_type: (typeof OUTPUT_FILE_TYPES)[number];
 } & (
@@ -94,7 +94,7 @@ export type ParsingCheck = { name: string; help: string; output: OutputSpec; fix
 /** Manifest field mappings and public metadata for one JSON finding. */
 export type JsonFindingSpec = { check: string; help: string; output: OutputSpec };
 
-/** One format's parser, source-file checks and protection of captured output. */
+/** The parser of one format, its source-file checks, and the protection of captured output. */
 export type OutputDescriptor = {
     read: (input: ReportInput) => Finding[];
     namesFiles: (output: OutputSpec) => boolean;
@@ -146,7 +146,7 @@ export type SarifArtifactLocation = NonNullable<NonNullable<SarifRun['artifacts'
 
 export type SarifPhysicalLocation = NonNullable<SarifRun['results'][number]['locations']>[number]['physicalLocation'];
 
-/** Rule matches and scanner diagnostics emitted by Semgrep. */
+/** The rule matches and scanner errors that Semgrep reports. */
 export type SemgrepReport = {
     results: { check_id: string; path: string; start: { line: number; col: number }; extra: { message: string } }[];
     errors: {

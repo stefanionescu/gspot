@@ -73,8 +73,8 @@ function buildCommandReference(command: ReturnType<typeof buildProgram>['command
 }
 
 /**
- * Read CLI facts once for the documentation build.
- * @returns commands, configurations, checks, settings, and their schema
+ * Read the CLI facts once for the documentation build.
+ * @returns the data for the reference pages.
  */
 export function readReferenceData(): ReferenceData {
     const configurations = [...readManifests(createReadCache(process.cwd())).values()].toSorted((first, second) =>

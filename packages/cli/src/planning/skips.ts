@@ -29,7 +29,7 @@ function findConditionSkip(check: PlannedCheck, hasGit: boolean, dependencyFiles
     };
 }
 
-// The skip an ignore entry without a rule or paths imposes, which disables the whole check.
+// Find the skip that an ignore record without a rule or paths causes: the whole check turns off.
 function findIgnoreSkip(scope: ScopeSelection, check: CheckDeclaration): SettingsSkip | undefined {
     const ignored = scope.view
         .ignoresFor(check.name)
@@ -48,7 +48,7 @@ function findEmptySetting(scope: ScopeSelection, check: CheckDeclaration): strin
     return isSettingEmpty(scope.view.settings[setting]) ? setting : undefined;
 }
 
-// Ignore syntax belongs to the check's authored or generated ignore file.
+// Read the ignore syntax from the authored or generated ignore file of the check.
 function readToolIgnore(session: Session, check: PlannedCheck): ToolIgnore | undefined {
     const argument = check.check.command?.indexOf(TOOL_IGNORE_ARGUMENT) ?? -1;
     const file = argument < 0 ? undefined : check.check.command?.[argument + 1];
@@ -69,13 +69,13 @@ export function isSettingEmpty(value: unknown): boolean {
 }
 
 /**
- * Skip checks for other operating systems or tools with no build for this host.
+ * Skip checks for other systems, or for tools with no build for this system.
  *
- * @param check the declared check.
- * @param tool the declared tool and its installation pin.
- * @param host the operating system and architecture.
+ * @param check the declaration to read.
+ * @param tool the declaration and its pin.
+ * @param host the system and architecture.
  *
- * @returns the system skip, or undefined when this host can run the check.
+ * @returns the system skip, or undefined when this system can run the check.
  */
 export function findSystemSkip(check: CheckDeclaration, tool: ToolDeclaration | undefined, host: System): Skip {
     if (check.operating_systems && !(check.operating_systems as readonly string[]).includes(host.platform))
@@ -90,11 +90,11 @@ export function findSystemSkip(check: CheckDeclaration, tool: ToolDeclaration | 
 }
 
 /**
- * The reason persistent settings selects or disables a check.
- * @returns the check skip reason, or undefined for an active check.
- * @param settings the validated repository settings.
- * @param scope the effective settings for the project.
- * @param check the declared check and project prerequisites.
+ * Find the reason that the settings turn a check off.
+ * @param settings the validated gspot.toml.
+ * @param scope the settings of the project folder.
+ * @param check the declaration and project prerequisites.
+ * @returns the skip reason, or undefined for an active check.
  */
 export function findSettingsSkip(
     settings: Settings,
@@ -112,14 +112,14 @@ export function findSettingsSkip(
 }
 
 /**
- * Select the first applicable reason a planned check cannot run.
+ * Find the first reason that a planned check cannot run.
  *
- * @param check the planned check.
- * @param inputs the planning inputs.
- * @param inputs.session the repository session.
- * @param inputs.options the command options.
- * @param inputs.platform the operating system name.
- * @param inputs.dependencyFiles the parsed dependency files.
+ * @param check the plan to test.
+ * @param inputs what planning reads.
+ * @param inputs.session the repository.
+ * @param inputs.options the parsed flags.
+ * @param inputs.platform the system name.
+ * @param inputs.dependencyFiles the parsed package declarations.
  *
  * @returns the first skip, or undefined when the check can run.
  */
@@ -138,8 +138,8 @@ export function findFirstSkip(check: PlannedCheck, inputs: PlanInputs): Skip {
 /**
  * Restrict file checks through their declared ignore files.
  *
- * @param session the source-read owner.
- * @param check the planned check.
+ * @param session the repository with its file cache.
+ * @param check the plan to narrow.
  *
  * @returns the check with its files restricted.
  */

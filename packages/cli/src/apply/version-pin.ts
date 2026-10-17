@@ -5,11 +5,11 @@ import { VERSION_PIN_FILE } from '#cli/config/system/locations.ts';
 import packageManifest from '../../package.json' with { type: 'json' };
 
 /**
- * The pinned version, or undefined when the repository has none.
+ * Read the pinned gspot version.
  *
- * @param repositoryRoot the folder containing the managed version file.
+ * @param repositoryRoot the folder that holds .gspot/version.
  *
- * @returns the version in .gspot/version.
+ * @returns the version, or undefined when the repository has no pin.
  */
 export function readVersionPin(repositoryRoot: string): string | undefined {
     using files = openFiles(repositoryRoot);
@@ -20,9 +20,9 @@ export function readVersionPin(repositoryRoot: string): string | undefined {
 }
 
 /**
- * Throws when the repository pins a different gspot version.
+ * Throw when the repository pins a different gspot version.
  *
- * @param repositoryRoot the folder whose pin and start command determine upgrade guidance.
+ * @param repositoryRoot the folder with the pin and the start command.
  */
 export async function assertVersionPin(repositoryRoot: string): Promise<void> {
     const pinned = readVersionPin(repositoryRoot);

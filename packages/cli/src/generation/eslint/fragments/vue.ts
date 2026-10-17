@@ -5,8 +5,8 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
 import { pickPresetFields, promotePresetRules, buildArrayPresetBlocks } from '#cli/generation/eslint/presets.ts';
 
 /**
- * Apply Vue presets, accessibility rules, and component parsing.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the Vue presets, accessibility lint rules, and component parsing.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildVueFragment(

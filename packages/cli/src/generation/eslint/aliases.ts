@@ -31,10 +31,10 @@ function readPackageAliases(root: string, prefix: string): Record<string, string
 }
 
 /**
- * Resolves package imports and TypeScript paths for one scope, with TypeScript paths taking precedence.
- * @param repositoryRoot the boundary for resolving compiler paths and expressing alias targets.
- * @param scope the scope path, empty for the root.
- * @param reads the run-owned compiler configuration cache.
+ * Resolve package imports and TypeScript paths for one scope. TypeScript paths win.
+ * @param repositoryRoot the root that alias targets start from.
+ * @param scope the folder, empty for the root.
+ * @param reads the run cache for compiler settings.
  * @returns aliases relative to the repository root.
  */
 export function readScopeAliases(repositoryRoot: string, scope: string, reads: ReadCache): Record<string, string> {

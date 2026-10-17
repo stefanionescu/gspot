@@ -1,4 +1,4 @@
-// Explain a check, or one rule of the tool a check runs.
+// Explain a check, or one lint rule of the tool that a check runs.
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { stripUndefined } from '#cli/system/values.ts';
@@ -21,7 +21,7 @@ function getRulePlugin(prefix: string, manifests: Map<string, Manifest>): ToolDe
         .find((pin) => pin.rule_prefix === prefix);
 }
 
-// The page a manifest declares for a rule: the tool's own page, or the page of the plugin whose prefix the rule carries.
+// Find the page for a lint rule: the tool page, or the page of the plugin that the rule prefix names.
 function getRulePage(
     check: CheckDeclaration,
     tool: string,
@@ -37,7 +37,7 @@ function getRulePage(
     return plugin?.rule_url?.replace(RULE_PLACEHOLDER, rule.slice(slash + 1));
 }
 
-// The settings that change the check, and the rules and crash pattern its configuration carries.
+// List the settings that change the check, and the rules and crash pattern of its configuration.
 function getFacts(
     check: CheckDeclaration,
     configuration: Found['configuration'],
@@ -75,7 +75,7 @@ function getFacts(
     };
 }
 
-// The lines about this repository: a [[command_check]] record's command and paths, or whether the selection includes the configuration.
+// Describe use in this repository: the command and paths of a [[command_check]] record, or whether the configuration runs here.
 function formatRepositoryUse(
     session: Session | undefined,
     declared: CommandCheck | undefined,
@@ -128,11 +128,11 @@ function describeCheck(
 }
 
 /**
- * Explains a check by name: a shipped check, or a [[command_check]] record of the settings.
- * @param session the session, or undefined outside a repository
- * @param checkName a shipped check ID or a configured command check ID to look up.
- * @param reads the run cache.
- * @returns the explanation, or undefined when no check has the name
+ * Explain a shipped check or a command check.
+ * @param session the repository, or undefined outside one.
+ * @param checkName the check ID to explain.
+ * @param reads the file cache for this run.
+ * @returns the explanation, or undefined when no check has the ID.
  */
 export function explainCheck(
     session: Session | undefined,
@@ -178,11 +178,11 @@ export function explainCheck(
 }
 
 /**
- * Explains one rule of a tool: its declared documentation page, and how to turn it off or change its options.
- * @param tool the command or plugin prefix that identifies a declared lint check.
- * @param rule the unqualified lint instruction to link and configure.
- * @param reads the run cache.
- * @returns the explanation, or undefined when no check runs the tool
+ * Explain one lint rule: its page, and how to turn it off or change its options.
+ * @param tool the command or plugin prefix.
+ * @param rule the ID without its prefix, such as no-console.
+ * @param reads the file cache for this run.
+ * @returns the explanation, or undefined when no check runs the tool.
  */
 export function explainLintRule(tool: string, rule: string, reads: ReadCache): Explanation | undefined {
     const manifests = readManifests(reads);

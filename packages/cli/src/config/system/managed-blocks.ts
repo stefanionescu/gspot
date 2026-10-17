@@ -3,5 +3,5 @@ export const MARKERS = {
     hash: { start: '# >>> gspot managed >>>', end: '# <<< gspot managed <<<' },
 } as const;
 
-/** Comment syntax supported by managed instruction blocks. */
+/** The comment styles of managed blocks. */
 export const BLOCK_STYLES = ['markdown', 'hash'] as const;

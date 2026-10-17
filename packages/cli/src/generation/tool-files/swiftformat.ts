@@ -22,9 +22,9 @@ function readSwiftVersion(input: SwiftVersionInput, projectPath: string): string
     return projectText === undefined ? undefined : parseBuildSettings(projectText).swiftVersion;
 }
 /**
- * Build swiftformat file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the Swift language, indentation, line-ending, and rule settings.
+ * Build the SwiftFormat file from the settings.
+ * @param context the tool file to build.
+ * @returns the SwiftFormat settings of the repository.
  */
 function buildSwiftformatFile(context: ToolFileContext): string {
     const { selection } = context;

@@ -16,8 +16,8 @@ import {
 } from '#cli/config/checks/general/structure.ts';
 
 /**
- * Every function of a module, nested ones included.
- * @param module the parsed syntax tree and its repository-relative filename.
+ * List every function of a module, nested ones too.
+ * @param module the parsed Python file.
  * @returns declarations and lambdas with source nodes and executable body statements.
  */
 function listFunctions(module: PythonModule): PythonFunction[] {
@@ -36,10 +36,10 @@ function listFunctions(module: PythonModule): PythonFunction[] {
 }
 
 /**
- * Whether this Python string expression starts the statements after any comments.
+ * Check whether a Python string expression comes first, after any comments.
  * @param node the candidate statement.
  * @param siblings the statements in the same file or function body.
- * @returns whether the string expression supplies a docstring.
+ * @returns true when the string holds a docstring.
  */
 function isDocstring(node: Node, siblings: Node[]): boolean {
     return (
@@ -50,8 +50,8 @@ function isDocstring(node: Node, siblings: Node[]): boolean {
 }
 
 /**
- * Read selected Python sources and their function declarations.
- * @param input the selected files and source reads.
+ * Read the Python sources and their function declarations.
+ * @param input the files to read.
  * @returns parsed modules with trees to dispose of after use.
  */
 async function readPython(input: SourceInput): Promise<PythonFiles> {
@@ -70,8 +70,8 @@ async function readPython(input: SourceInput): Promise<PythonFiles> {
 }
 
 /**
- * Parse one Python source module using the run's existing grammar cache when supplied.
- * @param path the repository-relative source path.
+ * Parse one Python module, with the grammar cache of the run, if any.
+ * @param path the repository-relative source file.
  * @param text the exact source content.
  * @param cache the source reads and tree cleanup for this run.
  * @returns a parsed module whose caller disposes its tree.
@@ -90,9 +90,9 @@ async function parsePythonModule(path: string, text: string, cache?: ParseCache)
 }
 
 /**
- * The docstring text of a function, or undefined.
- * @param definition the function definition.
- * @returns the text inside the quotes.
+ * Find the docstring text of a function.
+ * @param definition the function node.
+ * @returns the text inside the quotes, or undefined.
  */
 function findDocstring(definition: Node): string | undefined {
     const siblings = definition.childForFieldName('body')?.namedChildren ?? [];
@@ -120,7 +120,7 @@ function findDeclarationScope(node: Node): Node {
     return scope;
 }
 
-// Import aliases retain the actual module or member identity.
+// An import alias keeps the module or member that it names.
 function readImportName(node: Node) {
     if (node.type !== 'aliased_import') return { name: node.text, target: node.text };
     return { name: node.childForFieldName('alias')?.text, target: node.childForFieldName('name')?.text };
@@ -242,9 +242,9 @@ function readEnvironmentLiteral(node: Node): Node | null | undefined {
 }
 
 /**
- * Read Python environment access and configured reader calls through lexical import aliases.
+ * Read Python environment access and calls to the environment functions, through import aliases.
  * @param syntaxRoot the parsed Python source.
- * @param readers the configured environment functions.
+ * @param readers the environment functions.
  * @returns the environment reads and their source positions.
  */
 function readPythonEnvironment(syntaxRoot: Node, readers: readonly string[]): EnvironmentRead[] {

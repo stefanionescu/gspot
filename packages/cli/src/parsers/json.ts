@@ -11,11 +11,11 @@ import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 
 export function parseJsonFile(path: string, source: string): Record<string, unknown>;
 export function parseJsonFile<Value>(path: string, source: string, schema: z.ZodType<Value>): Value;
 /**
- * Read a JSON object. Validate its shape against any supplied schema.
- * @param path the repository-relative file path.
+ * Read a JSON object, and validate it against the schema, if any.
+ * @param path the repository-relative file.
  * @param source the file text.
- * @param schema the schema for parsed-value validation.
- * @returns the parsed JSON object, checked against the supplied schema.
+ * @param schema the shape to check.
+ * @returns the parsed object.
  */
 export function parseJsonFile(path: string, source: string, schema?: z.ZodType): unknown {
     try {
@@ -31,7 +31,7 @@ export function parseJsonFile(path: string, source: string, schema?: z.ZodType):
  * Parse and validate a source JSON document before a check reads its fields.
  * @param text the JSON source.
  * @param schema the fields and constraints to validate.
- * @returns the validated value or a source diagnostic.
+ * @returns the validated value, or a parse error.
  */
 export function parseJsonResult<T>(text: string, schema: z.ZodType<T>): Parsed<T> {
     let value: unknown;
@@ -46,10 +46,10 @@ export function parseJsonResult<T>(text: string, schema: z.ZodType<T>): Parsed<T
 }
 
 /**
- * Reads and edits shared JSON fields without rewriting unrelated content.
- * @param path the destination used in syntax and edit errors.
+ * Open a JSON file to edit shared fields, and leave other content as written.
+ * @param path the file that syntax and edit errors name.
  * @param source the complete JSON or JSON-with-comments text.
- * @returns the document used by managed field edits.
+ * @returns the editable document.
  */
 export function openJsonFile(path: string, source: string): EditableFile {
     let text = source;
@@ -68,9 +68,9 @@ export function openJsonFile(path: string, source: string): EditableFile {
 }
 
 /**
- * Parses configuration JSON with comments and trailing commas, rejecting partial results.
- * @param text the configuration text.
- * @returns the parsed configuration.
+ * Parse JSON with comments and trailing commas, and refuse partial results.
+ * @param text the source to parse.
+ * @returns the parsed value.
  * @throws when the text does not parse.
  */
 export function parseJsonc(text: string): unknown {

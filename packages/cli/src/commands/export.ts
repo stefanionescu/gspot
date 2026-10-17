@@ -18,11 +18,11 @@ import { type ExportJson, type ExportOptions } from '#cli/types/commands/export.
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 /**
- * Writes a template from the settings of this repository.
- * @param options the export destination.
- * @param options.cwd the directory the command runs in
- * @param options.file the destination path, relative to cwd
- * @returns the command result, with the omitted entries.
+ * Write a template from the settings of this repository.
+ * @param options where to write the template.
+ * @param options.cwd the folder where the command runs.
+ * @param options.file the template path, relative to cwd.
+ * @returns the command result, with the left-out settings.
  */
 async function runExportCommand(options: ExportOptions): Promise<CommandResult<ExportJson>> {
     const { cwd, file } = options;
@@ -66,8 +66,8 @@ async function runExportCommand(options: ExportOptions): Promise<CommandResult<E
 
 /**
  * Register the export command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 function registerExport(program: Command, onResult: CommandCompletion): void {
     program

@@ -27,8 +27,6 @@ import { listCheckIds, listRuleFiles, readManifests } from '#cli/configurations/
 import { listSettings, getSettingValue, findDeclaration, listCandidateKeys } from '#cli/settings/inherit.ts';
 import { type Explanation, type SettingScope, type ConfigurationExplanation } from '#cli/types/commands/explain.ts';
 
-// Explain a check, rule, configuration, setting, or file path.
-
 function formatList(label: string, items: string[]): string[] {
     return items.length === 0 ? [] : [`${label}: ${items.join(', ')}`];
 }
@@ -83,7 +81,7 @@ function explainConfiguration(
     return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, data: row };
 }
 
-// The lines about one scope: its default, its current value and source, and how to change it.
+// Describe one scope: the default, the value and where it comes from, and how to change it.
 function formatSettingScope(key: string, declaration: SettingDeclaration, entry: SettingScope): string[] {
     const { scope, shipped, effective } = entry;
     const { value, source, reason } = effective ?? { value: undefined, source: 'unset', reason: undefined };
@@ -164,7 +162,7 @@ function formatUnknownSubject(session: Session | undefined, subject: string, rea
     return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${suggestion}`;
 }
 
-// A check retains its meaning; a tracked path precedes a rule with the same first folder.
+// A check ID wins. A tracked path wins over a lint rule with the same first folder.
 function explainSlashed(
     session: Session | undefined,
     subject: string,
@@ -188,11 +186,11 @@ function explainNamed(session: Session | undefined, subject: string, reads: Read
 }
 
 /**
- * Explains whatever the argument names, or returns the near matches.
- * @param session the session, or undefined outside a repository.
+ * Explain what the subject names.
+ * @param session the repository, or undefined outside one.
  * @param subject a check ID, a tool/rule pair, a configuration name, a setting key, or a file path.
- * @param reads the cache shared by every lookup in this explanation.
- * @returns the requested explanation
+ * @param reads the file cache for every lookup.
+ * @returns the explanation.
  * @throws GspotError when no subject or file matches, with the closest known names
  */
 function explain(session: Session | undefined, subject: string, reads: ReadCache): Explanation {
@@ -209,8 +207,8 @@ function explain(session: Session | undefined, subject: string, reads: ReadCache
 
 /**
  * Register the explain command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 function registerExplain(program: Command, onResult: CommandCompletion): void {
     program

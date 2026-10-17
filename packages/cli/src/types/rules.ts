@@ -1,6 +1,6 @@
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 
-/** A selected rule's destination, final text, and path within the rules folder. */
+/** The destination, final text, and path in the rules folder of one rule. */
 export type RuleFile = {
     path: string;
     target: string;
@@ -9,7 +9,7 @@ export type RuleFile = {
     group: Manifest['configuration']['group'];
 };
 
-/** Effective instruction settings and the same selected rule files that generation writes. */
+/** The rule settings, and the rule files that generation writes. */
 export type AgentsBlockInput = {
     files: RuleFile[];
     generatedPaths: string[];
@@ -19,7 +19,7 @@ export type AgentsBlockInput = {
     startCommand: string;
 };
 
-/** One Markdown heading's source range, depth, and all-level marker. */
+/** The source range, depth, and all-level marker of one Markdown heading. */
 export type RuleSection = { start: number; end: number; depth: number; all: boolean };
 
 /** A shipped rule asset and its path before selection. */

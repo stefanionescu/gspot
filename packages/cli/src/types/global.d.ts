@@ -1,6 +1,6 @@
 import 'zod/v4/core';
 
-// The runtime provides RegExp.escape before TypeScript's standard declarations include it.
+// The runtime provides RegExp.escape before the standard TypeScript declarations include it.
 declare global {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: TypeScript extends the built-in RegExp constructor through an interface.
     interface RegExpConstructor {

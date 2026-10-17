@@ -68,7 +68,7 @@ function buildDependencyPolicies({
     return policies;
 }
 
-// Test files take precedence over module categories. elements cover unknown endpoints.
+// Test files win over module categories. The elements also cover unknown endpoints.
 function buildBoundarySettings({
     modules,
     enforceTests,
@@ -97,9 +97,9 @@ function buildBoundarySettings({
 }
 
 /**
- * Compose root modules and project tests in one boundary configuration.
+ * Build one boundary block from the root modules and the project tests.
  *
- * @param context selected scopes, level, and your own Node script paths.
+ * @param context the scopes, level, and Node script paths to cover.
  *
  * @returns one classification block and its ordered dependency policies.
  */

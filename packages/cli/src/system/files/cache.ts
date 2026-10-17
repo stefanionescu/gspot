@@ -4,13 +4,13 @@ import { type MemoKey, type ParseKey, type ReadCache, type CachedParseInput } fr
 
 /**
  * Reuse one value produced by a stable key during this run.
- * @param reads the run-owned source and derived-value cache.
+ * @param reads the run cache.
  * @param key the producer whose identity and return type own the entry.
- * @returns the existing value or the producer's first result.
+ * @returns the cached value, or the first result of the producer.
  */
 export function getCachedValue<Value extends object>(reads: ReadCache, key: MemoKey<Value>): Value {
     const held = reads.memo.get(key);
-    // Only this key's producer writes its entry; its return type owns the stored value.
+    // Only the producer of this key writes its entry, so its return type matches the stored value.
     if (held !== undefined) return held as Value;
     const value = key.create();
     reads.memo.set(key, value);
@@ -18,12 +18,12 @@ export function getCachedValue<Value extends object>(reads: ReadCache, key: Memo
 }
 
 /**
- * Reuse one calculated entry within a run-owned map.
- * @param reads the current run's read cache.
+ * Reuse one calculated value in a map that the run owns.
+ * @param reads the run cache.
  * @param key the map producer.
- * @param entry the calculation's key.
+ * @param entry the key of the calculation.
  * @param create the calculation.
- * @returns the existing entry or its first calculated value.
+ * @returns the cached value, or its first calculated value.
  */
 export function getCachedMapValue<Key, Value>(
     reads: ReadCache,
@@ -39,17 +39,17 @@ export function getCachedMapValue<Key, Value>(
 }
 
 /**
- * Give source bytes and derived values to one repository root.
+ * Create the cache of source bytes and derived values for one repository root.
  * @param repositoryRoot the folder to canonicalize before caching source reads.
- * @returns the session-owned read cache.
+ * @returns the run cache.
  */
 export function createReadCache(repositoryRoot: string): ReadCache {
     return { root: realpathSync(repositoryRoot), sources: new Map(), memo: new Map() };
 }
 
 /**
- * Parse selected files once per stable reader key and ordered path list.
- * @param input the selected paths, run cache, and cleanup stack.
+ * Parse the files once per reader key and ordered path list.
+ * @param input the paths to parse and the run resources.
  * @param key the reader and its disposer.
  * @returns the parsed value for the lifetime of the input resources.
  */
@@ -57,7 +57,7 @@ export async function parseCached<Input extends CachedParseInput, Value extends 
     input: Input,
     key: ParseKey<Input, Value>,
 ): Promise<Value> {
-    // This stable key owns both the reader's result type and its per-path-list entries.
+    // This key decides both the result type of the reader and its entries for each path list.
     let entries = input.reads.memo.get(key) as Map<string, Promise<Value>> | undefined;
     if (entries === undefined) {
         entries = new Map();

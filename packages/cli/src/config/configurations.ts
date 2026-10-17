@@ -4,12 +4,12 @@ export const SOURCE_FILE_GROUPS = ['language', 'framework'] as const;
 export const MANIFEST_FILE = 'manifest.toml';
 export const CONFIGURATIONS_FOLDER = 'configurations';
 
-/** The rule assets within each shipped configuration. */
+/** The rules folder in each shipped configuration. */
 export const RULES_FOLDER = 'rules';
 
 export const NAMING_DEFAULTS_FILE = 'configurations/general/naming/defaults.json';
 
-/** Display labels for every validated configuration group, in initialization order. */
+/** Display labels for each configuration group, in init order. */
 export const GROUPS = [
     'language',
     'framework',
@@ -40,7 +40,7 @@ export const MISE_BACKENDS = [
     { installer: 'cargo', prefix: 'cargo:' },
 ] as const;
 
-/** A manifest-owned file list reads the scope's already resolved repository-relative tests. */
+/** The placeholder that a manifest file list uses for the resolved test files of the scope. */
 export const TEST_FILES_PLACEHOLDER = '{setting:test_files}';
 
 export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
@@ -79,12 +79,12 @@ export const TARGET_PLACEHOLDER = /\{target(?:_json|_module)?\}/gu;
 
 export const MAX_EXIT_CODE = 255;
 
-/** Supported configuration levels, in their selection order. */
+/** The levels, in selection order. */
 export const LEVELS = ['recommended', 'all'] as const;
 
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
 
-/** Numeric floors allow an omitted minor or patch version. */
+/** A version floor may leave out the minor or patch number. */
 export const VERSION_FLOOR = /^(?:\d+|\d+\.\d+|\d+\.\d+\.\d+)$/u;
 
 export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;

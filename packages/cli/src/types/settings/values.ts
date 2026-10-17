@@ -33,7 +33,7 @@ type SettingsFile = {
     text: string;
 };
 
-/** Values validated once for a selected scope and then consumed by checks and generators. */
+/** Values validated once for one scope, then read by checks and generators. */
 type ScopeSettings = {
     settings: Record<string, unknown>;
     values: TableValues;
@@ -140,7 +140,7 @@ type SettingDefault = { value: unknown; configuration: string };
 /** Transform or observe one declared path without changing its role. */
 type PathVisitor = (path: string, keys: KeyPath, role: NonNullable<SettingDeclaration['path_role']>) => string;
 
-/** An written origin and its actual selected defaults during ordered omission. */
+/** A written table and its defaults, while defaults get dropped in order. */
 type WrittenTable = { scope: string; table: TomlTable; known: KnownSettings };
 
 export type {

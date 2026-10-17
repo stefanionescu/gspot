@@ -10,9 +10,9 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/edit-settings.ts';
 
 /**
- * Register removal of ignores by check, lint rule, and path.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * Register the unignore command.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 function registerUnignore(program: Command, onResult: CommandCompletion): void {
     program
@@ -27,7 +27,7 @@ function registerUnignore(program: Command, onResult: CommandCompletion): void {
         });
 }
 
-// Calculate matching record and path removals without changing the captured settings.
+// Find the records and paths to remove, and leave the read settings unchanged.
 function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
     const removed = new Set(options.paths);
     const ignores: unknown[] = Array.isArray(written['ignore']) ? written['ignore'] : [];
@@ -68,9 +68,9 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
 }
 
 /**
- * Remove matching ignores or paths while preserving unmatched records.
- * @param options the repository, check, optional rule, and paths
- * @returns the mutation result and any ignore that still covers every path
+ * Remove the matching ignores or paths, and keep the other records.
+ * @param options the check, the lint rule, and the paths to match.
+ * @returns the edit result, and any ignore that still covers every path.
  */
 async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,

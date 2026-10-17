@@ -37,9 +37,9 @@ function parseFormattingWidth(value: string | undefined): number | undefined {
 }
 
 /**
- * Read matching EditorConfig options without executing project code.
- * @param file the project package path
- * @returns the matching formatting options, or null when the project has no EditorConfig
+ * Read the matching EditorConfig options, and run no project code.
+ * @param file the path of the project package.json.
+ * @returns the formatting options, or null when the project has no EditorConfig.
  */
 function readFormattingFields(file: string): InitFormatOptions | null {
     const root = posix.dirname(file);
@@ -69,11 +69,11 @@ function readFormattingFields(file: string): InitFormatOptions | null {
 }
 
 /**
- * Reads JSON Prettier settings or the matching EditorConfig section without executing written code.
- * @param file the project package path
- * @param dependencies the declared project dependencies
- * @param prettierFiles the authored formatter declarations discovered in this repository.
- * @returns the three formatting options, or null when the repository configures neither formatter
+ * Read JSON Prettier settings or the matching EditorConfig section, and run no authored code.
+ * @param file the path of the project package.json.
+ * @param dependencies what the project package.json declares.
+ * @param prettierFiles the Prettier settings that init found.
+ * @returns the three formatting options, or null when neither formatter has settings.
  */
 function readFormatOptions(
     file: string,
@@ -98,12 +98,12 @@ function readFormatOptions(
 }
 
 /**
- * Reads the formatting fields for the scopes init will configure.
- * @param draft the selected configurations and written template
- * @param repository the source root and tracked files
- * @param manifests the configuration declarations
- * @param dependencyFiles the already parsed project dependencies
- * @returns inferred formatting tables, with written template values retained
+ * Read the formatting options for each scope that init sets up.
+ * @param draft the configurations and the template.
+ * @param repository the root and the tracked files.
+ * @param manifests every configuration.
+ * @param dependencyFiles the parsed package declarations.
+ * @returns the formatting tables, with the template values kept.
  */
 export function readFormatTables(
     draft: SettingsDraft,

@@ -1,4 +1,4 @@
-/** Operating-system names and host install commands used by planning, validation, and installation. */
+/** Each system name and its install commands. */
 export const OPERATING_SYSTEMS = [
     { nodeName: 'darwin', name: 'macos', label: 'macOS', installers: [{ installer: 'brew', command: 'brew install' }] },
     {

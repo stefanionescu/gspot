@@ -3,8 +3,8 @@ import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { HADOLINT_RECOMMENDED_OFF, HADOLINT_FAILURE_THRESHOLD } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Build hadolint file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Hadolint file from the settings.
+ * @param context the tool file to build.
  * @returns the Hadolint exclusions and trusted registry settings.
  */
 function buildHadolintFile(context: ToolFileContext): string {

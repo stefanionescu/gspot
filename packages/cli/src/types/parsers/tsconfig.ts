@@ -1,6 +1,6 @@
 import type ts from 'typescript';
 
-/** Compiler configuration with its validated authored fields and actual configuration reads. */
+/** The parsed tsconfig: its validated authored fields and the tsconfig files it read. */
 export type TypeScriptConfiguration = Omit<ts.ParsedCommandLine, 'raw'> & {
     raw: { [key: string]: unknown; compilerOptions?: Record<string, unknown> | undefined };
     tsconfigFiles: string[];

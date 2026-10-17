@@ -53,7 +53,7 @@ export const YARN_ENVIRONMENT_SETTINGS = [
     },
 ] as const;
 
-/** Lockfile resolution runs without committing a tool project installation. */
+/** Resolve the lockfile, and install nothing into the tool project. */
 export const LOCKFILE_ARGUMENTS = {
     npm: ['npm', 'install', '--package-lock-only', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
     bun: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted', '--network-concurrency=1'],

@@ -26,12 +26,12 @@ export const RUNTIME_EMBEDS = [
     [/\bcat\s+>[^<]+<</u, 'a generated script heredoc'],
 ] as const;
 
-/** Safety-rule patterns and their diagnostic text. */
+/** Safety patterns and their finding text. */
 export const ALL_LEVEL_SAFETY_PATTERNS = [
     [/\|\|\s*true(?:\s|$)/u, 'blanket-success', 'a command failure is discarded with || true'],
 ] as const;
 
-/** Patterns requiring reasoned ignores. */
+/** Patterns that need an ignore with a reason. */
 export const SAFETY_PATTERNS = [
     [/\bpkill\s+-f\b/u, 'broad-kill', 'processes are matched broadly'],
     [/\bkillall\b/u, 'broad-kill', 'processes are matched broadly'],
@@ -42,7 +42,7 @@ export const SAFETY_PATTERNS = [
 /** A top-level assignment of an upper-case name. */
 export const TOP_LEVEL_ASSIGNMENT = /^(?<name>[A-Z_][A-Z0-9_]*)=/u;
 
-/** Functions every script may leave uncalled. */
+/** The function that every script may leave uncalled. */
 export const MAIN_FUNCTION = 'main';
 
 /** Prose that announces a deprecated alias. */

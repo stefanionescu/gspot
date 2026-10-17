@@ -2,8 +2,8 @@ import { JEST_GLOBAL_PACKAGE } from '#cli/config/generation/eslint-fragments.ts'
 import { type EslintContext, type EslintFragment } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply Jest rules with the selected test files and globals.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the Jest lint rules with the test files and globals of the scope.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildJestFragment(

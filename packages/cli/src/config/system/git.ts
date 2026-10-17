@@ -1,4 +1,4 @@
-/** Git resolves scalar path variables relative to the original hook directory. */
+/** Git resolves these single-path variables relative to the original hook folder. */
 export const GIT_PATH_VARIABLES = [
     'GIT_DIR',
     'GIT_WORK_TREE',
@@ -10,13 +10,13 @@ export const GIT_PATH_VARIABLES = [
     'GIT_CONFIG',
 ] as const;
 
-/** Command-scope configuration may supply authentication and applies to both repositories. */
+/** Git settings from the command line may carry credentials, and apply to both repositories. */
 export const GIT_COMMAND_CONFIGURATION: ReadonlySet<string> = new Set(['GIT_CONFIG_COUNT', 'GIT_CONFIG_PARAMETERS']);
 
-/** These commands create metadata instead of using the invoking repository's metadata. */
+/** This command creates new Git metadata and does not read the metadata of the calling repository. */
 export const GIT_CLONE_COMMAND = 'clone';
 
-/** Git executable names, including Windows. */
+/** The Git executable name on every system. */
 export const GIT_EXECUTABLE = 'git';
 
 /** Git reports this exit code when repository discovery fails. */

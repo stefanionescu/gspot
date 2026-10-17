@@ -32,7 +32,7 @@ type InitPlan = {
     noLongerRuns: InitFileRow[];
 };
 
-/** The authored configuration init replaces: what it read, what it deletes, and what stays for the developer. */
+/** The authored tool files that init replaces: what it read, what it deletes, and what stays for you. */
 type ReplacedFiles = {
     changed: InitFileRow[];
     read: Map<string, FileContents | undefined>;
@@ -85,7 +85,7 @@ type DetectionSummary = {
     hasGit: boolean;
 };
 
-/** A file initialization writes, removes, or preserves, with its explanation. */
+/** A file that init writes, removes, or keeps, with its note. */
 type InitFileRow = { path: string; note: string };
 
 /** The CI provider init selects, including an explicit choice to write no workflow. */
@@ -109,7 +109,7 @@ type InitDetection = {
     files: TrackedFile[];
     dependencyFiles: DependencyFile[];
     options: Pick<InitOptions, 'configurations' | 'template'>;
-    /** Whether the folder contains a Git repository; a configuration whose checks all read git stays out otherwise. */
+    /** Whether the folder contains a Git repository; a configuration whose checks all read Git stays out otherwise. */
     hasGit: boolean;
 };
 
@@ -133,7 +133,7 @@ type InitInputs = {
     options: Pick<InitOptions, 'configurations' | 'template'>;
 };
 
-/** Explicit, detected, and recommended choices for explaining initial selection. */
+/** Explicit, detected, and recommended choices, to explain the init selection. */
 type ConfigurationChoices = { named: Set<string>; chosen: Set<string>; listed: Set<string> };
 
 type InitFormatOptions = {

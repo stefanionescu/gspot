@@ -27,13 +27,13 @@ export const TEST_RULE_NAMES = [
 // The check that runs ESLint, whose ignores with a rule become blocks of the generated tool file.
 export const ESLINT_CHECK = 'javascript/eslint';
 
-/** Default folder boundaries selected by all-level repository policy. */
+/** The default folder boundaries at level all. */
 export const ESLINT_BOUNDARY_FOLDERS = ['*/*'] as const;
 
 /** Frameworks whose application sources use browser APIs. Build scripts retain Node.js. */
 export const ESLINT_BROWSER_CONFIGURATIONS = ['react', 'vue', 'svelte'] as const;
 
-/** Keep calls while classifying import and export types by their actual specifiers. */
+/** Count require calls and dynamic imports too, and classify imports and exports by their specifiers. */
 export const TRPC_DEPENDENCY_NODES = ['require', 'dynamic-import'] as const;
 
 export const TRPC_DEPENDENCY_SELECTORS = [
@@ -63,7 +63,7 @@ export const TRPC_DEPENDENCY_SELECTORS = [
     },
 ] as const;
 
-/** Boundary classification leaves unknown clients outside your own architecture policies. */
+/** Files that no boundary covers stay outside your own architecture policies. */
 export const UNKNOWN_IMPORT_POLICIES = [
     { from: { file: { isUnknown: true } }, allow: { to: { file: { path: '**/*' } } } },
     { allow: { to: { file: { isUnknown: true } } } },
@@ -75,7 +75,7 @@ export const TRPC_SERVER_VALUE_POLICY = {
     disallow: { to: { file: { categories: 'module:server' } }, dependency: { kind: 'value' } },
 } as const;
 
-/** selectors cover alias import suffixes alongside the relative-import rule. */
+/** Selectors that cover alias import suffixes next to the relative-import rule. */
 export const ALIAS_IMPORT_SELECTORS = {
     always: {
         selector: String.raw`:matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#|@\/)/][source.value!=/\.[^/?.]+$/]:not([source.value=/\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))`,
@@ -87,7 +87,7 @@ export const ALIAS_IMPORT_SELECTORS = {
     },
 } as const;
 
-/** compiled imports use the emitted JavaScript suffix for TypeScript sources. */
+/** Compiled imports use the JavaScript suffix of the output for TypeScript files. */
 export const TYPESCRIPT_EXTENSION_MAP = [
     ['.ts', '.js'],
     ['.mts', '.mjs'],
@@ -95,7 +95,7 @@ export const TYPESCRIPT_EXTENSION_MAP = [
     ['.tsx', '.js'],
 ] as const;
 
-/** Import resolution includes your own TypeScript modules before checking emitted suffixes. */
+/** Import resolution finds your own TypeScript modules before it checks output suffixes. */
 export const IMPORT_EXTENSIONS = [
     '.js',
     '.ts',
@@ -191,8 +191,8 @@ export const ESLINT_BASE_IMPORTS = [
     ['globals', 'globals'],
 ] as const;
 
-/** Indentation shared by emitted ESLint configuration blocks. */
+/** The indent of each generated ESLint block. */
 export const ESLINT_INDENT = ' '.repeat(ESLINT_INDENT_WIDTH);
 
-/** Spacing preceding component framework preset blocks. */
+/** The blank lines before each framework preset block. */
 export const FRAGMENT_SPACING = '\n'.repeat(FRAGMENT_BLANK_LINES);

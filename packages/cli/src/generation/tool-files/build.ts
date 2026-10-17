@@ -107,10 +107,10 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
     [SEMGREP_RULE_PACK_FOLDER]: buildSemgrepFile,
 };
 /**
- * Build one target file and its declared pointers.
- * @param context the declared output, its owner, and the selected scope settings.
- * @param targets the generated tool files chosen for each scope.
- * @returns the generated file with companion paths relative to its chosen location.
+ * Build one tool file and its pointers.
+ * @param context the tool file to build.
+ * @param targets the tool file path for each scope.
+ * @returns the generated file, with paths relative to where it sits.
  */
 function buildToolFile(context: ToolFileContext, targets: ToolFileGeneration['targets']): GeneratedFile {
     const { toolFile, targetPath } = context;

@@ -22,7 +22,7 @@ import {
 /**
  * Accept the dictionary keys written in gspot.toml without extending every source-file dictionary.
  *
- * @param spellingScopes the scopes with spelling checks.
+ * @param spellingScopes the projects where typos runs.
  *
  * @returns the settings dictionary and its file selector.
  */
@@ -43,7 +43,7 @@ function buildSettingsDictionary(spellingScopes: ScopeSelection[]) {
         'extend-words': Object.fromEntries<string>(collectWords('extend-words')),
     };
 }
-// Convert each shared ignore section once and retain the first reason for a repeated path.
+// Convert each shared ignore section once, and keep the first reason for a repeated path.
 function buildTyposSections(context: ToolFileContext): IgnoreSection[] {
     const excludedLockfiles = TYPOS_EXCLUDED_FILES.filter(
         (path) => path === '*.lock' || findLockfile(path) !== undefined,
@@ -124,8 +124,8 @@ function serializeExclusions(grouped: IgnoreSection[]): string {
 }
 
 /**
- * Build typos file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the typos file from the settings.
+ * @param context the tool file to build.
  * @returns the spelling dictionaries and reason-grouped exclusions as TOML.
  */
 function buildTyposFile(context: ToolFileContext): string {

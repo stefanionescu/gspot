@@ -57,7 +57,7 @@ const bunPackagesSchema = z.looseObject({ packages: z.record(z.string(), z.array
 
 const bunPackageSchema = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]);
 
-// Whether a parsed Yarn lockfile resolves each requested descriptor to its pinned version.
+// Check whether a parsed Yarn lockfile resolves each requested descriptor to its pinned version.
 function isYarnLockfileCurrent(
     entries: Record<string, { version?: string | undefined }>,
     dependencies: DependencyMap,
@@ -73,14 +73,14 @@ function isYarnLockfileCurrent(
     );
 }
 
-// The registry a package resolves through: its scope's, or the default one.
+// Find the registry of a package: the registry of its scope, or the default.
 function findPackageRegistry(name: string, env: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;
     const scopeRegistry = scope === undefined ? undefined : env[`${NPM_SETTING_PREFIX}${scope}:registry`];
     return scopeRegistry ?? env[`${NPM_SETTING_PREFIX}registry`];
 }
 
-// Whether a Bun lockfile entry resolved the standard tarball of a valid npm version through the configured registry.
+// Check whether a Bun lockfile entry resolved the standard tarball of a valid npm version through the configured registry.
 function isStandardTarball(entry: BunPackage, env: Record<string, string>): boolean {
     const [identity, address, , integrity] = entry;
     const separator = identity.lastIndexOf('@');
@@ -94,7 +94,7 @@ function isStandardTarball(entry: BunPackage, env: Record<string, string>): bool
     return address === new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
 }
 
-// The registry-relative form of a resolved URL under the registry, or undefined when it lies elsewhere.
+// Strip the registry prefix from a resolved URL, or return undefined when the URL lies elsewhere.
 function stripRegistryPrefix(address: string, base: URL): string | undefined {
     if (!HTTP_URL.test(address)) return undefined;
     const url = new URL(address);
@@ -103,11 +103,11 @@ function stripRegistryPrefix(address: string, base: URL): string | undefined {
 }
 
 /**
- * Rewrite resolved URLs under the registry as relative paths, retaining Yarn's formatting.
+ * Rewrite resolved URLs under the registry as relative paths, and keep the Yarn formatting.
  * Throw if any other entry changes.
  *
  * @param content the lockfile text Yarn wrote.
- * @param registry the registry URL its resolved references start with.
+ * @param registry the URL that resolved references start with.
  *
  * @returns the lockfile text with registry-relative references.
  */
@@ -136,7 +136,7 @@ function stripYarnRegistryUrls(content: string, registry: string): string {
  * @param content the lockfile text Bun wrote.
  * @param env the registry settings the resolution ran with.
  *
- * @returns the lockfile text without the registry's tarball URLs.
+ * @returns the lockfile text without the registry tarball URLs.
  */
 function stripBunRegistryUrls(content: string, env: Record<string, string>): string {
     const parsed = bunPackagesSchema.parse(parseJsonc(content));
@@ -150,9 +150,9 @@ function stripBunRegistryUrls(content: string, env: Record<string, string>): str
 }
 
 /**
- * Root lockfile dependencies.
+ * Read the root dependencies of a lockfile.
  *
- * @param name the tool or setting name.
+ * @param name the package manager that wrote the lockfile.
  * @param content the lockfile text.
  *
  * @returns the dependencies recorded for the root project.
@@ -188,12 +188,12 @@ function parseRootDependencies(
 }
 
 /**
- * Whether a lockfile pins every generated dependency.
- * npm, Bun, and pnpm must have no additional root dependencies; Yarn may retain extra entries.
+ * Check whether a lockfile pins every generated dependency.
+ * npm, Bun, and pnpm must have no extra root dependencies; Yarn may keep extra entries.
  *
  * @param name the package manager that wrote the lockfile.
  * @param content the lockfile text.
- * @param dependencies the dependencies the tool project declares.
+ * @param dependencies what the tool project declares.
  *
  * @returns true when the lockfile matches.
  */
@@ -219,11 +219,11 @@ export function isLockfileCurrent(name: PackageManager['name'], content: string,
 /**
  * Remove registry locations from portable lockfile bytes.
  *
- * @param work the tool project directory.
- * @param packageManager the selected package manager.
- * @param options the lockfile bytes and package manager environment.
+ * @param work the tool project folder.
+ * @param packageManager the tool that wrote the lockfile.
+ * @param options the result of the package manager run.
  * @param options.env the environment for the tool process.
- * @param options.lockfile the resolved lockfile bytes.
+ * @param options.lockfile the resolved bytes to clean.
  */
 export function stripRegistryUrls(work: string, packageManager: PackageManager, options: PackageCommandResult): void {
     const { env, lockfile } = options;

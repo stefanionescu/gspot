@@ -21,8 +21,8 @@ export class GspotError extends Error {
 
 /**
  * Format a Zod issue and its union branches as field paths and messages.
- * @param issue the validation issue.
- * @returns the diagnostic lines with each nested field's full path.
+ * @param issue one Zod failure.
+ * @returns the message lines, with the full path of each nested field.
  */
 export function formatZodIssue(issue: z.core.$ZodIssue): string[] {
     const path = issue.path.map(String).join('.');

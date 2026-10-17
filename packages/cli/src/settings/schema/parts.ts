@@ -89,10 +89,10 @@ namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
 /** Numeric limits at both written and resolved settings boundaries. */
 const limitTableSchema = z.record(z.string(), z.number()) satisfies z.ZodType<ScopeSettings['limits']>;
 
-/** The calendar form used by CLI date arguments and the editor's JSON representation. */
+/** The calendar form of CLI date arguments and of the editor JSON. */
 const calendarDateSchema = z.iso.date();
 
-/** Runtime expiry values retain unquoted TOML local dates. */
+/** Runtime expiry values keep unquoted TOML local dates. */
 const localDateSchema = z.custom<LocalDate>(
     (value) => value instanceof LocalDate && calendarDateSchema.safeParse(value.toISOString()).success,
     { error: 'Use an unquoted TOML local date in YYYY-MM-DD form, without a time or offset.' },
@@ -142,9 +142,9 @@ const formatSchema = formatFields.extend({
 } satisfies SchemaShape<Pick<TableSettings<'format'>, 'override'>, Pick<WrittenFormat, 'override'>>);
 
 /**
- * Accept a setting value with its explanation in the same TOML entry.
- * @param schema the setting's value schema
- * @returns the value schema and its reasoned value
+ * Accept a setting value, or a reasoned value with the same value schema.
+ * @param schema the value validator.
+ * @returns the value schema and its reasoned value.
  */
 function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
@@ -159,9 +159,9 @@ function allowReasonedValue<Output, Input>(
 }
 
 /**
- * Read one value together with its required explanation.
- * @param schema the field's value validator and description
- * @returns the value read from its strict reasoned value
+ * Read one value with its required reason.
+ * @param schema the validator and description of the value.
+ * @returns the value read from its strict reasoned value.
  */
 function buildReasonedValueSchema<Output, Input>(
     schema: z.ZodType<Output, Input>,
@@ -175,9 +175,9 @@ function buildReasonedValueSchema<Output, Input>(
 }
 
 /**
- * Remove optional and default wrappers before inspecting a setting's shape.
- * @param schema the validator to inspect
- * @returns the validator that defines the setting's value
+ * Remove optional and default wrappers to inspect the shape of a setting.
+ * @param schema the validator to inspect.
+ * @returns the inner validator.
  */
 function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
     let inner = schema;

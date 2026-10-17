@@ -8,7 +8,7 @@ import type { Finding } from '#cli/types/checks/run/check.ts';
 import { MARKDOWNLINT_SEVERITIES } from '#cli/config/parsers/output.ts';
 import { type ReportInput, type MarkdownlintResult } from '#cli/types/parsers/output.ts';
 
-// One markdownlint entry as a finding.
+// Turn one markdownlint entry into a finding.
 function buildFinding(check: string, help: string, entry: MarkdownlintResult, file: string): Finding {
     return {
         check,
@@ -39,9 +39,9 @@ const markdownlintReportSchema = z.array(
 ) satisfies z.ZodType<MarkdownlintResult[]>;
 
 /**
- * Findings from the markdownlint JSON report, with its reported source position.
- * @param input the check, report text, source paths, and output declaration.
- * @returns source positions and rule names resolved against the tool working folder.
+ * Read the findings in the markdownlint JSON report.
+ * @param input the tool output to read.
+ * @returns the findings, with positions and lint rule names resolved against the tool folder.
  */
 export function parseMarkdownlintFindings(input: ReportInput): Finding[] {
     const { check, stdout, help, cwd } = input;

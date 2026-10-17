@@ -88,7 +88,7 @@ function mergeTable(
 }
 
 /**
- * Ordered command arguments replace intact; other lists append, per-rule tables merge, and scalars replace.
+ * Merge two values: command arguments replace whole, other lists append, per-rule tables merge, and single values replace.
  * @param declaration the setting.
  * @param current the value so far.
  * @param found the value the next table writes.
@@ -114,8 +114,8 @@ function mergeValue(declaration: SettingDeclaration, current: unknown, found: un
 }
 
 /**
- * The root settings and every scope table, with their locations in the document.
- * @param settings the repository settings.
+ * List the root settings and every scope table, with their locations in the document.
+ * @param settings the parsed gspot.toml.
  * @returns the tables in written order, root first.
  */
 function listSettingsTables(settings: Settings): WrittenScopeTable[] {
@@ -128,9 +128,9 @@ function listSettingsTables(settings: Settings): WrittenScopeTable[] {
 }
 
 /**
- * The root settings and applicable scope tables, ordered from outermost to innermost.
- * @param settings the repository settings.
- * @param scope the scope path, '' or undefined for the root alone.
+ * List the root settings and the scope tables that apply, from outermost to innermost.
+ * @param settings the parsed gspot.toml.
+ * @param scope the folder, '' or undefined for the root alone.
  * @returns the tables with their scope paths and reported names.
  */
 function listApplicableTables(settings: Settings, scope: string | undefined): WrittenScopeTable[] {
@@ -140,11 +140,11 @@ function listApplicableTables(settings: Settings, scope: string | undefined): Wr
 }
 
 /**
- * Matches a written key to the declaration it belongs to: per-language and per-category variants map back to their base declaration.
+ * Match a written key to its declaration. Per-language and per-category keys map back to their base declaration.
  *
- * @param known the known settings of the selection.
- * @param key the dotted key as written.
- * @returns the declaration with the language and category the key names, or undefined when nothing exposes it.
+ * @param known the declarations and defaults of the selection.
+ * @param key the dotted name as written.
+ * @returns the match with its language and category, or undefined.
  */
 function findDeclaration(known: KnownSettings, key: string): DeclarationMatch | undefined {
     const direct = known.declarations.get(key);
@@ -155,10 +155,10 @@ function findDeclaration(known: KnownSettings, key: string): DeclarationMatch | 
 }
 
 /**
- * Reads the written value the settings hold for a dotted key, or undefined.
- * @param settings the root table or one scope table.
- * @param key the dotted key.
- * @returns the value with its reason, or undefined when the document does not contain the key.
+ * Read the written value of a dotted key.
+ * @param settings the root table or one scope.
+ * @param key the dotted setting name.
+ * @returns the value with its reason, or undefined when the key has no value.
  */
 function getWrittenSetting(settings: Pick<Settings, 'written'>, key: string): WrittenSetting | undefined {
     const value: unknown = getValueAt(settings.written, key.split('.'));
@@ -173,9 +173,9 @@ function getWrittenSetting(settings: Pick<Settings, 'written'>, key: string): Wr
 
 /**
  * Resolve a written language or category key after its broader declaration.
- * @param match the setting's declaration and written selector.
- * @param key the written dotted key.
- * @returns candidate keys from the broadest declaration to the selected field.
+ * @param match the declaration and the written selector.
+ * @param key the dotted name as written.
+ * @returns candidate keys from the broadest declaration to the named field.
  */
 function listCandidateKeys(match: DeclarationMatch, key: string): string[] {
     return match.language === undefined
@@ -190,12 +190,12 @@ function listCandidateKeys(match: DeclarationMatch, key: string): string[] {
 }
 
 /**
- * Resolve one selected default against its language, scope, and site build folder.
- * @param known the declarations and defaults of the selected configurations.
- * @param match the declaration and its language, if specified.
+ * Resolve one default against its language, scope, and site build folder.
+ * @param known the declarations and defaults of the configurations in use.
+ * @param match the declaration and its language, if any.
  * @param scope the project whose shipped paths apply.
- * @param readValue the effective value reader for this caller's settings tables.
- * @returns the selected default with repository-relative paths, or undefined when absent.
+ * @param readValue reads a value from the settings tables of the caller.
+ * @returns the default with repository-relative paths, or undefined.
  */
 function findSettingDefault(
     known: KnownSettings,
@@ -216,12 +216,12 @@ function findSettingDefault(
 }
 
 /**
- * Resolves one key: configuration default, root table, scope table. Lists append and deduplicate; scalars replace.
+ * Resolve one key: configuration default, root table, then scope table. Lists append without repeats; single values replace.
  *
- * @param known the known settings of the selection.
- * @param settings the loaded settings.
- * @param key the dotted key.
- * @param scope the scope path whose table applies last, if any.
+ * @param known the declarations and defaults of the selection.
+ * @param settings the parsed gspot.toml.
+ * @param key the dotted setting name.
+ * @param scope the folder whose table applies last, if any.
  * @returns the value with where it came from, or undefined when nothing exposes the key.
  */
 function getSettingValue(
@@ -265,11 +265,11 @@ function getSettingValue(
 }
 
 /**
- * The effective declared settings, language defaults and written variants, in key order.
+ * List the settings that apply, with language defaults and written variants, in key order.
  *
- * @param known the known settings of the selection.
- * @param settings the loaded settings.
- * @param scope the scope path whose table applies last, if any.
+ * @param known the declarations and defaults of the selection.
+ * @param settings the parsed gspot.toml.
+ * @param scope the folder whose table applies last, if any.
  * @returns the resolved settings in key order.
  */
 function listSettings(known: KnownSettings, settings: Settings, scope?: string): EffectiveSetting[] {
@@ -291,7 +291,7 @@ function listSettings(known: KnownSettings, settings: Settings, scope?: string):
 }
 
 /**
- * Read the owning table of a setting, including a tool's own table.
+ * Read the table of a setting or of a tool.
  * @param key the full setting name.
  * @returns its table name.
  */
@@ -304,7 +304,7 @@ function getSettingTable(key: string): string {
 /**
  * Read a written setting value from its reasoned value or its plain value.
  * @param written the authored setting.
- * @returns the value that a settings mutation changes.
+ * @returns the value that a settings edit changes.
  */
 function getWrittenValue(written: unknown): unknown {
     if (isRecord(written) && Object.hasOwn(written, 'value')) return written['value'];
@@ -312,10 +312,10 @@ function getWrittenValue(written: unknown): unknown {
 }
 
 /**
- * Replace a written value while keeping the reason of its reasoned value.
- * @param written the original setting
- * @param value the changed setting value
- * @returns the replacement in the same written form
+ * Replace a written value, and keep the reason of its reasoned value.
+ * @param written the original setting.
+ * @param value the new setting.
+ * @returns the replacement in the same written form.
  */
 function replaceWrittenValue(written: unknown, value: unknown): unknown {
     if (isRecord(written) && Object.hasOwn(written, 'value')) return { ...written, value };

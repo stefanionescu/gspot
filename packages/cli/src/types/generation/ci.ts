@@ -12,9 +12,9 @@ export type Pipeline = {
     manualTools: ToolDeclaration[];
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     operatingSystems: NonNullable<Settings['ci']>['operating_systems'];
-    /** Whether a selected scope includes Swift. */
+    /** Whether a scope includes Swift. */
     hasSwift: boolean;
-    /** The manual checks the selected configurations declare, which the final job step runs by name. */
+    /** The manual checks that the configurations declare, which the final job step runs by name. */
     manualChecks: PlannedCheck[];
 };
 

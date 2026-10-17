@@ -42,8 +42,8 @@ function planApply(session: Session): CommandResult {
 
 /**
  * Register the apply command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 function registerApply(program: Command, onResult: CommandCompletion): void {
     program
@@ -62,9 +62,9 @@ function registerApply(program: Command, onResult: CommandCompletion): void {
 }
 
 /**
- * Writes generated files or shows planned changes without writing.
- * @param options the parsed flags
- * @returns the command result
+ * Write the generated files, or show the planned changes and write nothing.
+ * @param options the parsed flags.
+ * @returns the command result.
  */
 async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);

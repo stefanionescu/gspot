@@ -2,8 +2,8 @@ import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply Vitest presets to the selected test files.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the Vitest presets to the test files.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildVitestFragment(

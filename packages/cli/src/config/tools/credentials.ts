@@ -1,6 +1,6 @@
 export const REINSTALL_HINT = 'Run: gspot apply, then gspot install';
 
-/** Limit installation diagnostic length after credential redaction. */
+/** The longest install output that gspot shows after it removes credentials. */
 export const INSTALL_OUTPUT_LIMIT = 4000;
 
 export const HTTP_URL = /^https?:\/\//u;

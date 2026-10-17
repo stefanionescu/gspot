@@ -21,9 +21,9 @@ function isLimitLoosening(direction: 'raising' | 'lowering', value: unknown, shi
 
 /**
  * Describe a missing or invalid reason for commands and saved settings.
- * @param where the settings entry or command needing a reason.
- * @param reason the written explanation, when present.
- * @param command an available command that can correct the entry.
+ * @param where the setting or command that needs a reason.
+ * @param reason the written text, if any.
+ * @param command the CLI line that can fix it.
  * @returns the error, or undefined when the reason meets the requirements.
  */
 function validateReason(where: string, reason: string | undefined, command?: string): string | undefined {
@@ -44,8 +44,8 @@ function validateExtraReason(entry: Record<string, unknown>, path: KeyPath): Set
 }
 
 /**
- * Missing or invalid reasons on ignores, declarations, naming exceptions, and custom tool options.
- * @param settings the normalized settings.
+ * Find missing or invalid reasons on ignores, declarations, naming exceptions, and extra tool options.
+ * @param settings the normalized gspot.toml.
  * @returns the errors in plain English.
  */
 function validateSettingReasons(settings: Settings): SettingsError[] {
@@ -85,8 +85,8 @@ function validateSettingReasons(settings: Settings): SettingsError[] {
 }
 
 /**
- * Checks that the reason meets the minimum word count.
- * @param reason the reason as written, if any.
+ * Check whether the reason meets the minimum word count.
+ * @param reason the written text, if any.
  * @returns whether the reason meets the requirements.
  */
 function isReasonAccepted(reason: string | undefined): boolean {
@@ -96,10 +96,10 @@ function isReasonAccepted(reason: string | undefined): boolean {
 }
 
 /**
- * True when setting `value` for `declaration` loosens `shipped` and needs a reason.
+ * Check whether setting `value` for `declaration` loosens `shipped`, so the value needs a reason.
  * @param declaration the setting.
- * @param value the value written.
- * @param shipped the shipped default.
+ * @param value what gspot.toml sets.
+ * @param shipped the default of the configuration.
  * @returns whether the value needs a reason.
  */
 function isLoosening(declaration: SettingDeclaration, value: unknown, shipped: unknown): boolean {

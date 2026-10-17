@@ -17,8 +17,8 @@ import {
 } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Build ansible lint file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Ansible Lint file from the settings.
+ * @param context the tool file to build.
  * @returns the Ansible Lint exclusions as YAML.
  */
 function buildAnsibleLintFile(context: ToolFileContext): string {
@@ -27,8 +27,8 @@ function buildAnsibleLintFile(context: ToolFileContext): string {
     return stringifyYaml({ skip_list: [...new Set([...ALWAYS_SKIPPED_TAGS, ...rulesOff('ansible/ansible-lint')])] });
 }
 /**
- * Build gixy file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Gixy file from the settings.
+ * @param context the tool file to build.
  * @returns the Gixy rule exclusions, or empty text when every rule stays enabled.
  */
 function buildGixyFile(context: ToolFileContext): string {
@@ -38,8 +38,8 @@ function buildGixyFile(context: ToolFileContext): string {
     return off.length === 0 ? '' : `skips = ${off.join(',')}\n`;
 }
 /**
- * Build lychee file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Lychee file from the settings.
+ * @param context the tool file to build.
  * @returns the Lychee link exclusions as TOML.
  */
 function buildLycheeFile(context: ToolFileContext): string {
@@ -49,8 +49,8 @@ function buildLycheeFile(context: ToolFileContext): string {
     return stringifyToml(exclude.length === 0 ? {} : { exclude }, TOML_FORMAT).trimEnd();
 }
 /**
- * Build osv scanner file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the `osv-scanner` tool file from the settings.
+ * @param context the tool file to build.
  * @returns the package ignores, reasons, and expiration dates for the scanner.
  */
 function buildOsvScannerFile(context: ToolFileContext): string {
@@ -73,8 +73,8 @@ function buildOsvScannerFile(context: ToolFileContext): string {
     ).trimEnd();
 }
 /**
- * Build periphery file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Periphery file from the settings.
+ * @param context the tool file to build.
  * @returns the Xcode project, schemes, and retained Periphery declarations as YAML.
  */
 function buildPeripheryFile(context: ToolFileContext): string {
@@ -89,8 +89,8 @@ function buildPeripheryFile(context: ToolFileContext): string {
     });
 }
 /**
- * Build purgecss file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the PurgeCSS file from the settings.
+ * @param context the tool file to build.
  * @returns the JavaScript token extractor and safelist used by PurgeCSS.
  */
 function buildPurgecssFile(context: ToolFileContext): string {
@@ -103,9 +103,9 @@ function buildPurgecssFile(context: ToolFileContext): string {
     return `export const defaultExtractor = (content) => (content.match(${String(PURGECSS_EXTRACTOR)}) ?? []).map((token) => { let end = token.length; while (end > 0 && token[end - 1] === ${JSON.stringify(PURGECSS_TOKEN_END)}) end--; return token.slice(0, end); }).filter((token) => token !== '');\nexport const safelist = { standard: [${standard.join(', ')}] };\n`;
 }
 /**
- * Build spectral file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the OpenAPI preset and the Spectral rules selected at this level.
+ * Build the Spectral file from the settings.
+ * @param context the tool file to build.
+ * @returns the OpenAPI preset and the Spectral rules at this level.
  */
 function buildSpectralFile(context: ToolFileContext): string {
     const isAll = context.level === 'all';
@@ -116,8 +116,8 @@ function buildSpectralFile(context: ToolFileContext): string {
     }).trimEnd();
 }
 /**
- * Build taplo file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Taplo file from the settings.
+ * @param context the tool file to build.
  * @returns the Taplo formatting settings with automatic schema lookup disabled.
  */
 function buildTaploFile(context: ToolFileContext): string {
@@ -137,8 +137,8 @@ function buildTaploFile(context: ToolFileContext): string {
     ).trimEnd();
 }
 /**
- * Build trivy file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Trivy file from the settings.
+ * @param context the tool file to build.
  * @returns the Trivy severity, timeout, and skipped folders as YAML.
  */
 function buildTrivyFile(context: ToolFileContext): string {
@@ -151,8 +151,8 @@ function buildTrivyFile(context: ToolFileContext): string {
     }).trimEnd();
 }
 /**
- * Build v8r file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the v8r file from the settings.
+ * @param context the tool file to build.
  * @returns the v8r schema catalog, including the configured file selectors.
  */
 function buildV8rFile(context: ToolFileContext): string {

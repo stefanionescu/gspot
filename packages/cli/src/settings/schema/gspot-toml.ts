@@ -229,8 +229,8 @@ const settingsSchema = z
     .meta({ examples: SETTINGS_EXAMPLES }) satisfies z.ZodType<ParsedSettings, WrittenSettings>;
 
 /**
- * Write the editor schema for the version of gspot that owns these settings.
- * @returns the JSON Schema document
+ * Build the editor schema for this gspot version.
+ * @returns the JSON Schema document.
  */
 function buildJsonSchema(): Record<string, unknown> {
     return {
@@ -244,8 +244,8 @@ function buildJsonSchema(): Record<string, unknown> {
 
 /**
  * Locate one setting in the root, configuration, and tool schemas.
- * @param key the dotted setting key
- * @returns its authoritative schema, or undefined when the key names no setting
+ * @param key the dotted setting name.
+ * @returns its schema, or undefined when the key names no setting.
  */
 function findSettingSchema(key: string): z.ZodType | undefined {
     const direct = Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).find(([name]) => name === key);
@@ -277,9 +277,9 @@ function buildDateJsonSchema(): z.core.JSONSchema.JSONSchema {
 }
 
 /**
- * Publish settings input schemas while retaining written defaults and declaration metadata.
- * @param schema the authoritative runtime validator.
- * @returns its object projection, with TOML dates represented as calendar strings.
+ * Convert a settings schema to JSON Schema, and keep written defaults and declaration metadata.
+ * @param schema the runtime validator.
+ * @returns the JSON Schema, with TOML dates as calendar strings.
  */
 function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
     return z.toJSONSchema(schema, {

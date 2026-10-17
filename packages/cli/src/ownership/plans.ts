@@ -29,8 +29,8 @@ function buildBlockText(path: string, text: string, body: string, style: BlockSt
 /**
  * Remove only the marked block and its separating blank line.
  * @param path the block file.
- * @param current its current bytes.
- * @returns the remaining copy, or absence when nothing remains.
+ * @param current its bytes on disk.
+ * @returns the remaining file contents, or undefined when nothing remains.
  */
 function removeBlock(path: string, current: FileContents): FileContents | undefined {
     const text = decodeUtf8(current.bytes);
@@ -44,7 +44,7 @@ function removeBlock(path: string, current: FileContents): FileContents | undefi
 
 /**
  * Determine ownership from the gspot folder, file notice, or managed Git attributes.
- * @param path the repository-relative path.
+ * @param path the repository-relative file.
  * @param disk the repository reader.
  * @returns whether gspot owns the whole file.
  */
@@ -63,7 +63,7 @@ export function isOwned(path: string, disk: Files): boolean {
 
 /**
  * Find owned files and managed blocks outside the generation plan.
- * @param session the current file inventory and declared instruction files.
+ * @param session the repository files.
  * @param expected the generated destinations that remain.
  * @returns the obsolete generated paths.
  */
@@ -103,10 +103,10 @@ export function listStrayPaths(
 }
 
 /**
- * Replace owned or explicitly reviewed bytes and preserve other authored files.
- * @param writer the locked file writer.
- * @param request the next bytes and any reviewed copy.
- * @returns the prior and next bytes with an unchanged, changed, or preserved status.
+ * Replace owned or reviewed bytes, and keep other authored files.
+ * @param writer the locked repository handle.
+ * @param request the new bytes and any reviewed file contents.
+ * @returns the write plan, with an unchanged, changed, or preserved status.
  */
 export function planReplacement(writer: Writer, request: ReplacementRequest): WritePlan {
     const { path, next, expected } = request;
@@ -127,11 +127,11 @@ export function planReplacement(writer: Writer, request: ReplacementRequest): Wr
 }
 
 /**
- * Replace or append the marked block while retaining text outside it.
- * @param writer the locked file writer.
- * @param path the file path.
+ * Replace or append the marked block, and keep the text outside it.
+ * @param writer the locked repository handle.
+ * @param path the file.
  * @param body the block text.
- * @param style the marker style.
+ * @param style markdown or hash markers.
  * @returns the block write plan.
  */
 export function planBlock(writer: Writer, path: string, body: string, style: BlockStyle): WritePlan {
@@ -147,8 +147,8 @@ export function planBlock(writer: Writer, path: string, body: string, style: Blo
 }
 
 /**
- * Merge the keys gspot currently manages into a shared file.
- * @param writer the locked file writer.
+ * Merge the managed keys into a shared file.
+ * @param writer the locked repository handle.
  * @param path the destination.
  * @param changes the keys and requested values.
  * @returns the key write plan.
@@ -160,9 +160,9 @@ export function planManagedKeys(writer: Writer, path: string, changes: FileEdit[
 }
 
 /**
- * Remove the exact copy the caller reviewed.
+ * Remove a file only when it holds the reviewed contents.
  * @param path the destination.
- * @param expected the reviewed copy.
+ * @param expected the reviewed file contents.
  * @returns the removal plan.
  */
 export function planDeletion(path: string, expected: FileContents): WritePlan {
@@ -170,10 +170,10 @@ export function planDeletion(path: string, expected: FileContents): WritePlan {
 }
 
 /**
- * Remove an owned file or its managed block while retaining authored text.
- * @param writer the locked file writer.
- * @param path the obsolete generated destination.
- * @returns the previous bytes and any authored text left after removing the managed block.
+ * Remove an owned file or its managed block, and keep the authored text.
+ * @param writer the locked repository handle.
+ * @param path the stale generated file.
+ * @returns the old bytes, and any authored text left after the managed block goes.
  */
 export function planRemoval(writer: Writer, path: string): WritePlan {
     const current = writer.files.readKeepingLinks(path);

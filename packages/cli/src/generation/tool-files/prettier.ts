@@ -21,7 +21,7 @@ import type {
     PrettierPluginOptions,
 } from '#cli/types/generation/formatting.ts';
 
-// A selector list as written: one string or several.
+// Read a selector list as written: one string or several.
 function normalizeSelectors(value: string | string[] | undefined): string[] {
     if (value === undefined) return [];
     return typeof value === 'string' ? [value] : value;
@@ -56,7 +56,7 @@ function moveOverrides(
 
 /**
  * Collect the root and nested formatting settings with their selectors.
- * @param settings the repository settings and per-scope formatting overrides.
+ * @param settings the parsed gspot.toml.
  * @returns the root and nested formatting overrides with their file selectors.
  */
 function listScopeFormats(settings: Settings): ScopeFormat[] {
@@ -108,11 +108,11 @@ function buildPluginsOption(
 }
 
 /**
- * The Prettier options for the format settings a settings states.
+ * Convert format settings to Prettier options.
  *
- * @param format the format settings, each optional.
+ * @param format the formatting values, each optional.
  *
- * @returns the options Prettier reads, only for the settings given.
+ * @returns the Prettier options for each setting in the input.
  */
 function convertFormatSettings(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
@@ -127,11 +127,11 @@ function convertFormatSettings(format: Partial<FormatSettings>): Record<string, 
 }
 
 /**
- * Generate each Prettier configuration relative to its own output path.
+ * Generate the Prettier options relative to the path of the tool file.
  *
- * @param input effective formatting, your own overrides, applicable plugins, and the output path.
+ * @param input what the Prettier file holds.
  *
- * @returns the Prettier configuration.
+ * @returns the Prettier options.
  */
 function buildPrettierOptions(input: PrettierInput): Record<string, unknown> {
     const { settings, format, targetPath, extra, plugins } = input;
@@ -154,8 +154,8 @@ function buildPrettierOptions(input: PrettierInput): Record<string, unknown> {
 
 /**
  * Build the Prettier tool file relative to its destination.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the formatter options, selected plugins, and scoped overrides.
+ * @param context the tool file to build.
+ * @returns the formatter options, plugins, and scope overrides.
  */
 function buildPrettierFile(context: ToolFileContext): string {
     const value = buildPrettierOptions({

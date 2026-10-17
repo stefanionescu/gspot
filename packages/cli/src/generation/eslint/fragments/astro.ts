@@ -11,8 +11,8 @@ import {
 } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply Astro presets and its component parser choices.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the Astro presets and the Astro component parser.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildAstroFragment(

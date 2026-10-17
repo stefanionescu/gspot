@@ -12,5 +12,5 @@ export type GitTargetEnvironment = {
     explicit: Record<string, string | undefined>;
 };
 
-/** Git commands share the spawn contract; the runner owns the working directory. */
+/** Git commands share the spawn options; the Git helper sets the working folder. */
 export type GitOptions = Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>;

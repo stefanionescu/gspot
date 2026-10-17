@@ -4,8 +4,8 @@ import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES_OFF } from '#cli/config/generat
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply typed presets and the selected project files.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the typed presets and the project files.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildTypescriptFragment(

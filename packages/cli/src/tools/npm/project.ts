@@ -48,7 +48,7 @@ import {
     NPM_CONFIG_FOLDER_VARIABLE,
 } from '#cli/config/tools/npm.ts';
 
-// Resolve in a disposable directory; keep repository credentials out of the portable result.
+// Resolve in a scratch folder, and keep repository credentials out of the portable result.
 async function createNpmLockfile(
     context: InstallContext,
     toolProjectFile: GeneratedFile,
@@ -86,11 +86,11 @@ async function createNpmLockfile(
 }
 
 /**
- * The resolution and immutable-install arguments for the selected package manager.
+ * Select the lockfile and frozen-install arguments for the package manager.
  *
- * @param packageManager the declared package manager and major.
+ * @param packageManager the declared name and major version.
  *
- * @returns both actual package operations.
+ * @returns the arguments of both operations.
  */
 function selectPackageManagerArguments(packageManager: PackageManager): PackageManagerArguments {
     const yarn = isYarnBerry(packageManager) ? YARN_ARGUMENTS.berry : YARN_ARGUMENTS.classic;
@@ -102,9 +102,9 @@ function selectPackageManagerArguments(packageManager: PackageManager): PackageM
 }
 
 /**
- * Execute a package operation and validate its complete lockfile before publication.
+ * Run a package manager operation, and validate its full lockfile before it gets written.
  *
- * @param context the selected tools, repository writer, session, and command log.
+ * @param context what install needs for this step.
  * @param request the package-manager operation and routing.
  *
  * @returns validated lockfile bytes and the private routing environment.
@@ -163,9 +163,8 @@ async function runPackageManager(
 
 /**
  * Verify the declared package manager against its executable before writing project inputs.
- * @param packageManager the package manager declaration.
- * @param version the executable's version response.
- * @returns nothing.
+ * @param packageManager the declaration to verify.
+ * @param version what the executable printed.
  */
 function assertPackageManagerVersion(packageManager: PackageManager, version: SpawnResult): void {
     const requirement = `${String(semver.major(packageManager.version))}.x`;
@@ -177,8 +176,8 @@ function assertPackageManagerVersion(packageManager: PackageManager, version: Sp
 }
 
 /**
- * Verify the selected package-manager executable before installation changes any tool inputs.
- * @param context the session, shared cancellation signal, and attempted command list.
+ * Verify the package manager executable before install changes any tool inputs.
+ * @param context what install needs for this step.
  */
 async function verifyPackageManagerVersion(context: InstallContext): Promise<void> {
     const { session, steps } = context;
@@ -193,11 +192,11 @@ async function verifyPackageManagerVersion(context: InstallContext): Promise<voi
 }
 
 /**
- * Prepare the npm tool project's credential-free lockfile.
+ * Prepare the npm tool project lockfile, free of credentials.
  *
- * @param context the selected tools, repository writer, session, and command log.
+ * @param context what install needs for this step.
  * @param toolProjectFile the generated package.json.
- * @param yarn the generated Yarn settings.
+ * @param yarn the generated .yarnrc.yml text, if any.
  *
  * @returns the lockfile and its recorded bytes.
  */
@@ -233,10 +232,8 @@ async function prepareNpmLockfile(
 
 /**
  * Install the npm tool project in .gspot.
- * @param context the selected tools, repository writer, session, and command log.
- *
- *
- * @returns the installation summary.
+ * @param context what install needs for this step.
+ * @returns the install summary.
  */
 async function installNpmTools(context: InstallContext): Promise<string> {
     const { session } = context;

@@ -2,7 +2,7 @@
 import type { SqlRange, SqlToken, PreparedSql } from '#cli/types/parsers/sql.ts';
 import { WORD_CHARACTER, IDENTIFIER_START, DOLLAR_TAG_BLOCKER } from '#cli/config/parsers/sql.ts';
 
-// The index of the first stop character at or after from, or the text length.
+// Find the index of the first stop character at or after from, or the text length.
 function findLineEnd(text: string, from: number, stops: string): number {
     for (let at = from; at < text.length; at += 1) if (stops.includes(text[at] ?? '')) return at;
     return text.length;
@@ -18,7 +18,7 @@ function findDoubledQuoteEnd(text: string, from: number, quote: string): number 
     return text.length;
 }
 
-// The index past an E'' string, whose backslash escapes the next character, or the text length when unclosed.
+// Find the index past an E'' string, whose backslash escapes the next character, or the text length when unclosed.
 function findEscapedStringEnd(text: string, from: number): number {
     for (let at = from; at < text.length; at += 1) {
         const char = text[at];
@@ -29,7 +29,7 @@ function findEscapedStringEnd(text: string, from: number): number {
     return text.length;
 }
 
-// The index past an identifier that starts at from, or from when none starts there.
+// Find the index past an identifier that starts at from, or from when none starts there.
 function findIdentifierEnd(text: string, from: number): number {
     if (!IDENTIFIER_START.test(text[from] ?? '')) return from;
     let end = from + 1;
@@ -37,7 +37,7 @@ function findIdentifierEnd(text: string, from: number): number {
     return end;
 }
 
-// The index past a psql variable such as `:name`, `:'name'`, or `:"name"`, or `-1` when the colon starts none.
+// Find the index past a psql variable such as `:name`, `:'name'`, or `:"name"`, or `-1` when the colon starts none.
 function findVariableEnd(text: string, at: number): number {
     const quote = text[at + 1];
     const isQuoted = quote === "'" || quote === '"';
@@ -48,31 +48,31 @@ function findVariableEnd(text: string, at: number): number {
     return text[end] === quote ? end + 1 : -1;
 }
 
-// An E'' string, whose E must start a word.
+// Match an E'' string, whose E must start a word.
 function matchEscapedString(text: string, at: number): Omit<SqlToken, 'start'> | undefined {
     if (text[at + 1] !== "'" || WORD_CHARACTER.test(text[at - 1] ?? '')) return undefined;
     return { end: findEscapedStringEnd(text, at + "E'".length), kind: 'other' };
 }
 
-// A dollar-quote tag, which cannot continue an identifier or a number.
+// Match a dollar-quote tag, which cannot continue an identifier or a number.
 function matchDollarTag(text: string, at: number): Omit<SqlToken, 'start'> | undefined {
     if (DOLLAR_TAG_BLOCKER.test(text[at - 1] ?? '')) return undefined;
     const end = findIdentifierEnd(text, at + 1);
     return text[end] === '$' ? { end: end + 1, kind: 'dollar' } : undefined;
 }
 
-// A cast operator, or a psql variable.
+// Match a cast operator or a psql variable.
 function matchColonToken(text: string, at: number): Omit<SqlToken, 'start'> | undefined {
     if (text[at + 1] === ':') return { end: at + '::'.length, kind: 'other' };
     const end = findVariableEnd(text, at);
     return end === -1 ? undefined : { end, kind: 'variable' };
 }
 
-// The reader for each character that can start a lexeme.
 function matchQuotedToken(text: string, at: number): Omit<SqlToken, 'start'> {
     return { end: findDoubledQuoteEnd(text, at + 1, text[at] ?? ''), kind: 'other' };
 }
 
+// The reader for each character that can start a lexeme.
 const READERS: Record<string, (text: string, at: number) => Omit<SqlToken, 'start'> | undefined> = {
     '-': (text: string, at: number): Omit<SqlToken, 'start'> | undefined => {
         return text[at + 1] === '-' ? { end: findLineEnd(text, at, '\n'), kind: 'line-comment' } : undefined;
@@ -91,7 +91,7 @@ const READERS: Record<string, (text: string, at: number) => Omit<SqlToken, 'star
     ':': matchColonToken,
 };
 
-// The index past the block comment whose opener ends at from, with nesting, or the text length when unclosed.
+// Find the index past the block comment whose opener ends at from, with nesting, or the text length when unclosed.
 function findBlockCommentEnd(text: string, from: number): number {
     let depth = 1;
     for (let at = from; at < text.length; at += 1) {
@@ -108,7 +108,7 @@ function findBlockCommentEnd(text: string, from: number): number {
     return text.length;
 }
 
-// The index past the whole lexeme: a block comment closes with nesting, and a dollar quote at its tag's return.
+// Find the index past the whole lexeme: a block comment closes with nesting, and a dollar quote at the return of its tag.
 function findLexemeEnd(text: string, at: number, lexeme: Omit<SqlToken, 'start'>): number {
     if (lexeme.kind === 'block-comment') return findBlockCommentEnd(text, lexeme.end);
     if (lexeme.kind !== 'dollar') return lexeme.end;
@@ -117,7 +117,7 @@ function findLexemeEnd(text: string, at: number, lexeme: Omit<SqlToken, 'start'>
     return close === -1 ? text.length : close + tag.length;
 }
 
-// The parser text that stands in for a meta-command or a psql variable, with the same length so positions hold.
+// Build the parser text that stands in for a meta-command or a psql variable, with the same length so positions hold.
 function buildReplacement(kind: Omit<SqlToken, 'start'>['kind'], lexeme: string): string {
     if (kind === 'command') return ' '.repeat(lexeme.length);
     if (lexeme[1] === "'") return `''${' '.repeat(lexeme.length - "''".length)}`;

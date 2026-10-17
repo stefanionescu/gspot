@@ -39,9 +39,9 @@ const uvIndexSchema = z.looseObject({ url: z.string() } satisfies SchemaShape<{ 
  * Copy repository uv index settings into the scratch folder, make relative paths absolute, and collect registry credentials.
  *
  * @param repositoryRoot the base folder for reading uv settings and resolving local index paths.
- * @param work the directory the resolution runs in.
+ * @param work the folder where the resolution runs.
  *
- * @returns index credentials that must remain absent from generated lockfiles.
+ * @returns index credentials that must stay out of generated lockfiles.
  */
 export function writePythonSettings(repositoryRoot: string, work: string): string[] {
     const { settings, credentials } = parsePythonSettings(repositoryRoot, {
@@ -55,10 +55,10 @@ export function writePythonSettings(repositoryRoot: string, work: string): strin
 /**
  * Read repository index settings and resolve their local paths for a temporary uv project.
  *
- * @param repositoryRoot the repository root for resolving local index paths.
+ * @param repositoryRoot the base for local index paths.
  * @param sources the authored uv.toml and pyproject.toml contents.
  *
- * @returns selected settings and passwords excluded from generated lockfiles and diagnostics.
+ * @returns the index settings, and the passwords to keep out of generated lockfiles and messages.
  */
 export function parsePythonSettings(repositoryRoot: string, sources: PythonSettingsSources): PythonIndexSettings {
     const parsed = parse(sources.uv ?? sources.project ?? '') as Record<string, unknown>;

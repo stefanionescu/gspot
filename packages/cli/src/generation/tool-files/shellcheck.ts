@@ -7,8 +7,8 @@ import {
 } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Build shellcheck file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the ShellCheck file from the settings.
+ * @param context the tool file to build.
  * @returns the ShellCheck source-path and excluded-rule settings.
  */
 function buildShellcheckFile(context: ToolFileContext): string {

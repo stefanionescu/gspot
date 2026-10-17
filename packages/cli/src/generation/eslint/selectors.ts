@@ -8,7 +8,7 @@ import { REEXPORT_SELECTORS } from '#cli/config/generation/eslint-rules.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import { ENVIRONMENT_SELECTOR, ESLINT_SETTINGS_TABLE, ALIAS_IMPORT_SELECTORS } from '#cli/config/generation/eslint.ts';
 
-// Each distinct path list once, in the order written.
+// Keep each distinct path list once, in the order written.
 function filterDistinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();
     return lists.filter((list) => {
@@ -20,13 +20,13 @@ function filterDistinctLists(lists: string[][]): string[][] {
 }
 
 /**
- * Groups the selectors the selected fragments add so each file set gets one no-restricted-syntax rule.
+ * Group the selectors that fragments add, so each file set gets one no-restricted-syntax rule.
  *
- * A selector without files applies to every code file. A selector's except paths leave it out of the groups for those
- * paths. File and except-path intersections produce exclusive blocks, each retaining every selector that applies there
- * in first-mention order.
+ * A selector without files applies to every code file. The except paths of a selector leave it out of the groups for
+ * those paths. Each intersection of files and except paths makes its own block, with every selector that applies
+ * there, in first-mention order.
  *
- * @param selectors the selectors of the selected fragments with their covered and skipped paths.
+ * @param selectors the fragment syntax patterns with their covered and skipped paths.
  *
  * @returns the groups, where an absent files list means every code file.
  */
@@ -65,11 +65,11 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
 }
 
 /**
- * Resolve the actual selectors contributed by selected fragments within each project scope.
+ * Resolve the selectors that fragments add in each project scope.
  *
- * @param scopes every selected project scope.
- * @param isAll whether house style selectors apply.
- * @param reexports the selected export convention.
+ * @param scopes every project selection.
+ * @param isAll whether the house style selectors apply.
+ * @param reexports the export convention.
  *
  * @returns selector groups with their owning scope and excluded child projects.
  */

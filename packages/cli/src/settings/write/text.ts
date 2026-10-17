@@ -68,10 +68,10 @@ function mergeIgnores(ignores: TomlTable[]): TomlTable[] {
 }
 
 /**
- * Merge an written ignore into its matching identity while retaining scope-wide entries.
- * @param ignores the mutable written entries
- * @param ignore the entry whose paths join its existing identity
- * @returns the saved entry, including the merged paths
+ * Merge a written ignore into the record with the same identity, and keep scope-wide records.
+ * @param ignores the written [[ignore]] records.
+ * @param ignore the record whose paths join the match.
+ * @returns the saved record, with the merged paths.
  */
 function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
     const { paths: writtenPaths, ...identity } = ignore;
@@ -91,10 +91,10 @@ function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
 }
 
 /**
- * Write the settings while retaining written comments and template provenance.
- * @param previousText the original written document, or empty text for initialization
- * @param settings the written values, before execution defaults
- * @returns TOML 1.0 with value encoding
+ * Write the settings, and keep the written comments and the template source.
+ * @param previousText the gspot.toml contents before, or empty for init.
+ * @param settings the written values, before defaults.
+ * @returns the TOML 1.0 text.
  */
 function formatSettingsText(previousText: string, settings: TomlTable): string {
     const ordered = sortTable(settings);

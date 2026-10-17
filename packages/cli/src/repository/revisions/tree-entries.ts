@@ -15,9 +15,9 @@ import {
 
 /**
  * Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
- * @param repositoryRoot the folder used as the Git working directory.
+ * @param repositoryRoot the folder where Git runs.
  * @param source index or commit to inspect.
- * @param cancelSignal command cancellation.
+ * @param cancelSignal stops the command.
  * @returns validated entries.
  */
 export async function listRevisionEntries(
@@ -36,11 +36,11 @@ export async function listRevisionEntries(
 }
 
 /**
- * Read raw blobs once, visiting each before allocating the next blob.
- * @param repositoryRoot the folder used as the Git working directory.
+ * Read each raw blob once, and visit it before the next blob loads.
+ * @param repositoryRoot the folder where Git runs.
  * @param requested full blob object IDs.
- * @param visit the consumer of one validated object.
- * @param cancelSignal command cancellation.
+ * @param visit reads one validated object.
+ * @param cancelSignal stops the command.
  */
 export async function visitGitBlobs(
     repositoryRoot: string,
@@ -66,10 +66,10 @@ export async function visitGitBlobs(
 }
 
 /**
- * Collect the validated blobs required by a consumer that compares multiple objects.
- * @param repositoryRoot the folder used as the Git working directory.
+ * Collect the validated blobs for a caller that compares several objects.
+ * @param repositoryRoot the folder where Git runs.
  * @param requested full blob object IDs.
- * @param cancelSignal command cancellation.
+ * @param cancelSignal stops the command.
  * @returns validated object bytes.
  */
 export async function readBlobs(
@@ -91,8 +91,8 @@ export async function readBlobs(
 
 /**
  * Read the current commit, distinguishing an unborn branch from failed Git reads.
- * @param repositoryRoot the folder used as the Git working directory.
- * @param cancelSignal command cancellation.
+ * @param repositoryRoot the folder where Git runs.
+ * @param cancelSignal stops the command.
  * @returns current commit hash, or undefined for an unborn branch.
  */
 export async function readHead(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
@@ -108,8 +108,8 @@ export async function readHead(repositoryRoot: string, cancelSignal?: AbortSigna
 
 /**
  * Resolve committed entries, distinguishing an unborn branch from failed Git reads.
- * @param repositoryRoot the folder used as the Git working directory.
- * @param cancelSignal command cancellation.
+ * @param repositoryRoot the folder where Git runs.
+ * @param cancelSignal stops the command.
  * @returns current commit entries, or an empty list for an unborn branch.
  */
 export async function listHeadEntries(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitEntry[]> {

@@ -35,7 +35,7 @@ export const namingOverrideSchema = z.strictObject({
     reason: z.string().optional().meta({ description: 'Why these names may break the rules.' }),
 } satisfies SchemaShape<NamingOverride>);
 
-/** Built-in naming defaults read by validation and source checks. */
+/** Shipped naming defaults for validation and source checks. */
 export const namingDefaultsSchema = z.strictObject({
     path_containers: z.array(pathContainerSchema),
     allow_digits: z.boolean(),

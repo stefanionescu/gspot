@@ -2,7 +2,7 @@ import type { Node, Parser } from 'web-tree-sitter';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { GRAMMAR_NAMES } from '#cli/config/parsers/tree-sitter.ts';
 
-/** Files with grammars that a check already selected. */
+/** Files, each with the grammar that a check chose. */
 type ParsedFile = { path: string; grammar: GrammarName };
 
 export type MarkupAttribute = { name: string; value: string; element: string; node: Node };
@@ -11,10 +11,10 @@ export type GrammarName = (typeof GRAMMAR_NAMES)[number];
 
 export type ParseCache = { reads: ReadCache; resources?: DisposableStack };
 
-/** Selected repository files and the reads that own their parsed observations. */
+/** The repository files to parse, with the cache that owns their parse results. */
 export type SourceInput = ParseCache & { root: string; files: { path: string; kind: string }[] };
 
-/** Selected files and their repository-owned reads. */
+/** The files to parse, each with its grammar, and the repository cache. */
 export type ParsedSourceInput = ParseCache & { root: string; files: ParsedFile[] };
 
 /** A tree borrowed only for the duration of a synchronous source visitor. */

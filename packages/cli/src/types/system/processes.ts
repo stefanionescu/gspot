@@ -41,7 +41,7 @@ export type SpawnCompletion = Pick<
 
 export type StdoutRead = 'utf8' | ((chunks: AsyncIterable<Buffer>) => Promise<void>);
 
-/** Process-tree completion state and its actual stop and disposal operations. */
+/** The completion state of a process tree, and its stop and disposal operations. */
 export type ProcessTreeControl = {
     state: { isTimedOut: boolean; isCanceled: boolean };
     stop: () => void;

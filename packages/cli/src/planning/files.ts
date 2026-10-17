@@ -8,7 +8,7 @@ import { type Manifest, type CheckDeclaration } from '#cli/types/configurations.
 import { listCoveredFiles as listRepositoryCoveredFiles } from '#cli/repository/coverage.ts';
 import type { Session, PlanInputs, PlannedCheck, CheckCandidate } from '#cli/types/planning.ts';
 
-// Every tracked file under the scope.
+// List every tracked file under the scope.
 function listScopeFiles(context: PlanInputs, scopePath: string, runs: CheckDeclaration['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');
     return context.session.repository.files.filter(
@@ -16,7 +16,7 @@ function listScopeFiles(context: PlanInputs, scopePath: string, runs: CheckDecla
     );
 }
 
-// The files a project-wide check runs over: the scope's tree, when its files select anything in it.
+// List the files of a project-wide check: the scope tree, when the check files match anything in it.
 function listProjectCheckFiles(context: PlanInputs, entry: CheckCandidate, scopePath: string): TrackedFile[] {
     const { check, manifest } = entry;
     const { scope } = context;
@@ -67,7 +67,7 @@ function stripIgnoredFiles(
     };
 }
 
-// The files narrowed to the selection: a project check keeps everything when the selection touches it.
+// Narrow the files to the selection; a project check keeps everything when the selection touches it.
 function filterNarrowedFiles(context: PlanInputs, entry: CheckCandidate, files: TrackedFile[]): TrackedFile[] {
     const { narrow } = context;
     if (!narrow) return files;
@@ -78,7 +78,7 @@ function filterNarrowedFiles(context: PlanInputs, entry: CheckCandidate, files: 
     return entry.check.runs === 'files' ? inNarrowed : files;
 }
 
-// Selected paths deleted from the tree but still trigger a project check.
+// List the paths deleted from the tree that still trigger a project check.
 function listDeletedTriggers(context: PlanInputs, entry: CheckCandidate, scopePath: string): string[] {
     const { check, manifest } = entry;
     if (check.runs === 'files' || context.narrow === undefined) return [];
@@ -106,10 +106,10 @@ function listDeletedTriggers(context: PlanInputs, entry: CheckCandidate, scopePa
 }
 
 /**
- * The scopes nested inside a scope, whose files belong to them and not to it.
+ * List the scopes nested inside a scope. Their files belong to them, not to it.
  *
- * @param session the complete configured ownership boundaries for this run.
- * @param scope the owner whose nested paths belong to child scopes.
+ * @param session the scopes of this run.
+ * @param scope the parent selection.
  *
  * @returns the child scope paths.
  */
@@ -121,10 +121,10 @@ export function listChildScopes(session: Pick<Session, 'scopes'>, scope: ScopeSe
 }
 
 /**
- * Whether a general per-file check runs once at the root unless it reads a tool file for a scope.
+ * Check whether a general per-file check runs once at the root. A check that reads a scope tool file does not.
  *
- * @param manifest the manifest that declares the check.
- * @param check the execution mode and command arguments to inspect.
+ * @param manifest the configuration that declares the check.
+ * @param check the declaration to inspect.
  *
  * @returns true when the check runs once for the repository.
  */
@@ -142,12 +142,12 @@ export function isRootOnlyCheck(manifest: Manifest | undefined, check: CheckDecl
 }
 
 /**
- * The files and deleted trigger paths a planned check runs over.
+ * Select the files and deleted trigger paths of a planned check.
  *
- * @param context the scope selected for planning.
- * @param entry the declaration paired with its owning manifest.
+ * @param context the scope to plan.
+ * @param entry the check and its manifest.
  *
- * @returns the selected files and the trigger paths.
+ * @returns the files and the trigger paths.
  */
 export function selectCheckFiles(
     context: PlanInputs,
@@ -171,9 +171,9 @@ export function selectCheckFiles(
 }
 
 /**
- * The name a tool-file placeholder uses for a tool file.
- * @param target the target path
- * @returns the file name under .gspot/config without its extensions
+ * Get the name that a tool-file placeholder uses for a tool file.
+ * @param target the tool file path.
+ * @returns the file name under .gspot/config without its extensions.
  */
 export function extractToolFileName(target: string): string {
     const bare = target.startsWith(TOOL_FILE_PREFIX) ? target.slice(TOOL_FILE_PREFIX.length) : target;

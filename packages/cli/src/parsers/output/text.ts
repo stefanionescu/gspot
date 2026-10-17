@@ -46,8 +46,8 @@ function buildFinding(
 }
 
 /**
- * Read findings from individually matched output lines.
- * @param input the check, report text, source paths, and output declaration.
+ * Read a finding from each matching output line.
+ * @param input the tool output to read.
  * @returns the findings from matched lines.
  */
 export function parseRegexFindings(input: ReportInput): Finding[] {
@@ -68,7 +68,7 @@ export function parseRegexFindings(input: ReportInput): Finding[] {
 
 /**
  * Read findings grouped under output file headings.
- * @param input the check, report text, source paths, and output declaration.
+ * @param input the tool output to read.
  * @returns the findings under each matched file heading.
  */
 export function parseGroupedFindings(input: ReportInput): Finding[] {

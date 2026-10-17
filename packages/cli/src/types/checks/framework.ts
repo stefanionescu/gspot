@@ -14,7 +14,7 @@ export type PurgecssConstructor = new () => {
     purge(options: Record<string, unknown>): Promise<{ file?: string; rejected?: string[] }[]>;
 };
 
-/** The selected package's public LinkChecker API with CLI option delivery. */
+/** The public LinkChecker API of the linkinator package, with CLI options. */
 export type LinkinatorConstructor = new () => {
     on(event: 'pagestart', listener: (url: string) => void): unknown;
     check(options: {

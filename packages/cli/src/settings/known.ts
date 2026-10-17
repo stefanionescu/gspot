@@ -45,8 +45,8 @@ function addDefault(known: KnownSettings, manifest: Manifest, declaration: Setti
     });
 }
 
-// Adds one configuration's settings and their defaults, then its [defaults] for settings other configurations declare; those apply
-// only while the selection includes that configuration.
+// Add the settings of one configuration and their defaults, then its [defaults] for settings that other configurations
+// declare. Those apply only while the selection includes that configuration.
 function addManifest(known: KnownSettings, manifest: Manifest, level: Level): void {
     const isAll = level === 'all';
     const declarations = listConfigurationSettings(manifest.configuration.name).map((declared) =>
@@ -127,11 +127,12 @@ const toolDeclarations: MemoKey<Map<string, SettingDeclaration[]>> = {
 };
 
 /**
- * Builds the known settings in selection order; framework, platform, library, and database configurations override scalar defaults.
+ * Build the known settings in selection order. Framework, platform, library, and database configurations override
+ * single-value defaults.
  * @param selected the manifests of the selection, in order.
- * @param level the enforcement level whose defaults apply.
- * @param reads the run cache, when a session owns this calculation.
- * @returns the declarations, their defaults and the conflicts found on the way.
+ * @param level picks the recommended or all defaults.
+ * @param reads the run cache, if a session runs this.
+ * @returns the declarations, their defaults, and the conflicts found on the way.
  */
 function buildKnownSettings(selected: Manifest[], level: Level = 'recommended', reads?: ReadCache): KnownSettings {
     const roots = reads === undefined ? rootDeclarations.create() : getCachedValue(reads, rootDeclarations);
@@ -153,14 +154,14 @@ function buildKnownSettings(selected: Manifest[], level: Level = 'recommended', 
 }
 
 /**
- * Shares defaults derived from project inputs between init and a session.
- * @param inputs the package manager, SDK root, and workspace names when detected.
- * @param inputs.packageManager the detected package manager.
+ * Detect the defaults that come from project files for init and a session.
+ * @param inputs what detection found.
+ * @param inputs.packageManager the detected npm, pnpm, Yarn, or Bun.
  * @param inputs.sdkRoot the detected Xcode SDK.
  * @param inputs.scopes the workspace names.
- * @param inputs.openapi the detected OpenAPI filenames and candidate documents.
- * @param inputs.openapi.filenames the filenames that identify an OpenAPI document.
- * @param inputs.openapi.paths the repository-relative paths searched for an OpenAPI document.
+ * @param inputs.openapi the filenames and places to search.
+ * @param inputs.openapi.filenames the names that mark an OpenAPI document.
+ * @param inputs.openapi.paths the repository-relative places to search.
  * @returns computed setting defaults, with undefined when their project input does not exist.
  */
 function detectDefaults(inputs: {
@@ -188,9 +189,9 @@ function detectDefaults(inputs: {
 }
 
 /**
- * Read the declarations and defaults from their authoritative field schemas.
- * @param configuration the configuration that supplies the fields.
- * @returns the setting fields this configuration owns.
+ * Read the declarations and defaults from their field schemas.
+ * @param configuration the name whose fields to read.
+ * @returns the settings of this configuration.
  */
 function listConfigurationSettings(configuration: string): SettingDeclaration[] {
     const declarations: SettingDeclaration[] = [];

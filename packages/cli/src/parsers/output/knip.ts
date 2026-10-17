@@ -50,9 +50,9 @@ const knipReportSchema = z.strictObject({
 } satisfies SchemaShape<KnipReport>);
 
 /**
- * Read Knip's JSON categories without losing grouped symbols or source positions.
- * @param input the check, report text, source paths, and output declaration.
- * @returns categorized findings, including each positioned member of a grouped issue.
+ * Read the Knip JSON categories, and keep grouped symbols and source positions.
+ * @param input the tool output to read.
+ * @returns the findings, with each positioned member of a grouped issue.
  */
 export function parseKnipFindings(input: ReportInput): Finding[] {
     const { check, stdout: text, help } = input;

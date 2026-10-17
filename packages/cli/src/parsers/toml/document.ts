@@ -13,7 +13,7 @@ import {
     listAnchoredComments,
 } from '#cli/parsers/toml/comments.ts';
 
-// The TOML table a key path's parent names, creating missing parents before setting a value.
+// Find the TOML table that the parent of a key path names, and create missing parents first.
 function findTomlTable(
     document: Record<string, unknown>,
     options: TomlTableOptions,
@@ -40,10 +40,10 @@ function findTomlTable(
 }
 
 /**
- * Patch managed tool values and retain comments on their original syntax entries.
- * Text edits preserve the original order and formatting.
+ * Patch managed tool values, and keep comments on their syntax entries.
+ * Text edits keep the order and formatting.
  * @param original indexed source before edits.
- * @param values the resulting values.
+ * @param values the table after the edits.
  * @returns the edited document with its comments.
  */
 function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>): string {
@@ -114,9 +114,9 @@ function parseTomlFile(input: TomlInput): Record<string, unknown> {
 }
 
 /**
- * Reads and edits TOML keys while preserving comments and layout.
+ * Open a TOML file for key edits, and keep its comments and layout.
  * @param input the file path and TOML text.
- * @returns the document used by managed config-file edits.
+ * @returns the editable document.
  */
 export function openTomlFile(input: TomlInput): EditableFile {
     const document: Record<string, unknown> = parseTomlFile(input);

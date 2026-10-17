@@ -4,8 +4,8 @@ import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts'
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply query presets with their enabled warnings promoted to errors.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the TanStack Query presets, with enabled warnings turned into errors.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildTanstackQueryFragment(

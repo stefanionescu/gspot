@@ -11,7 +11,7 @@ import { parseReport } from '#cli/parsers/output/formats.ts';
 import type { Finding } from '#cli/types/checks/run/check.ts';
 import { type ReportInput, type ReportedTypo } from '#cli/types/parsers/output.ts';
 
-// The lines of a source file as bytes, read once per file, so byte offsets map to columns.
+// Read the lines of a source file as bytes, once per file, so byte offsets map to columns.
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
     const held = cache.get(path);
     if (held !== undefined) return held;
@@ -33,7 +33,7 @@ function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]
     return lines;
 }
 
-// The line and character column of a typo, from the byte offset typos reports.
+// Compute the line and character column of a typo from the byte offset that typos reports.
 function computeTypoPosition(
     root: string,
     path: string,
@@ -51,7 +51,7 @@ function computeTypoPosition(
     };
 }
 
-// One typos entry as a finding: a filename typo when it has no line, otherwise a positioned one.
+// Turn one typos entry into a finding: a filename typo when it has no line, otherwise a positioned one.
 function buildFinding(
     check: string,
     help: string,
@@ -83,10 +83,10 @@ const reportedTypoSchema = z.object({
 } satisfies SchemaShape<ReportedTypo>);
 
 /**
- * Findings from the JSON lines typos prints. JSON preserves filename delimiters; offsets count UTF-8 bytes,
- * while report columns count characters.
+ * Read the JSON lines that typos prints. JSON keeps filename delimiters. Offsets count UTF-8 bytes,
+ * but report columns count characters.
  *
- * @param input the check, report text, source paths, and output declaration.
+ * @param input the tool output to read.
  * @returns source positions with byte offsets converted to character columns.
  */
 export function parseTyposFindings(input: ReportInput): Finding[] {

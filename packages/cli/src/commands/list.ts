@@ -80,10 +80,10 @@ function buildConfigurationsResult(session: Session): CommandResult {
 }
 
 /**
- * Every setting per scope, plus each written extra tool options table.
- * @param settings the parsed repository settings
- * @param scopes the effective settings for each scope
- * @returns the rows and the extra tables
+ * List every setting for each scope, and each extra tool options table that you wrote.
+ * @param settings the parsed gspot.toml.
+ * @param scopes the settings that apply in each scope.
+ * @returns the rows and the extra tables.
  */
 function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): SettingsListJson {
     const extras = listSettingsTables(settings).flatMap(({ table, scope = '' }) =>
@@ -125,9 +125,9 @@ function formatCheckStatus(check: PlannedCheck | undefined): string {
 }
 
 /**
- * List configurations and effective settings without executing checks or mutating the project.
- * @param program the command-line program
- * @param onResult the sink that writes the completed command result.
+ * Register the list command. It runs no checks and changes no files.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 function registerList(program: Command, onResult: CommandCompletion): void {
     program
@@ -147,7 +147,7 @@ function registerList(program: Command, onResult: CommandCompletion): void {
  * Run the list command and return its output.
  * @param cwd the folder where the command starts.
  * @param kind whether to list configurations or settings.
- * @returns the selected list and its command exit code.
+ * @returns the list and its exit code.
  */
 async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResult> {
     const root = findRoot(cwd);

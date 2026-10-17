@@ -1,11 +1,11 @@
-// Reads host information and constructs command environments.
+// Read system information and build command environments.
 import envPaths from 'env-paths';
 import { isAbsolute } from 'node:path';
 import { CACHE_FOLDER_NAME } from '#cli/config/system/environment.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 
 /**
- * The environment for spawning tools, with Windows identities merged without changing their spelling.
+ * Build the environment for tool processes. Merge Windows names that differ only in case, and keep their spelling.
  * @param overrides tool variables that replace or remove inherited values.
  * @returns the variables as strings.
  */
@@ -31,8 +31,8 @@ export function readEnvironmentVariable(name: string): string | undefined {
 }
 
 /**
- * Compare plain-record environment keys by their system identity.
- * @param name the variable name.
+ * Build the comparison key of an environment variable name for this system.
+ * @param name the environment variable to key.
  * @returns its comparison key.
  */
 export function normalizeEnvironmentKey(name: string): string {
@@ -40,8 +40,8 @@ export function normalizeEnvironmentKey(name: string): string {
 }
 
 /**
- * The gspot cache directory of the platform. Refuse relative cache environment paths.
- * @returns the absolute cache directory.
+ * Read the gspot cache folder of this system. Refuse a relative cache path from the environment.
+ * @returns the absolute cache folder.
  */
 export function readCacheFolder(): string {
     const { cache } = envPaths(CACHE_FOLDER_NAME, { suffix: '' });
@@ -51,8 +51,8 @@ export function readCacheFolder(): string {
 }
 
 /**
- * Translate the host name reported by Node for planning, doctor, and test operating system selection.
- * @returns the gspot name, or the original Node name for another operating system.
+ * Translate the system name from Node for planning, doctor, and tests.
+ * @returns the gspot name, or the Node name for another system.
  */
 export function getOperatingSystem(): string {
     return OPERATING_SYSTEMS.find((platform) => platform.nodeName === process.platform)?.name ?? process.platform;

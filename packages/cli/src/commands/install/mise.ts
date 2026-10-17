@@ -15,7 +15,7 @@ import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISE_TRUST_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/install.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
-// Select only programs required by checks this operating system can run in hooks.
+// Keep only the programs that hooks need for checks that can run on this system.
 function selectHookPrograms(session: Session, tools: ToolDeclaration[]) {
     const manifests = session.neededToolManifests;
     const host = { platform: getOperatingSystem(), arch: process.arch };
@@ -43,11 +43,11 @@ function selectHookPrograms(session: Session, tools: ToolDeclaration[]) {
 }
 
 /**
- * Install selected mise programs and refresh their actual executable directories.
+ * Install the mise programs, and read their executable folders again.
  *
- * @param context the selected tools, session, writer, generated files, and attempted commands.
+ * @param context what install needs for this step.
  *
- * @returns the installation note for missing program tools.
+ * @returns the note about missing programs.
  */
 export async function installMiseTools(context: InstallContext): Promise<string> {
     const { session, tools, mise, steps } = context;

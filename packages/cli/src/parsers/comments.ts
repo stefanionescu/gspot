@@ -181,8 +181,8 @@ async function parseSyntaxComments(grammar: GrammarName, source: string, text: s
 
 /**
  * Read comments in one explicit grammar.
- * @param grammar the parser grammar.
- * @param text the source text.
+ * @param grammar the tree-sitter language to use.
+ * @param text the source contents.
  * @returns comments in source order.
  */
 export async function parseGrammarComments(grammar: GrammarName, text: string): Promise<SourceComment[]> {
@@ -193,7 +193,7 @@ export async function parseGrammarComments(grammar: GrammarName, text: string): 
 
 /**
  * Skip a quoted span before looking for comment openers outside it.
- * @param line the source line.
+ * @param line the source to scan.
  * @param start the first source offset.
  * @returns the offset after the quoted value.
  */
@@ -219,8 +219,8 @@ export function stripCommentEnd(text: string): string {
 
 /**
  * Read comment text and line locations for suppression discovery.
- * @param path the source path that selects its syntax.
- * @param text the source text.
+ * @param path the file, whose name selects the syntax.
+ * @param text the source contents.
  * @returns comments in source order, with whether each occupies its line alone.
  */
 export async function parseComments(path: string, text: string): Promise<SourceComment[]> {

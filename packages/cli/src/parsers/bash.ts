@@ -47,7 +47,7 @@ function findHighestParameter(node: Node): number {
 
 /**
  * Find the function that contains a Bash syntax node.
- * @param node the parsed syntax node.
+ * @param node the syntax point to start from.
  * @returns the containing function, or undefined outside a function.
  */
 function findEnclosingFunction(node: Node): Node | undefined {
@@ -60,7 +60,7 @@ function findEnclosingFunction(node: Node): Node | undefined {
 }
 
 /**
- * Read each function's own syntax without counting nested function bodies.
+ * Read the syntax of each function, without nested function bodies.
  * @param syntaxRoot the parsed Bash root.
  * @param codeText source with comments masked at their original positions.
  * @returns function metrics and source spans.
@@ -115,7 +115,7 @@ function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['f
     });
 }
 
-// Preserve code-unit positions and line breaks while removing the syntax tree's comment spans.
+// Keep code-unit positions and line breaks, and blank out the comment spans of the syntax tree.
 function stripComments(text: string, comments: Node[]): string {
     const pieces: string[] = [];
     let offset = 0;
@@ -283,8 +283,8 @@ async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCac
 /**
  * Parse comments, function ranges, calls, parameter reads, and file content through one Bash syntax tree.
  * @param text the exact source.
- * @param cache run-owned parser resources.
- * @returns syntax data that remains valid after disposing of the tree.
+ * @param cache the parser state for this run.
+ * @returns syntax data that stays valid after the tree goes away.
  */
 export async function parseBashScript(text: string, cache?: ParseCache): Promise<ScriptSyntax> {
     const tree = await parseSource('bash', text, cache);
@@ -313,7 +313,7 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
 
 /**
  * Select non-blank code lines after the parser has masked comments.
- * @param lines the parsed code lines.
+ * @param lines the masked code, split by row.
  * @returns trimmed code and one-based positions.
  */
 export function listCodeLines(lines: string[]): NumberedLine[] {
@@ -324,7 +324,7 @@ export function listCodeLines(lines: string[]): NumberedLine[] {
 }
 
 /**
- * Read expansions of environment names declared by the scope's reader scripts.
+ * Read expansions of the environment names that the environment readers declare.
  * @param syntaxRoot the parsed Bash source.
  * @param owned the variables declared by environment readers.
  * @returns the environment reads and their source positions.

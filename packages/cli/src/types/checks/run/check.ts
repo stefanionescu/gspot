@@ -9,7 +9,7 @@ import type { SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts
 import type { Scope, Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Session, PlanOptions, StageFilter, PlannedCheck } from '#cli/types/planning.ts';
 
-/** A built-in fix publishes through the same repository or disposable-copy boundary as command fixes. */
+/** A built-in fix writes through the same repository or scratch copy boundary as command fixes. */
 type BuiltInFix = (planned: PlannedCheck, root: string) => FixResult | Promise<FixResult>;
 
 type RunReportOptions = PlanOptions & {
@@ -47,7 +47,7 @@ export type RunnableCheck = {
     run: (session: Session, planned: PlannedCheck, options?: CheckRunOptions) => CheckResult | Promise<CheckResult>;
 };
 
-/** Selected staged paths and optional command or scratch root supplied by a check. */
+/** The staged paths, and the command or scratch root that a check gives. */
 export type CheckRunOptions = {
     staged?: Set<string>;
     command?: string[];
@@ -99,11 +99,11 @@ export type CheckInput = {
     resources: DisposableStack;
     cancelSignal?: AbortSignal;
     repositoryFiles: TrackedFile[];
-    /** Every effective scope selection supplied by the open session. */
+    /** Every scope selection of the session. */
     selections: ScopeSelection[];
     root: string;
     check: CheckDeclaration;
-    /** Planner-selected files; scope checks exclude every nested scope. */
+    /** The files that planning chose; scope checks leave out every nested scope. */
     files: TrackedFile[];
     staged?: Set<string>;
 };
@@ -154,7 +154,7 @@ export type ReportInput = {
     fixes: FixReport | undefined;
 };
 
-/** Checks and fixer outcomes prepared for the subsequent execution pass. */
+/** The checks and fixer results for the run after the fixes. */
 export type PlanAfterFixes = { executables: RunnableCheck[]; fixes: FixReport | undefined };
 
 /** A preview fixes a scratch copy and reports differences. */
@@ -180,5 +180,5 @@ export type Finding = {
 /** Where a finding points: the file, and the line and column when the check knows them. */
 export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;
 
-/** Completed check count and comparison used for terminal progress. */
+/** The finished check count and the comparison, for terminal progress. */
 export type CheckProgress = { completed: number; total: number; comparison: RunReport['comparison'] };

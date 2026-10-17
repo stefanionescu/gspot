@@ -30,7 +30,7 @@ function recordLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
 /**
  * List the state of each tool project lockfile. Nothing gets resolved or written.
  *
- * @param session the repository root and the package manager.
+ * @param session the repository and its package manager.
  * @param generated the tool project files that apply writes.
  *
  * @returns each lockfile with its state: missing, mismatched, or current.
@@ -68,10 +68,10 @@ export function listStaleLockfiles(
 }
 
 /**
- * Append selected npm and Python lockfiles before writing generated files.
+ * Add the npm and Python lockfiles before the generated files get written.
  *
- * @param context the selected tools, repository writer, session, and command log.
- * @param files the generated files.
+ * @param context what install needs for this step.
+ * @param files the generated list to add to.
  */
 export async function prepareLockfiles(context: InstallContext, files: GeneratedFile[]): Promise<void> {
     const packages = files.find((file) => file.path === NPM_TOOL_PROJECT_FILE);
@@ -85,10 +85,10 @@ export async function prepareLockfiles(context: InstallContext, files: Generated
 }
 
 /**
- * Build a generated lockfile with its recorded replacement source.
+ * Build a generated lockfile with the file contents that it replaces.
  * @param path the repository-relative destination for the replacement bytes.
  * @param content the credential-free lockfile.
- * @param original the recorded copy, when the file exists.
+ * @param original the file contents on disk, if any.
  * @returns the replacement bytes with the previous file attached for write validation.
  */
 export function buildLockfileResult(path: string, content: string, original: FileContents | undefined): GeneratedFile {

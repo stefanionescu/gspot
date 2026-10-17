@@ -34,12 +34,12 @@ function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, k
 }
 
 /**
- * Transform declared path leaves through the same schemas used for runtime validation.
- * @param schema the field's authoritative validator.
- * @param value the already validated written value.
- * @param visit the required path calculation.
- * @param keys the field's location in its written table.
- * @returns the value with only declared path leaves transformed.
+ * Change the declared path leaves with the schemas that validation uses.
+ * @param schema the validator of the field.
+ * @param value the validated written setting.
+ * @param visit changes one path.
+ * @param keys where the field sits in its table.
+ * @returns the setting with only its declared path leaves changed.
  */
 function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
     const role = schema.meta()?.pathRole;
@@ -50,9 +50,9 @@ function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, 
 }
 
 /**
- * Join a shipped default selector to its owning scope while retaining a leading exclusion marker.
+ * Join a shipped default selector to its scope, and keep a leading exclusion mark.
  * @param path the shipped default selector.
- * @param scope the repository-relative owning scope.
+ * @param scope the repository-relative folder that owns the default.
  * @returns the repository-relative selector.
  */
 function joinScopeSelector(path: string, scope: string): string {
@@ -61,10 +61,10 @@ function joinScopeSelector(path: string, scope: string): string {
 }
 
 /**
- * Resolve a shipped setting default's path leaves against its project scope.
- * @param key the dotted setting key.
- * @param value the already validated selected default.
- * @param scope the owning scope path, empty for repository-root values.
+ * Resolve the path leaves of a shipped default against its project scope.
+ * @param key the dotted setting name.
+ * @param value the validated default.
+ * @param scope the owning folder, empty for repository-root values.
  * @returns repository-relative path values without changing identities or tool options.
  */
 function joinDefaultPaths(key: string, value: unknown, scope: string): unknown {

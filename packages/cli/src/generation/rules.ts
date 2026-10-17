@@ -1,4 +1,4 @@
-// Selects agent rules and builds their managed instruction block.
+// Select the rules and build their managed block.
 import { posix } from 'node:path';
 import { readAsset } from '#cli/system/assets.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
@@ -18,7 +18,7 @@ import { type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { RuleFile, ShippedRule, RuleSection, AgentsBlockInput } from '#cli/types/rules.ts';
 import { FIRST_READ, RULES_HEADING, ALL_LEVEL_MARKER, RULE_OPENING_PREFIX } from '#cli/config/rules.ts';
 
-// The rules of the selected configurations; a file with a condition installs only when the repository meets it.
+// List the rules of the configurations; a file with a condition installs only when the repository meets it.
 function listConfigurationRules(
     manifests: Manifest[],
     repository: Repository,
@@ -35,12 +35,12 @@ function listConfigurationRules(
 }
 
 /**
- * Omits marked Markdown sections, including their subsections, at the recommended level.
+ * Drop the marked Markdown sections and their subsections at level recommended.
  *
  * @param text the authored rule with Markdown level markers.
- * @param level the selected rule detail.
+ * @param level recommended or all.
  *
- * @returns the original bytes outside excluded sections.
+ * @returns the original bytes outside the dropped sections.
  */
 function stripAllLevelSections(text: string, level: Level): string {
     if (level === 'all') return text;
@@ -90,7 +90,7 @@ function formatRulesIndex(files: RuleFile[]): string[] {
 }
 
 /**
- * Locate heading sections and their level markers without treating fenced headings as structure.
+ * Find heading sections and their level markers, and skip headings inside code fences.
  *
  * @param text the authored Markdown rule.
  *
@@ -110,17 +110,17 @@ function parseHeadingSections(text: string): RuleSection[] {
     }));
 }
 
-// Precompute each scope's rule membership before selecting shared content.
+// List the rule files of each scope before selecting shared content.
 function listScopeRules(selection: ScopeSelection): Set<string> {
     return new Set(selection.selected.flatMap((manifest) => listRuleFiles(manifest).map((file) => file.path)));
 }
 
 /**
- * The shared engineering instructions and selected configuration rules at the level, without the
- * excluded ones and the ones the level leaves empty.
+ * Select the shared rules and the configuration rules at the level. Leave out the excluded rules
+ * and the ones that the level leaves empty.
  *
- * @param session the repository inventory, selected configurations, and effective settings.
- * @returns each rule with its final content and destination.
+ * @param session the repository and its settings.
+ * @returns each rule with its content and path.
  */
 function selectRuleFiles(
     session: Pick<Session, 'settingsFile' | 'scopes' | 'repository' | 'dependencyFiles'>,
@@ -158,15 +158,15 @@ function selectRuleFiles(
 }
 
 /**
- * The managed instruction block for the already selected rules and enforcement level.
+ * Build the managed block for the rules and the level.
  *
- * @param inputs the selected rules, enforcement level, start command, and presence of executable checks.
- * @param inputs.files the selected files with final content.
- * @param inputs.generatedPaths the generated destinations outside .gspot, including managed configuration keys.
- * @param inputs.fileEdits the keys managed inside otherwise authored tool files.
- * @param inputs.level the enforcement level.
- * @param inputs.hasChecks whether the selected configurations provide executable checks.
- * @param inputs.startCommand the pinned repository start command.
+ * @param inputs what the block lists.
+ * @param inputs.files the rules with their content.
+ * @param inputs.generatedPaths the files gspot writes outside .gspot, with managed keys.
+ * @param inputs.fileEdits the keys that gspot manages inside authored tool files.
+ * @param inputs.level recommended or all.
+ * @param inputs.hasChecks whether any configuration runs a check.
+ * @param inputs.startCommand the command that starts gspot.
  *
  * @returns the heading, rule index, and instructions for changing settings.
  */

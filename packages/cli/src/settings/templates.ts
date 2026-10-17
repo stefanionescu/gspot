@@ -52,9 +52,9 @@ function readLocalText(source: string, cwd: string): string {
 }
 
 /**
- * Export reusable settings while reporting every repository-specific entry left out.
- * @param settingsText the text of gspot.toml
- * @returns the template text and omission report
+ * Export the reusable settings, and report each repository-specific setting left out.
+ * @param settingsText the text of gspot.toml.
+ * @returns the template text and the left-out settings.
  */
 function exportTemplate(settingsText: string): ExportedTemplate {
     const written = parseTomlText(settingsText, SETTINGS_FILE, 'settings');
@@ -71,10 +71,10 @@ function exportTemplate(settingsText: string): ExportedTemplate {
 }
 
 /**
- * Validate a reusable template and retain its source and text digest.
- * @param text the TOML text
- * @param source the local path or address used in diagnostics
- * @returns the validated template
+ * Validate a template, and keep its source and text digest.
+ * @param text the template contents.
+ * @param source the local path or address, for errors.
+ * @returns the validated template.
  * @throws GspotError with every template validation error.
  */
 function parseTemplate(text: string, source: string): Template {
@@ -103,9 +103,9 @@ function parseTemplate(text: string, source: string): Template {
 
 /**
  * Read a template from a local path, HTTPS address, or GitHub repository reference.
- * @param source a path, HTTPS address, or github:owner/repository[/path][@ref]
- * @param cwd the directory relative local paths start from
- * @returns the validated template
+ * @param source a path, HTTPS address, or github:owner/repository[/path][@ref].
+ * @param cwd the folder where relative local paths start.
+ * @returns the validated template.
  */
 async function readTemplate(source: string, cwd: string): Promise<Template> {
     if (source.startsWith(HTTP_PREFIX))

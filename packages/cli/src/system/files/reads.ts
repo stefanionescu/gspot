@@ -36,9 +36,9 @@ function readUtf8(path: string, read: () => Buffer): string | undefined {
 }
 
 /**
- * Read a bounded prefix using the run's resolved root and any held source bytes.
- * @param reads the run's source reads.
- * @param path the root-relative path.
+ * Read the first bytes of a file, with the resolved root of the run and any cached bytes.
+ * @param reads the run cache.
+ * @param path the root-relative file.
  * @param limit the maximum byte count.
  * @returns the bytes read.
  */
@@ -48,9 +48,9 @@ function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer
 }
 
 /**
- * Read contained file bytes directly from disk.
+ * Read file bytes from disk inside the folder.
  * @param sourceFolder the boundary for resolving the relative file path.
- * @param path the root-relative path.
+ * @param path the root-relative file.
  * @returns the file bytes.
  */
 function readBytes(sourceFolder: string, path: string): Buffer {
@@ -58,9 +58,9 @@ function readBytes(sourceFolder: string, path: string): Buffer {
 }
 
 /**
- * Read contained file bytes once per run.
- * @param reads the run's source reads.
- * @param path the root-relative path.
+ * Read file bytes once per run.
+ * @param reads the run cache.
+ * @param path the root-relative file.
  * @returns the first bytes read during this run.
  */
 function readCachedBytes(reads: ReadCache, path: string): Buffer {
@@ -74,7 +74,7 @@ function readCachedBytes(reads: ReadCache, path: string): Buffer {
 /**
  * Read UTF-8 text from disk, or return undefined for a missing file.
  * @param sourceFolder the boundary for resolving the relative file path.
- * @param path the root-relative path.
+ * @param path the root-relative file.
  * @returns the file text.
  */
 function readText(sourceFolder: string, path: string): string | undefined {
@@ -83,8 +83,8 @@ function readText(sourceFolder: string, path: string): string | undefined {
 
 /**
  * Read UTF-8 text through the run cache, or return undefined for a missing file.
- * @param reads the run's source reads.
- * @param path the root-relative path.
+ * @param reads the run cache.
+ * @param path the root-relative file.
  * @returns the cached file text.
  */
 function readCachedText(reads: ReadCache, path: string): string | undefined {
@@ -92,9 +92,9 @@ function readCachedText(reads: ReadCache, path: string): string | undefined {
 }
 
 /**
- * Resolve a source path while refusing links outside the root.
+ * Resolve a source path, and refuse links outside the root.
  * @param sourceFolder the canonical folder for checking symbolic link destinations.
- * @param path the root-relative path.
+ * @param path the root-relative file.
  * @returns the resolved file location after the boundary check.
  */
 function readContainedPath(sourceFolder: string, path: string): string {

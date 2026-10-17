@@ -96,9 +96,9 @@ function dropTableDefaults(
 }
 
 /**
- * Omit redundant written defaults without erasing a scope's override of its parent.
- * @param settings the independent ordered draft whose selected declarations own the defaults
- * @returns the draft without redundant setting values
+ * Drop written values that equal the default, but keep a scope override of its parent.
+ * @param settings the ordered draft, whose declarations own the defaults.
+ * @returns the draft without values that equal the default.
  */
 function dropDefaults(settings: TomlTable): TomlTable {
     const reads = createReadCache(process.cwd());

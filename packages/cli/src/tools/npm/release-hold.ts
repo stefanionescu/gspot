@@ -12,8 +12,8 @@ import { GSPOT_PACKAGES, TOOL_HOLD_FILES, PNPM_IGNORE_WORKSPACE } from '#cli/con
  * in the folder they run in. Yarn gets the hold in its install settings file instead.
  *
  * @param work the folder that the package manager runs in.
- * @param command the package manager command.
- * @param packageManager the package manager.
+ * @param command the arguments to run.
+ * @param packageManager npm, pnpm, Yarn, or Bun, with its version.
  * @param days the hold.
  *
  * @returns the command to run, and the settings file to delete after it.

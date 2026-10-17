@@ -16,10 +16,10 @@ import {
 } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Component parsers need file-specific pseudo-class and function rules.
+ * Build the component parser overrides, which need their own pseudo-class and function rules.
  *
- * @param configurations the selected configuration names.
- * @param tailwindFunctions the Tailwind functions accepted in component styles.
+ * @param configurations the configuration names in use.
+ * @param tailwindFunctions the Tailwind helpers that component styles may call.
  * @param chosen the authored rule options.
  * @param off the disabled lint rule names.
  *
@@ -65,9 +65,9 @@ const ruleNamesFileSchema = z.strictObject({
     rules: z.array(z.string().min(1)),
 } satisfies SchemaShape<RuleNamesFile>) satisfies z.ZodType<RuleNamesFile>;
 /**
- * Build stylelint file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the CSS lint presets and rules selected for this level.
+ * Build the Stylelint file from the settings.
+ * @param context the tool file to build.
+ * @returns the CSS lint presets and rules for this level.
  */
 function buildStylelintFile(context: ToolFileContext): string {
     const { selection } = context;

@@ -42,7 +42,7 @@ import {
 
 /**
  * Resolve a path the way tools print it after they follow links.
- * @param path the path to resolve.
+ * @param path the file or folder.
  * @returns the resolved path with POSIX separators, or undefined when nothing exists at the path.
  */
 function readRealPath(path: string): string | undefined {
@@ -68,8 +68,8 @@ function stripRoot(root: string, file: string): string {
 /**
  * List the forms of the root that a tool can print in a message.
  * The longest form comes first, so that a shorter form never cuts a longer one.
- * @param root the root with POSIX separators.
- * @returns the given root and its resolved form with POSIX separators and with system separators.
+ * @param root the repository folder with POSIX separators.
+ * @returns the root and its resolved form in POSIX and in system separators.
  */
 function listRootPrefixes(root: string): string[] {
     const roots = [root, readRealPath(root) ?? root];
@@ -85,10 +85,10 @@ function hasFilePaths(output: OutputSpec): boolean {
 }
 
 /**
- * Parse and validate a report without exposing its untrusted contents in errors.
- * @param tool the tool that produced the invalid output.
+ * Parse and validate a report, and keep its untrusted contents out of errors.
+ * @param tool the program that printed the report.
  * @param text the JSON report.
- * @param schema the report's contract.
+ * @param schema the shape that the report must have.
  * @returns the validated report.
  */
 export function parseReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value {
@@ -128,11 +128,11 @@ export const outputFormats = {
 } satisfies Record<OutputSpec['format'], OutputDescriptor>;
 
 /**
- * The findings a tool's output holds, with every path relative to the root.
- * @param check the report format, lint rule metadata, and fallback help for the tool.
- * @param stdout the tool's standard output.
- * @param stderr the tool's standard error.
- * @param paths the repository root and tool working directory, for resolving reported source paths.
+ * Read the findings in the tool output, with every path relative to the root.
+ * @param check how to read the output.
+ * @param stdout the standard output of the tool.
+ * @param stderr the standard error of the tool.
+ * @param paths the folders that resolve reported files.
  * @returns the findings.
  */
 export function parseOutput(check: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {

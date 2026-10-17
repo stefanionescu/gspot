@@ -253,7 +253,7 @@ const pyprojectSchema = z.object({
 
 /**
  * Normalize a Python distribution name for package identity comparisons.
- * @param name the name as written.
+ * @param name the distribution as written.
  * @returns the name in lower case with one hyphen between words.
  */
 export function normalizePythonPackage(name: string): string {
@@ -261,8 +261,8 @@ export function normalizePythonPackage(name: string): string {
 }
 
 /**
- * Select the parser for a supported package manifest or requirements file.
- * @param path the repository-relative path used in fields and parsing diagnostics.
+ * Select the parser for a dependency file.
+ * @param path the repository-relative file that fields and parse errors name.
  * @returns the text parser, or undefined for an unsupported file name.
  */
 export function selectDependencyFileParser(path: string): DependencyFileParser | undefined {

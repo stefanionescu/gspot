@@ -5,7 +5,7 @@ import { listScopeFormats } from '#cli/generation/tool-files/prettier.ts';
 import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
 import { UNREPRESENTABLE_SELECTOR, EDITORCONFIG_FIXED_SECTIONS } from '#cli/config/generation/formatting.ts';
 
-// A Prettier selector as an EditorConfig section path, placed under its scope when it has one.
+// Convert a Prettier selector to an EditorConfig section path, under its scope when it has one.
 function buildSectionPath(pattern: string, scope: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))
         throw new Error(
@@ -20,9 +20,9 @@ function buildSectionPath(pattern: string, scope: string): string {
 }
 
 /**
- * Build editorconfig file from the selected settings.
- * @param context the selected scope, settings, and source files.
- * @returns the EditorConfig sections used by this repository.
+ * Build the EditorConfig file from the settings.
+ * @param context the tool file to build.
+ * @returns the EditorConfig sections of this repository.
  */
 function buildEditorconfigFile(context: ToolFileContext): string {
     const { format, extra } = context.selection.view;

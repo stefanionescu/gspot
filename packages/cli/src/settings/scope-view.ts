@@ -33,7 +33,7 @@ function listNamingVariants(known: KnownSettings, settings: Settings, scope: str
 
 /**
  * Select saved ignores whose expiry date has not arrived.
- * @param settings the repository settings, including inactive ignores.
+ * @param settings the parsed gspot.toml, with expired ignores.
  * @returns the ignores that apply today in UTC.
  */
 function listActiveIgnores(settings: Settings): IgnoreRecord[] {
@@ -42,11 +42,11 @@ function listActiveIgnores(settings: Settings): IgnoreRecord[] {
 }
 
 /**
- * Builds the merged view for a scope from the known settings, the settings and the scope's selection.
- * @param known the known settings of the selection.
+ * Build the merged view of a scope from the known settings, the written settings, and the configurations of the scope.
+ * @param known the declarations and defaults of the selection.
  * @param settings the written root values and scoped overrides.
- * @param selected the selected manifests.
- * @param scope the scope path, '' for the root.
+ * @param selected the manifests of the scope.
+ * @param scope the folder, '' for the root.
  * @returns the view the templates read.
  */
 function buildScopeView(known: KnownSettings, settings: Settings, selected: Manifest[], scope: string): ScopeView {
@@ -96,17 +96,11 @@ function buildScopeView(known: KnownSettings, settings: Settings, selected: Mani
 }
 
 /**
- * Read the merged settings of the repository root.
- * @param scopes the command's validated scope selections.
- * @returns the root scope's merged view.
- */
-
-/**
- * Resolve the selected known settings once into validated namespace values and numeric limits.
- * @param known the selected declarations and defaults.
- * @param settings the written repository settings.
- * @param selected the selected configurations.
- * @param scope the selected scope path.
+ * Resolve the known settings once into validated table values and numeric limits.
+ * @param known the declarations and defaults.
+ * @param settings the written gspot.toml.
+ * @param selected the configurations of the scope.
+ * @param scope the folder to resolve for.
  * @returns typed execution values without adding defaults to written tables.
  */
 function buildScopeSettings(
@@ -166,8 +160,8 @@ function buildScopeSettings(
 
 /**
  * Fill settings tables from direct settings and their declared naming variants.
- * @param namespaces the scope's execution tables.
- * @param rows the values already resolved through the selected declarations.
+ * @param namespaces the run tables of the scope.
+ * @param rows the values that the declarations already resolved.
  */
 function fillTableValues(namespaces: Record<string, unknown>, rows: EffectiveSetting[]): void {
     const entries = rows

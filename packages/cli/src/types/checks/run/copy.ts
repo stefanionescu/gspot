@@ -2,7 +2,7 @@ import type { GitEntry } from '#cli/types/parsers/git.ts';
 
 export type PendingLink = { source: string; target: string };
 
-/** Dependency trees and pending links in a working-tree copy. */
+/** Dependency trees and pending links in a scratch copy of the working tree. */
 export type DependencyTreeCopy = {
     root: string;
     scratch: string;
@@ -14,7 +14,7 @@ export type DependencyTreeCopy = {
 /** An installed dependency tree copied privately or linked for an in-place run. */
 export type DependencyCopy = { path: string; operation: 'clone' | 'link' };
 
-/** Source path, Git blob or gitlink directory in a private copy. */
+/** A source path, Git blob, or gitlink folder in a scratch copy. */
 export type ScratchFile =
     | string
     | { entry: Omit<GitEntry, 'mode'> & { mode: Exclude<GitEntry['mode'], '160000'> }; bytes: Buffer };

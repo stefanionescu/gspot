@@ -1,4 +1,4 @@
-// What the selected fragments add to a generated target: emitted text, imports, file globs, and selectors.
+// Collect what the fragments add to a generated file: text, imports, file globs, and selectors.
 import type { Session } from '#cli/types/planning.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import type { Fragment } from '#cli/types/generation/fragments.ts';
@@ -26,12 +26,12 @@ import { buildTanstackQueryFragment } from '#cli/generation/eslint/fragments/tan
 import { buildTestingLibraryFragment } from '#cli/generation/eslint/fragments/testing-library.ts';
 
 /**
- * Select the configurations whose fragments contribute to this target.
- * A target written for one scope asks that scope; a target written once asks every scope.
- * @param scopes the selected projects and their effective settings.
- * @param selection the scope receiving the generated target.
- * @param target the tool-file declaration and its scope requirements.
- * @returns the distinct configurations whose fragments feed this target.
+ * Select the configurations whose fragments add to this tool file.
+ * A tool file for one scope asks that scope; a tool file written once asks every scope.
+ * @param scopes every project and its settings.
+ * @param selection the scope that gets the tool file.
+ * @param target the tool file declaration and its scope requirements.
+ * @returns each configuration with a fragment for this tool file, once.
  */
 function listFragmentConfigurations(
     scopes: ScopeSelection[],
@@ -70,7 +70,7 @@ function buildFragment(manifest: Manifest, inputs: EslintContext): EslintFragmen
     return builder(inputs, manifest.configuration.name);
 }
 
-// The text emitted by each selected ESLint fragment.
+// Build the text of each ESLint fragment.
 function buildSelectedFragments(
     session: Session,
     fragments: Fragment[],
@@ -118,15 +118,15 @@ function buildSelectedFragments(
 }
 
 /**
- * Build the imports, rule blocks, and selectors contributed by selected ESLint fragments.
+ * Collect the imports, lint blocks, and selectors that the ESLint fragments add.
  *
- * @param session the repository session.
- * @param scopes every selected scope.
- * @param selection the scope that receives the target.
- * @param target the configuration target.
- * @param inputs the scope's typed source inputs for emitting the fragments.
+ * @param session the repository.
+ * @param scopes every scope.
+ * @param selection the scope that gets the tool file.
+ * @param target the tool file to build.
+ * @param inputs the typed source facts of the scope.
  *
- * @returns the emitted fragments, their imports, file globs, and selector groups.
+ * @returns the fragments with their imports, file globs, and selector groups.
  */
 function collectFragments(
     session: Session,

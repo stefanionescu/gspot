@@ -54,7 +54,7 @@ function selectScopeConfigurations(context: InitDetection, scope: Scope, rootIds
             return manifest !== undefined && manifest.configuration.group !== 'general';
         })
         .map((evidence) => evidence.configuration);
-    // A language stays out of a scope only while the root really keeps it: some source of it lies outside every scope.
+    // A language stays out of a scope only while the root keeps it: some source of the language sits outside every scope.
     const atRoot = new Set(rootIds);
     return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.configuration.group !== 'language');
 }
@@ -82,7 +82,7 @@ function expandSuggestions(ids: string[], manifests: Map<string, Manifest>, dete
             ...ids,
             ...suggestions.filter((id) => {
                 const manifest = manifests.get(id);
-                // A suggestion without detection criteria does not require a source match.
+                // A suggestion without detection rules needs no source match.
                 const hasDetection =
                     manifest !== undefined &&
                     Object.values(manifest.detect).some((entry) => Object.keys(entry).length > 0);
@@ -99,9 +99,9 @@ function getSelectionReason(id: string, sets: ConfigurationChoices): Configurati
 }
 
 /**
- * Selects configurations for init from the files, named configurations, and project scopes.
- * @param inputs the root, the tracked files, the manifests read from the repository, the project scopes, every configuration manifest, and the init flags.
- * @returns the scopes, the root and per-scope configuration ids, and the closure of everything selected.
+ * Select configurations for init from the files, the named configurations, and the project scopes.
+ * @param inputs what init detected, with the flags.
+ * @returns the scopes and the configurations of each.
  */
 export function selectForInit(inputs: InitInputs): InitSelection {
     const { root, repository, dependencyFiles, manifests, options } = inputs;

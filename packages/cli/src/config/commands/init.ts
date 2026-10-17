@@ -44,7 +44,7 @@ export const PRETTIER_JSON_FILES = ['.prettierrc', '.prettierrc.json'] as const;
 
 export const EDITORCONFIG_COMMENT = /^\s*[#;]/u;
 
-/** Initialization answers before a reusable template supplies its choices. */
+/** The init answers before a template gives its choices. */
 export const INIT_TEMPLATE_DEFAULTS = {
     hooks: { enabled: true },
     rules: { enabled: true },

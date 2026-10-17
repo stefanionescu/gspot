@@ -9,8 +9,8 @@ import {
 } from '#cli/config/generation/eslint-fragments.ts';
 
 /**
- * Apply Next.js presets and the selected pages and JSX settings.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the Next.js presets and the pages and JSX settings.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildNextjsFragment(

@@ -32,9 +32,9 @@ async function buildParser(name: GrammarName): Promise<Parser> {
 }
 
 /**
- * The parser for a grammar, built on first use.
+ * Get the parser for a grammar, and build it on first use.
  * @param name the grammar.
- * @returns the shared promise, including a pending grammar load.
+ * @returns the shared promise, which may still load the grammar.
  */
 function getParser(name: GrammarName): Promise<Parser> {
     let parser = state.parsers.get(name);
@@ -46,11 +46,11 @@ function getParser(name: GrammarName): Promise<Parser> {
 }
 
 /**
- * Shares a run-owned parse while giving each reader its own disposable tree handle.
- * @param name the grammar that gives the source its meaning.
+ * Share one parse per run, and give each reader its own tree handle to dispose.
+ * @param name the grammar of the source.
  * @param text the exact source to parse.
  * @param cache source reads and tree cleanup for this run.
- * @returns a caller-owned tree copy.
+ * @returns a tree that the caller owns.
  */
 export async function parseSource(name: GrammarName, text: string, cache?: ParseCache): Promise<Tree> {
     const parser = await getParser(name);
@@ -69,10 +69,10 @@ export async function parseSource(name: GrammarName, text: string, cache?: Parse
 }
 
 /**
- * Reads selected files and lends each parsed tree to a synchronous visitor, then releases its handle.
- * @param input the repository reads and files with their selected grammars.
- * @param visit the source inspection; syntax nodes must not escape this callback.
- * @returns after inspecting every selected source.
+ * Read the files, lend each parsed tree to a visitor, then release its handle.
+ * @param input the files to parse, each with its grammar.
+ * @param visit reads one tree; syntax nodes must not leave this callback.
+ * @returns a promise that settles after every file.
  */
 export async function visitParsedSources(input: ParsedSourceInput, visit: (source: SourceTree) => void): Promise<void> {
     for (const file of input.files) {
@@ -87,9 +87,9 @@ export async function visitParsedSources(input: ParsedSourceInput, visit: (sourc
 }
 
 /**
- * The grammar of a language configuration, with TSX syntax for .tsx files.
- * @param path the file path.
- * @param language the language configuration the file belongs to.
+ * Select the grammar of a language configuration, with TSX for .tsx files.
+ * @param path the file to parse.
+ * @param language the configuration that owns the file.
  * @returns the grammar, or undefined for declaration files and languages without a grammar.
  */
 export function selectGrammar(path: string, language: string): GrammarName | undefined {

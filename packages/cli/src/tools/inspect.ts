@@ -16,11 +16,11 @@ import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/npm/
 import { MISE_PROGRAM, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/find.ts';
 
 /**
- * The install command for managed tools, or platform guidance for a host tool.
+ * Build the install command for managed tools, or the install advice for a system tool.
  *
  * @param tool the pin.
  *
- * @returns the next installation step based on managed tools, mise availability, and host guidance.
+ * @returns the next install step.
  */
 function installHint(tool: ToolDeclaration): string {
     const installation = findToolProjectPackage(tool);
@@ -32,7 +32,7 @@ function installHint(tool: ToolDeclaration): string {
     return tool.install_hint ?? `Install ${tool.name}.`;
 }
 
-// The inspection of a library whose tool-project package.json declares a version.
+// Build the inspection of a library whose tool-project package.json declares a version.
 function buildLibraryInspection(
     inputs: Omit<Inspected, 'path'>,
     path: string,
@@ -54,7 +54,7 @@ function buildLibraryInspection(
     };
 }
 
-// Query a host library through the declared executable and its complete argument list.
+// Query a system library through the declared executable and its complete argument list.
 function inspectLibraryCommand(
     context: ToolSearch,
     inputs: Omit<Inspected, 'path'>,
@@ -105,12 +105,12 @@ function inspectLibrary(
     return buildLibraryInspection(inputs, installed.path, installed.version, want);
 }
 
-// The inspection of a tool without an installation in the search directories.
+// Build the inspection of a tool without an installation in the search folders.
 function buildMissingInspection(tool: ToolDeclaration, hint: string, want: string | undefined): ToolInspection {
     return { name: tool.name, state: 'missing', hint, ...stripUndefined({ want }) };
 }
 
-// Query an executable once and assemble its host or selected-version inspection.
+// Query an executable once, and build its system or pinned-version inspection.
 function inspectExecutablePath(inspected: Inspected, want: string | undefined): ToolInspection {
     const { root, cwd, tool, path, hint } = inspected;
     if (want === undefined && tool.version_command === undefined && tool.min_version === undefined)
@@ -183,10 +183,10 @@ function inspectExecutable(
 /**
  * Explain why the required tool cannot run.
  *
- * @param tool the declared tool.
+ * @param tool the declaration to explain.
  * @param inspection the observed installation.
  *
- * @returns the actionable installation note.
+ * @returns the install note, with the next step.
  */
 export function formatUnavailableNote(tool: ToolDeclaration, inspection: ToolInspection): string {
     const hint = inspection.hint ?? installHint(tool);
@@ -197,9 +197,9 @@ export function formatUnavailableNote(tool: ToolDeclaration, inspection: ToolIns
 }
 
 /**
- * Inspect one tool, reusing an inspection already made in this command session.
+ * Inspect one tool, and reuse an inspection from earlier in this run.
  *
- * @param context the repository root and session reads.
+ * @param context where to search, with the run cache.
  * @param tool the pin.
  *
  * @returns the tool path, version, and availability.
@@ -226,12 +226,12 @@ export function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolIns
 }
 
 /**
- * Resolve a usable executable or an actionable inspection failure.
+ * Resolve a usable executable, or a failure with the next step.
  *
- * @param tool the selected pin.
+ * @param tool the declaration and its pin.
  * @param inspection the resolved path, version, and install command.
  *
- * @returns the executable path or its unavailable status and diagnostic.
+ * @returns the executable path, or the unavailable status and its message.
  */
 export function buildToolAvailability(tool: ToolDeclaration, inspection: ToolInspection): ToolAvailability {
     if (AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined) return { path: inspection.path };

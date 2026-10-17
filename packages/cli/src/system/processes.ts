@@ -30,11 +30,11 @@ import {
     TASKKILL_GONE_CODE,
 } from '#cli/config/system/processes.ts';
 
-// Execa captures output and uses operating system shims. This boundary supervises each asynchronous process tree.
+// Execa captures output and uses system shims. This code watches each asynchronous process tree.
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env = buildSpawnEnvironment(options.env);
-    // A selected tool's launcher must find its sibling runtime and commands before unrelated tools on the executable search path.
+    // The launcher of a tool must find its sibling runtime and commands before unrelated tools on the executable search path.
     const path = Object.keys(env).find((name) => normalizeEnvironmentKey(name) === 'PATH');
     if (isAbsolute(executable) && path !== undefined)
         env[path] = [dirname(executable), env[path]].filter((value) => value !== '').join(delimiter);
@@ -61,7 +61,7 @@ function buildAsyncExecaOptions(options: AsyncSpawnOptions, executable: string) 
     };
 }
 
-// A command that names a file which does not exist. Resolve bare names through the executable search path at spawn.
+// Check whether a command names a file that does not exist. Bare names resolve through the executable search path at spawn.
 function isExecutableAbsent(executable: string, cwd: string): boolean {
     if (!PATH_SEPARATORS.test(executable)) return false;
     const path = resolve(cwd, executable);
@@ -114,8 +114,8 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
     };
 }
 
-// The group has no process left to signal. macOS refuses the signal as not permitted, rather than reporting no such
-// process, when every member has exited but still awaits operating system cleanup.
+// The group has no process left to signal. macOS refuses the signal as not permitted, instead of reporting no such
+// process, when every member has exited but still waits for system cleanup.
 function isGroupGone(error: Error, child: ChildProcess): boolean {
     if (!('code' in error)) return false;
     if (error.code === 'ESRCH') return true;
@@ -248,7 +248,7 @@ async function readProcessOutput(
 /**
  * Run a supervised process tree and capture its text.
  * @param command executable and literal arguments.
- * @param options working directory, environment, and process controls.
+ * @param options where and how the process runs.
  * @returns captured output and termination status.
  */
 export async function spawnProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
@@ -267,8 +267,8 @@ export async function spawnProcess(command: readonly string[], options: AsyncSpa
 /**
  * Run a supervised process tree and read its output bytes.
  * @param command executable and literal arguments.
- * @param options working directory, environment, and process controls.
- * @param readStdout the reader of output bytes.
+ * @param options where and how the process runs.
+ * @param readStdout reads the output bytes.
  * @returns output and termination status, with empty stdout when the callback reads it.
  */
 export async function streamProcess(
@@ -292,9 +292,9 @@ export async function streamProcess(
 }
 
 /**
- * Synchronous process execution for Git plumbing and version inspections.
+ * Run a process and wait. Git plumbing and version checks use it.
  * @param command executable and literal arguments.
- * @param options working directory, environment, and process controls.
+ * @param options where and how the process runs.
  * @returns captured output and termination status.
  */
 export function spawnProcessBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {

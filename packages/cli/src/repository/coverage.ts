@@ -9,7 +9,7 @@ import { selectConfigurations, filterSourceConfigurations } from '#cli/configura
 import { escapeGlob, buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import type { FileMatch, FileCoverageOptions, ConfigurationSelection } from '#cli/types/repository/selection.ts';
 
-// The owners with the file types of the selected Prettier or ESLint plugins, when the table takes them.
+// Add the file types of the Prettier or ESLint plugins in use to the owners, when the table takes them.
 function addPluginExtensions(owners: FileMatch, selected: Manifest[]): FileMatch {
     if (!owners.prettier_plugins && !owners.eslint_plugins) return owners;
     const extensions = selected
@@ -37,14 +37,14 @@ export function buildFileMatcher(table: FileMatch): (file: TrackedFile) => boole
 }
 
 /**
- * The files selected by file patterns for one scope and its `kinds` and `languages` constraints.
+ * List the files that the patterns match in one scope, within its `kinds` and `languages` limits.
  * @param table the file patterns.
- * @param files the tracked files.
- * @param options the selected configurations, scope, and settings view.
+ * @param files the tracked inventory.
+ * @param options the scope to match in.
  * @param options.selected manifests that declare languages and Prettier plugins.
- * @param options.scope the scope path.
+ * @param options.scope the folder to match in.
  * @param options.view settings and repository-relative test paths for the scope.
- * @returns the files owned.
+ * @returns the matching files.
  */
 export function listCoveredFiles(
     table: FileMatch,
@@ -92,12 +92,12 @@ export function listCoveredFiles(
 }
 
 /**
- * The root selection and each ancestor scope selection, deduplicated in order.
- * @param settings the declared selections.
- * @param settings.configurations the configurations the root selects.
- * @param settings.scopes the keyed scopes, each with its written configuration choices.
- * @param settings.removed_configurations the manually removed configurations.
- * @param scope the scope path.
+ * Select the manifests of the root and each parent scope, each once, in order.
+ * @param settings the written selections.
+ * @param settings.configurations the root choices.
+ * @param settings.scopes each folder with its written choices.
+ * @param settings.removed_configurations the names that you removed.
+ * @param scope the folder to select for.
  * @param manifests every configuration manifest.
  * @returns the manifests in order.
  */
@@ -133,9 +133,9 @@ export function selectForScope(
 
 /**
  * Select source paths by extension or whole file name.
- * @param files the classified repository files.
+ * @param files the classified inventory.
  * @param endings the file extensions to select.
- * @returns the selected source paths.
+ * @returns the matching source paths.
  */
 export function listSourcePaths(files: TrackedFile[], endings?: readonly string[]): string[] {
     return files

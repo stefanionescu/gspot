@@ -21,7 +21,7 @@ import {
     LOCAL_ENVIRONMENT_PATTERNS,
 } from '#cli/config/generation/ignore-files.ts';
 
-// Expand alternatives before splitting paths because a brace branch can contain a directory separator.
+// Expand alternatives before splitting paths, because a brace branch can hold a slash.
 function expandAlternatives(pattern: string): string[] {
     let braceStart = -1;
     let depth = 0;
@@ -65,7 +65,7 @@ function expandAlternatives(pattern: string): string[] {
     );
 }
 
-// A globstar can consume no directories or stay active while consuming the scope prefix.
+// A globstar can match no folders, or stay active while it matches the scope prefix.
 function expandGlobstarSkips(states: Set<number>, parts: string[]): Set<number> {
     const expanded = new Set(states);
     for (const index of expanded) if (parts[index] === '**') expanded.add(index + 1);
@@ -92,10 +92,10 @@ function moveIntoScope(pattern: string, scope: string): string[] {
 }
 
 /**
- * Preserve ordered gitignore patterns when discovery moves their base into a scope directory.
+ * Move gitignore patterns into a scope folder, and keep their order.
  *
- * @param patterns the gitignore patterns, relative to the root.
- * @param scope the scope path the tool discovers from.
+ * @param patterns the gitignore lines, relative to the root.
+ * @param scope the folder where the tool starts.
  *
  * @returns the patterns relative to the scope.
  */
@@ -129,9 +129,9 @@ function collectToolExclusions(session: Parameters<typeof buildIgnoreSections>[0
 }
 
 /**
- * Group repository exclusions by their source, before adding a check's own ignores.
- * @param session the repository inventory, selected configurations, and effective settings.
- * @returns the ordered build, tool, generated, dependency, lockfile, and environment exclusions.
+ * Group the exclusions by source, before the ignores of a check.
+ * @param session the repository to read.
+ * @returns the exclusion groups in order.
  */
 function buildIgnoreSections(
     session: Pick<Session, 'reads' | 'repository' | 'scopes' | 'neededToolManifests'>,
@@ -189,8 +189,8 @@ function buildIgnoreSections(
 
 /**
  * Keep the reason with each check-wide path ignore.
- * @param view the effective settings and ignores for this scope.
- * @param check the check that supplies whole-file path exclusions.
+ * @param view the settings of this scope.
+ * @param check the ID whose ignores to keep.
  * @returns the check-wide path exclusions with their reasons.
  */
 function buildSettingsSections(view: ScopeView, check: string): IgnoreSection[] {
@@ -202,11 +202,11 @@ function buildSettingsSections(view: ScopeView, check: string): IgnoreSection[] 
 
 /**
  * Write ignore sections relative to the folder where the tool reads them.
- * @param options the ignore sections and output location.
+ * @param options what to write.
  * @param options.sections the ordered exclusion groups and their reasons.
  * @param options.scope the folder from which the tool reads these patterns.
- * @param options.purpose the explanation written at the start of the ignore file.
- * @returns the complete ignore file with paths relative to the selected folder.
+ * @param options.purpose the explanation at the start of the ignore file.
+ * @returns the ignore file text, with paths relative to the scope.
  */
 function ignoreFileText(options: { sections: IgnoreSection[]; scope: string; purpose: string }): string {
     const { sections, scope, purpose } = options;
@@ -237,9 +237,9 @@ function ignoreFileText(options: { sections: IgnoreSection[]; scope: string; pur
 }
 
 /**
- * Convert the same ordered sections to the glob patterns used by configuration files.
+ * Convert the sections to the globs that tool files use.
  * @param sections the ordered exclusion groups and their written reasons.
- * @returns the equivalent deduplicated glob selectors.
+ * @returns the globs, each once.
  */
 function buildGlobSections(sections: IgnoreSection[]): string[] {
     const patterns = sections.flatMap((section) => section.patterns);
@@ -261,8 +261,8 @@ function buildGlobSections(sections: IgnoreSection[]): string[] {
 
 /**
  * Build the Prettier ignore file with the shared section order and the written reasons.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the generated ignore file with its ordered reasons and patterns.
+ * @param context the tool file to build.
+ * @returns the ignore file text.
  */
 function buildPrettierignore(context: ToolFileContext): string {
     return ignoreFileText({
@@ -277,8 +277,8 @@ function buildPrettierignore(context: ToolFileContext): string {
 
 /**
  * Build the Semgrep ignore file with every pattern relative to its scope.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the generated ignore file with its ordered reasons and patterns.
+ * @param context the tool file to build.
+ * @returns the ignore file text.
  */
 function buildSemgrepignore(context: ToolFileContext): string {
     return ignoreFileText({

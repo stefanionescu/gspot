@@ -6,7 +6,7 @@ import { GLOB_EXCLUDE, TRAILING_SLASH, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
 /**
- * A picomatch matcher over root-relative posix paths, cached by pattern list.
+ * Build a picomatch matcher for root-relative POSIX paths, cached by pattern list.
  * @param patterns the globs, a leading `!` excludes.
  * @returns a predicate that includes positive globs and rejects excluded paths.
  */
@@ -28,7 +28,7 @@ export function buildPathMatcher(patterns: string[]): (path: string) => boolean 
 }
 
 /**
- * Expand literal directory selectors while retaining their inclusion or exclusion polarity.
+ * Expand literal folder selectors, and keep each include or exclude.
  * @param patterns the selectors, a leading ! for an exclusion.
  * @returns the selectors, each literal path followed by everything under it.
  */
@@ -42,9 +42,9 @@ export function includeFolderContents(patterns: string[]): string[] {
 }
 
 /**
- * Matches literal filenames and glob selectors against both the filename and repository path.
+ * Build a matcher for literal filenames and globs that tests both the filename and the repository path.
  * @param names the literal filenames and glob selectors.
- * @returns the same filename matcher for detection and ownership.
+ * @returns the filename matcher that detection and ownership share.
  */
 export function buildFilenameMatcher(names: string[]): (path: string) => boolean {
     const literals = new Set(names.filter((name) => !picomatch.scan(name).isGlob));
@@ -57,7 +57,7 @@ export function buildFilenameMatcher(names: string[]): (path: string) => boolean
 
 /**
  * Escape a repository path so glob selectors match that literal path.
- * @param path the literal repository path.
+ * @param path the literal repository file.
  * @returns a glob with every special character escaped.
  */
 export function escapeGlob(path: string): string {

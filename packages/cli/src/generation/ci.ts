@@ -1,4 +1,4 @@
-// Build readable GitHub workflows and GitLab includes from selected checks.
+// Build readable GitHub workflows and GitLab includes from the checks.
 import type { Node, YAMLMap, YAMLSeq } from 'yaml';
 import { Scalar, Document, stringify } from 'yaml';
 import { quoteArgument } from '#cli/system/text.ts';
@@ -35,7 +35,7 @@ import {
     GITLAB_MANUAL_CONDITION,
 } from '#cli/config/generation/ci.ts';
 
-// An action pinned to a commit, with the version the pin stands for as its comment.
+// Build an action pinned to a commit, with the version that the pin stands for as its comment.
 function buildPinnedAction({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);
     node.comment = ` ${version}`;
@@ -55,7 +55,7 @@ function buildCheckScript(command: string): string {
     ].join('\n');
 }
 
-// The selected package manager shares the same mise invocation as Node and the published CLI.
+// The package manager runs through the same mise command as Node and the published CLI.
 function buildGspotCommand(pipeline: Pipeline): string {
     const { packageManager } = pipeline;
     const tools = [CI_NODE, `npm:${cliName}@${pipeline.version}`];
@@ -139,9 +139,9 @@ function spaceWorkflowGroups(workflow: Document): void {
 }
 
 /**
- * Generate check and applicable manual jobs for each machine through the same mise setup.
+ * Generate the check job and the manual jobs for each machine with one mise setup.
  *
- * @param pipeline the gspot version, selected package manager, machines, and manual checks and tools.
+ * @param pipeline what the workflow runs.
  *
  * @returns the GitHub workflow file.
  */
@@ -202,9 +202,9 @@ function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
 }
 
 /**
- * Generate a GitLab include without changing the authored pipeline. Platform and Swift selections do not apply.
+ * Generate a GitLab include, and leave the authored pipeline unchanged. Platform and Swift choices do not apply.
  *
- * @param pipeline the gspot version, selected package manager, and manual checks and tools.
+ * @param pipeline what the include runs.
  *
  * @returns the GitLab include file.
  */

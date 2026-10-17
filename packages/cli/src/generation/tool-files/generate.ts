@@ -1,4 +1,4 @@
-// Build tool files once for each distinct text and assign their paths to every selected scope.
+// Build each distinct tool file text once, and give its path to every scope that uses it.
 import type { Session } from '#cli/types/planning.ts';
 import { join, extname, basename } from 'node:path/posix';
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
@@ -191,9 +191,9 @@ function writePointers(
 }
 
 /**
- * Build selected tool files, sharing identical text and resolving every pointer to its chosen path.
- * @param session the repository inventory, selected checks, scope settings, and program declarations.
- * @returns the shared output files and every scope's chosen destination.
+ * Build the tool files. Scopes with the same text share one file, and every pointer resolves to its path.
+ * @param session the repository to build for.
+ * @returns the tool files, and the path that each scope uses.
  */
 function buildToolFiles(session: Session): ToolFileGeneration {
     const repository = {

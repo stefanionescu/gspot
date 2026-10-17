@@ -60,7 +60,7 @@ function buildToolProjectRows(everySelected: Manifest[], reads: ReadCache): Init
     return rows;
 }
 
-// Name dependencies that the generated tool project now pins without deleting the authored manifest.
+// Name the dependencies that the generated tool project pins. Keep the authored dependency file.
 function buildPinnedDependencyRows({ root, existingTools }: InitPlanInputs, requirements: Manifest[]): InitFileRow[] {
     const pinned = new Set(Object.keys(listToolProjectPins(requirements).npm));
     return existingTools.toolOnlyPackages.flatMap((path) => {
@@ -90,7 +90,7 @@ function buildPinnedDependencyRows({ root, existingTools }: InitPlanInputs, requ
     });
 }
 
-// The CI files init leaves alone: every one when init writes no workflow, and every existing lint job.
+// List the CI files that init leaves alone: all of them when init writes no workflow, and every existing lint job.
 function buildKeptCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: string[]): InitPlan['retained'] {
     const untouched =
         ci === 'none' && lintJobs.length === 0
@@ -141,14 +141,14 @@ function formatTemplateSection(template: InitPlan['template']): string[] {
 }
 
 /**
- * Build the proposed writes and integrations shown before init asks for acceptance.
- * @param planning the repository evidence, answers, and selected configurations.
- * @param settings the validated proposal and its generated outputs.
- * @param settings.settings the parsed settings for file generation.
+ * Build the file writes and integrations that init shows before it asks you to accept.
+ * @param planning the repository facts, answers, and configurations.
+ * @param settings the validated gspot.toml and its generated files.
+ * @param settings.settings the parsed gspot.toml for file generation.
  * @param settings.settingsText the proposed gspot.toml text.
- * @param settings.requirements the configurations selected for installation.
- * @param settings.generated the generated outputs and their ownership plan.
- * @returns the files, tool installations, and integrations init proposes.
+ * @param settings.requirements the configurations to install.
+ * @param settings.generated the files to write and their ownership plan.
+ * @returns the plan that init proposes.
  */
 function buildInitPlan(
     planning: InitPlanInputs,
@@ -203,9 +203,9 @@ function buildInitPlan(
 }
 
 /**
- * The plan init prints before writing anything.
- * @param plan the selected configurations and file operations to preview before init writes.
- * @returns the text
+ * Format the plan that init prints before it writes anything.
+ * @param plan the configurations and file changes to preview.
+ * @returns the text.
  */
 function formatInitPlan(plan: InitPlan): string {
     const { dim } = getColors();
@@ -263,9 +263,9 @@ function formatReplacedFiles(summary: DetectionSummary): string[] {
 }
 
 /**
- * The detection header: tracked files, the evidence for each configuration group, scopes, and existingTools.
- * @param summary what init detected
- * @returns the text, ending with a blank line when the repository has existingTools
+ * Format the detection header: tracked files, the evidence for each group, scopes, and existing tools.
+ * @param summary what init detected.
+ * @returns the text, with a final blank line when the repository has existing tools.
  */
 function formatDetection(summary: DetectionSummary): string {
     const languages = summary.detected

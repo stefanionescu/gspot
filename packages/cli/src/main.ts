@@ -25,9 +25,9 @@ import { printResult, printFailure, isColorAllowed, setOutputOptions } from '#cl
 if (import.meta.main) process.exitCode = await runProgram(process.argv.slice(PROCESS_ARGUMENTS_START));
 
 /**
- * Build the registered CLI program used by execution and the generated command reference.
- * @param onResult the sink that writes the completed command result.
- * @returns the commander program with every command registered
+ * Build the CLI with every command. Runs and the command reference both use it.
+ * @param onResult writes the command result.
+ * @returns the Commander program.
  */
 function buildProgram(onResult: CommandCompletion): Command {
     const program: Command = new Command('gspot')
@@ -65,9 +65,9 @@ function buildProgram(onResult: CommandCompletion): Command {
 }
 
 /**
- * Runs the program over the supplied arguments.
- * @param commandArguments the arguments after the program name
- * @returns the exit code
+ * Run the CLI with the arguments.
+ * @param commandArguments the arguments after the program name.
+ * @returns the exit code.
  */
 async function runProgram(commandArguments: string[]): Promise<number> {
     let result!: CommandResult;

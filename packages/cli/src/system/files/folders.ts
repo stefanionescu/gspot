@@ -32,9 +32,9 @@ export function createScratchFolder(): ScratchFolder {
 }
 
 /**
- * Find files under each pattern's fixed folder. Include dot files and leave directory links unopened.
+ * Find the files under the fixed folder of each pattern. Include dot files, and do not open folder links.
  * @param cwd the folder to scan.
- * @param patterns one glob or several, with ! patterns excluding matches.
+ * @param patterns one glob or several; a leading ! excludes matches.
  * @returns matching paths relative to cwd, each once in scan order.
  */
 export function listMatchingPaths(cwd: string, patterns: string | string[]): string[] {

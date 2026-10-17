@@ -9,11 +9,11 @@ import {
 } from '#cli/config/tools/credentials.ts';
 
 /**
- * Reject a generated lockfile containing a configured credential in either URL representation.
+ * Reject a generated lockfile that holds a configured credential in either URL form.
  *
- * @param lockfile the manager's lockfile output.
- * @param credentials the raw and decoded registry credentials.
- * @param failure the installation owner's error, without credential values.
+ * @param lockfile the text that the package manager wrote.
+ * @param credentials the raw and decoded registry secrets.
+ * @param failure the error to throw, without credential values.
  */
 export function assertCredentialFreeLockfile(lockfile: string, credentials: string[], failure: Error): void {
     if (LOCKFILE_URL_PASSWORD.test(lockfile)) throw failure;
@@ -25,9 +25,9 @@ export function assertCredentialFreeLockfile(lockfile: string, credentials: stri
 /**
  * Read both encoded and decoded passwords from a registry or proxy URL.
  *
- * @param url the authored URL.
+ * @param url the authored registry or proxy address.
  *
- * @returns password representations excluded from generated lockfiles and diagnostics.
+ * @returns the password forms to keep out of generated lockfiles and messages.
  */
 export function extractUrlPasswords(url: string): string[] {
     const password = new URL(url).password;
@@ -36,10 +36,10 @@ export function extractUrlPasswords(url: string): string[] {
 }
 
 /**
- * Retain bounded installation output after removing configured and printed credentials.
+ * Keep the end of the install output once the configured and printed credentials go.
  *
  * @param result the captured package-manager streams.
- * @param credentials credentials read from repository registry settings.
+ * @param credentials the secrets from the registry settings of the repository.
  *
  * @returns the redacted tail, or a sentence that says the tool printed nothing.
  */

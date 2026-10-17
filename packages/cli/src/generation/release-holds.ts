@@ -24,7 +24,7 @@ import {
 
 /**
  * Write a hold of some days in the unit that the installer reads.
- * @param unit the installer's unit.
+ * @param unit what the installer counts in.
  * @param days the hold.
  * @returns the value for the settings file.
  */
@@ -36,8 +36,8 @@ function formatHold(unit: HoldUnit, days: number): number | string {
 
 /**
  * Read a hold back into days, so a longer hold that the file already has can stay.
- * @param unit the installer's unit.
- * @param value the value in the file.
+ * @param unit what the installer counts in.
+ * @param value what the file holds.
  * @returns the hold in days, or undefined when the value has another form.
  */
 function readHoldDays(unit: HoldUnit, value: number | string): number | undefined {
@@ -59,8 +59,8 @@ function readDurationDays(value: string): number | undefined {
 }
 
 /**
- * Whether a scope uses the installer: one of its files sits in the scope folder.
- * @param files the repository files.
+ * Check whether a scope uses the installer: one of its files sits in the scope folder.
+ * @param files the repository handle.
  * @param prefix the scope folder, with a trailing slash, or empty for the root.
  * @param hold the installer.
  * @returns true when the scope uses the installer.
@@ -74,9 +74,9 @@ function isHoldInUse(files: Files, prefix: string, hold: ReleaseHold): boolean {
 }
 
 /**
- * The hold keys for one installer's settings file. A longer hold and the file's own excludes stay.
+ * Build the hold keys for the settings file of one installer. A longer hold and the excludes in the file stay.
  *
- * @param files the repository files.
+ * @param files the repository handle.
  * @param path the settings file.
  * @param hold the installer.
  * @param days the hold that gspot.toml asks for.
@@ -100,7 +100,7 @@ function buildHoldChanges(files: Files, path: string, hold: ReleaseHold, days: n
 }
 
 /**
- * The release hold for each installer that a scope uses, in scopes that select dependencies.
+ * Build the release hold for each installer that a scope uses, in scopes that select dependencies.
  * @param repositoryRoot where the scopes sit.
  * @param scopes every scope.
  * @returns each settings file and the keys gspot sets in it.
@@ -127,7 +127,7 @@ function buildReleaseHoldEdits(repositoryRoot: string, scopes: ScopeSelection[])
 }
 
 /**
- * The hold that the root gspot.toml asks for. The tool installs in .gspot use it.
+ * Read the hold that the root gspot.toml asks for. The tool installs in .gspot use it.
  * @param scopes every scope.
  * @returns the hold in days.
  */

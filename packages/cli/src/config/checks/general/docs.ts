@@ -1,7 +1,7 @@
 import { YARN_SETTINGS } from '#cli/config/system/locations.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 
-/** Documents can name standard outputs before you enable their generating setting. */
+/** Paths that documents may name before you turn on the setting that generates them. */
 export const OPTIONAL_GENERATED_PATHS = [GITHUB_WORKFLOW, GITLAB_WORKFLOW, YARN_SETTINGS] as const;
 
 export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;

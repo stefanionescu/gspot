@@ -9,12 +9,12 @@ import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { TOOL_TIMEOUT_SETTING } from '#cli/config/settings/values.ts';
 
 /**
- * Runs a tool command with the shared output environment and configured timeout.
+ * Run a tool command with the shared output environment and the timeout from the settings.
  *
- * @param command the expanded argument vector.
- * @param options the command directory, environment, timeout, and cancellation.
+ * @param command the expanded arguments.
+ * @param options how the command runs.
  *
- * @returns the completed process result.
+ * @returns the process result.
  */
 export async function runTool(command: readonly string[], options: ToolRunOptions): Promise<SpawnResult> {
     const { timeoutSeconds, cancelSignal, ...prepared } = options;
@@ -43,10 +43,10 @@ export async function runTool(command: readonly string[], options: ToolRunOption
 }
 
 /**
- * Stop an installation step that ran past the time limit, so the error names the limit instead of an exit code.
+ * Throw for an install step that ran past the time limit, so the error names the limit, not an exit code.
  *
  * @param name the step, as the error names it.
- * @param result the completed process result.
+ * @param result what the process printed, and its exit code.
  * @param timeoutSeconds the limit the step ran under.
  */
 export function assertWithinTimeLimit(name: string, result: SpawnResult, timeoutSeconds: number): void {
@@ -58,11 +58,11 @@ export function assertWithinTimeLimit(name: string, result: SpawnResult, timeout
 }
 
 /**
- * Resolve the configured process timeout from effective check settings.
+ * Read the process timeout from the scope settings.
  *
- * @param view the scoped values containing the process timeout setting.
+ * @param view the scope settings with the timeout.
  *
- * @returns the numeric process limit selected for the current scope.
+ * @returns the timeout in seconds.
  */
 export function getToolTimeoutSeconds(view: Pick<ScopeView, 'settings'>): number {
     return Number(view.settings[TOOL_TIMEOUT_SETTING]);

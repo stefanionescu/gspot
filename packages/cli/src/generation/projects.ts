@@ -26,9 +26,9 @@ import {
 } from '#cli/config/system/locations.ts';
 
 /**
- * Emit the program tool project without repository runtime pins.
+ * Generate the mise tool project without the runtime pins of the repository.
  *
- * @param manifests the selected configuration manifests.
+ * @param manifests the configurations in use.
  * @param reads the run cache.
  *
  * @returns the mise tool project.
@@ -50,15 +50,15 @@ export function buildMiseProject(manifests: Manifest[], reads: ReadCache): Gener
 }
 
 /**
- * Generate the npm tools as a tool project without adding dependencies to the repository.
+ * Generate the npm tools as a tool project, and add no dependencies to the repository.
  *
- * @param inputs the selected source projects, tool manifests, and package manager.
- * @param inputs.root the repository root.
- * @param inputs.scopes the selected source scopes.
- * @param inputs.manifests the selected tool declarations.
+ * @param inputs what the tool project holds.
+ * @param inputs.root the repository folder.
+ * @param inputs.scopes the source projects.
+ * @param inputs.manifests the configurations with npm tools.
  * @param inputs.isYarnBerry true for Yarn 2 or later as the repository package manager.
  *
- * @returns the tool project's files.
+ * @returns the tool project files.
  */
 export function buildNpmProject({ root, scopes, manifests, isYarnBerry }: NpmProjectInputs): GeneratedFile[] {
     const pins = listToolProjectPins(manifests).npm;
@@ -100,9 +100,9 @@ export function buildNpmProject({ root, scopes, manifests, isYarnBerry }: NpmPro
 }
 
 /**
- * Keep Python lint dependencies in a tool project owned by gspot.
+ * Generate the Python tool project that holds the Python lint tools.
  *
- * @param manifests the selected manifests.
+ * @param manifests the configurations in use.
  * @param days the release hold, so uv installs no release newer than that.
  *
  * @returns the Python tool project files, or none without Python tools.

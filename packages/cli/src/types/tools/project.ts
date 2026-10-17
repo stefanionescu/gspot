@@ -9,7 +9,7 @@ export type PackageManagerCommand = {
     failure: string;
 };
 
-/** One uv operation with its private index configuration and diagnostic credentials. */
+/** One uv operation with its private index settings and the credentials to hide in messages. */
 export type UvExecution = {
     work: string;
     commandArguments: readonly string[];
@@ -24,7 +24,7 @@ export type PackageCommandResult = {
     lockfile: string;
 };
 
-/** Package operations for a declared manager major. */
+/** The lockfile and install arguments for the major version of a package manager. */
 export type PackageManagerArguments = { lockfile: string[]; install: string[] };
 
 /** The validated uv lockfile of the Python tool project. */
@@ -48,7 +48,7 @@ export type PythonSettingsSources = { uv: string | undefined; project: string | 
 /** Repository index settings and credentials that lockfiles must omit. */
 export type PythonIndexSettings = { settings: Record<string, unknown>; credentials: string[] };
 
-/** Validated npm tool project with the manager and lockfile it declares. */
+/** A validated npm tool project: its package manager and lockfile. */
 export type NpmToolProject = {
     dependencies: Record<string, string>;
     lockfile: ToolProjectLockfileName;

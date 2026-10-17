@@ -14,8 +14,8 @@ function buildSeverityLimits(count: unknown) {
     return { warning: count, error: count };
 }
 /**
- * Build swiftlint file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the SwiftLint file from the settings.
+ * @param context the tool file to build.
  * @returns the SwiftLint rules with the source limits of the repository.
  */
 function buildSwiftlintFile(context: ToolFileContext): string {

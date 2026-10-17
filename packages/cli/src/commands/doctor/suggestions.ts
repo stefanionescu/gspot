@@ -138,9 +138,9 @@ function listUnownedToolFiles(
 }
 
 /**
- * Setup suggestions for a repository session.
- * @param session the detected files and settings for comparison with generated output.
- * @returns detected and suggested configurations, unowned tool files, existing lint jobs
+ * List setup suggestions for the repository.
+ * @param session the repository to compare with the generated files.
+ * @returns the suggested changes.
  */
 export function listSuggestions(session: Session): Suggestions {
     const { dependencyFiles } = session;

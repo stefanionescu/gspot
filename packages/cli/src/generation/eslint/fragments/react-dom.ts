@@ -3,8 +3,8 @@ import { JSX_CODE_FILES } from '#cli/config/generation/eslint-fragments.ts';
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply accessibility rules to the selected React DOM files.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the accessibility lint rules to the React DOM files.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildReactDomFragment(

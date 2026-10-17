@@ -36,9 +36,9 @@ import {
 } from '#cli/config/repository/inventory.ts';
 
 /**
- * Reads attribute rules once for a repository read.
- * @param repositoryRoot the folder used as the Git working directory.
- * @param paths the tracked attribute-file paths.
+ * Read the attribute rules once per repository read.
+ * @param repositoryRoot the folder where Git runs.
+ * @param paths the tracked .gitattributes files.
  * @returns the parsed rules, or none when the optional file does not exist.
  */
 function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Record<string, string>> {
@@ -52,8 +52,8 @@ function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Re
 
 /**
  * Refuse broken Git metadata while allowing a folder outside any repository.
- * @param folder the folder whose top-level lookup failed.
- * @param top the failed top-level lookup.
+ * @param folder where the top-level lookup failed.
+ * @param top the failed Git result.
  */
 function assertOutsideGit(folder: string, top: SpawnResult): void {
     const inspection = runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
@@ -62,13 +62,13 @@ function assertOutsideGit(folder: string, top: SpawnResult): void {
 }
 
 /**
- * Reads tracked files, dependency files, and the written and discovered scopes.
- * @param reads the run-owned repository cache.
- * @param options the declarations, written scopes, manifests, and cached source reads.
- * @param options.declarations the generated and vendored declarations.
- * @param options.scopes the written scope entries.
- * @param options.manifests the shipped configuration manifests.
- * @returns the repository record.
+ * Read the tracked files, dependency files, and the written and discovered scopes.
+ * @param reads the run cache.
+ * @param options what the read needs.
+ * @param options.declarations the generated and vendored path rules.
+ * @param options.scopes the written scope tables.
+ * @param options.manifests the shipped configurations.
+ * @returns the repository inventory.
  */
 export async function readRepository(
     reads: ReadCache,
@@ -124,8 +124,8 @@ export async function readRepository(
 
 /**
  * Read generated and vendored selectors from each tracked attribute file.
- * @param reads the run's source reads.
- * @param paths tracked root-relative paths.
+ * @param reads the run cache.
+ * @param paths the tracked root-relative files.
  * @returns the selectors declared by Git attributes.
  */
 export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[] {
@@ -152,9 +152,9 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
 }
 
 /**
- * The nearest folder at or above start that holds gspot.toml, stopping at the Git top level.
- * Without settings, use the Git top level or start outside Git.
- * @param start the directory to start from.
+ * Find the nearest folder at or above start that holds gspot.toml, up to the Git top level.
+ * Without settings, return the Git top level, or start outside Git.
+ * @param start the folder where the search starts.
  * @returns the settings folder, Git top level, or starting folder outside Git.
  */
 export function findRoot(start: string): string {

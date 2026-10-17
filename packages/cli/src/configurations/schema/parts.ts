@@ -14,10 +14,10 @@ import type { Level, Stage, ParsedCheck, ConditionFields, CheckDeclarationInput 
 
 const findingExitCodesSchema = z.array(z.number().int().min(1).max(MAX_EXIT_CODE));
 
-/** The stages supported by declared checks; custom commands exclude the message stage. */
+/** The stages of tool checks. Command checks cannot use the message stage. */
 export const checkStageSchema = z.enum(STAGES) satisfies z.ZodType<Stage>;
 
-/** Argument vectors require an executable and preserve empty arguments after it. */
+/** Arguments need an executable first, and keep empty arguments after it. */
 export const commandSchema = z
     .array(z.string())
     .min(1)
@@ -31,7 +31,7 @@ export const pathContainerSchema = z.strictObject({
     category: z.enum(NAMED_CATEGORIES),
 } satisfies SchemaShape<PathContainer>);
 
-/** floors normalize at the manifest boundary before version comparisons. */
+/** Normalize version floors when gspot reads the manifest, before any version comparison. */
 export const versionFloorSchema = z
     .string()
     .regex(VERSION_FLOOR)

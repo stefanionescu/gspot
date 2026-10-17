@@ -55,7 +55,7 @@ async function detectPackageManager(root: string, candidates: string[]): Promise
     return { name: NPM_PROGRAM, version: undefined };
 }
 
-/** Authored manager names before installation validates their requested version. */
+/** The authored package manager declaration, before install validates its version. */
 const packageManagerDeclarationSchema = z.strictObject({
     name: z.enum(PACKAGE_MANAGERS),
     version: z.string().optional(),
@@ -66,8 +66,8 @@ const packageManagerSchema = packageManagerDeclarationSchema.extend({
 }) satisfies z.ZodType<PackageManager>;
 
 /**
- * Identify the Yarn major version that uses Berry configuration and installation arguments.
- * @param packageManager the validated package manager and version requirement.
+ * Check whether the package manager runs Yarn Berry, which has its own settings and install arguments.
+ * @param packageManager the validated name and version range.
  * @returns whether the package manager uses Yarn Berry.
  */
 function isYarnBerry(packageManager: PackageManager): boolean {
@@ -76,8 +76,8 @@ function isYarnBerry(packageManager: PackageManager): boolean {
 }
 
 /**
- * Read a package-manager declaration before validating its installation version.
- * @param manifest the validated package manifest.
+ * Read the package manager declaration, before its version gets validated.
+ * @param manifest the validated package.json.
  * @returns packageManager first, then the first devEngines declaration, or no declaration.
  */
 function readPackageManagerDeclaration(manifest: PackageJson): PackageManagerDeclaration | undefined {
@@ -99,7 +99,7 @@ async function selectPackageManager(
     repositoryRoot: string,
     trackedPaths: string[],
 ): Promise<PackageManagerDeclaration> {
-    // The root declaration wins; without it, the first nested manifest provides a deterministic shared tool manager.
+    // The root declaration wins. Without it, the first nested package.json gives one stable package manager for the tools.
     const candidates = [
         PACKAGE_JSON,
         ...trackedPaths
@@ -123,8 +123,8 @@ async function selectPackageManager(
  * Resolve an undeclared package manager version only when generating or installing a tool project.
  *
  * @param repositoryRoot the working folder used when querying an undeclared version.
- * @param packageManager the declared or detected package manager identity.
- * @param timeoutSeconds the tool timeout in seconds.
+ * @param packageManager the declared or detected name and version.
+ * @param timeoutSeconds the limit for the version query.
  *
  * @returns the name and version requirement used by the tool project.
  */

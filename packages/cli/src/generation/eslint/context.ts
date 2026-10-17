@@ -91,7 +91,7 @@ function readEslintPresets(session: ToolFileContext['session']): Map<string, Esl
     );
 }
 
-// Derive project imports, runtime boundaries and your own ESLint options from the shared facts.
+// Derive project imports, runtime boundaries, and your own ESLint options from the shared facts.
 function buildProjectOptions(session: ToolFileContext['session'], context: EslintFacts): EslintParts {
     const { root, reads, scopes, selection, nodeFiles, repositorySettings } = context;
     const { view } = selection;
@@ -132,9 +132,9 @@ function buildProjectOptions(session: ToolFileContext['session'], context: Eslin
 }
 
 /**
- * Compute the repository facts, selected rule blocks, and printers used by this scope's ESLint file.
- * @param input the repository, selected scope, and ESLint tool-file declaration.
- * @returns the scope facts, selected presets, rule blocks, and printers.
+ * Build the ESLint context of one scope.
+ * @param input the tool file to build.
+ * @returns the context that the ESLint file needs.
  */
 function buildEslintContext(input: ToolFileContext): EslintContext {
     const { session, selection, toolFile } = input;

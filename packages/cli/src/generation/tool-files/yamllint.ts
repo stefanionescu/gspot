@@ -3,8 +3,8 @@ import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { YAMLLINT_RULES, YAMLLINT_YAML_OPTIONS, YAMLLINT_RULE_OPTIONS } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Build yamllint file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the yamllint file from the settings.
+ * @param context the tool file to build.
  * @returns the YAML lint rules with the configured indentation and disabled checks.
  */
 function buildYamllintFile(context: ToolFileContext): string {

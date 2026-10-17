@@ -190,14 +190,14 @@ export const SHEBANG_TAGS: Readonly<Record<string, readonly string[]>> = {
     node: ['javascript', 'node', 'executable', 'text'],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
-/** Ordinary source content after higher-priority inventory classifications. */
+/** The file classification of a file that no earlier rule claims. */
 export const SOURCE_KIND = { kind: 'source', origin: 'default' } as const;
 
 export const SHEBANG_TAG = 'shebang:';
 
 export const RUNTIME_TAG = 'runtime:';
 
-/** Kinds assigned to repository inventory entries and accepted by file selectors. */
+/** The file kinds in the inventory, which file selectors accept. */
 export const FILE_KINDS = ['source', 'generated', 'vendored', 'binary'] as const;
 
 export const DOCKERFILE_NAME = 'Dockerfile';

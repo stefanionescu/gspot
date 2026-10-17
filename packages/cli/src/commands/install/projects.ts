@@ -11,11 +11,11 @@ import { prepareLockfiles } from '#cli/tools/project-lockfiles.ts';
 import { PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 
 /**
- * Resolve owned lockfiles, then install their frozen npm and Python projects.
+ * Resolve the owned lockfiles, then install the frozen npm and Python tool projects.
  *
- * @param context the selected tools, session, writer, generated files, and attempted commands.
+ * @param context what install needs for this step.
  *
- * @returns the npm and Python installation notes.
+ * @returns the npm and Python install notes.
  */
 export async function installToolProjects(context: InstallContext): Promise<string[]> {
     const { session, writer, generated, mise } = context;

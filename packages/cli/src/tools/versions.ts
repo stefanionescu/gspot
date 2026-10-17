@@ -16,7 +16,7 @@ import { TOOL_ENV, NO_VERSION, VERSION_FLAG } from '#cli/config/tools/run.ts';
 import type { ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts';
 import { readHostPackage, readToolProjectPackage } from '#cli/tools/npm/packages.ts';
 
-// The version the first package.json above a folder declares for the named package, searching upward.
+// Find the version that the first package.json above a folder declares for the named package, searching upward.
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, PACKAGE_JSON);
@@ -28,11 +28,11 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
 }
 
 /**
- * The version a package.json above the real file of an npm tool holds, for the package the pin names.
+ * Read the version that a package.json above the real file of an npm tool holds, for the package that the pin names.
  *
  * @param repositoryRoot the boundary for validating managed package metadata reads.
  * @param path the executable.
- * @param name the package name, or undefined for tools outside npm.
+ * @param name the npm package, or undefined for tools outside npm.
  *
  * @returns the declared version, or undefined when no package.json above the file names the package.
  */
@@ -46,8 +46,8 @@ function readPackageVersion(repositoryRoot: string, path: string, name: string |
             ? realpathSync(path)
             : files.readRealPath(convertToPosixPath(relative(repositoryRoot, path))),
     );
-    // A Windows shim in node_modules/.bin has its own file, so find its package
-    // found by name beside that folder.
+    // A Windows shim in node_modules/.bin has its own file, so look for its package by name
+    // next to that folder.
     const start = basename(folder) === basename(NPM_BIN_FOLDER) ? join(dirname(folder), name) : folder;
     return findVersionAbove(files, repositoryRoot, start, name);
 }
@@ -66,7 +66,7 @@ function findVersionFailure(
 ): ParsedToolVersion | undefined {
     if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version inspection timed out.` };
     if (result.missing) return { state: 'missing', note: text };
-    // A shim with no selected version starts nothing, regardless of other mise installations.
+    // A shim without a set version starts nothing, whatever other mise installs exist.
     if (text.includes(NO_VERSION)) return { state: 'missing', note: 'not installed' };
     if (result.code !== (tool.version_exit_code ?? 0))
         return { state: 'error', note: `${tool.name} version inspection exited ${String(result.code)}: ${text}` };
@@ -142,9 +142,9 @@ function isBelowFloor(found: string | undefined, floor: string | undefined): boo
 /**
  * Read a declared tool version from captured process output.
  *
- * @param tool the declared tool and its installation pin.
- * @param result the completed process result.
- * @param installedVersion the version the installed package declares.
+ * @param tool the declaration and its pin.
+ * @param result what the process printed, and its exit code.
+ * @param installedVersion what the package.json of the install declares.
  *
  * @returns the parsed version or its inspection failure.
  */

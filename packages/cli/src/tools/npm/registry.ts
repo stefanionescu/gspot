@@ -25,7 +25,7 @@ import {
     PACKAGE_SETTING_VARIABLE_PREFIX,
 } from '#cli/config/tools/npm.ts';
 
-// Read and validate the configuration before exposing its effective registry settings.
+// Read and validate the npm settings before returning the registry settings that apply.
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {
     const inherited = buildSpawnEnvironment();
     const npm = which.sync(NPM_PROGRAM, { nothrow: true });
@@ -65,8 +65,8 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
 /**
  * Add a connection setting under an unused environment variable and return its reference.
  *
- * @param env the installation environment receiving the value.
- * @param prefix the variable prefix for this package manager.
+ * @param env the install environment that gets the value.
+ * @param prefix the start of each variable name.
  * @param value the connection setting kept out of generated files.
  *
  * @returns a package-manager environment reference.
@@ -80,11 +80,11 @@ export function addEnvironmentReference(env: Record<string, string>, prefix: str
 }
 
 /**
- * Retain raw, decoded, and URL-encoded secrets for lockfile validation and diagnostic redaction.
+ * Collect raw, decoded, and URL-encoded secrets. Lockfile checks and message redaction use them.
  *
  * @param env the environment for the tool process.
  *
- * @returns the registry secrets that diagnostics must redact.
+ * @returns the registry secrets that messages must hide.
  */
 export function extractRegistryCredentials(env: Record<string, string>): string[] {
     const credentials = Object.entries(env)
@@ -106,7 +106,7 @@ export function extractRegistryCredentials(env: Record<string, string>): string[
 /**
  * Write npm connection settings through environment references, so the temporary .npmrc contains no credentials.
  *
- * @param work the private user configuration directory.
+ * @param work the private user settings folder.
  * @param env the environment for the tool process.
  */
 export function writeNpmrc(work: string, env: Record<string, string>): void {
@@ -120,7 +120,7 @@ export function writeNpmrc(work: string, env: Record<string, string>): void {
 }
 
 /**
- * Read npm-compatible connection settings through the npm settings file, keeping credentials in memory.
+ * Read npm-compatible connection settings through the npm settings file, and keep credentials in memory.
  *
  * @param repositoryRoot the working folder for npm settings and relative certificate paths.
  *

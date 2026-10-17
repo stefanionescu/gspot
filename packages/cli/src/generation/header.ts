@@ -18,12 +18,11 @@ function formatCommentBlock(lines: string[], mark: string): string {
 }
 
 /**
- * The generated notice outside .gspot, or an empty string for JSON.
+ * Format the generated-file notice for a file outside .gspot.
  *
- * @param path the target path.
- *
- * @param notes the explanatory lines that follow the generated-file notice.
- * @returns the comment block ending in a newline, or ''.
+ * @param path the generated file.
+ * @param notes lines to add after the notice.
+ * @returns the comment block with a final newline, or '' for JSON.
  */
 function formatHeader(path: string, notes: string[] = []): string {
     if (isInGspotFolder(path)) return '';

@@ -3,12 +3,12 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
 
 /**
  * Build the declared plugin imports and lint rule blocks.
- * @param context the selected presets, rule printer, and scope settings.
- * @param configuration the configuration that supplies the pinned rule list.
+ * @param context the ESLint inputs of the scope.
+ * @param configuration the name with the pinned lint rule list.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildLintRuleFragment(context: EslintContext, configuration: string): EslintFragment {
-    // Only the registered constant fragments select this producer.
+    // Only the fragments in PLUGIN_LINT_RULE_FRAGMENTS reach this function.
     const declaration = PLUGIN_LINT_RULE_FRAGMENTS[configuration] as (typeof PLUGIN_LINT_RULE_FRAGMENTS)[string];
     return {
         imports: [...declaration.imports],

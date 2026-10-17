@@ -9,10 +9,10 @@ import { type PythonInputs, type ToolFileContext } from '#cli/types/generation/f
 import { RUFF_ISORT, RUFF_IGNORED_RULES, BASEDPYRIGHT_OPTIONS } from '#cli/config/generation/python.ts';
 
 /**
- * Resolve Python configuration paths for both type and lint tools.
+ * Resolve the Python paths for the type checker and the linter.
  *
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the scope's environment and configuration-relative exclusions.
+ * @param context the tool file to build.
+ * @returns the environment of the scope, and the exclusions relative to the tool file.
  */
 function buildPythonInputs(context: ToolFileContext): PythonInputs {
     const { session, selection, level } = context;
@@ -40,8 +40,8 @@ function buildPythonInputs(context: ToolFileContext): PythonInputs {
     };
 }
 /**
- * Build ruff file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Ruff file from the settings.
+ * @param context the tool file to build.
  * @returns the Ruff lint rules, import settings, and source exclusions.
  */
 function buildRuffFile(context: ToolFileContext): string {
@@ -87,8 +87,8 @@ function buildRuffFile(context: ToolFileContext): string {
     return `${stringify(document, TOML_FORMAT).trimEnd()}\n`;
 }
 /**
- * Build basedpyright file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Basedpyright file from the settings.
+ * @param context the tool file to build.
  * @returns the Python environment and source paths used by Basedpyright.
  */
 function buildBasedpyrightFile(context: ToolFileContext): string {

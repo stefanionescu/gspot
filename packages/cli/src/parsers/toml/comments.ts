@@ -1,4 +1,4 @@
-// Retains TOML comments at their syntax entries.
+// Keep TOML comments at their syntax entries.
 import { getValueAt } from '#cli/system/values.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
@@ -54,9 +54,9 @@ function listNestedNodes(node: TomlValue, path: KeyPath): TomlSyntax['pathNodes'
 }
 
 /**
- * Find the key, header or item described by an inline or contiguous leading comment.
- * @param syntax original syntax entries.
- * @param comment a concrete comment token.
+ * Find the key, header, or item that an inline or adjacent leading comment describes.
+ * @param syntax the indexed document.
+ * @param comment a concrete `#` token.
  * @returns its syntax entry, or no entry for a separate comment.
  */
 function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPathNode | undefined {
@@ -78,10 +78,10 @@ function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPa
 }
 
 /**
- * Narrow a parsed TOML node by the library's serialized syntax kind.
- * @param node the parsed syntax node.
+ * Narrow a parsed TOML node by the syntax kind of the library.
+ * @param node the parsed item to test.
  * @param node.type its library enum value.
- * @param kind the syntax kind to match.
+ * @param kind the type name to match.
  * @returns whether the node has that kind.
  */
 function isTomlKind<Kind extends string>(
@@ -134,11 +134,11 @@ function parseTomlSyntax(source: string, value: Record<string, unknown>): TomlSy
 }
 
 /**
- * Place comments immediately before their own key, header or array item, without column alignment.
+ * Place comments just before their own key, header, or array item, without column alignment.
  * @param comments the original syntax entries.
- * @param kind the syntax entry kind.
- * @param path the key or array-item path.
- * @param text the entry text.
+ * @param kind the type of the entry.
+ * @param path the keys and array indexes of the entry.
+ * @param text the entry contents.
  * @returns syntax with exact source-ordered leading comments.
  */
 function insertTomlComments(comments: TomlComments, kind: string, path: KeyPath, text: string): string {
@@ -162,8 +162,8 @@ function insertTomlComments(comments: TomlComments, kind: string, path: KeyPath,
 }
 
 /**
- * Retain a physical comment's semantic identity through document edits.
- * @param syntax indexed syntax.
+ * Keep each comment tied to its entry through document edits.
+ * @param syntax the indexed entries.
  * @returns comments with their original anchors and stable path identities.
  */
 function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
@@ -175,9 +175,9 @@ function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
 }
 
 /**
- * Retrieve the extent of a concrete syntax token produced by the parser.
+ * Read the extent of a parsed syntax token.
  * @param node parsed syntax.
- * @returns the token's source extent.
+ * @returns the start and end offsets.
  */
 function getTomlRange(node: SourceRange): readonly [number, number] {
     if (node.range === undefined) throw new Error('The TOML parser omitted a source range.');
@@ -187,7 +187,7 @@ function getTomlRange(node: SourceRange): readonly [number, number] {
 /**
  * Add a source comment to its retained TOML entry.
  * @param comments the collected comment blocks.
- * @param entry the syntax entry, original comment, and placement.
+ * @param entry what to add, and where.
  */
 function addTomlComment(comments: TomlComments, entry: TomlCommentPlacement): void {
     const { kind, path, comment, placement } = entry;

@@ -26,7 +26,7 @@ export const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
 /** Comment styles for the languages whose code lines gspot counts. */
 export const COMMENT_MARKERS = { bash: '#', python: '#', sql: '--' } as const;
 
-// Counting executable statements in Python, Swift, and Bash syntax trees, and telling a trivial file from a real one.
+// Syntax tree nodes that count as statements in Python, Swift, and Bash, to tell a trivial file from a real one.
 
 export const COUNTED_FUNCTION_NODES = new Set([
     'function_definition',

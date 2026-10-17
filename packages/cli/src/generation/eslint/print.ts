@@ -53,12 +53,12 @@ function serializePresetRules(
 }
 
 /**
- * Serialize the same rule and applicability fields retained in the generation baseline.
+ * Serialize the lint rule and file fields that the generation baseline keeps.
  *
- * @param block the actual ESLint rule fields.
+ * @param block the ESLint rule fields.
  * @param runtime plugin, parser, and settings expressions that contain no rule fields.
- * @param preset the declared ESLint preset.
- * @param level the selected ESLint plugin configuration.
+ * @param preset the declared ESLint export to spread.
+ * @param level the ESLint plugin settings for recommended or all.
  *
  * @returns a JavaScript configuration block.
  */
@@ -142,12 +142,12 @@ function serializeRuntimeSelectors(runtimes: EslintParts['runtimes']): string {
 }
 
 /**
- * Serialize access to the manifest's actual preset export.
+ * Serialize the expression that reads the preset export of the manifest.
  *
- * @param variable the runtime settings importName.
- * @param source the source paths and dependency trees.
+ * @param variable the import name of the preset package.
+ * @param source the dotted path of the export, or empty for the whole import.
  *
- * @returns the import expression for the declared preset.
+ * @returns the expression that reads the preset.
  */
 function serializePresetAccess(variable: string, source: string): string {
     return (
@@ -162,12 +162,12 @@ function serializePresetAccess(variable: string, source: string): string {
 }
 
 /**
- * Serialize fixed imports and selected plugins before the fragment import statements.
+ * Serialize the fixed imports and the plugins before the fragment imports.
  *
- * @param plugins the selected formatter plugins.
- * @param fragments the emitted configuration fragments.
+ * @param plugins the import names and packages to load.
+ * @param fragments the extra import lines.
  *
- * @returns the imports used by the generated configuration.
+ * @returns the imports of the generated file.
  */
 function serializeImports(plugins: EslintPlugins, fragments: string): string {
     return (
@@ -181,10 +181,10 @@ function serializeImports(plugins: EslintPlugins, fragments: string): string {
 }
 
 /**
- * Serialize ordered block descriptors and retain the module's calculated rule settings.
+ * Serialize the blocks in order with the block writer of the scope.
  *
- * @param module the named architecture module.
- * @param blocks the emitted ESLint blocks.
+ * @param module the block writer of the scope.
+ * @param blocks the block arguments, in order.
  *
  * @returns the serialized ESLint blocks.
  */
@@ -193,9 +193,9 @@ function serializeBlocks(module: BlockWriter, blocks: Parameters<BlockWriter['bl
 }
 
 /**
- * Indent every line of an emitted ESLint block beneath its configuration array.
- * @param source the already serialized block or explanatory comment.
- * @returns the block text with the shared indentation.
+ * Indent every line of a generated ESLint block inside the export array.
+ * @param source a serialized block or comment.
+ * @returns the indented text.
  */
 function indentEslintBlock(source: string): string {
     return source

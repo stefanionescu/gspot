@@ -57,7 +57,7 @@ const CI_TIMEOUT_MINUTES = 60;
 
 const CI_FILE_LABELS = { github: GITHUB_WORKFLOW, gitlab: GITLAB_INCLUDE_LABEL } as const;
 
-/** Git uses these empty-tree sentinels for newly created branches. */
+/** Git sends these all-zero object names for new branches. */
 const ZERO_SHAS = [
     '0000000000000000000000000000000000000000',
     '0000000000000000000000000000000000000000000000000000000000000000',

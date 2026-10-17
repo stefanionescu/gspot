@@ -1,4 +1,4 @@
-// Install and check the selected Vale packages.
+// Install and check the Vale packages.
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
@@ -15,12 +15,12 @@ import { DOT_GSPOT, VALE_PACKAGES_PATH, VALE_TOOL_FILE_PATH } from '#cli/config/
 import { VALE_INSTALL_PREFIX, VALE_INSTALL_ARGUMENTS, VALE_STYLES_PATH_PATTERN } from '#cli/config/install.ts';
 
 /**
- * Check upstream style availability before running prose checks.
+ * Check that the upstream styles exist before prose checks run.
  *
- * @param repositoryRoot the boundary containing the generated prose configuration and style folders.
- * @param level the selected check level.
+ * @param repositoryRoot the root with the generated Vale files and style folders.
+ * @param level recommended or all, which decides the packages.
  *
- * @returns whether the config and required package directories exist.
+ * @returns whether the Vale settings and the package folders exist.
  */
 export function hasValePackages(repositoryRoot: string, level: Settings['level']): boolean {
     using files = openFiles(repositoryRoot);
@@ -32,11 +32,11 @@ export function hasValePackages(repositoryRoot: string, level: Settings['level']
 }
 
 /**
- * Downloads the upstream packages shipped at the selected level, and replaces the installed ones with them. Needs the network.
+ * Download the upstream packages for the level, and replace the installed ones. Needs the network.
  *
- * @param context the selected tools, session, writer, generated files, and attempted commands.
+ * @param context what install needs for this step.
  *
- * @returns the installation summary.
+ * @returns the install summary.
  */
 export async function installValePackages(context: InstallContext): Promise<string> {
     const { session: search, steps } = context;

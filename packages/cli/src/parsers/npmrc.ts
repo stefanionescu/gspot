@@ -4,8 +4,8 @@ import { NPMRC_LIST_SUFFIX, NPMRC_COMMENT_MARKS } from '#cli/config/parsers/npmr
 
 /**
  * Split one .npmrc line into its key and value.
- * @param line the line.
- * @returns the key without a list suffix, and the value, or undefined for a comment or a line with no `=`.
+ * @param line the text to split.
+ * @returns the key and value, or undefined for a comment or a line without `=`.
  */
 function readLine(line: string): { key: string; value: string } | undefined {
     const text = line.trim();
@@ -19,7 +19,7 @@ function readLine(line: string): { key: string; value: string } | undefined {
 }
 
 /**
- * The one key that a flat .npmrc path names.
+ * Read the one key that a flat .npmrc key path names.
  * @param path where the file sits, for the error message.
  * @param keys the requested key path.
  * @returns the key.

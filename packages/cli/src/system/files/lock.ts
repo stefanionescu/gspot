@@ -36,7 +36,7 @@ function assertAbandonedLock(current: FileContents, path: string): void {
     );
 }
 
-// A separate lease prevents concurrent reclaimers from deleting a replacement writer's lock.
+// A separate lease stops two reclaimers from deleting the lock of a new writer.
 function removeStaleLock(bounds: FilesState, path: string, target: string): void {
     const reclaim = `${target}${LOCK_RECOVERY_SUFFIX}`;
     try {
@@ -76,9 +76,9 @@ export function releaseLocks(bounds: FilesState): string[] {
 }
 
 /**
- * Takes the writer lock at a path, clearing one whose holder has exited and refusing one whose holder runs.
+ * Take the writer lock at a path. Clear a lock whose holder has exited, and refuse one whose holder still runs.
  * @param bounds the root, which records the lock it now holds.
- * @param path the root-relative path of the lock file.
+ * @param path the root-relative lock file.
  */
 export function lockForWriting(bounds: FilesState, path: string): void {
     const target = preparePath(bounds, path);

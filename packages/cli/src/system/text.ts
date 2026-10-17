@@ -15,12 +15,12 @@ import {
 } from '#cli/config/text.ts';
 
 /**
- * Up to three candidates within an edit distance that reads as a typo, closest first.
+ * Select up to three names close enough to look like a typo, closest first.
  *
- * @param name the name as typed.
+ * @param name the text as typed.
  * @param candidates the names that exist.
  *
- * @returns the closest candidates.
+ * @returns the closest names.
  */
 export function selectSimilarNames(name: string, candidates: string[]): string[] {
     const lower = name.toLowerCase();
@@ -37,7 +37,7 @@ export function selectSimilarNames(name: string, candidates: string[]): string[]
 }
 
 /**
- * Names in code spans, separated by commas, with the count of the rest past the limit.
+ * Format names as code spans with commas, and count the rest past the limit.
  *
  * @param items the names.
  *
@@ -51,7 +51,7 @@ export function formatCodeList(items: readonly string[]): string {
 }
 
 /**
- * The SHA-256 digest of text or bytes, in lowercase hex.
+ * Hash text or bytes with SHA-256, in lowercase hex.
  *
  * @param content the text or bytes.
  *
@@ -74,12 +74,12 @@ export function quoteArgument(value: string): string {
 }
 
 /**
- * The line and column of an offset into a text, both from one.
+ * Compute the line and column of an offset in a text, both from one.
  *
  * @param text the source for counting line breaks before the offset.
  * @param offset the index into it.
  *
- * @returns one-based line and column numbers for the supplied offset.
+ * @returns the one-based line and column.
  */
 export function computePosition(text: string, offset: number): TextPosition {
     const before = text.slice(0, offset);
@@ -88,9 +88,9 @@ export function computePosition(text: string, offset: number): TextPosition {
 }
 
 /**
- * Replace text with spaces while preserving code-unit positions and line breaks.
+ * Replace text with spaces, and keep code-unit positions and line breaks.
  *
- * @param text the source text.
+ * @param text the source.
  *
  * @returns spaces at the original text positions.
  */
@@ -101,7 +101,7 @@ export function convertToSpaces(text: string): string {
 /**
  * Print a count with its singular or plural noun.
  * @param value the quantity that selects the noun ending.
- * @param noun the singular noun.
+ * @param noun the singular word.
  * @returns the count and the noun with the matching ending.
  */
 export function formatCount(value: number, noun: string): string {

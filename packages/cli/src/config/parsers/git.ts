@@ -1,7 +1,7 @@
 const UNSUPPORTED_ENTRY =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
 
-/** Support full Git object hashes across listings, reports, and push selection. */
+/** Match a full SHA-1 or SHA-256 Git object hash. */
 const HASH_SOURCE = '(?:[a-f0-9]{40}|[a-f0-9]{64})';
 
 const HASH_PATTERN = new RegExp(`^${HASH_SOURCE}$`, 'u');

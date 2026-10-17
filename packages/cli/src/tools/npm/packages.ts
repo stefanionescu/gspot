@@ -36,11 +36,11 @@ function listWorkspacePackages(root: string): Package[] {
 const WORKSPACE_FILES_MEMO = { create: () => new Map<string, string[]>() };
 
 /**
- * Select declared workspace sources from this run's repository inventory.
+ * Select the declared workspace sources from the inventory of this run.
  * @param source the base folder for resolving inventoried package and compiler files.
  * @param scope the owning project.
  * @param files the source inventory.
- * @param reads the metadata cache.
+ * @param reads the run cache.
  * @returns workspace dependency paths.
  */
 function listWorkspaceDependencyFiles(source: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
@@ -104,7 +104,7 @@ function listWorkspaceDependencyFiles(source: string, scope: string, files: Trac
 }
 
 /**
- * The folders of the npm package workspaces the repository declares, the root left out.
+ * List the folders of the npm workspaces that the repository declares, without the root.
  * @param repositoryRoot the boundary that declared workspace packages must remain inside.
  * @returns the root-relative folders.
  */
@@ -117,9 +117,9 @@ export function listWorkspaceFolders(repositoryRoot: string): string[] {
 }
 
 /**
- * Select existing files that package manifests declare for publication.
- * @param repositoryRoot the base folder for reading manifests and expanding their publication patterns.
- * @param packageJsonPaths the repository-relative manifests whose files patterns select publication content.
+ * Select the existing files that package.json files declare for publication.
+ * @param repositoryRoot the base folder for the package.json files and their patterns.
+ * @param packageJsonPaths the repository-relative package.json files to read.
  * @returns the repository-relative package files.
  */
 export function listPackageFiles(repositoryRoot: string, packageJsonPaths: string[]): string[] {
@@ -136,8 +136,8 @@ export function listPackageFiles(repositoryRoot: string, packageJsonPaths: strin
 }
 
 /**
- * Read and validate a host package.json without the tool-project boundary.
- * @param path the absolute package.json path.
+ * Read and validate a package.json outside the tool project, without its boundary.
+ * @param path the absolute package.json file.
  * @returns the package metadata, or undefined when the file does not exist.
  */
 export function readHostPackage(path: string): PackageJson | undefined {
@@ -153,9 +153,9 @@ export function readHostPackage(path: string): PackageJson | undefined {
 
 /**
  * Read and validate installed metadata through the tool-project boundary.
- * @param files the confined tool-project files.
- * @param repositoryRoot the boundary for resolving and validating installed manifest paths.
- * @param path the absolute package.json path.
+ * @param files the confined file handle of the tool project.
+ * @param repositoryRoot the boundary for resolving and validating installed package.json paths.
+ * @param path the absolute package.json file.
  * @returns the package metadata, or undefined when the file does not exist.
  */
 export function readToolProjectPackage(files: Files, repositoryRoot: string, path: string): PackageJson | undefined {
@@ -176,7 +176,7 @@ export function readToolProjectPackage(files: Files, repositoryRoot: string, pat
  * @param repositoryRoot the base folder for resolving the dependency file.
  * @param manifest the repository-relative package.json used as the module-resolution base.
  * @param name the package to resolve through the dependency file.
- * @returns the resolved manifest and its version, or undefined when the dependency does not exist.
+ * @returns the resolved package.json and its version, or undefined when the dependency does not exist.
  */
 export function findInstalledDependency(
     repositoryRoot: string,

@@ -41,16 +41,16 @@ const SORTING_RULES = {
 } as const;
 
 const SONAR_RULES = {
-    // Jest and Vitest expect-expect check assertions within their selected test files.
+    // Jest and Vitest expect-expect check assertions in their test files.
     'sonarjs/assertions-in-tests': 'off',
-    // Jest and Vitest valid-expect check await semantics within their selected test files.
+    // Jest and Vitest valid-expect check await semantics in their test files.
     'sonarjs/async-test-assertions': 'off',
     // regexp owns exponential and polynomial backtracking, including constructor patterns.
     'sonarjs/slow-regex': 'off',
     // Core and TypeScript unused-variable rules cover bindings and imports, including intentional ignores.
     'sonarjs/no-unused-vars': 'off',
     'sonarjs/unused-import': 'off',
-    // owners cover these defects without duplicate reports.
+    // Other lint rules own these defects, so sonarjs only repeats their reports.
     'sonarjs/no-empty-character-class': 'off',
     'sonarjs/no-control-regex': 'off',
     'sonarjs/no-useless-catch': 'off',

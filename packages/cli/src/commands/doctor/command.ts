@@ -23,11 +23,11 @@ import type { ToolInspection, AvailableToolInspection } from '#cli/types/tools/f
 import { VERSION_GAP, COLUMN_WIDTHS, TOOL_STATE_COLORS, SUGGESTION_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 /**
- * Whether the inspected tool can run at a supported version.
+ * Check whether a tool runs at a supported version.
  *
- * @param inspection the executable inspection.
+ * @param inspection what doctor found for the tool.
  *
- * @returns whether inspection found a usable executable.
+ * @returns true when the tool can run.
  */
 function isToolAvailable(inspection: ToolInspection): inspection is AvailableToolInspection {
     return AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined;
@@ -71,14 +71,14 @@ function formatGspotVersion(report: DoctorReport): string {
 }
 
 /**
- * Builds the report: tool inspections and setup suggestions, hooks, CI, rules, and versions.
- * @param session the configured scopes and tool declarations to inspect on the current host.
- * @param pinned the version `.gspot/version` pins, if any
- * @returns the report, with exit code 1 when tools or Git hooks need changes
+ * Build the doctor report.
+ * @param session the tools and scopes to inspect.
+ * @param pinned the version that `.gspot/version` pins, if any.
+ * @returns the report, with exit code 1 when tools or Git hooks need changes.
  */
 function buildDoctorReport(session: Session, pinned: string | undefined): DoctorReport {
     const platform = getOperatingSystem();
-    // The session omits a tool with no build for this host; its checks skip here.
+    // The session leaves out a tool with no build for this system, so its checks skip here.
     const inspections = new Map<string, ToolInspection>();
     const pins = listDistinctTools(session.neededToolManifests).filter(
         (tool) => findMissingBuild(tool, platform, process.arch) === undefined,
@@ -114,9 +114,9 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
 }
 
 /**
- * The report as text: one line per tool, then suggestions, hooks, CI, rules, and versions.
- * @param report the tool readiness, hooks, and configuration suggestions to print.
- * @returns the text for stdout
+ * Format the report: one line per tool, then the other sections.
+ * @param report what doctor found.
+ * @returns the text for stdout.
  */
 function formatDoctorReport(report: DoctorReport): string {
     const lines = [
@@ -134,9 +134,9 @@ function formatDoctorReport(report: DoctorReport): string {
 }
 
 /**
- * Reports configuration and tool errors.
- * @param folder the folder where the command looks for the repository.
- * @returns the command result
+ * Report configuration and tool errors.
+ * @param folder where to look for the repository.
+ * @returns the command result.
  */
 async function runDoctorCommand(folder: string): Promise<CommandResult> {
     const root = findRoot(folder);
@@ -151,8 +151,8 @@ async function runDoctorCommand(folder: string): Promise<CommandResult> {
 
 /**
  * Register the doctor command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 export function registerDoctor(program: Command, onResult: CommandCompletion): void {
     program

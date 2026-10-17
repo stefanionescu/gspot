@@ -65,14 +65,14 @@ const toolSchema = z
         min_version: versionFloorSchema.optional(),
         install_hint: z.string().min(1).optional(),
         system: z.boolean().optional(),
-        // The platforms the tool has a build for; unset means every platform.
+        // The systems that the tool has a build for; unset means every system.
         builds: z.array(z.enum(TOOL_BUILDS)).min(1).optional(),
         version_command: commandSchema.optional(),
         version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
         version_pattern: z.string().optional(),
-        // Output that means the tool fell over rather than found something, for every check that runs it.
+        // Output that means the tool crashed instead of reporting findings, for every check that runs it.
         crash_pattern: regexSchema.optional(),
-        // Header lines omitted when a per-file command reports an unstructured failure.
+        // Header lines to drop when a per-file command reports a failure with no structure.
         finding_header_pattern: regexSchema.optional(),
         // Where the tool documents one rule; explain prints it with the rule name in place of `{rule}`.
         rule_url: z.string().includes(RULE_PLACEHOLDER, { message: 'A rule page names where {rule} goes.' }).optional(),
@@ -164,7 +164,7 @@ const toolSchema = z
         return { ...stripUndefined(tool), installers };
     }) satisfies z.ZodType<ToolDeclaration, ToolInput>;
 
-/** A name-only row refers to the complete declaration in another configuration. */
+/** A record with only a name points to the full declaration in another configuration. */
 export const toolDeclarationSchema = z.union([
     z
         .looseObject({ name: z.string() } satisfies SchemaShape<{ name: string }>)

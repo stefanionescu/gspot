@@ -1,4 +1,4 @@
-// The check command's flags, its pre-push input, and the cancellation the termination signals cause.
+// Parse the check flags, read the pre-push input, and stop the run on a termination signal.
 
 import { addAbortSignal } from 'node:stream';
 import { resolve, relative } from 'node:path';
@@ -22,7 +22,7 @@ import type { CheckResult, CheckProgress } from '#cli/types/checks/run/check.ts'
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type CheckFlags, type CheckOptions, type CheckCommandJson } from '#cli/types/commands/check.ts';
 
-// Reads the pre-push protocol from standard input, stopping when the signal stops the run.
+// Read the pre-push lines from standard input until the signal stops the run.
 async function readPushInput(signal: AbortSignal): Promise<string> {
     signal.throwIfAborted();
     const decoder = new TextDecoder('utf-8', { fatal: true });
@@ -136,7 +136,7 @@ function readCommitMessageFile(options: CheckOptions): void {
     }
 }
 
-// Validate the flags before reading Git's pre-push input or starting a check.
+// Validate the flags before reading the Git pre-push input or starting a check.
 function parseCheckFlags(paths: string[], flags: CheckFlags): CheckOptions {
     if (flags.dryRun === true && flags.fix !== true)
         throw new GspotError('arguments', '--dry-run previews the fixes. Add --fix.');
@@ -149,7 +149,7 @@ function parseCheckFlags(paths: string[], flags: CheckFlags): CheckOptions {
     return options;
 }
 
-// Checks an exact staged-index copy and writes the report in the working repository.
+// Check a scratch copy of the staged index, and write the report in the working tree.
 async function checkStaged(
     root: string,
     options: CheckOptions,
@@ -173,7 +173,7 @@ async function checkStaged(
     );
 }
 
-// Validate command input and dispatch the selected working tree or exact copy.
+// Validate the input, then check the working tree or a scratch copy.
 async function runCheckCommand(
     root: string,
     options: CheckOptions,
@@ -192,7 +192,7 @@ async function runCheckCommand(
     return await (selected.staged ? checkStaged(root, selected, signal) : checkTree(root, selected, signal));
 }
 
-// Runs check with an abort signal wired to the termination signals for the duration of the run.
+// Run check with an abort signal that the termination signals trigger.
 async function runCheck(paths: string[], flags: CheckFlags): Promise<CommandResult<CheckCommandJson>> {
     try {
         return await runCancelableCommand(async (signal) => {
@@ -207,8 +207,8 @@ async function runCheck(paths: string[], flags: CheckFlags): Promise<CommandResu
 
 /**
  * Register the check command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 export function registerCheck(program: Command, onResult: CommandCompletion): void {
     program

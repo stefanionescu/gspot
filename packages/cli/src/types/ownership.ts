@@ -17,7 +17,7 @@ export type ReplacementRequest = {
 export type KeyChangeRequest = { path: string; changes: FileEdit['changes']; current: FileContents | undefined };
 export type KeyChangePlan = { next: FileContents; status: 'changed' | 'unchanged' };
 
-/** Proposed bytes or removal, with the expected current copy on disk. */
+/** New bytes or a removal, with the file contents expected on disk. */
 export type WritePlan = {
     path: string;
     before: FileContents | undefined;

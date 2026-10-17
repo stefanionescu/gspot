@@ -4,8 +4,8 @@ import { promotePresetRules, buildArrayPresetBlocks } from '#cli/generation/esli
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply Svelte presets and select typed component parsing.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the Svelte presets and typed component parsing.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildSvelteFragment(

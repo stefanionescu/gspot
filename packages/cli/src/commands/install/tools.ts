@@ -16,14 +16,13 @@ import { verifyPackageManagerVersion } from '#cli/tools/npm/project.ts';
 import type { InstallContext, InstallationResult } from '#cli/types/install.ts';
 
 /**
- * Install selected tools in their repository projects and set the clone's hooks.
+ * Install the tools in their tool projects and set the hooks of this clone.
  *
- * @param session the repository session.
- * @param writer the locked repository writer.
- * @param generated the selected tool projects.
- *
- * @param cancelSignal the cancellation signal shared with installation processes.
- * @returns commands run, the installation summary, and exit code.
+ * @param session the repository to install for.
+ * @param writer the locked repository handle.
+ * @param generated the tool projects to install.
+ * @param cancelSignal stops the install processes.
+ * @returns the commands that ran, the install summary, and the exit code.
  */
 export async function installTools(
     session: Session,

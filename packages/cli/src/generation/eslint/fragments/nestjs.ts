@@ -4,8 +4,8 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
 import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/config/generation/eslint-fragments.ts';
 
 /**
- * Apply NestJS rules and the selected TypeScript parsing mode.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the NestJS lint rules and the TypeScript parsing mode of the scope.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildNestjsFragment(

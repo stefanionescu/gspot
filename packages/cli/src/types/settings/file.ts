@@ -277,7 +277,7 @@ export type Mutation = (written: TomlTable) => void;
 
 export type SettingKey = { path: string[]; name: string };
 
-/** A ordered header and its written values. */
+/** An ordered header and its written values. */
 export type LayoutSection = { path: KeyPath; table: TomlTable };
 
 export type ArchitectureModule = { name: string; paths: string[]; may_import: string[] };

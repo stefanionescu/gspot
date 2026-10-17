@@ -29,8 +29,8 @@ const toolProjectSchema = z.strictObject({
 /**
  * Validate an npm tool project and identify its package manager and lockfile.
  * @param text the generated or recorded package.json contents.
- * @param packageManagerName the selected package manager name.
- * @returns the dependencies and selected lockfile path.
+ * @param packageManagerName the name to match.
+ * @returns the dependencies and the lockfile path.
  */
 export function parseToolProject(text: string, packageManagerName: PackageManager['name']): NpmToolProject {
     const parsed = toolProjectSchema.parse(parseJsonFile(NPM_TOOL_PROJECT_FILE, text));
@@ -39,9 +39,9 @@ export function parseToolProject(text: string, packageManagerName: PackageManage
 }
 
 /**
- * Select the lockfile of a npm tool project's manager.
- * @param packageManager the validated package manager.
- * @returns the lockfile basename declared by its registry entry.
+ * Select the lockfile name for the package manager of an npm tool project.
+ * @param packageManager the validated name.
+ * @returns the lockfile basename that LOCKFILES declares.
  */
 export function selectLockfileName(packageManager: PackageManager['name']): ToolProjectLockfileName {
     return (

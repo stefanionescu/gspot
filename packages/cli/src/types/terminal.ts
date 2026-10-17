@@ -1,13 +1,13 @@
-/** The selected JSON format and terminal color. */
+/** The JSON and terminal color choices. */
 export type OutputOptions = { json: boolean; color: boolean };
 
-/** A completed command emitted as text or JSON with its contractual exit code. */
+/** A command result, printed as text or JSON, with its exit code. */
 export type CommandResult<Json = unknown> = { text: string; json: Json; exitCode: number };
 
-/** A command failure emitted as one JSON object. */
+/** A command failure printed as one JSON object. */
 export type CommandFailureJson = { error: string; message: string };
 
-/** Deliver one completed command to the CLI entry point. */
+/** Pass one command result to the CLI entry point. */
 export type CommandCompletion = (result: CommandResult) => void;
 
 /** A command interrupted before producing a complete result. */

@@ -30,8 +30,8 @@ function buildReasonHint(options: IgnoreOptions): string {
 
 /**
  * Write an ignore with its reason.
- * @param options the parsed flags
- * @returns the command result
+ * @param options the parsed flags.
+ * @returns the command result.
  */
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const { root, input, settings, reads } = startSettingsEdit(options.cwd);
@@ -63,8 +63,8 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
 
 /**
  * Register the ignore command.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 function registerIgnore(program: Command, onResult: CommandCompletion): void {
     program
@@ -93,9 +93,9 @@ function registerIgnore(program: Command, onResult: CommandCompletion): void {
 }
 
 /**
- * Validate a CLI expiry argument before creating its written value.
- * @param text the date supplied to --until
- * @returns the same calendar date as a TOML value
+ * Validate the --until date before writing it.
+ * @param text the date from --until.
+ * @returns the same calendar date as a TOML value.
  */
 function parseExpiryDate(text: string): LocalDate {
     const result = calendarDateSchema.safeParse(text);

@@ -9,13 +9,13 @@ import type { Finding, CheckResult, CheckRunOptions } from '#cli/types/checks/ru
 /** The process result and its interpreted execution failure. */
 export type PlannedToolResult = { result: SpawnResult; failure: ExecutionFailure | undefined };
 
-/** A disposable source copy and the command prepared against its files. */
+/** A scratch copy of the source, and the command prepared for its files. */
 export type PreparedScratch = { copy: ScratchFolder; session: Session; prepared: PreparedCommand };
 
-/** A selected tool's public API executed by a bundled, supervised program. */
+/** The public API of a tool, run by a shipped, supervised program. */
 export type CheckToolProgram = { tool: string; entry: string };
 
-/** The working directory, environment, and input of a nested tool. */
+/** The working folder, environment, and input of a nested tool. */
 export type CheckToolOptions = Pick<PreparedCommand, 'cwd'> &
     Partial<Pick<PreparedCommand, 'env'>> &
     Pick<SpawnOptions, 'stdin'>;
@@ -33,10 +33,10 @@ export type Substitutions = {
 /** An expanded command ready to spawn once or once per file. */
 export type CommandInvocation = { commandArguments: string[]; file?: string };
 
-/** A nested tool resolved to its selected executable and environment. */
+/** A nested tool resolved to its executable and environment. */
 export type CheckTool = { name: string; path: string; env: Record<string, string> };
 
-/** Scoped paths and environment values for inspecting and execute a command. */
+/** Scoped paths and environment values for inspecting and running a command. */
 export type CommandEnvironment = {
     root: string;
     cwd: string;
@@ -65,16 +65,16 @@ export type CommandRun = {
     options: CheckRunOptions;
 };
 
-/** Findings and process status accumulated across one check's commands. */
+/** The findings and process status across the commands of one check. */
 export type CommandRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
 
 /** Captured output before file and scope attribution. */
 export type InvocationOutput = { invocation: CommandInvocation; result: SpawnResult; findings: Finding[] };
 
-/** Parsed findings or an output refusal diagnostic. */
+/** Parsed findings, or a note that refuses the output. */
 export type ParsedFindings = { findings: Finding[]; note?: undefined } | { findings?: undefined; note: string };
 
-/** Check metadata for parsing output and distinguish a process crash from findings. */
+/** The check data for parsing output and telling a process crash from findings. */
 export type OutputCheck = Pick<PlannedCheck, 'check' | 'tool' | 'manifest'>;
 
 /** Repository data and check metadata consumed by placeholder expansion. */

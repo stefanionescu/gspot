@@ -78,9 +78,9 @@ function formatApplyReport(report: ApplyReport): string {
 }
 
 /**
- * Capture and validate settings once before a command edits them.
+ * Read and validate the settings once before a command edits them.
  * @param cwd the folder where the command starts.
- * @returns the repository root, original settings, and reads for one edit.
+ * @returns the starting state of one edit.
  */
 function startSettingsEdit(cwd: string): { root: string; input: SettingsEdit; settings: Settings; reads: ReadCache } {
     const root = findRoot(cwd);
@@ -91,10 +91,10 @@ function startSettingsEdit(cwd: string): { root: string; input: SettingsEdit; se
 }
 
 /**
- * Validate the configuration names shared by add and remove before either command edits a list.
+ * Validate the configuration names for add and remove before either command edits a list.
  * @param cwd the folder where the command starts.
- * @param names the configuration names supplied to the command.
- * @returns the validated configuration edit and its shipped manifests.
+ * @param names the configurations to add or remove.
+ * @returns the validated edit and its shipped manifests.
  */
 export function startConfigurationEdit(
     cwd: string,
@@ -118,15 +118,15 @@ export function startConfigurationEdit(
 }
 
 /**
- * Look up a setting in its selected scope using the settings already validated for this edit.
- * @param repositoryRoot the folder for Git detection and automatic configuration selection.
- * @param input the validated settings and original file captured before the edit.
- * @param input.input the original settings text and editable table.
- * @param input.settings the parsed settings before the edit.
- * @param input.reads the file reads shared with setting lookup.
- * @param key the dotted setting name supplied by the command.
- * @param scope the selected repository-relative scope, or the root when omitted.
- * @returns the selected declaration and defaults for the validated scope.
+ * Look up a setting in one scope with the settings that this edit already validated.
+ * @param repositoryRoot the folder for Git detection and automatic configuration choice.
+ * @param input the state from before the edit.
+ * @param input.input the settings text and table before the edit.
+ * @param input.settings the parsed gspot.toml before the edit.
+ * @param input.reads the file cache for the lookup.
+ * @param key the dotted setting name.
+ * @param scope the folder to look in, or the root when absent.
+ * @returns the declaration and defaults for that scope.
  */
 export function findSettingDeclaration(
     repositoryRoot: string,

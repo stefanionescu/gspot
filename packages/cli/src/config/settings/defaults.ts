@@ -1,4 +1,4 @@
-/** SDK roots select the corresponding xcodebuild platform at initialization. */
+/** Each SDK root picks its xcodebuild destination during init. */
 export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
     ['iphoneos', 'generic/platform=iOS Simulator'],
     ['iphonesimulator', 'generic/platform=iOS Simulator'],

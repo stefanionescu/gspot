@@ -4,7 +4,7 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 /** Exact text and position keep merged owned comments in their physical order. */
 type TomlComment = { raw: string; start: number; line: number };
 
-/** Free prose retains separation; owned comments move with their semantic owner. */
+/** Free comments keep their spacing; owned comments move with their key. */
 type TomlCommentBlock = { path: KeyPath; owned: TomlComment[]; free: TomlComment[] };
 
 export type TomlBlock = ReturnType<typeof parseDocument>['cst'][number];
@@ -24,7 +24,7 @@ export type TomlInput = { path: string; source: string };
 /** A parent table to retrieve or create while editing a file. */
 export type TomlTableOptions = { filePath: string; keys: KeyPath; create: boolean };
 
-/** A key or header that can retain its own physical comment block. */
+/** A key or header that can keep its own comment block. */
 export type TomlPathNode = { path: KeyPath } & (
     | { kind: 'key'; node: TomlKeyValue }
     | { kind: 'item'; node: TomlValue }
@@ -52,13 +52,13 @@ export type TomlTablePositions = {
 /** A concrete syntax owner before mapping its path through your own edit. */
 export type TomlCommentAnchor = { kind: string; path: KeyPath };
 
-/** A syntax chunk inserted, retained, or omitted around its semantic owner. */
+/** A syntax chunk inserted, kept, or left out around its owner. */
 export type TomlTextChunk = { start: number; end: number; text: string };
 
 /** Original comment identity distinguishes repeated physical text with different owners. */
 export type TomlAnchoredComment = { comment: TomlCommentNode; anchor: TomlPathNode | undefined; identity: string };
 
-/** One original TOML comment and its retained syntax entry. */
+/** One original TOML comment and the syntax entry that keeps it. */
 export type TomlCommentPlacement = {
     kind: string;
     path: KeyPath | undefined;

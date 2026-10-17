@@ -64,9 +64,9 @@ function formatBlocks(
 }
 
 /**
- * Write ESLint blocks for the selected level and project scope.
- * @param input the level, file selectors, your own options, and optional fragment scope.
- * @returns the emitted blocks and their rule options in the same order.
+ * Create the writer for the ESLint blocks of one level and scope.
+ * @param input what the blocks cover, with your own options.
+ * @returns the block writer.
  */
 function createBlockWriter(input: BlockWriterInput): BlockWriter {
     const { allRules, isAll, codeFiles, scope } = input;
@@ -95,11 +95,11 @@ function createBlockWriter(input: BlockWriterInput): BlockWriter {
 }
 
 /**
- * Preserve every preset option while promoting enabled warnings to errors.
+ * Turn enabled warnings into errors, and keep every preset option.
  *
- * @param rules the actual rules from a pinned preset.
+ * @param rules what a pinned preset sets.
  *
- * @returns error settings, with disabled rules retained.
+ * @returns the lint rules as errors, and the ones that stay off.
  */
 function convertWarningsToErrors(rules: Record<string, unknown>): Record<string, unknown> {
     return Object.fromEntries(

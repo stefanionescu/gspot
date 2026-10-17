@@ -11,10 +11,10 @@ import type { InstallCommandJson } from '#cli/types/install.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 /**
- * Install the selected tools and set the Git hooks as the settings require.
- * @param cwd the directory the command starts in
- * @param cancelSignal the cancellation signal shared with installation processes.
- * @returns the installation result
+ * Install the tools, and set the Git hooks as the settings ask.
+ * @param cwd the folder where the command starts.
+ * @param cancelSignal stops the install processes.
+ * @returns the install result.
  */
 async function runInstallCommand(cwd: string, cancelSignal?: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
     const root = findRoot(cwd);
@@ -31,9 +31,9 @@ async function runInstallCommand(cwd: string, cancelSignal?: AbortSignal): Promi
 }
 
 /**
- * Register tool installation.
- * @param program the command program
- * @param onResult the sink that writes the completed command result.
+ * Register the install command.
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
  */
 export function registerInstall(program: Command, onResult: CommandCompletion): void {
     program

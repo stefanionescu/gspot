@@ -145,12 +145,12 @@ function formatComparison(comparison: RunReport['comparison']): string {
 }
 
 /**
- * Format one report from the same result list used for its summary.
- * @param report the completed check results and run totals.
- * @param options the report presentation choices.
- * @param options.verbose whether to include successful checks and complete process output.
- * @param options.hook the Git hook that selected this run.
- * @returns the visible check lines and the final run summary.
+ * Format the report and its summary from one result list.
+ * @param report the check results and totals.
+ * @param options how to show the report.
+ * @param options.verbose whether to show passing checks and full tool output.
+ * @param options.hook pre-commit, pre-push, or commit-msg, when Git started the run.
+ * @returns the check lines and the summary.
  */
 export function formatRunReport(
     report: RunReport,
@@ -173,8 +173,8 @@ export function formatRunReport(
 }
 
 /**
- * Print one terminal status line, or clear it before printing the report.
- * @param progress the completed check and its position in this run.
+ * Print one terminal status line, or clear it before the report prints.
+ * @param progress the last finished check and its place in the run.
  */
 export function printProgress(progress: CheckProgress | undefined): void {
     if (!process.stderr.isTTY) return;
@@ -189,12 +189,12 @@ export function printProgress(progress: CheckProgress | undefined): void {
 }
 
 /**
- * Describe corrections without sending tool output or successful fixes through warnings.
- * @param fixes the fixer results and verification state.
- * @param options the report presentation choices.
- * @param options.isDryRun whether the command previews fixes without writing source files.
- * @param options.verbose whether to include successful checks and complete process output.
- * @returns the corrections, failed fixer details, and verification summary.
+ * Describe the fixes, and keep tool output and passing fixes out of the warnings.
+ * @param fixes the fixer results and the verification state.
+ * @param options how to show the fixes.
+ * @param options.isDryRun whether the run shows fixes and writes nothing.
+ * @param options.verbose whether to show passing checks and full tool output.
+ * @returns the lines that describe the fixes.
  */
 export function fixLines(fixes: FixReport, options: { isDryRun: boolean; verbose: boolean }): string[] {
     const { isDryRun, verbose } = options;

@@ -4,8 +4,8 @@ import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import { TOML_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Build squawk file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Squawk file from the settings.
+ * @param context the tool file to build.
  * @returns the disabled Squawk migration rules.
  */
 function buildSquawkFile(context: ToolFileContext): string {

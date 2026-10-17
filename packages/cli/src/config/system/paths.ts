@@ -1,4 +1,4 @@
-/** Executable lookup and Python environment layouts supported by each host family. */
+/** The executable and Python environment layouts of each system family. */
 export const EXECUTABLE_LAYOUTS = {
     windows: {
         executableSuffixes: ['.cmd', '.exe', ''],

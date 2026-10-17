@@ -5,8 +5,8 @@ import { EXECUTABLE_LAYOUTS, DECLARATION_EXTENSIONS } from '#cli/config/system/p
 const systemExecutables = EXECUTABLE_LAYOUTS[process.platform === 'win32' ? 'windows' : 'posix'];
 
 /**
- * Forward slashes on every operating system, for selectors, records, and output.
- * @param path a path in the operating system's form.
+ * Convert a path to forward slashes on every system, for selectors, records, and output.
+ * @param path the input, with system separators.
  * @returns the path with forward slashes.
  */
 export function convertToPosixPath(path: string): string {
@@ -14,9 +14,9 @@ export function convertToPosixPath(path: string): string {
 }
 
 /**
- * A path a tool printed, with forward slashes on any operating system. Test inputs and Windows tools can print
- * backslashes on any operating system.
- * @param path the path as the tool printed it.
+ * Convert a path that a tool printed to forward slashes. Test inputs and Windows tools can print
+ * backslashes on any system.
+ * @param path the text that the tool printed.
  * @returns the path with forward slashes.
  */
 export function normalizeOutputPath(path: string): string {
@@ -24,16 +24,16 @@ export function normalizeOutputPath(path: string): string {
 }
 
 /**
- * The operating system's form, for arguments handed to tools.
- * @param path a posix path.
- * @returns the path in the operating system's form.
+ * Convert a POSIX path to the form of this system, for tool arguments.
+ * @param path the input, with forward slashes.
+ * @returns the path in the form of this system.
  */
 export function convertToSystemPath(path: string): string {
     return sep === '/' ? path : path.split('/').join(sep);
 }
 
 /**
- * Whether a path relative to a folder stays inside it: not absolute, not the parent, and not under the parent.
+ * Check whether a path relative to a folder stays inside it: not absolute, not the parent, and not under the parent.
  * @param local the path relative to the folder, with either separator.
  * @returns whether the path stays inside the folder.
  */
@@ -42,8 +42,8 @@ export function isInside(local: string): boolean {
 }
 
 /**
- * The extension including the dot, lowercased; '.d.ts' and similar double extensions kept.
- * @param path a posix path.
+ * Extract the extension with its dot, in lower case. Double extensions such as '.d.ts' stay whole.
+ * @param path the input, with forward slashes.
  * @returns the extension, '' without an extension.
  */
 export function extractExtension(path: string): string {
@@ -56,7 +56,7 @@ export function extractExtension(path: string): string {
 
 /**
  * Remove trailing separators from a written scope path.
- * @param path the written scope path.
+ * @param path the written scope folder.
  * @returns the path without trailing slashes.
  */
 export function trimTrailingSlashes(path: string): string {
@@ -66,8 +66,8 @@ export function trimTrailingSlashes(path: string): string {
 }
 
 /**
- * The Unicode-normalized, case-insensitive key for identifying a repository path.
- * @param path the repository-relative path.
+ * Build the Unicode-normalized, case-insensitive key of a repository path.
+ * @param path the repository-relative input.
  * @returns its comparison key.
  */
 export function buildPathKey(path: string): string {
@@ -75,9 +75,9 @@ export function buildPathKey(path: string): string {
 }
 
 /**
- * The directory of a path, '' at the root.
- * @param path the slash-separated location to split at its final slash.
- * @returns the directory.
+ * Extract the parent folder of a path, '' at the root.
+ * @param path the slash-separated location to split at the last separator.
+ * @returns the folder.
  */
 export function extractParentFolder(path: string): string {
     const slash = path.lastIndexOf('/');
@@ -85,7 +85,7 @@ export function extractParentFolder(path: string): string {
 }
 
 /**
- * The base name without its extension; a declaration extension such as `.d.mts` counts as one.
+ * Extract the base name without its extension. A declaration extension such as `.d.mts` counts as one.
  * @param path the file location with its complete declaration or ordinary extension.
  * @returns the file name after removing its extension and parent folders.
  */
@@ -96,9 +96,9 @@ export function extractStem(path: string): string {
 }
 
 /**
- * Include each path and every directory above it.
- * @param paths the repository-relative paths.
- * @returns paths and parent directories, without duplicates.
+ * Collect each path and every folder above it.
+ * @param paths the repository-relative files.
+ * @returns the paths and parent folders, each once.
  */
 export function includeParentFolders(paths: readonly string[]): Set<string> {
     const expanded = new Set(paths);
@@ -111,7 +111,7 @@ export function includeParentFolders(paths: readonly string[]): Set<string> {
 
 /**
  * Name executable candidates in the system's preferred shim order.
- * @param name the executable name without a suffix.
+ * @param name the executable without a suffix.
  * @returns names used by tool-project verification and tool discovery.
  */
 export function listExecutableNames(name: string): string[] {
@@ -119,9 +119,9 @@ export function listExecutableNames(name: string): string[] {
 }
 
 /**
- * Locate the command directory of a Python virtual environment.
- * @param folder the environment directory.
- * @returns its Scripts directory on Windows or bin directory elsewhere.
+ * Find the command folder of a Python virtual environment.
+ * @param folder the environment root.
+ * @returns its Scripts folder on Windows, or its bin folder elsewhere.
  */
 export function buildVenvBinPath(folder: string): string {
     return join(folder, systemExecutables.environmentFolder);
@@ -129,9 +129,9 @@ export function buildVenvBinPath(folder: string): string {
 
 /**
  * Locate one Python interpreter or console script inside its virtual environment.
- * @param folder the environment directory.
+ * @param folder the environment root.
  * @param name the Python program or console script inside the environment.
- * @returns the executable path with the system's Python launcher suffix.
+ * @returns the executable path, with the Python launcher suffix of this system.
  */
 export function buildVenvExecutablePath(folder: string, name: string): string {
     return join(buildVenvBinPath(folder), name + systemExecutables.environmentSuffix);

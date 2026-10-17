@@ -2,7 +2,7 @@
 import type { Defined } from '#cli/types/shapes.ts';
 
 /**
- * Drops the undefined entries of an object, so exact optional types hold.
+ * Drop the undefined entries of an object, so exact optional types hold.
  *
  * @param value any object.
  *
@@ -24,10 +24,10 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * The value at a key path inside a parsed object.
+ * Read the value at a key path in a parsed object.
  *
  * @param value the parsed object.
- * @param keys the keys, outermost first.
+ * @param keys the property names, outermost first.
  *
  * @returns the value, or undefined when any key along the path has no value.
  */
@@ -41,11 +41,11 @@ export function getValueAt(value: unknown, keys: readonly (string | number)[]): 
 }
 
 /**
- * Give parsed objects a consistent null prototype while preserving dates and array order.
+ * Give parsed objects a null prototype, and keep dates and array order.
  *
  * @param value a parsed or edited field.
  *
- * @returns the same values with consistent object prototypes.
+ * @returns the same values with null object prototypes.
  */
 export function normalizeTables(value: unknown): unknown {
     if (Array.isArray(value)) return value.map((entry) => normalizeTables(entry));
@@ -58,12 +58,12 @@ export function normalizeTables(value: unknown): unknown {
 }
 
 /**
- * Creates the missing tables along a dotted path.
+ * Create the missing tables along a dotted path.
  *
  * @param raw the parsed document.
  * @param path the table names from the root down.
  *
- * @returns the table at the end of the path, or undefined when the path has no value or runs through a scalar.
+ * @returns the table at the end of the path, or undefined when the path runs through a missing or single value.
  */
 export function createTable(
     raw: Record<string, unknown>,

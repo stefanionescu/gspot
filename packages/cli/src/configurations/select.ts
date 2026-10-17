@@ -24,8 +24,8 @@ function visit(walk: SelectionWalk, configurationName: string): void {
 }
 
 /**
- * Resolves configuration names to ordered manifests. Throws an arguments error for unknown configurations.
- * @param configurationNames the requested configuration names.
+ * Resolve configuration names to manifests in order, and throw for unknown names.
+ * @param configurationNames the names to resolve.
  * @param manifests every configuration manifest.
  * @returns the manifests, requirements first, in order of first mention.
  */
@@ -37,9 +37,9 @@ function selectConfigurations(configurationNames: string[], manifests: Map<strin
 }
 
 /**
- * Language and framework configurations that contribute source to shared checks.
- * @param selected the selected manifests.
- * @returns the source settings owners.
+ * Keep the language and framework configurations that add source files to shared checks.
+ * @param selected the manifests in use.
+ * @returns the configurations that own source settings.
  */
 function filterSourceConfigurations(selected: Manifest[]): Manifest[] {
     const groups: readonly string[] = SOURCE_FILE_GROUPS;
@@ -47,9 +47,9 @@ function filterSourceConfigurations(selected: Manifest[]): Manifest[] {
 }
 
 /**
- * Every distinct manifest across the scopes, in first-seen order.
- * @param scopes selections whose enabled configuration declarations may overlap.
- * @returns one declaration per configuration name, in first-seen order.
+ * List each manifest of the scopes once, in first-seen order.
+ * @param scopes scope selections that can share configurations.
+ * @returns one manifest per configuration name.
  */
 function listSelectedManifests(scopes: Pick<ScopeSelection, 'selected'>[]): Manifest[] {
     const seen = new Map<string, Manifest>();
@@ -60,20 +60,20 @@ function listSelectedManifests(scopes: Pick<ScopeSelection, 'selected'>[]): Mani
 }
 
 /**
- * Tests whether any resolved scope selects a configuration.
- * @param scopes the validated scope selections
- * @param name the identifier to find in each scope's enabled configurations.
- * @returns whether any scope includes the configuration
+ * Check whether any scope selects a configuration.
+ * @param scopes the validated scope selections.
+ * @param name the configuration to find.
+ * @returns whether any scope includes the configuration.
  */
 function isConfigurationSelected(scopes: Pick<ScopeSelection, 'selected'>[], name: string): boolean {
     return scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === name));
 }
 
 /**
- * Names an unavailable configuration and suggests nearby declared names.
- * @param name the requested configuration
- * @param known the declared configuration names
- * @returns the public diagnostic
+ * Name an unknown configuration, and suggest close names.
+ * @param name the requested configuration.
+ * @param known the declared configuration names.
+ * @returns the error message.
  */
 function formatUnknownConfiguration(name: string, known: string[]): string {
     const suggestions = selectSimilarNames(name, known);
@@ -81,10 +81,10 @@ function formatUnknownConfiguration(name: string, known: string[]): string {
 }
 
 /**
- * Reports unknown configuration names without losing their declaration order or location.
- * @param declarations the requested names, with their original fields
- * @param manifests the declared configurations
- * @returns each unknown declaration with its public diagnostic
+ * Find the unknown configuration names, and keep their order and location.
+ * @param declarations the requested names, with their original fields.
+ * @param manifests the declared configurations.
+ * @returns each unknown declaration with its error message.
  */
 function listUnknownConfigurations<Declaration extends Pick<ConfigurationDeclaration, 'name'>>(
     declarations: readonly Declaration[],
@@ -101,7 +101,7 @@ function listUnknownConfigurations<Declaration extends Pick<ConfigurationDeclara
 
 /**
  * Refuse explicit edits to configurations that gspot selects itself.
- * @param names the configuration names
+ * @param names the configurations that the command edits.
  * @param manifests the configuration declarations
  */
 function refuseAlwaysSelected(names: string[], manifests: Map<string, Manifest>): void {

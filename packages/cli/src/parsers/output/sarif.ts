@@ -24,7 +24,7 @@ function getArtifactLocation(artifact: SarifArtifactLocation, run: SarifRun): Sa
     return location;
 }
 
-// Source URIs must resolve inside the selected copy before path-specific exceptions can apply.
+// Source URIs must resolve inside the source folder before path exceptions can apply.
 function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, source: string): string {
     if (artifact.uri === undefined) return '';
     const root = pathToFileURL(`${source}${sep}`);
@@ -47,9 +47,9 @@ function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, sour
 
 /**
  * Resolve a validated SARIF physical location into a source path and coordinates.
- * @param location the first result location, when present.
+ * @param location the first physical place of the result.
  * @param run its source metadata.
- * @param source the selected source copy.
+ * @param source the folder that holds the sources.
  * @returns the repository-relative location.
  */
 function buildFindingPlace(location: SarifPhysicalLocation, run: SarifRun, source: string): FindingPlace {
@@ -152,7 +152,7 @@ const sarifLogSchema = z.object({
 
 /**
  * Read a SARIF report and validate its source locations.
- * @param input the check, report text, source paths, and output declaration.
+ * @param input the tool output to read.
  * @returns the report findings.
  */
 export function parseSarifFindings(input: ReportInput): Finding[] {

@@ -38,7 +38,7 @@ function formatLooseningError(
     return `\`${key} = ${value}\` is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "..."`;
 }
 
-// The errors of a written list: bad items, and loosening entries that carry no reason when the declaration requires reasons.
+// List the errors of a written list: bad items, and loosening items without a reason when the declaration requires reasons.
 function listErrors(key: string, written: WrittenSetting, match: DeclarationMatch, shipped: unknown): SettingsError[] {
     if (!Array.isArray(written.value)) return [];
     const message =
@@ -48,7 +48,7 @@ function listErrors(key: string, written: WrittenSetting, match: DeclarationMatc
     return message === undefined ? [] : [{ path: [...key.split('.'), 'reason'], message }];
 }
 
-// The error of a written scalar that loosens the shipped default without an accepted reason.
+// Find the error of a written single value that loosens the shipped default without an accepted reason.
 function validateScalar(
     key: string,
     written: WrittenSetting,
@@ -133,7 +133,7 @@ function listUnsettledConflicts(
     return errors;
 }
 
-// Whether a written tool table groups exposed keys rather than exposing one key.
+// Check whether a written tool table groups exposed keys instead of exposing one key.
 function isKeyGroup(known: KnownSettings, key: string, value: unknown): value is Record<string, unknown> {
     if (known.declarations.has(key) || !isRecord(value)) return false;
     let schema = findSettingSchema(key);
@@ -142,9 +142,9 @@ function isKeyGroup(known: KnownSettings, key: string, value: unknown): value is
 }
 
 /**
- * Every setting key a settings table writes, in dotted form.
- * @param settings the root table or one scope table.
- * @param known the selected manifest settings, including nested tool keys.
+ * List every setting key that a settings table writes, in dotted form.
+ * @param settings the root table or one scope.
+ * @param known the declarations, with nested tool keys.
  * @returns all known written keys, plus unknown keys from open settings tables.
  */
 function listWrittenKeys(settings: Partial<Settings> & Pick<Settings, 'written'>, known: KnownSettings): string[] {
@@ -173,10 +173,10 @@ function listWrittenKeys(settings: Partial<Settings> & Pick<Settings, 'written'>
 }
 
 /**
- * Names unknown settings and lists the closest keys under the same table.
- * @param known the known settings of the selected configurations.
- * @param key the written setting key.
- * @returns the error and a command for discovering settings.
+ * Name an unknown setting, and list the closest keys in the same table.
+ * @param known the declarations of the configurations.
+ * @param key the written dotted name.
+ * @returns the error, with a command that lists the settings.
  */
 function formatUnknownSetting(known: KnownSettings, key: string): string {
     const all = known.declarations.keys().toArray();
@@ -199,10 +199,10 @@ function formatUnknownSetting(known: KnownSettings, key: string): string {
 }
 
 /**
- * Validates every written key against the known settings and the loosening rule.
- * @param known the known settings of the selection.
- * @param settings the loaded settings.
- * @param scopeKnown the known settings of each scope by its path; each scope table uses its own declarations.
+ * Validate every written key against the known settings and the loosening rule.
+ * @param known the declarations and defaults of the selection.
+ * @param settings the parsed gspot.toml.
+ * @param scopeKnown the declarations of each scope by path, which its own table uses.
  * @param retained the settings saved for configurations whose repository evidence disappeared.
  * @returns the errors in plain English, empty when the settings pass validation.
  */

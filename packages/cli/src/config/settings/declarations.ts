@@ -10,7 +10,7 @@ export const SETTING_DECLARATIONS = {
     'repository.max_file_kilobytes': {
         configurations: ['repository'],
         description:
-            'The largest file Git may track, in kilobytes. Larger files need Git LFS or a linguist-generated or linguist-vendored mark in .gitattributes.',
+            'The largest file, in kilobytes, that Git may track without Git LFS or a linguist-generated or linguist-vendored mark in .gitattributes.',
         reason_needed: 'raising',
     },
     'prose.max_sentence_words': {
@@ -49,7 +49,7 @@ export const SETTING_DECLARATIONS = {
     'swift.xcode_project': {
         configurations: ['swift'],
         description:
-            'The Xcode project or workspace, relative to the repository root. Init writes a detected project; when absent, use the Swift package.',
+            'The Xcode project or workspace, relative to the repository root, which init fills in when it finds one; without it, the checks use the Swift package.',
     },
     'swift.xcode_scheme': {
         configurations: ['swift'],
@@ -65,7 +65,7 @@ export const SETTING_DECLARATIONS = {
     },
     'licenses.allowed': {
         configurations: ['licenses'],
-        description: 'The SPDX license ids a dependency may report.',
+        description: 'The SPDX license IDs a dependency may report.',
     },
     'licenses.allowed_package': {
         configurations: ['licenses'],
@@ -74,7 +74,7 @@ export const SETTING_DECLARATIONS = {
     'structure.reexports': {
         configurations: ['structure'],
         reason_needed: 'adding',
-        description: 'Whether re-exports are allowed: none, or an index file that re-exports other files.',
+        description: 'Where re-exports may go: none, or an index file that re-exports other files.',
     },
     'cloudflare.types_file': {
         configurations: ['cloudflare'],
@@ -124,7 +124,7 @@ export const SETTING_DECLARATIONS = {
     },
     'dependencies.bun_scanner': {
         configurations: ['dependencies'],
-        description: 'The security scanner package Bun runs on install. When absent, no scanner is required.',
+        description: 'The security scanner package that Bun runs on install; without one, Bun needs no scanner.',
     },
     'docs.banned_headings': {
         configurations: ['docs'],
@@ -142,7 +142,7 @@ export const SETTING_DECLARATIONS = {
     'openapi.document': {
         configurations: ['openapi'],
         description:
-            'The committed OpenAPI document, relative to the repository root. Init writes a detected document; when absent, OpenAPI checks do not run.',
+            'The committed OpenAPI document, relative to the repository root, which init fills in when it finds one; without it, the OpenAPI checks do not run.',
     },
     'openapi.generate_command': {
         configurations: ['openapi'],
@@ -155,22 +155,21 @@ export const SETTING_DECLARATIONS = {
     'postgres.frozen_through': {
         configurations: ['postgres'],
         description:
-            'The version through which migrations have run everywhere: none, all, or a version. Squawk skips them, and they may not change.',
+            'The last migration version that has run everywhere (none, all, or a version); Squawk skips those migrations, and they may not change.',
     },
     'postgres.migrations_folder': {
         configurations: ['postgres'],
         description:
-            'The migrations folder relative to the repository root. When absent, use the migration files this configuration owns.',
+            'The migrations folder, relative to the repository root; without it, the checks use the migration files of this configuration.',
     },
     'secrets.env_examples': {
         configurations: ['secrets'],
-        description:
-            'The example environment filenames searched for supported environment keys; a key may appear in any one example file.',
+        description: 'The env example filenames to search for environment keys; a key may appear in any one of them.',
     },
     'secrets.environment_functions': {
         configurations: ['secrets'],
         description:
-            'The project functions that read environment keys, in addition to the built-in readers; for example config.$env and read_env.',
+            'The project functions that read environment keys, besides the built-in ones, such as config.$env and read_env.',
     },
     'site.build_command': {
         configurations: ['site'],
@@ -187,7 +186,7 @@ export const SETTING_DECLARATIONS = {
     },
     'site.size_limit': {
         configurations: ['site'],
-        description: 'Weight ceilings: the built paths, and the most kilobytes they may weigh compressed.',
+        description: 'Size limits: the built paths, and the most kilobytes they may weigh compressed.',
     },
     'spelling.locale': {
         configurations: ['spelling'],
@@ -196,7 +195,7 @@ export const SETTING_DECLARATIONS = {
     'supabase.functions_folder': {
         configurations: ['supabase'],
         description:
-            'The folder relative to the repository root that holds one folder for each edge function. The default is relative to the project scope.',
+            'The folder, relative to the repository root, with one folder for each edge function; the default starts from the project scope.',
     },
     'supabase.schemas': {
         configurations: ['supabase'],
@@ -205,7 +204,7 @@ export const SETTING_DECLARATIONS = {
     'supabase.types_file': {
         configurations: ['supabase'],
         description:
-            'The committed database types file, relative to the repository root. When absent, no type comparison runs.',
+            'The committed database types file, relative to the repository root; without it, no type comparison runs.',
     },
     'translations.base_locale': {
         configurations: ['translations'],
@@ -217,7 +216,7 @@ export const SETTING_DECLARATIONS = {
     },
     'format.indent_style': {
         configurations: ['format'],
-        description: 'What one indent level is made of: space or tab.',
+        description: 'The character of one indent level: space or tab.',
     },
     'format.indent_width': {
         configurations: ['format'],
@@ -237,7 +236,7 @@ export const SETTING_DECLARATIONS = {
     },
     'format.quotes': {
         configurations: ['format'],
-        description: 'single or double, for the languages where a formatter chooses.',
+        description: 'Single or double, for the languages where a formatter chooses.',
     },
     'format.trailing_commas': {
         configurations: ['format'],
@@ -253,23 +252,25 @@ export const SETTING_DECLARATIONS = {
     },
     configurations: {
         description:
-            'Configurations you chose by hand, on top of the ones gspot detects. `gspot add` writes it; `gspot set` refuses it.',
+            'Configurations you chose yourself, on top of the detected ones; `gspot add` writes this list, and `gspot set` refuses it.',
     },
     removed_configurations: {
         description:
-            'Configurations you removed; detection does not add them back. Only `gspot add` and `gspot remove` write it; `gspot set` and `gspot unset` refuse it.',
+            'Configurations you removed, which detection does not add back; only `gspot add` and `gspot remove` write this list.',
     },
-    'ci.enabled': { description: 'Write a CI workflow. Root only.' },
-    'ci.provider': { description: 'Which CI gets the workflow. Root only.' },
-    'ci.setup_command': { description: 'A command CI runs before `gspot install`, such as `npm ci`. Root only.' },
-    'scope.path': { description: 'The folder. Two records may not name the same folder.' },
+    'ci.enabled': { description: 'Whether gspot writes a CI workflow; set it at the root only.' },
+    'ci.provider': { description: 'Which CI service gets the workflow; set it at the root only.' },
+    'ci.setup_command': {
+        description: 'A command that CI runs before `gspot install`, such as `npm ci`; set it at the root only.',
+    },
+    'scope.path': { description: 'The folder of the scope; no two records may name the same folder.' },
     'scope.configurations': {
-        description: 'Configurations for this folder, on top of the root ones. `gspot add --scope` writes it.',
+        description: 'Configurations for this folder, on top of the root ones; `gspot add --scope` writes this list.',
     },
     'scope.removed_configurations': {
-        description: 'Configurations removed in this folder. Only `gspot add` and `gspot remove` write it.',
+        description: 'Configurations removed in this folder; only `gspot add` and `gspot remove` write this list.',
     },
-    'scope.test_files': { description: 'More test files for this folder. Adds to the root list.' },
+    'scope.test_files': { description: 'More test files for this folder, added to the root list.' },
     'naming.max_characters': {
         configurations: ['naming'],
         description: 'The most characters one identifier may have.',
@@ -289,7 +290,7 @@ export const SETTING_DECLARATIONS = {
     'naming.cases': {
         configurations: ['naming'],
         description:
-            'The case patterns one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift) and timestamp-snake (20260103120000_create_users.sql). Ruff owns the case of Python classes, functions, and parameters, and SwiftLint owns Swift types, variables, parameters, and enum cases; these settings choose the case for every other category.',
+            'The case patterns that one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift), or timestamp-snake (20260103120000_create_users.sql). Ruff checks the case of Python classes, functions, and parameters, and SwiftLint checks Swift types, variables, parameters, and enum cases; this setting covers the rest.',
         reason_needed: 'adding',
         languages: ['typescript', 'javascript', 'python', 'swift', 'bash', 'sql'],
         categories: NAMING_TABLE_CATEGORIES,

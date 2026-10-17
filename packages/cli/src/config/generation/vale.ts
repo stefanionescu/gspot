@@ -1,7 +1,7 @@
 /** The Vale input mode, source grammar, and comment format for each file extension. */
 
 // Known source grammars parse Markdown inside comments. Module extensions without a grammar use stdin
-// with the corresponding language extension. Map other comment-compatible formats through [formats].
+// with the extension of that language. Map other formats with the same comments through [formats].
 export const PROSE_GRAMMARS = {
     '.md': { mode: 'path', extension: '.md' },
     '.mdx': { mode: 'path', extension: '.md' },

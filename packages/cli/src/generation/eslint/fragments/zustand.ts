@@ -2,8 +2,8 @@ import { ZUSTAND_STORE_CREATORS } from '#cli/config/generation/eslint-fragments.
 import { type EslintContext, type EslintFragment } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply Zustand store rules to the selected files.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the Zustand store lint rules to the files of the scope.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildZustandFragment(

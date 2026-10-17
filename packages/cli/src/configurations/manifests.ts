@@ -45,9 +45,9 @@ function readToolFileDeclarations(configurationFolder: string, toolFiles: unknow
 }
 
 /**
- * Resolves each named tool to its complete declaration without changing configuration selection.
- * @param manifests the parsed configuration declarations
- * @returns the registry with canonical tool metadata
+ * Link each named tool to its full declaration.
+ * @param manifests the parsed configuration declarations.
+ * @returns the manifests by name, with full tool declarations.
  */
 function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manifest> {
     const tools = listDeclaredTools(manifests);
@@ -71,7 +71,7 @@ function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manife
 /**
  * Parse one manifest text into validated declarations; invalid input throws GspotError with code manifest.
  * @param text the `manifest.toml` content.
- * @param configurationFolder the asset folder that determines the configuration name and group.
+ * @param configurationFolder the asset path that gives the name and group.
  * @returns validated declarations with qualified check IDs and discovered tool files.
  */
 function parseManifest(text: string, configurationFolder: string): ManifestDeclaration {
@@ -92,7 +92,7 @@ function parseManifest(text: string, configurationFolder: string): ManifestDecla
             ...new Set(result.error.issues.flatMap((issue) => formatZodIssue(issue))),
         ]);
     const declared = result.data;
-    // A check's ID joins the configuration name and its own name.
+    // The check ID joins the configuration name and the check name.
     return {
         ...declared,
         checks: declared.checks.map((check) =>
@@ -123,10 +123,10 @@ function readShippedNamingDefaults(): NamingDefaults {
 }
 
 /**
- * The error for an invalid configuration manifest.
- * @param configuration the configuration name
- * @param errors the errors in plain English
- * @returns the error to throw
+ * Build the error for a manifest that fails validation.
+ * @param configuration the name of the failing manifest.
+ * @param errors the messages in plain English.
+ * @returns the error to throw.
  */
 function buildManifestError(configuration: string, errors: string[]): GspotError {
     return new GspotError(
@@ -136,19 +136,19 @@ function buildManifestError(configuration: string, errors: string[]): GspotError
 }
 
 /**
- * Every configuration manifest by configuration name, retained only for the supplied run.
- * @param reads the run cache
- * @returns the run-cached declarations indexed by configuration name.
+ * Read every manifest once per run.
+ * @param reads the run cache.
+ * @returns the manifests by configuration name.
  */
 function readManifests(reads: ReadCache): Map<string, Manifest> {
     return getCachedValue(reads, MANIFESTS);
 }
 
 /**
- * Lists built-in check IDs alongside the repository's command check IDs.
- * @param checks the command checks declared by this repository
- * @param reads the run cache
- * @returns the available check IDs
+ * List the shipped check IDs and the command check IDs of the repository.
+ * @param checks the [[command_check]] records.
+ * @param reads the run cache.
+ * @returns the check IDs.
  */
 function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[], reads: ReadCache): string[] {
     const shipped = [...listChecksById(readManifests(reads).values()).keys()];
@@ -166,9 +166,9 @@ function readNamingDefaults(reads: ReadCache): NamingDefaults {
 }
 
 /**
- * Lists the files in a configuration's rules folder.
- * @param manifest the configuration
- * @returns each file with its path inside the rules folder
+ * List the files in the rules folder of a configuration.
+ * @param manifest the configuration.
+ * @returns each file with its path inside the rules folder.
  */
 function listRuleFiles(manifest: Manifest): ShippedRule[] {
     const { group, name } = manifest.configuration;
@@ -181,9 +181,9 @@ function listRuleFiles(manifest: Manifest): ShippedRule[] {
 }
 
 /**
- * Every declared check by ID, with the configuration that ships it.
- * @param manifests the manifests to index
- * @returns the declared checks by ID
+ * Index the declared checks by ID, with the configuration of each.
+ * @param manifests the configurations to index.
+ * @returns the declared checks by ID.
  */
 function listChecksById(manifests: Iterable<Manifest>): Map<string, ConfigurationCheck> {
     const checks = new Map<string, ConfigurationCheck>();
@@ -196,9 +196,9 @@ function listChecksById(manifests: Iterable<Manifest>): Map<string, Configuratio
 }
 
 /**
- * Indexes complete tool declarations and refuses independent declarations of the same tool.
- * @param manifests the parsed configuration declarations
- * @returns the canonical tools by name
+ * Index the tool declarations by name, and refuse two declarations of one tool.
+ * @param manifests the parsed configuration declarations.
+ * @returns the tools by name.
  */
 function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string, ToolDeclaration> {
     const tools = new Map<string, ToolDeclaration>();
@@ -213,10 +213,10 @@ function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string
 }
 
 /**
- * Name an unknown check and suggest nearby checks from the caller's inventory.
- * @param name the requested check ID
- * @param known the check IDs available to the caller
- * @returns the shared selection diagnostic
+ * Name an unknown check, and suggest close check IDs.
+ * @param name the requested check ID.
+ * @param known the check IDs to suggest from.
+ * @returns the error message.
  */
 function formatUnknownCheck(name: string, known: string[]): string {
     const suggestions = selectSimilarNames(name, known);

@@ -21,11 +21,11 @@ const typeScriptConfigSchema = z.looseObject({
 const TSCONFIG_MEMO = { create: () => new Map<string, TypeScriptConfiguration | undefined>() };
 
 /**
- * Resolve a project and every project it references with the run-owned configuration cache.
- * @param repositoryRoot the base folder used by cached source readers.
- * @param path the absolute project path.
- * @param reads the run-owned reads.
- * @returns actual parsed projects indexed by their absolute system paths.
+ * Read a project and every project it references, with the run cache.
+ * @param repositoryRoot the base folder of the cached readers.
+ * @param path the absolute tsconfig file.
+ * @param reads the run cache.
+ * @returns the parsed projects by absolute path.
  */
 function readReferencedProjects(
     repositoryRoot: string,
@@ -47,11 +47,11 @@ function readReferencedProjects(
 }
 
 /**
- * Parses compiler options and inherited configuration with the TypeScript compiler.
- * @param path the absolute configuration path.
- * @param text the configuration source.
- * @param host the caller's file discovery and configuration reader.
- * @returns the parsed compiler configuration.
+ * Parse compiler options and inherited settings with the TypeScript compiler.
+ * @param path the absolute tsconfig file.
+ * @param text the tsconfig contents.
+ * @param host finds and reads files for the compiler.
+ * @returns the parsed compiler settings.
  */
 function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): TypeScriptConfiguration {
     const source = ts.parseConfigFileTextToJson(path, text);
@@ -74,7 +74,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
         undefined,
         path,
     );
-    // Option and alias consumers also read configurations with no input files.
+    // The option and alias readers also read tsconfig files with no input files.
     const errors = parsed.errors.filter(
         (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TS_NO_INPUTS_CODE,
     );
@@ -89,12 +89,12 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
 }
 
 /**
- * Read compiler inputs through the repository cache and preserve installed library paths.
- * @param repositoryRoot the base folder used by cached source readers.
- * @param scope the scope path relative to the repository.
- * @param reads the run source-read cache.
- * @param options the TypeScript compiler options.
- * @returns the compiler host backed by captured repository reads.
+ * Read compiler inputs through the repository cache, and keep the installed library paths.
+ * @param repositoryRoot the base folder of the cached readers.
+ * @param scope the folder relative to the repository.
+ * @param reads the run cache.
+ * @param options the parsed compiler settings.
+ * @returns a compiler host that reads through the cache.
  */
 function buildCompilerHost(
     repositoryRoot: string,
@@ -137,9 +137,9 @@ function buildCompilerHost(
 
 /**
  * Read a file for the TypeScript compiler, following links into node_modules.
- * @param repositoryRoot the base folder used by cached source readers.
- * @param path the absolute system input path.
- * @param reads the repository read cache.
+ * @param repositoryRoot the base folder of the cached readers.
+ * @param path the absolute input file.
+ * @param reads the run cache.
  * @returns source text, or undefined for a missing input.
  */
 function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache): string | undefined {
@@ -149,7 +149,7 @@ function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache
         const segments = local.split('/');
         const dependency = segments.indexOf(NODE_MODULES);
         if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
-            // Follow linked dependency folders. Refuse links preceding node_modules.
+            // Follow linked dependency folders. Refuse links before node_modules.
 
             if (dependency > 0) files.readStats(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
@@ -162,11 +162,11 @@ function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache
 }
 
 /**
- * Resolves compiler options and inherited paths with the TypeScript compiler.
- * @param repositoryRoot the base folder used by cached source readers.
- * @param path the absolute configuration path.
- * @param reads the configuration cache owned by this run.
- * @returns the parsed configuration, or undefined when the file does not exist.
+ * Resolve compiler options and inherited paths with the TypeScript compiler.
+ * @param repositoryRoot the base folder of the cached readers.
+ * @param path the absolute tsconfig file.
+ * @param reads the run cache.
+ * @returns the parsed settings, or undefined when the file does not exist.
  */
 function readTsconfig(repositoryRoot: string, path: string, reads: ReadCache): TypeScriptConfiguration | undefined {
     const configurations = getCachedValue(reads, TSCONFIG_MEMO);
@@ -190,12 +190,12 @@ function readTsconfig(repositoryRoot: string, path: string, reads: ReadCache): T
 }
 
 /**
- * Find the nearest TypeScript project that includes every source owned by a scope.
- * @param repositoryRoot the base folder used by cached source readers.
- * @param scope the repository-relative scope.
- * @param files the scope-owned source paths.
- * @param reads the run-owned configuration cache.
- * @returns the covering project, or no project for a standalone scope.
+ * Find the nearest TypeScript project that includes every source of a scope.
+ * @param repositoryRoot the base folder of the cached readers.
+ * @param scope the repository-relative folder.
+ * @param files the source paths of the scope.
+ * @param reads the run cache.
+ * @returns the project, or undefined for a standalone scope.
  */
 function readTsconfigProject(
     repositoryRoot: string,
@@ -223,10 +223,10 @@ function readTsconfigProject(
 }
 
 /**
- * Resolve source inputs through the project's TypeScript compiler configuration.
- * @param repositoryRoot the base folder used by cached source readers.
- * @param scope the importing project scope.
- * @param reads the run-owned metadata cache.
+ * Resolve the source inputs through the tsconfig of the project.
+ * @param repositoryRoot the base folder of the cached readers.
+ * @param scope the importing project folder.
+ * @param reads the run cache.
  * @param config the parsed project.
  * @returns resolved source files without installed or compiler libraries.
  */

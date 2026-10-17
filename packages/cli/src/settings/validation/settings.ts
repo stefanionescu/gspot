@@ -18,10 +18,10 @@ import { listCheckIds, readManifests, formatUnknownCheck } from '#cli/configurat
 import { validateScopePaths, validateExtraOptions, validateDisabledRules } from '#cli/settings/validation/values.ts';
 
 /**
- * Name the invalid setting and retain the validator’s explanation.
+ * Name the invalid setting, and keep the message of the validator.
  * @param path the setting or field that the issue concerns.
- * @returns the setting path and its validation failure
- * @param issue the validation message supplied by the schema.
+ * @param issue the schema validation message.
+ * @returns the setting path and its validation failure.
  */
 function formatSettingsIssue(path: string, issue: z.core.$ZodIssue): string[] {
     const branches = issue.code === 'invalid_union' ? issue.errors : [];
@@ -61,9 +61,9 @@ function throwErrors(errors: SettingsError[]): never {
 
 /**
  * Validate written selections, tool options, ignores, and paths before a command uses them.
- * @param settings the settings to validate before execution.
+ * @param settings the parsed gspot.toml.
  * @param repositoryRoot the optional folder for checking declared scope paths.
- * @param reads the file reads and parsed values shared by this run.
+ * @param reads the run cache.
  */
 function validateSettings(settings: Settings, repositoryRoot: string | undefined, reads: ReadCache): void {
     const manifests = readManifests(reads);
@@ -121,9 +121,9 @@ function validateSettings(settings: Settings, repositoryRoot: string | undefined
 }
 
 /**
- * A settings error as text that leads with its file, when given, and the key path it names.
+ * Format a settings error with its file, if any, and its key path first.
  * @param error the refused value and its key path.
- * @param file the settings file, for a line that names it.
+ * @param file the gspot.toml path, for a line that names it.
  * @returns the text.
  */
 function formatSettingsError(error: SettingsError, file?: string): string {

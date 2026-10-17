@@ -109,7 +109,7 @@ export type ParsedManifest = {
 
 export type ToolFileDeclaration = ParsedManifest['toolFiles'][number];
 
-/** Validated execution variants. Repository-defined commands do not require reference examples. */
+/** A validated check declaration. Repository commands need no reference example. */
 export type CheckDeclaration = Omit<ParsedCheck, 'example'> & {
     example?: string;
 };
@@ -147,7 +147,7 @@ export type ManifestDeclaration = Omit<ParsedManifest, 'checks'> & {
     folder: string;
 };
 
-/** A registry entry with complete declarations for each named tool reference. */
+/** A manifest with the full declaration of each named tool. */
 export type Manifest = Omit<ManifestDeclaration, 'tools'> & { tools: ToolDeclaration[] };
 
 /** Public check identity and the configuration that ships its behavior. */
@@ -156,7 +156,7 @@ export type ConfigurationCheck = { check: CheckDeclaration; configuration: Manif
 /** A configuration name and its exact written settings location. */
 export type ConfigurationDeclaration = { name: string; path: KeyPath };
 
-/** An unknown name retains the fields of its original declaration. */
+/** An unknown name keeps the fields of its original declaration. */
 export type UnknownConfiguration<Declaration extends Pick<ConfigurationDeclaration, 'name'>> = Declaration & {
     message: string;
 };
@@ -185,7 +185,7 @@ export type Level = (typeof LEVELS)[number];
 /** Requirements of the generated npm and Python tool projects. */
 export type ToolProjectPins = { npm: Record<string, string>; python: string[] };
 
-/** Default rules active only at level all. */
+/** Default lint rules that run only at level all. */
 export type EslintAllRules = Set<string>;
 
 export type InstallerPin = {

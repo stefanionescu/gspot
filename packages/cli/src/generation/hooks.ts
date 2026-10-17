@@ -26,11 +26,11 @@ function buildHookScript(name: HookName, runner: StartRunner, prefix: string): s
 }
 
 /**
- * Select the start command from the root gspot dependency.
+ * Select the runner from the root gspot dependency.
  *
- * @param repositoryRoot the folder whose package declaration selects the start command.
+ * @param repositoryRoot the folder whose package.json decides the runner.
  *
- * @returns the package manager row, or mise when gspot has no root npm dependency.
+ * @returns the runner of the package manager, or mise when gspot has no root npm dependency.
  */
 export async function selectRunner(repositoryRoot: string): Promise<StartRunner> {
     const manifest = readPackageJson(repositoryRoot, 'package.json');
@@ -43,13 +43,13 @@ export async function selectRunner(repositoryRoot: string): Promise<StartRunner>
 }
 
 /**
- * The hook scripts, one per stage, in the hooks folder of the repository, when the settings selects hooks.
+ * Build one hook script per stage in the hooks folder, when the settings turn hooks on.
  *
  * @param repositoryRoot the folder for Git detection and hook command prefixes.
- * @param settings the repository settings.
- * @param runner the start command selected from the repository pin.
+ * @param settings the parsed gspot.toml.
+ * @param runner the command that starts gspot.
  *
- * @returns the generated files.
+ * @returns the hook scripts.
  */
 export function buildHookFiles(repositoryRoot: string, settings: Settings, runner: StartRunner): GeneratedFile[] {
     if (settings.hooks?.enabled !== true) return [];

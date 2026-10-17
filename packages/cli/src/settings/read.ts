@@ -16,9 +16,9 @@ import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/
 /**
  * Parse and validate gspot.toml. Throw a GspotError with every settings error.
  *
- * @param text the file's text.
+ * @param text the gspot.toml contents.
  * @param repositoryRoot the optional folder for validating declared scope paths.
- * @param reads the read cache for this run.
+ * @param reads the run cache.
  * @returns the normalized settings.
  */
 function parseSettings(text: string, repositoryRoot: string | undefined, reads: ReadCache): Settings {
@@ -35,10 +35,10 @@ function parseSettings(text: string, repositoryRoot: string | undefined, reads: 
 }
 
 /**
- * Reads gspot.toml from a repository root.
+ * Read gspot.toml from a repository root.
  * @param repositoryRoot the folder that contains gspot.toml.
- * @param reads the read cache for this run.
- * @returns the settings and the file's text.
+ * @param reads the run cache.
+ * @returns the settings and the file text.
  */
 function readSettings(repositoryRoot: string, reads: ReadCache): SettingsFile {
     const { text } = readSettingsFile(repositoryRoot);
@@ -74,9 +74,9 @@ function normalizeScopeTables(
 }
 
 /**
- * Fills the architecture table's lists and keeps its optional keys only when written.
- * @param written the table as written, if any
- * @returns the architecture configuration
+ * Fill the lists of the architecture table, and keep its optional keys only when written.
+ * @param written the authored table, if any.
+ * @returns the architecture settings.
  */
 function normalizeArchitecture(written: ParsedSettings['architecture']): Settings['architecture'] {
     return {
@@ -115,9 +115,9 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
 
 /**
  * Build the settings values from the parsed document.
- * @param parsed the validated document
- * @param written the raw authored table
- * @returns normalized tables with defaults and authored scope values preserved.
+ * @param parsed the validated document.
+ * @param written the raw authored table.
+ * @returns normalized tables that keep the defaults and the authored scope values.
  */
 function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
     const { command_check: commandChecks, ...document } = parsed;

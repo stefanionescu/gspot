@@ -21,8 +21,8 @@ const trufflehogResultSchema = z.object({
     } satisfies SchemaShape<TrufflehogResult['SourceMetadata']>),
 } satisfies SchemaShape<TrufflehogResult>);
 /**
- * Findings from TruffleHog's verified results, one per credential, without the secret itself.
- * @param input the check, report text, source paths, and output declaration.
+ * Read the verified TruffleHog results as findings, one per credential, without the secret.
+ * @param input the tool output to read.
  * @returns credential locations and detector names without credential text.
  */
 export function parseTrufflehogFindings(input: ReportInput): Finding[] {

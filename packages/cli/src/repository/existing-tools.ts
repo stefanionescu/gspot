@@ -56,7 +56,7 @@ import {
     GITHUB_WORKFLOWS_FOLDER,
 } from '#cli/config/repository/existing-tools.ts';
 
-// Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
+// Check whether a CI command line runs a linter: eslint, a two-word lint command, or a lint task.
 function isLintCommand(command: string): boolean {
     const words = command.split(COMMAND_SEPARATORS).filter((word) => word !== '');
     return words.some((word, index) => {
@@ -69,7 +69,7 @@ function isLintCommand(command: string): boolean {
     });
 }
 
-// The files in a folder under a root, without dot files; none when the folder does not exist.
+// List the files in a folder under a root, without dot files; none when the folder does not exist.
 function listFolder(root: string, folder: string): string[] {
     const path = join(root, folder);
     if (!existsSync(path)) return [];
@@ -127,7 +127,7 @@ function isLintJob(name: string, job: CiJob): boolean {
     );
 }
 
-// Find lint commands in the CI document's jobs.
+// Find the lint commands in the jobs of a CI file.
 function listLintCommands(path: string, document: unknown): string[] {
     const parsed = ciDocumentSchema.safeParse(document);
     if (!parsed.success) return [];
@@ -140,7 +140,7 @@ function listLintCommands(path: string, document: unknown): string[] {
     });
 }
 
-// The tool files one replace row finds among tracked files.
+// Find the tracked tool files that one replace row names.
 function findReplacedToolFiles(
     root: string,
     inventory: Set<string>,
@@ -182,9 +182,9 @@ function parseSharedFile(text: string, extension: string, path: string): unknown
 }
 
 /**
- * Whether a shared tool file contains the declared key or table.
- * @param text the file text.
- * @param path the file path, whose extension names the format.
+ * Check whether a shared tool file holds the declared key or table.
+ * @param text the file contents.
+ * @param path the file, whose extension names the format.
  * @param selector the key or table that the tool owns.
  * @returns whether that section exists.
  */
@@ -201,9 +201,9 @@ function hasToolSection(text: string, path: string, selector: Pick<FoundToolFile
 }
 
 /**
- * The hooks a clone already runs: another hooks folder, a hook folder a tool keeps, and hook manager settings.
- * @param repositoryRoot the folder that contains tracked inputs and tool files.
- * @returns each set of hooks with where it lives.
+ * Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
+ * @param repositoryRoot the repository to read.
+ * @returns each hook setup and its location.
  */
 export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
     const manifest = readPackageJson(repositoryRoot, PACKAGE_JSON);
@@ -244,8 +244,8 @@ export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
 }
 
 /**
- * Identify existing lint jobs before proposing another CI job.
- * @param repositoryRoot the folder that contains tracked inputs and tool files.
+ * Find the existing lint jobs before init proposes a CI job.
+ * @param repositoryRoot the repository to read.
  * @param paths the CI files to read.
  * @returns the names of the jobs that already run a linter.
  */
@@ -268,11 +268,11 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
 
 /**
  * Find tool files to replace, hooks, CI, agent files, and lint folders.
- * @param repositoryRoot the folder that contains tracked inputs and tool files.
- * @param files the tracked files.
- * @param dependencyFiles the parsed package manifests.
- * @param reads the cached file reads for this run.
- * @returns tool files, hooks, CI, agent files, and lint folders.
+ * @param repositoryRoot the repository to read.
+ * @param files the tracked inventory.
+ * @param dependencyFiles the parsed package declarations.
+ * @param reads the run cache.
+ * @returns the existing tools.
  */
 export function readExistingTools(
     repositoryRoot: string,
@@ -332,8 +332,8 @@ export function readExistingTools(
 }
 
 /**
- * Identify one INI section or its colon-delimited subsections.
- * @param text the complete configuration contents, including bracketed headings.
+ * Find one INI section or its colon-delimited subsections.
+ * @param text the file contents.
  * @param section the INI heading to match, including colon-delimited subsections.
  * @returns true when a matching bracketed heading starts a line.
  */

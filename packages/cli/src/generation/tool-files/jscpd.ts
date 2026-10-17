@@ -4,8 +4,8 @@ import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
 
 /**
- * Build jscpd file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the jscpd file from the settings.
+ * @param context the tool file to build.
  * @returns the duplication scan settings and source exclusions.
  */
 function buildJscpdFile(context: ToolFileContext): string {

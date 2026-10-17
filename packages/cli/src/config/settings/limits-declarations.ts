@@ -1,7 +1,7 @@
 export const LIMITS_DECLARATIONS = {
     'limits.file_lines': {
         configurations: ['sql', 'structure'],
-        description: 'The most lines one file may have. Blank lines and comment-only lines do not count.',
+        description: 'The most lines one file may have, not counting blank lines and comment-only lines.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript', 'python', 'swift', 'sql', 'bash'],
         language_defaults: { sql: 400, bash: 140 },
@@ -40,13 +40,14 @@ export const LIMITS_DECLARATIONS = {
     },
     'limits.cognitive_complexity': {
         configurations: ['structure'],
-        description: 'How hard a function is to follow, by the sonarjs cognitive score.',
+        description:
+            'The highest sonarjs cognitive score one function may have; the score grows as the function gets harder to follow.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript'],
     },
     'limits.cyclomatic_complexity': {
         configurations: ['structure'],
-        description: 'How many paths run through one function.',
+        description: 'The most paths that may run through one function.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript', 'python', 'swift'],
     },
@@ -94,7 +95,7 @@ export const LIMITS_DECLARATIONS = {
     'limits.trivial_function_statements': {
         configurations: ['structure'],
         description:
-            'Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.`<language>`.',
+            'Report functions with this many statements or fewer; any whole number from 1 up works, a higher number reports more functions, and limits.`<language>` sets it for one language.',
         reason_needed: 'lowering',
         languages: ['typescript', 'javascript', 'python', 'swift', 'bash'],
     },

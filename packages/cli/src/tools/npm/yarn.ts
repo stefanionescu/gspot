@@ -66,8 +66,8 @@ function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]
 /**
  * Write the scratch .yarnrc.yml with connection settings replaced by environment references, and add those variables to env.
  *
- * @param context the install session and command log.
- * @param work the directory the isolated project runs in.
+ * @param context what install needs for this step.
+ * @param work the folder where the isolated project runs.
  * @param env the environment the install runs with, which receives the settings.
  *
  * @returns the credential values the lockfile must not contain.

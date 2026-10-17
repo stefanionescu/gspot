@@ -1,4 +1,4 @@
-// The parts of the ESLint configuration that the settings and the emitted scope decide.
+// Build the ESLint tool file from the settings and the scope.
 
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { buildEslintContext } from '#cli/generation/eslint/context.ts';
@@ -15,9 +15,9 @@ import {
 } from '#cli/generation/eslint/print.ts';
 
 /**
- * Build the ESLint file from the selected presets, rules, and fragment blocks.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the generated JavaScript ESLint configuration.
+ * Build the ESLint file from the presets, lint rules, and fragment blocks.
+ * @param context the tool file to build.
+ * @returns the JavaScript text of the ESLint file.
  */
 function buildEslintFile(context: ToolFileContext): string {
     const { session, selection, toolFile: target } = context;

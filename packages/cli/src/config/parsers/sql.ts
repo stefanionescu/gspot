@@ -2,7 +2,7 @@ export const FROZEN_NONE = 'none';
 
 export const FROZEN_ALL = 'all';
 
-/** Numeric migration versions can use Flyway's V prefix. */
+/** Numeric migration versions can start with the Flyway V prefix. */
 export const MIGRATION_VERSION = /^V?(?<version>\d+)/u;
 
 export const IDENTIFIER_START = /[A-Za-z_]/u;
@@ -16,7 +16,7 @@ export const MIGRATION_NUMBER = /^\d+$/u;
 /** Complete PostgreSQL name tokens, including doubled quotes inside quoted names. */
 export const SQL_NAME_TOKEN = /"(?:[^"]|"")*"|[\p{L}_][\p{L}\p{N}_$]*/gu;
 
-/** A relation's complete qualified spelling begins at its RangeVar location. */
+/** The full qualified name of a relation starts at its RangeVar location. */
 export const SQL_QUALIFIED_NAME = new RegExp(
     String.raw`^(?:${SQL_NAME_TOKEN.source})(?:\s*\.\s*(?:${SQL_NAME_TOKEN.source}))*`,
     'u',

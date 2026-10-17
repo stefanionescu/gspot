@@ -42,7 +42,7 @@ function parseLocalEnvironment(text: string): string[] {
     return text.replace(TRAILING_NEWLINE, '').split('\n');
 }
 
-// The hook's original working directory owns relative paths and Git's implicit worktree root.
+// The original working folder of the hook decides relative paths and the implicit Git worktree root.
 function readInheritedGitEnvironment(origin: string): GitLookup {
     const env = Object.fromEntries(
         GIT_PATH_VARIABLES.flatMap((name) => {
@@ -73,7 +73,7 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
     return { folder: folder, env };
 }
 
-// The target's own metadata decides whether inherited repository-local variables remain valid.
+// The metadata of the target decides whether inherited repository-local variables stay valid.
 function readTargetGitEnvironment(
     root: string,
     source: GitRepository,
@@ -91,7 +91,7 @@ function readTargetGitEnvironment(
 }
 
 /**
- * Distinguishes an absent work tree from broken Git metadata after a failed command.
+ * Tell an absent work tree from broken Git metadata after a failed command.
  * @param inspection the work-tree probe result.
  * @returns true when Git reports that no repository exists.
  */
@@ -102,9 +102,10 @@ function isOutsideGit(inspection: SpawnResult): boolean {
 let sourceMetadata: { metadata: string[]; source?: GitLookup } | undefined;
 
 /**
- * Git identifies local variables and worktree-specific metadata. Explicit caller settings apply last.
- * @param workingFolder the repository directory.
- * @param commandArguments the literal Git command arguments.
+ * Build the environment for one Git command. Git names the local variables and worktree metadata;
+ * the caller overrides apply last.
+ * @param workingFolder the repository folder.
+ * @param commandArguments everything after `git`, literally.
  * @param explicit the environment overrides for this command.
  * @returns the environment for the requested Git command.
  */
@@ -143,9 +144,9 @@ export function buildGitEnvironment(
 
 /**
  * Run Git without a time limit and wait for its result.
- * @param workingFolder the working directory.
+ * @param workingFolder where Git runs.
  * @param commandArguments the arguments after git.
- * @param options the other spawn options, such as the environment.
+ * @param options the other spawn settings, such as the environment.
  * @returns what Git printed and how it exited.
  */
 export function runGitBlocking(
@@ -159,11 +160,11 @@ export function runGitBlocking(
 }
 
 /**
- * Runs Git with cancellation.
- * @param workingFolder the working directory.
+ * Run Git with cancellation.
+ * @param workingFolder where Git runs.
  * @param commandArguments the arguments after git.
  * @param options spawn settings for standard input and optional cancellation.
- * @param output the declared output format.
+ * @param output how to decode stdout.
  * @returns what Git printed and how it exited.
  */
 export async function runGit(
@@ -180,8 +181,8 @@ export async function runGit(
 }
 
 /**
- * Runs Git with cancellation and keeps output bytes for paths and objects.
- * @param workingFolder the working directory.
+ * Run Git with cancellation, and keep the output bytes for paths and objects.
+ * @param workingFolder where Git runs.
  * @param commandArguments the arguments after git.
  * @param options spawn settings for standard input and optional cancellation.
  * @returns the bytes Git printed and how it exited.
@@ -199,9 +200,9 @@ export async function runGitForBytes(
 }
 
 /**
- * Reads a Git configuration value, distinguishing an unset key from a failed command.
- * @param workingFolder the working directory.
- * @param key the configuration key.
+ * Read a Git setting, and tell an unset key from a failed command.
+ * @param workingFolder where Git runs.
+ * @param key the Git setting name.
  * @returns the exact value, or undefined for an unset key.
  */
 export function readGitSetting(workingFolder: string, key: string): string | undefined {
@@ -214,7 +215,7 @@ export function readGitSetting(workingFolder: string, key: string): string | und
 }
 
 /**
- * The folder Git runs hooks from: core.hooksPath when set, otherwise the hooks folder of the Git directory.
+ * Find the folder that Git runs hooks from: core.hooksPath when set, else the hooks folder of the Git folder.
  * @param workingFolder the repository root.
  * @returns the absolute path.
  */
@@ -225,7 +226,7 @@ export function readHooksFolder(workingFolder: string): string {
 }
 
 /**
- * What a Git command prints, or the selection error it failed with.
+ * Read what a Git command prints, or the selection error that it failed with.
  * @param workingFolder the repository root.
  * @param commandArguments the arguments after git.
  * @param options cancellation and input.
@@ -246,7 +247,7 @@ export async function readGitText(
 }
 
 /**
- * A Git command's output as its non-empty lines.
+ * Read the non-empty output lines of a Git command.
  * @param workingFolder the repository root.
  * @param commandArguments the arguments after git.
  * @param options cancellation and input.
@@ -262,7 +263,7 @@ export async function readGitLines(
 }
 
 /**
- * The paths a null-separated Git listing names.
+ * Read the paths that a null-separated Git listing names.
  * @param workingFolder the repository root.
  * @param commandArguments the arguments after git, which must include -z.
  * @param options cancellation and input.
@@ -278,7 +279,7 @@ export async function readGitPaths(
 }
 
 /**
- * Whether a shallow clone cuts repository history.
+ * Check whether a shallow clone cuts the repository history.
  * @param workingFolder the repository root.
  * @param options cancellation and input.
  * @returns true for a shallow repository.
@@ -289,9 +290,9 @@ export async function isShallow(workingFolder: string, options: GitOptions): Pro
 }
 
 /**
- * The path from Git's top level to the project root, with a trailing slash.
- * @param workingFolder the repository directory.
- * @returns the repository-relative prefix for this directory.
+ * Read the path from the Git top level to the project root, with a trailing slash.
+ * @param workingFolder the repository folder.
+ * @returns the repository-relative prefix for this folder.
  */
 export function readGitPrefix(workingFolder: string): string {
     const result = runGitBlocking(workingFolder, GIT_PREFIX_ARGUMENTS);
@@ -300,8 +301,8 @@ export function readGitPrefix(workingFolder: string): string {
 }
 
 /**
- * Remove the final newline from a Git result while preserving the value's other bytes.
- * @param text Git's printed value.
+ * Remove the final newline from a Git result, and keep the other bytes.
+ * @param text the value that Git printed.
  * @returns the value without its final newline.
  */
 export function trimGitLine(text: string): string {
@@ -309,8 +310,8 @@ export function trimGitLine(text: string): string {
 }
 
 /**
- * True when a Git work tree contains the root.
- * @param workingFolder the directory.
+ * Check whether a Git work tree contains the folder.
+ * @param workingFolder the folder to test.
  * @returns whether Git confirms a work tree.
  * @throws when Git cannot establish the repository state.
  */

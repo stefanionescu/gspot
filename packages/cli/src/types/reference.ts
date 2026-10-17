@@ -2,7 +2,7 @@ import type { JSONSchema } from 'zod/v4/core';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import type { Manifest, ConfigurationCheck } from '#cli/types/configurations.ts';
 
-/** One command's public help, without Commander runtime objects. */
+/** The public help of one command, without Commander runtime objects. */
 export type CommandReference = {
     name: string;
     summary: string;

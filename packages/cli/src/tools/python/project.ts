@@ -60,7 +60,7 @@ function readPythonLockfile(work: string, credentials: string[], project: Python
     return lockfile;
 }
 
-// uv runs inside the selected tool project and uses its exact Python requirement.
+// uv runs inside the tool project and uses its exact Python requirement.
 async function runUv(
     context: InstallContext,
     { work, commandArguments, executable, credentials, configFile = join(work, UV_SETTINGS_FILE) }: UvExecution,
@@ -149,7 +149,7 @@ const pythonToolProjectSchema = z.object({
 /**
  * Resolve the Python tool lockfile outside the repository before writing it.
  *
- * @param context the selected tools, repository writer, session, and command log.
+ * @param context what install needs for this step.
  * @param toolProjectFile the generated pyproject.toml.
  *
  * @returns credential-free lockfile bytes.
@@ -190,10 +190,10 @@ async function preparePythonLockfile(context: InstallContext, toolProjectFile: G
 /**
  * Install the frozen Python tool project in .gspot.
  *
- * @param context the selected tools, repository writer, session, and command log.
- * @param executable the uv executable.
+ * @param context what install needs for this step.
+ * @param executable the path of uv.
  *
- * @returns the installation summary.
+ * @returns the install summary.
  */
 async function installPythonTools(context: InstallContext, executable: string): Promise<string> {
     const { root } = context.session;
@@ -218,13 +218,13 @@ async function installPythonTools(context: InstallContext, executable: string): 
 }
 
 /**
- * Run a pinned Python check over the scope's installed project dependencies.
+ * Build the command that runs a pinned Python check with the installed project dependencies of the scope.
  *
- * @param selection the scope's selected tool declarations.
+ * @param selection the scope and its tool declarations.
  * @param scopeRoot the project folder.
  * @param command the target executable and its arguments.
  *
- * @returns the uv project command without synchronizing the project or its lockfile.
+ * @returns the uv command, which syncs neither the project nor its lockfile.
  */
 function buildUvRunCommand(selection: ScopeSelection, scopeRoot: string, command: [string, ...string[]]): string[] {
     const tool = getToolDeclaration(selection.selected, command[0]);
@@ -243,7 +243,7 @@ function buildUvRunCommand(selection: ScopeSelection, scopeRoot: string, command
 }
 
 /**
- * Identify the structured syntax errors emitted by the TOML parser.
+ * Check whether an error comes from the TOML parser with a syntax location.
  * @param error the failed lockfile parse.
  * @returns whether the failure reports a TOML syntax location.
  */

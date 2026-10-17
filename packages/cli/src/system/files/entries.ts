@@ -44,14 +44,14 @@ function prepareParentFolder(folder: string): Stats {
     return lstatSync(folder);
 }
 
-// The copy of a symbolic link: its target text and its own mode.
+// Read the file contents of a symbolic link: its target text and its own mode.
 function readSymbolicLink(target: string, stat: Stats): FileContents {
     const bytes = Buffer.from(readlinkSync(target));
     const mode = normalizeFileMode({ mode: stat.mode & MODE_BITS, isLink: true });
     return { bytes, mode, isLink: true };
 }
 
-// The bytes and mode of a private regular file.
+// Read the bytes and mode of a private regular file.
 function readRegularFile(target: string, stat: Stats, path: string): FileContents {
     if (!stat.isFile() || stat.nlink !== 1)
         throw new Error(`${path} is not a regular file with one link. Use a regular file without extra hard links.`);
@@ -59,7 +59,7 @@ function readRegularFile(target: string, stat: Stats, path: string): FileContent
     return { bytes, mode: normalizeFileMode({ mode: stat.mode & MODE_BITS }) };
 }
 
-// Check the same parent directories before a read or a prepared write.
+// Check the same parent folders before a read or a prepared write.
 function walkParentFolders(bounds: FilesState, path: string, statParent: (path: string) => Stats): string {
     const parts = splitSystemPath(path);
     let folder = bounds.root;
@@ -87,16 +87,16 @@ function writeStagedFile(temporary: string, value: FileContents): void {
     closeSync(file);
 }
 
-// Windows cannot rename over a read-only file, so it goes first. The owner's recovery treats an absent target of an
-// interrupted replacement as not written.
+// Windows cannot rename over a read-only file, so that file goes first. Recovery after an interrupted replacement
+// treats an absent target as not written.
 function isRenameBlocked(expected: FileContents | undefined): boolean {
     if (process.platform !== 'win32' || expected === undefined || expected.isLink === true) return false;
     return (expected.mode & OWNER_WRITE_BIT) === 0;
 }
 
 /**
- * Compare only permissions represented by the host filesystem API. Windows exposes a read-only flag.
- * @param file the copy's mode and whether it holds a link.
+ * Keep only the permissions that the system file API shows. Windows shows a read-only flag.
+ * @param file the mode, and whether it holds a link.
  * @returns the mode the system can represent.
  */
 export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isLink'>): number {
@@ -107,10 +107,10 @@ export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isLink'>): 
 }
 
 /**
- * Whether two copies hold the same bytes and the same mode as the host can represent it.
- * @param found the copy read from disk.
- * @param expected the copy the caller expects there.
- * @returns true when both do not exist or both match.
+ * Check whether two file contents hold the same bytes and the same mode, as far as the system can show it.
+ * @param found the file contents on disk.
+ * @param expected the file contents that the caller expects.
+ * @returns true when neither exists or both match.
  */
 export function isSameContents(found: FileContents | undefined, expected: FileContents | undefined): boolean {
     if (found === undefined || expected === undefined) return found === expected;
@@ -120,9 +120,9 @@ export function isSameContents(found: FileContents | undefined, expected: FileCo
 }
 
 /**
- * The absolute path of an entry, after checking that all parents denote real directories without links.
+ * Build the absolute path of a file after a check that every parent names a real folder, not a link.
  * @param bounds the root.
- * @param path the root-relative path.
+ * @param path the root-relative file.
  * @returns the absolute path.
  */
 export function verifyPath(bounds: FilesState, path: string): string {
@@ -130,9 +130,9 @@ export function verifyPath(bounds: FilesState, path: string): string {
 }
 
 /**
- * The absolute path of an entry, creating missing parents and refusing linked or non-directory parents.
+ * Build the absolute path of a file, create missing parents, and refuse parents that link or name no folder.
  * @param bounds the root.
- * @param path the root-relative path.
+ * @param path the root-relative file.
  * @returns the absolute path after preparing its parents.
  */
 export function preparePath(bounds: FilesState, path: string): string {
@@ -142,8 +142,8 @@ export function preparePath(bounds: FilesState, path: string): string {
 /**
  * Read a regular file with no other hard link, or return undefined when absent.
  * @param bounds the root.
- * @param path the root-relative path.
- * @returns the file copy.
+ * @param path the root-relative file.
+ * @returns the file contents.
  */
 export function readEntry(bounds: FilesState, path: string): FileContents | undefined {
     try {
@@ -158,8 +158,8 @@ export function readEntry(bounds: FilesState, path: string): FileContents | unde
 /**
  * Read a file or symbolic link without following the link, or return undefined when absent.
  * @param bounds the root.
- * @param path the root-relative path.
- * @returns the entry copy.
+ * @param path the root-relative file.
+ * @returns the file contents.
  */
 export function readEntryKeepingLinks(bounds: FilesState, path: string): FileContents | undefined {
     try {
@@ -173,11 +173,11 @@ export function readEntryKeepingLinks(bounds: FilesState, path: string): FileCon
 }
 
 /**
- * Replaces the entry at a path with the copy, through a staged file renamed into place.
+ * Replace the file at a path with new file contents, through a staged file that moves into place.
  * @param bounds the root.
- * @param path the root-relative path.
- * @param value the copy to write.
- * @param expected the copy the caller last saw there, or undefined for a new file.
+ * @param path the root-relative file.
+ * @param value the file contents to write.
+ * @param expected the file contents that the caller last saw, or undefined for a new file.
  */
 export function replaceEntry(
     bounds: FilesState,

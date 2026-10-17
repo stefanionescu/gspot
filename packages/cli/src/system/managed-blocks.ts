@@ -5,9 +5,9 @@ import type { BlockSpan, BlockContext } from '#cli/types/system/managed-blocks.t
 
 /**
  * Locate one complete block. Refuse ambiguous or malformed markers.
- * @param text the file text.
+ * @param text the file contents.
  * @param context the file path and marker style.
- * @returns the block's character range, or undefined when the file holds none.
+ * @returns the character range of the block, or undefined when the file holds none.
  */
 export function findBlockSpan(text: string, context: BlockContext): BlockSpan | undefined {
     const markersForStyle = MARKERS[context.style];
@@ -31,9 +31,9 @@ export function findBlockSpan(text: string, context: BlockContext): BlockSpan | 
 }
 
 /**
- * Replace a complete block or append it, preserving the text around it.
+ * Replace a complete block or append it, and keep the text around it.
  * @param existing the file text.
- * @param block the block body to install.
+ * @param block the body to install.
  * @param context the file path and marker style.
  * @returns the file text with the block in place.
  */
@@ -49,10 +49,10 @@ export function replaceBlock(existing: string, block: string, context: BlockCont
 }
 
 /**
- * The block currently in a file, or undefined.
- * @param text the file's text.
+ * Read the block in a file.
+ * @param text the file contents.
  * @param context the file path and marker style.
- * @returns the block body, trimmed.
+ * @returns the trimmed block body, or undefined.
  */
 export function readBlock(text: string, context: BlockContext): string | undefined {
     const span = findBlockSpan(text, context);

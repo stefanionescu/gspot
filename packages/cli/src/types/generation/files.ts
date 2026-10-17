@@ -44,7 +44,7 @@ export type ToolFileGeneration = {
     targets: ReadonlyMap<string, ReadonlyMap<string, string>>;
 };
 
-/** The start command chosen from this repository's gspot dependency. */
+/** The runner chosen from the gspot dependency of this repository. */
 export type StartRunner = {
     name: keyof typeof RUNNERS;
     command: string;
@@ -94,7 +94,7 @@ export type ToolFileContext = ToolFileInputs & { targetPath: string; level: Leve
 /** Build a tool file's text from its resolved settings and declaration, including the final newline. */
 export type ToolFileBuilder = (context: ToolFileContext) => string;
 
-/** A selected tool and the generated destinations that can replace package fields. */
+/** A tool and the generated destinations that can replace its package fields. */
 export type PointerFieldInputs = {
     selection: ScopeSelection;
     manifest: Manifest;
@@ -111,7 +111,7 @@ export type IgnoreSection = { title: string; patterns: string[] };
 /** A declaration paired with the repository and scope that own it. */
 export type ToolFileSelection = { toolFile: ToolFileDeclaration; owner: ToolFileInputs };
 
-/** A whole-file declaration with the text built for one selected scope. */
+/** A whole-file declaration with the text built for one scope. */
 export type ToolFileContent = ToolFileSelection & { toolFile: WholeToolFile; file: GeneratedFile };
 
 /** The mutable destinations and output files collected during one generation. */

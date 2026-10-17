@@ -4,7 +4,7 @@ export const HOOK_ARGUMENTS = {
     'commit-msg': 'check --hook commit-msg -- "$1"',
 } as const;
 
-/** Start commands and exact pin commands for the repository installation. */
+/** The runner and exact pin command for each package manager. */
 export const RUNNERS = {
     npm: {
         command: 'npm exec --no -- gspot',

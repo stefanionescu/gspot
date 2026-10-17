@@ -46,9 +46,9 @@ const filesSchema = z.strictObject({
     tags: optionalStringList,
     paths: optionalStringList,
     languages: z.boolean().default(false),
-    // The file types the Prettier plugins of the selected configurations format, such as .astro, join the owned ones.
+    // The file types that the Prettier plugins of the configurations in use format, such as .astro, join the owned ones.
     prettier_plugins: z.boolean().default(false),
-    // The file types the ESLint plugins of the selected configurations lint, such as .vue, join the owned ones.
+    // The file types that the ESLint plugins of the configurations in use lint, such as .vue, join the owned ones.
     eslint_plugins: z.boolean().default(false),
     kinds: z.array(fileKindSchema).default(['source']),
 } satisfies SchemaShape<ParsedManifest['files'], FileMatchInput>);
@@ -77,10 +77,10 @@ const toolFileSchema = z
     .strictObject({
         level: levelSchema.optional(),
         target: z.string(),
-        // Emit the target when an applicable check in its scope consumes any named tool.
+        // Generate the file when a check in its scope runs any named tool.
         tool: consumerNamesSchema,
         check: consumerNamesSchema,
-        // Companion tools needed only when an applicable check consumes this configuration.
+        // Extra tools that a check needs only when it uses this configuration.
         required_tools: z.array(z.string().min(1)).default([]),
         pointer: pointerSchema.optional(),
         fragment: z.boolean().default(false),
@@ -116,7 +116,7 @@ const sentence = z.string().min(1);
 
 const checkFields = z.strictObject({
     ...commandCheckFields,
-    // The name inside the configuration; the check's ID joins the configuration name, a slash, and this name, as python/ruff.
+    // The name inside the configuration; the check ID joins the configuration name, a slash, and this name, as python/ruff.
     name: z.string().regex(NAME_PATTERN),
     level: levelSchema,
     runs: z.enum(CHECK_RUNS).default('files'),
@@ -214,7 +214,7 @@ const eslintPresetBlockSchema = z.strictObject({
     rules: z.record(z.string(), z.json()).optional(),
 } satisfies SchemaShape<EslintPresets[string]['blocks'][number]>);
 
-/** A copy identifies its exact installed package and public preset export. */
+/** A preset copy names its exact installed package and the preset export. */
 export const eslintPresetSchema = z.strictObject({
     package: z.string(),
     version: z.string(),
@@ -281,8 +281,8 @@ export const manifestSchema = z
                 override: z.array(manifestNamingOverride).default([]),
             } satisfies SchemaShape<NonNullable<ParsedManifest['naming']>, NonNullable<ManifestInput['naming']>>)
             .optional(),
-        // The files of the configuration's rules folder that install only when their condition holds, by file name. Every other
-        // file there installs with the configuration. The detection reads a condition as it reads a configuration's, the other lists empty.
+        // Rule files, by name, that install only when their condition holds. Every other file in the rules folder installs
+        // with the configuration. Detection reads each condition as it reads a detection table, with the other lists empty.
         rules: z
             .record(
                 z.string().regex(RULE_FILE_PATTERN),
@@ -318,7 +318,7 @@ export const manifestSchema = z
         } & Record<'tool_file', ToolFileDeclaration[]>,
         ManifestInput
     >)
-    // A manifest writes one [[tool]], [[tool_file]], or [[check]] table per entry; the code reads the lists.
+    // A manifest writes one [[tool]], [[tool_file]], or [[check]] record for each item; the code reads them as lists.
     .transform(({ tool, tool_file: toolFiles, check, detect, ...rest }) => ({
         ...rest,
         // An absent detection table inherits only the matcher fields of the validated file declaration.

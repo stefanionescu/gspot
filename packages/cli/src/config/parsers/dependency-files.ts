@@ -2,10 +2,10 @@ export const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
 
 export const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
 
-/** Literal identity shared by the npm tool-project generator and validator. */
+/** Fixed fields of the npm tool project that its generator and validator share. */
 export const NPM_TOOL_PROJECT = { private: true } as const;
 
-/** Literal identity and pinned Python version shared by the Python project generator and validator. */
+/** Fixed fields and the pinned Python version of the Python tool project that its generator and validator share. */
 export const PYTHON_VERSION = '3.13.16';
 export const PYTHON_TOOL_PROJECT = {
     name: 'tools',

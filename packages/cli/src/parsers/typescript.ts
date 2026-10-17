@@ -34,10 +34,10 @@ function readEnvironmentKey(node: ts.Node, source: ts.SourceFile, getters: Set<s
 }
 
 /**
- * Read environment members and configured reader calls from parsed JavaScript or TypeScript expressions.
+ * Read environment members and calls to the environment functions in JavaScript or TypeScript.
  * @param file the original source path.
  * @param text the JavaScript or TypeScript source.
- * @param readers the configured environment functions.
+ * @param readers the environment functions.
  * @returns the environment reads and their source positions.
  */
 function readJavascriptEnvironment(file: string, text: string, readers: readonly string[]): EnvironmentRead[] {

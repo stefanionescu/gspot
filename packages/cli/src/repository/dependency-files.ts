@@ -27,8 +27,8 @@ async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<
 
 /**
  * Read the supported dependency files for dependency and runtime detection.
- * @param reads the run's cached source reads.
- * @param files the tracked files.
+ * @param reads the run cache.
+ * @param files the tracked inventory.
  * @returns one dependency file per supported source file.
  */
 export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
@@ -41,9 +41,9 @@ export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]
 }
 
 /**
- * Read and validate the package fields used by repository and check consumers.
- * @param repositoryRoot the base folder for resolving the manifest path.
- * @param path the repository-relative package.json path.
+ * Read and validate the package.json fields that gspot uses.
+ * @param repositoryRoot the base folder of the path.
+ * @param path the repository-relative package.json.
  * @returns the validated package fields, or undefined when the file does not exist.
  */
 export function readPackageJson(repositoryRoot: string, path: string): PackageJson | undefined {
@@ -53,9 +53,9 @@ export function readPackageJson(repositoryRoot: string, path: string): PackageJs
 }
 
 /**
- * True for a tool-only package: a package.json with only declared npm tools and Git hook packages.
+ * Check whether a package.json holds only declared npm tools and Git hook packages: a tool-only package.
  * @param dependencyFile the parsed file.
- * @param npmNames the package names of the declared npm tools.
+ * @param npmNames the declared npm tools.
  * @returns whether the file holds tools only.
  */
 export function isToolOnlyPackage(dependencyFile: DependencyFile, npmNames: ReadonlySet<string>): boolean {
@@ -68,8 +68,8 @@ export function isToolOnlyPackage(dependencyFile: DependencyFile, npmNames: Read
 /**
  * Get dependencies from the nearest declared npm project that contains a scope.
  * @param dependencyFiles the validated files.
- * @param scope the repository-relative project scope.
- * @returns declared dependencies without borrowing from children or siblings.
+ * @param scope the repository-relative project folder.
+ * @returns the declared dependencies without those of child projects or sibling projects.
  */
 export function getProjectDependencies(dependencyFiles: DependencyFile[], scope: string): DependencyMap {
     const owner = dependencyFiles

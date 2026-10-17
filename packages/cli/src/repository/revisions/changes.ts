@@ -15,7 +15,7 @@ import {
     CHANGED_COMMITS_ARGUMENTS,
 } from '#cli/config/repository/revisions.ts';
 
-// The remote branch references, as pairs of the ref name and the branch it points to.
+// List the remote branch refs, as pairs of the ref name and the branch it points to.
 async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
     const lines = await readGitLines(root, REMOTE_HEADS_ARGUMENTS, {
         cancelSignal,
@@ -27,9 +27,9 @@ async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promis
     });
 }
 /** Read the upstream or remote default branch.
- * @param repositoryRoot the folder used as the Git working directory.
- * @param cancelSignal cancellation for Git reads.
- * @returns the selected branch or an empty string when absent.
+ * @param repositoryRoot the folder where Git runs.
+ * @param cancelSignal stops the Git reads.
+ * @returns the branch, or an empty string without one.
  */
 export async function readDefaultRef(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
     const head = await readGitText(repositoryRoot, HEAD_NAME_ARGUMENTS, { cancelSignal });
@@ -43,9 +43,9 @@ export async function readDefaultRef(repositoryRoot: string, cancelSignal?: Abor
     return preferred?.[1] ?? '';
 }
 /** Read the merge base between a comparison branch and `HEAD`.
- * @param repositoryRoot the folder used as the Git working directory.
+ * @param repositoryRoot the folder where Git runs.
  * @param compared the comparison branch.
- * @param cancelSignal cancellation for Git reads.
+ * @param cancelSignal stops the Git reads.
  * @returns the shared base commit.
  */
 export async function readMergeBase(
@@ -64,9 +64,9 @@ export async function readMergeBase(
 }
 
 /**
- * Staged paths include deletions and both sides of renames. Count paths with unstaged changes.
- * @param repositoryRoot the folder used as the Git working directory.
- * @param cancelSignal cancellation for the Git commands.
+ * Read the staged paths, with deletions and both sides of renames, and count paths with unstaged changes.
+ * @param repositoryRoot the folder where Git runs.
+ * @param cancelSignal stops the Git commands.
  * @returns the staged paths, sorted, and the unstaged count.
  */
 export async function readStagedPaths(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
@@ -79,11 +79,11 @@ export async function readStagedPaths(repositoryRoot: string, cancelSignal?: Abo
 }
 
 /**
- * Files and commits changed relative to a ref, for the pull-request form.
- * @param repositoryRoot the folder used as the Git working directory.
+ * Read the files and commits that changed after a ref, for the pull-request form.
+ * @param repositoryRoot the folder where Git runs.
  * @param reference the git ref to compare against.
- * @param cancelSignal cancellation for the Git commands.
- * @returns the selected reference, the sorted paths, and the commits after the merge base, oldest first.
+ * @param cancelSignal stops the Git commands.
+ * @returns the changed paths, and the commits after the merge base.
  */
 export async function readChangedPaths(
     repositoryRoot: string,

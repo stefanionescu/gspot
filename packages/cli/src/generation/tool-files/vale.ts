@@ -29,7 +29,7 @@ function listExceptions(prose: ProseInputs): string[] {
 }
 /**
  * Build the heading or title capitalization style declared by this file.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * @param context the tool file to build.
  * @returns the Vale heading capitalization rule.
  */
 function buildCapitalizationStyle(context: ToolFileContext): string {
@@ -48,9 +48,9 @@ function buildCapitalizationStyle(context: ToolFileContext): string {
 }
 
 /**
- * Build acronyms style from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the Vale acronym rule with the selected acronym allowance.
+ * Build the Vale acronyms style from the settings.
+ * @param context the tool file to build.
+ * @returns the Vale acronym rule with the allowed acronyms.
  */
 function buildAcronymsStyle(context: ToolFileContext): string {
     const prose = buildProseInputs(context.session, context.manifests);
@@ -66,9 +66,9 @@ function buildAcronymsStyle(context: ToolFileContext): string {
     });
 }
 /**
- * Build vale ini file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the Vale style locations and rule levels for the selected prose checks.
+ * Build the Vale INI file from the settings.
+ * @param context the tool file to build.
+ * @returns the Vale style locations and rule levels for the prose checks.
  */
 function buildValeIniFile(context: ToolFileContext): string {
     const isAll = context.level === 'all';
@@ -124,8 +124,8 @@ function buildValeIniFile(context: ToolFileContext): string {
     return `${lines.join('\n')}\n`;
 }
 /**
- * Build alt text style from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Vale alt text style from the settings.
+ * @param context the tool file to build.
  * @returns the Vale alternative-text rule.
  */
 function buildAltTextStyle(context: ToolFileContext): string {
@@ -141,9 +141,9 @@ function buildAltTextStyle(context: ToolFileContext): string {
     });
 }
 /**
- * Build banned headings style from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the Vale rule for the configured prohibited headings.
+ * Build the Vale banned headings style from the settings.
+ * @param context the tool file to build.
+ * @returns the Vale rule for the banned headings.
  */
 function buildBannedHeadingsStyle(context: ToolFileContext): string {
     const { settings } = context.selection.view;
@@ -160,8 +160,8 @@ function buildBannedHeadingsStyle(context: ToolFileContext): string {
     });
 }
 /**
- * Build list item style from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Vale list item style from the settings.
+ * @param context the tool file to build.
  * @returns the Vale list-item punctuation rule.
  */
 function buildListItemStyle(context: ToolFileContext): string {
@@ -174,8 +174,8 @@ function buildListItemStyle(context: ToolFileContext): string {
     });
 }
 /**
- * Build paragraph length style from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Vale paragraph length style from the settings.
+ * @param context the tool file to build.
  * @returns the Vale paragraph length rule with the configured ceiling.
  */
 function buildParagraphLengthStyle(context: ToolFileContext): string {
@@ -188,8 +188,8 @@ function buildParagraphLengthStyle(context: ToolFileContext): string {
     });
 }
 /**
- * Build sentence length style from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Vale sentence length style from the settings.
+ * @param context the tool file to build.
  * @returns the Vale sentence length rule with the configured ceiling.
  */
 function buildSentenceLengthStyle(context: ToolFileContext): string {
@@ -202,8 +202,8 @@ function buildSentenceLengthStyle(context: ToolFileContext): string {
     });
 }
 /**
- * Build possessives style from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Vale possessives style from the settings.
+ * @param context the tool file to build.
  * @returns the Vale possessive-form rule.
  */
 function buildPossessivesStyle(context: ToolFileContext): string {
@@ -218,8 +218,8 @@ function buildPossessivesStyle(context: ToolFileContext): string {
     });
 }
 /**
- * Build accepted words file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the Vale accepted words file from the settings.
+ * @param context the tool file to build.
  * @returns the accepted product names and your own allowed words, one per line.
  */
 function buildAcceptedWordsFile(context: ToolFileContext): string {
@@ -228,15 +228,15 @@ function buildAcceptedWordsFile(context: ToolFileContext): string {
     return prose.words.toSorted((left, right) => left.localeCompare(right)).join('\n') + '\n';
 }
 /**
- * Compute the selected prose packages, vocabulary, and file formats.
+ * Compute the prose packages, vocabulary, and file formats.
  *
- * @param session the effective repository session.
- * @param manifests the selected manifests.
+ * @param session the repository to check.
+ * @param manifests the configurations in use.
  *
- * @returns prose asset inputs.
+ * @returns the inputs of the prose files.
  */
 function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs {
-    // The selected manifest list owns this prose entry for the run.
+    // The manifest list keys this cached value for the run.
     const cached = session.reads.memo.get(manifests) as ProseInputs | undefined;
     if (cached !== undefined) return cached;
     const words = session.settingsFile.settings.allowed_words;
@@ -253,9 +253,9 @@ function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs 
 }
 
 /**
- * List product names supplied by the selected tools and configurations.
- * @param session the repository inventory, selected configurations, and effective settings.
- * @returns the distinct tool names and allowed product words for the Vale vocabulary.
+ * List the product names of the tools and configurations.
+ * @param session the repository and its tools.
+ * @returns each tool name and allowed product word once, for the Vale vocabulary.
  */
 function listProductNames(session: Session): string[] {
     return [

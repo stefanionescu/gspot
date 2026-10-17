@@ -40,12 +40,12 @@ function fillTarget(value: string, pointerPath: string, targetPath: string): str
 }
 
 /**
- * Names a generated target relative to its pointer, including the local-module prefix.
+ * Name the tool file relative to its pointer, with the local-module prefix.
  *
  * @param pointerPath the authored pointer file.
- * @param targetPath the generated target file.
+ * @param targetPath the generated tool file.
  *
- * @returns a portable relative path understood by configuration loaders.
+ * @returns a relative path that tool loaders read on every system.
  */
 function deriveRelativeTarget(pointerPath: string, targetPath: string): string {
     const relativePath = convertToPosixPath(relative(dirname(pointerPath), targetPath));
@@ -53,13 +53,13 @@ function deriveRelativeTarget(pointerPath: string, targetPath: string): string {
 }
 
 /**
- * Emits a body pointer: the body with the target placeholder replaced, under the header.
+ * Generate a pointer: the header, then the body with the target placeholder filled.
  *
- * @param pointer the pointer declaration.
- * @param pointerPath the destination that determines the relative target and header.
- * @param targetPath the generated file's path.
+ * @param pointer the declaration to build.
+ * @param pointerPath where the pointer goes.
+ * @param targetPath the generated tool file.
  *
- * @returns a header and target-filled body written at the declared pointer path.
+ * @returns the pointer file.
  */
 function buildBodyPointer(
     pointer: NonNullable<ToolFileDeclaration['pointer']>,
@@ -81,10 +81,10 @@ function buildBodyPointer(
 /**
  * Resolve declared pointer paths.
  *
- * @param context files, scopes, and selected configuration.
- * @param toolFile the tool file declaration.
+ * @param context the repository and the scope.
+ * @param toolFile the declaration from the manifest.
  *
- * @returns root or directory paths.
+ * @returns the root or folder paths.
  */
 function listPointerPaths(
     context: Pick<ToolFileInputs, 'files' | 'selection' | 'manifest' | 'scopes'>,
@@ -165,12 +165,11 @@ function listPointerFieldTargets({
 }
 
 /**
- * Redirect authored package fields declared by selected manifests to generated tool files.
+ * Point the package fields that manifests declare at the generated tool files.
  *
- * @param session the authored inventory and selected scopes.
- * @param generated the actual tool files emitted for applicable checks.
- *
- * @param targets the final generated destination for each scope and declared target.
+ * @param session the repository files and scopes.
+ * @param generated the tool files that this run generates.
+ * @param targets the tool file path for each scope and declaration.
  * @returns changes to the declared package fields.
  */
 function buildPointerFieldEdits(
@@ -233,9 +232,9 @@ function buildPointerFieldEdits(
 /**
  * Build the declared pointers for one generated tool file.
  * Root and folder pointers use their body or the generated formatter settings.
- * @param context the repository and selected scope.
- * @param toolFile the shipped tool-file declaration.
- * @param target the generated destination path.
+ * @param context the repository and the scope.
+ * @param toolFile the shipped declaration.
+ * @param target the tool file path.
  * @returns the pointer files for the tool file.
  */
 function buildPointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaration, target: string): GeneratedFile[] {

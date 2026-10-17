@@ -9,7 +9,7 @@ import { ALL_FILES_GLOB, GRAMMARS_FOLDER, CLI_PACKAGE_JSON, PACKAGE_SEARCH_DEPTH
 
 let cachedPackageFolder: string | undefined;
 
-// The nearest folder above the running code with a package.json and the configurations, or undefined.
+// Find the nearest folder above the running code with a package.json and the configurations, or undefined.
 function findNearestPackage(): string | undefined {
     let folder = dirname(fileURLToPath(import.meta.url));
     for (let index = 0; index < PACKAGE_SEARCH_DEPTH; index += 1) {
@@ -23,16 +23,16 @@ function findNearestPackage(): string | undefined {
     return undefined;
 }
 
-// The package folder that holds the running code. The source tree and an installed package both have one. Code bundled
-// into another build, such as the documentation site, finds the package through module resolution instead.
+// The package folder that holds the running code. The source tree and an installed package both have one. Code that
+// another build includes, such as the documentation site, finds the package through module resolution instead.
 function getPackageFolder(): string {
     cachedPackageFolder ??= findNearestPackage() ?? dirname(createRequire(import.meta.url).resolve(CLI_PACKAGE_JSON));
     return cachedPackageFolder;
 }
 
 /**
- * The file of one asset in the package, for a tool that reads it by path.
- * @param path the asset path, such as `configurations/language/bash/manifest.toml`.
+ * Build the path of one asset in the package, for a tool that reads it by path.
+ * @param path the asset, such as `configurations/language/bash/manifest.toml`.
  * @returns the absolute path.
  */
 export function buildAssetPath(path: string): string {
@@ -40,7 +40,7 @@ export function buildAssetPath(path: string): string {
 }
 
 /**
- * Reads one asset by its path in the package, such as `configurations/language/bash/manifest.toml`.
+ * Read one asset by its path in the package, such as `configurations/language/bash/manifest.toml`.
  * @param path the package-relative location to decode as UTF-8.
  * @returns the text.
  */
@@ -49,8 +49,8 @@ export function readAsset(path: string): string {
 }
 
 /**
- * The path of a grammar WASM file shipped in grammars/.
- * @param name the file name, such as `bash.wasm`.
+ * Find the path of a grammar WASM file in grammars/.
+ * @param name the WASM file, such as `bash.wasm`.
  * @returns the WASM file path.
  */
 export function findWasmPath(name: string): string {
@@ -61,8 +61,8 @@ export function findWasmPath(name: string): string {
 }
 
 /**
- * Lists asset paths under a prefix, relative to the package, sorted.
- * @param prefix the path prefix, such as `configurations/`.
+ * List the asset paths under a prefix, relative to the package, sorted.
+ * @param prefix the start of the paths, such as `configurations/`.
  * @returns the paths.
  */
 export function listAssets(prefix: string): string[] {

@@ -14,7 +14,7 @@ export const ADMIN_KEY_NAMES = [
     'sb_secret_',
 ] as const;
 
-/** Client languages not represented by the inventory's language tags. */
+/** Client file extensions that the language tags of the inventory do not cover. */
 export const ADMIN_KEY_EXTENSIONS = ['.kt', '.dart'] as const;
 
 export const DENO_CONFIG_FILES = ['deno.json', 'deno.jsonc'] as const;

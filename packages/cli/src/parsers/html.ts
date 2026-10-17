@@ -4,9 +4,9 @@ import { SURROUNDING_QUOTES } from '#cli/config/text.ts';
 import type { MarkupAttribute } from '#cli/types/parsers/tree-sitter.ts';
 
 /**
- * Read the tag attributes while their source tree remains borrowed.
- * @param element the parsed element.
- * @returns its tag, attribute names, values, and source nodes.
+ * Read the tag attributes while the source tree still exists.
+ * @param element the parsed tag.
+ * @returns the attributes, with their source nodes.
  */
 export function listElementAttributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');

@@ -126,8 +126,8 @@ async function listGitFiles(
 
 /**
  * Read a Git index once for paths, executable bits, and gitlinks.
- * @param repositoryRoot the folder used as the Git working directory.
- * @param cancelSignal command cancellation.
+ * @param repositoryRoot the folder where Git runs.
+ * @param cancelSignal stops the command.
  * @returns validated entries, retaining stages of conflicted working files.
  */
 export async function readIndexEntries(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitIndexEntry[]> {
@@ -136,7 +136,7 @@ export async function readIndexEntries(repositoryRoot: string, cancelSignal?: Ab
 }
 
 /**
- * Identify gitlinks without opening submodule directories or reading their configuration.
+ * Find gitlinks without opening submodule folders or reading their settings.
  * @param entries the shared index listing.
  * @returns sorted, unique submodule paths.
  */
@@ -150,10 +150,10 @@ export function listSubmodulePaths(entries: GitIndexEntry[]): string[] {
  * List tracked and new files as sorted, root-relative paths.
  * Outside Git, walk files according to the ignore rules.
  *
- * @param repositoryRoot the folder used as the Git working directory.
- * @param index the repository-owned index.
+ * @param repositoryRoot the folder where Git runs.
+ * @param index the parsed staging area entries.
  * @param options the repository state.
- * @param options.hasGit whether the directory belongs to a Git repository.
+ * @param options.hasGit whether the folder belongs to a Git repository.
  * @returns the entries with size, executable bit, and symlink flag.
  */
 export async function listTrackedFiles(

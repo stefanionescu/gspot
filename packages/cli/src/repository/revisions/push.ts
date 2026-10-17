@@ -32,13 +32,13 @@ import {
     MISSING_PUSH_REVISION_MESSAGE,
 } from '#cli/config/repository/revisions.ts';
 
-// Whether a pre-push field pair holds two object ids of the same hash length.
+// Check whether a pre-push field pair holds two object IDs of the same hash length.
 function isHashPair(localHash: string, remoteHash: string): boolean {
     if (!HASH_PATTERN.test(localHash) || !HASH_PATTERN.test(remoteHash)) return false;
     return localHash.length === remoteHash.length;
 }
 
-// One line of pre-push input: two refs and two objects of the same hash length.
+// Parse one line of pre-push input: two refs and two objects of the same hash length.
 function parseLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(/\s+/u);
     const hasRefs = verbatim.length === 0 && localRef !== undefined && remoteRef !== undefined;
@@ -74,14 +74,14 @@ async function readPeeledCommits(
     );
 }
 
-// The commits a shallow clone's history stops at.
+// Read the commits where the history of a shallow clone stops.
 async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): Promise<Set<string>> {
     const path = await readGitText(root, SHALLOW_FILE_ARGUMENTS, { cancelSignal });
     const text = await readFile(resolve(root, path.trim()), 'utf8');
     return new Set(text.trim().split('\n'));
 }
 
-// Compare an update with its previous commit, or a new ref with Git's remote-tracking namespace.
+// Compare an update with its previous commit, or a new ref with the Git remote-tracking namespace.
 async function readComparison(context: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
     const { root, cancelSignal } = context;
     if (!ABSENT_HASH.test(remoteHash)) {
@@ -102,7 +102,7 @@ async function readComparison(context: PushSearch, hash: string, remoteHash: str
     return { base: await readPushBase(root, cancelSignal), changed, range };
 }
 
-// The revision a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
+// Build the revision that a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
 async function buildRevision(context: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = context;
     const { base, changed, range } = await readComparison(context, hash, line.remoteHash);
@@ -154,11 +154,11 @@ async function selectLine(context: PushSearch, result: PushSelection, line: Push
 }
 
 /**
- * Resolve the exact objects supplied by Git's pre-push protocol before running source checks.
- * @param repositoryRoot the folder used as the Git working directory.
- * @param input the lines Git hands the pre-push hook on standard input.
- * @param remote the remote name or address supplied to the hook.
- * @param cancelSignal cancellation for the Git commands.
+ * Resolve the exact objects that the Git pre-push input names, before source checks run.
+ * @param repositoryRoot the folder where Git runs.
+ * @param input the lines that Git writes to the pre-push hook.
+ * @param remote the name or address that the hook gets.
+ * @param cancelSignal stops the Git commands.
  * @returns the pushed revisions with their commits, and the updates no check applies to.
  */
 export async function selectPush(
@@ -187,8 +187,8 @@ export async function selectPush(
 
 /**
  * Compare a push with its upstream or remote default. Without either, start at the root commit.
- * @param repositoryRoot the folder used as the Git working directory.
- * @param cancelSignal cancellation for the Git commands.
+ * @param repositoryRoot the folder where Git runs.
+ * @param cancelSignal stops the Git commands.
  * @returns the commit the pushed range starts after.
  */
 export async function readPushBase(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
@@ -199,11 +199,11 @@ export async function readPushBase(repositoryRoot: string, cancelSignal?: AbortS
 }
 
 /**
- * The supplied pushed commits, or the commits after the push base.
- * @param repositoryRoot the folder used as the Git working directory.
- * @param commits the explicit selection when supplied.
- * @param cancelSignal cancellation for the Git commands.
- * @returns the exact selected commits or the Git selection error.
+ * Read the commits after the push base, unless the caller names the pushed commits.
+ * @param repositoryRoot the folder where Git runs.
+ * @param commits the pushed revisions, if known.
+ * @param cancelSignal stops the Git commands.
+ * @returns the commits, or the Git error.
  */
 export async function readPushedCommits(
     repositoryRoot: string,

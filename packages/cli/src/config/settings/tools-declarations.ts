@@ -1,6 +1,6 @@
 export const TOOLS_DECLARATIONS = {
-    'tools.eslint.override.paths': { description: 'The files.' },
-    'tools.eslint.override.rules': { description: 'Rule options for these files.' },
+    'tools.eslint.override.paths': { description: 'The files that these lint rule options apply to.' },
+    'tools.eslint.override.rules': { description: 'Lint rule options for these files.' },
     'tools.eslint.override.runtime': {
         description: 'The runtime of these files, such as `serviceworker` (the name the `globals` package uses).',
     },
@@ -9,20 +9,20 @@ export const TOOLS_DECLARATIONS = {
     'tools.eslint.import_extension': {
         configurations: ['javascript'],
         description:
-            'The import suffix used in this scope: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code.',
+            'The import suffix in this scope: js for compiled ESM, ts for Deno and Bun, or extensionless for code that a bundler builds.',
     },
     'tools.eslint.restricted_imports': {
         configurations: ['javascript'],
-        description: 'Imports this repository refuses, each with a name, and a message.',
+        description: 'Imports that this repository refuses, each with a name and a message.',
     },
     'tools.eslint.rules': {
         configurations: ['javascript'],
         description:
-            'Option arrays by ESLint rule ID, without a severity. Options apply only where the selected level enables the rule. Accept findings with gspot ignore --rule.',
+            'Option arrays by ESLint rule ID, without a severity, which apply only where the level turns the rule on; accept findings with gspot ignore --rule.',
     },
     'tools.eslint.override': {
         configurations: ['javascript'],
-        description: 'Rule options for repository-relative paths, in order. Explicit ignores apply last.',
+        description: 'Lint rule options for repository-relative paths, in order, with ignores applied last.',
     },
     'tools.hadolint.trusted_registries': {
         configurations: ['docker'],
@@ -35,7 +35,7 @@ export const TOOLS_DECLARATIONS = {
     'tools.ruff.docstring_convention': {
         configurations: ['python'],
         description:
-            'The Ruff pydocstyle convention carried from project configuration, also used by pydoclint when it has no explicit style.',
+            'The Ruff pydocstyle convention from the project settings, which pydoclint also uses when it has no style of its own.',
     },
     'tools.semgrep.registry_packs': {
         configurations: ['security'],
@@ -64,30 +64,30 @@ export const TOOLS_DECLARATIONS = {
     'tools.commitlint.scopes': {
         configurations: ['commits'],
         description:
-            'Optional commit scopes accepted by the scope-enum rule. Empty derives exact names from the last segment of each project scope path; a repository with no project scopes gets no enum. A message can omit its scope.',
+            'Commit scopes that the scope-enum rule accepts, and a message may leave out its scope. When empty, gspot uses the last segment of each project scope path, or no list without project scopes.',
     },
     'tools.commitlint.rules': {
         configurations: ['commits'],
         description:
-            'Options for active commitlint rules, by rule name: an always/never condition and optional value, without a severity. The level decides which rules run. Ignore a finding with gspot ignore commits/commitlint --rule `<rule>` --reason `<why>`.',
+            'Options for active commitlint rules, by rule name: an always/never condition and an optional value, without a severity; the level decides which rules run. Ignore a finding with gspot ignore commits/commitlint --rule `<rule>` --reason `<why>`.',
         off_values: [0],
     },
     'tools.yamllint.rules': {
         configurations: ['files'],
         description:
-            'Option tables for active YAML rules. The level decides which rules run, and formatting width comes from [format]. Ignore a finding with gspot ignore files/yamllint --rule `<rule>` --reason `<why>`.',
+            'Option tables for active YAML rules; the level decides which rules run, and [format] sets the width. Ignore a finding with gspot ignore files/yamllint --rule `<rule>` --reason `<why>`.',
         off_values: ['disable'],
     },
     'tools.markdownlint.rules': {
         configurations: ['markdown'],
         description:
-            'Option tables by Markdown rule ID, such as MD024. The level decides which rules run; ignore a finding with gspot ignore markdown/markdownlint --rule `<rule>` --reason `<why>`.',
+            'Option tables by Markdown rule ID, such as MD024; the level decides which rules run. Ignore a finding with gspot ignore markdown/markdownlint --rule `<rule>` --reason `<why>`.',
         off_values: [false],
     },
     'tools.stylelint.rules': {
         configurations: ['css'],
         description:
-            'Options for Stylelint rules active at recommended or all. Severity remains error; accept a finding with gspot ignore css/stylelint --rule `<rule>` --reason `<why>`.',
+            'Options for the Stylelint rules that run at the level, which stay errors. Accept a finding with gspot ignore css/stylelint --rule `<rule>` --reason `<why>`.',
     },
     'tools.squawk.assume_in_transaction': {
         configurations: ['postgres'],
@@ -101,7 +101,7 @@ export const TOOLS_DECLARATIONS = {
     'tools.knip.ignore_dependencies': {
         configurations: ['javascript'],
         description:
-            'Exact package names knip does not report as unused. Adding names needs a reason; a scope list applies to that project.',
+            'Exact package names that knip does not report as unused; new names need a reason, and a scope list applies to that project only.',
         reason_needed: 'adding',
     },
     'tools.purgecss.safelist': {
@@ -111,7 +111,6 @@ export const TOOLS_DECLARATIONS = {
     },
     'tools.v8r.schema': {
         configurations: ['files'],
-        description:
-            'File patterns mapped to schema URLs, for files the SchemaStore catalog does not know; each entry has a pattern and a schema.',
+        description: 'File patterns mapped to schema URLs, for files that the SchemaStore catalog does not know.',
     },
 } as const;

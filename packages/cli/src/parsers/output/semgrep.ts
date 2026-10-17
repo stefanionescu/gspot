@@ -44,9 +44,9 @@ const semgrepReportSchema = z.object({
 } satisfies SchemaShape<SemgrepReport>);
 
 /**
- * Read Semgrep rule findings and source parsing errors without accepting scanner or rule failures.
- * @param input the check, report text, source paths, and output declaration.
- * @returns positioned diagnostics from a validated report.
+ * Read Semgrep rule findings and source parsing errors, and refuse scanner or rule failures.
+ * @param input the tool output to read.
+ * @returns positioned findings from a validated report.
  */
 export function parseSemgrepFindings(input: ReportInput): Finding[] {
     const { check, stdout: text, help } = input;

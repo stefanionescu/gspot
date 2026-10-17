@@ -5,9 +5,9 @@ import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import { type SemgrepDocument, type ToolFileContext } from '#cli/types/generation/files.ts';
 
 /**
- * Build the selected Semgrep pack with its dependency and scope paths.
- * @param context the repository, scope settings, tool declaration, and output path.
- * @returns the selected Semgrep rules with paths relative to their configuration file.
+ * Build the Semgrep pack with its dependency and scope paths.
+ * @param context the tool file to build.
+ * @returns the Semgrep rules with paths relative to the tool file.
  */
 function buildSemgrepFile(context: ToolFileContext): string {
     const { selection, scopes } = context;

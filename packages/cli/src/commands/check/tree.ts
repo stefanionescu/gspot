@@ -49,8 +49,6 @@ function buildRunOptions(
     };
 }
 
-// Check a working tree, staged index, or pushed commit and return its report.
-
 function buildComparison(
     revision: RevisionSource | undefined,
     changed: RunFilters['changed'],
@@ -60,7 +58,7 @@ function buildComparison(
     return undefined;
 }
 
-// The repository files a selector names: the file itself, or everything under a folder.
+// List the files that a path names: the file itself, or every file in a folder.
 function listMatchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
     const selector = convertToPosixPath(relative(session.root, resolve(options.cwd, path)));
     if (!isInside(selector)) throw new GspotError('arguments', `Path ${path} is outside this repository.`);
@@ -70,11 +68,11 @@ function listMatchingFiles(session: Session, options: CheckOptions, path: string
 }
 
 /**
- * Selects tracked and changed repository files through positional paths.
- * @param session the open session
- * @param options the parsed flags
- * @param changed the staged or changed paths, which can name deleted files
- * @returns the selected paths, or none when the caller gave no path
+ * Select the files that the path arguments name.
+ * @param session the repository files.
+ * @param options the parsed flags.
+ * @param changed the staged or modified paths, which can name deleted files.
+ * @returns the matching paths, or none without path arguments.
  */
 function selectArgumentPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
     if (options.paths.length === 0) return [];
@@ -84,9 +82,9 @@ function selectArgumentPaths(session: Session, options: CheckOptions, changed: s
 }
 
 /**
- * Refuses an --only check no selected configuration runs here.
- * @param session the open session
- * @param only the checks named on the command line
+ * Refuse an --only check that no configuration here runs.
+ * @param session the configurations that run here.
+ * @param only the check IDs that the flag names.
  */
 function refuseUnknownChecks(session: Session, only: string[] | undefined): void {
     const known = new Set([
@@ -113,7 +111,7 @@ function warnAboutHooks(session: Session, revision: RevisionSource | undefined):
     if (!hooks.ready) warn('The Git hooks are not installed in this clone. Run: gspot install');
 }
 
-// The changed set a run compares against: the revision's paths, the --changed ref, or nothing for a whole push.
+// Read the changed paths: from the revision, from the --changed ref, or none for a whole push.
 async function readChangedSet(
     session: Session,
     options: CheckOptions,
@@ -124,7 +122,7 @@ async function readChangedSet(
     return options.base === undefined ? undefined : readChangedPaths(session.root, options.base, signal);
 }
 
-// The staged set a run narrows to: the revision's, the index when asked, or nothing.
+// Read the staged paths: from the revision, from the index for --staged, or none.
 async function readStagedSet(
     session: Session,
     options: CheckOptions,
@@ -135,7 +133,7 @@ async function readStagedSet(
     return options.staged ? readStagedPaths(session.root, signal) : { staged: undefined, unstaged: 0 };
 }
 
-// What the run narrows to: the changed set, the staged set, and the stage.
+// Collect the run filters: the changed paths, the staged paths, and the stage.
 async function runFilters(
     session: Session,
     options: CheckOptions,
@@ -150,12 +148,12 @@ async function runFilters(
 }
 
 /**
- * Runs check and returns what to print.
- * @param treeFolder the checkout or scratch copy whose files the selected checks read.
+ * Run check and return what to print.
+ * @param treeFolder the working tree or scratch copy to check.
  * @param options the parsed flags.
- * @param signal cancellation for the run.
- * @param revision what the copy stands for, when the root contains a copy.
- * @returns the text, the run report, and the exit code.
+ * @param signal stops the run.
+ * @param revision the commit or index that the copy holds, if any.
+ * @returns the command result.
  */
 export async function checkTree(
     treeFolder: string,

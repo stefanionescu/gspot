@@ -7,8 +7,8 @@ import {
 } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Build sqlfluff file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the SQLFluff file from the settings.
+ * @param context the tool file to build.
  * @returns the SQL dialect, formatting choices, and SQLFluff rule exclusions.
  */
 function buildSqlfluffFile(context: ToolFileContext): string {

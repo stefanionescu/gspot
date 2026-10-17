@@ -17,7 +17,7 @@ import {
 const eslintPresetsSchema = z.record(z.string(), eslintPresetSchema) satisfies z.ZodType<EslintPresets>;
 
 /**
- * Select emitted preset properties without its parser-detection flag.
+ * Pick the preset fields to generate, without the parser-detection flag.
  *
  * @param block the captured preset metadata.
  *
@@ -50,11 +50,11 @@ function readPresets(manifest: Manifest): EslintPresets {
 }
 
 /**
- * Build the blocks of one pinned preset with the caller's rule and parser choices.
- * @param preset the pinned export and all configuration blocks it contains.
- * @param importName the JavaScript identifier for the preset package import.
- * @param transform the transformation that retains each block and its runtime source expression.
- * @returns the transformed preset blocks with their runtime source expressions.
+ * Build the blocks of one pinned preset with a rule and parser transform.
+ * @param preset the pinned export and its blocks.
+ * @param importName the JavaScript binding of the preset package.
+ * @param transform changes each block, and keeps its runtime source expression.
+ * @returns the changed blocks with their runtime source expressions.
  */
 function buildPresetBlocks(
     preset: Pick<FragmentPreset, 'source'> & { blocks: readonly FragmentPreset['blocks'][number][] },
@@ -70,10 +70,10 @@ function buildPresetBlocks(
 }
 
 /**
- * Retain each array preset block's runtime spread while applying its component-specific fields.
- * @param preset the pinned array preset.
- * @param importName the imported plugin identifier.
- * @param transform the component's rule or file-field transformation.
+ * Keep the runtime spread of each array preset block, and apply its component fields.
+ * @param preset the pinned array export.
+ * @param importName the JavaScript binding of the plugin.
+ * @param transform changes the rules or file fields of a block.
  * @returns the blocks with their installed preset expressions.
  */
 function buildArrayPresetBlocks(
@@ -90,8 +90,8 @@ function buildArrayPresetBlocks(
 
 /**
  * Keep component preset fields and raise warning rules to errors.
- * @param block the captured component preset block.
- * @returns its emitted fields with warning severities promoted.
+ * @param block one captured component preset.
+ * @returns its fields, with warnings turned into errors.
  */
 function promotePresetRules(block: FragmentPreset['blocks'][number]): EslintSettingsBlock {
     return {

@@ -1,10 +1,10 @@
-// What init replaces: the tool files of the selected tools, read before init writes anything.
+// Find the tool files that init replaces, and read them before init writes anything.
 import { openFiles } from '#cli/system/files/open.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
 import type { ReplacedFiles } from '#cli/types/commands/init.ts';
 import type { ExistingTools, FoundToolFile } from '#cli/types/repository/inventory.ts';
 
-// Records what init does with one file: a shared file stays for the developer, and init deletes an owned one.
+// Record what init does with one file: a shared file stays for you, and init deletes an owned one.
 function recordReplacedFile(entry: FoundToolFile, replaced: ReplacedFiles): void {
     const { tool, path, shared, table, key } = entry;
     if (shared)
@@ -16,12 +16,12 @@ function recordReplacedFile(entry: FoundToolFile, replaced: ReplacedFiles): void
 }
 
 /**
- * The tool files of the selected tools, read and sorted into what init deletes and what it leaves.
- * @param repositoryRoot the folder from which init captures reviewed originals before replacement.
- * @param tooling the tool files init found.
- * @param tools the tools consumed by applicable checks at the selected level.
- * @param toolFiles the applicable shared fields generated for the selection.
- * @returns the reads, the deletions, the shared files that stay.
+ * Read the tool files of the chosen tools, and sort them into the files init deletes and the files it keeps.
+ * @param repositoryRoot the folder where init reads the originals before it replaces them.
+ * @param tooling the tool files that init found.
+ * @param tools what the checks at this level run.
+ * @param toolFiles the shared tool file edits for this selection.
+ * @returns the reads, the deletions, and the shared files that stay.
  */
 export function planReplacedFiles(
     repositoryRoot: string,

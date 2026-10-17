@@ -9,7 +9,7 @@ import type { ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/genera
 
 type AllowedPackage = { name: string; version: string; reason: string };
 
-/** The distinct task definitions each runner consumes in one project. */
+/** The task names that mise, package scripts, and installed binaries offer in one project. */
 export type TaskNames = { mise: Set<string>; packages: Set<string>; binaries: Set<string> };
 
 /** Repository paths and per-project task definitions used by documentation validation. */
@@ -37,7 +37,7 @@ export type NamingInputs = Pick<CheckInput, 'check'> & {
     isTestFile: boolean;
 };
 
-/** The input and diagnostic location shared by the checks of one identifier. */
+/** The input and finding location that the checks of one identifier share. */
 export type NamingContext = NamingInputs & { identifier: Identifier; place: FindingPlace; prefix: string };
 
 /** A path-scoped rule, compiled. */
@@ -67,10 +67,10 @@ export type NamingSettings = {
     isRepeatAllowed: boolean;
 };
 
-/** Framework punctuation removed before checking a path segment's name. */
+/** Framework punctuation removed before checking the name of a path segment. */
 export type PathContainer = { open: string; close: string; category: NamedCategory };
 
-/** A selected source file and its owning language configuration. */
+/** A source file and its language configuration. */
 export type NamedFile = { file: TrackedFile; language: string };
 /** Identifier spellings associated with one file for cross-project comparisons. */
 export type FileNames = { path: string; names: string[]; declarations: string[] };
@@ -80,7 +80,7 @@ export type ProseRoute = { path: string; mode: 'path' | 'stdin'; extension: stri
 /** A nonempty set of path routes or one stdin route. */
 export type ProseRouteGroup = [ProseRoute, ...ProseRoute[]];
 
-/** The validated built-in naming settings. */
+/** The validated shipped naming settings. */
 export type NamingDefaults = {
     path_containers: PathContainer[];
     allow_digits: boolean;
@@ -96,7 +96,7 @@ export type NamingDefaults = {
     override: NamingOverride[];
 };
 
-/** One language's table in the shipped settings. */
+/** The table of one language in the shipped settings. */
 export type NamingDefaultsLanguage = NamingDefaults['languages'][string];
 
 /** One path-specific naming rule in settings or shipped configuration data. */
@@ -122,7 +122,7 @@ export type Identifier = {
     /** The label a finding prints, such as `typescript function`. */
     label: string;
     name: string;
-    /** For a directory name: the directory path, so a path rule can match it. */
+    /** For a folder name: the folder path, so a path rule can match it. */
     folder?: string;
 };
 
@@ -139,7 +139,7 @@ export type CountedLanguage = 'python' | 'swift' | 'bash';
 
 export type IsSubstantial = (node: Node, language: CountedLanguage, limit: number) => boolean;
 
-/** A tracked directory entry. */
+/** A tracked folder entry. */
 export type FolderEntry = { name: string; kind: 'file' | 'folder' };
 
 export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };

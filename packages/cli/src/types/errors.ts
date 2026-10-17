@@ -15,5 +15,5 @@ export type ErrorCode =
     | 'template'
     | 'prompt';
 
-/** A parsed value or the diagnostic from its source boundary. */
+/** A parsed value, or the error from its source. */
 export type Parsed<T, E = string> = { value: T } | { error: E };

@@ -85,7 +85,7 @@ function parseBlobSize(header: string, hash: string): number {
 /**
  * Read attribute declarations in their file order, preserving quoted paths.
  * @param text the gitattributes source.
- * @param folder the repository-relative folder containing the declarations.
+ * @param folder the repository-relative place of the .gitattributes file.
  * @returns selectors rooted in that folder and their declared attributes.
  */
 export function parseAttributePatterns(text: string, folder: string): AttributePattern[] {
@@ -112,7 +112,7 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
  * Apply declarations over inherited attributes, clearing unspecified entries with the ! prefix.
  * @param declarations the attribute tokens from one matching pattern.
  * @param previous the attributes inherited from earlier declarations.
- * @returns the final attributes without mutating the inherited table.
+ * @returns the new attributes. The inherited table stays unchanged.
  */
 export function mergeAttributes(declarations: string[], previous: Record<string, string>): Record<string, string> {
     const attributes = { ...previous };
@@ -127,7 +127,7 @@ export function mergeAttributes(declarations: string[], previous: Record<string,
 }
 
 /**
- * Parse Git's null-delimited path, name, and value triplets without splitting spaces in paths.
+ * Parse the null-delimited path, name, and value triplets from Git, and keep spaces in paths.
  * @param text the successful check-attr -z output.
  * @returns the final attributes per path.
  */
@@ -147,7 +147,7 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
 /**
  * Parse an unquoted index listing, retaining merge stages for working-tree inventory.
  * @param text the complete null-delimited listing.
- * @returns supported modes, full object IDs, stages, and paths.
+ * @returns the index entries with their stages.
  */
 export function parseIndexEntries(text: string): GitIndexEntry[] {
     return splitEntries(text).map((line) => {
@@ -169,8 +169,8 @@ export function parseTreeEntries(output: Uint8Array): GitEntry[] {
 }
 
 /**
- * Project a shared index into immutable revision entries, refusing conflicts.
- * @param entries validated working-tree index entries.
+ * Turn index entries into revision entries, and refuse conflicts.
+ * @param entries the validated index listing.
  * @returns entries from the resolved index.
  */
 export function stripIndexStages(entries: GitIndexEntry[]): GitEntry[] {
@@ -179,10 +179,10 @@ export function stripIndexStages(entries: GitIndexEntry[]): GitEntry[] {
 }
 
 /**
- * Validate batch identities and framing while retaining only the current blob.
- * @param chunks raw output chunks in stream order.
- * @param requestedIds requested full object IDs in response order.
- * @returns each object's exact bytes before reading its successor.
+ * Validate the IDs and framing of a batch, and hold only the current blob.
+ * @param chunks the raw output, in stream order.
+ * @param requestedIds the full object IDs, in response order.
+ * @returns the exact bytes of each object, one at a time.
  */
 export async function* parseGitBlobs(
     chunks: AsyncIterable<Buffer>,

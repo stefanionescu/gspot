@@ -32,7 +32,7 @@ import {
     ATTRIBUTE_QUOTED_CHARACTERS,
 } from '#cli/config/generation/files.ts';
 
-// CI includes the selected manual checks and adds macOS when a scope selects Swift.
+// CI includes the manual checks and adds macOS when a scope selects Swift.
 function buildWorkflow(session: Session, generated: GenerationResult): void {
     const {
         settingsFile: { settings },
@@ -151,7 +151,7 @@ function assertDistinctPaths(generated: GenerationResult): void {
 }
 
 /**
- * The managed .gitignore block for tool projects and generated files.
+ * Build the managed .gitignore block for tool projects and generated files.
  * @returns the paths that Git must leave untracked.
  */
 function buildGitignoreBlock(): string {
@@ -160,11 +160,11 @@ function buildGitignoreBlock(): string {
 }
 
 /**
- * Emits every generated file in memory and writes nothing.
+ * Generate every file in memory, and write nothing.
  *
- * @param session the repository inventory, effective settings, and selected tools.
+ * @param session the repository to generate for.
  *
- * @returns the files, managed blocks, authored config-file edits, and notes.
+ * @returns everything that apply writes, with notes.
  */
 function generate(session: Session): GenerationResult {
     const {

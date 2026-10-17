@@ -32,8 +32,8 @@ function getColors(): ReturnType<typeof pc.createColors> {
 }
 
 /**
- * True when both streams connect to terminals and NO_COLOR does not disable color.
- * @returns whether to paint
+ * Check whether both streams go to terminals and NO_COLOR leaves color on.
+ * @returns whether to use color.
  */
 function isColorAllowed(): boolean {
     const noColor = readEnvironmentVariable('NO_COLOR');
@@ -42,24 +42,24 @@ function isColorAllowed(): boolean {
 }
 
 /**
- * Sets the output mode for the process.
- * @param next JSON format and terminal color
+ * Set the output mode for the process.
+ * @param next the JSON and color choices.
  */
 function setOutputOptions(next: OutputOptions): void {
     options = next;
 }
 
 /**
- * A warning about the run, printed to stderr.
- * @param text the line
+ * Print a warning about the run to stderr.
+ * @param text the warning to print.
  */
 function warn(text: string): void {
     process.stderr.write(`${getColors().yellow('[warn]')} ${text}\n`);
 }
 
 /**
- * Print a diagnostic to stderr, or a structured command failure to stdout under --json.
- * @param failure the diagnostic text or structured failure
+ * Print an error message to stderr, or a structured failure to stdout under --json.
+ * @param failure the message, or the structured error.
  */
 function printError(failure: string | CommandFailureJson): void {
     if (typeof failure !== 'string' && options.json) {
@@ -71,8 +71,8 @@ function printError(failure: string | CommandFailureJson): void {
 }
 
 /**
- * Print the completed command in the selected format.
- * @param result the command output
+ * Print the command result in the chosen format.
+ * @param result the command output.
  */
 function printResult(result: CommandResult): void {
     if (options.json) printJson(result.json);
@@ -80,8 +80,8 @@ function printResult(result: CommandResult): void {
 }
 
 /**
- * A human-readable record on stdout, suppressed when --json selects structured output.
- * @param text the human-readable output, with a final newline added when absent.
+ * Print readable text on stdout, unless --json asks for structured output.
+ * @param text the output, which gets a final newline if it lacks one.
  */
 function print(text: string): void {
     if (options.json) return;
@@ -89,16 +89,16 @@ function print(text: string): void {
 }
 
 /**
- * Emit command notes in their existing order, each with its line prefix.
- * @param notes the messages attached to the prepared command result
- * @returns the note lines, or no text when the list contains no notes
+ * Format the command notes in order, each with its line prefix.
+ * @param notes the messages of the command result.
+ * @returns the note lines, or empty text without notes.
  */
 function formatNotes(notes: string[]): string {
     return notes.map((note) => `note     ${note}\n`).join('');
 }
 
 /**
- * Format Commander argument errors using the existing command suggestions.
+ * Format Commander argument errors with the command suggestions.
  * @param error the refused command arguments.
  * @returns the message and any available correction.
  */
@@ -119,9 +119,9 @@ function formatArgumentError(error: CommanderError): string {
 }
 
 /**
- * Print a command failure and select its process exit status.
- * @param error the rejected command value.
- * @param output the requested JSON output mode.
+ * Print a command failure, and choose the exit status.
+ * @param error what the command threw.
+ * @param output whether to print JSON.
  * @returns zero for Commander help, or the command error status.
  */
 function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>): number {
@@ -141,19 +141,19 @@ function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>): numb
 }
 
 /**
- * Name the root scope or return a child scope's path for command output.
- * @param path the repository-relative scope path.
- * @returns the root label or the supplied child path.
+ * Name the root scope, or return the path of a child scope, for command output.
+ * @param path the repository-relative scope.
+ * @returns the root label or the child path.
  */
 function formatScopeLabel(path: string): string {
     return path === '' ? ROOT_SCOPE_LABEL : path;
 }
 
 /**
- * Run a command with termination signals and release each listener when it finishes.
- * @param run the command receiving the shared cancellation signal
- * @param canceledMessage the diagnostic when cancellation prevents a command result
- * @returns the command result with the signal status when interrupted
+ * Run a command that termination signals can stop, and remove each listener when it finishes.
+ * @param run the command, which gets the shared abort signal.
+ * @param canceledMessage the message when a cancellation stops the command before it has a result.
+ * @returns the command result, with the signal status after an interruption.
  */
 async function runCancelableCommand<Json extends object>(
     run: (signal: AbortSignal) => Promise<CommandResult<Json>>,

@@ -5,7 +5,7 @@ export const CATEGORY_KEY_PARTS = 2;
 
 export const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
-// The configuration group folder sets scalar default precedence.
+// Defaults of single values from these configuration groups win over the defaults of other groups.
 export const OVERRIDING_KINDS = new Set<string>(['framework', 'platform', 'library', 'database']);
 
 export const REASON_WORDS_MIN = 2;
@@ -29,7 +29,7 @@ export const TOOL_TIMEOUT_SETTING = 'tool_timeout_seconds';
 
 export const ENVIRONMENT_READERS_ROLE = 'environment_readers';
 
-/** Scoped single-value tables omit root records while retaining their normalized list fields. */
+/** Scope tables leave out these root records but keep their normalized list fields. */
 export const SCOPE_EMPTY_RECORDS = [
     ['naming', 'override'],
     ['coverage', 'swift_target'],

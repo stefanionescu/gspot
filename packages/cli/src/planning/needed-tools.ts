@@ -38,12 +38,12 @@ function isToolSelected(scope: ScopeSelection, conditions: ToolDeclaration['when
 }
 
 /**
- * The selected plugin tools that active formatter checks require.
+ * List the plugin tools that active formatter checks need.
  *
- * @param scopes the selected project scopes.
- * @param programs the declared program installations.
+ * @param scopes every project selection.
+ * @param programs the tools that the manifests declare.
  *
- * @returns the package names required by active formatter plugins.
+ * @returns the package names of the plugins.
  */
 function listPrettierPluginNames(scopes: ScopeSelection[], programs: ReadonlySet<string>): string[] {
     return programs.has(PRETTIER_TOOL)
@@ -52,13 +52,13 @@ function listPrettierPluginNames(scopes: ScopeSelection[], programs: ReadonlySet
 }
 
 /**
- * Companion tools consumed by a check's command and its selected configuration.
+ * List the extra tools that the command and the configuration of a check use.
  *
- * @param scope the effective configuration selection.
- * @param check the declared check.
- * @param command the command arguments actually executed when supplied.
+ * @param scope where the check runs.
+ * @param check the declaration to read.
+ * @param command the arguments that run, if known.
  *
- * @returns each explicit and configuration-owned companion once.
+ * @returns each extra tool once.
  */
 export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, command?: string[]): string[] {
     const manifest = scope.selected.find((owner) => owner.checks.includes(check));
@@ -91,11 +91,11 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, 
 }
 
 /**
- * Read executable, fixer, and companion tools consumed by an applicable check.
+ * Read the executable, fixer, and extra tools that a check uses.
  *
- * @param check the check with its conditions, scopes, and exclusions resolved.
+ * @param check the plan with resolved conditions, scopes, and exclusions.
  *
- * @returns required executable, declared peer, and installation tools.
+ * @returns the tools to install.
  */
 export function listRequiredTools(check: PlannedCheck): string[] {
     const names = new Set(
@@ -112,13 +112,13 @@ export function listRequiredTools(check: PlannedCheck): string[] {
 }
 
 /**
- * Select tool declarations consumed by applicable checks, fixers, and their generated tool files.
- * Requirements include supported platforms so committed output does not depend on the current host.
+ * Select the tools that checks, fixers, and their tool files use.
+ * The selection covers every supported system, so committed output does not depend on this machine.
  *
- * @param session the saved settings and repository inventory.
- * @param checks the checks already planned across supported systems.
+ * @param session the repository and its settings.
+ * @param checks the plans for every supported system.
  *
- * @returns the selected manifests with only their required tools.
+ * @returns the manifests with only the tools they need.
  */
 export function selectNeededManifests(session: Session, checks: PlannedCheck[]): Manifest[] {
     const licenses = checks
@@ -155,14 +155,14 @@ export function selectNeededManifests(session: Session, checks: PlannedCheck[]):
 }
 
 /**
- * Select each consumer project with its effective license settings and authored scope.
+ * Select each project with its license settings and authored scope.
  *
- * @param files the check's actual repository inventory.
- * @param scopes the existing effective selections.
- * @param settings the validated repository settings.
- * @param check the license check declaration.
+ * @param files the inventory that the check reads.
+ * @param scopes every scope.
+ * @param settings the validated gspot.toml.
+ * @param check the license declaration.
  *
- * @returns the consumer projects that require installed license reports.
+ * @returns the projects that need installed license reports.
  */
 export function listLicenseProjects(
     files: TrackedFile[],
@@ -206,11 +206,11 @@ export function listLicenseProjects(
 }
 
 /**
- * Resolve the selected formatter plugins once. Retain their declaration identities and npm entries.
+ * Resolve the formatter plugins once, and keep their declarations and npm entries.
  *
- * @param manifests the selected configuration manifests.
+ * @param manifests the configurations in use.
  *
- * @returns the selected formatter plugins and their module paths.
+ * @returns the plugins and their module paths.
  */
 export function listPrettierPlugins(manifests: Iterable<Manifest>): Map<ToolDeclaration, PrettierPlugin> {
     return new Map(
@@ -226,11 +226,11 @@ export function listPrettierPlugins(manifests: Iterable<Manifest>): Map<ToolDecl
 }
 
 /**
- * The component dialects Stylelint reads and the parser each requires.
+ * List the component dialects that Stylelint reads, and the parser that each needs.
  *
- * @param configurations the selected configuration names.
+ * @param configurations the configuration names in use.
  *
- * @returns the selected component dialects and their parser declarations.
+ * @returns the dialects and their parser declarations.
  */
 export function selectStylelintComponents(configurations: string[]): StylelintComponent[] {
     return [

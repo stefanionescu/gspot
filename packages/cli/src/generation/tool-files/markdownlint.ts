@@ -3,8 +3,8 @@ import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { MARKDOWNLINT_RULES } from '#cli/config/generation/tool-files.ts';
 
 /**
- * Build markdownlint file from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the markdownlint file from the settings.
+ * @param context the tool file to build.
  * @returns the Markdown lint rules with the chosen level, indentation, and your own rule options.
  */
 function buildMarkdownlintFile(context: ToolFileContext): string {

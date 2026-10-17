@@ -12,8 +12,8 @@ import type { HookPlan, HookStatus, HookContext } from '#cli/types/install.ts';
 import { readGitPrefix, readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
 import { HOOK_COMMAND, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install.ts';
 
-// Read this clone's existing hook mechanisms: another folder, a hook tool, or scripts
-// in the default Git hooks folder.
+// Find the hooks that another setup in this clone runs: another hooks folder, a hook tool,
+// or scripts in the default Git hooks folder.
 function readForeignHooks(root: string, own: string): ExistingTools['hooks'] {
     const found = readHooks(root).filter((hook) => !(hook.kind === 'hooksPath' && hook.path === own));
     const folder = readHooksFolder(root);
@@ -33,7 +33,7 @@ function readForeignHooks(root: string, own: string): ExistingTools['hooks'] {
           ];
 }
 
-// The hook commands a foreign setup must invoke; install and readiness use the same instructions.
+// List the commands that another hook setup must run. Install and the status line share this text.
 function formatForeignHooks(hooks: ExistingTools['hooks'], runner: StartRunner): string {
     const lines = (Object.keys(HOOK_ARGUMENTS) as HookName[]).map(
         (name) => `  ${name}: ${runner.command} ${HOOK_ARGUMENTS[name]}`,
@@ -42,14 +42,14 @@ function formatForeignHooks(hooks: ExistingTools['hooks'], runner: StartRunner):
 }
 
 /**
- * Calculate the Git setting or instructions without changing existing hooks.
+ * Plan the Git setting, or the instructions for existing hooks, and change no hooks.
  *
- * @param options the settings and the repository.
- * @param options.settings the repository settings.
- * @param options.repository the repository root and Git availability.
- * @param options.runner the start command selected from the repository pin.
+ * @param options what the plan reads.
+ * @param options.settings the gspot.toml values that turn hooks on or off.
+ * @param options.repository the root, and whether Git exists.
+ * @param options.runner the command that starts gspot.
  *
- * @returns the command and completion note, or instructions for existing hooks.
+ * @returns the command and a note, or instructions for existing hooks.
  */
 function planHooks({ settings, repository, runner }: HookContext): HookPlan {
     const path = `${readGitPrefix(repository.root)}${HOOKS_PATH}`;
@@ -67,12 +67,12 @@ function planHooks({ settings, repository, runner }: HookContext): HookPlan {
 }
 
 /**
- * Install the planned Git setting or report the instructions for existing hooks.
+ * Set the planned Git setting, or report the instructions for existing hooks.
  *
- * @param context the settings and repository.
- * @param steps the commands attempted during installation.
+ * @param context what the hook plan reads.
+ * @param steps collects each command that install runs.
  *
- * @returns the installation summary.
+ * @returns the install summary.
  */
 export function installHooks(context: HookContext, steps: (readonly string[])[]): string {
     if (!context.repository.hasGit) return '';
@@ -87,14 +87,14 @@ export function installHooks(context: HookContext, steps: (readonly string[])[])
 }
 
 /**
- * Whether the hooks the settings selects run in this clone, with the line that says so.
+ * Check whether the hooks in the settings run in this clone.
  *
- * @param options the settings and the repository.
- * @param options.settings the repository settings.
- * @param options.repository the repository root and Git availability.
- * @param options.runner the start command selected from the repository pin.
+ * @param options what the check reads.
+ * @param options.settings the gspot.toml values that turn hooks on or off.
+ * @param options.repository the root, and whether Git exists.
+ * @param options.runner the command that starts gspot.
  *
- * @returns hook readiness and its status message.
+ * @returns whether the hooks run, and the status line.
  */
 export function readHookStatus({ settings, repository, runner }: HookContext): HookStatus {
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };

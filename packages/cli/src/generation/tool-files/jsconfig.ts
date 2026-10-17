@@ -19,8 +19,8 @@ import {
 } from '#cli/config/generation/typescript.ts';
 
 /**
- * Build jsconfig from the selected settings.
- * @param context the repository, scope settings, tool declaration, and output path.
+ * Build the jsconfig file from the settings.
+ * @param context the tool file to build.
  * @returns the JavaScript type-checking project and its scoped source selectors.
  */
 function buildJsconfig(context: ToolFileContext): string {

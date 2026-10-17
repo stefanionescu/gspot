@@ -33,10 +33,10 @@ export type SwiftBuildPlan = {
 /** The read build status and its compiler output. */
 export type SwiftBuildOutput = { code: number; output: string; source: string };
 
-/** Independent build state for each Swift consumer. */
+/** The separate build state for each Swift task. */
 export type SwiftBuildPurpose = 'compile' | 'analyze' | 'coverage' | 'periphery';
 
-/** Prepared source copy and its locked root, disposed by the consumer. */
+/** The prepared source copy and its locked root, which the caller disposes. */
 export type PreparedSwiftBuild = { files: Files; source: string };
 
 export type FenceParser = (typeof FENCE_PARSER_NAMES)[number];
@@ -44,7 +44,7 @@ export type FenceParser = (typeof FENCE_PARSER_NAMES)[number];
 /** The body and opening line of a language-tagged Markdown code fence. */
 export type FencedBlock = { line: number; language: string; body: string };
 
-/** A syntax diagnostic at a one-based line of a code body or Markdown source. */
+/** A syntax error at a one-based line of a code body or Markdown source. */
 export type FenceSyntaxError = { line: number; message: string };
 
 /** The styles accepted by the Python docstring checker. */

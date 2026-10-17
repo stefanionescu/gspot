@@ -10,8 +10,8 @@ import {
 } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply the test-library presets of the selected frameworks.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the Testing Library presets of the frameworks in use.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildTestingLibraryFragment(

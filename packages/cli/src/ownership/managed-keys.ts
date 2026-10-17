@@ -15,8 +15,8 @@ import { TOML_EXTENSION, EMPTY_JSON_TEXT, YAML_EDIT_EXTENSIONS, JSON_EDIT_EXTENS
 
 /**
  * Merge the requested keys and leave every other value in place.
- * @param request the current copy and requested values.
- * @returns the merged copy and whether its text changed.
+ * @param request the file contents and the requested values.
+ * @returns the merged file contents, and whether the text changed.
  */
 function planKeyChanges(request: KeyChangeRequest): KeyChangePlan {
     const { path, changes, current } = request;
@@ -31,12 +31,12 @@ function planKeyChanges(request: KeyChangeRequest): KeyChangePlan {
 }
 
 /**
- * Opens managed keys after checking the file encoding and selecting its parser.
+ * Open a file for managed keys after a check of its encoding.
  *
- * @param path the destination used for format selection and errors.
+ * @param path the file, which also picks the format.
  * @param current the existing file, or undefined when generation creates it.
  *
- * @returns the document used by merge, inspection, and restoration.
+ * @returns the editable document.
  */
 function openKeysDocument(path: string, current: FileContents | undefined): EditableFile {
     const text = current === undefined ? undefined : decodeUtf8(current.bytes);
@@ -47,7 +47,7 @@ function openKeysDocument(path: string, current: FileContents | undefined): Edit
 /**
  * Open a file in the editor that matches its name.
  * @param path the file, which also picks the format.
- * @param text the file text, or undefined when generation creates the file.
+ * @param text the contents, or undefined when generation creates the file.
  * @returns the editable file.
  */
 function openEditableFile(path: string, text: string | undefined): EditableFile {
@@ -61,13 +61,12 @@ function openEditableFile(path: string, text: string | undefined): EditableFile 
 }
 
 /**
- * Inspect managed keys through the same parser used by ownership plans.
+ * Check the managed keys with the parser that ownership plans use.
  *
  * @param output the file gspot writes managed keys into.
- * @param output.path the file path.
+ * @param output.path where the file sits.
  * @param output.changes the keys and the values they must hold.
- *
- * @param current the existing file copy.
+ * @param current the file contents on disk.
  * @returns whether the file holds every installed value.
  */
 function hasManagedKeys(output: FileEdit, current: FileContents): boolean {

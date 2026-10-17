@@ -18,9 +18,9 @@ import {
 } from '#cli/config/system/locations.ts';
 
 /**
- * Explain which files need review before replacement.
- * @param paths the destinations that contain unreviewed authored files.
- * @returns the refusal with the apply command to retry.
+ * Explain which files need review before gspot replaces them.
+ * @param paths the files with unreviewed authored content.
+ * @returns the refusal, with the apply command to retry.
  */
 function buildPreservedFilesError(paths: string[]): Error {
     return new Error(
@@ -73,13 +73,12 @@ function buildReplacementPlans(
 /**
  * Plan, write, and report generated file changes under the repository writer lock.
  *
- * @param session the configuration and repository reads.
- * @param generated the generated files with resolved lockfiles.
- * @param writer the file writer for this command.
- * @param options reviewed originals authorized for replacement.
- *
- * @param options.reviewedOriginals the file contents reviewed before the command asked for approval.
- * @returns generated changes.
+ * @param session the repository to write to.
+ * @param generated the files to write, with resolved lockfiles.
+ * @param writer writes and removes files.
+ * @param options what the write may replace.
+ * @param options.reviewedOriginals the file contents that you reviewed and approved for replacement.
+ * @returns the file changes.
  */
 export function writeGeneratedFiles(
     session: Session,
@@ -105,7 +104,7 @@ export function writeGeneratedFiles(
     const replacements = buildReplacementPlans(generated, writer, reviewedOriginals);
     const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.block, block.style));
     const generatedPlans = [...replacements, ...blocks, ...fileEditPlans];
-    // Remove generated destinations that no selected configuration needs.
+    // Remove generated files that no configuration needs.
     const pruning = listStrayPaths(session, paths).map((path) => planRemoval(writer, path));
     const plans = [...generatedPlans, ...pruning];
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);

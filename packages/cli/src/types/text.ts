@@ -1,4 +1,4 @@
-/** Text and its one-based source line for asset parsing and syntax diagnostics. */
+/** Text and its one-based source line that asset parsing and syntax errors use. */
 export type NumberedLine = { text: string; number: number };
 
 /** A one-based line and column within text. */

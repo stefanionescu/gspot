@@ -156,12 +156,12 @@ function findTagEvidence(detect: Manifest['detect'], tree: ScopeContents): Detec
 }
 
 /**
- * Proposes configurations from the tree, the manifests and the dependencies, with the evidence for each.
- * @param repositoryRoot the folder that supplies content for detection.
- * @param files the tracked files.
+ * Propose configurations from the files and the dependencies, with the evidence for each.
+ * @param repositoryRoot the folder to read.
+ * @param files the tracked inventory.
  * @param manifests every configuration manifest.
- * @param dependencyFiles the parsed package manifests.
- * @param scope the scope path, '' for the root.
+ * @param dependencyFiles the parsed package declarations.
+ * @param scope the folder, '' for the root.
  * @returns each matching configuration with its repository evidence.
  */
 export function detectConfigurations(
@@ -188,11 +188,11 @@ export function detectConfigurations(
 }
 
 /**
- * Selects conditional declarations using the shared file and dependency evidence.
- * @param conditions the detection conditions declared by selected manifests.
+ * Select the conditions that the file and dependency evidence meets.
+ * @param conditions the detection rules of the manifests.
  * @param files the repository source inventory.
- * @param dependencyFiles the parsed package manifests.
- * @returns the matching condition objects.
+ * @param dependencyFiles the parsed package declarations.
+ * @returns the conditions that match.
  */
 export function detectConditions(
     conditions: Manifest['detect'][],

@@ -116,10 +116,10 @@ function splitSection(
 }
 
 /**
- * Write ordered tables and retained comments around TOML values.
+ * Write the ordered tables, with the kept comments around TOML values.
  * @param target the ordered written values.
- * @param indent indentation resolved by the settings emitter.
- * @param comments comments retained on their keys and headers.
+ * @param indent the whitespace for one level.
+ * @param comments the kept `#` lines on their keys and headers.
  * @returns the formatted TOML text.
  */
 function encodeSettings(target: TomlTable, indent: string, comments: TomlComments): string {
@@ -265,12 +265,12 @@ function findKeptCommentPlacement(
 }
 
 /**
- * Keep exact physical comments on their surviving semantic owner before records merge or move.
- * An ambiguous split gives its general comments to the first ordered row; path comments follow their own values.
- * @param syntax the original keys, headers and parsed values
- * @param target the ordered written values
- * @param written the draft before omission of tool defaults
- * @returns source-ordered owned blocks and separately anchored free prose
+ * Keep each comment on the key that still owns it before records merge or move.
+ * An unclear split gives its general comments to the first row; path comments follow their own values.
+ * @param syntax the original keys, headers, and parsed values.
+ * @param target the ordered written values.
+ * @param written the draft before tool defaults drop out.
+ * @returns the comment blocks in source order, and the free comments apart.
  */
 function collectKeptComments(syntax: TomlSyntax, target: TomlTable, written: TomlTable): TomlComments {
     const comments: TomlComments = new Map();
@@ -289,7 +289,7 @@ function collectKeptComments(syntax: TomlSyntax, target: TomlTable, written: Tom
 /**
  * Identify nonempty arrays of parsed tables for section layout.
  *
- * @param value a parsed value.
+ * @param value the parsed input.
  *
  * @returns whether every array item holds a plain table.
  */

@@ -17,10 +17,10 @@ function formatUncheckedKind(file: TrackedFile): string | undefined {
 }
 
 /**
- * Explains one file.
- * @param session the configuration selections, file inventory, and recorded ignores for this run.
- * @param file the inventoried file.
- * @returns selected configurations, checks, and recorded ignores.
+ * Explain one file.
+ * @param session the configurations, files, and ignores of this run.
+ * @param file the tracked path to explain.
+ * @returns the configurations, checks, and ignores for the file.
  */
 function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
@@ -69,8 +69,8 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
 }
 
 /**
- * The report as text.
- * @param report the file classification, selected checks, and recorded ignores to show.
+ * Format the file report as text.
+ * @param report the kind, checks, and ignores of the file.
  * @returns the text for stdout.
  */
 function formatPathReport(report: PathExplanation): string {
@@ -96,11 +96,11 @@ function formatPathReport(report: PathExplanation): string {
 }
 
 /**
- * Explains a repository file or an explicitly requested path.
- * @param session the repository session, or undefined outside a configured repository.
- * @param subject the file path or another explanation subject.
+ * Explain a repository file or a path that the subject names.
+ * @param session the repository, or undefined outside a configured one.
+ * @param subject the file path, or what else the user typed.
  * @returns the file explanation, or undefined for another subject.
- * @throws GspotError when an explicitly requested path does not exist.
+ * @throws GspotError when a named path does not exist.
  */
 function explainPath(session: Session | undefined, subject: string): Explanation | undefined {
     if (session === undefined) return undefined;

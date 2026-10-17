@@ -104,12 +104,12 @@ function classifyManagedDocument(root: string, entry: ListedFile, prefix: Buffer
 }
 
 /**
- * Classify from declarations, attributes, binary content, managed paths, banners, then vendored directories.
- * @param file the source entry, its captured bytes, and repository location.
- * @param file.root the repository directory.
- * @param file.entry the tracked file entry.
- * @param file.prefix the initial file bytes.
- * @param file.isBinary whether the initial bytes contain binary data.
+ * Classify from declarations, attributes, binary content, managed paths, banners, then vendored folders.
+ * @param file what to classify.
+ * @param file.root the repository folder.
+ * @param file.entry the tracked listing item.
+ * @param file.prefix the first bytes of the file.
+ * @param file.isBinary whether those bytes hold binary data.
  * @param inputs the generated and vendored declarations and captured Git attributes.
  * @returns the kind and where it came from.
  */
@@ -166,9 +166,9 @@ function stripTrailingVersion(word: string): string {
 }
 
 /**
- * Resolve pointer paths that selected tool files generate outside their internal tool project.
- * @param path the selected scope.
- * @param files the selected tool-file declarations.
+ * Resolve the pointer paths that tool files generate outside the tool project.
+ * @param path the scope folder.
+ * @param files the tool file declarations.
  * @returns the pointer paths and declared folder patterns.
  */
 function listPointerDeclarations(path: string, files: ToolFileDeclaration[]): string[] {
@@ -182,7 +182,7 @@ function listPointerDeclarations(path: string, files: ToolFileDeclaration[]): st
 
 /**
  * Detect the generated gspot marker in the opening comment lines.
- * @param text a file's opening text.
+ * @param text the start of a file.
  * @returns whether the text carries the generated marker.
  */
 function hasGeneratedHeader(text: string): boolean {
@@ -192,7 +192,7 @@ function hasGeneratedHeader(text: string): boolean {
 
 /**
  * Read the first executable, skipping env and its -S argument when present.
- * @param firstLine the first source line.
+ * @param firstLine the shebang candidate.
  * @returns the executable basename, or undefined without an executable shebang.
  */
 function parseShebang(firstLine: string): string | undefined {
@@ -215,12 +215,12 @@ function findLockfile(path: string): Lockfile | undefined {
 }
 
 /**
- * Determine a tracked file's kind and the source of that classification.
+ * Find the kind of a tracked file and where the kind comes from.
  * @param repositoryRoot the base folder for resolving tracked entries.
- * @param entry the tracked file entry.
- * @param prefix the initial file bytes.
- * @param inputs the file declarations used for classification.
- * @returns the file kind and its classification source.
+ * @param entry the tracked listing item.
+ * @param prefix the first bytes of the file.
+ * @param inputs the file declarations to match.
+ * @returns the kind and its origin.
  */
 function classifyFile(
     repositoryRoot: string,
@@ -241,8 +241,8 @@ function classifyFile(
 }
 
 /**
- * Tags for one entry. Binary files retain path tags and do not receive content tags.
- * @param entry the tracked entry.
+ * Tag one file. A binary file keeps its path tags and gets no content tags.
+ * @param entry the tracked listing item.
  * @param prefix the captured first bytes.
  * @returns the path and content tags, and whether the file contains binary bytes.
  */
@@ -268,8 +268,8 @@ function tagFile(entry: ListedFile, prefix: Buffer): Tagged {
 }
 
 /**
- * Extensions whose authoritative inventory tags include any requested language or content tag.
- * @param tags the language or content tags to select.
+ * List the extensions whose inventory tags include any of the tags.
+ * @param tags the language or content labels to find.
  * @returns extensions in inventory order.
  */
 function listTaggedExtensions(...tags: string[]): string[] {
@@ -280,8 +280,8 @@ function listTaggedExtensions(...tags: string[]): string[] {
 
 /**
  * Resolve generated paths of the configurations each scope selects.
- * @param selected the actual manifests selected by each written scope.
- * @returns file declarations with internal configuration origins retained.
+ * @param selected the manifests of each written scope.
+ * @returns file declarations, with the configuration that declares each.
  */
 function listFileDeclarations(selected: Map<string, Manifest[]>): FileDeclaration[] {
     return selected
@@ -307,8 +307,8 @@ function listFileDeclarations(selected: Map<string, Manifest[]>): FileDeclaratio
 }
 
 /**
- * Whether a repository path belongs to a gspot tool project.
- * @param path the repository-relative path.
+ * Check whether a path sits in a gspot tool project.
+ * @param path the repository-relative file.
  * @returns whether a .gspot folder contains the file.
  */
 function isInGspotFolder(path: string): boolean {
@@ -316,8 +316,8 @@ function isInGspotFolder(path: string): boolean {
 }
 
 /**
- * Whether a repository path belongs to tool projects or installed npm dependencies.
- * @param path the repository-relative path.
+ * Check whether a path sits in a tool project or in installed npm dependencies.
+ * @param path the repository-relative file.
  * @returns whether project discovery must leave out the path.
  */
 function isInstalledToolPath(path: string): boolean {

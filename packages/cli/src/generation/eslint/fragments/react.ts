@@ -5,8 +5,8 @@ import { REACT_RULES, JSX_CODE_FILES } from '#cli/config/generation/eslint-fragm
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
 /**
- * Apply React, hooks, and refresh rules for the selected JSX mode.
- * @param context the selected presets, rule printer, and scope settings.
+ * Apply the React, hooks, and refresh lint rules for the JSX mode.
+ * @param context the presets and the block writer.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildReactFragment(context: Pick<EslintContext, 'eslintPresets' | 'blockWriter'>): EslintFragment {

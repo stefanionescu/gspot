@@ -6,7 +6,7 @@ import type { PushInput, StagedPaths, ChangedPaths, PushSelection } from '#cli/t
 
 type Checked = { hash: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport };
 
-/** The push report: one run report for every distinct tree that Git's pre-push input names. */
+/** The push report: one run report for every distinct tree that the Git pre-push input names. */
 type PushReport = {
     canceled?: { pendingRefs: string[] };
     revisions: Checked[];
@@ -14,7 +14,7 @@ type PushReport = {
     exitCode: number;
 };
 
-/** The selected index paths when present, and the count of unstaged changes. */
+/** The staged paths, if any, and the count of unstaged changes. */
 type StagedFiles = StagedPaths | { staged: undefined; unstaged: number };
 
 type RunFilters = {
@@ -40,7 +40,7 @@ type CheckOptions = {
     verbose: boolean;
 };
 
-/** What a copy stands for: the staged index or a pushed commit, and the repository whose tools it runs. */
+/** What a scratch copy stands for: the staged index or a pushed commit, and the repository whose tools it runs. */
 type RevisionSource = {
     base?: string;
     commits?: string[];

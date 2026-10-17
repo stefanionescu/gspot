@@ -20,10 +20,10 @@ function selectFrameworkRuntime(configurations: string[]): string | undefined {
 }
 
 /**
- * Select your own script paths and mise task files in the selected scope.
+ * List your own script paths and the mise task files in the scope.
  *
- * @param context the selected project.
- * @param context.selection the selected project scope.
+ * @param context the scope to read.
+ * @param context.selection the project scope.
  *
  * @returns repository-relative paths whose files use script rules.
  */
@@ -34,12 +34,12 @@ export function listScriptPaths({ selection }: Pick<EslintContext, 'selection'>)
 
 /**
  * Resolve one runtime per file from scoped framework defaults and your own runtime declarations.
- * More specific scopes and your later selectors take precedence. Build scripts retain Node.js
- * unless your own runtime explicitly selects them.
+ * More specific scopes and your later selectors win. Build scripts keep Node.js
+ * unless your own runtime names them.
  *
- * @param scopes the selected configurations and settings of every project scope.
+ * @param scopes every project selection.
  *
- * @returns runtime declarations in increasing precedence order.
+ * @returns the runtime declarations, lowest priority first.
  */
 export function buildRuntimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock[] {
     const blocks: EslintRuntimeBlock[] = [];

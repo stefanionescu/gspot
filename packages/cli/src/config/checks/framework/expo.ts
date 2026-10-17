@@ -1,7 +1,7 @@
-// Expo Doctor prints each failed check on a line of its own, then the issues it found, then its advice.
+// Expo Doctor prints each failed check on its own line, then what it found, then its advice.
 export const FAILED_CHECK = /^✖ (?<description>.+)$/u;
 
-/** The summary that closes a failed Doctor check's issue block. */
+/** The summary line that ends the block of a failed Doctor check. */
 export const PASSED_CHECKS = /^\d+\/\d+ checks passed\./u;
 
 export const EXPO_PACKAGE_JSON = 'expo/package.json';

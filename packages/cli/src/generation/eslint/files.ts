@@ -6,11 +6,11 @@ import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/reposi
 import type { EslintFiles, EslintFileInputs, EslintSettingsBlock } from '#cli/types/generation/eslint.ts';
 
 /**
- * Calculate the exact file sets shared by base blocks and every framework fragment.
+ * Calculate the exact file sets that base blocks and every framework fragment share.
  *
- * @param input selected components, detected Node files, and your own test or script patterns.
+ * @param input the file sets to combine.
  *
- * @returns code patterns and intersections that exclude non-code files.
+ * @returns code patterns and intersections that leave out non-code files.
  */
 export function buildFilePatterns(input: EslintFileInputs): EslintFiles {
     const { tests, scripts, nodeFiles } = input;
@@ -49,7 +49,7 @@ export function buildFilePatterns(input: EslintFileInputs): EslintFiles {
 }
 
 /**
- * One ESLint brace glob for the source extensions the inventory assigns to the requested languages.
+ * Build one ESLint brace glob for the source extensions of the languages.
  *
  * @param languages the inventory language tags.
  *
@@ -64,8 +64,8 @@ export function buildSourcePattern(...languages: string[]): string {
 /**
  * Escape detected Node paths for glob selectors within one project scope.
  *
- * @param paths your repository-relative Node file paths.
- * @param scope the scope that owns these source files.
+ * @param paths your repository-relative Node files.
+ * @param scope the folder that owns these sources.
  *
  * @returns literal file patterns that cannot select neighboring filenames.
  */
@@ -74,11 +74,11 @@ export function buildNodePatterns(paths: string[], scope: string): string[] {
 }
 
 /**
- * Preserve readable include and exclude globs for blocks and runtime predicates.
+ * Split globs into readable includes and excludes for blocks and runtime tests.
  *
  * @param patterns your own or generated paths, with a leading ! for an exclusion.
  *
- * @returns expanded globs with their inclusion polarity.
+ * @returns the expanded include and exclude globs.
  */
 export function splitGlobSelectors(patterns: string[]): PathExpressions {
     const expanded = includeFolderContents(patterns);
@@ -91,8 +91,8 @@ export function splitGlobSelectors(patterns: string[]): PathExpressions {
 /**
  * Intersect file selectors with root-relative patterns and one literal project scope.
  *
- * @param files the selected source files.
- * @param scope the selected project scope.
+ * @param files the source selectors.
+ * @param scope the project folder.
  * @param paths the repository-relative path patterns.
  *
  * @returns the intersections of code, project, and authored path selectors.

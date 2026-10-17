@@ -34,7 +34,7 @@ export type Tagged = { tags: string[]; isBinary: boolean };
 
 export type FileKind = (typeof FILE_KINDS)[number];
 
-/** A generated path declared by a selected shipped configuration. */
+/** A generated path that a shipped configuration declares. */
 export type FileDeclaration = { paths: string[]; kind: 'generated'; configuration: string };
 
 export type FileClassification = { kind: FileKind; origin: string };
@@ -67,15 +67,15 @@ export type FoundToolFile = {
     key?: string;
 };
 
-/** Directory entries together with inherited and locally authored ignore rules. */
+/** Folder entries and the ignore rules they inherit or author. */
 export type FolderListing = { entries: Dirent[]; ignores: PathIgnore[] };
-/** A directory waiting for a read with its inherited ignore rules. */
+/** A folder waiting for a read, with its inherited ignore rules. */
 export type PendingFolder = { folder: string; ignores: PathIgnore[] };
 
 /** Authored declarations and effective Git attributes used for classification. */
 export type ClassificationInputs = { declarations: FileDeclaration[]; attributes: Repository['attributes'] };
 
-/** What detection reads from a scope's tree once, for every manifest to look at. */
+/** What detection reads once from the tree of a scope, for every manifest to look at. */
 export type ScopeContents = {
     candidates: TrackedFile[];
     extensionCounts: Map<string, number>;

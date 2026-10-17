@@ -16,12 +16,12 @@ export type PreparedSql = { text: string; variables: SqlRange[] };
 /** PostgreSQL payload fields indexed by their node kind. */
 export type SqlNodeFields = { [Entry in Node as keyof Entry]: Entry[keyof Entry] };
 
-/** A statement retains the relation between its kind and payload. */
+/** A statement keeps the link between its kind and payload. */
 export type SqlStatementView<Kind extends keyof SqlNodeFields = keyof SqlNodeFields> = {
     [Name in Kind]: { kind: Name; fields: SqlNodeFields[Name]; start: number };
 }[Kind];
 
-/** Kind-specific readers preserve payload types and each caller's required context. */
+/** Readers for each kind keep the payload types and the context that each caller needs. */
 export type SqlStatementReaders<Result, Arguments extends unknown[] = []> = {
     [Kind in keyof SqlNodeFields]?: (statement: SqlStatementView<Kind>, ...readerArguments: Arguments) => Result;
 };

@@ -3,7 +3,7 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
 
 /**
  * Require safe changes in Drizzle queries.
- * @param context the selected presets, rule printer, and scope settings.
+ * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildDrizzleFragment(
