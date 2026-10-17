@@ -69,6 +69,15 @@ async function saveSettings(repositoryRoot: string, options: SaveSettingsOptions
 }
 
 /**
+ * Say that the generated files need no change.
+ * @param count how many files gspot generates.
+ * @returns the sentence, with the verb agreeing with the count.
+ */
+function formatUpToDate(count: number): string {
+    return `No change: the ${formatCount(count, 'generated file')} ${count === 1 ? 'is' : 'are'} up to date.`;
+}
+
+/**
  * Format generated file changes and notes for command output.
  * @param report the applied file changes and notes.
  * @returns the report text.
@@ -79,8 +88,7 @@ function formatApplyReport(report: ApplyReport): string {
         ...report.updated.map((path) => `updated  ${path}`),
         ...report.removed.map((path) => `removed  ${path}`),
     ];
-    if (lines.length === 0 && report.notes.length === 0)
-        lines.push(`No change: the ${formatCount(report.unchanged.length, 'generated file')} are up to date.`);
+    if (lines.length === 0 && report.notes.length === 0) lines.push(formatUpToDate(report.unchanged.length));
     return `${lines.length === 0 ? '' : lines.join('\n') + '\n'}${formatNotes(report.notes)}`;
 }
 
@@ -166,4 +174,4 @@ export async function findSettingDeclaration(
     return { settings, known, match };
 }
 
-export { saveSettings, formatApplyReport, startSettingsEdit };
+export { saveSettings, formatUpToDate, formatApplyReport, startSettingsEdit };

@@ -247,7 +247,7 @@ function formatExistingTools(summary: DetectionSummary): (string | undefined)[] 
             ...existingTools.agentFiles,
             ...existingTools.ruleFolders.map((folder) => `${folder}/`),
         ]),
-        formatDetectionRow('lint existingTools', lint.length === 0 ? [] : [...lint, 'yours; gspot leaves them alone']),
+        formatDetectionRow('lint folders', lint.length === 0 ? [] : [...lint, 'yours; gspot leaves them alone']),
     ];
 }
 

@@ -11,12 +11,15 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { readVersionPin } from '#cli/apply/version-pin.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { formatApplyReport } from '#cli/apply/save-settings.ts';
+import { formatUpToDate, formatApplyReport } from '#cli/apply/save-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/edit-settings.ts';
 
 function formatStaleFiles(staleFiles: StaleFile[]): string {
-    const lines = [`${formatCount(staleFiles.length, 'generated file')} need updating:`, ''];
+    const lines = [
+        `${formatCount(staleFiles.length, 'generated file')} ${staleFiles.length === 1 ? 'needs' : 'need'} updating:`,
+        '',
+    ];
     for (const entry of staleFiles) {
         const differences = (entry.diff ?? '').split('\n').map((line) => `    ${line}`);
         lines.push(`  ${entry.path}  ${entry.kind}`);
@@ -30,9 +33,7 @@ function planApply(session: Session): CommandResult {
     const generated = generate(session);
     const staleFiles = listStaleFiles(session, generated);
     const summary =
-        staleFiles.length === 0
-            ? `No change: the ${formatCount(generated.files.length, 'generated file')} are up to date.\n`
-            : formatStaleFiles(staleFiles);
+        staleFiles.length === 0 ? `${formatUpToDate(generated.files.length)}\n` : formatStaleFiles(staleFiles);
     const text = summary + formatNotes(generated.notes);
     const pin = { from: readVersionPin(session.root), to: session.version };
     const json: DryRunJson = { dryRun: true, pin, stale: staleFiles, notes: generated.notes };
