@@ -143,7 +143,7 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
         );
     const edit = startSettingsEdit(options.cwd);
     const { root, input } = edit;
-    const { settings, known, match } = findSettingDeclaration(root, edit, options.key, options.scope);
+    const { settings, known, match } = await findSettingDeclaration(edit, options.key, options.scope);
     const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
     return await writeSetting({ root, input, settings, known, options, match, shown });
 }

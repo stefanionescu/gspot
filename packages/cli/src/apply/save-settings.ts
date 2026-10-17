@@ -3,7 +3,6 @@
 import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { isGitRepository } from '#cli/system/git.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
@@ -12,25 +11,27 @@ import { generate } from '#cli/generation/generate.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { findDeclaration } from '#cli/settings/inherit.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { selectForScope } from '#cli/repository/coverage.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { detectConfigurations } from '#cli/repository/detect.ts';
 import { formatCount, quoteArgument } from '#cli/system/text.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { findScopeTable, updateSettings, readSettingsEdit } from '#cli/settings/edit.ts';
 import { refuseAlwaysSelected, listUnknownConfigurations } from '#cli/configurations/select.ts';
-import { type Settings, type KnownSettings, type DeclarationMatch } from '#cli/types/settings/values.ts';
 
 import type {
     SaveSettingsResult,
     SaveSettingsOptions,
     ConfigurationsOptions,
 } from '#cli/types/commands/edit-settings.ts';
+import {
+    type Settings,
+    type KnownSettings,
+    type ScopeSelection,
+    type DeclarationMatch,
+} from '#cli/types/settings/values.ts';
 
 /**
  * Edit settings, check them, and write them and their generated files. Installs nothing.
@@ -125,43 +126,35 @@ export function startConfigurationEdit(options: ConfigurationsOptions): {
 }
 
 /**
- * Look up a setting in one scope with the settings that this edit already validated.
- * @param repositoryRoot the folder for Git detection and automatic configuration choice.
- * @param input the state from before the edit.
- * @param input.input the settings text and table before the edit.
- * @param input.settings the parsed gspot.toml before the edit.
- * @param input.reads the file cache for the lookup.
+ * Look up a setting in one scope with the configurations that the session selects, including the ones that the
+ * files of the repository select.
+ * @param edit the state from before the edit.
+ * @param edit.root the repository root.
+ * @param edit.input the settings text and table before the edit.
+ * @param edit.settings the parsed gspot.toml before the edit.
+ * @param edit.reads the file cache for the lookup.
  * @param key the dotted setting name.
  * @param scope the folder to look in, or the root when absent.
  * @returns the declaration and defaults for that scope.
  */
-export function findSettingDeclaration(
-    repositoryRoot: string,
-    input: { input: SettingsEdit; settings: Settings; reads: ReadCache },
+export async function findSettingDeclaration(
+    edit: { root: string; input: SettingsEdit; settings: Settings; reads: ReadCache },
     key: string,
     scope: string | undefined,
-): { settings: Settings; known: KnownSettings; match: DeclarationMatch } {
+): Promise<{ settings: Settings; known: KnownSettings; match: DeclarationMatch }> {
     if (['configurations', 'removed_configurations'].includes(key))
         throw new GspotError('arguments', 'Use gspot add or gspot remove to change configurations.');
-    findScopeTable(input.input.table, scope);
-    const { settings, reads } = input;
-    const manifests = readManifests(reads);
-    const hasGit = isGitRepository(repositoryRoot);
-    const general = new Map([...manifests].filter(([, manifest]) => manifest.configuration.group === 'general'));
-    const automatic = detectConfigurations(repositoryRoot, [], general, []).flatMap(({ configuration }) =>
-        manifests.get(configuration)?.configuration.when?.git !== true || hasGit ? [configuration] : [],
-    );
-    const effective = { ...settings, configurations: [...new Set([...settings.configurations, ...automatic])] };
-    const known = buildKnownSettings(selectForScope(effective, scope ?? '', manifests), settings.level, reads);
+    findScopeTable(edit.input.table, scope);
+    const { settings, reads } = edit;
+    const session = await openSession(edit.root, { settings, text: edit.input.text }, { reads });
+    const known = (session.scopes.find((selection) => selection.scope.path === (scope ?? '')) as ScopeSelection).known;
     const match = findDeclaration(known, key);
     if (match === undefined) {
-        const selectedScope = Object.keys(settings.scopes).find(
-            (path) =>
-                findDeclaration(
-                    buildKnownSettings(selectForScope(effective, path, manifests), settings.level, reads),
-                    key,
-                ) !== undefined,
-        );
+        const selectedScope = session.scopes.find(
+            (selection) =>
+                Object.hasOwn(settings.scopes, selection.scope.path) &&
+                findDeclaration(selection.known, key) !== undefined,
+        )?.scope.path;
         if (selectedScope !== undefined)
             throw new GspotError(
                 'arguments',

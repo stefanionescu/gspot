@@ -44,7 +44,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
 
     const edit = startSettingsEdit(options.cwd);
     const { root, input } = edit;
-    const { match } = findSettingDeclaration(root, edit, setting, options.scope);
+    const { match } = await findSettingDeclaration(edit, setting, options.scope);
 
     if (items.length > 0 && match.declaration.type !== 'list' && match.declaration.type !== 'table')
         throw new GspotError(

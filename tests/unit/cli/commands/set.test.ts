@@ -105,6 +105,19 @@ test.each(['tools.taplo.unknown', 'tools.eslint.extra', 'tools.v8r.extra'])(
     },
 );
 
+test('set and unset change a setting of a configuration that the files select', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText([]),
+        'package.json': '{ "name": "example", "private": true }\n',
+    });
+    const set = await runGspot(sandbox.path, ['set', 'licenses.allowed', 'MIT']);
+    expect(set.code, set.stdout + set.stderr).toBe(0);
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(getValueAt(written, ['licenses', 'allowed'])).toEqual(['MIT']);
+    const unset = await runGspot(sandbox.path, ['unset', 'licenses.allowed']);
+    expect(unset.code, unset.stdout + unset.stderr).toBe(0);
+});
+
 test('an invalid level leaves gspot.toml as it was', async () => {
     await using sandbox = await testdir();
     const settingsPath = join(sandbox.path, 'gspot.toml');
