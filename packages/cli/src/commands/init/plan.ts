@@ -45,18 +45,15 @@ function buildToolProjectRows(everySelected: Manifest[], reads: ReadCache): Init
     const rows: InitPlan['change'] =
         count === 0
             ? []
-            : [{ path: NPM_TOOL_PROJECT_FILE, note: `${String(count)} pinned npm tools; matching lockfile` }];
+            : [{ path: NPM_TOOL_PROJECT_FILE, note: `${formatCount(count, 'pinned npm tool')}; matching lockfile` }];
     const python = pins.python.length;
     if (python > 0)
         rows.push({
             path: PYTHON_TOOL_PROJECT_FILE,
-            note: `${String(python)} pinned Python tools; matching uv.lock and tool environment`,
+            note: `${formatCount(python, 'pinned Python tool')}; matching uv.lock and tool environment`,
         });
-    if (listMisePins(everySelected, reads).length > 0)
-        rows.unshift({
-            path: MISE_TOOL_PROJECT_FILE,
-            note: `${String(listMisePins(everySelected, reads).length)} tool pins`,
-        });
+    const mise = listMisePins(everySelected, reads).length;
+    if (mise > 0) rows.unshift({ path: MISE_TOOL_PROJECT_FILE, note: formatCount(mise, 'tool pin') });
     return rows;
 }
 
