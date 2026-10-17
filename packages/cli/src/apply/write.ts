@@ -1,3 +1,4 @@
+import { GspotError } from '#cli/system/errors.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
@@ -22,8 +23,9 @@ import {
  * @param paths the files with unreviewed authored content.
  * @returns the refusal, with the apply command to retry.
  */
-function buildPreservedFilesError(paths: string[]): Error {
-    return new Error(
+function buildPreservedFilesError(paths: string[]): GspotError {
+    return new GspotError(
+        'writing',
         `These files were not overwritten by gspot: ${paths.join(', ')}. Move them aside, then run gspot apply.`,
     );
 }
