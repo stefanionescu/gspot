@@ -8,7 +8,7 @@ test.each(['linux', 'win32'] as const)('a relative cache folder setting is refus
     using _operatingSystem = simulateOperatingSystem(operatingSystem);
     const name = operatingSystem === 'win32' ? 'LOCALAPPDATA' : 'XDG_CACHE_HOME';
     using _environment = overrideEnvironment({ [name]: 'cache' });
-    expect(() => readCacheFolder()).toThrow('must be absolute');
+    expect(() => readCacheFolder()).toThrow('must be an absolute path');
 });
 
 // Only the Windows process environment folds names; a plain record does not.
