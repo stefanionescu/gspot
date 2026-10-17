@@ -5,9 +5,8 @@ import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { parseReport } from '#cli/parsers/output/json.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
-import { parseReport } from '#cli/parsers/output/formats.ts';
 import type { Finding } from '#cli/types/checks/run/check.ts';
 import { type ReportInput, type ReportedTypo } from '#cli/types/parsers/output.ts';
 

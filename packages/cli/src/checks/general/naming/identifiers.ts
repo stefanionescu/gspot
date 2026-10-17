@@ -1,29 +1,16 @@
 import { posix } from 'node:path';
-import type { Node } from 'web-tree-sitter';
 import { extractStem } from '#cli/system/paths.ts';
 import type { CheckInput } from '#cli/types/checks/run/check.ts';
+import { REST_SEGMENT } from '#cli/config/checks/general/naming.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
+import { createIdentifier } from '#cli/checks/general/naming/collect.ts';
 import { parseSource, selectGrammar } from '#cli/parsers/tree-sitter.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These modules import hoisted functions and read no values during initialization.
 import { extractSqlIdentifiers } from '#cli/checks/general/naming/sql.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These modules import hoisted functions and read no values during initialization.
 import { extractBashIdentifiers } from '#cli/checks/general/naming/bash.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These modules import hoisted functions and read no values during initialization.
 import { extractSwiftIdentifiers } from '#cli/checks/general/naming/swift.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These modules import hoisted functions and read no values during initialization.
 import { extractPythonIdentifiers } from '#cli/checks/general/naming/python.ts';
-import { REST_SEGMENT, CATEGORY_LABELS } from '#cli/config/checks/general/naming.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These modules import hoisted functions and read no values during initialization.
 import { extractTypescriptIdentifiers } from '#cli/checks/general/naming/typescript.ts';
-
-import {
-    type Identifier,
-    type ExtractSink,
-    type PathContainer,
-    type NamedCategory,
-    type IdentifierRead,
-    type IdentifierDeclaration,
-} from '#cli/types/checks/general.ts';
+import { type Identifier, type PathContainer, type IdentifierRead } from '#cli/types/checks/general.ts';
 
 function parseSegmentName(
     segment: string,
@@ -115,37 +102,4 @@ export async function parseIdentifiers(
     } finally {
         tree.delete();
     }
-}
-
-/**
- * Builds an identifier with its file and the label that findings show.
- * @param source the file and its language.
- * @param declaration what the code declares, and where.
- * @returns the labeled identifier.
- */
-export function createIdentifier(
-    source: Pick<ExtractSink, 'file' | 'language'>,
-    declaration: IdentifierDeclaration,
-): Identifier {
-    const label = CATEGORY_LABELS[declaration.category];
-    return { ...declaration, file: source.file, language: source.language, label: `${source.language} ${label}` };
-}
-
-/**
- * Adds an identifier at its source place, except an empty name or `_`.
- * @param sink the file and the identifiers found so far.
- * @param node the parsed declaration.
- * @param category the kind of declared name.
- * @param name the authored spelling, after any language change.
- */
-export function addIdentifier(sink: ExtractSink, node: Node, category: NamedCategory, name = node.text): void {
-    if (name === '' || name === '_') return;
-    sink.out.push(
-        createIdentifier(sink, {
-            line: node.startPosition.row + 1,
-            column: node.startPosition.column + 1,
-            category,
-            name,
-        }),
-    );
 }

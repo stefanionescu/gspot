@@ -13,13 +13,12 @@ import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { buildLockfileResult } from '#cli/generation/projects.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
-import { buildLockfileResult } from '#cli/tools/project-lockfiles.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { normalizePythonPackage } from '#cli/parsers/dependency-files.ts';
 import { parsePythonSettings, writePythonSettings } from '#cli/tools/python/settings.ts';

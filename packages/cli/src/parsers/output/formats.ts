@@ -1,26 +1,18 @@
 // Defines tool-output formats and validates their declarations.
 import { z } from 'zod';
 import { realpathSync } from 'node:fs';
-import { GspotError } from '#cli/system/errors.ts';
 import { sep, posix, isAbsolute } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { DRIVE_LETTER } from '#cli/config/system/paths.ts';
 import type { Finding } from '#cli/types/checks/run/check.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseJsonFindings } from '#cli/parsers/output/json.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseKnipFindings } from '#cli/parsers/output/knip.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseSarifFindings } from '#cli/parsers/output/sarif.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseTyposFindings } from '#cli/parsers/output/typos.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseSemgrepFindings } from '#cli/parsers/output/semgrep.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseTrufflehogFindings } from '#cli/parsers/output/trufflehog.ts';
 import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These hoisted readers call the shared report parser in this module; the required format table owns their dispatch.
 import { parseMarkdownlintFindings } from '#cli/parsers/output/markdownlint.ts';
 import { parseRegexFindings, parseGroupedFindings } from '#cli/parsers/output/text.ts';
 
@@ -82,21 +74,6 @@ function hasFilePaths(output: OutputSpec): boolean {
         output.file_type === 'path' &&
         (output.pattern === undefined ? output.fields?.file !== undefined : output.pattern.includes(FILE_GROUP))
     );
-}
-
-/**
- * Parse and validate a report, and keep its untrusted contents out of errors.
- * @param tool the program that printed the report.
- * @param text the JSON report.
- * @param schema the shape that the report must have.
- * @returns the validated report.
- */
-export function parseReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value {
-    try {
-        return schema.parse(JSON.parse(text));
-    } catch {
-        throw new GspotError('output', `${tool} returned invalid structured findings.`);
-    }
 }
 
 /** The reader and process-result rules for every supported output format. */

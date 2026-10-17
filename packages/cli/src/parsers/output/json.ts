@@ -1,9 +1,8 @@
 // Reads findings from declared JSON fields.
 import { z } from 'zod';
+import { GspotError } from '#cli/system/errors.ts';
 import { getValueAt } from '#cli/system/values.ts';
 import { JSON_START } from '#cli/config/parsers/output.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
-import { parseReport } from '#cli/parsers/output/formats.ts';
 import type { Finding } from '#cli/types/checks/run/check.ts';
 import { type ReportInput, type JsonFindingSpec } from '#cli/types/parsers/output.ts';
 
@@ -87,4 +86,19 @@ export function parseJsonFindings(input: ReportInput): Finding[] {
         );
     }) satisfies z.ZodType<Finding[]>;
     return parseReport('JSON', stdout.slice(start), schema);
+}
+
+/**
+ * Parse and validate a report, and keep its untrusted contents out of errors.
+ * @param tool the program that printed the report.
+ * @param text the JSON report.
+ * @param schema the shape that the report must have.
+ * @returns the validated report.
+ */
+export function parseReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value {
+    try {
+        return schema.parse(JSON.parse(text));
+    } catch {
+        throw new GspotError('output', `${tool} returned invalid structured findings.`);
+    }
 }

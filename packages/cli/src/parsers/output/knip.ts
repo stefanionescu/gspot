@@ -1,8 +1,7 @@
 // Reads Knip issue categories and source locations.
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
-import { parseReport } from '#cli/parsers/output/formats.ts';
+import { parseReport } from '#cli/parsers/output/json.ts';
 import type { Finding } from '#cli/types/checks/run/check.ts';
 import { KNIP_ISSUE_TYPES, KNIP_ISSUE_MESSAGES } from '#cli/config/parsers/output.ts';
 import { type KnipReport, type KnipSymbol, type ReportInput } from '#cli/types/parsers/output.ts';

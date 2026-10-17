@@ -2,12 +2,12 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { formatHold } from '#cli/generation/release-holds.ts';
 import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
 import { findInstalledDependency } from '#cli/tools/npm/packages.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/generation/eslint.ts';
+import type { ReadCache, FileContents } from '#cli/types/system/files.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { type GeneratedFile, type NpmProjectInputs } from '#cli/types/generation/files.ts';
 import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN, PYTHON_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
@@ -120,4 +120,15 @@ export function buildPythonProject(manifests: Manifest[], days: number): Generat
             kind: 'tool_file',
         },
     ];
+}
+
+/**
+ * Build a generated lockfile with the file contents that it replaces.
+ * @param path the repository-relative destination for the replacement bytes.
+ * @param content the credential-free lockfile.
+ * @param original the file contents on disk, if any.
+ * @returns the replacement bytes with the previous file attached for write validation.
+ */
+export function buildLockfileResult(path: string, content: string, original: FileContents | undefined): GeneratedFile {
+    return { path, content, kind: 'lock', ...(original === undefined ? {} : { read: original }) };
 }

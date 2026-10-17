@@ -10,14 +10,13 @@ import type { InstallContext } from '#cli/types/install.ts';
 import { rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/credentials.ts';
+import { buildLockfileResult } from '#cli/generation/projects.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
 import { readRootHoldDays } from '#cli/generation/release-holds.ts';
 import { addToolReleaseHold } from '#cli/tools/npm/release-hold.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: Lockfile orchestration and its producers share this hoisted result function within the tools module.
-import { buildLockfileResult } from '#cli/tools/project-lockfiles.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import { isLockfileCurrent, stripRegistryUrls } from '#cli/tools/npm/lockfiles.ts';

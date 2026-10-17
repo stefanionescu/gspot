@@ -2,8 +2,7 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
-import { parseReport } from '#cli/parsers/output/formats.ts';
+import { parseReport } from '#cli/parsers/output/json.ts';
 import type { Finding } from '#cli/types/checks/run/check.ts';
 import { type ReportInput, type TrufflehogResult } from '#cli/types/parsers/output.ts';
 

@@ -1,8 +1,7 @@
 import { computePosition } from '#cli/system/text.ts';
 import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-// eslint-disable-next-line import-x/no-cycle -- reason: These modules import hoisted functions and read no values during initialization.
-import { createIdentifier } from '#cli/checks/general/naming/identifiers.ts';
+import { createIdentifier } from '#cli/checks/general/naming/collect.ts';
 import type { SqlFile, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 import { type SqlNamed, type Identifier, type IdentifierRead } from '#cli/types/checks/general.ts';
 import { parseSqlFile, listNameParts, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';

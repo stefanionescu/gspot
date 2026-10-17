@@ -1,6 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-// eslint-disable-next-line import-x/no-cycle -- reason: These modules import hoisted functions and read no values during initialization.
-import { addIdentifier } from '#cli/checks/general/naming/identifiers.ts';
+import { addIdentifier } from '#cli/checks/general/naming/collect.ts';
 import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/general.ts';
 
 import {

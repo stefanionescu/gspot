@@ -4,8 +4,7 @@ import { sep, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-// eslint-disable-next-line import-x/no-cycle -- reason: The required format table calls this hoisted reader, and owns the shared report parser.
-import { parseReport } from '#cli/parsers/output/formats.ts';
+import { parseReport } from '#cli/parsers/output/json.ts';
 import { SARIF_SOURCE_ROOT } from '#cli/config/parsers/output.ts';
 import type { Finding, FindingPlace } from '#cli/types/checks/run/check.ts';
 
