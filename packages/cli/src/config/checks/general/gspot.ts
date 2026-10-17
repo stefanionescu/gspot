@@ -17,8 +17,10 @@ export const NEGATED_PATTERN = /^!/u;
 
 export const REASON_ABOVE = /^(?:\/\/|\/\*|#|--|<!--)\s*reason:\s*(?<reason>\S.*)$/u;
 
-export const LIMIT_SUPPRESSION_MESSAGE =
-    'Split the code by its steps, or ask the user to raise the limit in gspot.toml.';
+export const SUPPRESSION_DIRECTIVE_MESSAGES = {
+    all: 'This comment turns off every rule, including the size limits. Name the rules and give a reason.',
+    limit: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
+} as const;
 
 export const SUPPRESSION_LIMITS = new Map([
     [
@@ -26,6 +28,7 @@ export const SUPPRESSION_LIMITS = new Map([
         {
             separator: /\s--/u,
             directive: /\beslint-disable(?:-next-line|-line)?\b(?<rules>[\s\S]*)/u,
+            allRules: /^$/u,
             lintRules:
                 /(?:^|[\s,])(?:complexity|sonarjs\/cognitive-complexity|max-lines|max-lines-per-function|max-statements|max-params|max-depth|max-nested-callbacks)(?=$|[\s,])/u,
         },
@@ -35,6 +38,7 @@ export const SUPPRESSION_LIMITS = new Map([
         {
             separator: /#/u,
             directive: /#\s*(?:(?:ruff|flake8):\s*)?[nN][oO][qQ][aA](?::(?<rules>[^#]*))?/u,
+            allRules: /^$/u,
             lintRules: /(?:^|[\s,])(?:C901|PLR0911|PLR0912|PLR0913|PLR0915)(?=$|[\s,])/u,
         },
     ],
@@ -43,8 +47,9 @@ export const SUPPRESSION_LIMITS = new Map([
         {
             separator: /\s-\s/u,
             directive: /\bswiftlint:disable(?::(?:next|this|previous))?(?<rules>.*)/u,
+            allRules: /^all(?=$|\s)/u,
             lintRules:
-                /(?:^|[\s,])(?:all|cyclomatic_complexity|function_body_length|file_length|type_body_length|function_parameter_count)(?=$|[\s,])/u,
+                /(?:^|[\s,])(?:cyclomatic_complexity|function_body_length|file_length|type_body_length|function_parameter_count)(?=$|[\s,])/u,
         },
     ],
 ]);

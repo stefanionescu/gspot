@@ -60,7 +60,7 @@ export const LIMIT_SUPPRESSION_CASES = [
         name: 'all ESLint rules',
         file: 'source.js',
         source: '// eslint-disable-next-line  -- reason: The external interface fixes this statement.\nconsole.log(1);\n',
-        rule: 'eslint-limit',
+        rule: 'eslint-all',
     },
     {
         configuration: 'python',
@@ -102,7 +102,7 @@ export const LIMIT_SUPPRESSION_CASES = [
         name: 'all Ruff rules',
         file: 'source.py',
         source: '# ruff: noqa # reason: The external interface fixes this statement.\nprint(1)\n',
-        rule: 'ruff-limit',
+        rule: 'ruff-all',
     },
     {
         configuration: 'swift',
@@ -144,6 +144,6 @@ export const LIMIT_SUPPRESSION_CASES = [
         name: 'all',
         file: 'Source.swift',
         source: '// swiftlint:disable all // reason: The external interface fixes this statement.\nlet value = 1\n',
-        rule: 'swiftlint-limit',
+        rule: 'swiftlint-all',
     },
 ] as const;

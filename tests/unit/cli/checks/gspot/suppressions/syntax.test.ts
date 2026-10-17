@@ -9,6 +9,7 @@ import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { checkSuppressions } from '#cli/checks/general/gspot/suppressions.ts';
+import { SUPPRESSION_DIRECTIVE_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 import { LIMIT_SUPPRESSION_CASES } from '#tests/data/checks/gspot/suppression-limits.ts';
 
 import {
@@ -146,7 +147,7 @@ test.each([...LIMIT_SUPPRESSION_CASES])(
             matchFields({
                 file,
                 rule,
-                message: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
+                message: SUPPRESSION_DIRECTIVE_MESSAGES[rule.endsWith('-all') ? 'all' : 'limit'],
             }),
         );
     },

@@ -10,7 +10,7 @@ import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
 import type { Finding, CheckInput, FindingPlace } from '#cli/types/checks/run/check.ts';
-import { REASON_ABOVE, SUPPRESSION_LIMITS, LIMIT_SUPPRESSION_MESSAGE } from '#cli/config/checks/general/gspot.ts';
+import { REASON_ABOVE, SUPPRESSION_LIMITS, SUPPRESSION_DIRECTIVE_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 
 // A reason on the line above covers only the next line. Code or comments between them break the link.
 function findReasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
@@ -56,13 +56,21 @@ function listSuppressionSyntaxes(selection: ScopeSelection): SuppressionSyntax[]
     });
 }
 
-function isLimitSuppression(tool: string, text: string): boolean {
+// The lint rules that a directive of a tool with size limits names; undefined for any other comment.
+function readDirectiveRules(tool: string, text: string): string | undefined {
     const limits = SUPPRESSION_LIMITS.get(tool);
-    if (limits === undefined) return false;
-    const directive = limits.directive.exec(text);
-    if (directive === null) return false;
-    const rules = directive.groups?.['rules']?.split(limits.separator)[0]?.trim();
-    return rules === undefined || rules === '' || limits.lintRules.test(rules);
+    const directive = limits?.directive.exec(text);
+    if (limits === undefined || directive === null || directive === undefined) return undefined;
+    return (directive.groups?.['rules'] ?? '').split(limits.separator)[0];
+}
+
+// A directive that turns off every rule, or one that lifts a size or complexity limit.
+function classifyDirective(tool: string, text: string): keyof typeof SUPPRESSION_DIRECTIVE_MESSAGES | undefined {
+    const rules = readDirectiveRules(tool, text);
+    const limits = SUPPRESSION_LIMITS.get(tool);
+    if (rules === undefined || limits === undefined) return undefined;
+    if (limits.allRules.test(rules.trim())) return 'all';
+    return limits.lintRules.test(rules) ? 'limit' : undefined;
 }
 
 function hasAcceptedReason(form: SuppressionSyntax, text: string, preceding: string | undefined): boolean {
@@ -89,8 +97,9 @@ function checkSuppressionComment(
                 `${form.tool} suppression is not allowed; fix the finding or configure an explicit ignore.`,
             ),
         ];
-    if (isLimitSuppression(form.tool, text))
-        return [buildFinding(input, at, `${form.tool}-limit`, LIMIT_SUPPRESSION_MESSAGE)];
+    const directive = classifyDirective(form.tool, text);
+    if (directive !== undefined)
+        return [buildFinding(input, at, `${form.tool}-${directive}`, SUPPRESSION_DIRECTIVE_MESSAGES[directive])];
     if (hasAcceptedReason(form, text, preceding)) return [];
     return [
         buildFinding(
