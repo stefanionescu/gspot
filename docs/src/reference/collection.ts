@@ -35,7 +35,7 @@ function buildReferencePages(): Map<string, ReferencePage> {
 }
 
 /**
- * Load the authored and the generated pages into Starlight's content collection.
+ * Load the authored and generated pages into the Starlight content collection.
  * @returns the Astro loader
  */
 export function buildReferenceCollection(): Loader {

@@ -2,11 +2,11 @@ import type { ReferencePage } from '../types/reference.ts';
 import { MARKDOWN_ESCAPES, HTML_BRACKET_ENTITIES } from '../config/reference.ts';
 
 /**
- * Build a reference page with literal markup in metadata and no editor link.
- * @param title the visible heading stored in the collection metadata.
- * @param description the one-line description
- * @param body the Markdown body
- * @returns collection data with escaped body markup and the editor link disabled.
+ * Build a reference page with escaped markup and no edit link.
+ * @param title the visible heading
+ * @param description the one-line summary
+ * @param body the Markdown text
+ * @returns the page data and its escaped Markdown
  */
 export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
     return {
@@ -15,28 +15,28 @@ export function buildReferencePage(title: string, description: string, body: str
     };
 }
 /**
- * A level-two section, or nothing for an empty body.
+ * Format a level-two section, or nothing for empty text.
  * @param title the heading
- * @param body the Markdown body
- * @returns a second-level heading followed by its content, or an empty string.
+ * @param body the Markdown text
+ * @returns the heading and its text, or an empty string
  */
 export function formatSection(title: string, body: string): string {
     return body === '' ? '' : `\n## ${title}\n\n${body}\n`;
 }
 
 /**
- * A Markdown table.
+ * Format a Markdown table.
  * @param header the column titles
- * @param rows the cells of each row
- * @returns pipe-separated rows with a separator after the column headings.
+ * @param rows the cells, as one list per table line
+ * @returns the table, with a separator line under the header
  */
 export function formatTable(header: string[], rows: string[][]): string {
     return [header, header.map(() => '---'), ...rows].map((cells) => `| ${cells.join(' | ')} |`).join('\n');
 }
 
 /**
- * Text safe inside a table cell: pipes escaped and line breaks flattened.
- * @param text content that must stay within one rendered table column.
+ * Escape pipes and flatten line breaks so the content fits in one table cell.
+ * @param text the cell content
  * @returns the escaped text
  */
 export function escapeCell(text: string): string {
@@ -44,9 +44,9 @@ export function escapeCell(text: string): string {
 }
 
 /**
- * Name-and-meaning rows that fit a narrow screen.
+ * Format name and meaning pairs as a definition list that fits a narrow screen.
  * @param rows each name and its meaning
- * @returns a Markdown-aware definition list
+ * @returns the HTML list, with Markdown inside each item
  */
 export function formatDefinitions(rows: [string, string][]): string {
     return (

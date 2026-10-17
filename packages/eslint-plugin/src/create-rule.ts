@@ -9,9 +9,9 @@ export const createRule = ESLintUtils.RuleCreator<RuleDocs>((name) =>
 ) as DocumentedRuleCreator;
 
 /**
- * An object with the given properties and nothing else.
- * @param properties the property schemas
- * @returns an object validator that rejects keys outside the supplied properties.
+ * Build an options schema that allows only the listed keys.
+ * @param properties the schema of each allowed option
+ * @returns a JSON schema that rejects any other key
  */
 export function buildOptionsSchema(properties: Record<string, JSONSchema4>): JSONSchema4 {
     return { type: 'object', properties, additionalProperties: false };

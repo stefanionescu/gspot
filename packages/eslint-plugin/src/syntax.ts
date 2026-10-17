@@ -10,7 +10,7 @@ import {
     NON_EXECUTABLE_STATEMENTS,
 } from './config/syntax.ts';
 
-// Read syntax children through the parser visitor keys. Exclude metadata and parent links.
+// Walk only the visitor keys of the parser, which leave out metadata and parent links.
 function listChildNodes(
     node: TSESTree.Node,
     visitorKeys: Readonly<Record<string, readonly string[]>>,
@@ -50,7 +50,7 @@ function isDynamicValue(node: TSESTree.Node): boolean {
     }
 }
 
-// Compositions transform an earlier operation's result rather than forwarding one call unchanged.
+// A composition transforms an earlier result instead of forwarding one call unchanged.
 function isComposedCall(node: TSESTree.CallExpression): boolean {
     return (
         (node.callee.type === AST_NODE_TYPES.MemberExpression &&
@@ -61,11 +61,10 @@ function isComposedCall(node: TSESTree.CallExpression): boolean {
 }
 
 /**
- * Count the executable statements under a node, those of the functions written inside it included. An expression
- * body counts as one statement.
+ * Count the executable statements under a node, nested functions included. An expression body counts as one.
  * @param node the function implementation, or a node inside it
  * @param visitorKeys the child keys of each node type, from the parser
- * @returns the executable statement total, including nested function bodies.
+ * @returns the statement count
  */
 export function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
     if (TYPE_ONLY.has(node.type)) return 0;
@@ -78,9 +77,9 @@ export function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Recor
 }
 
 /**
- * Identify constructors whose parameters or assignments initialize instance state.
- * @param node the implemented function
- * @returns whether removing the constructor loses its instance initialization contract
+ * Check whether a constructor sets instance state through parameter properties or `this` assignments.
+ * @param node the function to check
+ * @returns whether the constructor sets instance state
  */
 export function hasConstructorState(node: ImplementedFunction): boolean {
     if (node.parent.type !== AST_NODE_TYPES.MethodDefinition || node.parent.kind !== 'constructor') return false;
@@ -96,9 +95,9 @@ export function hasConstructorState(node: ImplementedFunction): boolean {
 }
 
 /**
- * Read an expression through syntax wrappers that preserve its runtime value.
- * @param node the expression under inspection
- * @returns the expression after static assertions and optional chaining wrappers
+ * Strip the wrappers that keep the runtime value: type assertions and optional chains.
+ * @param node the expression, or null
+ * @returns the inner expression
  */
 export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     let value = node;
@@ -108,10 +107,11 @@ export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
 }
 
 /**
- * Detect constructed data, predicate selection, and composed operations. Exclude constants and plain forwarding.
+ * Check whether an expression builds data, selects a value, or composes calls. Constants and plain forwarding do
+ * not count.
  * @param node the function body or returned expression
- * @param visitorKeys the parser's child keys
- * @returns whether the expression constructs data, selects a value, or combines operations
+ * @param visitorKeys the child keys of each node type, from the parser
+ * @returns whether the expression calculates something
  */
 export function hasCalculation(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): boolean {
     if (isDynamicValue(node)) return true;

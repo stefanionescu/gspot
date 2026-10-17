@@ -1,4 +1,4 @@
-/** The sidebar: seven sections, one link per page, and one link to each long reference index. */
+/** The sidebar: one link per page, plus one to each long reference index. */
 export const SIDEBAR = [
     {
         label: 'Get started',

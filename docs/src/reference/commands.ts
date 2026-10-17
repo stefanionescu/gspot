@@ -21,8 +21,8 @@ function formatExitCodes(text: string): string {
 }
 
 /**
- * Build command pages from public help data in program order.
- * @param commands registered command help
+ * Build the command pages from the CLI help data, in program order.
+ * @param commands the help data the CLI registers
  * @returns pages keyed by their Markdown path
  */
 export function buildCommandPages(

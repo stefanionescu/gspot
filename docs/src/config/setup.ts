@@ -1,5 +1,5 @@
-// The two ways to set up gspot: the commands for each package manager, and the prompt for a coding agent with the
-// steps that the agent reads in /llms.txt. The home page and the Quickstart read these values.
+// Two ways to start with gspot: the commands for each package manager, or a prompt that sends a coding agent to the
+// steps in /llms.txt. The home page and the Quickstart share these values.
 export const SETUP_COMMANDS = [
     { label: 'npm', lines: ['npm i -D -E @gspothq/cli', 'npx gspot init', 'npx gspot install'] },
     { label: 'pnpm', lines: ['pnpm add -D -E @gspothq/cli', 'pnpm exec gspot init', 'pnpm exec gspot install'] },

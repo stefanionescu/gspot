@@ -15,7 +15,7 @@ import {
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 
-// Parents that hold a function value in one of their positions, with the test for that position.
+// Parent types that take a function value, each with a test for the slot it fills.
 const VALUE_HOLDERS: [AST_NODE_TYPES, (parent: TSESTree.Node, value: TSESTree.Node) => boolean][] = [
     [
         AST_NODE_TYPES.Property,
@@ -40,7 +40,7 @@ const VALUE_HOLDERS: [AST_NODE_TYPES, (parent: TSESTree.Node, value: TSESTree.No
     ],
 ];
 
-// The names callers can use for a function: its own name and the variable that holds it.
+// Callers reach a function through its own name or the variable that holds it.
 function listCallableVariables(node: ImplementedFunction, source: TSESLint.SourceCode): TSESLint.Scope.Variable[] {
     const owners: NamedFunction[] = [];
     if (node.type !== AST_NODE_TYPES.ArrowFunctionExpression && node.id !== null) owners.push({ node, id: node.id });
@@ -53,9 +53,9 @@ function listCallableVariables(node: ImplementedFunction, source: TSESLint.Sourc
 }
 
 /**
- * Find the consumer of a function value through assertions and conditional or logical expressions.
+ * Walk up through type assertions and conditional or logical expressions to the outermost value.
  * @param node the expression or declaration
- * @returns the value as observed by its parent expression
+ * @returns the outermost expression that wraps it
  */
 function findOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
     let value = node;
@@ -67,10 +67,10 @@ function findOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
 }
 
 /**
- * Identify a function whose position requires a function value: an argument, a returned value, an element,
- * a property, an assigned member, or JSX. The consumer takes a function, so the position needs one.
+ * Check whether a function fills a slot that takes a callback: an argument, a return value, an array element,
+ * a property, an assigned member, or JSX.
  * @param node the function implementation
- * @returns whether the position takes an inline function
+ * @returns whether the slot needs an inline function
  */
 function isInlineValue(node: ImplementedFunction): boolean {
     if (node.type === AST_NODE_TYPES.FunctionDeclaration) return false;
@@ -81,9 +81,9 @@ function isInlineValue(node: ImplementedFunction): boolean {
 }
 
 /**
- * Identify a function that calls itself. Its body names the function, so callers cannot replace it with that body.
+ * Check whether a function calls itself. Callers cannot inline such a body, because it names the function.
  * @param node the function implementation
- * @param source the parser source and lexical bindings
+ * @param source the parsed file, with its scopes
  * @returns whether a reference to the function sits inside its own body
  */
 function isRecursive(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {

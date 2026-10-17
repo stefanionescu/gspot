@@ -24,7 +24,7 @@ function hasOwnTypeShape(annotation: TSESTree.TypeNode): boolean {
     return typeArguments.params.some((parameter) => parameter.type === AST_NODE_TYPES.TSTypeQuery);
 }
 
-// Declarations own their schemas, implementations, or wrapped expressions.
+// A declaration counts as content when its schema, body, or wrapped expression does.
 function hasDeclarationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.ExportNamedDeclaration: {
@@ -49,7 +49,7 @@ function hasDeclarationContent(node: TSESTree.Node, inspect: ContentCheck): bool
     }
 }
 
-// Expression wrappers retain the content of their operand or exported value.
+// A wrapper counts as content when its operand or exported value does.
 function hasOperandContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.ExportDefaultDeclaration: {
@@ -71,7 +71,7 @@ function hasOperandContent(node: TSESTree.Node, inspect: ContentCheck): boolean 
     }
 }
 
-// Calls own inline schemas and substantive arguments.
+// A call counts as content through an inline type or a substantive argument.
 function hasCallContent(node: TSESTree.CallExpression | TSESTree.NewExpression, inspect: ContentCheck): boolean {
     if (
         node.typeArguments?.params.some(
@@ -95,7 +95,7 @@ function hasCallContent(node: TSESTree.CallExpression | TSESTree.NewExpression, 
     );
 }
 
-// Factories own the structure they construct, including structures passed to schema builders.
+// A built structure counts as content, also inside a call to a schema builder.
 function hasStructuredValue(expression: TSESTree.Node | null): boolean {
     const node = unwrap(expression);
     if (node === null) return false;

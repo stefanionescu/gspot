@@ -14,7 +14,7 @@ import {
 } from '../config/comments.ts';
 
 /**
- * True for a tool directive rather than prose: a suppression, a global declaration, a coverage mark.
+ * Check whether a comment holds a tool directive, such as a suppression, a global declaration, or a coverage mark.
  * @param value the comment text without its markers
  * @returns whether a tool reads the comment
  */
@@ -25,10 +25,10 @@ function isToolComment(value: string): boolean {
 }
 
 /**
- * Whether only whitespace precedes a comment on its source line.
- * @param source the parsed source and line locations
- * @param comment the source range whose line prefix determines whether it stands alone.
- * @returns whether the comment occupies its own line
+ * Check whether only whitespace comes before a comment on its line.
+ * @param source the parsed file, with line locations
+ * @param comment the range to check
+ * @returns whether the comment stands on its own line
  */
 function isOwnLine(source: TSESLint.SourceCode, comment: TSESTree.Comment): boolean {
     const start = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });
@@ -36,9 +36,9 @@ function isOwnLine(source: TSESLint.SourceCode, comment: TSESTree.Comment): bool
 }
 
 /**
- * True for an import declaration or a CommonJS require statement.
+ * Check for an import declaration or a CommonJS `require` statement.
  * @param node the statement
- * @param context the ESLint context with its declared source type
+ * @param context the running rule, with its source type
  * @returns whether the statement belongs to the import block
  */
 function isImportLike(node: TSESTree.Statement, context: RuleContext): boolean {
@@ -53,9 +53,9 @@ function isImportLike(node: TSESTree.Statement, context: RuleContext): boolean {
 }
 
 /**
- * Whether a node calls require with one argument.
- * @param node the node, which can have no value
- * @returns whether it calls require
+ * Check whether an expression calls `require` with one argument.
+ * @param node the expression, or nothing
+ * @returns whether it calls `require`
  */
 function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
     return (
@@ -110,7 +110,7 @@ function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
     return blocks;
 }
 
-// The parser starts an exported decorated class at export. Its leading comment belongs preceding the first decorator.
+// The parser starts an exported decorated class at `export`, but its leading comment sits above the first decorator.
 function getStatementStart(node: TSESTree.Node): StatementStart {
     const declared =
         node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration
@@ -125,7 +125,7 @@ function getStatementStart(node: TSESTree.Node): StatementStart {
         : { offset: node.range[0], line: node.loc.start.line };
 }
 
-// A declaration's comment can remain separated by one blank line and intervening tool directives.
+// A leading comment may sit one blank line and some tool directives above its declaration.
 function isLeading(
     source: TSESLint.SourceCode,
     comment: TSESTree.Comment,
@@ -149,7 +149,7 @@ function isLeading(
     return BLANK.test(between) && between.split('\n').length - 1 <= BLANK_LINE_DISTANCE;
 }
 
-// Remove a whole comment line or only the whitespace before an inline comment, preserving code on that line.
+// Remove the whole line for a comment that stands alone; otherwise remove only the comment and the spaces before it.
 function computeRemovalRange(source: TSESLint.SourceCode, comment: TSESTree.Comment): [number, number] {
     const text = source.getText();
     const lineStart = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });

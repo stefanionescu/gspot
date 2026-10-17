@@ -21,7 +21,7 @@ export const EXECUTABLE_DECLARATIONS = new Set(['VariableDeclaration', 'TSEnumDe
 /** Block containers and empty statements have no executable statement of their own. */
 export const NON_EXECUTABLE_STATEMENTS = new Set(['BlockStatement', 'EmptyStatement']);
 
-/** Object and array literals own the structure they construct. */
+/** Object and array literals count as content, because they build a structure. */
 export const STRUCTURED_EXPRESSIONS = new Set<string>(['ObjectExpression', 'ArrayExpression']);
 
 /** Nodes that introduce no implementation or owned schema. */
@@ -37,7 +37,7 @@ export const FORWARDING_NODES = new Set([
 // Positions whose parent always takes a function value.
 export const VALUE_PARENTS = new Set<string>(['ReturnStatement', 'JSXExpressionContainer', 'ArrowFunctionExpression']);
 
-/** Two reads establish reuse within the current module. */
+/** Two reads in one module count as reuse. */
 export const MIN_SHARED_READS = 2;
 
 export const EXPORT_REFERENCES = new Set(['ExportSpecifier', 'ExportDefaultDeclaration', 'TSExportAssignment']);
@@ -49,7 +49,7 @@ export const FUNCTION_SELECTOR = ':matches(FunctionDeclaration, FunctionExpressi
 export const IMPORT_SELECTOR = 'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression';
 export const SHEBANG = '#!';
 
-/** Operators that calculate a predicate instead of performing one scalar arithmetic operation. */
+/** Operators that produce a boolean, unlike plain arithmetic. */
 export const COMPARISON_OPERATORS = new Set<string>([
     '===',
     '!==',

@@ -5,7 +5,7 @@ export type ImplementedFunction =
     | TSESTree.FunctionExpression
     | TSESTree.ArrowFunctionExpression;
 
-/** A syntax owner that binds an implemented function to a lexical name. */
+/** The node that gives a function its name, and that name. */
 export type NamedFunction = { node: TSESTree.Node; id: TSESTree.Node | null };
 
 export type ImportSource =

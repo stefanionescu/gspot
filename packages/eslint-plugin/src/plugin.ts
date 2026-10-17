@@ -32,7 +32,6 @@ const plugin = {
     rules,
 };
 
-// all adds the house-style rules: comment placement, import paths, aliases, and trivial code.
 export default Object.assign(plugin, {
     configs: {
         recommended: {

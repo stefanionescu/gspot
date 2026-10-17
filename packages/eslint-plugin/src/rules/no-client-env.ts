@@ -17,10 +17,10 @@ function listDirectEnvironmentReads(identifier: TSESTree.Identifier): TSESTree.N
 }
 
 /**
- * Find environment access through global hosts, aliases, destructuring, and import.meta.
- * @param context the rule context and effective source scopes.
- * @param inspect the rule's decision for each environment access.
- * @returns listeners that find environment access once.
+ * Find environment access through global hosts, aliases, destructuring, and `import.meta`.
+ * @param context the running rule, with its source scopes
+ * @param inspect the callback that checks each access
+ * @returns listeners that pass each access to the callback once
  */
 function buildEnvironmentListeners(
     context: RuleContext,
@@ -53,9 +53,9 @@ function buildEnvironmentListeners(
 }
 
 /**
- * Read the statically named variables taken from an environment object. An empty list means the whole object or a dynamic key.
- * @param node the environment access.
- * @returns variable names used directly or through destructuring.
+ * List the variable names read from an environment object. An empty list means the whole object or a dynamic key.
+ * @param node the environment access
+ * @returns the names read directly or through destructuring
  */
 function listEnvironmentNames(node: TSESTree.Node): (string | null)[] {
     const { parent } = node;

@@ -7,7 +7,7 @@ type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 type CheckDeclaration = Manifest['checks'][number];
 
 /**
- * Name the tools a check runs, or gspot for a check implemented in the CLI.
+ * Name the tools a check runs, or gspot for a built-in check.
  * @param check the declaration
  * @returns the display name
  */
@@ -33,10 +33,10 @@ function formatCheckEnvironment(check: CheckDeclaration): string[] {
 }
 
 /**
- * The reference page of one check: why it runs, what to do, and where it runs.
- * @param check the check's manifest entry
- * @param manifest the manifest that declares the check
- * @returns collection metadata and Markdown instructions for the selected check.
+ * Build the reference page of one check: why it matters, what to do, and where it runs.
+ * @param check the record from the manifest
+ * @param manifest the parsed configuration that declares it
+ * @returns the page data and Markdown
  */
 export function buildCheckPage(check: CheckDeclaration, manifest: Manifest): ReferencePage {
     const lines = [
@@ -52,9 +52,9 @@ export function buildCheckPage(check: CheckDeclaration, manifest: Manifest): Ref
 }
 
 /**
- * Group the check index by configuration group and configuration.
- * @param checks declared checks and their owners
- * @param groups configuration group labels
+ * Build the check index sorted by group, then by configuration.
+ * @param checks every declaration, with the configuration that owns it
+ * @param groups the title of each folder of configurations
  * @returns the index page
  */
 export function buildCheckIndex(

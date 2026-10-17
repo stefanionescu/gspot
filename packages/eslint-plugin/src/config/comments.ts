@@ -1,4 +1,3 @@
-// Comment and whitespace analysis.
 export const TOOL_COMMENT_PREFIXES = [
     'eslint',
     'global ',

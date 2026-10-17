@@ -14,7 +14,7 @@ export type TrivialFunctionsOptions = [{ trivialStatements: number }];
 export type TrivialFilesOptions = [{ trivialStatements: number; allowIndex: boolean }];
 export type RuleContext = Readonly<TSESLint.RuleContext<string, unknown[]>>;
 
-/** RuleCreator preserves the required docs supplied by every rule declaration. */
+/** Keeps the required docs of each rule in the type that RuleCreator returns. */
 export type DocumentedRuleCreator = <Options extends readonly unknown[], MessageIds extends string>(
     rule: Readonly<ESLintUtils.RuleWithMetaAndName<Options, MessageIds, RuleDocs>>,
 ) => TSESLint.RuleModule<MessageIds, Options, RuleDocs> & {

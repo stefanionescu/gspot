@@ -20,13 +20,13 @@ import {
 } from './config/styles.ts';
 
 /**
- * Remove unused built styles and refresh their content hashes after all pages and scripts exist.
- * @param siteFolder the completed site folder.
- * @returns after writing the styles and their references.
+ * Remove unused built styles and update their content hashes. Run it after the build writes every page and script.
+ * @param siteFolder the built site
+ * @returns a promise that resolves once the styles and their references hold the new hashes
  */
 export async function pruneUnusedStyles(siteFolder: URL): Promise<void> {
     const { extractor, tokenEnd, pseudoClasses } = readReferenceData().styles;
-    // Include utility class separators, but discard a JavaScript property's trailing colon.
+    // Keep utility class separators, but drop the trailing colon of a JavaScript property.
     function extractStyleTokens(content: string): string[] {
         return [...content.matchAll(extractor)]
             .map(([token]) => {

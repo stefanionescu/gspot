@@ -28,8 +28,8 @@ function formatRuleOptions(schemas: unknown, defaults: unknown): string {
 }
 
 /**
- * Read standalone plugin documentation from the rule definitions and actual configurations.
- * @returns generated pages by reference-relative path
+ * Build the ESLint plugin pages from the rule definitions and the levels that turn each rule on.
+ * @returns the pages, keyed by path inside the reference
  */
 export function buildPluginPages(): Map<string, ReferencePage> {
     const levels = new Map(

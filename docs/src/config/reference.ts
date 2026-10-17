@@ -10,7 +10,7 @@ export const DETECTION_LABELS = {
     project_files: 'Project files',
 } as const;
 
-/** Plain labels for JSON schema types presented in settings tables. */
+/** Plain labels for JSON schema types in settings tables. */
 export const SCHEMA_TYPE_LABELS = {
     string: 'Text',
     integer: 'Whole number',
@@ -20,7 +20,7 @@ export const SCHEMA_TYPE_LABELS = {
     object: 'Table',
 } as const;
 
-/** Labels for the manifest check run frequency. */
+/** Labels for how often a check runs. */
 export const CHECK_RUN_LABELS = {
     once: 'once for the repository',
     scope: 'once per scope',
@@ -37,7 +37,7 @@ export const REFERENCE_FOLDERS = {
 export const REFERENCE_COLLECTION_NAME = 'gspot-reference';
 export const REFERENCE_IDS_KEY = 'reference-ids';
 export const PAGES_FOLDER = 'src/content/docs';
-/** Preserve Markdown code while escaping markup in generated reference text. */
+/** Matches code spans to keep and markup to escape in generated reference text. */
 export const MARKDOWN_ESCAPES = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)|<\/?d[dlt]>|[<>]/gu;
 
 export const HTML_BRACKET_ENTITIES: Readonly<Record<string, string>> = { '<': '&lt;', '>': '&gt;' };

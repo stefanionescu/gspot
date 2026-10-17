@@ -1,7 +1,7 @@
 import { readReferenceData } from '#cli/reference.ts';
 
 /**
- * Read the level counts and extra tools from shipped check declarations.
+ * Count the shipped checks at each level, and list the tools each level adds.
  * @returns one row for each level
  */
 export function buildLevelRows(): { level: string; count: number; tools: string }[] {

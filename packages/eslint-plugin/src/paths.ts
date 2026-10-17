@@ -1,7 +1,7 @@
 /**
- * Normalize path separators and Windows drive letters without changing path characters.
+ * Turn backslashes into forward slashes, uppercase a Windows drive letter, and leave other characters unchanged.
  * @param value the file path
- * @returns the path with forward slashes and an uppercase Windows drive letter
+ * @returns the normalized path
  */
 export function normalizePath(value: string): string {
     return value.replaceAll('\\', '/').replace(/^[a-z]:/u, (drive) => drive.toUpperCase());

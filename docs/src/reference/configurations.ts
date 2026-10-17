@@ -6,7 +6,6 @@ import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../co
 
 type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 
-// Describe each detection value, including content expressions.
 function formatDetectionConditions(detect: Manifest['detect']): string[] {
     return Object.entries(detect).flatMap(([kind, patterns]) =>
         Array.isArray(patterns)
@@ -17,7 +16,7 @@ function formatDetectionConditions(detect: Manifest['detect']): string[] {
     );
 }
 
-// The configuration's rule files and the conditions that install them.
+// Rule files of a configuration, with the conditions that install each one.
 function formatRules(manifest: Manifest, paths: string[]): string {
     return paths
         .map((path) => {
@@ -53,10 +52,10 @@ function formatConfigurationChecks(manifest: Manifest): string {
 }
 
 /**
- * Describe a shipped configuration from its selection, settings, and check owners.
- * @param manifest the validated configuration manifest
- * @param data the CLI reference data
- * @returns its public reference page
+ * Build the reference page of a shipped configuration: how it gets selected, its settings, and its checks.
+ * @param manifest the parsed configuration
+ * @param data everything the CLI exports for the reference
+ * @returns the page
  */
 function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof readReferenceData>): ReferencePage {
     const { configuration } = manifest;
@@ -118,8 +117,8 @@ function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof read
 
 /**
  * Build the grouped configuration index and its pages.
- * @param data CLI reference data
- * @returns generated pages
+ * @param data everything the CLI exports for the reference
+ * @returns the index and each configuration page, keyed by path
  */
 export function buildConfigurationPages(data: ReturnType<typeof readReferenceData>): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>([
