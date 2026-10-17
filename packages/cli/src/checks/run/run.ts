@@ -6,18 +6,14 @@ import { readRepository } from '#cli/repository/read.ts';
 import { findTool } from '#cli/checks/run/command/tool.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { runBuiltInCheck } from '#cli/checks/run/built-in.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listActiveIgnores } from '#cli/settings/scope-view.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import type { CheckDeclaration } from '#cli/types/configurations.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
-import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
+import { selectCheckRun, CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { buildRunReport, buildBaseResult, formatReproduceCommand } from '#cli/checks/run/report.ts';
 import { RAN_STATUSES, FAILED_STATUSES, DOCKER_MISSING_MESSAGE } from '#cli/config/checks/run/run.ts';
 
@@ -172,19 +168,6 @@ async function planAfterFixes(session: Session, options: RunOptions): Promise<Pl
     if (options.isDryRun) return { executables, fixes };
     await refreshAfterFixes(session);
     return { executables: planChecks(session, options), fixes };
-}
-
-/**
- * Pick the code that runs one check: the stale-output check, a built-in implementation, its own runner, or the tool
- * command.
- * @param check the check to run.
- * @returns the run function.
- */
-export function selectCheckRun(check: CheckDeclaration): RunnableCheck['run'] {
-    if (check.generator_outputs !== undefined) return runBuiltInCheck(checkStaleGeneratorOutputs);
-    const builtIn = (CHECK_IMPLEMENTATIONS as CheckImplementations)[check.name];
-    if (builtIn?.check !== undefined) return runBuiltInCheck(builtIn.check);
-    return builtIn?.run ?? runCheckCommand;
 }
 
 /**

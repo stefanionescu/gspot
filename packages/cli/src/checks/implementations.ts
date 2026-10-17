@@ -1,4 +1,5 @@
 import { checkVale } from '#cli/checks/general/prose.ts';
+import { runBuiltInCheck } from '#cli/checks/run/built-in.ts';
 import { checkSemgrep } from '#cli/checks/general/security.ts';
 import { checkExpoDoctor } from '#cli/checks/framework/expo.ts';
 import { checkJscpd } from '#cli/checks/general/duplication.ts';
@@ -8,6 +9,7 @@ import { runSvelteCheck } from '#cli/checks/framework/svelte.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { checkDeptry } from '#cli/checks/language/python/deptry.ts';
 import { checkSiteBuild } from '#cli/checks/framework/site/build.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { checkBashSafety } from '#cli/checks/language/bash/safety.ts';
 import { checkCommitlintPushed } from '#cli/checks/general/commits.ts';
 import { checkAllowedLicenses } from '#cli/checks/general/licenses.ts';
@@ -18,7 +20,6 @@ import { checkShellcheck } from '#cli/checks/language/bash/shellcheck.ts';
 import { checkPydoclint } from '#cli/checks/language/python/pydoclint.ts';
 import { checkSwiftTestsCoverage } from '#cli/checks/testing/coverage.ts';
 import { checkSwiftSkipReasons } from '#cli/checks/testing/swift-tests.ts';
-import { type CheckImplementations } from '#cli/types/checks/run/check.ts';
 import { importLinter } from '#cli/checks/language/python/import-linter.ts';
 import { checkLoneFiles } from '#cli/checks/general/structure/lone-files.ts';
 import { checkLongFiles } from '#cli/checks/general/structure/long-files.ts';
@@ -34,6 +35,7 @@ import { checkBashFunctionSize } from '#cli/checks/language/bash/function-size.t
 import { checkBashScriptLayout } from '#cli/checks/language/bash/script-layout.ts';
 import { checkSiteUnusedAssets } from '#cli/checks/framework/site/unused-assets.ts';
 import { checkPackageJson } from '#cli/checks/general/dependencies/package-json.ts';
+import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
 import { checkBashInlineScripts } from '#cli/checks/language/bash/inline-scripts.ts';
 import { checkPythonPipInstalls } from '#cli/checks/language/python/pip-installs.ts';
 import { checkTsc, checkJavascriptTsc } from '#cli/checks/language/typescript/tsc.ts';
@@ -49,6 +51,7 @@ import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/gener
 import { checkLargeFiles, checkIgnoredFilesTracked } from '#cli/checks/general/repository.ts';
 import { checkFileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
 import { checkEnvironmentReaders } from '#cli/checks/general/structure/environment-readers.ts';
+import { type RunnableCheck, type CheckImplementations } from '#cli/types/checks/run/check.ts';
 import { checkDockerCompose, checkDockerTrivyImage } from '#cli/checks/infrastructure/docker.ts';
 import { checkMarkdownFences, buildMarkdownlintArguments } from '#cli/checks/language/markdown.ts';
 import { checkPythonPlaceholderDocstrings } from '#cli/checks/language/python/placeholder-docstrings.ts';
@@ -198,3 +201,16 @@ export const CHECK_IMPLEMENTATIONS = {
     'python/deptry': { run: checkDeptry },
     'github-actions/actionlint': { run: checkActionlint },
 } satisfies CheckImplementations;
+
+/**
+ * Pick the code that runs one check: the stale-output check, a built-in implementation, its own runner, or the tool
+ * command.
+ * @param check the check to run.
+ * @returns the run function.
+ */
+export function selectCheckRun(check: CheckDeclaration): RunnableCheck['run'] {
+    if (check.generator_outputs !== undefined) return runBuiltInCheck(checkStaleGeneratorOutputs);
+    const builtIn = (CHECK_IMPLEMENTATIONS as CheckImplementations)[check.name];
+    if (builtIn?.check !== undefined) return runBuiltInCheck(builtIn.check);
+    return builtIn?.run ?? runCheckCommand;
+}
