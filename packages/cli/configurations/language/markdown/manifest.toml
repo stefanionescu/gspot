@@ -40,13 +40,13 @@ output = { format = "markdownlint" }
 run_in_copy = true
 stage = "commit"
 summary = "Checks every Markdown file against markdownlint with the shipped rule set."
-why = "Markdown that lints the same everywhere renders the same everywhere."
+why = "Consistent Markdown renders the same in every viewer."
 
 [[check]]
-example = "A code fence labeled `bash` containing `if then` reports invalid syntax. Correct the example to valid Bash. Use a text fence only when the block represents text rather than executable code."
-help = "Fix the code in the block, or tag the block text when it is not code."
+example = "A `bash` fence with `if then` reports a syntax error. Correct the Bash, or label the block `text` when it holds no code."
+help = "Fix the code, or label the block `text` when it holds prose."
 level = "recommended"
 name = "fences"
 stage = "commit"
 summary = "Checks JSON, JSONC, TOML, YAML, Bash, JavaScript, JSX, TypeScript, TSX, and Python code fences in Markdown (.md) files for syntax errors."
-why = "A code block that does not parse is documentation that lies about the code."
+why = "A code block that fails to parse shows readers a program that cannot run."

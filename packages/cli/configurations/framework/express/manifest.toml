@@ -1,5 +1,5 @@
 [configuration]
-description = "An Express service: the Semgrep rules for request handling, an OpenAPI document that lints and matches its source."
+description = "An Express service: Semgrep rules for request handling, and an OpenAPI document that lints and matches its source."
 requires = ["javascript"]
 suggests = ["openapi"]
 title = "Express"

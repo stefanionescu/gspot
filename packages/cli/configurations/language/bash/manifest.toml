@@ -1,6 +1,6 @@
 allowed_words = ["Bash", "ShellCheck", "tree-sitter"]
 [configuration]
-description = "Shell scripts, hooks and task files: ShellCheck, shfmt, a syntax pass, and the structure rules for shell."
+description = "Shell scripts, hooks, and task files: ShellCheck, shfmt, a syntax check, and the structure rules for shell."
 suggests = []
 title = "Bash, zsh, and Bats scripts"
 
@@ -47,14 +47,14 @@ tool = "shellcheck"
 
 [[check]]
 command = ["zsh", "-n", "{file}"]
-example = "In a Zsh script, `if then` has no condition. Use a real test: `if [[ -f \"$file\" ]]; then print -r -- \"$file\"; fi`, then rerun with Zsh installed."
+example = "In a Zsh script, `if then` has no condition. Write a real test, such as `if [[ -f \"$file\" ]]; then print -r -- \"$file\"; fi`."
 files = { tags = ["zsh"] }
-help = "Fix the syntax at the line Zsh reports. Install zsh when the command is missing."
+help = "Fix the syntax at the line Zsh reports. Install zsh when the system lacks it."
 level = "recommended"
 name = "zsh-syntax"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):\\s*(?<message>.*)$" }
 stage = "commit"
-summary = "Checks Zsh syntax with the Zsh interpreter."
+summary = "Checks the syntax of Zsh scripts with `zsh -n`."
 why = "Zsh syntax differs from Bash, so a Bash parser rejects valid Zsh programs."
 
 [[check]]
@@ -67,12 +67,12 @@ level = "recommended"
 name = "shellcheck"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$" }
 stage = "commit"
-summary = "Runs ShellCheck over shell scripts and sourced files, adding stable optional ShellCheck rules at level all."
-why = "ShellCheck catches the quoting, globbing and exit-status mistakes that make shell scripts fail on the one input nobody tested."
+summary = "Runs ShellCheck over shell scripts and sourced files, with its stable optional rules at level all."
+why = "ShellCheck catches the quoting, globbing, and exit-status mistakes that make a script fail on the one input nobody tested."
 
 [[check]]
 command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
-example = "In a script, `if true;then echo hello;fi` differs from shfmt output. Run the configured formatter to add the required spacing and block layout, then rerun the check."
+example = "`if true;then echo hello;fi` differs from the shfmt output. Run `gspot check --fix` to add the spacing and line breaks."
 files = { tags = ["bash", "sh", "bats"] }
 fix = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
 help = "Run `gspot check --fix` to format every script, or `shfmt -w` on one file."
@@ -80,64 +80,64 @@ level = "recommended"
 name = "shfmt"
 output = { format = "regex", pattern = "^(?:--- )?(?<file>.+?)(?:\\.orig$|:(?<line>\\d+):(?<column>\\d+): (?<message>.+)$)", message = "This script is not formatted the way shfmt formats it.", fixable = "^--- " }
 stage = "commit"
-summary = "Checks that every shell script is formatted the way shfmt formats it."
+summary = "Checks that every shell script matches the shfmt output."
 why = "One formatter means diffs show what changed, not how someone's editor indents."
 
 [[check]]
-example = "An executable Bash script without `set -euo pipefail` reports a strict-mode finding. Put strict mode before the first command and, when the script defines functions, call the documented `main` function last."
+example = "An executable Bash script without `set -euo pipefail` reports a finding. Put that line before the first command, and when the script defines functions, call `main` last."
 help = "Open with the shebang and run `set -euo pipefail` first. When an executable defines functions, end it with a call to main."
 level = "all"
 name = "script-layout"
 stage = "commit"
-summary = "Checks the contract every Bash script keeps: the shebang, strict mode, a main called last when functions are defined, declarative libraries, cleaned-up temporary files."
-why = "A script that skips strict mode or hides its runtime fails on the machine where it matters, silently."
+summary = "Checks each Bash script for a shebang, strict mode, a final `main` call when it defines functions, declarative libraries, and removed temporary files."
+why = "A script that skips strict mode or hides its runtime fails silently on the machine that matters."
 
 [[check]]
-example = "A function `_quiet() { printf \"%s\\n\" \"Hello\"; }` without a preceding description reports a missing comment. Add `# _quiet: prints a greeting.` immediately above the function. Other structural checks still apply."
-help = "Write \"# name: what it does\" above the function; when it carries doc sections, keep Globals, Arguments, Outputs, Returns in that order."
+example = "`_quiet() { printf \"%s\\n\" \"Hello\"; }` with no comment above it reports a finding. Add `# _quiet: prints a greeting.` on the line above."
+help = "Write \"# name: what it does\" above the function; when it carries doc sections, keep Globals, Arguments, Outputs, and Returns in that order."
 level = "all"
 name = "doc-comments"
 stage = "commit"
-summary = "Checks that every shell function announces itself in a comment above it that says more than its name."
-why = "A function with no summary makes the reader run it in their head; a vague summary is a summary nobody will trust."
+summary = "Checks that each shell function has a comment above it that says more than its name."
+why = "Without a summary, the reader must trace the function in their head, and nobody trusts a vague one."
 
 [[check]]
-example = "A private shell function `_orphan` that no script calls reports an unused-function finding. Delete the unused definition. If an external hook requires the function, record that contract with `gspot ignore` and a reason."
+example = "A private function `_orphan` that no script calls reports a finding. Delete it, or record a hook that needs it with `gspot ignore` and a reason."
 help = "Delete the function. For a required hook entry point, run `gspot ignore bash/unused-functions --paths <file> --reason <why>`."
 level = "recommended"
 name = "unused-functions"
 runs = "scope"
 stage = "commit"
 summary = "Finds shell functions no script in the scope calls."
-why = "ShellCheck checks one file; this check follows calls across every script in the scope."
+why = "ShellCheck works on one file at a time, while this check follows calls across the whole scope."
 
 [[check]]
-example = "A call `_deaf one two` whose function never reads positional arguments reports dead parameters. If both arguments are unnecessary, remove them from the call. Otherwise read and use the arguments in the function."
+example = "`_deaf one two` reports dead parameters when `_deaf` never reads its arguments. Drop them from the call, or use them in the function."
 help = "Read the argument in the function, or drop it from every call."
 level = "recommended"
 name = "unread-arguments"
 runs = "scope"
 stage = "commit"
 summary = "Finds shell functions called with arguments they never read."
-why = "A caller that passes an argument expects it to affect the result. An unread argument misleads the caller."
+why = "An unread argument misleads the caller, who expects it to change the result."
 
 [[check]]
-example = "A function over `limits.bash.function_lines`, `limits.bash.function_branches`, `limits.bash.block_nesting`, or `limits.bash.function_assignments` reports the count and the ceiling under `function-lines`, `branches`, `nesting`, or `assignments`. Split the function by the job, then rerun."
+example = "A function over `limits.bash.function_lines` reports `function-lines` with the count and the limit. Split it by job."
 help = "Split the script or the function, or raise the named limits.bash setting with a reason."
 level = "all"
 name = "function-size"
 stage = "commit"
 summary = "Checks every shell function against the size ceilings: code lines, branches, nesting, and assignments."
-why = "A long script holds more than one job, and a function with many branches or assignments is several functions with one name."
+why = "A long script holds more than one job, and many branches or assignments hide several functions under one name."
 
 [[check]]
-example = "A short launcher containing only `exec bash scripts/build.sh` reports a forwarding-wrapper finding. Invoke `scripts/build.sh` directly and remove the redundant launcher."
+example = "A launcher that holds only `exec bash scripts/build.sh` reports a finding. Call `scripts/build.sh` directly, and delete the launcher."
 help = "Call the target script directly and delete the redundant launcher or alias."
 level = "all"
 name = "forwarders"
 stage = "commit"
 summary = "Finds forwarding wrappers and compatibility aliases in shell scripts."
-why = "A wrapper is a second entry point that drifts from the first."
+why = "A wrapper adds a second entry point, and the two drift apart."
 
 [[check]]
 example = "A shell heredoc containing a Python program reports embedded code. Move the program into a `.py` file and invoke that file from the shell script."
@@ -146,16 +146,16 @@ level = "all"
 name = "inline-scripts"
 stage = "commit"
 summary = "Finds inline Python, Node, and generated-script heredocs in shell scripts."
-why = "Code inside a heredoc is checked by nothing."
+why = "No check reads code inside a heredoc."
 
 [[check]]
-example = "A `killall worker` command reports broad-kill. Target the specific process, or ignore that rule for the owning script with a reason."
-help = "Handle the failure. For required cleanup, use `gspot ignore bash/safety` with `--rule`, `--paths` and `--reason`."
+example = "`killall worker` reports `broad-kill`. Stop the one process by its ID, or ignore the rule for that script with a reason."
+help = "Handle the failure. For required cleanup, use `gspot ignore bash/safety` with `--rule`, `--paths`, and `--reason`."
 level = "recommended"
 name = "safety"
 stage = "commit"
-summary = "Finds broad process kills and recursive deletes, except traps that remove mktemp paths. At all, it also reports discarded failures."
-why = "Each of these is a way a script destroys something it did not mean to and says nothing."
+summary = "Finds broad process kills and recursive deletes, except traps that remove mktemp paths. At level all, also reports discarded failures."
+why = "Each of these lets a script silently destroy something by mistake."
 
 [[naming.override]]
 allowed_names = ["IFS", "OPTARG", "OPTIND", "EUID", "UID", "PPID", "RANDOM", "SECONDS", "LINENO", "BASH_SOURCE", "BASH_REMATCH", "BASH_VERSION", "BASH_VERSINFO", "FUNCNAME", "PIPESTATUS", "REPLY", "CDPATH", "OLDPWD", "SHLVL", "HOSTNAME", "OSTYPE", "MACHTYPE", "COLUMNS", "LINES"]

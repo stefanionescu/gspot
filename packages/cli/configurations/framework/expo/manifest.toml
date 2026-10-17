@@ -1,5 +1,5 @@
 [configuration]
-description = "Expo applications: rules for public environment variables and DOM exports, plus Expo Doctor's project and SDK compatibility checks. React Native supplies the native component and style rules."
+description = "Expo applications: rules for public environment variables and DOM exports, and the project and SDK checks of Expo Doctor. The React Native configuration adds the component and style rules."
 requires = ["react-native"]
 title = "Expo"
 
@@ -22,14 +22,14 @@ npm = "expo-doctor"
 version = "1.20.4"
 
 [[check]]
-example = "An Expo project whose installed `react-native` differs from the version its Expo SDK expects reports a failed Doctor check. Install the expected version with `npx expo install --check` and rerun."
-help = "Read the issues and advice Expo Doctor prints for the failed check, then run `npx expo install --check`."
+example = "A `react-native` version that differs from the one the Expo SDK requires fails a Doctor check. Run `npx expo install --check` to install the matching version."
+help = "Follow the advice Expo Doctor prints, then run `npx expo install --check`."
 level = "recommended"
 name = "expo-doctor"
 needs = ["network"]
 runs = "scope"
 stage = "push"
-summary = "Runs Expo Doctor in the selected Expo scope and reports each failed check with its issues."
+summary = "Runs Expo Doctor and reports each failed check with its details."
 tool = "expo-doctor"
 why = "A native package on the wrong version for the Expo SDK builds and then crashes on the device."
 

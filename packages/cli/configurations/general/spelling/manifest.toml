@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "typos over every text file, with the words this repository allows and the reason for each."
+description = "Runs typos over every text file, with the allowed words and a reason for each."
 title = "Spelling"
 
 [files]
@@ -23,7 +23,7 @@ tool = "typos"
 
 [[check]]
 command = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
-example = "A misspelled word in selected text reports a spelling finding. Correct it and rerun. Filename findings require a manual rename and reference updates."
+example = "A misspelled word reports a finding. Correct it, and for a file name, rename the file and update each reference to it."
 exit_codes = [2]
 fix = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
 help = "Fix the spelling, or write the real name and its reason in the root allowed_words setting."

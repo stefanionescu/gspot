@@ -1,7 +1,7 @@
 allowed_words = ["Semgrep"]
 [configuration]
 always_selected = true
-description = "Static analysis for security patterns with Semgrep over every file a selected language claims."
+description = "Runs Semgrep security rules over every file a language configuration claims."
 title = "Security"
 
 [files]
@@ -26,19 +26,19 @@ tool = "semgrep"
 
 [[check]]
 command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]
-example = "Code matching a selected local Semgrep rule reports that rule ID and source location. For a rule banning dynamic evaluation, replace `eval(userInput)` with explicit parsing and permitted operations, then rerun the same rule set."
+example = "`eval(userInput)` matches a rule against dynamic evaluation and reports its ID and location. Parse the input instead, and allow only known operations."
 exit_codes = [1, 3]
 help = "Change the code the way the message says. Turn one rule off for a path with `gspot ignore security/semgrep --rule <id> --paths <glob> --reason \"<why>\"`."
 level = "recommended"
 name = "semgrep"
 output = { format = "semgrep" }
 stage = "push"
-summary = "Runs the Semgrep rule packs of the selected configurations, and the repository's own rules, over the changed files."
+summary = "Runs the Semgrep packs of each configuration, and the repository rules, over changed files."
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."
 
 [[check]]
 command = ["semgrep", "scan", "--strict", "{each:--config:tools.semgrep.registry_packs}", "--error", "--metrics", "off", "--disable-version-check", "--quiet", "--json", "{files}"]
-example = "Code matching a configured Semgrep registry rule reports its upstream rule ID. Correct the operation identified by that rule and rerun with network access. The configured rule set determines which patterns are findings."
+example = "Code that matches a registry rule reports its upstream ID. Fix the code at that location, then rerun with network access."
 exit_codes = [1, 3]
 help = "Change the code the way the message says, or turn the rule off for a path with `gspot ignore security/semgrep-registry --rule <id> --reason \"<why>\"`."
 level = "recommended"
@@ -46,7 +46,7 @@ name = "semgrep-registry"
 needs = ["network"]
 output = { format = "semgrep" }
 stage = "manual"
-summary = "Runs the public Semgrep registry packs named in tools.semgrep.registry_packs, which the registry serves over the network."
+summary = "Downloads and runs the public Semgrep packs in `tools.semgrep.registry_packs`."
 tool = "semgrep"
 when = { setting = "tools.semgrep.registry_packs" }
 why = "The registry packs cover the common vulnerability classes, and their license keeps them out of this package."

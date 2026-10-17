@@ -1,5 +1,5 @@
 [configuration]
-description = "ESLint checks Vue templates, scripts, and accessibility. Attribute spelling, component names, declarations, ordering, and default props wait for level all. HTML injection checks run at both levels."
+description = "ESLint checks Vue templates, scripts, and accessibility. Rules for attribute spelling, component names, declarations, ordering, and default props apply at level all. HTML injection rules apply at both levels."
 requires = ["javascript"]
 suggests = ["typescript", "css"]
 title = "Vue"
@@ -41,8 +41,8 @@ version = "3.3.11"
 
 [[check]]
 cwd = "scope"
-example = "A component script containing `const count: number = 'one';` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
-help = "Read the first error vue-tsc prints and fix that file; later errors are often the same mistake."
+example = "`const count: number = 'one';` in a component script reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
+help = "Fix the first error vue-tsc prints; later errors often come from the same mistake."
 instead_of = "typescript/tsc"
 level = "recommended"
 name = "vue-tsc"
@@ -50,7 +50,7 @@ runs = "scope"
 stage = "push"
 summary = "Type-checks every Vue component and TypeScript file of the scope with the strict compiler options."
 tool = "vue-tsc"
-why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Vue checker reads it."
+why = "tsc cannot parse a component file, so a type error inside one ships unless vue-tsc catches it."
 
 [check.when]
 configuration = "typescript"

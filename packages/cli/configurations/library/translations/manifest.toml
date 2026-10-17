@@ -14,14 +14,14 @@ rule_prefix = "i18next"
 version = "6.1.5"
 
 [[check]]
-example = "If the base locale defines `welcome` but another required locale does not, the check reports the missing key. Add the translated message with matching interpolation arguments."
+example = "When the base locale defines `welcome` and another lacks it, the check reports the missing key. Add the translation with the same placeholders."
 help = "Correct the message, or add the missing key to the locale."
 level = "recommended"
 name = "messages"
 runs = "scope"
 stage = "push"
-summary = "Checks next-intl JSON/ICU message files under translations.messages_folder: each message parses, none is empty, and every locale holds every key of the base."
-why = "next-intl reads one locale at a time, so only a comparison of each locale with the base locale finds a key that a locale lacks."
+summary = "Checks the next-intl JSON/ICU files under `translations.messages_folder`: each message parses, none stays empty, and each locale holds all keys of the base."
+why = "next-intl loads one locale at a time, so only a comparison with the base finds a missing key."
 
 [check.when]
 dependencies = ["next-intl"]

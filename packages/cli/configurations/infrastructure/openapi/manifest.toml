@@ -1,5 +1,5 @@
 [configuration]
-description = "A committed OpenAPI document: Spectral lints it, and the command that writes it must not change it."
+description = "A committed OpenAPI document: Spectral lints it, and its generator command leaves it unchanged."
 title = "OpenAPI"
 
 [detect]
@@ -23,7 +23,7 @@ tool = "spectral"
 [[check]]
 command = ["spectral", "lint", "--ruleset", "{tool_file:spectral}", "--format", "text", "{setting:openapi.document}"]
 cwd = "root"
-example = "An OpenAPI document whose operation references an undefined schema reports a validation finding. Define the schema or correct the reference in the source that produces the document, then regenerate it."
+example = "An operation that references an undefined schema reports a finding. Define the schema or fix the reference in the source, then generate the document again."
 files = { extensions = [".yaml", ".yml", ".json"] }
 help = "Change the document the way the rule says, or the code that writes it."
 level = "recommended"
@@ -31,20 +31,20 @@ name = "spectral"
 output = { format = "regex", pattern = '^(?<file>.+):(?<line>\d+):(?<column>\d+) (?:error|warning) (?<rule>\S+) "(?<message>.*)"$' }
 runs = "scope"
 stage = "commit"
-summary = "Lints the OpenAPI document named in openapi.document with the Spectral OpenAPI rules."
+summary = "Lints the file in `openapi.document` with the Spectral OpenAPI rules."
 tool = "spectral"
 when = { setting = "openapi.document" }
-why = "Clients are written from this document, so an operation with no id or an undefined response becomes somebody's broken client."
+why = "Teams generate clients from this document, so an operation with no ID or an undefined response breaks them."
 
 [[check]]
 command = ["{setting:openapi.generate_command}"]
-example = "A committed OpenAPI document that differs from the configured generator output reports drift. Run the declared generator, inspect the changed document, and retain the corrected output before rerunning."
+example = "A committed document that differs from the generator output reports drift. Run the generator, review the change, and commit it."
 generator_outputs = [{ path = "{setting:openapi.document}" }]
 help = "Run the command and commit the document it writes."
 level = "recommended"
 name = "stale-document"
 runs = "scope"
 stage = "push"
-summary = "Runs the command in openapi.generate_command and fails when it changes the document."
+summary = "Runs `openapi.generate_command` and fails when the document changes."
 when = { setting = "openapi.generate_command" }
 why = "A committed document that lags the routes describes a service that does not exist."

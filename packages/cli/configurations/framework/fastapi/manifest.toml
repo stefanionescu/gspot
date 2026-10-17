@@ -1,5 +1,5 @@
 [configuration]
-description = "Checks FastAPI route declarations with Ruff. Adds Semgrep request-handling rules when security is selected and suggests the OpenAPI configuration."
+description = "Checks FastAPI routes with Ruff. With security, adds Semgrep rules for request handling, and suggests the OpenAPI configuration."
 requires = ["python"]
 suggests = ["openapi"]
 title = "FastAPI"

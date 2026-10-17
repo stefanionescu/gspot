@@ -4,7 +4,7 @@ allowed_words = ["Vitest"]
 prefixes = ["vitest"]
 
 [configuration]
-description = "Vitest test files: the test rules of ESLint over them, and coverage thresholds at push."
+description = "Vitest files: ESLint test rules, and coverage floors at push."
 requires = ["javascript", "coverage"]
 title = "Vitest"
 
@@ -38,15 +38,15 @@ system = true
 [[check]]
 command = ["vitest", "run", "--coverage", "--coverage.reporter=text-summary", "--coverage.thresholds.lines={setting:coverage.lines}", "--coverage.thresholds.branches={setting:coverage.branches}", "--coverage.thresholds.functions={setting:coverage.functions}", "--coverage.thresholds.statements={setting:coverage.statements}"]
 cwd = "scope"
-example = "Vitest reports `ERROR: Coverage for lines (85%) does not meet global threshold (90%)`. Exercise the missing lines before the push check."
-help = "Add tests for the code the coverage report shows uncovered, or lower one floor under coverage with a reason."
+example = "Vitest reports `ERROR: Coverage for lines (85%) does not meet global threshold (90%)`. Add tests for the uncovered lines."
+help = "Add tests for the lines the report marks, or lower one floor under `coverage` with a reason."
 level = "recommended"
 name = "coverage"
 runs = "scope"
 stage = "push"
 summary = "Runs the test suite with coverage, and fails when lines, branches, functions, or statements fall under their floors."
 tool = ["vitest", "@vitest/coverage-v8"]
-why = "A floor keeps new code from arriving untested, which is when its behavior is cheapest to pin down."
+why = "A floor makes new code arrive with tests, when its behavior costs least to check."
 
 [check.files]
 extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]

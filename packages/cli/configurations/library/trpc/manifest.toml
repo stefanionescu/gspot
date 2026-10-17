@@ -1,7 +1,7 @@
 allowed_words = ["tRPC"]
 
 [configuration]
-description = "tRPC routers: every procedure validates its input, and client code imports the declared server module as a type only. Name your server module `server` in `[[architecture.module]]`."
+description = "tRPC routers: every procedure validates its input, and client code imports the server module as a type only. Name that module `server` in `[[architecture.module]]`."
 requires = ["javascript"]
 title = "tRPC"
 

@@ -2,7 +2,7 @@ shared_prefixes = { prefixes = ["docker"] }
 
 allowed_words = ["Docker", "Trivy"]
 [configuration]
-description = "Dockerfiles and Compose files: hadolint, a Compose file that parses, an ignore file beside every Dockerfile, and Trivy over the configuration."
+description = "Dockerfiles and Compose files: hadolint, Compose parsing, a `.dockerignore` beside each Dockerfile, and Trivy scans."
 title = "Docker"
 
 [detect]
@@ -48,7 +48,7 @@ tool = "trivy"
 
 [[check]]
 command = ["hadolint", "--no-color", "--config", "{tool_file:hadolint}", "{files}"]
-example = "The instruction `FROM node:latest` reports DL3007 because the tag changes over time. Select a reviewed, explicit version tag or digest and rerun."
+example = "`FROM node:latest` reports DL3007, because that tag moves. Pin an explicit version tag or a digest."
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
 help = "Change the instruction the way the rule says. Turn one rule off with `gspot ignore docker/hadolint --rule <id> --reason \"<why>\"`."
 level = "recommended"
@@ -56,11 +56,11 @@ name = "hadolint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$" }
 stage = "commit"
 summary = "Lints every Dockerfile, and runs ShellCheck over its RUN lines."
-why = "An unpinned base image or a cache left in a layer makes a build nobody can repeat and an image larger than it needs to be."
+why = "An unpinned base image makes a build nobody can repeat, and a cache left in a layer bloats the result."
 
 [[check]]
 command = ["docker", "compose", "-f", "{file}", "config", "--quiet", "--no-env-resolution"]
-example = "A Compose service with an unknown key such as `bogus` fails configuration validation. Remove the key or replace it with the supported setting for the intended behavior."
+example = "A Compose service with the unknown key `bogus` fails to parse. Remove the key, or use a supported one."
 files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"] }
 help = "Read the message Compose prints; it names the key and the service."
 level = "recommended"
@@ -69,23 +69,23 @@ needs = ["docker"]
 output = { format = "lines" }
 runs = "scope"
 stage = "push"
-summary = "Asks Docker Compose to parse every Compose file, which needs no running daemon."
+summary = "Parses every Compose file with `docker compose config`, which needs no running daemon."
 tool = "docker"
-why = "A Compose file that is valid YAML can still name a key Compose refuses, and the first person to learn that is deploying."
+why = "Valid YAML can still hold a key that Compose rejects, and otherwise the first sign comes during a deploy."
 
 [[check]]
-example = "A Dockerfile without a neighboring `.dockerignore` reports the missing context exclusions. Add `.dockerignore` with the required entries named in the finding, such as `.git` and dependency directories."
-help = "Add a .dockerignore beside the Dockerfile with the entries the message names."
+example = "A Dockerfile with no `.dockerignore` beside it reports a finding. Add one that excludes the paths the finding names, such as `.git` and installed dependencies."
+help = "Add a .dockerignore beside the Dockerfile with the paths the message names."
 level = "recommended"
 name = "dockerignore"
 runs = "once"
 stage = "commit"
-summary = "Checks that an ignore file sits beside every Dockerfile and keeps the git folder, installed dependencies, and environment files out of the build."
-why = "Without it the whole folder goes to the daemon, and copying the folder puts the history and the secrets into the image."
+summary = "Checks that an ignore file sits beside every Dockerfile and keeps the `.git` folder, installed dependencies, and environment files out of the build."
+why = "Without it, the daemon receives the whole folder, and a `COPY` of it puts the history and secrets into the image."
 
 [[check]]
 command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{tool_file:trivy}", "--ignorefile", "{tool_file:trivyignore}", "--exit-code", "10", "--format", "sarif", "{root}"]
-example = "A Dockerfile whose final application stage runs as root can report a container-security finding. Create an unprivileged user, grant it only required file access, and select it with `USER` before running the application."
+example = "A Dockerfile whose final stage runs as root reports a finding. Create an unprivileged user, and switch to it with `USER` before the application starts."
 exit_codes = [10]
 help = "Change the file the way the message says. Accept one advisory with `gspot ignore docker/trivy-config --rule <id> --reason \"...\"`."
 level = "recommended"
@@ -96,10 +96,10 @@ runs = "scope"
 stage = "push"
 summary = "Scans Dockerfiles for HIGH and CRITICAL misconfigurations, including a root user and exposed secrets."
 tool = "trivy"
-why = "A container that runs as root turns any bug in the service into control of the container."
+why = "A root user turns any bug in the service into full control of the container."
 
 [[check]]
-example = "A configured image containing a package with a known advisory reports that advisory. Move to a reviewed image version containing the package fix, then rerun the image scan. Results depend on the advisory database and available image."
+example = "An image with a vulnerable package reports the advisory. Move to an image version with the fixed package."
 help = "Move to a newer tag of the image. Accept one advisory with `gspot ignore docker/trivy-image --rule <id> --reason \"...\"`."
 level = "recommended"
 name = "trivy-image"
@@ -108,4 +108,4 @@ runs = "scope"
 stage = "manual"
 summary = "Scans every image a Compose file names for known vulnerabilities in its packages."
 tool = "trivy"
-why = "A base image carries hundreds of packages, and their advisories arrive after the image was chosen."
+why = "A base image carries hundreds of packages, and new advisories keep arriving after you pick it."

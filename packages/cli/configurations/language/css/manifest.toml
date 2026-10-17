@@ -1,6 +1,6 @@
 allowed_words = ["CSS"]
 [configuration]
-description = "CSS files and the style blocks of Vue and Svelte components: Stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used. SCSS receives formatting only."
+description = "CSS files and style blocks in Vue and Svelte components: Stylelint with the standard rules, Prettier for layout, and module classes both defined and used. SCSS gets formatting only."
 title = "CSS"
 
 [detect]
@@ -39,7 +39,7 @@ tool = "stylelint"
 
 [[check]]
 command = ["stylelint", "--config", "{tool_file:stylelint}", "--config-basedir", "{root}/.gspot", "--formatter", "unix", "--allow-empty-input", "{files}"]
-example = "The declaration `color: #ggg` uses an invalid hexadecimal color and reports a Stylelint finding. Replace it with a valid intended color such as `#abc`."
+example = "The declaration `color: #ggg` holds an invalid hex value and reports a finding. Replace it with a valid one such as `#abc`."
 exit_codes = [2]
 files = { extensions = [".css", ".vue", ".svelte"] }
 fix = ["stylelint", "--config", "{tool_file:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
@@ -50,7 +50,7 @@ output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\
 stage = "commit"
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
 tool = ["stylelint", "stylelint-config-standard"]
-why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
+why = "A browser silently skips a declaration it cannot parse, so a typo in a property ships as a missing style."
 
 [rules]
 "TAILWIND.md" = { dependencies = ["tailwindcss"] }

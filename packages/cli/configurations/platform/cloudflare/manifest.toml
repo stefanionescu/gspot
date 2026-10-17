@@ -2,7 +2,7 @@ allowed_words = ["Cloudflare"]
 generated = ["worker-configuration.d.ts"]
 
 [configuration]
-description = "Cloudflare Pages and Workers: headers and redirects files Cloudflare can read, fresh binding types, and the Semgrep rules for workers."
+description = "Cloudflare Pages and Workers: valid headers and redirects files, current binding types, and Semgrep rules for worker code."
 requires = ["javascript"]
 suggests = []
 title = "Cloudflare"
@@ -32,30 +32,30 @@ tool = "semgrep"
 when = { configuration = "security" }
 
 [[check]]
-example = "An indented `X-Frame-Options: DENY` line before any path in `_headers` reports that the header sits under no path. Put the intended path, such as `/*`, on the preceding unindented line."
+example = "An indented `X-Frame-Options: DENY` at the top of `_headers` reports a header with no path. Put a path such as `/*` on an unindented line above it."
 help = "Write each block as a path, then indented lines of a name, a colon, and a value."
 level = "recommended"
 name = "headers"
 runs = "scope"
 stage = "commit"
-summary = "Checks that the headers file is blocks of a path line and indented header lines."
+summary = "Checks that `_headers` holds only blocks of a path followed by indented name-value lines."
 why = "Cloudflare skips a line it cannot read, so a typo silently drops a security header."
 
 [[check]]
-example = "The `_redirects` line `/old /new 999` reports an unsupported redirect status. For an intended permanent redirect, change it to `/old /new 301`."
-help = "Write the rule as source, destination, status."
+example = "The `_redirects` line `/old /new 999` reports an unsupported redirect status. For a permanent redirect, change it to `/old /new 301`."
+help = "Write the rule as source, destination, and status."
 level = "recommended"
 name = "redirects"
 runs = "scope"
 stage = "commit"
 summary = "Checks each redirect source, destination, and optional status: 200, 301, 302, 303, 307, or 308, without a force suffix."
-why = "A redirect Cloudflare cannot read is dropped, and the old address starts to answer 404."
+why = "Cloudflare drops a redirect it cannot parse, and the old address starts to answer 404."
 
 [[check]]
 command = ["wrangler", "types", "{file}", "--env-interface", "{setting:cloudflare.types_interface}"]
-example = "A generated Worker environment type file that differs from `wrangler types` output reports drift. Regenerate it using the configured Wrangler project, inspect the changes, and rerun."
+example = "A Worker types file that differs from the output of `wrangler types` reports drift. Run `wrangler types`, and commit the new file."
 generator_outputs = [{ pattern = "**/{setting:cloudflare.types_file}" }]
-help = "Run wrangler types and commit the file."
+help = "Run `wrangler types` and commit the file."
 level = "recommended"
 name = "stale-types"
 runs = "scope"
@@ -65,11 +65,11 @@ tool = "wrangler"
 why = "Stale binding types let code compile against a binding the configuration dropped."
 
 [[check]]
-example = "A configured response-header block without a required security header reports the missing header. Add that header to every governed path block using the value required by settings."
+example = "A path block without a required security header reports it as missing. Add the header, with the value from the settings, to every path block."
 help = "Add the header to the block for every path."
 level = "recommended"
 name = "security-headers"
 runs = "scope"
 stage = "commit"
 summary = "Checks that the headers file sets the content type, referrer, and framing headers for every path."
-why = "A site of files has no server code, so the headers file is the only place these protections can live."
+why = "A static site has no server code, so these protections can live only in the headers file."

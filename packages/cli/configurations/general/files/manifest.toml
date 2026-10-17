@@ -1,7 +1,7 @@
 allowed_words = ["JSON", "TOML", "YAML"]
 [configuration]
 always_selected = true
-description = "Checks JSON, YAML, TOML, XML, and related formats. Its tool files configure the tools that read these files."
+description = "Checks JSON, YAML, TOML, XML, and related formats, and writes a tool file for each checker."
 title = "JSON, YAML, TOML, and XML files"
 
 [files]
@@ -60,7 +60,7 @@ tool = "v8r"
 
 [[check]]
 command = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
-example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
+example = "The TOML line `enabled=true` differs from the taplo output. Run `gspot check --fix` to get `enabled = true`."
 files = { extensions = [".toml"] }
 fix = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
 help = "Run `gspot check --fix`."
@@ -68,14 +68,14 @@ level = "recommended"
 name = "taplo-format"
 output = { format = "regex", pattern = "^(?:\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)|--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file does not parse as TOML, or it is not in the format of the configured TOML settings.", fixable = "^(?:--- a/|ERROR taplo:format_files)" }
 stage = "commit"
-summary = "Checks that every TOML file parses and is formatted the way taplo formats it with the shared settings."
+summary = "Checks that every TOML file parses and matches the taplo output under the shared settings."
 why = "One formatter keeps a diff about the values, not the spacing."
 
 [[check]]
 command = ["yamllint", "-c", "{tool_file:yamllint}", "-f", "parsable", "-s", "{files}"]
-example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
+example = "Two `enabled` keys in one YAML mapping report a duplicate key. Keep one, and delete the other."
 files = { extensions = [".yaml", ".yml"] }
-help = "Fix the line yamllint names, or set the rule's options with `gspot set tools.yamllint.rules`."
+help = "Fix the line yamllint names, or change rule options with `gspot set tools.yamllint.rules`."
 level = "recommended"
 name = "yamllint"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$" }
@@ -86,7 +86,7 @@ why = "A YAML file that parses to the wrong shape fails silently: a duplicated k
 [[check]]
 command = ["v8r", "--output-format", "text", "{files}"]
 env = { V8R_CONFIG_FILE = "{tool_file:v8r}" }
-example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
+example = "A JSON file with a string where its schema requires a boolean reports a mismatch. Replace the string with `true` or `false`."
 files = { extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"] }
 help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schema."
 level = "recommended"
@@ -94,8 +94,8 @@ name = "v8r"
 needs = ["network"]
 output = { format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$" }
 stage = "push"
-summary = "Validates every tool file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
-why = "A key the schema refuses is a setting that never applies, and nobody finds out until the behavior it was meant to change does not change."
+summary = "Validates each file that matches a SchemaStore schema, such as package.json, tsconfig.json, mise files, and workflows."
+why = "A key the schema rejects never takes effect, and nobody notices until the expected behavior fails to appear."
 
 [[check]]
 command = ["xmllint", "--noout", "{files}"]
@@ -107,4 +107,4 @@ name = "xmllint"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }
 stage = "commit"
 summary = "Parses every XML file with xmllint."
-why = "Malformed XML is refused by the reader at the worst moment."
+why = "A parser rejects malformed XML at the worst moment."

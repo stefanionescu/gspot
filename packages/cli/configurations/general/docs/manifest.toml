@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape."
+description = "Checks documentation for broken links and anchors, banned headings, stale paths, and a well-formed README in every scope."
 title = "Docs"
 
 [files]
@@ -22,18 +22,18 @@ tool = "lychee"
 
 [[check]]
 command = ["lychee", "--config", "{tool_file:lychee}", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
-example = "The Markdown link `[Setup](missing.md)` reports a missing local target when `missing.md` does not exist. Point it at the actual setup guide or add the intended document."
+example = "The link `[Setup](missing.md)` reports a broken target when no `missing.md` exists. Point it at the setup guide, or add that file."
 help = "Point the link at the file or heading that exists, or delete it."
 level = "recommended"
 name = "lychee"
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 stage = "commit"
 summary = "Checks that local documentation links reach existing files and valid anchor or text fragments."
-why = "A dead link inside the repository is a promise the docs broke without anyone noticing."
+why = "A dead link inside the repository breaks silently, and readers hit it first."
 
 [[check]]
 command = ["lychee", "--config", "{tool_file:lychee}", "--root-dir", "{root}", "--scheme", "http", "--scheme", "https", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
-example = "A documentation link returning HTTP 404 reports a broken external destination. Replace it with a verified current URL or remove the obsolete link, then rerun with network access."
+example = "A link that returns HTTP 404 reports a broken destination. Replace the URL with a current one, or remove the link."
 help = "Update or remove the link, or exclude the URL pattern with a reason under docs.allowed_urls."
 level = "recommended"
 name = "lychee-external"
@@ -41,23 +41,23 @@ needs = ["network"]
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 stage = "manual"
 summary = "Checks every external link over the network."
-why = "An external link rots on its own schedule; this run says which ones did."
+why = "External links break over time; this check reports which ones did."
 
 [[check]]
-example = "A documented repository path that no longer exists reports a stale reference. Update the path and any associated command to the current owner, then verify the procedure from its stated working directory."
-help = "Fix the path or the task name. Give an example code block a title= attribute."
+example = "A path in the docs that points to a deleted file reports a stale reference. Update the path and any command that uses it."
+help = "Fix the path or the task name. Give an example code block a `title=` attribute."
 level = "recommended"
 name = "missing-paths"
 runs = "once"
 stage = "commit"
-summary = "Checks that documented paths name tracked files and mise, npm, pnpm, yarn, and bun run commands name tasks or scripts in their project."
-why = "A path in the docs that nothing tracks sends the reader to a file that is gone."
+summary = "Checks that documented paths point to tracked files, and that mise, npm, pnpm, yarn, and bun run commands name a task or script of their project."
+why = "A stale path in the docs sends the reader to a deleted file."
 
 [[check]]
-example = "A configured scope without `README.md` reports the missing README. Add one that explains its purpose and setup. The repository root also needs a license when license presence is required."
+example = "A scope without `README.md` reports the missing file. Add one that explains what the scope does and how to start."
 help = "Write the README; the docs rule files say what goes in it."
 level = "all"
 name = "required-files"
 stage = "commit"
 summary = "Checks that every scope has a README.md and the root has a LICENSE."
-why = "A scope with no README is a door with no sign."
+why = "A scope with no README leaves readers to guess what it does."

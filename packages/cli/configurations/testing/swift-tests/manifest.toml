@@ -18,14 +18,14 @@ target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
 
 [[check]]
-example = "In a Swift test, `throw XCTSkip()` reports a missing reason. Restore the test, or supply a nonempty reason such as `throw XCTSkip(\"Requires the hardware test device\")`. The check requires a reason; it does not validate when the test will be enabled."
+example = "`throw XCTSkip()` in a Swift test reports a missing reason. Restore the test, or give a reason such as `throw XCTSkip(\"Requires the hardware test device\")`."
 files = { tags = ["swift-test"] }
-help = "Say why the test is off and what turns it back on, or delete the test."
+help = "Write why the test stays off and what turns it on again, or delete it."
 level = "recommended"
 name = "skip-reasons"
 stage = "commit"
 summary = "Checks that skip calls and disabled traits name a nonempty reason, and unavailable tests carry an explanation."
-why = "A test turned off with no reason stays off, because nobody knows when it is safe to turn on."
+why = "A skipped test with no reason stays off, because nobody can tell when to restore it."
 
 [[check]]
 example = "A Swift target reports 85% line coverage against a 90% floor. Add a test that exercises its uncovered lines, then rerun the target."
@@ -37,5 +37,5 @@ needs = ["build"]
 operating_systems = ["macos", "linux"]
 runs = "scope"
 stage = "push"
-summary = "Measures Xcode projects and Swift packages, holding each source target against coverage.lines and its coverage.swift_target floor."
-why = "A target-specific coverage floor exposes Swift code that its test target has not exercised."
+summary = "Measures each source target in Xcode projects and Swift packages against `coverage.lines` and its `coverage.swift_target` floor."
+why = "A floor for each target exposes Swift code that no test runs."

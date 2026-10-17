@@ -55,7 +55,7 @@ test.each([...DOCTOR_RESULTS])('Expo Doctor runs once in each app folder: $name'
                 file: `${scope}/package.json`,
                 line: 1,
                 rule: 'failed-check',
-                help: 'Read the issues and advice Expo Doctor prints for the failed check, then run `npx expo install --check`.',
+                help: 'Follow the advice Expo Doctor prints, then run `npx expo install --check`.',
                 message: message,
                 fixable: false,
             })),

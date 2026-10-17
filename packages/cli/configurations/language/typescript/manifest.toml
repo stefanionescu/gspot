@@ -31,23 +31,23 @@ extensions = [".ts", ".tsx", ".mts", ".cts"]
 
 [[check]]
 cwd = "scope"
-example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
-help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
+example = "`const count: number = \"one\";` reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
+help = "Fix the first error tsc prints; later errors often come from the same mistake."
 level = "recommended"
 name = "tsc"
 runs = "scope"
 stage = "push"
-summary = "Checks that every TypeScript file type-checks with the strict compiler options."
+summary = "Runs tsc with the strict compiler options over every TypeScript file."
 tool = "tsc"
-why = "A file that does not type-check can crash at run time in a way the editor already knew about."
+why = "A type error left in a file can crash the program at run time, though the editor already showed it."
 
 [check.output]
 format = "regex"
 pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"
 
 [[check]]
-example = "Your TypeScript configuration setting `strict` to `false` reports the required compiler option. Enable `strict` and fix the type errors it reports."
-help = "Enable the reported compiler option in your TypeScript configuration."
+example = "A tsconfig with `strict` set to `false` reports a finding. Set `strict` to `true`, and fix the new type errors."
+help = "Turn on the reported compiler option in your tsconfig."
 level = "recommended"
 name = "tsconfig"
 stage = "commit"

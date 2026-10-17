@@ -19,20 +19,20 @@ tool = "html-validate"
 
 [[check]]
 command = ["html-validate", "--config", "{tool_file:html-validate-source}", "--formatter", "json", "{files}"]
-example = "An `<img src=\"logo.png\">` element without alternative text reports an accessibility finding under the configured rules. Add meaningful `alt` text, or an empty `alt` value for a decorative image."
+example = "An `<img src=\"logo.png\">` without alternative text reports a finding. Add `alt` text, or leave it empty for a decorative image."
 help = "Change the markup the way the rule page says. Turn one rule off with `gspot ignore html/html-validate --rule <name> --reason \"<why>\"`."
 level = "recommended"
 name = "html-validate"
 output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
 stage = "commit"
-summary = "Validates every HTML file: elements where they may sit, required attributes, text alternatives, and one style for void elements."
-why = "A browser repairs broken markup in its own way, and a screen reader reads what the repair left."
+summary = "Validates HTML files for nesting, required attributes, text alternatives, and one style for void elements."
+why = "Each browser repairs broken markup differently, and a screen reader announces only what remains."
 
 [[check]]
-example = "A button using an inline `onclick` attribute reports embedded executable code. Remove the attribute and attach the event listener from a separate script file."
-help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
+example = "A button with an inline `onclick` attribute reports a finding. Remove it, and attach the listener from a script file."
+help = "Move the script into its own file, and attach the handler there. Structured data of type `application/ld+json` stays inline."
 level = "all"
 name = "scripts"
 stage = "commit"
-summary = "Refuses executable inline script, event handler attributes, and executable script or data URLs in HTML files."
-why = "A content security policy that allows inline script allows an injected one too, so the policy only holds when the pages hold none."
+summary = "Reports inline scripts, event handler attributes, and executable URLs in HTML files."
+why = "A content security policy can block injected code only when the pages carry no inline script."

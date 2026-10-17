@@ -1,5 +1,5 @@
 [configuration]
-description = "React Hook Form: a form validates through a resolver, and a registered field is not also controlled."
+description = "React Hook Form: each form validates through a resolver, and no registered field also acts as a controlled one."
 requires = ["javascript"]
 title = "React Hook Form"
 

@@ -1,7 +1,7 @@
 allowed_words = ["Drizzle"]
 
 [configuration]
-description = "Drizzle: no update or delete without a where, raw SQL only where the settings allow it, and migrations that match the schema."
+description = "Drizzle: no update or delete without `where`, raw SQL only at paths the settings allow, and migrations that match the schema."
 requires = ["javascript"]
 title = "Drizzle"
 
@@ -25,15 +25,15 @@ version_command = ["--version"]
 
 [[check]]
 command = ["drizzle-kit", "generate"]
-example = "Changing a Drizzle schema without generating its migration reports drift. Run `drizzle-kit generate` with the project configuration, inspect the new migration, and retain it before rerunning."
-help = "Run drizzle-kit generate and commit the migration."
+example = "A schema change with no new migration reports drift. Run `drizzle-kit generate`, review the migration, and commit it."
+help = "Run `drizzle-kit generate` and commit the migration."
 level = "recommended"
 name = "stale-migrations"
 runs = "scope"
 stage = "push"
-summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
+summary = "Runs `drizzle-kit generate` and fails when it creates a migration."
 tool = "drizzle-kit"
-why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
+why = "A schema change with no migration works only on the machine that pushed it."
 
 [[check.generator_outputs]]
 pattern = "**/*"

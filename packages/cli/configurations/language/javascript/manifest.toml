@@ -207,7 +207,7 @@ name = "eslint"
 stage = "commit"
 summary = "Runs the shipped ESLint rules on JavaScript, TypeScript, component files, and package.json."
 tool = ["eslint", "node"]
-why = "ESLint catches mistakes and dead code the runtime accepts: unused code, unsafe patterns, functions that only forward."
+why = "ESLint catches mistakes that the runtime accepts: unused code, unsafe patterns, and functions that only forward."
 
 [check.files]
 eslint_plugins = true
@@ -229,7 +229,7 @@ rule = "ruleId"
 
 [[check]]
 cwd = "scope"
-example = "With JavaScript type checking enabled, passing a number to a JSDoc parameter declared as `string` reports a type error. Pass the intended string value or correct the documented parameter contract."
+example = "Passing a number to a JSDoc `string` parameter reports a type error. Pass a string, or fix the JSDoc."
 help = "Add or fix the JSDoc type that the error names."
 level = "recommended"
 name = "tsc"
@@ -237,7 +237,7 @@ runs = "scope"
 stage = "push"
 summary = "Type-checks plain JavaScript through its JSDoc comments."
 tool = "tsc"
-why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
+why = "A wrong call in JavaScript crashes at run time, and written types let the checker catch it first."
 
 [check.files]
 extensions = [".js", ".mjs", ".cjs", ".jsx"]
@@ -249,14 +249,14 @@ pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\
 [[check]]
 command = ["knip", "--config", "{tool_file:knip}", "--no-progress", "--reporter", "json", "{workspace:--workspace}"]
 cwd = "root"
-example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, add its entry point in tools.knip.entry."
-help = "Delete what knip names, or add a knip entry point in tools.knip.entry if the file is loaded in a way knip cannot see."
+example = "An export that no entry point uses reports a finding. Remove it, or list a dynamically loaded file in `tools.knip.entry`."
+help = "Delete what knip names. For a file loaded in a way that knip cannot trace, add an entry point in `tools.knip.entry`."
 level = "recommended"
 name = "knip"
 runs = "scope"
 stage = "push"
 summary = "Finds files, exports, and dependencies nothing uses."
-why = "Dead code is read, maintained, and shipped for nobody."
+why = "Teams read, maintain, and ship dead code for nobody."
 
 [check.output]
 format = "knip"

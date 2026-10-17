@@ -1,5 +1,5 @@
 [configuration]
-description = "pytest suites: Ruff pytest style rules over the tests, pytest test-name prefixes, and a coverage floor at push."
+description = "pytest suites: Ruff style rules for tests, test-name prefixes, and a coverage floor at push."
 requires = ["python", "coverage"]
 title = "pytest"
 
@@ -31,15 +31,15 @@ cwd = "scope"
 example = "pytest-cov reports `FAIL Required test coverage of 90% not reached. Total coverage: 85%`. Add a Python test for the uncovered behavior."
 exit_codes = [1]
 files = { extensions = [".py"] }
-help = "Fix the failing test, or add tests for the code the report shows uncovered. Lower coverage.lines with a reason."
+help = "Fix the failed test, or cover the lines the report marks. Lower `coverage.lines` only with a reason."
 level = "recommended"
 name = "coverage"
 output = { format = "regex", pattern = "^(?<message>(?:FAIL Required test coverage|FAILED |ERROR ).*)$" }
 runs = "scope"
 stage = "push"
-summary = "Runs the test suite with coverage, and fails when a test fails or the covered share falls under the floor."
+summary = "Runs pytest with coverage, and fails on a broken test or a covered share under the floor."
 tool = ["pytest", "pytest-cov"]
-why = "Python coverage reveals branches and lines the test suite does not exercise before a push."
+why = "Coverage shows the Python branches and lines that no test runs, before a push."
 
 [ruff]
 all = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT018", "PT019", "PT022", "PT023", "PT026"]

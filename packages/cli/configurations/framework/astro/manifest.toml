@@ -1,7 +1,7 @@
 
 
 [configuration]
-description = "Astro components: ESLint reads the frontmatter, the markup, and the scripts together with the recommended and accessibility rules of the Astro plugin as errors, and astro check reports type errors in every component."
+description = "Astro components: ESLint applies the recommended and accessibility rules of eslint-plugin-astro as errors to frontmatter, markup, and scripts. `astro check` reports type errors in each component."
 requires = ["javascript"]
 suggests = ["typescript", "css"]
 title = "Astro"
@@ -54,13 +54,13 @@ command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--m
 cwd = "scope"
 example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."
 exit_codes = [1]
-help = "Read the first error astro check prints and fix that component; later errors are often the same mistake."
+help = "Fix the first error `astro check` prints; later errors often come from the same mistake."
 level = "recommended"
 name = "astro-check"
 runs = "scope"
 stage = "push"
 summary = "Runs astro check over the scope: the type errors and warnings of every Astro component."
-why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Astro checker reads it."
+why = "tsc cannot parse a component file, so a type error inside one ships unless `astro check` catches it."
 
 [check.files]
 extensions = [".astro"]

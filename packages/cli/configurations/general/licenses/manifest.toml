@@ -1,5 +1,5 @@
 [configuration]
-description = "Every installed dependency reports a license from the allowed list, or has an allowed-package record whose reason names its license."
+description = "Checks the license of each installed dependency against the allowed list. An allowed-package record with a reason accepts one package."
 title = "Licenses"
 
 [files]
@@ -19,12 +19,12 @@ pypi = "pip-licenses"
 version = "5.5.5"
 
 [[check]]
-example = "An installed package whose reported license is outside licenses.allowed reports a finding for that exact package version. Replace it with an acceptable dependency, or write a [[licenses.allowed_package]] record with name, version, and a reason naming the license. A record for another version does not apply."
+example = "A dependency with a license outside `licenses.allowed` reports a finding for that version. Replace it, or write a `[[licenses.allowed_package]]` record with its name, version, and the license in a reason."
 files = { filenames = ["package.json", "pyproject.toml"] }
 help = "Replace the package, or write a [[licenses.allowed_package]] record by hand with its name, exact version, and a reason naming the license."
 level = "recommended"
 name = "allowed"
 runs = "once"
 stage = "push"
-summary = "Compares the license every installed npm or Python package reports with the allowed list and the allowed-package records."
+summary = "Compares the license of each installed npm or Python package with the allowed list and package records."
 why = "A license the project cannot accept arrives silently with a transitive dependency."

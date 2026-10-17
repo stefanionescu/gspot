@@ -15,7 +15,7 @@ paths = ["**"]
 reason = "Next.js discovers these data and metadata exports by name."
 
 [configuration]
-description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. The configuration turns no build check off."
+description = "A Next.js app: ESLint rules for the framework and hooks, and server code marked server-only. The configuration leaves every build check on."
 requires = ["typescript", "react", "react-dom"]
 suggests = ["css"]
 title = "Next.js"
@@ -40,8 +40,8 @@ rule_prefix = "@next/next"
 version = "16.3.8"
 
 [[check]]
-example = "The TypeScript declaration `const count: number = \"one\";` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
-help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
+example = "`const count: number = \"one\";` reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
+help = "Fix the first error tsc prints; later errors often come from the same mistake."
 instead_of = "typescript/tsc"
 level = "recommended"
 name = "tsc"

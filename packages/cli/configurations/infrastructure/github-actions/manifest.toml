@@ -30,7 +30,7 @@ tool = "zizmor"
 
 [[check]]
 command = ["actionlint", "-no-color", "{files}"]
-example = "A workflow using an unknown expression context such as `${{ unknown.value }}` reports an actionlint error. Replace it with a supported context and property for that workflow location."
+example = "A workflow expression with the unknown context `${{ unknown.value }}` reports an error. Use a supported context and property there instead."
 exit_codes = [1]
 files = { paths = ["**/.github/workflows/*.{yml,yaml}"] }
 help = "Fix the line actionlint names."
@@ -44,7 +44,7 @@ why = "A workflow error surfaces on the first push after the change, in CI, wher
 
 [[check]]
 command = ["zizmor", "--offline", "--no-progress", "--format", "github", "--config", "{tool_file:zizmor}", "{files}"]
-example = "A workflow interpolating pull-request text directly into a shell command can report a template-injection audit. Pass the text through a step environment variable and quote its expansion instead of interpolating it into shell code."
+example = "A workflow that puts pull request text straight into a shell command reports `template-injection`. Pass the text through a step environment variable, and quote its expansion."
 exit_codes = [11, 12, 13, 14]
 help = "Apply the fix zizmor names, or turn one audit off with `gspot ignore github-actions/zizmor --rule <audit> --reason \"<why>\"`."
 level = "recommended"

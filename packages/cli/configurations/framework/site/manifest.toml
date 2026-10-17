@@ -34,18 +34,18 @@ target = ".gspot/config/purgecss.config.mjs"
 tool = "purgecss"
 
 [[check]]
-example = "If the configured site build imports a missing template, the build check reports the command failure. Correct the template import or restore the template, then rerun the same configured build."
+example = "A build that imports a missing template fails the check. Fix the import, or restore that file."
 help = "Run the build command by hand and fix what it prints. Name the command under site.build_command."
 level = "recommended"
 name = "build"
 needs = ["build"]
 runs = "scope"
 stage = "push"
-summary = "Runs the site build command and fails when it fails or writes no build folder."
+summary = "Runs `site.build_command`, and fails on an error or a missing output folder."
 why = "Other site checks read the built files, so a failed build hides their findings."
 
 [[check]]
-example = "A template emitting `<img src=\"logo.png\">` without alternative text can produce an accessibility finding in the built HTML. Add meaningful `alt` text in the template, or `alt=\"\"` for a decorative image, and rebuild."
+example = "A template that writes `<img src=\"logo.png\">` without alternative text reports a finding in the built HTML. Add `alt` text in the template, or `alt=\"\"` for a decorative image."
 help = "Fix the template or the content that writes the markup the rule names."
 level = "recommended"
 name = "html-validate"
@@ -58,19 +58,19 @@ tool = "html-validate"
 why = "Templates can each be valid and still join into a page with two main elements or a missing label."
 
 [[check]]
-example = "A built stylesheet containing `.unused-banner` that no scanned HTML or script uses reports an unused selector. Delete the unused rule. For a class added at runtime, declare the actual class in the configured safelist with a reason."
+example = "A built `.unused-banner` selector that no page or script uses reports a finding. Delete the rule, or list a class that a script adds under `tools.purgecss.safelist` with a reason."
 help = "Delete the rule, or list a name a script adds at run time under tools.purgecss.safelist with a reason."
 level = "recommended"
 name = "purgecss"
 needs = ["build"]
 runs = "scope"
 stage = "push"
-summary = "Finds selectors of the built stylesheets that no built page or script uses."
+summary = "Finds selectors in the built stylesheets that no page or script uses."
 tool = "purgecss"
-why = "A selector nobody uses is downloaded by every visitor and read by every maintainer."
+why = "Visitors download an unused selector, and maintainers still read it."
 
 [[check]]
-example = "A built page linking to `/missing/` reports a missing destination when no such page exists. Point the source link at an existing page or add the intended page, then rebuild."
+example = "A link to `/missing/` reports a broken destination when that page does not exist. Point it at an existing page, or add the page."
 help = "Fix the link, or the page it points at."
 level = "recommended"
 name = "linkinator"
@@ -79,10 +79,10 @@ runs = "scope"
 stage = "push"
 summary = "Serves the built site and follows every link between its pages, stylesheets, and fragments."
 tool = "linkinator"
-why = "A broken internal link is a dead end a visitor finds before the author does."
+why = "A visitor hits a broken internal link before the author notices it."
 
 [[check]]
-example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
+example = "A built page over its limit reports the measured size. Remove unused assets or shrink the page, then rebuild."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
 level = "recommended"
 name = "size"
@@ -91,21 +91,21 @@ runs = "scope"
 stage = "push"
 summary = "Sums the compressed weight of the built paths each ceiling in site.size_limit names."
 when = { setting = "site.size_limit" }
-why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
+why = "Page weight grows a kilobyte at a time, and only a limit catches it."
 
 [[check]]
-example = "A sitemap entry for `/removed/` with no corresponding built page reports a stale entry. Remove that entry from the sitemap source and rebuild. Add missing public pages to the sitemap instead of excluding them without a reason."
-help = "Add the page to the sitemap, remove the dead entry, or leave a page out under site.allowed_unlisted_pages."
+example = "A sitemap URL for `/removed/` with no built page reports a stale route. Remove it from the sitemap source, and rebuild."
+help = "Add the page to the sitemap, remove the dead URL, or leave a page out under site.allowed_unlisted_pages."
 level = "recommended"
 name = "sitemap"
 needs = ["build"]
 runs = "scope"
 stage = "push"
-summary = "Compares the sitemap with the built pages: every listed route is a page, and every page is listed."
-why = "A page outside the sitemap is found late by search engines, and a listed page that does not exist costs trust with them."
+summary = "Compares the sitemap with the built pages, and reports a listed route with no page or a page left out."
+why = "Search engines find an unlisted page late, and a listed route with nothing behind it costs their trust."
 
 [[check]]
-example = "An image in the build folder that no built page or stylesheet references reports an unused asset. Remove it from the source asset set and rebuild."
+example = "An image that no built page or stylesheet references reports an unused asset. Delete it from the source assets, and rebuild."
 files = { paths = ["**/*"], kinds = ["source", "binary"] }
 help = "Delete the file."
 level = "all"
@@ -113,4 +113,4 @@ name = "unused-assets"
 runs = "scope"
 stage = "push"
 summary = "Finds files under an assets folder that no page, stylesheet, or script names."
-why = "An asset nobody references ships with every deploy and is kept by everyone who fears deleting it."
+why = "An unreferenced asset ships with every deploy, and nobody dares to delete it."

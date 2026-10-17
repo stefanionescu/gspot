@@ -2,7 +2,7 @@ allowed_words = ["Prettier"]
 
 [configuration]
 always_selected = true
-description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."
+description = "A single `[format]` block for every formatter, so Prettier, shfmt, Ruff, and markdownlint use the same indentation."
 title = "Format"
 
 [files]
@@ -70,7 +70,7 @@ tool = "prettier"
 
 [[check]]
 command = ["prettier", "--check", "--config", "{tool_file:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
-example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
+example = "A JavaScript file with `const value={enabled:true};` differs from the Prettier output. Run `gspot check --fix` to format it."
 exit_codes = [1]
 fix = ["prettier", "--write", "--config", "{tool_file:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 help = "Run `gspot check --fix` to format every file, or `prettier --write` on one file."
@@ -78,18 +78,18 @@ level = "recommended"
 name = "prettier"
 output = { format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "Not formatted the way Prettier formats it." }
 stage = "commit"
-summary = "Checks that every file Prettier formats is already formatted that way."
+summary = "Checks each file Prettier handles for unformatted code."
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."
 
 [[check]]
 command = ["editorconfig-checker", "-no-color", "-disable-indentation", "{files}"]
-example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
+example = "A file with CRLF line endings under an `.editorconfig` that requires LF reports a finding. Save it with LF endings."
 files = { paths = ["**"] }
 help = "Fix the line the checker names; most editors apply .editorconfig on save."
 level = "recommended"
 name = "editorconfig-checker"
 output = { format = "grouped", file_pattern = "^(?<file>.+):$", pattern = "^\\s+(?:(?<line>\\d+)(?:-\\d+)?: )?(?<message>\\S.*)$" }
 stage = "commit"
-summary = "Checks line endings, final newlines and trailing whitespace in every file against .editorconfig."
+summary = "Checks line endings, final newlines, and trailing whitespace in every file against .editorconfig."
 tool = "editorconfig-checker"
-why = "These rules cover the files no formatter touches, so a stray tab or missing newline never lands in a diff. Indentation is the formatters' job and is not checked here."
+why = "These rules cover the files no formatter touches, so a stray tab or missing newline never lands in a diff. The formatters handle indentation."

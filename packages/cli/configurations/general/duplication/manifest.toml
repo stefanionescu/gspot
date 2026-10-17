@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Copy-paste detection across every language a selected configuration claims. Every copied block is reported."
+description = "Reports copied code across every language a configuration claims."
 title = "Duplication"
 
 [files]
@@ -17,7 +17,7 @@ target = ".gspot/config/jscpd.json"
 tool = "jscpd"
 
 [[check]]
-example = "Two selected files containing the same substantial code block report that copied block. Move the shared behavior into its actual owner and call it from both locations, then rerun."
+example = "Two files with the same long block of code report that block. Move it into one function, and call it from both places."
 files = { languages = true }
 help = "Move the shared block into one function both callers use."
 level = "all"
@@ -26,4 +26,4 @@ runs = "scope"
 stage = "push"
 summary = "Reports every block of code copied between files, naming both places."
 tool = "jscpd"
-why = "A copied block is fixed in one place and stays broken in the other."
+why = "A fix in one place leaves the copied block broken in the other."

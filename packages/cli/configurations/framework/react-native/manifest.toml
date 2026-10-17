@@ -1,5 +1,5 @@
 [configuration]
-description = "React Native components, styles, and native APIs. Lists use stable keys and virtualized rendering, touch targets use Pressable, and AsyncStorage stores no credentials."
+description = "React Native components, styles, and native APIs. Lists take stable keys and virtualized rendering, touch targets use Pressable, and AsyncStorage holds no credentials."
 requires = ["react"]
 suggests = ["typescript"]
 title = "React Native"

@@ -1,7 +1,7 @@
 
 
 [configuration]
-description = "ESLint checks Svelte markup and scripts. DOM manipulation and event-dispatcher typing rules run at level all; HTML injection checks run at both levels."
+description = "ESLint checks Svelte markup and scripts. DOM manipulation and event-dispatcher typing rules apply at level all; HTML injection rules apply at both levels."
 requires = ["javascript"]
 suggests = ["typescript", "css"]
 title = "Svelte"
@@ -53,15 +53,15 @@ embeddedLanguageFormatting = "auto"
 
 [[check]]
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
-help = "Read the warning or error svelte-check prints for the file and fix it there; a warning fails the check as an error does."
+help = "Fix each warning and error svelte-check prints; both fail the check."
 instead_of = "typescript/tsc"
 level = "recommended"
 name = "svelte-check"
 runs = "scope"
 stage = "push"
-summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."
+summary = "Runs svelte-check over the scope for compiler and accessibility warnings, and the types of every component and TypeScript file."
 tool = "svelte-check"
-why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."
+why = "tsc cannot parse a component file, and the Svelte compiler warns about markup that no browser reports."
 
 [check.files]
 extensions = [".svelte"]

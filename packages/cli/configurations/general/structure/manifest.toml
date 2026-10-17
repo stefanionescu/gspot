@@ -1,20 +1,20 @@
 [configuration]
 always_selected = true
-description = "The structural rules no standard linter ships, over every language: wrappers, barrels, lone files, and the size limits."
+description = "Structural rules that no standard linter ships, for every language: wrappers, barrels, lone files, and size limits."
 title = "Structure"
 
 [files]
 languages = true
 
 [[check]]
-example = "With the TypeScript configuration at level `all`, `feature/only.ts` reports `lone-file` when it is the folder's only code file. Move it beside related files and update references, or keep the folder when a second substantial file belongs to that feature. Adding `feature/second.ts` makes this folder contain two code files."
+example = "With TypeScript at level `all`, a `feature/only.ts` alone in its folder reports `lone-file`. Move it up beside related code, and update its imports."
 help = "Move the file up beside its neighbors, or use `gspot ignore structure/lone-files` with paths and a reason."
 level = "all"
 name = "lone-files"
 runs = "scope"
 stage = "commit"
 summary = "Finds a folder that holds one code file and nothing else."
-why = "A folder of one file adds a level to every path and promises siblings that never arrive."
+why = "A folder with one file adds a level to every import path and groups nothing."
 
 [[check]]
 example = "Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` share a repeated prefix. Move them into `asset/` with names `card.ts`, `list.ts`, and `row.ts`, then update imports."
@@ -23,32 +23,32 @@ level = "all"
 name = "shared-prefixes"
 runs = "scope"
 stage = "commit"
-summary = "Finds sibling files that share a name prefix, like asset-card, asset-list and asset-row in one folder."
-why = "Files that share a prefix are one concept split by suffix; they belong in a folder named after the prefix."
+summary = "Finds sibling files that share a name prefix, such as `asset-card`, `asset-list`, and `asset-row`."
+why = "Sibling files with one prefix split a single concept by suffix, and a folder of that name groups them."
 
 [[check]]
-example = "Sibling entries `report.ts` and `report/` have the same stem and report a collision. Rename the file or directory after its distinct responsibility and update every reference."
+example = "A `report.ts` beside a `report/` folder reports a clash. Rename one after its job, and update each reference."
 help = "Rename the file or the folder so their stems differ."
 level = "all"
 name = "file-folder-clashes"
 runs = "scope"
 stage = "commit"
-summary = "Finds a file and a folder in the same place with the same stem, like turn.ts beside turn/."
+summary = "Finds a file and a folder with one stem in the same place, such as `turn.ts` beside `turn/`."
 why = "An import of ./turn names both, and a reader cannot tell which one loads."
 
 [[check]]
-example = "A Python, Bash, or SQL source file above its language's code-line ceiling reports its count. Split independent responsibilities into their owners and rerun the check."
+example = "A Python file over its line limit reports the count. Split it by responsibility."
 files = { extensions = [".sh", ".bash", ".zsh", ".bats", ".py", ".pyi", ".sql", ".pgsql", ".psql"], tags = ["shebang:shell"], kinds = ["source"] }
-help = "Split the file by its responsibility, or raise its limits.`<language>`.file_lines with a reason."
+help = "Split the file by responsibility, or raise limits.`<language>`.file_lines with a reason."
 level = "all"
 name = "long-files"
 runs = "scope"
 stage = "commit"
-summary = "Checks source code lines against each language's ceiling."
+summary = "Checks the code line count of each file against the limit for its language."
 why = "A long file hides independent responsibilities from the reader."
 
 [[check]]
-example = "A Bash function that only calls another function reports its declaration. Inline that call into its callers and remove the forwarding function."
+example = "A Bash function that only calls another reports a finding. Inline the call at each caller, and delete the wrapper."
 files = { extensions = [".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
 help = "Inline a forwarding function at its calls and delete it. Split independent statements into the files that use them."
 level = "all"
@@ -59,7 +59,7 @@ summary = "Finds functions with too few statements and files that only forward t
 why = "A function of one statement makes the reader jump for nothing."
 
 [[check]]
-example = "A Python file outside architecture.roles.environment_readers that reads os.environ reports that read. Move it into a declared environment reader and pass its value to callers."
+example = "A Python file that uses `os.environ` outside `architecture.roles.environment_readers` reports a finding. Move that access into an environment reader, and pass the value to callers."
 files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
 help = "Move the environment read into a file listed in architecture.roles.environment_readers, then pass the value to callers."
 level = "all"

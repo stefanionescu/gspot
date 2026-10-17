@@ -23,23 +23,23 @@ tool = "commitlint"
 
 [[check]]
 command = ["commitlint", "--config", "{tool_file:commitlint}", "--edit", "{message_file}"]
-example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
-help = "Write `<type>`: `<subject>` or `<type>`(`<scope>`): `<subject>`, with an accepted type and optional scope. Keep the whole first line at 72 characters or fewer. Change accepted types with `gspot set tools.commitlint.types`."
+example = "The message `changed stuff` has no type or scope. Write `fix(cli): report missing configuration` instead."
+help = "Write `<type>`: `<subject>` or `<type>`(`<scope>`): `<subject>` in a first line of 72 characters or fewer. Change the accepted types with `gspot set tools.commitlint.types`."
 level = "all"
 name = "commitlint"
 output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
 stage = "message"
-summary = "Checks the commit message being written: a conventional type, an optional known scope, a first line of 72 characters or fewer, and a wrapped body."
-why = "A history of typed, scoped subjects is what release notes, blame and bisect are read from; a free-form message hides the change."
+summary = "Checks a new commit message for a conventional type, an optional known scope, a first line of 72 characters or fewer, and a wrapped body."
+why = "Release notes, blame, and bisect depend on typed, scoped subjects, and a free-form message hides the change."
 
 [[check]]
-example = "A new commit with message `changed stuff` causes the checked range to fail its message rules. Reword that commit to an accepted message such as `fix(cli): report missing configuration`. Rewriting commits changes their IDs; coordinate before rewriting shared history."
+example = "A commit with the message `changed stuff` in the push fails. Reword it as `fix(cli): report missing configuration`, and coordinate first when others share that history."
 help = "Reword the commits that fail with `git rebase -i`, or change the rule with `gspot set tools.commitlint.rules`."
 level = "all"
 name = "commitlint-pushed"
 output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
 runs = "history"
 stage = "push"
-summary = "Checks the message of every commit the push sends. Run by hand, it checks every commit from the upstream merge base to HEAD."
+summary = "Checks the message of each commit in a push. A manual run covers every commit from the upstream merge base to HEAD."
 tool = "commitlint"
-why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."
+why = "A message written past the hook (--no-verify, a rebase, or a merge) still reaches the shared branch unless the push checks it."

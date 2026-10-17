@@ -107,7 +107,7 @@ test('Vale reads known file types by path, and .mts files and scripts without an
 
 test.each([
     {
-        name: 'native file and stdin report locations',
+        name: 'file and stdin report locations',
         stdout: JSON.stringify({
             'docs/a.md': [{ Line: 3, Span: [10, 15], Check: 'gspot.marketing', Message: "Marketing word 'robust'." }],
             'stdin.rb': [{ Line: 2, Span: [5, 6], Check: 'Google.We', Message: 'Try not to use first-person plural.' }],
@@ -134,7 +134,7 @@ test.each([
         ],
     },
     {
-        name: 'control characters in native report paths',
+        name: 'control characters in report paths',
         stdout:
             JSON.stringify({
                 [join('docs', 'café:part\nname.md')]: [
@@ -153,7 +153,7 @@ test.each([
             },
         ],
     },
-    { name: 'empty native reports', stdout: '{}', findings: [] },
+    { name: 'empty reports', stdout: '{}', findings: [] },
 ])('Vale preserves $name through the check', async ({ stdout, findings }) => {
     await using resources = new AsyncDisposableStack();
     const session = await prepareValeSession(resources);
@@ -169,25 +169,22 @@ test.each([
     expect(await checkFindings(session.root, 'prose/vale')).toStrictEqual(
         findings.map((finding) => ({
             ...finding,
-            help: 'Rewrite the sentence the alert names, write a real name and its reason in the root allowed_words setting, or use `gspot ignore prose/vale --rule <rule> --reason "<why>"`.',
+            help: 'Rewrite the sentence the alert names, add a real name and its reason to the root allowed_words setting, or use `gspot ignore prose/vale --rule <rule> --reason "<why>"`.',
         })),
     );
 });
 
-test.each(['diagnostic text', '{"file.md":[{}]}'])(
-    'the Vale check refuses malformed native output %s',
-    async (stdout) => {
-        await using resources = new AsyncDisposableStack();
-        const session = await prepareValeSession(resources);
+test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malformed output %s', async (stdout) => {
+    await using resources = new AsyncDisposableStack();
+    const session = await prepareValeSession(resources);
 
-        resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout })));
-        const failure = await checkFindings(session.root, 'prose/vale').catch((error: unknown) => error);
-        if (stdout.startsWith('{')) expect(String(failure)).toContain('Line');
-        else expect(failure).toBeInstanceOf(SyntaxError);
-    },
-);
+    resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout })));
+    const failure = await checkFindings(session.root, 'prose/vale').catch((error: unknown) => error);
+    if (stdout.startsWith('{')) expect(String(failure)).toContain('Line');
+    else expect(failure).toBeInstanceOf(SyntaxError);
+});
 
-/** Prepare the same Markdown source for either valid or refused Vale output. */
+/** Create a Markdown sandbox for the valid and refused Vale output tests. */
 async function prepareValeSession(resources: AsyncDisposableStack): Promise<Session> {
     const sandbox = resources.use(
         await testdir({

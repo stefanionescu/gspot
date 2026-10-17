@@ -1,7 +1,7 @@
 allowed_words = ["gspot"]
 [configuration]
 always_selected = true
-description = "Checks gspot.toml and generated files, checks suppression reasons with gspot/suppressions, and requires Node.js as a system tool."
+description = "Checks gspot.toml, generated files, and suppression reasons, and requires Node.js as a system tool."
 title = "gspot"
 
 [[tool]]
@@ -14,17 +14,17 @@ version_command = ["--version"]
 winget = "OpenJS.NodeJS.LTS"
 
 [[check]]
-example = "A file under `.gspot/config/` edited by hand differs from what gspot writes from gspot.toml and reports drift. Change the settings in gspot.toml and run gspot apply, or move the edited file aside so apply writes it again."
-help = "Change the settings in gspot.toml, then run `gspot apply`. After a merge, run `gspot apply` and then `gspot install`."
+example = "An edit by hand to a tool file under `.gspot/config/` reports drift. Move the change into gspot.toml, then run `gspot apply`."
+help = "Change gspot.toml, then run `gspot apply`. After a merge, run `gspot apply`, followed by `gspot install`."
 level = "recommended"
 name = "generated-files"
 runs = "once"
 stage = "commit"
-summary = "Compares every generated file with what gspot writes from the settings: a changed, missing, or stray file, or one with merge conflict markers, is a finding."
-why = "A generated file that no longer matches the settings runs a tool with settings nobody chose."
+summary = "Compares generated files with the settings and reports changed, missing, and stray ones, and any with merge conflict markers."
+why = "A generated file that drifts from gspot.toml runs a tool with settings nobody chose."
 
 [[check]]
-example = "An `[[ignore]]` record for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete record or correct its path to the actual exception, preserving its reason."
+example = "An `[[ignore]]` record with `paths = [\"nowhere/**\"]` that matches no file reports `unmatched-pattern`. Remove the record, or correct its path and keep the reason."
 help = "Remove the record or correct its path."
 level = "recommended"
 name = "unmatched-patterns"
@@ -34,11 +34,11 @@ summary = "Checks settings path patterns against tracked files."
 why = "An ignore or declaration that matches nothing misleads the next reader."
 
 [[check]]
-example = "An `eslint-disable-next-line` comment without a reason reports an unexplained suppression. Fix the underlying finding and remove the suppression, or append a specific `-- reason: ...` explanation of the required exception."
-help = "Use the tool's suppression syntax to write a meaningful reason, or fix the finding and remove the suppression. Never suppress a size or complexity limit; split the code by its steps, or ask the user to raise the limit in gspot.toml."
+example = "An `eslint-disable-next-line` comment without a reason reports a finding. Fix the code and remove the comment, or append `-- reason: ...` that explains the exception."
+help = "Fix the finding and remove the suppression, or add a reason in the syntax of the tool. Never suppress a size or complexity limit: split the code by its steps, or ask the user to raise it in gspot.toml."
 level = "recommended"
 name = "suppressions"
 runs = "once"
 stage = "commit"
-summary = "Checks suppression reasons and refuses size or complexity suppressions, Semgrep directives, and Vale directives."
+summary = "Reports suppressions with no reason, any that lift a size or complexity limit, and Semgrep or Vale directives."
 why = "A suppression with no reason hides a finding nobody reviewed."

@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "The naming engine: banned words, case rules, length and word ceilings over every identifier, file, and folder."
+description = "Checks every identifier, file, and folder for banned words, case, length, and word count."
 title = "Naming"
 
 [files]
@@ -8,12 +8,12 @@ languages = true
 
 [[check]]
 example = "`export const userHelper = 1;` reports the banned word `helper`. Rename it after what it holds, such as `userCount`."
-help = "Rename after what the thing is or does. Write the exact names under allowed_names in a [[naming.override]] record with a reason, or adjust a ceiling with `gspot set naming.<language>.max_words`."
+help = "Rename the thing after what it holds or does. To keep a name, list it exactly under `allowed_names` in a `[[naming.override]]` record with a reason, or change a limit with `gspot set naming.<language>.max_words`."
 level = "all"
 name = "identifiers"
 stage = "commit"
 summary = "Checks every identifier against the naming settings: banned words, case, length, and word count."
-why = "Names such as `enhancedHandler`, `ensureConfigIfNeeded`, and `utils` do not explain the value or behavior a reader needs to understand."
+why = "Names such as `enhancedHandler`, `ensureConfigIfNeeded`, and `utils` hide what the value holds or the code does."
 
 [[check]]
 example = "`utils/format.js` reports `utils`. Move it into the folder of the feature it serves, such as `invoices/format.js`."
@@ -21,15 +21,15 @@ help = "Rename the file or folder, or add a path rule under [[naming.override]] 
 level = "all"
 name = "paths"
 stage = "commit"
-summary = "Checks every file stem and folder name against the language's case rules and the banned words."
-why = "A file named `enhanced-utils.ts` is a home for code nobody placed; the case rule keeps imports predictable."
+summary = "Checks every file stem and folder name against the case rules of its language and the banned words."
+why = "A file such as `enhanced-utils.ts` collects code with no clear place. One case rule keeps imports predictable."
 
 [[check]]
-example = "A naming allowance for an identifier that no selected source contains reports an unmatched settings record. Remove the obsolete allowance or correct it to the exact required identifier and scope."
+example = "An allowed name that no source file contains reports an unmatched record. Remove the name, or correct it to the exact identifier and scope."
 help = "Remove the record that matches nothing, or fix its name or path."
 level = "all"
 name = "allowed-names"
 runs = "once"
 stage = "commit"
-summary = "Reports allowed names that no selected source uses."
+summary = "Reports allowed names that no source file uses."
 why = "An allowed name that nothing uses hides an obsolete exception."

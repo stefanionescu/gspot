@@ -132,7 +132,7 @@ test('compiler: a later Swift session reads a failed build after an earlier succ
             rule: 'compiler',
             message: 'Missing value',
             fixable: false,
-            help: 'Fix the first compiler error; later ones are often the same mistake.',
+            help: 'Fix the first compiler error; later ones often come from the same mistake.',
         },
     ]);
 });
@@ -231,7 +231,7 @@ test('compiler: Swift compiler diagnostics drop the macOS /private prefix from s
         spyOn(processes, 'spawnProcess').mockResolvedValue(
             buildProcessResult({
                 code: 1,
-                // eslint-disable-next-line sonarjs/publicly-writable-directories -- The test compares compiler diagnostic text and never opens these paths.
+                // eslint-disable-next-line sonarjs/publicly-writable-directories -- The test compares compiler error text and never opens these paths.
                 stderr: '/private/tmp/project/Main.swift:4:2: error: Missing value\n/tmp/project/Other.swift:5:3: error: Unknown name',
             }),
         ),
