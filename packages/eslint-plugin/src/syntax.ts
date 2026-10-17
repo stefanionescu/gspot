@@ -62,7 +62,7 @@ function isComposedCall(node: TSESTree.CallExpression): boolean {
 
 /**
  * Count the executable statements under a node, nested functions included. An expression body counts as one.
- * @param node the function implementation, or a node inside it
+ * @param node the function body, or anything inside it
  * @param visitorKeys the child keys of each node type, from the parser
  * @returns the statement count
  */

@@ -254,7 +254,7 @@ function isTomlSyntaxError(error: unknown): boolean {
 /**
  * Compare a Python tool project with the pins recorded in its uv lockfile.
  *
- * @param project the parsed generated pyproject.toml.
+ * @param project the parsed tool project file.
  * @param lockfile the recorded uv.lock contents.
  *
  * @returns whether both validated inputs describe the same requirements.

@@ -49,7 +49,7 @@ function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, sour
  * Resolve a validated SARIF physical location into a source path and coordinates.
  * @param location the first physical place of the result.
  * @param run its source metadata.
- * @param source the folder that holds the sources.
+ * @param source the folder that the report paths start from.
  * @returns the repository-relative location.
  */
 function buildFindingPlace(location: SarifPhysicalLocation, run: SarifRun, source: string): FindingPlace {

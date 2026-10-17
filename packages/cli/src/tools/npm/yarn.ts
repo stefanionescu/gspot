@@ -68,7 +68,7 @@ function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]
  *
  * @param context what install needs for this step.
  * @param work the folder where the isolated project runs.
- * @param env the environment the install runs with, which receives the settings.
+ * @param env variables for the install; the settings go here too.
  *
  * @returns the credential values the lockfile must not contain.
  */

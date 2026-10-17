@@ -8,7 +8,7 @@ import { isTomlKind, getTomlRange, insertTomlComments } from '#cli/parsers/toml/
  * @param text the TOML source of those ranges.
  * @param path the setting key and array indexes for comment placement.
  * @param comments the `#` lines anchored to their original values.
- * @param indent the indentation used for multiline arrays.
+ * @param indent spaces before each line of a multiline array.
  * @returns TOML value text with its anchored comments.
  */
 function encodeValue(node: TomlValue, text: string, path: KeyPath, comments: TomlComments, indent: string): string {

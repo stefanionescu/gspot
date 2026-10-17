@@ -45,7 +45,7 @@ export async function runTool(command: readonly string[], options: ToolRunOption
 /**
  * Throw for an install step that ran past the time limit, so the error names the limit, not an exit code.
  *
- * @param name the step, as the error names it.
+ * @param name what the error calls the step.
  * @param result what the process printed, and its exit code.
  * @param timeoutSeconds the limit the step ran under.
  */

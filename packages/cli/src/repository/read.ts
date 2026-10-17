@@ -154,7 +154,7 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
 /**
  * Find the nearest folder at or above start that holds gspot.toml, up to the Git top level.
  * Without settings, return the Git top level, or start outside Git.
- * @param start the folder where the search starts.
+ * @param start where the search begins.
  * @returns the settings folder, Git top level, or starting folder outside Git.
  */
 export function findRoot(start: string): string {

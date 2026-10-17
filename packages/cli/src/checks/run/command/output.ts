@@ -150,7 +150,7 @@ function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths:
  * @param completion what the run collected.
  * @param completion.base the initial check result.
  * @param completion.state the findings and failure flag.
- * @param completion.commandArguments the expanded command arguments.
+ * @param completion.commandArguments what the process ran, placeholders expanded.
  * @param completion.started the monotonic start time.
  * @returns the check result.
  */

@@ -65,7 +65,7 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
 /**
  * Add a connection setting under an unused environment variable and return its reference.
  *
- * @param env the install environment that gets the value.
+ * @param env the install variables that get the value.
  * @param prefix the start of each variable name.
  * @param value the connection setting kept out of generated files.
  *
@@ -82,7 +82,7 @@ export function addEnvironmentReference(env: Record<string, string>, prefix: str
 /**
  * Collect raw, decoded, and URL-encoded secrets. Lockfile checks and message redaction use them.
  *
- * @param env the environment for the tool process.
+ * @param env variables for the tool process.
  *
  * @returns the registry secrets that messages must hide.
  */
@@ -107,7 +107,7 @@ export function extractRegistryCredentials(env: Record<string, string>): string[
  * Write npm connection settings through environment references, so the temporary .npmrc contains no credentials.
  *
  * @param work the private user settings folder.
- * @param env the environment for the tool process.
+ * @param env variables for the tool process.
  */
 export function writeNpmrc(work: string, env: Record<string, string>): void {
     const references: string[] = [];

@@ -94,7 +94,7 @@ function isTomlKind<Kind extends string>(
 /**
  * Index concrete keys, headers, and array items without changing layout.
  * @param source TOML text.
- * @param value parsed values.
+ * @param value what the TOML parser returned.
  * @returns syntax entries and source-ordered comments.
  */
 function parseTomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax {

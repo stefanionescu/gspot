@@ -61,7 +61,7 @@ export async function runPlannedTool(
  * @param session the repository and tool paths.
  * @param cwd the working folder.
  * @param tool the declaration with its version pin.
- * @param env the environment for the tool process.
+ * @param env variables for the tool process.
  * @returns the executable path or its installation failure.
  */
 export function findTool(
@@ -77,7 +77,7 @@ export function findTool(
  * Add the folders of installed companion tools to the process `PATH`, also in a scratch copy.
  * @param input the repository and manifests.
  * @param names the companion tools to add.
- * @param env the environment for the tool process.
+ * @param env variables for the tool process.
  * @returns the environment with the companion folders on `PATH`.
  */
 export function buildCompanionEnvironment(

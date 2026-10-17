@@ -63,7 +63,7 @@ export function buildProgramPin(name: string, version: string, npm?: string): To
  * @param project extra manifest tables and fields.
  * @param project.requires configurations that it needs.
  * @param project.tables extra TOML for the manifest.
- * @param project.group the group folder.
+ * @param project.group where the configuration sits.
  * @returns the parsed manifest.
  */
 export function buildManifest(
@@ -109,7 +109,7 @@ export function buildTrackedFile(path: string, tags: string[] = ['text']): Track
 /**
  * The planned fixer of the sandbox with its command replaced by a script.
  * @param session the open sandbox.
- * @param script the JavaScript the fixer runs.
+ * @param script JavaScript for the fixer to run.
  * @returns the planned check.
  */
 export function planFixer(session: Session, script: string): PlannedCheck {

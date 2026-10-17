@@ -196,7 +196,7 @@ async function verifyPackageManagerVersion(context: InstallContext): Promise<voi
  *
  * @param context what install needs for this step.
  * @param toolProjectFile the generated package.json.
- * @param yarn the generated .yarnrc.yml text, if any.
+ * @param yarn the generated Yarn settings text, if any.
  *
  * @returns the lockfile and its recorded bytes.
  */

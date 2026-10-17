@@ -222,7 +222,7 @@ export function isLockfileCurrent(name: PackageManager['name'], content: string,
  * @param work the tool project folder.
  * @param packageManager the tool that wrote the lockfile.
  * @param options the result of the package manager run.
- * @param options.env the environment for the tool process.
+ * @param options.env variables for the tool process.
  * @param options.lockfile the resolved bytes to clean.
  */
 export function stripRegistryUrls(work: string, packageManager: PackageManager, options: PackageCommandResult): void {

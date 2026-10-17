@@ -107,7 +107,7 @@ function buildReferenceTsconfig(
  * @param command the tsc arguments to extend.
  * @param options the parsed compiler flags.
  * @param scratch the folder for metadata.
- * @param name the metadata basename.
+ * @param name the basename to look for.
  */
 function appendBuildMetadata(
     command: string[],

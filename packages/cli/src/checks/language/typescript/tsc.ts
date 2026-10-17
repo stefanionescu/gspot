@@ -59,7 +59,7 @@ function listCompilerInputs(
  * Selects the source files and type roots of a scope.
  * @param session the source repository or scratch copy.
  * @param scope the folder whose files to keep.
- * @param config the parsed jsconfig.
+ * @param config the parsed jsconfig.json.
  * @returns the file names and compiler options.
  */
 function buildScopeCompilerProject(

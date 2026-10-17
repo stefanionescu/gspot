@@ -12,10 +12,10 @@ import type { WrittenSettings } from '#cli/types/settings/file.ts';
  * @param options extra settings to write.
  * @param options.level `recommended` or `all`.
  * @param options.tables more TOML to append.
- * @param options.rules whether to write the agent rules.
- * @param options.ignore checks to ignore.
+ * @param options.rules whether to write the agent instructions.
+ * @param options.ignore checks to leave out.
  * @param options.ignore.checks their check IDs.
- * @param options.ignore.reason the reason to write.
+ * @param options.ignore.reason why to leave them out.
  * @returns the gspot.toml text.
  */
 export function buildSettingsText(

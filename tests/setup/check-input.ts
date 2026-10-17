@@ -33,7 +33,7 @@ async function createCompilerCache(): Promise<AsyncDisposableStack> {
  * @param session the sandbox the test opened.
  * @param checkId for example bash/shellcheck.
  * @param options which files to include and what to clean up.
- * @param options.scope the scope path; the root by default.
+ * @param options.scope a folder to check; the root by default.
  * @param options.paths files to check; every file by default.
  * @param options.resources what to dispose of with the check.
  * @returns the check input.

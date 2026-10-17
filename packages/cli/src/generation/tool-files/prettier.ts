@@ -110,7 +110,7 @@ function buildPluginsOption(
 /**
  * Convert format settings to Prettier options.
  *
- * @param format the formatting values, each optional.
+ * @param format width, indent, and line ending, each optional.
  *
  * @returns the Prettier options for each setting in the input.
  */

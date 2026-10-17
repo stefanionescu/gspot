@@ -173,7 +173,7 @@ export function listNpmToolNames(manifests: Iterable<Manifest>): Set<string> {
  * Find the build that a tool lacks on a system such as Windows or arm64 Linux.
  * @param tool the declaration with its builds.
  * @param platform the system name: macos, linux, or windows.
- * @param arch the system architecture: x64 or arm64.
+ * @param arch x64 or arm64.
  * @returns the words for the missing build, or undefined when the tool has a build.
  */
 export function findMissingBuild(tool: ToolDeclaration, platform: string, arch: string): string | undefined {

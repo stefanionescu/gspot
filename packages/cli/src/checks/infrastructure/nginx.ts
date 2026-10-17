@@ -183,8 +183,8 @@ function splitTokens(text: string): string[] {
  * @param text the nginx configuration, with its includes.
  * @param mounts the host paths to mount.
  * @param mounts.configs the copied nginx files and their container paths.
- * @param mounts.certificate the self-signed certificate file to mount.
- * @param mounts.key the throwaway private key file to mount.
+ * @param mounts.certificate a self-signed file to mount.
+ * @param mounts.key a throwaway secret to mount.
  * @param image the nginx container tag.
  * @returns the command arguments after docker.
  */

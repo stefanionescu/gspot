@@ -15,7 +15,7 @@ import { TOML_EXTENSION, EMPTY_JSON_TEXT, YAML_EDIT_EXTENSIONS, JSON_EDIT_EXTENS
 
 /**
  * Merge the requested keys and leave every other value in place.
- * @param request the file contents and the requested values.
+ * @param request the current file and the values to set.
  * @returns the merged file contents, and whether the text changed.
  */
 function planKeyChanges(request: KeyChangeRequest): KeyChangePlan {
