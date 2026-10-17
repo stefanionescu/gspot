@@ -34,9 +34,6 @@ export const ALL_LEVEL_SAFETY_PATTERNS = [
     ],
 ] as const;
 
-export const RECURSIVE_REMOVE_MESSAGE =
-    'This line deletes files recursively. Delete only a mktemp path in a trap, or ignore this rule with a reason.';
-
 /** Patterns that need an ignore with a reason. */
 export const SAFETY_PATTERNS = [
     [
@@ -45,8 +42,11 @@ export const SAFETY_PATTERNS = [
         '`pkill -f` stops every process whose command line matches. Stop the one process by its ID.',
     ],
     [/\bkillall\b/u, 'broad-kill', '`killall` stops every process with this name. Stop the one process by its ID.'],
-    [/\brm\s+-[\dA-Z_a-qs-z]*r\w*f\b/u, 'recursive-remove', RECURSIVE_REMOVE_MESSAGE],
-    [/\brm\s+-[\dA-Z_a-eg-z]*f\w*r\b/u, 'recursive-remove', RECURSIVE_REMOVE_MESSAGE],
+    [
+        /\brm\s+-(?:[\dA-Z_a-qs-z]*r\w*f|[\dA-Z_a-eg-z]*f\w*r)\b/u,
+        'recursive-remove',
+        'This line deletes files recursively. Delete only a mktemp path in a trap, or ignore this rule with a reason.',
+    ],
 ] as const;
 
 /** A top-level assignment of an upper-case name. */
