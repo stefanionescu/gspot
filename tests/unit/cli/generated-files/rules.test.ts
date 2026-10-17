@@ -19,6 +19,7 @@ import { readManifests, listChecksById } from '#cli/configurations/manifests.ts'
 import {
     OWN_CLAUDE_TEXT,
     DRIZZLE_DRIVERS,
+    JAVASCRIPT_IN_APP,
     RUNTIME_RULE_CASES,
     RULE_CONFIGURATIONS,
     EARLIER_CLAUDE_BLOCK,
@@ -112,6 +113,18 @@ test.each(['', 'app'].flatMap((scope) => RUNTIME_RULE_CASES.map((row) => ({ ...r
         expect(paths).toContain('general/engineering/agent/TALKING.md');
     },
 );
+
+test('the AGENTS.md block names the folders of a scoped rule without parentheses', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText([], { rules: true, tables: JAVASCRIPT_IN_APP }),
+        'app/main.js': 'console.log("ready");\n',
+    });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
+    expect(agents).toContain('/JAVASCRIPT.md` in `app/`: ');
+    expect(agents).not.toContain('(app/)');
+});
 
 test('rules > an always-selected configuration installs its rule file once', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([], { rules: true, level: 'all' }) });

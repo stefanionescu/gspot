@@ -61,8 +61,8 @@ function groupFilesByArea(files: RuleFile[]): [string, string[]][] {
         if (FIRST_READ.includes(file.path)) continue;
         const area = GROUP_LABELS[file.group];
         const list = rows.get(area) ?? [];
-        const scopes = file.scopes.map((path) => path + '/').join(', ');
-        const scope = file.scopes.includes('') ? '' : ' (' + scopes + ')';
+        const scopes = file.scopes.map((path) => `\`${path}/\``).join(', ');
+        const scope = file.scopes.includes('') ? '' : ` in ${scopes}`;
         const opening = (file.content.split('\n') as [string, string, string, ...string[]])[2];
         const sentence = opening.replace(RULE_OPENING_PREFIX, '');
         list.push(`\`${file.target}\`${scope}: ${sentence}`);
@@ -77,7 +77,7 @@ function formatRulesIndex(files: RuleFile[]): string[] {
         '',
         ...FIRST_READ.map((path) => `- \`${RULES_PATH}/${path}\``),
         '',
-        'Read each rule below when its sentence applies. A rule with folders in parentheses applies only in those folders.',
+        'Read each rule below when its sentence applies. A rule followed by folders applies only in those folders.',
         'A more specific rule wins over a general one.',
         '',
         ...groupFilesByArea(files).flatMap(([area, paths]) => [

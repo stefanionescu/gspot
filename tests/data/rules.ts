@@ -18,3 +18,6 @@ export const EARLIER_CLAUDE_BLOCK = '<!-- >>> gspot managed >>> -->\n\n@AGENTS.m
 
 /** Your own `CLAUDE.md` text after that block. */
 export const OWN_CLAUDE_TEXT = '# Your instructions\n\nKeep this text.\n';
+
+/** A scope in app/ with the javascript configuration. */
+export const JAVASCRIPT_IN_APP = '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n';
