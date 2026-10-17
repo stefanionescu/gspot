@@ -7,13 +7,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { buildToolFile } from '#cli/generation/tool-files/build.ts';
-import type { WholeToolFile } from '#cli/types/generation/files.ts';
 
 import {
     LANGUAGE_IGNORES,
     PATH_IGNORE_CASES,
-    SCOPE_PATTERN_CASES,
     PRETTIER_IGNORE_CASES,
     PRETTIER_IGNORE_SETTINGS,
     PRETTIER_IGNORE_ATTRIBUTES,
@@ -39,79 +36,6 @@ test.each([...PRETTIER_IGNORE_CASES])(
         expect(result).toStrictEqual({ ignored, inferredParser: ignored ? null : 'typescript' });
     },
 );
-
-/** Generate the .semgrepignore of one scope from a sandbox. */
-async function generateIgnoreFile(settings: string, files: Record<string, string>, scope: string): Promise<string> {
-    await using sandbox = await testdir({ ...files, 'gspot.toml': settings });
-    const session = await openSession(sandbox.path);
-    const manifest = session.manifests.get('security')!;
-    const toolFile = manifest.toolFiles
-        .filter((file): file is WholeToolFile => !file.fragment && file.source !== undefined)
-        .find(({ target }) => target === '.semgrepignore')!;
-    return buildToolFile(
-        {
-            session,
-            manifest,
-            toolFile,
-            scopes: session.scopes,
-            files: session.repository.files,
-            manifests: session.neededToolManifests,
-            selection: session.scopes.find(({ scope: selected }) => selected.path === scope)!,
-            targetPath: `${scope}/.semgrepignore`,
-            level: session.settingsFile.settings.level,
-        },
-        session.toolFiles().targets,
-    ).content;
-}
-
-/** Read the lines of one ignore section, without the comments around it. */
-function readIgnoreSection(content: string, title: string): string[] {
-    const section = content.split(`# ${title}\n`, 2)[1];
-    return section === undefined ? [] : section.split('\n\n', 1)[0]!.trimEnd().split('\n');
-}
-
-test.each([...SCOPE_PATTERN_CASES])(
-    'scope projection keeps brace and escape meaning for $pattern',
-    async ({ pattern, expected }) => {
-        const settings = stringify({
-            configurations: ['javascript'],
-            scope: [{ path: 'apps/web', configurations: ['javascript'] }],
-        });
-        const content = await generateIgnoreFile(
-            settings,
-            {
-                '.gitattributes': `${JSON.stringify(pattern)} linguist-generated\n`,
-                'apps/web/source.js': 'export {};\n',
-            },
-            'apps/web',
-        );
-        expect(readIgnoreSection(content, 'Generator outputs')).toStrictEqual([...expected]);
-    },
-);
-
-test('scope projection keeps exclusion order and leaves other scopes out', async () => {
-    const reason = 'These generated sources have a separate security owner.';
-    const settings = {
-        configurations: ['javascript'],
-        scope: [
-            { path: 'apps/web', configurations: ['javascript'] },
-            { path: 'services/web', configurations: ['javascript'] },
-        ],
-        ignore: [{ check: 'security/semgrep', paths: ['apps/web/{a,b}.ts', '!apps/web/a.ts'], reason }],
-    };
-    const files = { 'apps/web/source.js': 'export {};\n', 'services/web/source.js': 'export {};\n' };
-    const selected = await generateIgnoreFile(stringify(settings), files, 'apps/web');
-    expect(readIgnoreSection(selected, reason)).toStrictEqual(['/a.ts', '/b.ts', '!/a.ts']);
-    const other = await generateIgnoreFile(
-        stringify({
-            ...settings,
-            ignore: [{ check: 'security/semgrep', paths: ['{apps,packages}/web/file.ts'], reason }],
-        }),
-        files,
-        'services/web',
-    );
-    expect(readIgnoreSection(other, reason)).toStrictEqual([]);
-});
 
 test.each([...PATH_IGNORE_CASES])(
     '$check: a check-wide path ignore reaches the tool file and a rule or other-check ignore does not',
@@ -142,38 +66,6 @@ test.each([...PATH_IGNORE_CASES])(
         expect(patterns).not.toContain('other/**');
     },
 );
-
-test('.semgrepignore lists repository-relative Semgrep path ignores', async () => {
-    const settings = stringify({
-        configurations: ['javascript'],
-        scope: [{ path: 'api', configurations: ['javascript'] }],
-        ignore: [
-            {
-                check: 'security/semgrep',
-                paths: ['api/local/**'],
-                reason: 'These local sources have their own security owner.',
-            },
-            {
-                check: 'security/semgrep',
-                rule: 'example-rule',
-                paths: ['api/rule-only/**'],
-                reason: 'This one rule has a reviewed false positive.',
-            },
-            {
-                check: 'security/semgrep-registry',
-                paths: ['api/registry-only/**'],
-                reason: 'Only registry findings are accepted here.',
-            },
-        ],
-    });
-    const content = await generateFile(settings, '.semgrepignore', {
-        'source.js': 'export {};\n',
-        'api/source.js': 'export {};\n',
-    });
-    expect(content.split('\n')).toContain('api/local/**');
-    expect(content).not.toContain('rule-only');
-    expect(content).not.toContain('registry-only');
-});
 
 test.each([...LANGUAGE_IGNORES])(
     "$name: Prettier ignores only the selected languages' folders, with pointers where JavaScript is selected",

@@ -5,6 +5,7 @@ import { buildKnipFile } from '#cli/generation/tool-files/knip.ts';
 import { buildJscpdFile } from '#cli/generation/tool-files/jscpd.ts';
 import { buildTyposFile } from '#cli/generation/tool-files/typos.ts';
 import { buildEslintFile } from '#cli/generation/eslint/tool-file.ts';
+import { buildPrettierignore } from '#cli/generation/ignore-files.ts';
 import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
 import { buildSquawkFile } from '#cli/generation/tool-files/squawk.ts';
 import { buildSemgrepFile } from '#cli/generation/tool-files/semgrep.ts';
@@ -20,7 +21,6 @@ import { buildShellcheckFile } from '#cli/generation/tool-files/shellcheck.ts';
 import { buildSwiftformatFile } from '#cli/generation/tool-files/swiftformat.ts';
 import { buildEditorconfigFile } from '#cli/generation/tool-files/editorconfig.ts';
 import { buildMarkdownlintFile } from '#cli/generation/tool-files/markdownlint.ts';
-import { buildSemgrepignore, buildPrettierignore } from '#cli/generation/ignore-files.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/tool-files/python.ts';
 import { ESLINT_RUNTIME_FILE, ESLINT_RUNTIME_TARGET } from '#cli/config/generation/eslint.ts';
 import { TOOL_FILE_REFERENCE, SEMGREP_RULE_PACK_FOLDER } from '#cli/config/generation/files.ts';
@@ -78,7 +78,6 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
     '.gspot/config/osv-scanner.toml': buildOsvScannerFile,
     '.gspot/config/purgecss.config.mjs': buildPurgecssFile,
     '.gspot/config/html-validate-built.json': buildBuiltHtmlFile,
-    '.semgrepignore': buildSemgrepignore,
     '.prettierignore': buildPrettierignore,
     '.editorconfig': buildEditorconfigFile,
     '.gspot/config/vale/styles/config/vocabularies/words/accept.txt': buildAcceptedWordsFile,

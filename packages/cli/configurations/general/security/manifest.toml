@@ -16,15 +16,9 @@ min_version = "1.100.0"
 mise = "pipx:semgrep"
 name = "semgrep"
 pypi = "semgrep"
-replace = [".semgrepignore"]
 suppression = { marker = "\\bnosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
 version = "1.178.0"
 version_command = ["--disable-version-check", "--version"]
-
-[[tool_file]]
-per_scope = true
-target = ".semgrepignore"
-tool = "semgrep"
 
 [[check]]
 command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]

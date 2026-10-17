@@ -1,7 +1,6 @@
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 
 export const GSPOT_FOLDER_PATTERNS = [`${DOT_GSPOT}/**`] as const;
-export const BRACE_TOKENS = /\\[\s\S]|\[(?:\\[\s\S]|[^\]\\])*\]?|[{},]/gu;
 
 export const IGNORE_SECTION_TITLES = {
     build: 'Build output',

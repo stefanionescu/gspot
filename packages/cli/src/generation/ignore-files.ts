@@ -1,6 +1,5 @@
-// Build shared ignore sections and project their patterns into each scope.
-import picomatch from 'picomatch';
-import { dirname, basename } from 'node:path/posix';
+// Build the shared ignore sections for .prettierignore and the tool exclusions.
+import { basename } from 'node:path/posix';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
@@ -13,102 +12,12 @@ import { isInGspotFolder, listFileDeclarations } from '#cli/repository/classify.
 import { type IgnoreSection, type ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
-    BRACE_TOKENS,
     BUILD_OUTPUT_FOLDERS,
     GSPOT_FOLDER_PATTERNS,
     IGNORE_SECTION_TITLES,
     BUILD_OUTPUT_PATTERNS,
     LOCAL_ENVIRONMENT_PATTERNS,
 } from '#cli/config/generation/ignore-files.ts';
-
-// Expand alternatives before splitting paths, because a brace branch can hold a slash.
-function expandAlternatives(pattern: string): string[] {
-    let braceStart = -1;
-    let depth = 0;
-    const branches: string[] = [];
-    let branchStart = 0;
-    // Keep escaped characters and character classes out of the brace parser.
-    const tokens = pattern.matchAll(BRACE_TOKENS);
-    const closing = [...tokens].find((match) => {
-        const [character] = match;
-        const position = match.index;
-        switch (character) {
-            case '{': {
-                if (depth === 0) {
-                    braceStart = position;
-                    branchStart = position + 1;
-                }
-                depth += 1;
-                break;
-            }
-            case ',': {
-                if (depth === 1) {
-                    branches.push(pattern.slice(branchStart, position));
-                    branchStart = position + 1;
-                }
-                break;
-            }
-            case '}': {
-                if (depth !== 1) {
-                    depth = Math.max(0, depth - 1);
-                    break;
-                }
-                branches.push(pattern.slice(branchStart, position));
-                return true;
-            }
-        }
-        return false;
-    });
-    if (closing === undefined) return [pattern];
-    return branches.flatMap((entry) =>
-        expandAlternatives(`${pattern.slice(0, braceStart)}${entry}${pattern.slice(closing.index + 1)}`),
-    );
-}
-
-// A globstar can match no folders, or stay active while it matches the scope prefix.
-function expandGlobstarSkips(states: Set<number>, parts: string[]): Set<number> {
-    const expanded = new Set(states);
-    for (const index of expanded) if (parts[index] === '**') expanded.add(index + 1);
-    return expanded;
-}
-
-function moveIntoScope(pattern: string, scope: string): string[] {
-    const isFolderPattern = pattern.endsWith('/');
-    const bare = isFolderPattern ? pattern.slice(0, -1) : pattern;
-    const isAnchored = bare.startsWith('/') || bare.includes('/');
-    const parts = bare.replace(/^\//u, '').split('/');
-    if (!isAnchored) parts.unshift('**');
-    let states = expandGlobstarSkips(new Set([0]), parts);
-    for (const name of scope.split('/')) {
-        const next = [...states].flatMap((index) => {
-            const part = parts[index];
-            if (part === undefined || part === '**') return [index];
-            return picomatch.isMatch(name, part, { dot: true, noext: true, nonegate: true }) ? [index + 1] : [];
-        });
-        states = expandGlobstarSkips(new Set(next), parts);
-    }
-    if (states.has(parts.length)) return ['/**'];
-    return [...states].map((index) => `/${parts.slice(index).join('/')}${isFolderPattern ? '/' : ''}`);
-}
-
-/**
- * Move gitignore patterns into a scope folder, and keep their order.
- *
- * @param patterns the gitignore lines, relative to the root.
- * @param scope the folder where the tool starts.
- *
- * @returns the patterns relative to the scope.
- */
-function moveIgnorePatterns(patterns: string[], scope: string): string[] {
-    if (scope === '') return patterns;
-    return patterns.flatMap((pattern) => {
-        if (pattern === '' || pattern.startsWith('#')) return [];
-        const isNegated = pattern.startsWith('!');
-        const bare = isNegated ? pattern.slice(1) : pattern;
-        const rebased = expandAlternatives(bare).flatMap((entry) => moveIntoScope(entry, scope));
-        return [...new Set(rebased)].map((entry) => `${isNegated ? '!' : ''}${entry}`);
-    });
-}
 
 // Collect the generated destinations and pointers that external scanners must leave alone.
 function collectToolExclusions(session: Parameters<typeof buildIgnoreSections>[0]): string[] {
@@ -142,22 +51,17 @@ function buildIgnoreSections(
     const folders = [
         ...new Set(scopes.flatMap(({ selected }) => selected.flatMap((manifest) => manifest.ignored_folders))),
     ];
-    const usesSemgrep = session.neededToolManifests.some((manifest) =>
-        manifest.tools.some((tool) => tool.name === 'semgrep'),
-    );
     const toolFiles = collectToolExclusions(session);
     return [
         {
             title: IGNORE_SECTION_TITLES.build,
             patterns: [
-                ...BUILD_OUTPUT_PATTERNS.filter(
-                    (pattern) =>
-                        usesSemgrep ||
-                        repository.files.some((file) =>
-                            buildPathMatcher(
-                                buildGlobSections([{ title: IGNORE_SECTION_TITLES.build, patterns: [pattern] }]),
-                            )(file.path),
-                        ),
+                ...BUILD_OUTPUT_PATTERNS.filter((pattern) =>
+                    repository.files.some((file) =>
+                        buildPathMatcher(
+                            buildGlobSections([{ title: IGNORE_SECTION_TITLES.build, patterns: [pattern] }]),
+                        )(file.path),
+                    ),
                 ),
                 ...folders.filter((folder) => BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
             ],
@@ -201,21 +105,19 @@ function buildSettingsSections(view: ScopeView, check: string): IgnoreSection[] 
 }
 
 /**
- * Write ignore sections relative to the folder where the tool reads them.
+ * Write ignore sections for a tool that reads them from the root.
  * @param options what to write.
  * @param options.sections the ordered exclusion groups and their reasons.
- * @param options.scope the folder from which the tool reads these patterns.
  * @param options.purpose the explanation at the start of the ignore file.
- * @returns the ignore file text, with paths relative to the scope.
+ * @returns the ignore file text.
  */
-function ignoreFileText(options: { sections: IgnoreSection[]; scope: string; purpose: string }): string {
-    const { sections, scope, purpose } = options;
+function ignoreFileText(options: { sections: IgnoreSection[]; purpose: string }): string {
+    const { sections, purpose } = options;
     const seen = new Set<string>();
     const lines = sections.flatMap(({ title, patterns }) => {
-        const projected = moveIgnorePatterns(patterns, scope);
-        const ordered = projected.some((pattern) => pattern.startsWith('!'))
-            ? projected
-            : projected.toSorted((left, right) => left.localeCompare(right));
+        const ordered = patterns.some((pattern) => pattern.startsWith('!'))
+            ? patterns
+            : patterns.toSorted((left, right) => left.localeCompare(right));
         const paths = ordered.filter((pattern) => {
             if (seen.has(pattern)) return false;
             seen.add(pattern);
@@ -270,25 +172,8 @@ function buildPrettierignore(context: ToolFileContext): string {
             ...buildIgnoreSections(context.session),
             ...buildSettingsSections(context.selection.view, 'format/prettier'),
         ],
-        scope: dirname(context.targetPath) === '.' ? '' : dirname(context.targetPath),
         purpose: IGNORE_FILE_PURPOSES.prettier,
     });
 }
 
-/**
- * Build the Semgrep ignore file with every pattern relative to its scope.
- * @param context the tool file to build.
- * @returns the ignore file text.
- */
-function buildSemgrepignore(context: ToolFileContext): string {
-    return ignoreFileText({
-        sections: [
-            ...buildIgnoreSections(context.session),
-            ...buildSettingsSections(context.selection.view, 'security/semgrep'),
-        ],
-        scope: dirname(context.targetPath) === '.' ? '' : dirname(context.targetPath),
-        purpose: IGNORE_FILE_PURPOSES.semgrep,
-    });
-}
-
-export { buildGlobSections, buildSemgrepignore, buildIgnoreSections, buildPrettierignore, buildSettingsSections };
+export { buildGlobSections, buildIgnoreSections, buildPrettierignore, buildSettingsSections };

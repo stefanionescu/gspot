@@ -7,23 +7,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { SEMGREP_IGNORE_CASES } from '#tests/data/generated-files/ignore-files.ts';
-import { SWIFT_IGNORE_FOLDERS } from '#tests/data/checks/security/semgrep-rules.ts';
-
-test('a scoped Semgrep selection shares a root ignore file with repository-relative patterns', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['bash'], {
-            level: 'all',
-            tables: '[[scope]]\npath = "web"\nconfigurations = ["bash"]\n',
-        }),
-        '.gitattributes': 'web/gen/** linguist-generated\n',
-        'web/main.sh': 'echo source\n',
-        'web/gen/output.sh': 'echo generated\n',
-    });
-    const output = generate(await openSession(sandbox.path));
-    const ignore = output.files.find(({ path }) => path === '.semgrepignore');
-    expect(ignore?.content).toContain('web/gen/**');
-});
 
 test('a language choice brings its security rules without selecting security', async () => {
     await using sandbox = await testdir();
@@ -118,21 +101,3 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
         expect(text).not.toContain('no-stack-trace-in-response');
     }
 });
-
-test.each([...SEMGREP_IGNORE_CASES])(
-    'Semgrep ignores follow selected sources and scopes: $name',
-    async ({ configurations, tables, sources, paths, swift, patterns }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            ...sources,
-            'gspot.toml': buildSettingsText(configurations, { level: 'all', tables }),
-        });
-        const output = generate(await openSession(sandbox.path));
-        const ignores = output.files.filter(({ path }) => path.endsWith('.semgrepignore'));
-        expect(ignores.map(({ path }) => path)).toStrictEqual([...paths]);
-        const root = ignores.find(({ path }) => path === '.semgrepignore')!;
-        for (const folder of SWIFT_IGNORE_FOLDERS) expect(root.content.includes(folder)).toBe(swift);
-        for (const pattern of patterns)
-            expect(ignores.find(({ path }) => path === pattern.path)?.content).toContain(pattern.text);
-    },
-);

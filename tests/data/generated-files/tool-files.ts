@@ -67,7 +67,6 @@ export const PLAIN_TOOL_FILES = [
     '.editorconfig',
     'prettierignore',
     '.prettierignore',
-    '.semgrepignore',
     'accept.txt',
     'shellcheckrc',
     'swiftformat',

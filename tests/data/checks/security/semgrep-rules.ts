@@ -111,8 +111,6 @@ export const OWN_RULE = `rules:
       severity: ERROR
 `;
 
-export const SWIFT_IGNORE_FOLDERS = ['.build/', 'DerivedData/', 'Pods/'] as const;
-
 /** The Semgrep check command for the rule pack and output parser cases. */
 export const SEMGREP_CHECK = ['check', '--only', 'security/semgrep', '--json'] as const;
 

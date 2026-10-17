@@ -10,7 +10,6 @@ export const EDITORCONFIG_FIXED_SECTIONS = {
 } as const;
 export const IGNORE_FILE_PURPOSES = {
     prettier: 'Editors and gspot checks use the same ordered ignore patterns.',
-    semgrep: 'Semgrep excludes these paths before it reads source files.',
 } as const;
 
 export const PRETTIER_TOOL = 'prettier';
