@@ -68,10 +68,14 @@ async function createNpmLockfile(
     if (yarn !== undefined) writeFileSync(join(work, YARN_SETTINGS_FILE), yarn);
     if (recorded !== undefined && isLockfileCurrent(packageManager.name, recorded, project.dependencies))
         writeFileSync(join(work, project.lockfile), recorded);
+    const lockfileArguments = selectPackageManagerArguments(packageManager).lockfile;
+    const days = readRootHoldDays(context.session.scopes);
+    // The hold goes where versions get chosen. A frozen install takes them from the lockfile, and npm ci ignores
+    // min-release-age-exclude for lockfile entries without a URL.
     const env = await runPackageManager(context, {
         work,
         packageManager,
-        arguments: selectPackageManagerArguments(packageManager).lockfile,
+        arguments: addToolReleaseHold(work, lockfileArguments, packageManager, days),
         failure: 'lockfile resolution failed',
     });
     stripRegistryUrls(work, packageManager, env);
@@ -118,7 +122,6 @@ async function runPackageManager(
     const env = await readRegistryEnvironment(root);
     const credentials = extractRegistryCredentials(env);
     using settings = createScratchFolder();
-    const hold = addToolReleaseHold(work, commandArguments, packageManager, readRootHoldDays(context.session.scopes));
     try {
         writeNpmrc(settings.path, env);
         env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
@@ -129,8 +132,8 @@ async function runPackageManager(
             credentials.push(...(await writeYarnSettings(context, work, env)));
             env['YARN_RC_FILENAME'] = YARN_INSTALL_SETTINGS_FILE;
         }
-        steps.push(hold.command);
-        const result = await runTool(hold.command, {
+        steps.push(commandArguments);
+        const result = await runTool(commandArguments, {
             cancelSignal: context.cancelSignal,
             cwd: work,
             env,
@@ -156,7 +159,6 @@ async function runPackageManager(
         return { env, lockfile };
     } finally {
         rmSync(join(work, YARN_INSTALL_SETTINGS_FILE), { force: true });
-        if (hold.written !== undefined) rmSync(join(work, hold.written), { force: true });
     }
 }
 

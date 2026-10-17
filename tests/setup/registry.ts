@@ -15,6 +15,15 @@ import {
     PACKED_PACKAGES_FILE,
 } from '#tests/data/test-setup.ts';
 
+/**
+ * Pick the publish time that the registry reports for a packed package.
+ * @param name the package name.
+ * @returns now for a gspot package, as on release day, so the hold must let it through; an older time for the rest.
+ */
+function selectPublishTime(name: string): string {
+    return name.startsWith(GSPOT_PACKAGE_SCOPE) ? new Date().toISOString() : PACKED_PUBLISH_TIME;
+}
+
 /** Pack the local npm packages once for the current integration run. */
 export async function runNpmPack(work: string, declarations: readonly RegistryPackage[]): Promise<string> {
     const packages: PackedPackage[] = [];
@@ -74,7 +83,7 @@ export async function createNpmRegistry(
             return Response.json({
                 name,
                 'dist-tags': { latest: entry.version },
-                time: { [entry.version]: PACKED_PUBLISH_TIME },
+                time: { [entry.version]: selectPublishTime(name) },
                 versions: {
                     [entry.version]: { ...manifest, dist: { tarball: `${url.origin}/${tarball}`, integrity } },
                 },
