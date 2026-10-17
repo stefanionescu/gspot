@@ -8,7 +8,6 @@ import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
 import { buildBoundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
@@ -179,11 +178,7 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
         scopeDependencies: Object.keys(getProjectDependencies(session.dependencyFiles, selection.scope.path)),
         testRuleNames: TEST_RULE_NAMES,
         isAll: repositorySettings.level === 'all',
-        files: (extension) =>
-            session.repository.files.flatMap((file) =>
-                file.kind === 'source' && file.path.endsWith(extension) ? [file.path] : [],
-            ),
-        json: (value) => JSON.stringify(value, null, JSON_INDENT),
+        sourceFiles: session.repository.files.flatMap((file) => (file.kind === 'source' ? [file.path] : [])),
     };
 }
 

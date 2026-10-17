@@ -185,8 +185,8 @@ export type EslintContext = {
     testRuleNames: readonly string[];
     isAll: boolean;
     repositorySettings: Settings;
-    files: (extension: string) => string[];
-    json: (value: unknown) => string;
+    /** Source file paths; a fragment gets only the files of its scope. */
+    sourceFiles: string[];
 };
 
 /** The expression and captured values of rules supplied by a pinned preset. */

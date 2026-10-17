@@ -34,7 +34,7 @@ function buildBlocksBeforeFragments(
     view: Pick<ScopeView, 'limit' | 'options'>,
     plugins: EslintPlugins,
 ): Parameters<BlockWriter['block']>[] {
-    const { eslintFiles, isAll, json } = base;
+    const { eslintFiles, isAll } = base;
     const config = base.eslint;
     const rules = buildLevelRules(view, isAll ? BASE_SELECTORS : []);
     const pluginMap = Object.entries(plugins)
@@ -55,8 +55,8 @@ function buildBlocksBeforeFragments(
         if (settings === undefined) return [data, ''];
         const runtime =
             settings['boundaries/files'] === undefined
-                ? `settings: ${json(settings)}`
-                : `settings: { ...${json(settings)}, 'import/resolver': { typescript: { project: ${json(config.projects)}.map((project) => join(root, project)) } } }`;
+                ? `settings: ${JSON.stringify(settings)}`
+                : `settings: { ...${JSON.stringify(settings)}, 'import/resolver': { typescript: { project: ${JSON.stringify(config.projects)}.map((project) => join(root, project)) } } }`;
         return [data, runtime];
     });
     return [
@@ -95,7 +95,7 @@ function buildBlocksAfterFragments(
     view: Pick<ScopeView, 'limit' | 'options'>,
     fragmentSelectors: SelectorGroup[],
 ): Parameters<BlockWriter['block']>[] {
-    const { eslintFiles, isAll, json } = base;
+    const { eslintFiles, isAll } = base;
     const config = base.eslint;
     const selectors = isAll ? BASE_SELECTORS : [];
     const rules = buildLevelRules(view, selectors);
@@ -115,7 +115,7 @@ function buildBlocksAfterFragments(
                     ...(runtime === 'commonjs' ? { 'unicorn/prefer-module': 'off' } : {}),
                 },
             },
-            `languageOptions: { sourceType: ${json(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${json(names)}] }`,
+            `languageOptions: { sourceType: ${JSON.stringify(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${JSON.stringify(names)}] }`,
         ];
     });
     return [

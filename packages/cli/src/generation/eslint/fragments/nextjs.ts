@@ -14,9 +14,9 @@ import {
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildNextjsFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'eslintFiles' | 'scope' | 'files' | 'json'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'eslintFiles' | 'scope' | 'sourceFiles'>,
 ): EslintFragment {
-    const { eslintPresets, blockWriter, eslintFiles, scope, files, json } = context;
+    const { eslintPresets, blockWriter, eslintFiles, scope, sourceFiles } = context;
 
     const imports: string[] = [
         "import nextPlugin from '@next/eslint-plugin-next';",
@@ -26,7 +26,7 @@ function buildNextjsFragment(
     const output: string[] = ['\n\n'];
     const presets = eslintPresets.get('nextjs') as FragmentPresets;
     const prefix = scope === '' ? '' : `${scope}/`;
-    const hasPages = files('').some((path) => NEXT_PAGES_FOLDERS.some((folder) => path.startsWith(prefix + folder)));
+    const hasPages = sourceFiles.some((path) => NEXT_PAGES_FOLDERS.some((folder) => path.startsWith(prefix + folder)));
     output.push(
         '\n',
         blockWriter.block(
@@ -41,7 +41,7 @@ function buildNextjsFragment(
                     '@next/next/no-async-client-component': NEXT_RULES['@next/next/no-async-client-component'],
                 },
             },
-            `plugins: { '@next/next': nextPlugin }, settings: { next: { rootDir: root + '/' + ${json(scope)} } }`,
+            `plugins: { '@next/next': nextPlugin }, settings: { next: { rootDir: root + '/' + ${JSON.stringify(scope)} } }`,
             {
                 expression: `{ ...${serializePresetAccess('nextPlugin', presets.recommended.source)}.rules, ...${serializePresetAccess('reactRefresh', presets.refresh.source)}.rules }`,
                 rules: { ...presets.recommended.blocks[0].rules, ...presets.refresh.blocks[0].rules },

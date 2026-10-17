@@ -74,11 +74,7 @@ function groupToolOutputs(
     entries: (ToolFileSelection & { toolFile: WholeToolFile })[],
     state: ToolFileGenerationState,
 ): ToolFileContent[][] {
-    const [first] = entries as [
-        ToolFileSelection & { toolFile: WholeToolFile },
-        ...(ToolFileSelection & { toolFile: WholeToolFile })[],
-    ];
-    const owners = first.toolFile.per_scope ? entries : entries.slice(0, 1);
+    const owners = entries[0]?.toolFile.per_scope === true ? entries : entries.slice(0, 1);
     const outputs = owners.map((entry) => ({
         ...entry,
         file: buildToolFile(

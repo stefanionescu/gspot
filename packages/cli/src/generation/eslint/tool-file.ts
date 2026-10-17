@@ -1,5 +1,6 @@
 // Build the ESLint tool file from the settings and the scope.
 
+import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { buildEslintContext } from '#cli/generation/eslint/context.ts';
 import { buildSelectedBlocks } from '#cli/generation/eslint/lint-rules.ts';
@@ -23,7 +24,7 @@ function buildEslintFile(context: ToolFileContext): string {
     const { session, selection, toolFile: target } = context;
 
     const base = buildEslintContext(context);
-    const { eslint, json, blockWriter } = base;
+    const { eslint, blockWriter } = base;
     const { fragmentParts, fragmentImports, fragmentSelectors } = collectFragments(
         session,
         session.scopes,
@@ -47,7 +48,11 @@ function buildEslintFile(context: ToolFileContext): string {
     ];
 
     if (config.extra !== undefined) {
-        output.push('\n    // Your own ESLint options.\n', indentEslintBlock(json(config.extra.entries)), ',\n');
+        output.push(
+            '\n    // Your own ESLint options.\n',
+            indentEslintBlock(JSON.stringify(config.extra.entries, null, JSON_INDENT)),
+            ',\n',
+        );
     }
     output.push(
         serializeBlocks(

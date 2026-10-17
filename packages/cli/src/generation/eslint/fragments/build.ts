@@ -85,9 +85,9 @@ function buildSelectedFragments(
                 scopes.map((entry) => entry.scope.path),
                 scope,
             );
-            const selectedFiles = inputs
-                .files('')
-                .filter((path) => isInScope(path, scope) && children.every((child) => !isInScope(path, child)));
+            const selectedFiles = inputs.sourceFiles.filter(
+                (path) => isInScope(path, scope) && children.every((child) => !isInScope(path, child)),
+            );
             const module = createBlockWriter({
                 source: manifest.configuration.name,
                 allRules: inputs.eslintAllRules,
@@ -109,7 +109,7 @@ function buildSelectedFragments(
                         inputs.eslintFiles.code.map((pattern) => [test, pattern]),
                     ),
                 },
-                files: (extension: string) => selectedFiles.filter((path) => path.endsWith(extension)),
+                sourceFiles: selectedFiles,
             });
             blockText.push(fragment);
         }
