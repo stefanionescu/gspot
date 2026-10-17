@@ -153,15 +153,6 @@ summary = "Checks every shell function against the size ceilings: code lines, br
 why = "A long script holds more than one job, and many branches or assignments hide several functions under one name."
 
 [[check]]
-example = "A launcher that holds only `exec bash scripts/build.sh` reports a finding. Call `scripts/build.sh` directly, and delete the launcher."
-help = "Call the target script directly and delete the redundant launcher or alias."
-level = "all"
-name = "forwarders"
-stage = "commit"
-summary = "Finds forwarding wrappers and compatibility aliases in shell scripts."
-why = "A wrapper adds a second entry point, and the two drift apart."
-
-[[check]]
 example = "A shell heredoc containing a Python program reports embedded code. Move the program into a `.py` file and invoke that file from the shell script."
 help = "Move the embedded code into its own file and run that."
 level = "all"

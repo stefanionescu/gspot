@@ -18,7 +18,6 @@ import {
     LOOP_COUNTS,
     COUNTED_LOOPS,
     DOC_COMMENT_CASES,
-    SINGLE_CALL_CASES,
     BASH_SIZE_LOCATIONS,
     UNREAD_ARGUMENT_CASES,
     UNUSED_FUNCTION_CASES,
@@ -35,31 +34,17 @@ import {
     SCOPE_READER_SETTINGS,
 } from '#tests/data/checks/bash/script-checks.ts';
 
-test.each([...NODE_EMBEDS])(
-    'inline-scripts: inline Node (%s) is reported once, by bash/inline-scripts',
-    async (source) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['bash'], { level: 'all' }),
-            'source.sh': source,
-        });
-        const result = await checkReport(sandbox.path, [
-            'check',
-            '--only',
-            'bash/forwarders',
-            'bash/inline-scripts',
-            '--json',
-        ]);
-        expect(result.code, result.stdout + result.stderr).toBe(1);
-        expect(result.report.checks.find(({ check }) => check === 'bash/forwarders')).toMatchObject({
-            status: 'passed',
-            findings: [],
-        });
-        expect(result.report.checks.find(({ check }) => check === 'bash/inline-scripts')?.findings).toMatchObject([
-            { file: 'source.sh', line: 1, rule: 'runtime-embed' },
-        ]);
-        expect(result.report.checks.flatMap(({ findings }) => findings)).toHaveLength(1);
-    },
-);
+test.each([...NODE_EMBEDS])('inline-scripts: inline Node (%s) is reported once', async (source) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['bash'], { level: 'all' }),
+        'source.sh': source,
+    });
+    const result = await checkReport(sandbox.path, ['check', '--only', 'bash/inline-scripts', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(result.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
+        { file: 'source.sh', line: 1, rule: 'runtime-embed' },
+    ]);
+});
 test.each([...SAFETY_SOURCES])(
     'safety: a trap that removes its own temporary file is allowed and other recursive removals are reported: $source',
     async ({ source, unsafeLines }) => {
@@ -115,7 +100,6 @@ test.each([
     ...SCRIPT_LAYOUT_CASES,
     ...UNREAD_ARGUMENT_CASES,
     ...UNUSED_FUNCTION_CASES,
-    ...SINGLE_CALL_CASES,
     ...BASH_TRIVIAL_FUNCTION_CASES,
 ])('$check reports $expected.rule and passes after the fix', async (entry) => {
     const result = await runBashSample(bashSandbox(), entry);

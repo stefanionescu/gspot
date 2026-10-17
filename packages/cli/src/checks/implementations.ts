@@ -24,7 +24,6 @@ import { importLinter } from '#cli/checks/language/python/import-linter.ts';
 import { checkLoneFiles } from '#cli/checks/general/structure/lone-files.ts';
 import { checkLongFiles } from '#cli/checks/general/structure/long-files.ts';
 import { checkSuppressions } from '#cli/checks/general/gspot/suppressions.ts';
-import { checkBashForwarders } from '#cli/checks/language/bash/forwarders.ts';
 import { checkLockfiles } from '#cli/checks/general/dependencies/lockfiles.ts';
 import { checkDockerignore } from '#cli/checks/infrastructure/dockerignore.ts';
 import { checkActionlint } from '#cli/checks/infrastructure/github-actions.ts';
@@ -177,7 +176,6 @@ export const CHECK_IMPLEMENTATIONS = {
     'bash/unused-functions': { check: checkBashUnusedFunctions },
     'bash/unread-arguments': { check: checkBashUnreadArguments },
     'bash/script-layout': { check: checkBashScriptLayout },
-    'bash/forwarders': { check: checkBashForwarders },
     'bash/inline-scripts': { check: checkBashInlineScripts },
     'bash/safety': { check: checkBashSafety },
     'prose/vale': { check: checkVale },

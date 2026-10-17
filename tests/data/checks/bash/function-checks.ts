@@ -1,15 +1,5 @@
 import { BASH_MAIN, BASH_HEADER } from '#tests/data/checks/bash/samples.ts';
 
-export const SINGLE_CALL_CASES = [
-    {
-        check: 'bash/forwarders',
-        files: {
-            'scripts/build.sh': '#!/usr/bin/env bash\nexec bash scripts/target.sh\n',
-        },
-        expected: { file: 'scripts/build.sh', rule: 'forwarding-wrapper', line: 2 },
-    },
-] as const;
-
 /** Source locations for the generated Bash size samples. */
 export const BASH_SIZE_LOCATIONS = [
     { file: 'scripts/long.sh', rule: 'file-lines', line: 1 },

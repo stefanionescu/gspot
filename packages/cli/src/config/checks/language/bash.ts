@@ -45,17 +45,6 @@ export const TOP_LEVEL_ASSIGNMENT = /^(?<name>[A-Z_][A-Z0-9_]*)=/u;
 /** The function that every script may leave uncalled. */
 export const MAIN_FUNCTION = 'main';
 
-/** Prose that announces a deprecated alias. */
-export const DEPRECATED_ALIAS = /deprecated\s+command|deprecated\s+alias|compatibility\s+wrapper|forwarding\s+script/iu;
-
-export const FORWARDED_SCRIPT = /\.(?:sh|js)(?:\s|$)/u;
-
-/** A line that only forwards to another script: an interpreter first, a script name after. */
-export const FORWARDER_INTERPRETER = /^(?:exec )?(?:\/bin\/bash|bash|node)\s/u;
-
-/** The most non-comment lines a script may have and still count as a forwarding wrapper. */
-export const FORWARDER_MAX_LINES = 4;
-
 /** A source statement. */
 export const SOURCE_STATEMENT = /^(?:source|\.)\s+/u;
 
