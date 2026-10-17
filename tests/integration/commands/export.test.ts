@@ -25,50 +25,44 @@ test('an exported template sets up another repository', async () => {
     const environment = { PATH: buildSandboxPath() };
     await prepareTemplate(first.path, environment);
 
-    {
-        await createFileTree(second.path, {
-            ...DESTINATION_FILES,
-        });
-        commitAll(second.path);
-        const init = await spawnGspot(
-            second.path,
-            ['init', '--yes', '--from', join(first.path, TEMPLATE_FILE)],
-            environment,
-        );
-        expect(init.code, init.stdout + init.stderr).toBe(0);
-        expect(init.stdout).toContain(`template    ${join(first.path, TEMPLATE_FILE)}`);
-        expect(init.stdout).toMatch(/typescript\s+detected/u);
-    }
-    {
-        const [sourceText, exported, copied] = await Promise.all([
-            Bun.file(join(first.path, 'gspot.toml')).text(),
-            Bun.file(join(first.path, TEMPLATE_FILE)).text(),
-            Bun.file(join(second.path, 'gspot.toml')).text(),
-        ]);
-        const { scope, ...rootSettings } = parseTomlText(sourceText, 'gspot.toml', 'settings');
-        expect(scope).toStrictEqual([{ path: 'app', configurations: ['bash'] }]);
-        expect(parseTomlText(copied, 'gspot.toml', 'settings')).toStrictEqual({
-            ...rootSettings,
-            configurations: [...DESTINATION_CONFIGURATIONS],
-        });
-        expect(copied).toContain(
-            `# Copied from template ${join(first.path, TEMPLATE_FILE)}, sha256 ${hashContent(exported)}.\n`,
-        );
-        expect(await isOnDisk(join(second.path, '.shellcheckrc'))).toBe(false);
-        const checked = await spawnGspot(second.path, ['check', '--only', 'sandbox/pass'], environment);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    }
+    await createFileTree(second.path, DESTINATION_FILES);
+    commitAll(second.path);
+    const init = await spawnGspot(
+        second.path,
+        ['init', '--yes', '--from', join(first.path, TEMPLATE_FILE)],
+        environment,
+    );
+    expect(init.code, init.stdout + init.stderr).toBe(0);
+    expect(init.stdout).toContain(`template    ${join(first.path, TEMPLATE_FILE)}`);
+    expect(init.stdout).toMatch(/typescript\s+detected/u);
+    const [sourceText, exported, copied] = await Promise.all([
+        Bun.file(join(first.path, 'gspot.toml')).text(),
+        Bun.file(join(first.path, TEMPLATE_FILE)).text(),
+        Bun.file(join(second.path, 'gspot.toml')).text(),
+    ]);
+    const { scope, ...rootSettings } = parseTomlText(sourceText, 'gspot.toml', 'settings');
+    expect(scope).toStrictEqual([{ path: 'app', configurations: ['bash'] }]);
+    expect(parseTomlText(copied, 'gspot.toml', 'settings')).toStrictEqual({
+        ...rootSettings,
+        configurations: [...DESTINATION_CONFIGURATIONS],
+    });
+    expect(copied).toContain(
+        `# Copied from template ${join(first.path, TEMPLATE_FILE)}, sha256 ${hashContent(exported)}.\n`,
+    );
+    expect(await isOnDisk(join(second.path, '.shellcheckrc'))).toBe(false);
+    const checked = await spawnGspot(second.path, ['check', '--only', 'sandbox/pass'], environment);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
 
     await verifyRepeatedExport(second.path, first.path, environment);
 
-    const copied = await Bun.file(join(second.path, 'gspot.toml')).text();
+    const settled = await Bun.file(join(second.path, 'gspot.toml')).text();
     for (const { files, code } of TEMPLATE_SHELLCHECK_CASES) {
         await createFileTree(second.path, files);
-        const checked = await spawnGspot(second.path, ['check', '--only', 'bash/shellcheck'], environment);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(code);
-        if (code === 1) expect(checked.stdout).toContain('SC2086');
+        const shellcheck = await spawnGspot(second.path, ['check', '--only', 'bash/shellcheck'], environment);
+        expect(shellcheck.code, shellcheck.stdout + shellcheck.stderr).toBe(code);
+        if (code === 1) expect(shellcheck.stdout).toContain('SC2086');
     }
-    expect(await Bun.file(join(second.path, 'gspot.toml')).text()).toBe(copied);
+    expect(await Bun.file(join(second.path, 'gspot.toml')).text()).toBe(settled);
 });
 
 /** Configure a source repository and export its reusable settings without changing it. */

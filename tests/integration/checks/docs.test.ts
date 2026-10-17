@@ -73,15 +73,12 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
         await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
         await Bun.write(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}page#setup).\n`);
         await assertLinkFailures(sandbox.path, 'docs/lychee-external', []);
-        {
-            const level = 'all';
-            const selected = await spawnGspot(sandbox.path, ['set', 'level', level]);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            await assertTextFragments(sandbox.path, 'docs/lychee-external', `${url}page`);
-            requests.length = 0;
-            await assertTextFragments(sandbox.path, 'docs/lychee', 'page.html');
-            expect(requests).toStrictEqual([]);
-        }
+        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+        await assertTextFragments(sandbox.path, 'docs/lychee-external', `${url}page`);
+        requests.length = 0;
+        await assertTextFragments(sandbox.path, 'docs/lychee', 'page.html');
+        expect(requests).toStrictEqual([]);
     } finally {
         await server.stop(true);
     }

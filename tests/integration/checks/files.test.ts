@@ -34,20 +34,17 @@ test('Taplo fixes inline table spacing', async () => {
     );
     const path = join(root, 'settings/inline.toml');
     const command = ['check', 'settings/inline.toml', '--only', 'files/taplo-format', '--json'];
-    {
-        const level = 'all';
-        const selected = await spawnGspot(root, ['set', 'level', level], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        await Bun.write(path, 'entry={key=true}\n');
-        const fixed = await spawnGspot(root, [...command, '--fix'], environment);
-        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-        expect(await Bun.file(path).text()).toBe('entry = { key = true }\n');
-        const checked = await spawnGspot(root, command, environment);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/taplo-format', status: 'passed', findings: [] },
-        ]);
-    }
+    const selected = await spawnGspot(root, ['set', 'level', 'all'], environment);
+    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+    await Bun.write(path, 'entry={key=true}\n');
+    const fixed = await spawnGspot(root, [...command, '--fix'], environment);
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+    expect(await Bun.file(path).text()).toBe('entry = { key = true }\n');
+    const checked = await spawnGspot(root, command, environment);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+        { check: 'files/taplo-format', status: 'passed', findings: [] },
+    ]);
 });
 
 test('Taplo follows an extra tool option for compact inline tables and returns to its default without it', async () => {
@@ -174,23 +171,20 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
         }),
     );
     const command = ['check', 'settings/schema.toml', '--only', 'files/taplo-format', '--json'];
-    {
-        const level = 'all';
-        const selected = await spawnGspot(root, ['set', 'level', level], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        await Bun.write(join(root, 'settings/schema.toml'), directive + 'value =\n');
-        const failed = await spawnGspot(root, command, environment);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/taplo-format', status: 'failed', findings: [{ file: 'settings/schema.toml', line: 2 }] },
-        ]);
-        await Bun.write(join(root, 'settings/schema.toml'), directive + 'value = 1\n');
-        const corrected = await spawnGspot(root, command, environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'files/taplo-format', status: 'passed', findings: [] },
-        ]);
-    }
+    const selected = await spawnGspot(root, ['set', 'level', 'all'], environment);
+    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+    await Bun.write(join(root, 'settings/schema.toml'), directive + 'value =\n');
+    const failed = await spawnGspot(root, command, environment);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([
+        { check: 'files/taplo-format', status: 'failed', findings: [{ file: 'settings/schema.toml', line: 2 }] },
+    ]);
+    await Bun.write(join(root, 'settings/schema.toml'), directive + 'value = 1\n');
+    const corrected = await spawnGspot(root, command, environment);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+        { check: 'files/taplo-format', status: 'passed', findings: [] },
+    ]);
     expect(requests).toBe(0);
 });
 
@@ -224,19 +218,16 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
     );
     const applied = await spawnGspot(root, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    {
-        const level = 'all';
-        const selected = await spawnGspot(root, ['set', 'level', level]);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        await assertYamlFiles(root);
-        const formatted = await spawnGspot(root, ['check', '--only', 'format/prettier', '--json']);
-        expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
-        expect((JSON.parse(formatted.stdout) as RunReport).checks).toMatchObject([
-            { check: 'format/prettier', scope: '', status: 'passed', findings: [] },
-        ]);
-        await Bun.write(join(root, 'app/settings/project.yaml'), YAML_SCOPE_SAMPLE);
-        await assertYamlFiles(root, 'truthy');
-        await Bun.write(join(root, 'app/settings/project.yaml'), YAML_SCOPE_FILES['app/settings/project.yaml']);
-        await assertYamlFiles(root);
-    }
+    const selected = await spawnGspot(root, ['set', 'level', 'all']);
+    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+    await assertYamlFiles(root);
+    const formatted = await spawnGspot(root, ['check', '--only', 'format/prettier', '--json']);
+    expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
+    expect((JSON.parse(formatted.stdout) as RunReport).checks).toMatchObject([
+        { check: 'format/prettier', scope: '', status: 'passed', findings: [] },
+    ]);
+    await Bun.write(join(root, 'app/settings/project.yaml'), YAML_SCOPE_SAMPLE);
+    await assertYamlFiles(root, 'truthy');
+    await Bun.write(join(root, 'app/settings/project.yaml'), YAML_SCOPE_FILES['app/settings/project.yaml']);
+    await assertYamlFiles(root);
 });

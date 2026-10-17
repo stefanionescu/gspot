@@ -107,43 +107,41 @@ test.each([...LEVELS])(
     async (level) => {
         const sandbox = { path: installedSandbox().root };
         const sample = PACKAGE_STYLE_CASES.map(({ sample }) => sample).join('\n\n') + '\n';
-        {
-            const path = 'sample.md';
-            const scope = '';
-            const settings = buildSettingsText(['prose'], { level });
-            await using _sourceChange = await updateSandbox(installedSandbox(), {
-                check: '',
-                files: { 'gspot.toml': settings, [path]: sample },
-            });
-            const applied = await spawnGspot(sandbox.path, ['apply']);
-            expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-            const appliedSettings = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-            const checked = await spawnGspot(sandbox.path, ['check', path, '--only', 'prose/vale', '--json']);
-            expect(checked.code, checked.stdout + checked.stderr).toBe(level === 'all' ? 1 : 0);
-            const result = (JSON.parse(checked.stdout) as RunReport).checks.find((check) => check.scope === scope)!;
-            const rules = result.findings.map(({ rule }) => rule);
-            for (const entry of PACKAGE_STYLE_CASES) {
-                expect(rules.includes(entry.rule), entry.rule).toBe(level === 'all');
-            }
-            expect(
-                rules.some((rule) => rule?.startsWith('Microsoft.') === true || rule?.startsWith('RedHat.') === true),
-            ).toBe(false);
-            expect(await Bun.file(join(sandbox.path, path)).text()).toBe(sample);
-            expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(appliedSettings);
-            await Bun.write(
-                join(sandbox.path, path),
-                `# Guide
+        const path = 'sample.md';
+        const scope = '';
+        const settings = buildSettingsText(['prose'], { level });
+        await using _sourceChange = await updateSandbox(installedSandbox(), {
+            check: '',
+            files: { 'gspot.toml': settings, [path]: sample },
+        });
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const appliedSettings = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
+        const checked = await spawnGspot(sandbox.path, ['check', path, '--only', 'prose/vale', '--json']);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(level === 'all' ? 1 : 0);
+        const result = (JSON.parse(checked.stdout) as RunReport).checks.find((check) => check.scope === scope)!;
+        const rules = result.findings.map(({ rule }) => rule);
+        for (const entry of PACKAGE_STYLE_CASES) {
+            expect(rules.includes(entry.rule), entry.rule).toBe(level === 'all');
+        }
+        expect(
+            rules.some((rule) => rule?.startsWith('Microsoft.') === true || rule?.startsWith('RedHat.') === true),
+        ).toBe(false);
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(sample);
+        expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(appliedSettings);
+        await Bun.write(
+            join(sandbox.path, path),
+            `# Guide
 
 Read the guide.
 `,
-            );
-            const correctedCommand = await spawnGspot(sandbox.path, ['check', path, '--only', 'prose/vale', '--json']);
-            expect(correctedCommand.code, correctedCommand.stdout + correctedCommand.stderr).toBe(0);
-            const corrected = (JSON.parse(correctedCommand.stdout) as RunReport).checks.find(
-                (check) => check.scope === scope,
-            )!;
-            expect(corrected.status, corrected.note).toBe('passed');
-            expect(corrected.findings).toStrictEqual([]);
-        }
+        );
+        const correctedCommand = await spawnGspot(sandbox.path, ['check', path, '--only', 'prose/vale', '--json']);
+        expect(correctedCommand.code, correctedCommand.stdout + correctedCommand.stderr).toBe(0);
+        const corrected = (JSON.parse(correctedCommand.stdout) as RunReport).checks.find(
+            (check) => check.scope === scope,
+        )!;
+        expect(corrected.status, corrected.note).toBe('passed');
+        expect(corrected.findings).toStrictEqual([]);
     },
 );

@@ -95,19 +95,15 @@ scope-case = ["always", "lower-case"]
 
 const installedSandbox = registerSharedSandbox({ configurations: ['commits'], level: 'all', files: COMMITS_FILES });
 
-let root: string;
-
-let environment: Record<string, string>;
-
-let initial: string;
-
 describe('a repository with the commit hooks installed', () => {
     beforeAll(prepareHookRepository);
     beforeEach(() => {
-        readGitOutput(root, ['reset', '--hard', initial]);
+        const { root } = installedSandbox();
+        readGitOutput(root, ['reset', '--hard', 'configured']);
         readGitOutput(root, ['clean', '-fd']);
     });
     test('commits/commitlint-pushed reports a commit made past the hook', async () => {
+        const { root, environment } = installedSandbox();
         const accepted = await spawnGspot(root, ['check', '--only', 'commits/commitlint-pushed'], environment);
         expect(accepted.code).toBe(0);
         await Bun.write(join(root, 'more.md'), '# More\n');
@@ -118,6 +114,7 @@ describe('a repository with the commit hooks installed', () => {
         expect(range.stdout).toContain('type-empty');
     });
     test('the pre-push check reads every pushed commit message, even when the trees are equal', async () => {
+        const { root, environment } = installedSandbox();
         const base = readGitOutput(root, ['rev-parse', 'HEAD']);
         const tree = readGitOutput(root, ['rev-parse', 'HEAD^{tree}']);
         const good = readGitOutput(root, ['commit-tree', tree, '-p', base, '-m', 'docs: reviewed']);
@@ -197,11 +194,10 @@ test('a shallow push checks source content but refuses incomplete required histo
     }).toStrictEqual({ head: selected, source: 'echo selected\n' });
 });
 
-/** Install real commit hooks and record the clean state restored between hook cases. */
+/** Commit the installed hooks and tag the commit that each hook case starts from. */
 function prepareHookRepository(): void {
-    root = installedSandbox().root;
-    environment = { NO_COLOR: '1', PATH: buildSandboxPath() };
+    const { root } = installedSandbox();
     readGitOutput(root, ['add', '-A']);
     readGitOutput(root, ['commit', '-qm', 'chore: configure checks', '--no-verify']);
-    initial = readGitOutput(root, ['rev-parse', 'HEAD']);
+    readGitOutput(root, ['tag', 'configured']);
 }
