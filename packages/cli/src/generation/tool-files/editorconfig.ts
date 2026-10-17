@@ -1,5 +1,5 @@
+import { AGENTS_FILE } from '#cli/config/rules.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
-import { AGENTS_FILE, CLAUDE_FILE } from '#cli/config/rules.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { listScopeFormats } from '#cli/generation/tool-files/prettier.ts';
 import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
@@ -31,7 +31,7 @@ function buildEditorconfigFile(context: ToolFileContext): string {
         ...context.session.repository.files
             .filter((file) => !isInGspotFolder(file.path) && (file.kind !== 'generated' || file.kindOrigin !== 'gspot'))
             .map((file) => file.path),
-        ...(settings.rules.enabled ? [AGENTS_FILE, CLAUDE_FILE] : []),
+        ...(settings.rules.enabled ? [AGENTS_FILE] : []),
     ];
 
     const extraOptions = extra('editorconfig-checker');

@@ -9,7 +9,7 @@ import { commandSchema, operatingSystemSchema } from '#cli/configurations/schema
 
 const rulesSchema = z.strictObject({
     enabled: z.boolean().default(true).meta({
-        description: 'Write the rules, the AGENTS.md block, and the CLAUDE.md import.',
+        description: 'Write the rules and the AGENTS.md block.',
     }),
     exclude: z.array(z.string()).default([]).meta({
         description: 'Rule files and folders left out of the installed selection.',

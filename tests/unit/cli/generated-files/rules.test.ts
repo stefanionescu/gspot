@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { format } from 'prettier';
+import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import * as assets from '#cli/system/assets.ts';
-import { stat, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -15,7 +15,14 @@ import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
-import { DRIZZLE_DRIVERS, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/data/rules.ts';
+
+import {
+    OWN_CLAUDE_TEXT,
+    DRIZZLE_DRIVERS,
+    RUNTIME_RULE_CASES,
+    RULE_CONFIGURATIONS,
+    EARLIER_CLAUDE_BLOCK,
+} from '#tests/data/rules.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();
@@ -230,29 +237,17 @@ test('a React dependency selects COMPONENTS.md', async () => {
     const session = await openSession(sandbox.path);
     expect(selectRuleFiles(session).map(({ path }) => path)).toContain('language/javascript/COMPONENTS.md');
 });
-test.each(['', '# Your instructions\n\nKeep this text.\n'])(
-    'apply writes the CLAUDE.md import before your own text: %s',
-    async (authored) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText([], { rules: true }),
-            ...(authored === '' ? {} : { 'CLAUDE.md': authored }),
-        });
-        const applied = await runGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const instructions = await readFile(join(sandbox.path, 'CLAUDE.md'), 'utf8');
-        expect(instructions).toBe(
-            '<!-- >>> gspot managed >>> -->\n\n@AGENTS.md\n\n<!-- <<< gspot managed <<< -->\n' +
-                (authored === '' ? '' : '\n' + authored),
-        );
-        const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
-        expect(agents).toContain('agent/WORKING.md');
-        const written = await stat(join(sandbox.path, 'CLAUDE.md'));
-        const modified = written.mtimeMs;
-        const again = await runGspot(sandbox.path, ['apply']);
-        expect(again.code, again.stdout + again.stderr).toBe(0);
-        expect(await readFile(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe(instructions);
-        const unchanged = await stat(join(sandbox.path, 'CLAUDE.md'));
-        expect(unchanged.mtimeMs).toBe(modified);
-    },
-);
+test.each([
+    [EARLIER_CLAUDE_BLOCK, undefined],
+    [`${EARLIER_CLAUDE_BLOCK}\n${OWN_CLAUDE_TEXT}`, OWN_CLAUDE_TEXT],
+])('apply removes the CLAUDE.md block of gspot 0.2.0 and keeps your own text: %j', async (earlier, kept) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText([], { rules: true }),
+        'CLAUDE.md': earlier,
+    });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toContain('agent/WORKING.md');
+    expect(await readFile(join(sandbox.path, 'CLAUDE.md'), 'utf8').catch(() => undefined)).toBe(kept);
+});

@@ -12,6 +12,6 @@ export const AGENTS_FILE = 'AGENTS.md';
 
 export const ALL_LEVEL_MARKER = '<!-- level: all -->';
 
+/** gspot 0.2.0 and 0.2.1 wrote an `@AGENTS.md` block into this file; apply removes it. */
 export const CLAUDE_FILE = 'CLAUDE.md';
-export const CLAUDE_BLOCK = '@AGENTS.md';
 export const RULE_OPENING_PREFIX = 'Read this rule ';

@@ -12,7 +12,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/packed-sandbox.ts';
-import { STARTING_FILES, CLAUDE_REFERENCE_BLOCK, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/data/packed-install.ts';
+import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/data/packed-install.ts';
 
 // Checks what init replaced and kept, before the test reads the check report.
 async function assertReplacedFiles(root: string, output: string): Promise<void> {
@@ -25,7 +25,7 @@ async function assertReplacedFiles(root: string, output: string): Promise<void> 
         formatter: await isOnDisk(join(root, 'prettier.config.mjs')),
         instructions: await isOnDisk(join(root, 'CLAUDE.md')),
     }).toStrictEqual({ settings: true, formatter: false, instructions: true });
-    expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(CLAUDE_REFERENCE_BLOCK + STARTING_FILES['CLAUDE.md']);
+    expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(STARTING_FILES['CLAUDE.md']);
     const agents = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect({
         teamNotes: agents.startsWith('# Team notes\n'),
@@ -33,7 +33,7 @@ async function assertReplacedFiles(root: string, output: string): Promise<void> 
     }).toStrictEqual({ teamNotes: true, ruleLink: true });
 }
 
-test('init replaces formatter files, links CLAUDE.md to AGENTS.md, keeps your notes, and check reports findings', async () => {
+test('init replaces formatter files, keeps your notes and CLAUDE.md, and check reports findings', async () => {
     await using consumer = await createPackedSandbox();
     const { root } = consumer;
     await createFileTree(root, STARTING_FILES);

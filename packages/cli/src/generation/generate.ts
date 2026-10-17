@@ -1,3 +1,4 @@
+import { AGENTS_FILE } from '#cli/config/rules.ts';
 import { buildPathKey } from '#cli/system/paths.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
 import type { Session } from '#cli/types/planning.ts';
@@ -15,7 +16,6 @@ import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
 import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
-import { AGENTS_FILE, CLAUDE_FILE, CLAUDE_BLOCK } from '#cli/config/rules.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
@@ -120,10 +120,7 @@ function addManagedBlocks(
         level: settings.level,
         hasChecks: manifests.some((manifest) => manifest.checks.length > 0),
     });
-    generated.blocks.push(
-        { path: AGENTS_FILE, block, style: 'markdown' },
-        { path: CLAUDE_FILE, block: CLAUDE_BLOCK, style: 'markdown' },
-    );
+    generated.blocks.push({ path: AGENTS_FILE, block, style: 'markdown' });
 }
 
 function mergeFileEdits(generated: GenerationResult): void {

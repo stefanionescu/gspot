@@ -85,11 +85,3 @@ const configs: TSESLint.FlatConfig.Config[] = [plugin.configs.recommended, plugi
 const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin.rules['import-boundaries'];
 console.log(configs, rule);
 `;
-
-export const CLAUDE_REFERENCE_BLOCK = `<!-- >>> gspot managed >>> -->
-
-@AGENTS.md
-
-<!-- <<< gspot managed <<< -->
-
-`;

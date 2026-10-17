@@ -18,14 +18,6 @@ import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-bloc
 import type { Writer, FileEdit, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
 import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
 
-function buildBlockText(path: string, text: string, body: string, style: BlockStyle): string {
-    const span = path === CLAUDE_FILE ? findBlockSpan(text, { path, style }) : undefined;
-    const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
-    if (path !== CLAUDE_FILE || span?.start === 0) return replaceBlock(text, body, { path, style });
-    const suffix = authored === '' ? '' : '\n' + authored;
-    return replaceBlock('', body, { path, style }) + suffix;
-}
-
 /**
  * Remove only the marked block and its separating blank line.
  * @param path the block file.
@@ -38,7 +30,9 @@ function removeBlock(path: string, current: FileContents): FileContents | undefi
     const span = findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' });
     if (span === undefined) return current;
     const before = text.slice(0, span.start).replace(/(\r?\n)\r?\n$/u, '$1');
-    const next = before + text.slice(span.end);
+    const after = text.slice(span.end);
+    // A block at the top of the file leaves the blank line that separated it from your text.
+    const next = before === '' ? after.replace(/^\r?\n/u, '') : before + after;
     return next === '' ? undefined : { bytes: Buffer.from(next), mode: current.mode };
 }
 
@@ -138,7 +132,7 @@ export function planBlock(writer: Writer, path: string, body: string, style: Blo
     const current = writer.files.read(path);
     const text = current === undefined ? '' : decodeUtf8(current.bytes);
     if (text === undefined) throw new Error(`${path} is not UTF-8 text`);
-    const nextText = buildBlockText(path, text, body, style);
+    const nextText = replaceBlock(text, body, { path, style });
     const next = {
         bytes: Buffer.from(nextText),
         mode: current?.mode ?? OWNER_WRITABLE_FILE,

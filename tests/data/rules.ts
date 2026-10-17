@@ -12,3 +12,9 @@ export const DRIZZLE_DRIVERS = [
 ] as const;
 
 export const RULE_CONFIGURATIONS = ['typescript', 'css', 'vitest', 'swift', 'bash', 'drizzle', 'openapi'] as const;
+
+/** The `CLAUDE.md` block that gspot 0.2.0 and 0.2.1 wrote. */
+export const EARLIER_CLAUDE_BLOCK = '<!-- >>> gspot managed >>> -->\n\n@AGENTS.md\n\n<!-- <<< gspot managed <<< -->\n';
+
+/** Your own `CLAUDE.md` text after that block. */
+export const OWN_CLAUDE_TEXT = '# Your instructions\n\nKeep this text.\n';
