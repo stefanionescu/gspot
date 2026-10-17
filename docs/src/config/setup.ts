@@ -54,3 +54,22 @@ Node.js 24.15 or newer.
    not use \`git commit --no-verify\`.
 8. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
 `;
+
+/**
+ * Page order and contents of llms-full.txt and llms-small.txt. The guides come first and the generated reference pages
+ * last. llms-small.txt holds the guides only, and the reference gets its own set.
+ */
+export const LLMS_PAGES = {
+    promote: ['start/overview', 'start/quickstart', 'start/**', 'use/**', 'configure/**', 'checks/**', 'languages/**'],
+    demote: ['404', 'reference/**'],
+    exclude: ['404', 'reference/**'],
+    customSets: [
+        {
+            label: 'Reference',
+            paths: ['reference/**'],
+            description: 'every command, gspot.toml setting, configuration, check, and ESLint plugin rule',
+        },
+    ],
+    // The hidden "Section titled" link text of each heading.
+    customSelectors: { all: ['.sl-anchor-link'] },
+};

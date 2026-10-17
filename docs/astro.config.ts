@@ -5,8 +5,8 @@ import { pruneUnusedStyles } from './src/styles.ts';
 import { SIDEBAR } from './src/config/navigation.ts';
 import { readReferenceData } from '#cli/reference.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
-import { AGENT_STEPS, LLMS_DESCRIPTION } from './src/config/setup.ts';
 import { description } from '@gspothq/cli/package.json' with { type: 'json' };
+import { LLMS_PAGES, AGENT_STEPS, LLMS_DESCRIPTION } from './src/config/setup.ts';
 
 import {
     LOGO,
@@ -59,7 +59,14 @@ export default defineConfig({
             title: 'gspot',
             favicon: LOGO,
             // Writes /llms.txt with the steps for coding agents, and /llms-full.txt and /llms-small.txt with the docs.
-            plugins: [starlightLlmsTxt({ projectName: 'gspot', description: LLMS_DESCRIPTION, details: AGENT_STEPS })],
+            plugins: [
+                starlightLlmsTxt({
+                    projectName: 'gspot',
+                    description: LLMS_DESCRIPTION,
+                    details: AGENT_STEPS,
+                    ...LLMS_PAGES,
+                }),
+            ],
             head: [
                 {
                     tag: 'meta',
