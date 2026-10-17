@@ -18,7 +18,7 @@ import { PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
  * @returns the npm and Python installation notes.
  */
 export async function installToolProjects(context: InstallContext): Promise<string[]> {
-    const { session, writer: log, generated, mise } = context;
+    const { session, writer, generated, mise } = context;
     const manifests = session.neededToolManifests;
     const notes: string[] = [];
     const uvPath = mise !== null || which.sync(UV_TOOL, { nothrow: true }) !== null ? session.uvPath : undefined;
@@ -28,11 +28,11 @@ export async function installToolProjects(context: InstallContext): Promise<stri
             : generated.files;
     await prepareLockfiles(context, lockfileInputs);
     writePlans(
-        log,
+        writer,
         lockfileInputs
             .filter((file) => file.kind === 'lock')
             .map((file) =>
-                planReplacement(log, {
+                planReplacement(writer, {
                     path: file.path,
                     next: { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE },
                     canReplace: file.read !== undefined,

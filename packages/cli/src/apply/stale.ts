@@ -11,13 +11,7 @@ import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import { listStaleLockfiles } from '#cli/tools/project-lockfiles.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-
-import {
-    UV_LOCKFILE,
-    VERSION_PIN_FILE,
-    NPM_TOOL_PROJECT_FILE,
-    PYTHON_TOOL_PROJECT_FILE,
-} from '#cli/config/system/locations.ts';
+import { UV_LOCKFILE, NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 
 function buildDiff(path: string, before: string, after: string, beforeName: string): string {
     return createTwoFilesPatch(
@@ -113,10 +107,7 @@ export function listExpectedPaths(
     session: Pick<Session, 'requirePackageManagerName'>,
     generated: GenerationResult,
 ): Set<string> {
-    const paths = new Set([
-        VERSION_PIN_FILE,
-        ...[...generated.files, ...generated.blocks, ...generated.fileEdits].map((file) => file.path),
-    ]);
+    const paths = new Set([...generated.files, ...generated.blocks, ...generated.fileEdits].map((file) => file.path));
     for (const file of generated.files) {
         if (file.path === NPM_TOOL_PROJECT_FILE)
             paths.add(parseToolProject(file.content, session.requirePackageManagerName()).lockfilePath);

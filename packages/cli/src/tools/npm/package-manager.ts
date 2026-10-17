@@ -17,10 +17,10 @@ import {
     type PackageManagerDeclaration,
 } from '#cli/types/parsers/dependency-files.ts';
 import {
-    NPM_CLIENTS,
     PACKAGE_JSON,
+    PACKAGE_MANAGERS,
     YARN_BERRY_MAJOR,
-    NPM_CLIENT_HASH_SUFFIX,
+    PACKAGE_MANAGER_HASH_SUFFIX,
 } from '#cli/config/parsers/dependency-files.ts';
 
 const exactVersionSchema = z
@@ -38,7 +38,7 @@ const exactVersionSchema = z
 function parsePackageManagerField(value: string): PackageManagerDeclaration {
     const [name, declared, ...verbatim] = value.split('@');
     if (verbatim.length > 0) throw new Error('Invalid packageManager declaration.');
-    const version = (declared ?? '').split(NPM_CLIENT_HASH_SUFFIX, 1)[0];
+    const version = (declared ?? '').split(PACKAGE_MANAGER_HASH_SUFFIX, 1)[0];
     return packageManagerDeclarationSchema.parse({ name, version });
 }
 
@@ -57,7 +57,7 @@ async function detectPackageManager(root: string, candidates: string[]): Promise
 
 /** Authored manager names before installation validates their requested version. */
 const packageManagerDeclarationSchema = z.strictObject({
-    name: z.enum(NPM_CLIENTS),
+    name: z.enum(PACKAGE_MANAGERS),
     version: z.string().optional(),
 } satisfies SchemaShape<PackageManagerDeclaration>) satisfies z.ZodType<PackageManagerDeclaration>;
 

@@ -19,7 +19,7 @@ import type { InstallContext, InstallationResult } from '#cli/types/install.ts';
  * Install selected tools in their repository projects and set the clone's hooks.
  *
  * @param session the repository session.
- * @param log the locked repository writer.
+ * @param writer the locked repository writer.
  * @param generated the selected tool projects.
  *
  * @param cancelSignal the cancellation signal shared with installation processes.
@@ -27,7 +27,7 @@ import type { InstallContext, InstallationResult } from '#cli/types/install.ts';
  */
 export async function installTools(
     session: Session,
-    log: Writer,
+    writer: Writer,
     generated: GenerationResult,
     cancelSignal?: AbortSignal,
 ): Promise<InstallationResult> {
@@ -38,7 +38,7 @@ export async function installTools(
     const mise = which.sync(MISE_PROGRAM, { nothrow: true });
     const context: InstallContext = {
         session,
-        writer: log,
+        writer,
         generated,
         tools,
         mise,

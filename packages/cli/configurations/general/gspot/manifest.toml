@@ -25,7 +25,7 @@ why = "A generated file that no longer matches the settings runs a tool with set
 
 [[check]]
 example = "An `[[ignore]]` record for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete record or correct its path to the actual exception, preserving its reason."
-help = "Remove the entry or correct its path."
+help = "Remove the record or correct its path."
 level = "recommended"
 name = "unmatched-patterns"
 runs = "once"

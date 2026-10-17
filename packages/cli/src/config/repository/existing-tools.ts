@@ -1,4 +1,4 @@
-import { NPM_CLIENTS } from '#cli/config/parsers/dependency-files.ts';
+import { PACKAGE_MANAGERS } from '#cli/config/parsers/dependency-files.ts';
 
 export const LINT_FOLDERS = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;
 
@@ -35,7 +35,7 @@ export const MISE_FILES = [
 // In "<runner> run <task>", the task sits two words after the runner.
 export const TASK_AFTER_RUN = 2;
 
-export const RUNNER_NAMES: readonly string[] = [...NPM_CLIENTS, 'mise'];
+export const RUNNER_NAMES: readonly string[] = [...PACKAGE_MANAGERS, 'mise'];
 export const INI_EXTENSIONS: ReadonlySet<string> = new Set(['.ini', '.cfg']);
 
 export const GITLAB_CI_FILE = '.gitlab-ci.yml';

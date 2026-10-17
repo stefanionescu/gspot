@@ -28,13 +28,13 @@ function buildPreservedFilesError(paths: string[]): Error {
     );
 }
 
-function removeUnusedToolFolders(log: Writer, paths: ReadonlySet<string>): void {
+function removeUnusedToolFolders(writer: Writer, paths: ReadonlySet<string>): void {
     for (const [path, keep] of [
         [INSTALLED_TOOL_FOLDERS.npm, paths.has(NPM_TOOL_PROJECT_FILE)],
         [INSTALLED_TOOL_FOLDERS.python, paths.has(PYTHON_TOOL_PROJECT_FILE)],
         [INSTALLED_TOOL_FOLDERS.vale, paths.has(VALE_TOOL_FILE_PATH)],
     ] as const) {
-        if (!keep) log.files.deleteTree(path);
+        if (!keep) writer.files.deleteTree(path);
     }
 }
 
@@ -50,7 +50,7 @@ function addInstallationNote(session: Session, generated: GenerationResult, repo
 
 function buildReplacementPlans(
     generated: GenerationResult,
-    log: Writer,
+    writer: Writer,
     reviewedOriginals: ReadonlyMap<string, FileContents | undefined> | undefined,
 ): WritePlan[] {
     const authorized = new Map(reviewedOriginals);
@@ -60,7 +60,7 @@ function buildReplacementPlans(
             bytes: Buffer.from(file.content),
             mode: file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE,
         };
-        const plan = planReplacement(log, {
+        const plan = planReplacement(writer, {
             path: file.path,
             next: replacement,
             canReplace: read !== undefined,
@@ -75,7 +75,7 @@ function buildReplacementPlans(
  *
  * @param session the configuration and repository reads.
  * @param generated the generated files with resolved lockfiles.
- * @param log the file writer for this command.
+ * @param writer the file writer for this command.
  * @param options reviewed originals authorized for replacement.
  *
  * @param options.reviewedOriginals the file contents reviewed before the command asked for approval.
@@ -84,7 +84,7 @@ function buildReplacementPlans(
 export function writeGeneratedFiles(
     session: Session,
     generated: GenerationResult,
-    log: Writer,
+    writer: Writer,
     options?: { reviewedOriginals?: ReadonlyMap<string, FileContents | undefined> | undefined },
 ): ApplyReport {
     const reviewedOriginals = options?.reviewedOriginals;
@@ -97,24 +97,24 @@ export function writeGeneratedFiles(
     };
     const paths = listExpectedPaths(session, generated);
     const fileEditPlans = generated.fileEdits.map((output) => {
-        const plan = planManagedKeys(log, output.path, output.changes);
+        const plan = planManagedKeys(writer, output.path, output.changes);
         return reviewedOriginals?.has(output.path) === true
             ? { ...plan, before: reviewedOriginals.get(output.path) }
             : plan;
     });
-    const replacements = buildReplacementPlans(generated, log, reviewedOriginals);
-    const blocks = generated.blocks.map((block) => planBlock(log, block.path, block.block, block.style));
+    const replacements = buildReplacementPlans(generated, writer, reviewedOriginals);
+    const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.block, block.style));
     const generatedPlans = [...replacements, ...blocks, ...fileEditPlans];
     // Remove generated destinations that no selected configuration needs.
-    const pruning = listStrayPaths(session, paths).map((path) => planRemoval(log, path));
+    const pruning = listStrayPaths(session, paths).map((path) => planRemoval(writer, path));
     const plans = [...generatedPlans, ...pruning];
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
     if (reviewedOriginals !== undefined && conflicts.length > 0) throw buildPreservedFilesError(conflicts);
     writePlans(
-        log,
+        writer,
         plans.filter((plan) => plan.status !== 'preserved'),
     );
-    removeUnusedToolFolders(log, paths);
+    removeUnusedToolFolders(writer, paths);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
     report.updated.push(

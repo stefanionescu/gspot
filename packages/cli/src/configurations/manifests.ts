@@ -27,10 +27,10 @@ import {
     type ManifestDeclaration,
 } from '#cli/types/configurations.ts';
 
-// Producer identities retain bundled declarations only for the supplied run cache.
-const MANIFESTS = { create: readBundledManifests };
+// Each read cache keeps its own copy of the shipped declarations.
+const MANIFESTS = { create: readShippedManifests };
 
-const NAMING_DEFAULTS = { create: readBundledNamingDefaults };
+const NAMING_DEFAULTS = { create: readShippedNamingDefaults };
 
 // Every tool-files asset has one canonical output; metadata adds consumers and generation settings.
 function readToolFileDeclarations(configurationFolder: string, toolFiles: unknown): unknown {
@@ -103,7 +103,7 @@ function parseManifest(text: string, configurationFolder: string): ManifestDecla
 }
 
 // Parse shipped declarations only for the first manifest read in one run.
-function readBundledManifests(): Map<string, Manifest> {
+function readShippedManifests(): Map<string, Manifest> {
     const manifests = new Map<string, ManifestDeclaration>();
     const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));
     for (const path of paths) {
@@ -118,7 +118,7 @@ function readBundledManifests(): Map<string, Manifest> {
     );
 }
 
-function readBundledNamingDefaults(): NamingDefaults {
+function readShippedNamingDefaults(): NamingDefaults {
     return namingDefaultsSchema.parse(JSON.parse(readAsset(NAMING_DEFAULTS_FILE)));
 }
 
@@ -151,13 +151,13 @@ function readManifests(reads: ReadCache): Map<string, Manifest> {
  * @returns the available check IDs
  */
 function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[], reads: ReadCache): string[] {
-    const bundled = [...listChecksById(readManifests(reads).values()).keys()];
+    const shipped = [...listChecksById(readManifests(reads).values()).keys()];
     const authored = checks.map((check) => check.name);
-    return [...new Set([...bundled, ...authored])];
+    return [...new Set([...shipped, ...authored])];
 }
 
 /**
- * Reads bundled naming settings, retaining them for the supplied run.
+ * Read the shipped naming settings once for a run.
  * @param reads the run cache
  * @returns the shipped naming choices
  */

@@ -27,7 +27,7 @@ export const PYPROJECT_TOML = 'pyproject.toml';
 
 export const REQUIREMENTS_FILE = /(?:^|\/)requirements[^/]*\.txt$/u;
 
-export const NPM_CLIENTS = ['npm', 'bun', 'pnpm', 'yarn'] as const;
+export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm', 'yarn'] as const;
 
 export const PACKAGE_SWIFT = 'Package.swift';
 
@@ -43,6 +43,6 @@ export const PYTHON_NAME_SEPARATORS = /[._-]+/gu;
 
 export const PYTHON_IDENTITY_NAME = /^[^@]+(?=@)/u;
 
-export const NPM_CLIENT_HASH_SUFFIX = '+sha';
+export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 
 export const PIPFILE = 'Pipfile';

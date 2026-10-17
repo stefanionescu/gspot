@@ -69,9 +69,10 @@ function isConsecutive(parts: string[], termParts: string[]): boolean {
     return false;
 }
 
-function stripPrefixes(name: string, rules: CompiledOverride[]): string {
+function stripPrefixes(name: string, overrides: CompiledOverride[]): string {
     let result = name;
-    for (const rule of rules) if (rule.ignoredPrefix !== undefined) result = result.replace(rule.ignoredPrefix, '');
+    for (const override of overrides)
+        if (override.ignoredPrefix !== undefined) result = result.replace(override.ignoredPrefix, '');
     return result === '' ? name : result;
 }
 
@@ -96,12 +97,12 @@ function checkCase(context: NamingContext, name: string, limits: CategoryLimits)
           );
 }
 
-function checkDigits(context: NamingContext, parts: string[], rules: CompiledOverride[]) {
+function checkDigits(context: NamingContext, parts: string[], overrides: CompiledOverride[]) {
     const { settings } = context;
     if (
         settings.isDigitsAllowed ||
         !parts.some((part) => DIGIT.test(part) && !NUMERIC_WORDS.has(part)) ||
-        rules.some((rule) => rule.isDigitsAllowed)
+        overrides.some((override) => override.isDigitsAllowed)
     )
         return undefined;
     return buildFinding(context, context.place, 'digits', `${context.prefix}a digit is not a word.`);
@@ -127,9 +128,9 @@ function checkWordCount(context: NamingContext, words: string[], limits: Categor
     );
 }
 
-function checkRepeatedWords(context: NamingContext, words: string[], rules: CompiledOverride[]) {
+function checkRepeatedWords(context: NamingContext, words: string[], overrides: CompiledOverride[]) {
     const { settings } = context;
-    if (settings.isRepeatAllowed || rules.some((rule) => rule.isRepeatAllowed)) return undefined;
+    if (settings.isRepeatAllowed || overrides.some((override) => override.isRepeatAllowed)) return undefined;
     const repeated = findRepeatedPart(words);
     return repeated === undefined
         ? undefined
@@ -197,13 +198,13 @@ function checkBannedWords(context: NamingContext, parts: string[]): Finding[] {
 
 function checkCallbackVerb(context: NamingContext, parts: string[]) {
     if (!VERB_CATEGORIES.has(context.identifier.category)) return undefined;
-    const verb = context.settings.rules
+    const verb = context.settings.overrides
         .filter(
-            (rule) =>
-                rule.matches(context.identifier.file) &&
-                (rule.languages === undefined || rule.languages.has(context.identifier.language)),
+            (override) =>
+                override.matches(context.identifier.file) &&
+                (override.languages === undefined || override.languages.has(context.identifier.language)),
         )
-        .map((rule) => rule.ignoredPrefix?.exec(context.identifier.name)?.[0])
+        .map((override) => override.ignoredPrefix?.exec(context.identifier.name)?.[0])
         .find((prefix) => prefix === parts[0]);
     return verb === undefined
         ? undefined
@@ -230,29 +231,29 @@ function findRepeatedPart(parts: string[]): string | undefined {
 }
 
 /**
- * The path rules that apply to one identifier.
+ * The path overrides that apply to one identifier.
  * @param settings the effective settings.
  * @param identifier the category, language, and source location that select path exceptions.
- * @returns the rules, in settings order.
+ * @returns the overrides, in settings order.
  */
 function selectOverrides(settings: NamingSettings, identifier: Identifier): CompiledOverride[] {
     const path = identifier.folder ?? identifier.file;
-    return settings.rules.filter(
-        (rule) =>
-            rule.matches(path) &&
-            (rule.languages === undefined || rule.languages.has(identifier.language)) &&
-            (rule.categories === undefined || rule.categories.has(identifier.category)),
+    return settings.overrides.filter(
+        (override) =>
+            override.matches(path) &&
+            (override.languages === undefined || override.languages.has(identifier.language)) &&
+            (override.categories === undefined || override.categories.has(identifier.category)),
     );
 }
 
 /**
- * The limits and cases for one identifier after its path rules.
+ * The limits and cases for one identifier after its path overrides.
  * @param settings the effective settings.
  * @param identifier the category and language whose length and case constraints apply.
- * @param rules the rules that apply.
+ * @param overrides the overrides that apply.
  * @returns effective length bounds and allowed cases after language and path exceptions.
  */
-function deriveLimits(settings: NamingSettings, identifier: Identifier, rules: CompiledOverride[]): CategoryLimits {
+function deriveLimits(settings: NamingSettings, identifier: Identifier, overrides: CompiledOverride[]): CategoryLimits {
     const base = settings.limitsFor(identifier.language, identifier.category);
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
     const parent = parents[identifier.category] ?? identifier.category;
@@ -263,12 +264,12 @@ function deriveLimits(settings: NamingSettings, identifier: Identifier, rules: C
         (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category))
     )
         return { ...base, caseNames: [], maxChars: 0 };
-    const caseRule = rules.findLast((rule) => rule.cases !== undefined);
-    return caseRule?.cases === undefined ? base : { ...base, caseNames: caseRule.cases };
+    const caseOverride = overrides.findLast((override) => override.cases !== undefined);
+    return caseOverride?.cases === undefined ? base : { ...base, caseNames: caseOverride.cases };
 }
 
 /**
- * Findings for one identifier under the settings. A path rule can exclude the identifier.
+ * Findings for one identifier under the settings. A path override can exclude the identifier.
  * @param identifier the spelling, category, language, and source location to evaluate.
  * @param inputs the check identity, effective settings, and the file's test status.
  * @returns the findings, empty when the name passes.
@@ -281,18 +282,18 @@ export function checkIdentifier(identifier: Identifier, inputs: NamingInputs): F
         prefix: `${identifier.label} "${identifier.name}": `,
     };
     const { settings } = inputs;
-    const rules = selectOverrides(settings, identifier);
-    if (rules.some((rule) => rule.allowedNames?.has(identifier.name) === true)) return [];
-    const limits = deriveLimits(settings, identifier, rules);
-    const name = stripPrefixes(identifier.name, rules);
+    const overrides = selectOverrides(settings, identifier);
+    if (overrides.some((override) => override.allowedNames?.has(identifier.name) === true)) return [];
+    const limits = deriveLimits(settings, identifier, overrides);
+    const name = stripPrefixes(identifier.name, overrides);
     const parts = splitParts(name);
     const words = splitParts(name.split('.', 1)[0] ?? name).filter((part) => !DIGITS_ONLY.test(part));
     const findings = [
         checkCase(context, name, limits),
-        checkDigits(context, parts, rules),
+        checkDigits(context, parts, overrides),
         checkLength(context, name, limits),
         checkWordCount(context, words, limits),
-        checkRepeatedWords(context, words, rules),
+        checkRepeatedWords(context, words, overrides),
         ...checkBannedWords(context, parts),
         checkCallbackVerb(context, parts),
     ];

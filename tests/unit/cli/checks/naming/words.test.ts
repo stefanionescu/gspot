@@ -124,7 +124,7 @@ test('a reserved word is allowed only in its named categories', () => {
 test('a prefix rule allows handle in functions and methods and reports it in variables', () => {
     const plain = buildNamingInputs();
     const rule = {
-        ...buildNamingSettings().rules[4]!,
+        ...buildNamingSettings().overrides[4]!,
         matches: buildPathMatcher(['src/**']),
         languages: new Set(['typescript', 'javascript']),
         ignoredPrefix: /^handle(?=[A-Z])/u,
@@ -132,7 +132,7 @@ test('a prefix rule allows handle in functions and methods and reports it in var
     };
     const selected = {
         ...plain,
-        settings: { ...buildNamingSettings(), rules: [...buildNamingSettings().rules, rule] },
+        settings: { ...buildNamingSettings(), overrides: [...buildNamingSettings().overrides, rule] },
     };
     for (const file of ['src/a.ts', 'src/a.tsx', 'src/a.js', 'src/a.jsx']) {
         for (const category of ['functions', 'methods'] as const)
@@ -153,7 +153,7 @@ test('a prefix rule allows handle in functions and methods and reports it in var
     expect(
         checkIdentifier(buildIdentifier('useSubmit', 'variables'), {
             ...selected,
-            settings: { ...buildNamingSettings(), rules: [{ ...rule, ignoredPrefix: /^use(?=[A-Z])/u }] },
+            settings: { ...buildNamingSettings(), overrides: [{ ...rule, ignoredPrefix: /^use(?=[A-Z])/u }] },
         })[0]?.message,
     ).toContain('"use"');
 });
@@ -190,7 +190,7 @@ test('the tests-group exemption follows the group, not its label', () => {
     ]);
 });
 
-test('a banned term matches whole words and runs of words only', () => {
+test('a banned word matches whole words and runs of words only', () => {
     const plain = buildNamingInputs();
     const settings = { ...buildNamingSettings(), bannedWords: BANNED_WORDS };
     const listBannedWordFindings = (name: string) =>

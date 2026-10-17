@@ -154,7 +154,7 @@ function buildKnownSettings(selected: Manifest[], level: Level = 'recommended', 
 
 /**
  * Shares defaults derived from project inputs between init and a session.
- * @param inputs the npm client, SDK root, and workspace names when detected.
+ * @param inputs the package manager, SDK root, and workspace names when detected.
  * @param inputs.packageManager the detected package manager.
  * @param inputs.sdkRoot the detected Xcode SDK.
  * @param inputs.scopes the workspace names.

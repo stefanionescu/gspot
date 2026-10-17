@@ -167,7 +167,7 @@ export const NAMING_TEST_SETTINGS = {
         { word: 'handler', parts: ['handler'], setting: 'marketing group', group: 'marketing' },
     ],
     reserved: new Map([['config', ['folders', 'variables']]]),
-    rules: [
+    overrides: [
         {
             matches: ['**'],
             languages: undefined,

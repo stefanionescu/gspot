@@ -61,7 +61,7 @@ export type NamingSettings = {
     bannedWords: BannedWord[];
     allowedPhrases: string[][];
     reserved: Map<string, string[]>;
-    rules: CompiledOverride[];
+    overrides: CompiledOverride[];
     limitsFor: (language: string, category: string) => CategoryLimits;
     isDigitsAllowed: boolean;
     isRepeatAllowed: boolean;

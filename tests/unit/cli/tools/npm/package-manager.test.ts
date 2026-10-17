@@ -32,12 +32,15 @@ test('without a declaration or Bun on PATH, the tool project uses npm at the ver
     });
 });
 
-test.each([...PACKAGE_MANAGER_DECLARATIONS])('%s names the npm client and its version', async (_, files, expected) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, files);
-    const { name, version } = await selectPackageManager(sandbox.path, []);
-    expect([name, version]).toStrictEqual(expected.split('@'));
-});
+test.each([...PACKAGE_MANAGER_DECLARATIONS])(
+    '%s names the package manager and its version',
+    async (_, files, expected) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, files);
+        const { name, version } = await selectPackageManager(sandbox.path, []);
+        expect([name, version]).toStrictEqual(expected.split('@'));
+    },
+);
 
 test.each([...NON_EXACT_PNPM_VERSIONS])(
     'a pnpm version that is not exact is refused with the version to write: %s',

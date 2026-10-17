@@ -120,17 +120,17 @@ export function readNamingSettings(
         ),
         ...compileBannedWords(bannedWords, { setting: 'naming.banned_words' }),
     ];
-    // The shipped rules first, then what the selected configurations know about their own files, then the repository's.
-    const rules = [
+    // The shipped overrides first, then what the selected configurations know about their own files, then the repository's.
+    const overrides = [
         compileOverride({ allowed_names: shipped.allowed_names }, 'shipped allowed names'),
-        ...shipped.override.map((rule, index) => compileOverride(rule, `shipped rule ${String(index + 1)}`)),
+        ...shipped.override.map((override, index) => compileOverride(override, `shipped rule ${String(index + 1)}`)),
         ...manifests.flatMap((manifest) =>
-            (manifest.naming?.override ?? []).map((rule) =>
-                compileOverride(stripUndefined(rule), `the ${manifest.configuration.name} configuration`),
+            (manifest.naming?.override ?? []).map((override) =>
+                compileOverride(stripUndefined(override), `the ${manifest.configuration.name} configuration`),
             ),
         ),
-        ...settings.naming.override.map((rule, index) =>
-            compileOverride(rule, `[[naming.override]] record ${String(index + 1)}`),
+        ...settings.naming.override.map((override, index) =>
+            compileOverride(override, `[[naming.override]] record ${String(index + 1)}`),
         ),
     ];
     return {
@@ -139,7 +139,7 @@ export function readNamingSettings(
         reserved: new Map(
             Object.entries(shipped.reserved).map(([term, categories]) => [term.toLowerCase(), categories]),
         ),
-        rules,
+        overrides,
         limitsFor: buildLimitsFor(shipped, view),
         isDigitsAllowed: shipped.allow_digits,
         isRepeatAllowed: shipped.allow_repeated_words,

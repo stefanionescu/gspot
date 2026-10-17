@@ -145,8 +145,8 @@ export function inspectionContext(root: string, fields: Partial<ToolSearch> = {}
 export function buildNamingSettings(): NamingSettings {
     return {
         ...NAMING_TEST_SETTINGS,
-        rules: NAMING_TEST_SETTINGS.rules.map(({ matches, ...rule }) => ({
-            ...rule,
+        overrides: NAMING_TEST_SETTINGS.overrides.map(({ matches, ...override }) => ({
+            ...override,
             matches: buildPathMatcher(matches),
         })),
         limitsFor: (language, category) => {

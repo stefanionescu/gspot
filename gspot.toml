@@ -156,6 +156,11 @@ allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
+paths = ["packages/cli/src/config/parsers/dependency-files.ts"]
+allowed_names = ["PACKAGE_MANAGERS", "PACKAGE_MANAGER_HASH_SUFFIX"]
+reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+
+[[naming.override]]
 paths = ["packages/cli/src/tools/npm/release-hold.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."

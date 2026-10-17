@@ -34,7 +34,7 @@ function validateReason(where: string, reason: string | undefined, command?: str
     return `${where} needs a reason that says something: ${refused} is refused. Write one sentence saying why.`;
 }
 
-// The tool reads extra options; only the surrounding envelope carries a gspot reason.
+// The tool reads extra options; only the reasoned value around them carries a gspot reason.
 function validateExtraReason(entry: Record<string, unknown>, path: KeyPath): SettingsError[] {
     const reason = entry['reason'];
     return buildErrorsAt(

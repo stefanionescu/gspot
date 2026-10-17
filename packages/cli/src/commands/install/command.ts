@@ -20,8 +20,8 @@ async function runInstallCommand(cwd: string, cancelSignal?: AbortSignal): Promi
     const root = findRoot(cwd);
     const session = await openSession(root);
     const generated = generate(session);
-    using log = openWriter(root);
-    const { note, exitCode, steps } = await installTools(session, log, generated, cancelSignal);
+    using writer = openWriter(root);
+    const { note, exitCode, steps } = await installTools(session, writer, generated, cancelSignal);
     if (exitCode !== 0) throw new GspotError('installation', note);
     return {
         text: `${note === '' ? 'No change: every tool is installed.' : note}\n`,

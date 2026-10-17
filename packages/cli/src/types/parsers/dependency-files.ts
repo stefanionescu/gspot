@@ -1,9 +1,9 @@
-import type { NPM_CLIENTS } from '#cli/config/parsers/dependency-files.ts';
+import type { PACKAGE_MANAGERS } from '#cli/config/parsers/dependency-files.ts';
 
-export type PackageManager = { name: (typeof NPM_CLIENTS)[number]; version: string };
+export type PackageManager = { name: (typeof PACKAGE_MANAGERS)[number]; version: string };
 
 /** A validated package manager name and its authored or detected version, when present. */
-export type PackageManagerDeclaration = { name: (typeof NPM_CLIENTS)[number]; version?: string | undefined };
+export type PackageManagerDeclaration = { name: (typeof PACKAGE_MANAGERS)[number]; version?: string | undefined };
 
 export type PackageJson = {
     [x: string]: unknown;
