@@ -32,8 +32,10 @@ Run `gspot explain eslint/eqeqeq` to read the options of the lint rule.
 
 ## Ruff
 
-Ruff options use `tools.ruff.rules`. The table names follow Ruff rule groups.
-Use `gspot explain python/ruff` to inspect the generated check.
+Ruff takes no lint rule options from `gspot.toml`. Its limits, such as `limits.cyclomatic_complexity` and
+`limits.function_parameters`, come from [limits](/reference/gspot-toml/limits/), and `tools.ruff.docstring_convention`
+sets the pydocstyle convention. To turn a Ruff lint rule off, ignore it by its code:
+`gspot ignore python/ruff --rule <code> --reason "<why>"`.
 
 ## Stylelint
 

@@ -59,8 +59,8 @@ function_lines = { value = 80, reason = "The parser is one state machine." }
 ## Edit the file by hand
 
 gspot.toml uses TOML 1.0. Keep each inline table on one line.
-Editors find the [JSON Schema](https://generativespotting.com/gspot.schema.json) through SchemaStore. Omit schema
-comments from `gspot.toml`.
+The [JSON Schema](https://generativespotting.com/gspot.schema.json) describes every key. Editors apply it on their own
+once SchemaStore lists gspot. Omit schema comments from `gspot.toml`.
 
 After an edit, run `gspot apply` and `gspot install`. `gspot apply --dry-run` previews the changes.
 

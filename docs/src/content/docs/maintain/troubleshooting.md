@@ -37,10 +37,10 @@ Move any change you need into `gspot.toml` before you run `gspot apply`. Apply r
 
 Run the `run again:` command from the report to time that check alone. `--verbose` prints each command.
 
-## `gspot init` waits for an answer in CI
+## `There is no terminal to ask in`
 
-Pass `--yes` to accept the plan without the "Continue?" question.
-A dry run never asks: `gspot init --dry-run`.
+`gspot init` asks before it writes, and it cannot ask in CI or anywhere without a terminal. Pass `--yes` to accept the
+plan, or `--dry-run` to print it.
 
 ## npm exec cannot find gspot
 

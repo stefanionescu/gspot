@@ -32,7 +32,8 @@ Fix the file, then run the check again.
 | Command                                               | Checks                                                              |
 | ----------------------------------------------------- | ------------------------------------------------------------------- |
 | `gspot check`                                         | Every file, including work that you did not commit.                 |
-| `gspot check --staged`                                | The staged files, as the pre-commit hook does.                      |
+| `gspot check --staged`                                | The staged content, with the commit and push checks.                |
+| `gspot check --hook pre-commit`                       | What the pre-commit hook runs: the commit checks on staged files.   |
 | `gspot check --changed`                               | The files changed since your upstream branch or the default branch. |
 | `gspot check --changed origin/main`                   | The files changed since another branch, tag, or commit.             |
 | `gspot check <file> <folder>`                         | Some files and folders, relative to the current folder.             |

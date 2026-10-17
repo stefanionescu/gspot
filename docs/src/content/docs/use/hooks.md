@@ -5,13 +5,11 @@ description: Run checks before commits and pushes and check commit messages.
 
 The `gspot init` plan includes Git hooks. With `hooks.enabled = true`, gspot writes three hooks and `gspot install` turns them on:
 
-| Hook         | Checks                                               |
-| ------------ | ---------------------------------------------------- |
-| `pre-commit` | Commit-stage checks over staged files                |
-| `pre-push`   | Push-stage checks over every pushed revision         |
-| `commit-msg` | Message-stage checks; commitlint runs at level `all` |
-
-At level `recommended`, no check reads commit messages; level `all` adds `commits/commitlint`.
+| Hook         | Checks                                                                                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pre-commit` | The commit-stage checks, on the staged files.                                                                                                              |
+| `pre-push`   | The commit- and push-stage checks, on each commit that the push sends. At level `all`, `commits/commitlint-pushed` also checks each pushed commit message. |
+| `commit-msg` | The message-stage checks on the new commit message: `commits/commitlint`, at level `all`.                                                                  |
 
 The commit hook checks the staged files. The push hook checks every commit that it pushes, intermediate ones included. Some checks, such as the type checker, read the whole project and can report a finding in a file you did not change.
 

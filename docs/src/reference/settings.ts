@@ -219,7 +219,7 @@ export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): 
             'gspot.toml reference',
             'Every key, accepted value, and default of gspot.toml.',
             'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n' +
-                `[JSON Schema](/${data.schemaFile}) for editor validation.\n\n` +
+                `The [JSON Schema](/${data.schemaFile}) describes every key. Editors apply it on their own once SchemaStore lists gspot.\n\n` +
                 sections.join('\n\n'),
         ),
     );
