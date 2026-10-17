@@ -515,6 +515,11 @@ paths = ["packages/cli/configurations/*/*/rules/**"]
 reason = "Paths in shipped rules are examples for user projects."
 
 [[ignore]]
+check = "docs/missing-paths"
+paths = ["packages/cli/RELEASE_NOTES.md"]
+reason = "Release notes quote commands and task names of the version they describe, which later versions may rename."
+
+[[ignore]]
 check = "javascript/eslint"
 rule = "@typescript-eslint/no-magic-numbers"
 paths = ["tests/data/**"]
@@ -542,6 +547,11 @@ reason = "The tests workspace declares TypeScript and checks the packed plugin d
 check = "prose/vale"
 paths = ["packages/cli/configurations/general/prose/tool-files/vale/styles/LICENSES.md"]
 reason = "This file reproduces upstream license notices and terms whose wording must remain unchanged."
+
+[[ignore]]
+check = "prose/vale"
+paths = ["packages/cli/RELEASE_NOTES.md"]
+reason = "Release notes describe what changed between versions, so they name past states and old behavior on purpose."
 
 [[ignore]]
 check = "prose/vale"
