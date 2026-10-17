@@ -11,16 +11,16 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
 
 ## Providers and lifecycle
 
-- Register each provider with the module that provides it. Repeated registration can create distinct instances.
+- Register each provider in the module that owns it. Repeated registration can create distinct instances.
 - Request-scoped dependencies propagate request scope to their consumers. Check lifetime and
-  resource costs before selecting that scope.
+  resource costs before choosing that scope.
 - Close connections and timers through the application lifecycle, such as `OnModuleDestroy`.
 
 ## Configuration and security
 
 - Fail startup when required configuration has missing or malformed values.
-- Use guards for route authorization. Enforce additional permissions at each protected operation
-  when one request performs several operations or the service has non-HTTP callers.
+- Use guards for route authorization. Enforce extra permissions inside each protected operation
+  when one request runs several, or the service has non-HTTP callers.
 - Guards run before pipes. Do not assume guard inputs have passed data transfer object (DTO) transformation or validation.
 - Set request-size limits, security headers, and rate limits for the exposed application.
 
@@ -28,8 +28,8 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
 
 <!-- level: all -->
 
-- Give each feature one module and export only providers consumed by other features.
-- Inject dependencies through constructors instead of constructing them inside consumers.
+- Give each feature one module, and export only the providers that other modules consume.
+- Inject dependencies through constructors instead of creating them inside consumers.
 - Define the versioning contract before publishing a public API.
 - Keep request DTOs distinct from persistence entities and map between them explicitly.
 
@@ -40,5 +40,5 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
 - Do not mock the class under test or assert on private methods.
 - Close test applications in teardown.
 
-See Nest's [response handling](https://docs.nestjs.com/controllers) and
+See the NestJS [response handling](https://docs.nestjs.com/controllers) and
 [authorization guidance](https://docs.nestjs.com/security/authorization).

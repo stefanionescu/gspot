@@ -5,7 +5,7 @@ Read this rule when you write text that people read in files: documentation, com
 TALKING.md covers what you say to the user.
 
 Write in plain language under `ISO 24495-1`: short sentences and common words. State the action or result early.
-Use familiar words and explain a technical term when the reader needs it.
+Explain a technical term when the reader needs it.
 
 ## Evidence
 

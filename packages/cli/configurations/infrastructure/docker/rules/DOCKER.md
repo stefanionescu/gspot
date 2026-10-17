@@ -4,11 +4,11 @@ Read this rule when you change a Dockerfile, a Compose file, or `.dockerignore`.
 
 ## Image inputs
 
-Select a base image that supports the application's runtime, target architecture, native libraries,
+Select a base image that supports the application's runtime, target architecture, system libraries,
 and certificate requirements. Tags can change, so pin a reviewed digest when the build requires
 immutable input, and keep an update process for security fixes: a digest never patches itself.
 
-Use a supported runtime release. For native modules, keep the build and runtime operating system,
+Use a supported runtime release. For compiled modules, keep the build and runtime operating system,
 libc, and architecture compatible. Alpine, Debian, and distroless images have different runtime
 and operational requirements; no single variant fits every application.
 
@@ -50,7 +50,7 @@ CMD ["node", "dist/main.js"]
 Use the package manager the project declares; for Bun, its pinned version with
 `bun install --frozen-lockfile`, adding `--production` for runtime dependencies. The final image
 holds a package-manager binary only when the runtime uses it. A statically linked `server` built
-for the target platform needs no package manager or shell, only the certificates, time-zone data,
+for the target system needs no package manager or shell, only the certificates, time-zone data,
 or other runtime files it reads.
 
 ```dockerfile
@@ -63,11 +63,11 @@ ENTRYPOINT ["/server"]
 ## Package installation and downloads
 
 hadolint reports unpinned images and packages, apt cleanup, `ADD` for local files, and shell-form
-commands. Review these additional requirements:
+commands. Also apply these requirements:
 
 - Install application dependencies from the declared lockfile without updating it during the build.
-- Refresh repository metadata and install packages in the same `RUN`, so cached metadata cannot
-  select an unintended version.
+- Refresh repository metadata and install packages in the same `RUN`, so a stale cache cannot
+  pick an unintended version.
 - Refresh base images for operating-system fixes. A targeted package upgrade needs an explicit
   dependency change, never an unbounded distribution upgrade in every build.
 - Verify a downloaded executable's digest or signature before installing it.
@@ -79,7 +79,7 @@ commands. Review these additional requirements:
 
 Put stable build inputs before frequently changing application source when that improves cache
 reuse. Put substantial shell behavior in an existing script. Keep the final image's user,
-working directory, environment, and startup command in documented locations. Do not add a wrapper script
+working folder, environment, and startup command in documented locations. Do not add a wrapper script
 for a command the container can run directly.
 
 ## Build context and ignore files
@@ -94,11 +94,11 @@ Dockerfile that uses it. A deny-by-default context suits a small, stable input s
 
 Use BuildKit secret mounts for private registry authentication and other build credentials.
 Read the secret only inside the `RUN` instruction that requires it. Copying it into a layer keeps
-it in image history even if a later layer removes it.
+it in image history even after a later step removes it.
 
 ## Shell and process behavior
 
-Use the shell syntax actually selected for `RUN`; the default shell does not run Bash. A required
+Match `RUN` syntax to the configured shell; the default one does not run Bash. A required
 entrypoint script validates configuration and uses `exec` for its final handoff. A documented
 process supervisor forwards signals and reaps its children, and no init wrapper hides missing
 shutdown behavior in the application.
@@ -112,9 +112,9 @@ The application's shutdown limit fits the orchestrator's grace period.
   service sets `NODE_ENV=production` where the runtime expects it.
 - Expose only the required ports, and bind private local services to localhost. Never add Linux
   capabilities, public debug ports, or disabled TLS verification to make a build or service work.
-- Resource limits fit the deployment and leave room for native memory, buffers, and runtime
-  overhead beyond a language heap limit. Ask the user for memory measurements before changing a limit
-  when the task provides none.
+- Resource limits fit the deployment and leave room for off-heap memory, buffers, and runtime
+  overhead beyond the language heap. Ask the user for memory measurements before changing a limit
+  when the task has none.
 
 ## Compose
 
@@ -125,7 +125,7 @@ development source or host dependencies.
 
 ## Verification
 
-Do not build or run images unless the user asks or the repository's checks require it. Give the user a list of items to check: the image's user, command, runtime files, permissions, exposed ports, startup,
+Do not build or run images unless the user asks or the repository's checks require it. Give the user a checklist: image user, command, runtime files, permissions, exposed ports, startup,
 readiness, shutdown, and resource limits. Image documentation names the current build arguments,
 supported platforms, runtime environment, and artifact paths.
 

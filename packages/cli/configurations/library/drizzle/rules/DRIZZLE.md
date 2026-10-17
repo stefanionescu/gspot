@@ -3,7 +3,7 @@
 Read this rule when you change Drizzle schemas, queries, or migrations.
 
 These decisions cover Drizzle with PostgreSQL. Use the adapter and APIs of the installed release.
-Supabase connection and identity decisions remain in the Supabase rules.
+Connection and identity decisions for Supabase stay in its rules.
 
 ## Connections and schema ownership
 
@@ -22,7 +22,7 @@ and [relations](https://orm.drizzle.team/docs/relations).
 ## Authorized operations
 
 Select only the fields the caller may see. Apply resource and tenant restrictions in the query or
-an enforced policy. A row identifier proves no permission, and an inferred insert type permits
+an enforced policy. A row identifier proves no permission, and an inferred insert type allows
 fields a public request must not set. Keep public schemas apart from persistence types.
 
 Scope writes to the authorized resource and verify affected rows. Bound growing collections and

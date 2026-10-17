@@ -37,5 +37,5 @@ When you write contract tests:
 - Test the public response. Assert its status and content type.
 - Keep generated schemas and their inputs synchronized through the existing generator.
 
-An assertion that checks only selected response fields does not prove that the whole response
+An assertion that checks only some fields does not prove that the whole response
 satisfies its schema. Use the project's schema validator for that claim.

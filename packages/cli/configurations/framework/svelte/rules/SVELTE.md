@@ -6,13 +6,13 @@ Read this rule when you change Svelte components or SvelteKit routes.
 
 <!-- level: all -->
 
-- Use `$derived` for values used in markup.
+- Use `$derived` for values in markup.
 - Pass a prop or callback instead of changing state through `bind:this`.
 
 ## Runes and reactivity
 
-- Use `$state` for a value that changes and `$derived` for a value computed from others.
-- Use `$effect` for work outside Svelte: a request, a timer, storage, the DOM. Do not use it to derive state.
+- Use `$state` for a value that changes and `$derived` for one computed from others.
+- Use `$effect` for work outside Svelte: a request, a timer, storage, or the DOM. Do not use it to derive state.
 - An `$effect` that starts something returns a function that stops it.
 - Keep derived expressions free of side effects. Do not mutate state while computing a derivation.
 - Temporarily override a mutable `$derived` value for optimistic UI only in Svelte 5.25 and later.
@@ -29,14 +29,14 @@ Read this rule when you change Svelte components or SvelteKit routes.
 
 <!-- level: all -->
 
-Name a callback prop for what happened: `onsave`, `onclose`.
+Name a callback prop for what happened, such as `onsave` or `onclose`.
 
 ## Data loading and the server
 
 - Load data in `load` functions, never in `onMount` for a page that can render on the server.
 - Code under `$lib/server` and in `+page.server` files stays on the server. Do not import it from a component.
 - Read a secret from `$env/static/private` or `$env/dynamic/private`, and only on the server.
-- A form posts to a form action and works with JavaScript off. Enhance it, do not replace it.
+- A form posts to a form action and works with JavaScript off. Enhance it; do not replace it.
 
 ## Accessibility
 

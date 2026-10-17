@@ -4,15 +4,15 @@ Read this rule when you change Python code.
 
 ## Python scope
 
-Write readable Python before clever Python: explicit data flow, clear names, small functions,
+Prefer readable Python to clever tricks: explicit data flow, clear names, small functions,
 and the formatter's layout.
-Importing a module does no I/O, starts no work, and parses no arguments. Prefer the project's rules to generic style guides, and consistency with the
-surrounding module where a guide allows more than one style.
+Importing a module does no I/O, starts no work, and parses no arguments. Prefer the project's rules to generic style guides, and match the
+surrounding module where a guide allows several options.
 
 ## Runtime and files
 
-Use the syntax of the declared Python version, stated once in the runtime pin, and name
-version requirements in examples whose syntax depends on them. Use `.py` for source and
+Use the syntax of the declared Python version, stated once in the runtime pin. Name the
+version requirement of an example whose syntax depends on it. Use `.py` for source and
 `.pyi` for stubs.
 
 ### Comment language
@@ -23,7 +23,7 @@ Write comments and docstrings in the project's declared language. Accept valid u
 
 ## Environment and configuration
 
-An importable module never depends on an active shell, a virtual environment, the working directory, or a
+An importable module never depends on an active shell, a virtual environment, the current folder, or a
 globally installed package. Imports resolve through project configuration, editable
 installs, `python -m`, or the configured environment. Virtual environments and package caches
 stay out of commits.
@@ -60,24 +60,24 @@ Every runtime module has a docstring describing its present purpose.
 
 ## Imports
 
-Imports resolve in the declared project environment, never through the script directory on
-`sys.path`, and break cycles by moving shared data or interfaces into a lower-level module.
+Imports resolve in the declared project environment, never through the script folder on
+`sys.path`. Break import cycles by moving shared data or interfaces into a lower-level module.
 
 ### Import conventions
 
 <!-- level: all -->
 
-Imports sit at the top after the docstring and future imports, one per line, with typing and
-`collections.abc` symbols imported directly. Use absolute cross-package imports; explicit
-relative imports serve siblings inside a package where surrounding code does that. Never an
-implicit relative import, a wildcard import, an import inside a function, method, or class
-body in runtime code, or a dynamic import through `importlib.import_module`, `__import__`, or
-`builtins.__import__`.
+Place imports at the top after the docstring and future statements, one per line. Take typing and
+`collections.abc` symbols directly. Use absolute cross-package imports. Explicit
+relative ones serve siblings inside a package where surrounding code does that. Never use an
+implicit relative, wildcard, or dynamic import through `importlib.import_module`, `__import__`, or
+`builtins.__import__`. In runtime code, never import inside a function, method, or class body.
 
-Direct symbol imports keep call sites readable; use a module import when
-its prefix identifies the module, as `logging.getLogger(__name__)` does. Give every alias a reason. Two modules can share a final name, a module can collide with a local
-name, or a name can have too many words for the call site. A standard abbreviation such as `np` and a
-disambiguated generic name provide the other reasons.
+Direct symbol imports keep call sites readable. Import the module instead when
+its prefix identifies the source, as `logging.getLogger(__name__)` does. Give every alias a reason.
+Valid reasons include a shared final name between two modules, a collision with a local symbol,
+or too many words for the call site. A standard abbreviation such as `np` and a
+disambiguated generic name also count.
 
 ## Docstrings
 
@@ -95,9 +95,9 @@ here follow Google style.
 
 ## Constants, globals, and mutable state
 
-Prefer module constants. Do not expose mutable global state, lazy singletons, or mutable globals as
-public API. Required mutable state stays internal with its design reason documented,
-and no ordinary call mutates a module global as a hidden side effect. Validated configuration
+Prefer module constants. Do not expose mutable global state or lazy singletons as
+public API. Required mutable state stays internal, with its design reason documented.
+No ordinary call changes a module global as a hidden side effect. Validated configuration
 passes into the client or operation that consumes it, without a renaming wrapper.
 
 ### Constant naming
@@ -105,7 +105,7 @@ passes into the client or operation that consumes it, without a renaming wrapper
 <!-- level: all -->
 
 Name constants `UPPER_SNAKE`, private ones with one leading underscore, and retained module
-state takes a name for its concept.
+state for its concept.
 
 ## Main programs
 
@@ -115,22 +115,21 @@ Repository entrypoints run as `python -m package.module`, and shell scripts call
 modules rather than inline snippets. A shebang appears only on a file meant to execute
 directly.
 
-Never execute untrusted input as Python code, and dynamic execution never replaces input
-validation.
+Never execute untrusted input as Python code. Dynamic execution never replaces validation.
 
 ## Power features
 
 <!-- level: all -->
 
-Avoid power features unless the project already uses the feature and no plain alternative works. That covers custom metaclasses, bytecode manipulation, dynamic inheritance, object
+Avoid power features unless the project already uses one and no plain alternative works. That covers custom metaclasses, bytecode manipulation, dynamic inheritance, object
 reparenting, import hooks, runtime monkeypatching, and reflection-heavy designs. It also
 covers interpreter internals, `__del__` cleanup, manual descriptors, and dynamic code
-generation. A power feature never makes code shorter or hides a dependency cycle; ordinary
-functions, dataclasses, explicit imports, and explicit data structures come first.
+generation. Never use a power feature to shorten code or hide a dependency cycle. Ordinary
+functions, dataclasses, and explicit imports and data structures come first.
 
 ## Threading
 
-Built-in types and variable assignment do not synchronize threads: use `queue.Queue` for thread
+Built-in types and variable assignment do not synchronize threads. Use `queue.Queue` for
 communication and locks or conditions for shared state, which stays small and explicit.
 
 ## Naming
@@ -143,7 +142,7 @@ communication and locks or conditions for shared state, which stays small and ex
   `--output-dir`.
 - Avoid single-letter names except loop counters and math notation.
 - Preserve provider capitalization in external names such as `AWS_REGION` and
-  provider resource IDs.
+  resource IDs.
 
 ### Python modules and imports
 
@@ -162,14 +161,13 @@ hides the contract and provides no collision information.
 <!-- level: all -->
 
 - Dataclass names describe the domain value they represent.
-- Field names describe the value inside the owning type without repeating the
-  type name.
-- Use `Path` variables with names that reveal whether they point to a directory,
+- Field names describe the value inside the owning type without repeating it.
+- Give `Path` variables names that reveal whether they point to a folder,
   file, report, output, or repository root.
-- Use `*_path` for filesystem paths and `*_dir` only for directories.
-- Use `*_id` only for real identifiers, not arbitrary names, or labels.
+- Use `*_path` for filesystem paths and `*_dir` only for folders.
+- Use `*_id` only for real identifiers. Never use it for arbitrary names or labels.
 - Use `*_name` for display or provider names.
-- Use `*_key` for dictionary keys and supported variant keys.
+- Use `*_key` for dictionary and supported variant keys.
 
 | Avoid                    | Prefer           | Meaning             |
 | ------------------------ | ---------------- | ------------------- |
@@ -181,8 +179,8 @@ hides the contract and provides no collision information.
 <!-- level: all -->
 
 - Keep raw provider or CLI names at the boundary.
-- Translate external names into domain names before passing values inward when
-  the external name differs from the domain concept.
+- Translate an external name into the domain term before passing values inward when
+  the two differ.
 - Keep path construction with the code that owns the resource instead of repeating it in
   unrelated operations.
 - Name functions that cross boundaries for the operation they perform.

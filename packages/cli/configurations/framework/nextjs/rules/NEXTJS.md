@@ -8,12 +8,12 @@ adapter. App Router guidance applies only to App Router routes.
 ## Server and client ownership
 
 Keep privileged operations and credentials on the server. Send only authorized fields to the
-browser. That includes query hydration and Server Component props. A hidden control, type, or filename
-does not control access. A client entry includes its imports in the client graph; keep it small
+browser; that covers query hydration and Server Component props too. A hidden control, type, or filename
+does not restrict access. A client boundary pulls its imports into the browser bundle; keep it small
 and compose server-rendered children into it.
 
-Validate and authorize every mutation at its server entry. Routes, actions, and RPC procedures
-share the same domain operation. Initial server reads do not HTTP-fetch the application's own
+Validate and authorize every mutation at its server entry point. Routes, actions, and RPC procedures
+share one domain operation. Initial server reads do not HTTP-fetch the application's own
 Route Handler. Rendering, `GET` requests, and prefetching perform no writes.
 
 See [Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components).
@@ -21,12 +21,12 @@ See [Server and Client Components](https://nextjs.org/docs/app/getting-started/s
 ## Loading and failures
 
 Put a loading boundary around the section that waits. Keep useful content mounted during refresh,
-and reset pending state when the selected resource changes. Start independent work early without
+and reset pending state when the user switches resources. Start independent work early without
 moving protected reads before authorization.
 
 Decide status, headers, cookies, redirects, and not-found behavior before streaming commits the
 response. Preserve framework control-flow exceptions. Check direct load, client navigation,
-refresh, Back, and failed prefetch; those paths need not share the same state.
+refresh, Back, and failed prefetch; those paths may differ in state.
 
 See [streaming](https://nextjs.org/docs/app/guides/streaming).
 
@@ -38,7 +38,7 @@ filters, and permissions where they affect results; session tokens stay out of k
 
 Default private data to uncached until an isolation design exists. Never let a cached decision
 retain revoked access. Clear private browser caches on logout. Invalidate after the write commits
-and before a terminating redirect; a failed refresh must not retry the committed write.
+and before a terminating redirect; a failed refresh must not retry it.
 Next.js and a client query cache need separate reconciliation.
 
 See [caching](https://nextjs.org/docs/app/getting-started/caching)

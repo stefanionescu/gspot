@@ -13,10 +13,10 @@ Read this rule when code runs on Cloudflare Workers.
 
 ## Lifetime
 
-- The runtime can reuse or discard isolates. Module state provides neither durable storage nor a safe place
+- The runtime can reuse or discard isolates. Module state offers neither durable storage nor a safe place
   for request-specific user data.
-- Share immutable configuration. Keep mutable request state isolated and persist durable
-  state through the application's storage contract.
+- Share immutable configuration. Keep mutable request state isolated, and persist durable
+  data through the application's storage contract.
 - Use `ctx.waitUntil()` for work after the response. Use a Queue or Workflow for work that must finish.
 
 ## Repository

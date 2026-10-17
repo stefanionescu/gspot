@@ -19,7 +19,7 @@ Read this rule when you change Astro components, pages, or content collections.
 - Ship HTML by default. Add a `client:` directive only to a component that needs the browser.
 - Pick the most deferred directive that works: `client:visible` or `client:idle` before `client:load`.
 - `client:only` names the framework of the component, such as `client:only="react"`.
-- Astro serializes island props, so pass plain data. A function or a class instance does not survive the trip.
+- Astro serializes island props, so pass plain data. A function or a class instance does not survive serialization.
 
 ## Markup
 

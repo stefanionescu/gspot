@@ -2,19 +2,19 @@
 
 Read this rule when you change tRPC procedures or their client.
 
-Use the client integration the project has. Do not mix the classic and TanStack-native clients.
+Use the client integration the project has. Do not mix the classic client with the TanStack one.
 Check the installed release before using a version-specific API.
 
 ## Request ownership
 
 Create context from verified identity for each request. Context creation can run during prefetching,
 so it performs no writes. Each operation in a batch authorizes itself; a batch does not create a transaction.
-Authentication proves identity, and resource authorization proves access to the named resource.
+Authentication proves identity, and authorization proves access to the named resource.
 Neither a valid input nor a procedure named public proves permission.
 
 Direct callers receive verified context explicitly. Never store a session in a process-wide
 variable or cast a direct caller into an HTTP request. Procedures that share logic call the same
-authorized domain operation rather than calling each other.
+authorized domain operation rather than each other.
 
 See [authorization](https://trpc.io/docs/server/authorization)
 and [server callers](https://trpc.io/docs/server/server-side-calls).
@@ -28,7 +28,7 @@ need one source of the data or coordinated refresh.
 
 Cookie-setting operations use a transport that can finish headers before streaming. Configure
 serialization at both ends and preserve transformer metadata. Bound batch sizes and expensive
-work. One layer owns retries, and retries of a write require an idempotency contract.
+work. One layer owns retries, and a retried write requires an idempotency contract.
 
 See [TanStack integration](https://trpc.io/docs/client/tanstack-react-query/setup)
 and [links](https://trpc.io/docs/client/links).

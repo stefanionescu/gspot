@@ -8,10 +8,10 @@ Read this rule when you change a GitHub Actions workflow or action.
 - Every workflow that can run twice for one ref has a `concurrency` group. Cancel a run in progress only for a pull
   request. Never cancel a run on the default branch or a tag; its result records that commit.
 - Pin a runner image such as `ubuntu-24.04` for each job. Do not use `ubuntu-latest`.
-- No `continue-on-error` without a reason comment. Required failures must fail the job.
+- No `continue-on-error` without a reason comment. Required steps that break must fail the job.
 - Upload diagnostics after failed checks with an explicit status condition. Deployments and release publication
   require successful prerequisites.
-- Before a release job publishes a package or creates a release, it runs the tests or needs the job that runs them.
+- Before a release job publishes a package or creates a release, it runs the tests or needs the job that does.
 
 ## Repository actions and secrets
 
@@ -21,19 +21,19 @@ Read this rule when you change a GitHub Actions workflow or action.
 
 ## Scripts
 
-- Declare the shell required by the script. The explicit Bash shell in GitHub Actions enables `-e` and
-  `pipefail`, but does not enable `-u`. Enable required options and validate inputs explicitly.
+- Declare the shell required by the script. The explicit Bash shell in GitHub Actions turns on `-e` and
+  `pipefail`, but not `-u`. Enable required options and validate inputs explicitly.
 - Key caches on the lockfile hash and the runtime version. Restore keys never match a
   different lockfile.
 
 ## Outputs
 
 - Artifacts and summaries name the job and the ref. Set retention explicitly.
-- Every job leaves a result that a later job, a deployment, or a person uses. Do not upload an artifact that no job
+- Each job leaves a result that a later one, a deployment, or a person uses. Do not upload an artifact that no job
   downloads. Do not build the same output in two workflows.
 - Give deploy credentials only to the job that deploys, as `env` on the step that needs them. Deploy only from the
   default branch or a release tag. When the repository uses GitHub environments, run the job in a protected
-  environment with a reviewer.
+  one with a reviewer.
 
 ## Workflow organization
 

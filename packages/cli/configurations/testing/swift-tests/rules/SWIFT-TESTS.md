@@ -2,7 +2,7 @@
 
 Read this rule when you write or change a Swift test.
 
-When you write tests, these rules cover XCTest, Swift Testing, and snapshot tests.
+These rules cover XCTest, Swift Testing, and snapshot tests.
 
 ## What to test
 
@@ -13,7 +13,7 @@ When you write tests, these rules cover XCTest, Swift Testing, and snapshot test
 - When the project uses view models, assert state transitions and what the application shows to the user, never private method calls.
 - Test invalid payload mapping and validate external data when it enters the program.
 - Test cancellation and stale results for asynchronous operations.
-- Do not mock SwiftUI or test its framework behavior.
+- Do not mock SwiftUI.
 - Do not test trivial getters, setters, or framework behavior.
 - Do not add a protocol only to make a mock when the code already accepts the network or database client as an argument.
 
@@ -33,7 +33,7 @@ When you write tests, these rules cover XCTest, Swift Testing, and snapshot test
 
 - Test data shows the behavior under test.
 - Prefer private builders or stubs with sensible defaults when model construction hides the point of the test.
-- Keep test builders beside the tests that use them, unless many test files share them on purpose.
+- Keep builders beside the tests that use them, unless many test files share them on purpose.
 - Decode JSON test data only when the test covers decoding, mapping, or the format of an external payload.
 - Do not add a production default to make a test shorter.
 - Prefer stable identifiers, dates, clocks, and ordering.
@@ -50,7 +50,7 @@ private extension Message {
 }
 ```
 
-Test builders belong in test code. A test setup API never becomes a second model layer.
+A test setup API never becomes a second model layer.
 
 ## Style
 
@@ -59,7 +59,7 @@ Test builders belong in test code. A test setup API never becomes a second model
 - In XCTest, prefer throwing test methods with `try XCTUnwrap`.
 - In Swift Testing, prefer `try #require`.
 - Avoid `guard` in a test when an assertion helper states the failure directly.
-- Make test helpers and test data private unless several tests need them.
+- Make helpers and test data private unless several tests need them.
 
 ## Disabled tests
 

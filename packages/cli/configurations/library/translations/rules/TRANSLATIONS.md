@@ -8,19 +8,19 @@ and International Components for Unicode (ICU) MessageFormat adds placeholders, 
 
 ## Locales and routing
 
-- Define the supported locales, the default locale, and locale selection in one place, with Best Current Practice (BCP) 47
+- Define the supported locales, the default, and the selection logic in one place, with Best Current Practice (BCP) 47
   tags such as `en-GB`.
 - Check a locale from a URL, cookie, or header against the supported list before loading messages,
-  and build catalog import paths from checked values only. Unsupported input gets the documented
+  and build catalog import paths from validated values only. Unsupported input gets the documented
   default or not-found behavior, not a failed dynamic import.
 - Choose the routing deliberately. A public site with locale-prefixed URLs needs locale-aware links,
   redirects, canonical URLs, alternate-language metadata, and sitemap entries. An application
-  without indexed locale URLs can select the language by cookie or saved preference.
+  without indexed locale URLs can pick the language by cookie or saved preference.
 - Define the precedence among the URL, the saved preference, the negotiated header, and the
   default, without redirect loops.
-- A request-local i18n configuration owns resolution, and request handling and displayed content
-  use the same locale. Never keep a user's locale in mutable server module state, and partition
-  localized data in server, browser, and content delivery network (CDN) caches.
+- A request-local i18n configuration owns resolution; handlers and displayed content use the
+  same locale. Never keep a user's locale in mutable server module state. Partition localized
+  data in server, browser, and content delivery network (CDN) caches.
 
 ## Messages and catalogs
 
@@ -41,11 +41,11 @@ arbitrary server string, a display name, or an English source sentence.
 - User-generated content, proper names, identifiers, and developer logs supply interpolation data,
   not message keys, and stay untranslated.
 
-Translate every application-authored string the application displays to the user. That covers headings, buttons,
+Translate every string the application authors and displays to the user. That covers headings, buttons,
 placeholders, toasts, validation errors, accessible names, image alternatives, navigation,
 metadata, list status controls, and the empty, error, and loading states.
 
-Plural categories can differ by locale while every locale takes the same input value. Configure
+Plural categories can differ by locale for the same input value. Configure
 the catalog loader for the application's format and namespace layout.
 
 Translations land in the same change as their call sites; an incomplete locale leaves the
@@ -55,8 +55,8 @@ a silent `catch` that hides a missing catalog.
 
 ## Rendering and formatting
 
-- Use the framework's established i18n library. Translate on the server where rendering happens
-  there, and give each client provider the scoped messages its interactive children need, never
+- Use the framework's established i18n library. Translate on the server where it renders,
+  and give each client provider the scoped messages its interactive children need, never
   every locale or the whole catalog.
 - Format numbers, currencies, dates, relative times, and time zones through locale-aware APIs.
   Never infer currency or time zone from language alone.
@@ -68,18 +68,18 @@ a silent `catch` that hides a missing catalog.
 ## Changing the language
 
 1. Keep the current resource, the relevant search parameters, and the hash where the routing supports them.
-2. Save the preference through the code that validates and saves it, when the product promises to keep it.
+2. Save the preference through the code that validates and stores it, when the product promises to keep it.
 3. Navigate through the locale-aware routing, so that server-rendered content, client labels, and metadata agree.
 4. Refresh locale-dependent query keys and results. Do not keep translated data under a key without the locale.
 5. Keep the focus and the scroll position.
 6. Report a failed preference write. Never show a selection that reverts on refresh.
 
-A language menu names each language with a clear label, commonly its native name, not a flag.
+A language menu names each language as its speakers write it, not with a flag.
 Treat region and currency as separate choices when the product offers them.
 
 ## Right-to-left layout
 
-Set the document's `lang` and `dir` for the selected locale. List supported right-to-left (RTL)
+Set the document's `lang` and `dir` for the active locale. List supported right-to-left (RTL)
 locales and affected screens for the user to check. Use logical spacing and alignment properties, and mirror an icon or image only when
 its meaning requires it. Focus order and horizontal scrolling follow the direction, and record data
 never reverses to display RTL text. Add translated sentences that hold identifiers or URLs to that list, because their text directions mix.

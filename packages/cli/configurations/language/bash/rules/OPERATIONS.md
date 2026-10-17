@@ -6,11 +6,11 @@ Read this rule when you write a deployment, publishing, or remote shell script.
 
 <!-- level: all -->
 
-Each file owns one cohesive responsibility, and the directory supplies the family name.
+Each file owns one cohesive responsibility, and the folder supplies the family name.
 
 - A sourced public function carries its family name, such as `release_prepare` or
   `cache_read_state`.
-- A function with one caller lives in the caller's file.
+- Keep a function with one caller in the same file as the call.
 
 ## Deployment and publishing pipelines
 
@@ -18,11 +18,11 @@ Deployment, publishing, and long-running scripts separate validation, planning, 
 execution, readiness checks, and cleanup.
 
 - Fail before any work when the script lacks a required input, command, file, host, or secret.
-- Name the target explicitly: never infer production, a remote, a host, or an artifact from a
+- State the target explicitly: never infer production, a remote, a host, or an artifact from a
   branch name without a confirmation or a CI contract.
 - A destructive or remote action asks for confirmation unless CI owns the guard.
 - Use idempotent commands and stop at the first failed required step.
-- Check readiness after deploying or publishing, and print diagnostics a person can act on.
+- Check readiness after deploying or publishing, and print messages a person can act on.
 - Keep rollback and cleanup explicit, and delete no artifact or result as a side effect.
 - Log enough to reconstruct what happened, without secrets.
 
@@ -46,9 +46,9 @@ confirm_exact() {
 ## Remote commands
 
 Copy a reviewed script to the remote host and invoke it with arguments. SSH joins its arguments
-into one remote shell string, so local quoting does not keep remote argument boundaries. Validate
-host, user, service, and path values before using them, never build a remote command from user
-input, and give every remote call that can hang a timeout.
+into one remote shell string, so local quoting does not keep their boundaries. Validate host,
+user, service, and path values before you use them. Never build a remote command from user
+input. Give every remote call that can hang a timeout.
 
 Good, for a remote Bash login shell:
 
@@ -60,7 +60,7 @@ ssh -- "${host}" "${remote_command}"
 ## Persisted state
 
 Never `source` generated state or pass it to `bash -c`. Write state in a fixed data format with an
-exact key schema to a restricted file in the destination folder, and replace the previous state
+exact key schema to a restricted file in the destination folder. Replace the previous version
 with an atomic `mv`. A reader treats a malformed, duplicate, or unknown key as an error.
 
 ## Retries

@@ -6,7 +6,7 @@ Read this rule when you write code that raises, catches, or reports an error.
 
 - Return a typed result or throw a typed error for an expected operational failure. Invalid input, missing resources, denied permission, and provider timeouts need results the caller can act on.
 - Throw a programmer error for a broken invariant or impossible state. Log its stack and show a generic failure. Never catch it to keep going.
-- A startup failure fails fast before the process accepts work.
+- A startup failure stops the process before it accepts work.
 - On shutdown, set readiness to false, stop accepting work, drain in-flight work for a bounded
   time, close resources, and exit.
 - A fatal runtime error stops new work, reports the failure, and exits. Last-resort handlers never
@@ -16,7 +16,7 @@ Read this rule when you write code that raises, catches, or reports an error.
 
 - Catch the narrowest type. Never a bare catch-all unless the block re-raises or deliberately isolates an operation and records the failure.
 - Keep the try block around the one operation that can fail.
-- Preserve the cause when wrapping: `new Error(message, { cause })`, `raise ... from error`, `Error` conformance with an underlying error.
+- Preserve the cause when wrapping: `new Error(message, { cause })`, `raise ... from error`, or `Error` conformance with an underlying error.
 - Do not swallow failures. Handle, record, or re-raise each caught error.
 - Run required cleanup in `finally` or the language's equivalent.
 
@@ -31,7 +31,7 @@ private data out of every output.
 - Internal identifiers such as row IDs, user IDs, or session tokens.
 - Stack traces or file paths.
 - Raw upstream, provider, or database errors.
-- Implementation details such as trigger names, policy names, or internal state like "deleted" flags.
+- Implementation details such as trigger and policy names, or internal state like "deleted" flags.
 
 **Always:**
 

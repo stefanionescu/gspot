@@ -4,17 +4,17 @@ Read this rule when you write Bash functions, variables, quoting, or loops.
 
 ## Functions
 
-Declare function-local variables with `local`, and separate the declaration from a command
-substitution assignment when the exit code matters, because `local`, `declare`, `readonly`,
-and `export` report their own status rather than the substitution's:
+Declare function-local variables with `local`. When the exit code of a command substitution
+matters, assign it apart from the declaration: `local`, `declare`, `readonly`, and `export`
+report their own status:
 
 ```bash
 local output
 output="$(some_command)" || return 1
 ```
 
-Preserve the documented status contract: a predicate may use status 1 for false, kept
-distinct from an execution error.
+Preserve the documented status contract: a predicate may return 1 for false, distinct from an
+execution error.
 
 ```bash
 # report_unreadable_files: Reports each unreadable input and fails if any input is unreadable.
@@ -37,18 +37,18 @@ report_unreadable_files() {
 
 <!-- level: all -->
 
-Use `name() { ... }` for a function that runs in the caller's shell, and a subshell body,
-`name() ( ... )`, for deliberate isolation of the caller's state and traps.
+Use `name() { ... }` for a function that runs in the current shell, and a subshell body,
+`name() ( ... )`, to isolate state and traps from the caller on purpose.
 
 Every executable defines `main` and calls it last.
 
 ## Variables and constants
 
 Mark constants `readonly` immediately after assignment, and
-`export` only what child processes need. Never casually overwrite `PATH`, `HOME`, `IFS`,
-`CDPATH`, `SHELL`, `PWD`, or `BASH_ENV`, and never export `CDPATH`.
+`export` only what child processes need. Do not overwrite `PATH`, `HOME`, `IFS`, `CDPATH`,
+`SHELL`, `PWD`, or `BASH_ENV` without a clear need. Never export `CDPATH`.
 
-Compute a directory constant with `CDPATH='' cd -- <path> && pwd -P` and add a failure path: `|| exit 1` in an
+Compute a folder constant with `CDPATH='' cd -- <path> && pwd -P` and add a failure path: `|| exit 1` in an
 entrypoint and `|| return 1` in a library. Use `$HOME`, not a quoted `~`, inside paths, and
 assign a home-relative value before exporting it. Quote array elements passed to `unset -v`.
 
@@ -61,9 +61,9 @@ export PROJECT_ROOT
 
 ## Quoting and expansion
 
-Forward arguments with `"$@"`, and use `$*` only to join arguments into one string on
-purpose. Single quotes hold literals and double quotes hold expansions. Command substitution
-output never supplies an unquoted argument list, and word splitting never parses data. Use functions,
+Forward arguments with `"$@"`, and use `$*` only to join them into one string on
+purpose. Use single quotes for literals, double for expansions. Command substitution
+output never supplies an unquoted argument list. Word splitting never parses data. Use functions,
 not aliases. Parameter expansion replaces external tools for string work:
 
 ```bash
@@ -74,7 +74,7 @@ base="${filename%.tar.gz}"
 ## Arrays and argument lists
 
 Command arguments live in arrays, expanded with `"${array[@]}"` and never populated from raw
-`$(...)`. Read lines with a `while read` loop or `readarray`, and read filenames from `NUL`-delimited streams:
+`$(...)`. Read lines with a `while read` loop or `readarray`, and filenames from `NUL`-delimited streams:
 
 ```bash
 declare -a archive_args
@@ -90,9 +90,9 @@ Do not use arrays to imitate nested data structures. A need for those structures
 
 ## Conditionals and arithmetic
 
-`[[ ... ]]` holds string, pattern, and file tests. `==` compares for equality with a quoted
-right-hand side when the value may hold glob characters, and an unquoted right-hand side only
-for pattern matching. Store a regular expression in a variable and use it
+`[[ ... ]]` holds string, pattern, and file tests. With `==`, quote the right-hand side to
+compare equality when the value may hold glob characters, and leave it unquoted only for
+pattern matching. Store a regular expression in a variable and use it
 unquoted with `=~`. `-z` and `-n` test for emptiness. Numeric comparisons live in `(( ... ))` after validation of untrusted numbers; `<` and
 `>` inside `[[ ... ]]` compare strings.
 
@@ -108,8 +108,8 @@ zero, so under `errexit` increment with `retry_count=$(( retry_count + 1 ))`. Un
 strings never enter `(( ... ))`, `$(( ... ))`, `[[ value -gt n ]]`, array indices, or
 arithmetic `for` expressions: validate with a pattern first. `10#${value}` converts unsigned
 base-10 strings; a signed value needs `$(( ${value%%[!+-]*}10#${value#[-+]} ))`. Call `date`
-once when several fields describe one instant, and compute a redirection path before the
-command when the path expression mutates a variable.
+once when several fields describe one instant. Compute a redirection path before the command
+when its expression mutates a variable.
 
 ```bash
 if [[ ! "${port}" =~ ^[0-9]{1,5}$ ]]; then
@@ -159,10 +159,10 @@ join_path_parts() {
 
 ## Paths, globs, and file names
 
-Quote paths, put `--` before path arguments where the command supports it, prefer globs with
+Quote paths, put `--` before them where the command supports it, prefer globs with
 an explicit prefix such as `./*.sql`, and never filter filenames with `grep`. Filenames can
 hold spaces, newlines, quotes, brackets, and leading dashes. Never assume the current
-directory; compute it, and check `cd` explicitly. A broken symlink needs `-L` beside `-e`
+folder; compute it, and check `cd` explicitly. A broken symlink needs `-L` beside `-e`
 when existence matters, and a basename pattern reads `"${path##*/}"`. Handle the no-match
 glob deliberately, either with `[[ -e ${file} ]] || continue` or with `nullglob` scoped to a
 subshell:
@@ -194,9 +194,9 @@ content="${content_with_sentinel%x}"
 
 ## Pipelines and redirection
 
-Read `PIPESTATUS` immediately when individual statuses matter. Order redirections to show the intent, `>file 2>&1`, and never close a standard descriptor as a shortcut for `/dev/null`. A
-pipeline never reads from and writes to the same file; rewrite a file through a
-temporary file and an atomic rename. Parallel `xargs` jobs do not produce ordered, unmixed
+Read `PIPESTATUS` immediately when individual statuses matter. Order redirections to show the intent, `>file 2>&1`, and never close a standard descriptor as a shortcut for `/dev/null`. Never
+read from and write to the same file in one pipeline. Rewrite it through a temporary file
+and an atomic rename. Parallel `xargs` jobs do not produce ordered, unmixed
 output: write per-job files and combine them, or use a tool that serializes. Check a command
 directly or capture its status in a named variable rather than `(( ! $? )) || die`.
 

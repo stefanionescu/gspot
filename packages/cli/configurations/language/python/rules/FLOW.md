@@ -42,7 +42,7 @@ Keep the exception's public contract stable when changing its message.
 A custom exception inherits from `Exception`, describes its condition in the docstring, and
 lives beside the behavior that raises it rather than in a one-declaration file.
 
-Do not substitute a built-in exception for an external API's declared error type. Follow a
+Do not substitute a built-in exception for the declared error type of an external API. Follow a
 library's public error contract when callers depend on it.
 
 ## Assertions
@@ -80,9 +80,9 @@ requirements, not solely to shorten the implementation.
 
 ## Strings and output
 
-Use f-strings for ordinary value interpolation. Preserve formatting required by an external API,
-and keep logging arguments separate from the message when the logging API formats them lazily.
-Use efficient joining for a sequence of strings instead of repeatedly growing a large string.
+Use f-strings for ordinary value interpolation. Preserve formatting that an external API requires.
+Keep logging arguments apart from the message when the logger formats them lazily.
+Join a sequence of strings efficiently instead of repeatedly growing one large value.
 
 Formatting neither validates nor escapes values. Use parameterized database queries, argument arrays
 for subprocesses, and the appropriate encoder for HTML, JSON, or another output format.
@@ -90,7 +90,7 @@ for subprocesses, and the appropriate encoder for HTML, JSON, or another output 
 ## Files and stateful resources
 
 Use context managers for resources with an explicit lifetime. Close files and network resources
-on both success and failure. Declare text encoding when opening a text file. Use binary mode
+on both success and failure. Declare the encoding when opening a text file. Use binary mode
 for bytes instead of relying on an implicit conversion.
 
 A generator can keep a resource open while suspended. Make that lifetime clear to callers,
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 ```
 
 For large inputs, provide an explicit streaming interface whose caller owns the open resource
-or uses a context manager. Do not materialize the full input merely to avoid documenting its
+or uses a context manager. Do not materialize the full input only to avoid documenting its
 lifetime.
 
 Write to a temporary file in the same folder, validate it, then rename it over the target. Clean up only paths and resources owned by the current operation.

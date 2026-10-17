@@ -8,15 +8,15 @@ Read this rule when you change next-intl configuration or messages.
   `now` reference. Nothing else resolves a locale.
 - Define routing in one module: locales, default locale, prefix strategy, and pathnames
   that both the proxy and the navigation helpers import.
-- Use the library's navigation helpers such as `Link`, `redirect`, `usePathname`, `useRouter` for every
-  internal link so locale prefixes and alternate metadata stay correct. Never `next/link` directly
+- Use the library's navigation helpers such as `Link`, `redirect`, `usePathname`, and `useRouter` for every
+  internal link so locale prefixes and alternate metadata stay correct. Never use `next/link` directly
   in a localized route.
 
 ## Server and client boundaries
 
 - Use `getTranslations` in async Server Components. Non-async components can use
-  `useTranslations`; the library selects its server or client implementation from the render context.
-- Keep `now` and `timeZone` identical between the server render and the first browser render so
+  `useTranslations`; the library picks its server or client implementation from the render context.
+- Keep `now` and `timeZone` identical between the server and the first browser render, so
   formatted dates and relative times hydrate without mismatch.
 - Generate `alternates` and `canonical` metadata from the routing definition. Do not hand-write
   locale URLs in metadata.

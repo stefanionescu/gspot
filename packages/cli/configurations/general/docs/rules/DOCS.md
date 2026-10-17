@@ -5,7 +5,7 @@ Read this rule when you write or change documentation.
 ## Before you write
 
 Read the implementation and existing pages. Identify the reader, their task, starting state,
-permissions, and risks. Describe supported behavior. State limitations that rule out use before setup.
+permissions, and risks. Describe supported behavior. Before the install steps, state limitations that rule out use.
 
 Keep durable product information in its documentation. Link to its reference instead of copying
 procedures or configuration tables. When behavior changes, update the reference and examples.
@@ -34,9 +34,9 @@ An example teaches one idea and uses the supported API. Include imports, setup, 
 readers need. Label an incomplete fragment and say what it omits. Keep volatile output out of
 examples unless the public API defines its exact text.
 
-State the starting directory and prerequisites before commands. Explain placeholders. Separate
-output from commands, or comment output where a copied block must run. State the expected result
-when the result does not make success clear. Give each platform alternative a complete procedure.
+State the starting folder and prerequisites before commands. Explain placeholders. Separate
+output from commands, or comment it out where a copied block must run. State the expected result
+when the command output does not make success clear. Give each system alternative a complete procedure.
 
 A destructive step names its scope, irreversible effects, backup, and recovery before the action.
 Keep permissions, verification, and recovery beside the steps that need them. Use secure defaults
@@ -47,7 +47,7 @@ Start troubleshooting with the observable symptom and common causes. Diagnose be
 other destructive recovery. Preserve exact public errors and remove private data from examples.
 
 Do not write the current release number in prose or examples. Write `<version>` and say once where to find the
-number, or generate the text from the package manifest.
+number, or generate the text from the dependency file.
 
 A test runs or parses each command and each settings file that a page shows.
 
@@ -65,7 +65,7 @@ Describe releases by their effect on readers and required actions.
 
 A known issue states its trigger,
 risk, and verified workaround. A deprecation names support, replacement, and migration. A retirement
-names the unavailable functions. Security disclosures follow the project's disclosure policy.
+names the unavailable functions. Security disclosures follow the project policy.
 
 ## Images and video
 
@@ -80,14 +80,14 @@ A video needs captions and a transcript for information absent from the page. Ke
 procedure in text. Do not embed trackers or commit video outside the project's asset workflow.
 Follow the accessibility rules for alt text and color.
 
-Keep diagrams small and give equal concepts
-equal shapes. Prefer editable diagrams and descriptive file names. List keyboard shortcuts and
-platform steps in the same order each time.
+Keep diagrams small and draw equal concepts
+with the same shape. Prefer editable diagrams and descriptive file names. List keyboard shortcuts and
+per-system steps in a fixed order.
 
 ## Links
 
 Use maintained primary sources for external APIs and relative paths for repository content.
 Link text identifies the destination. A public procedure states any account or permission needed
 to open a required page.
-See [Diátaxis](https://diataxis.fr/), [Google's documentation guidance](https://developers.google.com/style),
+See [Diátaxis](https://diataxis.fr/), [Google documentation guidance](https://developers.google.com/style),
 and [W3C image guidance](https://www.w3.org/WAI/tutorials/images/).

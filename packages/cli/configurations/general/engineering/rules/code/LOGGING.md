@@ -7,7 +7,7 @@ Read this rule when you add or change logging.
 <!-- level: all -->
 
 - One logging module per process, configured at the entrypoint: level, format, redaction, transports.
-- Feature code obtains a logger from that module. It never instantiates, configures, or adds transports.
+- Feature code gets a logger from that module. It never instantiates, configures, or adds transports.
 - A service logs to stdout. Configure other transports at the logger.
 
 ## Levels
@@ -26,10 +26,10 @@ Read this rule when you add or change logging.
 - Write a stable, human-readable message string that describes the event. Values go in structured fields, never interpolated into the message.
 - Preserve declared event names and field keys. Before you rename one, tell the user because
   dashboards and alerts may read it.
-- Include the request trace when the request provides one.
-- Use stable names for request IDs, correlation IDs, provider request IDs, operation IDs, resource IDs, and safe user IDs. Propagate them to provider calls when supported.
-- Put an error object in the field the logger serializes errors from, so the logger keeps the stack and cause.
-- Summarize: counts, IDs, statuses, provider names, durations. No large, deeply nested, or expensive-to-compute fields.
+- Include the request trace when one exists.
+- Use stable names for request, correlation, provider request, operation, resource, and safe user IDs. Propagate them to provider calls when supported.
+- Put an error object in the field the logger serializes errors from, so it keeps the stack and cause.
+- Summarize: counts, IDs, statuses, provider names, and durations. No large, deeply nested, or expensive-to-compute fields.
 - Do not compute expensive log arguments when the logger disables the level.
 
 ### Field naming

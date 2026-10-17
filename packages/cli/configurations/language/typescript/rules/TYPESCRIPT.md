@@ -7,15 +7,15 @@ TypeScript checks static types. JavaScript and runtime rules cover modules and e
 ## Philosophy
 
 TypeScript makes types explicit at compile time. Plain values, small functions, discriminated
-unions, and clear modules keep types easier to read than elaborate type transformations.
+unions, and clear modules read better than elaborate type transformations.
 
 ## Files and modules
 
-Diagnostics and process termination stay at executable boundaries. Check the effective lint
-configuration for a path before assuming a rule.
+Error output and process exits stay at executable boundaries. Before you assume a lint rule
+applies to a path, check the effective configuration.
 
-Do not edit compiler output with string replacement. Change the source or the compiler options, then ship what the
-compiler writes.
+Do not edit compiler output with string replacement. Change the source or the compiler options, then ship the
+output.
 
 ## Values and shapes
 
@@ -38,14 +38,14 @@ missing fields, and nulls where they enter the program.
 
 ## Functions and classes
 
-Annotate callback parameters when inference does not give a clear type, rely on inference for local details,
+Annotate callback parameters when inference gives no clear type, rely on it for local details,
 and keep generics minimal. A discriminated union or options object replaces overloads when
-clearer. Make a parameter optional only for an optional input.
+clearer. Make a parameter optional only when callers can omit the input.
 
 ## Errors and async work
 
 `Promise.all` serves bounded independent fan-out. Order, rate limits, or failure isolation
-call for sequential `await`. Large fan-out, provider calls, and batch work use platform
+call for sequential `await`. Large fan-out, provider calls, and batch work use runtime
 concurrency utilities. Detach a promise only deliberately. Log and supervise it; never swallow a rejection.
 
 This fragment uses the message and provider types, persistence functions, and lock operations
@@ -85,7 +85,7 @@ export async function createProviderOperation(request: ProviderOperationRequest)
 
 - Do not use namespaces, `module`, triple-slash references, or
   `import x = require(...)` to simulate ownership.
-- Keep generated file names only when generator-owned.
+- Keep generator-style file names only for generator output.
 
 ### TypeScript variables
 
@@ -107,25 +107,25 @@ Name a reused daily timer duration `MILLISECONDS_PER_DAY` and define it as
 
 <!-- level: all -->
 
-- Use async/await in names only to distinguish from a blocking counterpart. Normally the return type communicates async.
+- Use async/await in names only to distinguish a function from a blocking counterpart. The return type already shows async.
 
 ### TypeScript types
 
 <!-- level: all -->
 
-- Use unions and discriminated unions for alternatives.
+- Use plain and discriminated unions for alternatives.
 - Use interfaces only when a framework contract, declaration merging, or
-  `implements` relationship makes an interface the clearest tool.
-- Use optional fields and parameters for values callers can omit.
-- Avoid return-type-only generics. When using an existing return-type-only
-  generic API, specify the generic explicitly.
-- Name index keys meaningfully when the type needs an index signature.
+  `implements` relationship makes one the clearest tool.
+- Use optional fields for values callers can omit.
+- Avoid return-type-only generics. When you call an existing one, specify the
+  type argument explicitly.
+- Give the keys of an index signature meaningful names.
 - Prefer `Map` for key/value operations.
 
 Name a coffee response union `CoffeeResponse`; put `| undefined` on an
-operation that can return no response. Name a user index `UsersById` and its
-index key `userId`.
+operation that can return nothing. Name a user index `UsersById` and its
+key `userId`.
 
-A function that selects a collection element ties its generic to the input
-collection. Its return contract must account for an empty collection unless
+A function that selects a collection element ties its generic to the input.
+Its return contract must account for an empty collection unless
 the input type or validation proves that an element exists.

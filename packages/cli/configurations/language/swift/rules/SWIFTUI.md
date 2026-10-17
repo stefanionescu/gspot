@@ -6,18 +6,18 @@ Read this rule when you change SwiftUI views or state.
 
 <!-- level: all -->
 
-This rule picks no presentation pattern, such as Model-View-ViewModel (MVVM) or The Composable Architecture (TCA); a project that wants one writes it
-down.
+This rule picks no presentation pattern, such as Model-View-ViewModel (MVVM) or The Composable Architecture (TCA); a project that adopts one
+documents it.
 
 ## SwiftUI views
 
-- Keep view-local state in the view when its lifetime matches the view's identity.
+- Keep state local when its lifetime matches the identity of the view.
   Use `@State`, `@FocusState`, `@GestureState`, and bindings according to their
   ownership and read contracts.
 - Keep view-owned state properties private. Inject values owned by a parent
   through the appropriate input or binding.
 - Preserve read and actor isolation when state changes.
-- Do not store derived state in `@State` when source state provides enough data to compute it.
+- Do not store derived values in `@State` when you can compute them from the source state.
 - Avoid heavy computation in `body`; SwiftUI can evaluate it repeatedly.
 - Preserve cancellation and stale-result handling for lifecycle work started with
   `.task`, `.onAppear`, or refresh actions.
@@ -26,9 +26,9 @@ down.
 
 <!-- level: all -->
 
-- Views render state and forward user intent to the project's operation or the object that holds the state.
-- Keep business workflows, network calls, database calls, and concrete infrastructure
-  construction in the types that handle them now.
+- Views render state and forward user intent to the project operation or the object that holds it.
+- Keep business workflows, network and database calls, and concrete infrastructure
+  construction in the types that handle them.
 - Do not add explicit `@ViewBuilder` to `body`; the compiler provides it.
 - Use `@ViewBuilder` for helper properties or functions that need conditional view branches.
 - Omit `else { EmptyView() }` when the missing branch already produces no content.
@@ -41,9 +41,9 @@ down.
 
 <!-- level: all -->
 
-Keep screen and flow state in the type the project chose for that state. Use a shared store
+Keep screen and flow state in the type the project chose for it. Use a shared store
 when multiple screens need the same state. A store owns cohesive feature or domain
-state; app-wide state belongs in app composition only for global state, such as
+state. App composition holds only global state, such as
 session, theme, or connectivity.
 
 Prefer an enum for mutually exclusive loading states instead of parallel booleans.

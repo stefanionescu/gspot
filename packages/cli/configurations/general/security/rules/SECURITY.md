@@ -6,8 +6,8 @@ Read this rule when code handles input, authentication, redirects, or downloads.
 
 - Validate every value that enters from outside the program before use: request bodies, query strings,
   path parameters, headers, cookies, environment, files, provider responses, queue messages,
-  command-line arguments. A type annotation does not validate input.
-- Bound every input: size, length, count, depth, rate.
+  and command-line arguments. A type annotation does not validate input.
+- Bound every input: size, length, count, depth, and rate.
 - Reject unknown fields in request bodies that create or change data.
 
 ## Never build code or paths from input
@@ -35,17 +35,17 @@ Read this rule when code handles input, authentication, redirects, or downloads.
 ## Authentication and authorization
 
 - Identity comes from a verified server-side session or token. A client-supplied user ID, role,
-  or tenant provides data, never authority.
+  or tenant counts as data, never authority.
 - Authorize every operation that reads or changes data, through each HTTP, RPC, job,
   and webhook entry point. Recheck access to the resource even when a parent already checked it.
 - Compare secrets, signatures, and tokens in constant time.
-- Generate tokens, nonces, and reset codes with the platform's cryptographic random source.
+- Generate tokens, nonces, and reset codes with the system's cryptographic random source.
 - Hash passwords with a current, slow, salted algorithm through a maintained library. Use one
   failure message for unknown user and wrong password.
 - Verify webhook signatures against the raw body before decoding, and handle replay with an
   idempotency key.
-- Cookies that carry sessions: `HttpOnly`, `Secure`, `SameSite`, explicit `Max-Age`, non-default
-  name. Writes never happen on `GET`. A cookie session needs cross-site request forgery (CSRF) protection on every
+- Cookies that carry sessions: `HttpOnly`, `Secure`, `SameSite`, explicit `Max-Age`, and a
+  non-default name. Writes never happen on `GET`. A cookie session needs cross-site request forgery (CSRF) protection on every
   state-changing request.
 
 ## Builds

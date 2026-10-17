@@ -8,14 +8,14 @@ Read this rule when you change a command-line program that the project ships.
 - Preserve established exit codes. New commands use `0` on success, `1` on failure, and `2`
   on usage error unless their protocol defines other behavior. List each exit code in `--help`.
 - Keep machine-readable `--json` output complete, stable, and free of progress text.
-- Omit color and terminal control sequences unless stdout connects to a terminal and `NO_COLOR` has no value.
+- Omit color and control sequences unless stdout connects to a terminal and `NO_COLOR` has no value.
 
 ## Interface
 
 - `--help` prints usage, every flag with its default, and one example. `--version` prints the
   version and exits.
 - Every value a prompt asks for also has a flag. If the process has no terminal, fail. Name the missing flag.
-- A destructive command asks for confirmation on a terminal and requires `--yes` otherwise.
+- A destructive command prompts for confirmation on a terminal and requires `--yes` otherwise.
 - Help and explain text says what the user can do. It shows no regular expression, internal identifier, source path
   of the program, or value that the user cannot change.
 - Every command, flag, and setting that help text names exists. A test checks each name.
@@ -25,12 +25,12 @@ Read this rule when you change a command-line program that the project ships.
 - Validate every argument before doing any work. Fail with an actionable message that names the
   argument.
 - Idempotent where the operation allows it: running twice produces the same state.
-- Long operations report progress on stderr and honor interruption: catch the termination signal,
-  clean up, exit with the signal's status.
-- Resolve a relative path against the directory the user ran the command in, or against an
-  explicit argument. Never resolve it against the script's own folder.
-- Create temporary files with the platform's secure call such as `mktemp`, `tempfile.mkstemp`, and
-  delete them on exit.
+- Long operations report progress on stderr and handle interruption: catch the termination signal,
+  clean up, and exit with its status.
+- Resolve a relative path against the folder the user ran the command in, or an explicit
+  argument. Never resolve it against the script's own folder.
+- Create temporary files with a secure call such as `mktemp` or `tempfile.mkstemp`, and delete
+  them on exit.
 
 ## Flag naming
 

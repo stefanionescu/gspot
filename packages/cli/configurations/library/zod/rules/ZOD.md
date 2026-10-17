@@ -10,7 +10,7 @@ second handwritten contract.
 
 Parse values at the boundary that receives them and pass the parsed result inward. Static types,
 a constructed validator, and successful client validation do not validate a server request.
-An invalid provider response shows an integration failure, not invalid user input. A valid identifier
+An invalid provider response shows an integration failure, not bad user input. A valid identifier
 proves no access.
 
 Choose thrown or returned validation issues to match the boundary. Async checks need async parsing;
@@ -39,7 +39,7 @@ boundary without mutating global locale state for one request.
 
 A JSON Schema projection cannot represent every runtime contract. Keep runtime validation and
 verify the exported dialect against meaningful examples. Use an explicit transport schema for
-non-JSON values instead of allowing every value in the projection. Regenerate consumers when the
+non-JSON values instead of allowing anything in the projection. Regenerate consumers when the
 contract changes, and check omitted fields, defaults, patches, and date handling after an upgrade.
 
 See [error customization](https://zod.dev/error-customization)

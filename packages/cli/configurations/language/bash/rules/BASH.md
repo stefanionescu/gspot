@@ -6,8 +6,8 @@ Read this rule when you write or change a shell script.
 
 <!-- level: all -->
 
-Bash orchestrates commands as glue code and does not build application logic. Prefer
-small scripts with explicit inputs, explicit outputs, and clear failure behavior.
+Use Bash as glue code that runs commands, not for application logic. Prefer
+small scripts with explicit inputs and outputs and clear failure behavior.
 Treat every path, argument, environment value, command output, and user input as unsafe until
 quoted, validated, or parsed by a structured tool. A script that builds, deploys, deletes, or
 publishes artifacts makes its inputs, effects, and failure behavior explicit.
@@ -21,7 +21,7 @@ publishes artifacts makes its inputs, effects, and failure behavior explicit.
 Use Bash when the script mostly calls other command-line tools or wires together
 installation, lint, build, runtime, publication, or cleanup steps. Use it to validate the
 environment and dispatch to project commands, or for file movement, process checks,
-and retry loops. Do not use Bash for business logic or complex text parsing. Do not use it
+and retry loops. Do not use Bash for complex text parsing. Do not use it
 for JSON, YAML, XML, or HTML transformations beyond extraction with a dedicated
 parser. Large mutable data structures, long-lived daemons, high-performance work,
 security-sensitive parsing of untrusted input, and behavior that needs typed contracts belong
@@ -41,8 +41,8 @@ for cleanup that can run safely on the relevant exit path.
 
 <!-- level: all -->
 
-An executable script finishes with a meaningful status: a final diagnostic command, a false
-condition, or an optional cleanup check must not become the script status by accident. Use
+End an executable script with a meaningful status. A final message, a false condition, or an
+optional cleanup check must not set the exit status by accident. Use
 an explicit `exit 0` only when the final command's status differs from the program result and
 prior checks establish success.
 
@@ -55,8 +55,8 @@ options around a small operation without restoring the prior state. Do not chang
 strict-mode ritual; set it locally where reading or joining data requires it. Keep `set -x`
 out of committed code.
 
-A function called in
-`if`, `while`, `&&`, or `||` writes its checks inside because `errexit` does not stop it there:
+Put explicit checks inside a function called in `if`, `while`, `&&`, or `||`, because `errexit`
+does not stop it there:
 
 ```bash
 # cleanup: Removes the contents of the target directory.
@@ -68,16 +68,16 @@ cleanup() {
 }
 ```
 
-Process substitution hides producer failures; when the producer matters, write to a checked
-temporary file, use `PIPESTATUS`, or call the producer separately. Under `pipefail`, short
-readers such as `head` and `grep -q` can make the producer see SIGPIPE and fail the pipeline;
-consume input predictably or handle the known status. Under `nounset`, use `${name:-}` where
+Process substitution hides producer failures. When the producer status matters, write to a checked
+temporary file, use `PIPESTATUS`, or call it separately. Under `pipefail`, short
+readers such as `head` and `grep -q` can make the producer receive SIGPIPE and fail the pipeline.
+Consume input predictably or handle the known status. Under `nounset`, use `${name:-}` where
 the public interface accepts an unset variable and `${name:?message}` for a required value at a clear
 boundary. Use `${1:-}` where callers can omit an argument.
 
 ## Output, logging, and errors
 
-Write diagnostics with `printf`, not `echo`. Return or exit with the intended status: printing
+Write messages with `printf`, not `echo`. Return or exit with the intended status: printing
 an error does not make a command fail.
 
 ```bash
@@ -117,11 +117,11 @@ A public, sourced, complex, or risky function carries the full header with `Glob
 - Omit the extension on an executable script only when users invoke it
   as a command on `PATH`.
 - Give sourced libraries the `.sh` extension and no executable permission.
-- Numbered pipeline steps use `NN-description.sh`, such as `01-install.sh`; the numeric prefix defines a
-  structural prefix the naming check strips before it matches the stem.
+- Numbered pipeline steps use `NN-description.sh`, such as `01-install.sh`; the naming check strips
+  the numeric prefix before it matches the stem.
 - Functions and mutable variables use `lower_snake_case`.
-- Package-like function prefixes may use `::` only when a script family already
-  uses that convention.
+- Use `::` in package-like function prefixes only when a script family already
+  follows that convention.
 
 | Avoid              | Prefer                     | Meaning              |
 | ------------------ | -------------------------- | -------------------- |
@@ -136,11 +136,11 @@ Name a deployment function `deploy_api` and its local target
 
 <!-- level: all -->
 
-- Loop variables name each item in the loop.
+- Name each loop variable after its item.
 - Name a temporary path after what it holds, such as `download_file` or `work_dir`; `tmp` and
   `temp` say nothing.
-- Avoid vague names when the domain provides a name.
-- Avoid shell-reserved and shell-special names for unrelated values.
+- Avoid vague names when the domain has a term.
+- Avoid reserved and special shell names for unrelated values.
 
 Use `migration_file` when iterating migration paths and `report_output` for
 captured report text. Check the report command's exit status before printing
@@ -150,8 +150,8 @@ the captured output. A loop variable such as `i` does not describe a file.
 
 <!-- level: all -->
 
-- Function names use verb phrases when the function has side effects.
-- Name a function that prints to `stdout` for the data it prints.
+- Give a function with side effects a verb-phrase name.
+- Name a function that writes to `stdout` for the data it prints.
 - Do not name scripts or functions after shell builtins or common commands.
 - Do not make function names so generic that logs and stack traces lose context.
 
@@ -162,7 +162,7 @@ generic names such as `run` or `process`.
 
 <!-- level: all -->
 
-- Put a related script family in an owning subdirectory and give the contained
-  files role names such as `main.sh`, `state.sh`, `query.sh`, or `report.sh`.
-- External hook families may use a dynamic shared prefix when the external
-  interface owns those filenames.
+- Put a related script family in its own subfolder, and give its files role names such as
+  `main.sh`, `state.sh`, `query.sh`, or `report.sh`.
+- Hook families may use a dynamic shared prefix when an external interface owns those
+  filenames.

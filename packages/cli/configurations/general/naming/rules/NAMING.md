@@ -6,16 +6,16 @@ Read this rule when you name a file, folder, type, function, or variable.
 
 <!-- level: all -->
 
-Each language rule states its own case table. These decisions hold across every language so
-the same concept reads the same way throughout the program.
+Each language rule states its own case table. These decisions hold across languages, so one
+concept reads alike throughout the program.
 
-| Concern               | Rule                                                                                                                                                                                                                                                                                                                                            |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Acronyms              | Follow the language: TypeScript, JavaScript treat them as words such as `parseHttpUrl`, `userId`; Swift keeps uppercase initialisms (`avatarURL`, `userID`, `apiClient` at the start of a name); Python, SQL, Bash lowercase them inside snake_case such as `http_url`, `user_id`. A platform name keeps its spelling such as `XMLHttpRequest`. |
-| Directories           | kebab-case for TypeScript, JavaScript, Bash, HTML, CSS, and static sites; snake_case for Python packages; PascalCase for Swift directories, which mirror type names.                                                                                                                                                                            |
-| On the wire           | Preserve existing external interfaces. For interfaces defined by the project, use camelCase JSON fields, kebab-case URL segments. Log fields follow the logging rules.                                                                                                                                                                          |
-| Environment variables | `UPPER_SNAKE_CASE`, named by the external interface. No application prefix is required; names defined by the platform are kept verbatim.                                                                                                                                                                                                        |
-| Constants             | Module-level constants bound to a literal or a frozen object are `UPPER_SNAKE_CASE` in TypeScript, JavaScript, Python, and Bash, and lowerCamelCase in Swift.                                                                                                                                                                                   |
+| Concern               | Rule                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Acronyms              | Follow the language. TypeScript and JavaScript treat them as words, such as `parseHttpUrl` and `userId`. Swift keeps uppercase initialisms (`avatarURL`, `userID`, and `apiClient` at the start of a name). Python, SQL, and Bash lowercase them inside snake_case, such as `http_url` and `user_id`. An external API name keeps its spelling, such as `XMLHttpRequest`. |
+| Folders               | kebab-case for TypeScript, JavaScript, Bash, HTML, CSS, and static sites; snake_case for Python packages; PascalCase for Swift folders, which mirror type names.                                                                                                                                                                                                         |
+| On the wire           | Preserve existing external interfaces. For project interfaces, use camelCase JSON fields and kebab-case URL segments. Log fields follow the logging rules.                                                                                                                                                                                                               |
+| Environment variables | `UPPER_SNAKE_CASE`, named by the external interface. Add no application prefix. Keep names that the platform defines verbatim.                                                                                                                                                                                                                                           |
+| Constants             | Module-level constants bound to a literal or a frozen object use `UPPER_SNAKE_CASE` in TypeScript, JavaScript, Python, and Bash, and lowerCamelCase in Swift.                                                                                                                                                                                                            |
 
 ## Authority
 
@@ -31,17 +31,17 @@ bad name in a string key, an alias, or a file name.
 A name lets a reader understand the concept, scope, role, and expected value without reading
 the implementation. Name by role, responsibility, and domain meaning, never by storage type,
 UI framework type, collection shape, or implementation accident. Use English unless an
-external identifier keeps another spelling. Prefer the shortest name that gives a clear meaning at the use
-site, and add a qualifier only when the bare name has more than one meaning there. Never invent private
+external identifier keeps another spelling. Prefer the shortest name that keeps its meaning at the use site. Add a
+qualifier only when the bare name has more than one meaning there. Never invent private
 shorthand or drop letters from a word.
 
-Do not repeat context the enclosing type, module, directory, or package already supplies, and
-do not encode every implementation detail.
+Do not repeat context the enclosing type, module, folder, or package already supplies, or
+encode every implementation detail.
 
-One concept keeps one word in the whole repository, and one word keeps one meaning. Before you give a word to a new
-concept, search the code for it. When the word already names another concept, choose another word. Add the synonyms
+Give each concept one word across the repository, and each word one meaning. Before you give a word to a new
+concept, search the code for it. When the word already names another concept, choose a different one. Add the synonyms
 you reject to `naming.banned_words`, so the naming check reports them. Use singular names for single values and
-plural names for collections. Name a collection by what it holds.
+plural ones for collections. Name a collection by what it holds.
 
 A role word carries meaning where a primitive or weak type does not.
 
@@ -76,9 +76,9 @@ A suffix names the role of a type. Use each suffix for one meaning. Name a type 
 | `Provider`   | Supplies a capability or value, especially when the source may vary. |
 | `Adapter`    | Bridges one interface or framework shape to another.                 |
 
-Use `Route`, `Callback`, `Observer`, and `Listener` only for the corresponding framework shape. The language file for the framework defines UI role words such as `View`, `ViewModel`, `ViewController`, and `Coordinator`. Never use `Manager`. Use `Service` only
-where the framework uses it, such as a NestJS provider. Preserve external names such as Apple's
-`FileManager`.
+Use `Route`, `Callback`, `Observer`, and `Listener` only for the framework shapes they name. The language file for the framework defines UI role words such as `View`, `ViewModel`, `ViewController`, and `Coordinator`. Never use `Manager`. Keep `Service`
+for framework roles, such as a NestJS provider. Preserve external names, such as `FileManager`
+from Apple.
 
 ## Functions and methods
 
@@ -91,40 +91,40 @@ a React `handleSubmit` or a UIKit `@objc handleConfirmButtonTapped`. Never use `
 that needs `and`, `or`, `with`, or an umbrella verb marks a function that combines too many concepts. A preposition
 cannot replace a verb: `toPosix`, `fromRow`, and `withTimeout` need one.
 
-Each act has one verb. Use the verb of the table for its act, and never a synonym:
+Each act has one verb. Use the table verb for each act, never a synonym:
 
-| Verb                          | Act                                                                                                          |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `get`                         | Take a value that is already in memory: a variable, a map, a cache, or a parsed structure.                   |
-| `read`                        | Take data from outside memory: a file, Git, the environment, a child process, or the network.                |
-| `write`                       | Put data into a file or another store outside memory.                                                        |
-| `find`                        | Search for one item. The result can be absent.                                                               |
-| `list`                        | Return every item of a kind, such as the files, the scopes, or the checks.                                   |
-| `select`                      | Choose among known options.                                                                                  |
-| `detect`                      | Infer a fact from the files of the project.                                                                  |
-| `build`, `make`               | Construct a value from other values, such as a message, a plan, or the text of a file.                       |
-| `create`                      | Make a new independent value or resource, such as a domain value before it is saved, a folder, or a sandbox. |
-| `parse`, `decode`             | Raw text to structured data; encoded bytes or payloads to typed values.                                      |
-| `encode`, `serialize`         | Typed values to bytes; values to the text of a file format.                                                  |
-| `format`                      | A value to text that people read: terminal lines, Markdown, or a message.                                    |
-| `check`                       | Inspect files or values for a check, and return its findings.                                                |
-| `validate`                    | Return the problems of one value.                                                                            |
-| `assert`                      | Stop with an error when a value is invalid.                                                                  |
-| `run`                         | Start a named program, command, or step, such as `runEslint` or `runInstallCommand`. Never a bare `run`.     |
-| `spawn`                       | Start a child process.                                                                                       |
-| `set`                         | Assign or replace current state with the supplied value.                                                     |
-| `add`, `remove`               | In-memory collection membership only.                                                                        |
-| `insert`, `update`, `delete`  | Add, change, or destroy a row or item in persisted data.                                                     |
-| `prepare`, `refresh`, `reset` | Set up local state before a workflow; replace presentation state from a source; return to an initial state.  |
-| `is`, `has`, `can`            | Predicates only: `is` for state, `has` for presence, `can` for capability.                                   |
+| Verb                          | Act                                                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `get`                         | Take a value already in memory: a variable, a map, a cache, or a parsed structure.                          |
+| `read`                        | Take data from outside memory: a file, Git, the environment, a child process, or the network.               |
+| `write`                       | Put data into a file or another store outside memory.                                                       |
+| `find`                        | Search for one item. The result can be absent.                                                              |
+| `list`                        | Return every item of a kind, such as the files, the scopes, or the checks.                                  |
+| `select`                      | Choose among known options.                                                                                 |
+| `detect`                      | Infer a fact from the files of the project.                                                                 |
+| `build`, `make`               | Construct a value from other values, such as a message, a plan, or the text of a file.                      |
+| `create`                      | Make a new independent value or resource, such as an unsaved domain value, a folder, or a sandbox.          |
+| `parse`, `decode`             | Raw text to structured data; encoded bytes or payloads to typed values.                                     |
+| `encode`, `serialize`         | Typed values to bytes; values to the text of a file format.                                                 |
+| `format`                      | A value to text that people read: terminal lines, Markdown, or a message.                                   |
+| `check`                       | Inspect files or values for a check, and return its findings.                                               |
+| `validate`                    | Return what makes one value invalid.                                                                        |
+| `assert`                      | Stop with an error on an invalid value.                                                                     |
+| `run`                         | Start a named program, command, or step, such as `runEslint` or `runInstallCommand`. Never a bare `run`.    |
+| `spawn`                       | Start a child process.                                                                                      |
+| `set`                         | Assign or replace current state with the supplied value.                                                    |
+| `add`, `remove`               | In-memory collection membership only.                                                                       |
+| `insert`, `update`, `delete`  | Add, change, or destroy a row or item in persisted data.                                                    |
+| `prepare`, `refresh`, `reset` | Set up local state before a workflow; replace presentation state from a source; return to an initial state. |
+| `is`, `has`, `can`            | Predicates only: `is` for state, `has` for presence, and `can` for capability.                              |
 
 Use `plan`, `install`, `apply`, and `generate` only for the program step of the same name, such as an `install`
-command. When no verb of the table fits, use another plain verb that names the act, such as `count`, `compare`,
+command. When no table verb fits, pick another plain one that names the act. Plain verbs include `count`, `compare`,
 `merge`, `split`, `sort`, `filter`, `group`, `match`, `replace`, `normalize`, `convert`, `extract`, `strip`, `copy`,
-`move`, `stop`, or `wait`. Never use `load`, `fetch`, or `resolve` for retrieval: use `get`, `read`, or `find`.
+`move`, `stop`, and `wait`. Never use `load`, `fetch`, or `resolve` for retrieval; pick `get`, `read`, or `find`.
 
 The noun and the return type carry multiplicity and optionality, such as `getSession` and `getSessions`. Add a
-qualifier only to tell two operations apart at one use site. Give a domain operation that combines create, read,
+qualifier only to tell two operations apart at one use site. Give an operation that combines create, read,
 update, and delete (CRUD) acts its precise domain verb.
 Preserve framework, SDK, generated, and external names exactly.
 
@@ -138,43 +138,42 @@ Preserve framework, SDK, generated, and external names exactly.
 
 Where external data enters, name the conversion for the operation and the concept, `decodeUserResponse`
 rather than `transform`. DTO means data transfer object. Shape suffixes such as `Row`, `DTO`, `Request`, and `Response` stay on the type that
-declares the shape. Never put those suffixes on domain entities, view models, or functions that accept the shape.
+declares it. Never put those suffixes on domain entities, view models, or functions that accept the shape.
 
 ## Booleans and predicates
 
 <!-- level: all -->
 
 Name stored boolean columns and direct domain mappings as concise positive states without a
-prefix: `enabled`, `active`, `retryable`, `webSearchEnabled`. Predicates, computed
-predicates, and presentation-state assertions ask their question with `is` for state, `has`
-for presence, and `can` for capability. Name an action for what it does even when it
-returns a boolean such as `sendInvite`. Name a proposed answer or control parameter
-for its role such as `defaultCountry`; a boolean type does not make a function a
+prefix: `enabled`, `active`, `retryable`, and `webSearchEnabled`. Predicates, including computed
+ones, and presentation-state assertions start with `is`, `has`, or `can`. Name an action for what
+it does even when it returns a boolean, such as `sendInvite`. Name a proposed answer or control
+parameter for its role, such as `defaultCountry`; a boolean type does not make a function a
 predicate.
 
-Negative names such as `isNotReady`, `isEmailNotUsed` give way to the positive form that
+Replace negative names such as `isNotReady` and `isEmailNotUsed` with the positive form that
 matches the branch without double negation. A boolean never reads like a noun value. Preserve external boolean names exactly, including framework, SDK,
 protocol, wire, and generated relationship names.
 
-| Avoid                    | Prefer                 | Meaning                                        |
-| ------------------------ | ---------------------- | ---------------------------------------------- |
-| `SearchPolicy.isEnabled` | `SearchPolicy.enabled` | Stored policy state.                           |
-| `email`                  | `hasEmailAddress`      | Presence of an email address.                  |
-| `textFile`               | `isTextFile`           | Whether a file meets the text-file definition. |
-| `isEmailNotUsed`         | `isEmailUsed`          | Whether an email address is already used.      |
-| `ready`                  | `is_ready`             | A computed readiness predicate in Bash.        |
+| Avoid                    | Prefer                 | Meaning                                           |
+| ------------------------ | ---------------------- | ------------------------------------------------- |
+| `SearchPolicy.isEnabled` | `SearchPolicy.enabled` | Stored policy state.                              |
+| `email`                  | `hasEmailAddress`      | Presence of an email address.                     |
+| `textFile`               | `isTextFile`           | Whether a file meets the text-file definition.    |
+| `isEmailNotUsed`         | `isEmailUsed`          | Whether an account already uses an email address. |
+| `ready`                  | `is_ready`             | A computed readiness predicate in Bash.           |
 
 ## Files and directories
 
 <!-- level: all -->
 
-Name files and directories for the behavior or entity they contain, not for reuse.
+Name files and folders for the behavior or entity they contain, not for reuse.
 
-- Name a file with one primary type after that type where the language does so. Name a module
+- Name a file that holds one primary type after it, where the language does so. Name a module
   after the capability it implements. Prefer feature folders to top-level type buckets.
 - Move code to a shared place only for a repeated concept with one module that implements it, never for a caller
   that does not exist yet.
-- A file name avoids the banned words that identifiers avoid. Only a generated artifact may carry a
+- File names and identifiers avoid the same banned words. Only a generated artifact may carry a
   timestamp in its name.
 
 | Avoid              | Prefer                        | Meaning                |
@@ -191,9 +190,9 @@ Name files and directories for the behavior or entity they contain, not for reus
 External systems use names that do not match the domain language. Keep those names in code that reads or writes external data.
 
 DTOs, SQL rows, generated types, wire payloads, and validation schemas keep the external field names.
-Renaming one changes the public interface. Translate them into domain names, through explicitly
-named mappings, before the values reach domain or presentation code; provider, database, and HTTP
-mechanics stay out of domain names.
+Renaming one changes the public interface. Translate them into domain names through explicit
+mappings before the values reach domain or presentation code. Keep provider, database, and HTTP
+mechanics out of domain names.
 
 A wire shape such as `MessageAttachmentDTO` keeps `storage_object_path`. The validated
 `MessageAttachment` uses `attachmentPath`, and the module that implements the storage protocol

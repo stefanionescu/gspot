@@ -4,26 +4,26 @@ Read this rule when you change a form built with React Hook Form.
 
 ## Form ownership and validation
 
-- One `useForm` instance owns a form. Use `FormProvider` when nested fields need that instance;
+- One `useForm` instance owns a form. Use `FormProvider` when nested fields need it;
   never create a second `useForm` instance for the same submission.
 - The resolver owns schema validation. Keep coercion and validation in that path rather than
   maintaining competing rules in fields and submit handlers.
 - Initialize `defaultValues` with the form's complete starting values. Reset deliberately when the
-  edited record changes; an incoming background response must not discard a user's changes.
+  edited record switches; an incoming background response must not discard a user's changes.
 - An input uses either `register` or `Controller`. A controlled widget forwards the controller's
-  value, change handler, blur handler, ref, and disabled state through its supported interface.
+  value, change and blur handlers, ref, and disabled state through its supported interface.
 - Subscribe through `useWatch` or `useFormState` near the consumer instead of making the entire form
   rerender for every field. `getValues` reads a snapshot rather than subscribing.
-- Conditional fields distinguish hidden values that remain part of the submission from values that
+- Conditional fields separate hidden values that stay in the submission from ones that
   need removal. The schema follows that choice.
 
 ## Field arrays
 
 - Give each field array one `useFieldArray` call. Use `field.id` as the React key and the current
   index in a registered path. Store database identity in a separate property.
-- Treat `fields` as row structure. Read live values through the form's value APIs.
+- Treat `fields` as row structure. Read live values through the form's APIs.
 - Add complete rows. Use a leaf `setValue` when an update must preserve the mounted row's focus and
-  widget state; `update` remounts the row.
+  widget state; `update` remounts it.
 - Keep one `useForm` instance across wizard steps. Validate a step before advancing and the whole payload
   before the final submission.
 
@@ -31,15 +31,15 @@ Read this rule when you change a form built with React Hook Form.
 
 - The submit handler awaits the real save. Pending state lasts until that operation settles;
   starting a request and returning early makes `isSubmitting` misleading.
-- Report field errors beside their fields and form errors at the form boundary. Keep entered values
+- Show field errors beside their inputs and form errors at the boundary. Keep entered values
   after a failed save so the user can correct or retry them.
 - A save captures the edited record's identity. Its late result must not reset a different record.
-- When the project uses TanStack Query, await `mutateAsync` when submission needs the mutation result.
+- When the project uses TanStack Query and submission needs the mutation result, await `mutateAsync`.
   Handle its rejection in the form's error path.
 - When the project uses Next.js Server Actions, await the action and map its returned validation or
   save result into the form's error state.
-- When the project uses an internationalization library, pass error messages through that library's
-  message API rather than constructing translated sentences from fragments.
+- When the project uses an internationalization library, pass error messages through its
+  message API rather than building translated sentences from fragments.
 
 ## References
 

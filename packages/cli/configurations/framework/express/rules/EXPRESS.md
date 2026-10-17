@@ -2,7 +2,7 @@
 
 Read this rule when you change routes, middleware, or error handling in an Express service.
 
-Routes, middleware, errors, and body parsing in an Express service, on top of the HTTP rules.
+Follow the HTTP rules too.
 
 ## Routes and middleware
 
@@ -35,18 +35,18 @@ router.post('/orders', authenticate, validateBody(submitOrderSchema), async (req
 
 - Middleware can enforce ownership. It reaches the database for product behavior only through auth
   or ownership helpers built for that boundary.
-- A permission check that depends on domain state belongs in a module; a transport-level one
-  belongs in ownership middleware.
+- A permission check that depends on domain state belongs in a module, and a transport-level one
+  in ownership middleware.
 
 ## Errors
 
-- Express 5 forwards the rejection of a promise that a route or middleware returns, so return the
-  promise and add no wrapper that repeats this. Express 4 needs the project's async handler or an
+- Express 5 forwards a rejected promise that a route or middleware returns, so return it and add
+  no wrapper that repeats this. Express 4 needs the project's async handler or an
   explicit `next(error)`.
 - Callback-based asynchronous work passes its errors to `next(error)` in both versions.
 - Error middleware keeps its four-argument signature, even when the function does not use an argument.
-- After the response sends its headers, error middleware calls `next(error)` instead of writing a
-  second response.
+- After the headers go out, error middleware calls `next(error)` instead of writing a second
+  response.
 - The not-found handler comes after every route.
 
 ## Body parsing and proxies

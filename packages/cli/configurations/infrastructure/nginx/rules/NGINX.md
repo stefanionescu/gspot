@@ -26,7 +26,7 @@ Read this rule when you change NGINX configuration.
 - Use immutable caching only for content-addressed assets. Give mutable resources a cache
   lifetime and revalidation policy consistent with their update process.
 - Keep configuration in the repository, lint it before commit, and reload it through the
-  deployment flow, never edited on the host.
+  deployment flow; never edit it on the host.
 
 ## Images
 
@@ -36,5 +36,4 @@ Read this rule when you change NGINX configuration.
 
 See [nginx TLS configuration](https://nginx.org/en/docs/http/ngx_http_ssl_module.html#ssl_stapling)
 for stapling requirements. Certificate authorities can
-[retire OCSP](https://letsencrypt.org/2024/12/05/ending-ocsp); verify issuer support
-before enabling stapling.
+[retire OCSP](https://letsencrypt.org/2024/12/05/ending-ocsp).

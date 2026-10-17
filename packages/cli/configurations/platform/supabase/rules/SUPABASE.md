@@ -2,8 +2,7 @@
 
 Read this rule when you change Supabase migrations, storage, Edge Functions, or `config.toml`.
 
-Layout, database access, storage, Edge Functions, configuration, and secrets of a Supabase
-project, on top of the Postgres rules. Supabase uses the API roles `anon`, `authenticated`, and
+Follow the Postgres rules too. Supabase uses the API roles `anon`, `authenticated`, and
 `service_role`.
 
 ## Layout and migrations
@@ -13,12 +12,12 @@ project, on top of the Postgres rules. Supabase uses the API roles `anon`, `auth
 
 ## Database access
 
-- `[api].schemas` in `config.toml` lists the schemas the Data API exposes. Treat those schemas as
+- `[api].schemas` in `config.toml` lists the schemas the Data API exposes. Treat them as
   externally reachable.
 - A table with row level security (RLS) on and no policy denies access to the API roles. Use that choice for tables
   that clients must not read.
 - Roles Supabase creates for auth, cron, or storage stay scoped to the functions and schemas they need.
-- Name Supabase's roles in `TO`: `anon`, `authenticated`, or `service_role`.
+- Name the Supabase roles in `TO`: `anon`, `authenticated`, or `service_role`.
 - A table can skip the foreign key to `auth.users` so its history survives account deletion.
 - Keep `[api].max_rows` conservative to bound accidental or malicious payloads.
 
@@ -26,14 +25,14 @@ project, on top of the Postgres rules. Supabase uses the API roles `anon`, `auth
 
 Choose the Supabase connection mode for the workload.
 
-| Workload                                        | Connection choice                                                     |
-| ----------------------------------------------- | --------------------------------------------------------------------- |
-| Short-lived serverless application requests     | Transaction pooler, with a compatible driver                          |
-| Persistent server with direct network access    | Direct connection with a bounded application pool                     |
-| Persistent server on an IPv4-only network       | Session pooler when the direct endpoint is unavailable                |
-| Migrations, dumps, or session-dependent tooling | Direct connection; use a supported session alternative when necessary |
+| Workload                                      | Connection choice                                                     |
+| --------------------------------------------- | --------------------------------------------------------------------- |
+| Short-lived serverless application requests   | Transaction pooler, with a compatible driver                          |
+| Persistent server with direct network access  | Direct connection with a bounded application pool                     |
+| Persistent server on an IPv4-only network     | Session pooler when the server cannot reach the direct endpoint       |
+| Migrations, dumps, or session-dependent tools | Direct connection; use a supported session alternative when necessary |
 
-A separate migration credential holds schema privileges. The application role holds only what the running application needs.
+A separate migration credential holds schema privileges. The application role holds only the privileges it needs at runtime.
 See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres).
 
 Set explicit connection, idle, and query timeouts. Budget connections across instances and
@@ -46,16 +45,16 @@ maps the identity to a fixed set of allowed roles, then opens a transaction on a
 connection. Use parameterized transaction-local `set_config` for claims and fixed trusted SQL for
 the role. Every protected query uses that transaction. Commit or rollback ends its context.
 
-When Drizzle generates migrations that the Supabase CLI applies, keep the CLI's migration format
+When Drizzle generates migrations that the Supabase CLI applies, keep the CLI migration format
 and one authoritative applied-history ledger. Declare provider-managed schemas and roles as
-existing. Check replay through the chosen runner. See
+existing. Check replay with the project migration tool. See
 [migration history](https://supabase.com/docs/guides/local-development/database-migrations) and
 [verified claims](https://supabase.com/docs/reference/javascript/auth-getclaims).
 
 ## Storage
 
 - Define buckets in migrations and mirror them in `config.toml`. A change to `public`,
-  `file_size_limit`, or `allowed_mime_types` updates both in the same change.
+  `file_size_limit`, or `allowed_mime_types` updates both at once.
 - Bucket restrictions enforce file size and MIME type, not only application validation.
 - RLS policies on `storage.objects` and `storage.buckets` control access. The service controls metadata in the `storage` schema: migrations add only policies, indexes for RLS or validation, triggers,
   and bucket configuration. Object rows change only through the Storage API.
@@ -79,15 +78,15 @@ existing. Check replay through the chosen runner. See
 
 ## Edge functions
 
-- Each deployable function lives under `functions/<function-name>/` in the CLI's functions root,
-  with a `[functions.<name>]` entry whose `entrypoint` starts from the configuration file directory.
+- Each deployable function lives under `functions/<function-name>/` in the CLI functions root,
+  with a `[functions.<name>]` table whose `entrypoint` path starts from the folder of `config.toml`.
   Shared code lives in `functions/_shared/`, which Supabase never deploys.
 - Name a function folder in kebab-case for its callable operation, not its technology:
-  `submit-order`, never `SubmitOrder` or `provider_handler`. The folder, configuration entry, and
-  deployed name match.
+  `submit-order`, never `SubmitOrder` or `provider_handler`. The folder, the `config.toml` table, and
+  the deployed name match.
 - Edge Functions run on Deno, and the Deno rules hold.
 - Keep `verify_jwt = true` for user-authenticated functions. Set it to `false` only when the function
-  exposes only public, harmless behavior, verifies a provider webhook signature, checks a service secret, or takes
+  exposes nothing but public, harmless behavior, verifies a provider webhook signature, checks a service secret, or takes
   a Vault secret from cron.
 - A publishable or secret API key differs from a user JSON Web Token (JWT). Never send that key as
   `Authorization: Bearer <key>`. Forward the caller's `Authorization` header to the Supabase
@@ -99,7 +98,7 @@ existing. Check replay through the chosen runner. See
   in `functions/_shared/`.
 - Functions have runtime, CPU, memory, bundle-size, and log-rate limits, so long CPU-heavy work
   runs elsewhere. Raw Supabase errors that expose credentials stay out of logs.
-- When you write tests, cover function logic in unit tests. Integration tests against a local
+- When you write tests, cover function logic at the unit level. Integration tests against a local
   database and function server cover the client, auth, RLS, and the invocation path.
 
 ## Configuration and secrets
@@ -108,7 +107,7 @@ existing. Check replay through the chosen runner. See
 
 Ask the user before changing signup, anonymous sign-in, providers, hooks, JWT expiry, or password policy.
 Also ask before weakening auth settings, row-level security, grants, or `verify_jwt`.
-Proceed when the task already authorizes the change. Write the reason in the commit when the user authorizes a commit.
+Proceed when the task already authorizes the change. When the user authorizes a commit, write the reason in it.
 
 - Service keys, Edge secrets, Vault values, database URLs, and provider API keys stay backend-only.
   They never appear in app code, checked-in files, logs, migration comments, tests, or test data.

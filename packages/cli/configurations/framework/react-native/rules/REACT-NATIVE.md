@@ -21,7 +21,7 @@ Read this rule when you change a React Native or Expo app. Read the React rule f
 
 <!-- level: all -->
 
-- Branch on `Platform.OS` in one place for one concern. Split a component full of platform checks into two components.
+- Branch on `Platform.OS` in one place for one concern. Split a component full of platform checks into two.
 
 ## Navigation and state
 
@@ -44,6 +44,6 @@ Read this rule when you change a React Native or Expo app. Read the React rule f
 
 ## Releases
 
-- Version the native build and the JavaScript bundle together, and know which bundles a given native build accepts.
+- Version the app binary and the JavaScript bundle together, and track which bundles each build accepts.
 - An over-the-air update never changes native code or a permission.
 - Tell the user to check the upgrade path from the last release with its stored data.

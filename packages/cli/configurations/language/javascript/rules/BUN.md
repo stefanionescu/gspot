@@ -6,7 +6,7 @@ Read this rule when code runs on Bun.
 
 - Match internal imports to the project entry point and TypeScript configuration. Bun
   [resolves TypeScript directly](https://bun.sh/docs/runtime/module-resolution), including
-  explicit `.ts` imports and extensionless paths. Do not assume the project emits `.js` files.
+  explicit `.ts` imports and extensionless paths. Do not assume the project outputs `.js` files.
 
 ## APIs
 

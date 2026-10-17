@@ -5,7 +5,7 @@ Read this rule when code runs on Node.
 ## Module resolution
 
 - Unbundled compiled TypeScript follows Node module resolution. Runtime imports must resolve
-  in the emitted output; a `.js` import can identify the corresponding TypeScript source.
+  in the compiled output; a `.js` import can name its TypeScript source.
 - Preserve the declared bundler or direct TypeScript execution contract when the project uses one.
 - Do not rely on CommonJS and ES module interop working by accident. A file declares its module format,
   through the package type field or its extension.

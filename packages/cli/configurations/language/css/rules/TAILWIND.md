@@ -5,11 +5,11 @@ Read this rule when you change Tailwind CSS classes or configuration.
 ## Generated styles
 
 - Verify that source detection covers templates and content containing class names. Tailwind CSS 4
-  detects sources automatically; register excluded sources with `@source`. Tailwind CSS 3 uses
+  detects sources automatically; register excluded ones with `@source`. Tailwind CSS 3 uses
   `content` configuration.
 - Keep complete class names in source so the scanner can find them.
 - Preserve the application's configured dark-mode strategy.
-- When the project configures a class-ordering formatter plugin, let that formatter own ordering.
+- When the project configures a formatter plugin that sorts classes, let it own the order.
 
 Use the [source detection documentation](https://tailwindcss.com/docs/detecting-classes-in-source-files)
 for the installed major version.
@@ -25,4 +25,4 @@ for the installed major version.
 - Use the project's adopted class-merging function when conditional utilities conflict.
   Do not introduce a separate merging implementation.
 - Avoid handwritten CSS that duplicates an existing utility without a component requirement.
-- Follow the installed Tailwind version's syntax for custom utilities, variants, and plugins.
+- Follow the syntax of the installed Tailwind version for custom utilities, variants, and plugins.

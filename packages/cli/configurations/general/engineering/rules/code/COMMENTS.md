@@ -17,8 +17,7 @@ A doc comment says what a function does, what its parameters mean, and what it r
 
 <!-- level: all -->
 
-Write the doc comment that the language check asks for. Say what the signature does not: what the function does,
-what each parameter means, and what it returns. Never write a comment that only repeats a name or a
+Write the doc comment that the language check requires. Say what the signature does not. Never write a comment that only repeats a name or a
 type. Name an object parameter for its role, such as `options`, never `root0`. Add other comments only when a
 function:
 
@@ -35,9 +34,9 @@ When you change a function, update its doc comment: summary, parameters, return 
 Rewrite or delete a comment that describes behavior the code lacks, or the reason for a decision
 you undo.
 
-- When you move or delete a declaration, move or delete its comment with it. A doc comment sits directly above its
+- When you move or delete a declaration, do the same to its comment. A doc comment sits directly above its
   declaration, with no blank line between them.
-- Use a file header only when it helps the reader. When a file has one, the header describes the whole file in one sentence. Update it
+- Use a file header only when it helps the reader. When present, the header describes the whole file in a single sentence. Update it
   when the file's job changes.
 - Do not write work status in a comment. For example, do not describe a paused job or a temporary choice.
 

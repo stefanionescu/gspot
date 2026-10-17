@@ -2,8 +2,6 @@
 
 Read this rule when you change Python dependencies, lockfiles, or package layout.
 
-Deployment installs and lockfiles.
-
 ## Package installation security
 
 Install from the uv lockfile:
@@ -25,9 +23,9 @@ rules.
 ## Import correctness
 
 - Respect the import-linter contracts the project declares.
-- Run entrypoints through the configured environment, installation, or module entrypoint.
-- Ensure packaged imports work outside the repository root. Do not depend on an accidental
-  current-directory import path.
+- Run each entrypoint through the configured environment, the installed package, or `python -m`.
+- Make packaged imports work outside the repository root. Do not depend on an accidental
+  current-folder import path.
 
 ## Packages and architecture
 
@@ -38,7 +36,7 @@ rules.
 - Do not use package `__init__.py` files to hide expensive imports.
 - Keep `__init__.py` files small and import-stable.
 - Barrel `__init__.py` files may contain imports and `__all__`.
-- Keep lower-level packages independent of higher-level workflow packages.
+- Keep lower-level packages independent of higher-level workflows.
 
 ## Source layout
 
@@ -55,4 +53,4 @@ src/
     accounts.py
 ```
 
-Keep helper scripts that nobody imports outside the package import path.
+Keep unimported helper scripts outside the package import path.

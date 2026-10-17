@@ -9,7 +9,7 @@ Read this rule when code reads, stores, or logs a secret.
 - Builds copy public build-time variables such as `NEXT_PUBLIC_*` and `VITE_*` into the bundle. They hold
   nothing secret.
 - Examples, documentation, templates, and sample files hold placeholders, never real secrets.
-- Keep actual local overrides in an ignored file.
+- Keep local overrides in an ignored file.
 - Never log secrets, tokens, passwords, cookies, authorization headers, or connection strings.
 - A published package lists its files explicitly; an ignored file can still leak through the
   defaults of a packaging tool.

@@ -5,9 +5,9 @@ Read this rule when you write SQL.
 ## SQL style
 
 - Fully qualify cross-schema references.
-- Prefer explicit column lists for every `INSERT` and every grant of write
+- Prefer explicit column lists for each `INSERT` and every grant of write
   privileges.
-- Keep table constraints close to the table definition unless the migration must add them
+- Keep table constraints close to the definition unless the migration must add them
   later for dependency reasons.
 
 ## Naming
@@ -16,7 +16,7 @@ Read this rule when you write SQL.
 
 <!-- level: all -->
 
-- SQL schemas, tables, columns, functions, function parameters, indexes,
+- SQL schemas, tables, columns, functions, parameters, indexes,
   triggers, constraints, and policies use `lower_snake_case`.
 - Fully qualify grants and function signatures when names have more than one possible meaning.
 - Do not use quoted sentence-style identifiers for local policy names.
@@ -27,7 +27,7 @@ Read this rule when you write SQL.
 | `public.OrderItems`          | `public.order_items`             | An order-item table.               |
 | `users_can_view_order_items` | `users_can_view_own_order_items` | A policy restricted to owned rows. |
 
-The policy name must describe its actual predicate. A name that says "own"
+The policy name must describe what its predicate checks. A name that says "own"
 does not establish ownership checks or enable Row Level Security.
 
 ### Migration filenames
@@ -43,7 +43,7 @@ Follow the migration tool's file names. Name each migration for its durable data
 - Table names identify the domain set stored by the relation.
 - Column names identify the value, not the application layer that reads it.
 - Foreign-key columns use the referenced concept plus `_id`.
-- Timestamp columns use stable event names such as `created_at`,
+- Timestamp columns use stable names such as `created_at`,
   `updated_at`, `deleted_at`, or a concrete domain event time.
 - Boolean columns use concise positive assertion names without an `is_`
   prefix.
@@ -60,17 +60,16 @@ Follow the migration tool's file names. Name each migration for its durable data
 
 <!-- level: all -->
 
-- SQL function names use verb phrases or domain operation names. These verbs govern function
-  names, not migration filenames.
+- SQL function names use verb phrases or domain operations. These verbs apply to functions,
+  not migration filenames.
 
-- Retrieval functions use `get_` regardless of whether they return one row,
-  an optional row, a collection, or a paginated collection. Do not use
+- Retrieval functions use `get_` whether they return one row,
+  an optional one, a collection, or a paginated one. Do not use
   `read_`, `find_`, `fetch_`, `load_`, or `list_` as retrieval synonyms.
 - Data-access mutation functions use `set_`, `insert_`, `update_`, or
   `delete_` according to the operation they perform. Do not use `create_`,
   `add_`, `save_`, `write_`, `put_`, `upsert_`, or `remove_` as synonyms.
-- Function parameters use `lower_snake_case`.
-- Parameter names never collide with table column names.
+- Parameter names never collide with table columns.
 - `SECURITY DEFINER` functions must have names that make the privileged action
   clear.
 - Do not name functions like arbitrary script tasks.
@@ -84,7 +83,7 @@ operation, and an unqualified `id` can obscure column ownership.
 <!-- level: all -->
 
 - Name constraints and scope them to their table or concept.
-- Name indexes by table plus indexed columns or purpose.
+- Name indexes by table plus their columns or purpose.
 - Name triggers by event and action.
 - Name policies by actor plus allowed action.
 - Keep names stable because they appear in migrations, errors, grants, and

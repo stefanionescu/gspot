@@ -33,10 +33,10 @@ Read this rule when you change React components, hooks, or state.
 - Keep renders pure. Effects synchronize external systems; handlers own user-triggered work. Derive
   ordinary values during render rather than synchronizing duplicate state with effects. Clean up
   timers, observers, subscriptions, animation frames, and requests.
-- Use refs for mutable controller values and state for values displayed in the UI.
+- Use refs for mutable controller values and state for what the UI displays.
 
-- Give each state value one place: URL state for navigation, query cache for server snapshots, form/local
-  state for editing, and client store for truly shared client state.
+- Give each state value one place. Navigation goes in the URL, server snapshots in the query cache, edits in
+  form or local state, and shared data in a client store.
 
 - Reset private state across identity and tenant changes; give each request its own server stores.
 
@@ -46,23 +46,23 @@ Read this rule when you change React components, hooks, or state.
 
 ## Read states and writes
 
-- Keep the first pending request, an empty result, and a failed request distinct. Show a stable
+- Keep the first pending load, an empty result, and a failed request distinct. Show a stable
   fallback, an explanation of the empty result, or safe error and retry UI for the matching state.
 - Keep existing content during a background refresh or a pending next page. A failed refresh does
   not erase a successful result. Revoked access removes stale private content.
 - Capture the resource identity when work starts. A superseded request must not overwrite the
-  currently selected resource.
+  resource now in view.
 - An optimistic update defines how to confirm or undo the operation.
-- Present the result of a save separately from the result of a refresh.
+- Show the result of a save apart from that of a refresh.
 
 ## URL state
 
-- The URL owns filters, sorting, and other shareable navigation values. It carries a selected,
+- The URL owns filters, sorting, and other shareable navigation values. It carries a minimal,
   versioned representation, never credentials, private drafts, or the whole store.
 - Validate parsed values, and handle missing or malformed input without assertions or an unchecked
   `JSON.parse`.
 - Define the precedence among URL values, stored preferences, and defaults. When the URL owns a
-  value, back and forward navigation reach the code that holds that value.
+  value, back and forward navigation reach the code that holds it.
 - One synchronization path compares values before writing, so store-to-URL and URL-to-store updates
   never loop.
 - Keep unrelated query parameters and fragments. Use the installed router or the History API to replace history for transient edits and to push an entry when back navigation restores the previous state.
@@ -82,7 +82,7 @@ UI updates after hydration. Fix the mismatch instead of hiding warnings globally
 - Give date/time formatting the same initial locale, time zone, and reference time where relative output otherwise differs.
 - Do not branch rendered markup on `typeof window` as a routine hydration fix. Server and first
   browser output agree on the visible tree.
-- Theme initialization may need the theme library's documented early script and a narrow hydration
+- Theme initialization may need the documented early script of its library and a narrow hydration
   exception. Keep that exception local to the affected node.
 - Do not mutate React-owned DOM to coordinate application state. Controlled state, refs, and
   third-party imperative APIs have explicit ownership boundaries.
@@ -97,6 +97,6 @@ UI updates after hydration. Fix the mismatch instead of hiding warnings globally
 ## Forms and inputs
 
 - Keep each input controlled or uncontrolled, never both. Choose per form and keep it.
-- Validate input against the declared contract and expose its errors to the user. When the application uses a form
+- Validate input against the declared contract and expose its errors to the user. When the application has a form
   library, use its supported validation and state APIs.
 - A form awaits the save and reports its result.
