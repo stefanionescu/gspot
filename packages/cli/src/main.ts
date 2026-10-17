@@ -2,7 +2,6 @@ import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { registerList } from '#cli/commands/list.ts';
-import { Command } from '@commander-js/extra-typings';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerUnset } from '#cli/commands/unset.ts';
 import { registerExport } from '#cli/commands/export.ts';
@@ -16,13 +15,43 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
 import { registerInstall } from '#cli/commands/install/command.ts';
+import { Command, type Argument } from '@commander-js/extra-typings';
 import { VERSION_PIN_COMMANDS } from '#cli/config/commands/program.ts';
-import { COMMAND_HELP, PROGRAM_HELP } from '#cli/config/commands/help.ts';
 import { PROCESS_ARGUMENTS_START } from '#cli/config/system/processes.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import { COMMAND_HELP, HELP_TERM_WIDTH, PROGRAM_HELP_FOOTER } from '#cli/config/commands/help.ts';
 import { printResult, printFailure, isColorAllowed, setOutputOptions } from '#cli/system/terminal.ts';
 
 if (import.meta.main) process.exitCode = await runProgram(process.argv.slice(PROCESS_ARGUMENTS_START));
+
+function formatArgumentTerm(argument: Argument): string {
+    const name = argument.argChoices?.join('|') ?? argument.name();
+    const shown = argument.variadic ? `${name}...` : name;
+    return argument.required ? `<${shown}>` : `[${shown}]`;
+}
+
+/**
+ * Build the help of gspot from its commands: their groups, arguments, and summaries, then the fixed footer.
+ * @param program the CLI with every command.
+ * @returns the help text.
+ */
+function formatProgramHelp(program: Command): string {
+    const groups = new Map<string, string[]>();
+    for (const command of program.commands) {
+        const help = COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP];
+        const term = [
+            command.name(),
+            ...command.registeredArguments.map((argument) => formatArgumentTerm(argument)),
+        ].join(' ');
+        const row =
+            term.length < HELP_TERM_WIDTH
+                ? `  ${term.padEnd(HELP_TERM_WIDTH)}${help.summary}`
+                : `  ${term}  ${help.summary}`;
+        groups.set(help.group, [...(groups.get(help.group) ?? []), row]);
+    }
+    const sections = [...groups].map(([group, rows]) => `${group}\n${rows.join('\n')}`);
+    return `Usage: gspot <command> [options]\n\n${program.description()}\n\n${sections.join('\n\n')}\n\n${PROGRAM_HELP_FOOTER}`;
+}
 
 /**
  * Build the CLI with every command. Runs and the command reference both use it.
@@ -60,7 +89,7 @@ function buildProgram(onResult: CommandCompletion): Command {
         command.option('--json', help.options['--json']);
         command.addHelpText('after', `\nExit codes:\n${help.exitCodes}\n\nExample:\n  ${help.example}\n`);
     }
-    program.configureHelp({ formatHelp: () => PROGRAM_HELP });
+    program.configureHelp({ formatHelp: () => formatProgramHelp(program) });
     return program;
 }
 
@@ -88,7 +117,7 @@ async function runProgram(commandArguments: string[]): Promise<number> {
         printResult(result);
         return result.exitCode;
     } catch (error) {
-        return printFailure(error, { json: commandJson });
+        return printFailure(error, { json: commandJson }, formatProgramHelp(program));
     }
 }
 export { runProgram, buildProgram };

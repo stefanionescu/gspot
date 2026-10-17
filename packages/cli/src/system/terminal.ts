@@ -1,7 +1,6 @@
 // Prints command results, errors, and warnings as text or JSON, and stops a command on a signal.
 import pc from 'picocolors';
 import { GspotError } from '#cli/system/errors.ts';
-import { PROGRAM_HELP } from '#cli/config/commands/help.ts';
 import { CommanderError } from '@commander-js/extra-typings';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJson } from '#cli/types/terminal.ts';
@@ -100,12 +99,13 @@ function formatNotes(notes: string[]): string {
 /**
  * Format Commander argument errors with the command suggestions.
  * @param error the refused command arguments.
+ * @param programHelp the help that gspot prints when the arguments name no command.
  * @returns the message and any available correction.
  */
-function formatArgumentError(error: CommanderError): string {
+function formatArgumentError(error: CommanderError, programHelp: string): string {
     const { message } = error;
     // With no command, Commander raises a help error after writing the help to the silent error stream.
-    if (error.code === 'commander.help') return PROGRAM_HELP;
+    if (error.code === 'commander.help') return programHelp;
     if (error.code === 'commander.unknownCommand') {
         const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
         const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
@@ -122,12 +122,13 @@ function formatArgumentError(error: CommanderError): string {
  * Print a command failure, and choose the exit status.
  * @param error what the command threw.
  * @param output whether to print JSON.
+ * @param programHelp the help that gspot prints when the arguments name no command.
  * @returns zero for Commander help, or the command error status.
  */
-function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>): number {
+function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>, programHelp: string): number {
     if (error instanceof CommanderError) {
         if (error.exitCode === 0) return 0;
-        printError({ error: 'arguments', message: formatArgumentError(error) });
+        printError({ error: 'arguments', message: formatArgumentError(error, programHelp) });
         return EXIT_ERROR;
     }
     if (error instanceof GspotError) {

@@ -3,6 +3,7 @@ import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { ARGUMENT_ERRORS } from '#tests/data/commands/errors.ts';
@@ -50,6 +51,7 @@ test('help works and exits 0 after an argument error', async () => {
     expect(help.stdout).toContain('Set up a repository:');
     expect(help.stdout).toContain('Run the checks:');
     expect(help.stdout).toContain('Change gspot.toml:');
+    for (const { summary } of Object.values(COMMAND_HELP)) expect(help.stdout).toContain(summary);
 });
 
 test('apply starts no npm, and install reports a failed npm version lookup in text and JSON', async () => {
