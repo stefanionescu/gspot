@@ -57,7 +57,7 @@ function openEditableFile(path: string, text: string | undefined): EditableFile 
         return openJsonFile(path, text ?? EMPTY_JSON_TEXT);
     if (YAML_EDIT_EXTENSIONS.some((extension) => path.endsWith(extension))) return openYamlFile(path, source);
     if (basename(path) === NPMRC_FILE) return openNpmrcFile(path, source);
-    throw new Error(`${path} has no supported shared configuration format.`);
+    throw new Error(`${path} has no format that gspot can set keys in.`);
 }
 
 /**

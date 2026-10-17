@@ -46,7 +46,9 @@ export function normalizeEnvironmentKey(name: string): string {
 export function readCacheFolder(): string {
     const { cache } = envPaths(CACHE_FOLDER_NAME, { suffix: '' });
     if (!isAbsolute(cache))
-        throw new Error('The cache directory must be absolute; set XDG_CACHE_HOME or LOCALAPPDATA to one.');
+        throw new Error(
+            'The cache folder must be an absolute path. Set XDG_CACHE_HOME or LOCALAPPDATA to an absolute path.',
+        );
     return cache;
 }
 

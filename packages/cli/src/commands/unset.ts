@@ -49,7 +49,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     if (items.length > 0 && match.declaration.type !== 'list' && match.declaration.type !== 'table')
         throw new GspotError(
             'arguments',
-            `${setting} is not a list, so it takes no items. Run gspot unset ${setting}.`,
+            `${setting} is not a list or a table, so it takes no items. Run gspot unset ${setting}.`,
         );
     return await saveSettings(root, {
         input,

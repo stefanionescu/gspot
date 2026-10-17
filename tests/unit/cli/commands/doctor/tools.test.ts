@@ -37,7 +37,7 @@ test('doctor reports no unowned gspot files in a fresh clone', async () => {
     readGitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
     const result = await runRegisteredCommand(checkout, ['doctor']);
     expect(result.json).toMatchObject({ suggestions: { unowned: [] } });
-    expect(result.text).not.toContain('configuration not owned');
+    expect(result.text).not.toContain('tool files gspot does not own');
 });
 test.each(['ok', 'newer', 'outdated'] as const)(
     'doctor exit code follows the library state %s: an outdated tool exits 1',

@@ -20,9 +20,7 @@ export async function checkBashSafety(input: CheckInput): Promise<Finding[]> {
             return rules
                 .filter(([pattern]) => pattern.test(code))
                 .filter(([, rule]) => rule !== 'recursive-remove' || !isCleanup)
-                .map(([, rule, text]) =>
-                    buildFinding(input, { file: file.path, line: position + 1 }, rule, `Here ${text}.`),
-                );
+                .map(([, rule, text]) => buildFinding(input, { file: file.path, line: position + 1 }, rule, text));
         }),
     );
 }

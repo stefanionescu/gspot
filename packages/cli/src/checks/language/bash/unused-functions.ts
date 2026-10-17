@@ -19,7 +19,7 @@ export async function checkBashUnusedFunctions(input: CheckInput): Promise<Findi
                     input,
                     { file: file.path, line: entry.start },
                     'never-called',
-                    `${entry.name} is called from no script.`,
+                    `No script in this scope calls ${entry.name}. Delete it, or call it.`,
                 ),
             );
     });

@@ -262,7 +262,7 @@ test.each([
     { commandArguments: ['unset', 'no_such_key'], message: 'no_such_key' },
     {
         commandArguments: ['unset', 'level', 'extra'],
-        message: 'level is not a list, so it takes no items. Run gspot unset level.',
+        message: 'level is not a list or a table, so it takes no items. Run gspot unset level.',
     },
 ])('gspot $argv refuses the change and preserves gspot.toml', async ({ commandArguments, message }) => {
     await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([]) });

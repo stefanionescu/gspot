@@ -225,7 +225,7 @@ test('Supabase types need Docker before the local stack starts', async () => {
 
     expect(await fixture.execute()).toMatchObject({
         status: 'missing',
-        note: 'Docker has no installation. Install Docker to run this check.',
+        note: 'Docker is not installed. Install Docker to run this check.',
     });
     expect(fixture.requests).toStrictEqual([]);
 });

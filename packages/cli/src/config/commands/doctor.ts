@@ -6,7 +6,7 @@ export const SUGGESTION_SECTIONS = [
     { key: 'detected', title: 'detected, not selected' },
     { key: 'suggested', title: 'suggested, not selected' },
     { key: 'undetected', title: 'selected, but no matching files found' },
-    { key: 'unowned', title: 'configuration not owned' },
+    { key: 'unowned', title: 'tool files gspot does not own' },
     { key: 'written', title: 'existing lint jobs' },
 ] as const;
 

@@ -2,7 +2,7 @@ const APPLY_HELP =
     'Change settings in gspot.toml, then run gspot apply. gspot replaces the generated files that it owns.';
 
 export const GENERATED_FILE_MESSAGES = {
-    changed: 'This generated file differs from what gspot.toml emits.',
+    changed: 'This generated file differs from what gspot.toml generates.',
     missing: 'This generated file is missing.',
     stray: 'gspot wrote this file, and no selected configuration writes it now.',
 } as const;
@@ -10,7 +10,7 @@ export const GENERATED_FILE_MESSAGES = {
 export const GENERATED_FILE_HELP = {
     changed: APPLY_HELP,
     missing: APPLY_HELP,
-    stray: 'Delete the file, or add the configuration that emits it.',
+    stray: 'Delete the file, or add the configuration that generates it.',
 } as const;
 
 export const NEGATED_PATTERN = /^!/u;

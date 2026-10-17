@@ -42,7 +42,7 @@ test('gspot/generated-files reports edited files and apply clears them while too
         {
             file: SHELLCHECK_RC,
             rule: 'changed',
-            message: 'This generated file differs from what gspot.toml emits.',
+            message: 'This generated file differs from what gspot.toml generates.',
             help: 'Change settings in gspot.toml, then run gspot apply. gspot replaces the generated files that it owns.',
         },
     ]);

@@ -40,7 +40,7 @@ export const COMMAND_HELP = {
             'Write the tool files, the rules, the Git hooks, and the CI workflow again from gspot.toml.\napply replaces the generated files that gspot owns.\napply sets the version pin in .gspot/version to the gspot version that runs.\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
         arguments: {},
         options: {
-            '--dry-run': 'Print the changes, with each lint rule that turns on or off, and write nothing',
+            '--dry-run': 'Print the generated files that would change, with their differences, and write nothing',
             '--json': 'Print the result as JSON',
             '-h, --help': 'Print help',
         },
@@ -217,7 +217,7 @@ export const COMMAND_HELP = {
         summary: 'Find setup problems and print the command that fixes each one',
         group: 'Look up:',
         description:
-            'Find setup problems: missing or wrong tool versions, Git hooks that do not run, outdated generated files,\nand configurations that the repository needs but does not select.\nEach problem line shows the command that fixes it. doctor changes nothing.',
+            'Find setup problems: missing or wrong tool versions, Git hooks that do not run, and configurations that the\nrepository needs but does not select.\nEach problem line shows the command that fixes it. doctor changes nothing.',
         arguments: {},
         options: {
             '--json': 'Print the full report as JSON, with the tools that are ready',

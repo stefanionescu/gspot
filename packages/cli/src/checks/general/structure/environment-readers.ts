@@ -44,10 +44,7 @@ export async function checkEnvironmentReaders(input: CheckInput): Promise<Findin
         const lines = new Map<number, EnvironmentRead>();
         for (const read of reads) if (!lines.has(read.line)) lines.set(read.line, read);
         return [...lines].map(([line, read]) => {
-            const message =
-                source.language === 'bash'
-                    ? `${read.key as string} is read here. Read environment variables only in the files that architecture.roles.environment_readers lists, and pass the value in.`
-                    : 'Read environment variables only in the files that architecture.roles.environment_readers lists, and pass the value in.';
+            const message = `${read.key ?? 'An environment variable'} is read here. Read environment variables only in the files that architecture.roles.environment_readers lists, and pass the value in.`;
             return buildFinding(input, { file: source.path, line }, 'read-outside-owner', message);
         });
     });

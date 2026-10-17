@@ -27,15 +27,26 @@ export const RUNTIME_EMBEDS = [
 
 /** Safety patterns and their finding text. */
 export const ALL_LEVEL_SAFETY_PATTERNS = [
-    [/\|\|\s*true(?:\s|$)/u, 'blanket-success', 'a command failure is discarded with || true'],
+    [
+        /\|\|\s*true(?:\s|$)/u,
+        'blanket-success',
+        '`|| true` hides the failure of this command. Handle the failure, or let it stop the script.',
+    ],
 ] as const;
+
+export const RECURSIVE_REMOVE_MESSAGE =
+    'This line deletes files recursively. Delete only a mktemp path in a trap, or ignore this rule with a reason.';
 
 /** Patterns that need an ignore with a reason. */
 export const SAFETY_PATTERNS = [
-    [/\bpkill\s+-f\b/u, 'broad-kill', 'processes are matched broadly'],
-    [/\bkillall\b/u, 'broad-kill', 'processes are matched broadly'],
-    [/\brm\s+-[\dA-Z_a-qs-z]*r\w*f\b/u, 'recursive-remove', 'files are removed recursively'],
-    [/\brm\s+-[\dA-Z_a-eg-z]*f\w*r\b/u, 'recursive-remove', 'files are removed recursively'],
+    [
+        /\bpkill\s+-f\b/u,
+        'broad-kill',
+        '`pkill -f` stops every process whose command line matches. Stop the one process by its ID.',
+    ],
+    [/\bkillall\b/u, 'broad-kill', '`killall` stops every process with this name. Stop the one process by its ID.'],
+    [/\brm\s+-[\dA-Z_a-qs-z]*r\w*f\b/u, 'recursive-remove', RECURSIVE_REMOVE_MESSAGE],
+    [/\brm\s+-[\dA-Z_a-eg-z]*f\w*r\b/u, 'recursive-remove', RECURSIVE_REMOVE_MESSAGE],
 ] as const;
 
 /** A top-level assignment of an upper-case name. */
