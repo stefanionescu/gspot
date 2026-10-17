@@ -10,6 +10,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { TYPO_REPORT } from '#tests/data/tool-output.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildProcessResult } from '#tests/setup/builders.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
@@ -47,21 +48,21 @@ test("a tool's crash pattern detects crashes for every check that runs it", () =
         hasToolError(
             { ...BASE_CHECK, output: { format: 'lines', file_type: 'path' }, command: [...BASE_CHECK.command] },
             ESLINT_TOOL,
-            ESLINT_CRASH,
+            buildProcessResult(ESLINT_CRASH),
         ),
     ).toBe(true);
     expect(
         hasToolError(
             { ...BASE_CHECK, output: { format: 'lines', file_type: 'path' }, command: [...BASE_CHECK.command] },
             ESLINT_TOOL,
-            { ...ESLINT_CRASH, stderr: '1 problem\n' },
+            buildProcessResult({ ...ESLINT_CRASH, stderr: '1 problem\n' }),
         ),
     ).toBe(false);
     expect(
         hasToolError(
             { ...BASE_CHECK, output: { format: 'lines', file_type: 'path' }, command: [...BASE_CHECK.command] },
             undefined,
-            ESLINT_CRASH,
+            buildProcessResult(ESLINT_CRASH),
         ),
     ).toBe(false);
 });
@@ -73,8 +74,10 @@ test("a check's own pattern comes before the tool's", () => {
         command: [...BASE_CHECK.command],
         crash_pattern: '^Fatal:',
     } satisfies CheckDeclaration;
-    expect(hasToolError(check, ESLINT_TOOL, ESLINT_CRASH)).toBe(false);
-    expect(hasToolError(check, ESLINT_TOOL, { ...ESLINT_CRASH, stderr: 'Fatal: cannot write\n' })).toBe(true);
+    expect(hasToolError(check, ESLINT_TOOL, buildProcessResult(ESLINT_CRASH))).toBe(false);
+    expect(
+        hasToolError(check, ESLINT_TOOL, buildProcessResult({ ...ESLINT_CRASH, stderr: 'Fatal: cannot write\n' })),
+    ).toBe(true);
 });
 
 test('located output rejects false paths and empty failures while keeping mixed real findings', async () => {
@@ -89,17 +92,18 @@ test('located output rejects false paths and empty failures while keeping mixed 
         tool: { name: 'tool', installers: {}, kind: 'program' as const },
     };
     const paths = { cwd: sandbox.path, root: sandbox.path };
-    expect(parseCommandFindings(planned, { ...FAILED_RUN, stdout: FALSE_PATH }, paths).note).toContain(
-        'tool broke: exit 1',
-    );
-    expect(parseCommandFindings(planned, FAILED_RUN, paths).note).toContain('tool broke: exit 1');
     expect(
-        parseCommandFindings(planned, { ...FAILED_RUN, stdout: FALSE_PATH + REAL_PATH }, paths).findings,
+        parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: FALSE_PATH }), paths).note,
+    ).toContain('tool broke: exit 1');
+    expect(parseCommandFindings(planned, buildProcessResult(FAILED_RUN), paths).note).toContain('tool broke: exit 1');
+    expect(
+        parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: FALSE_PATH + REAL_PATH }), paths)
+            .findings,
     ).toStrictEqual([
         { check: LOCATED_CHECK.name, file: '2026-09-19T02', message: 'FATAL', help: '', fixable: false },
         { check: LOCATED_CHECK.name, file: 'source.txt', message: 'located defect', help: '', fixable: false },
     ]);
-    expect(parseCommandFindings(planned, { ...FAILED_RUN, code: 0 }, paths).findings).toStrictEqual([]);
+    expect(parseCommandFindings(planned, buildProcessResult(), paths).findings).toStrictEqual([]);
     expect(await Bun.file(join(sandbox.path, 'source.txt')).text()).toBe('source');
 });
 
@@ -110,9 +114,10 @@ test.each([...FILELESS_CHECKS])('$name accepts a fileless result without classif
         check: { ...check, command: [...check.command] },
         manifest: readManifests(createReadCache(process.cwd())).get('files')!,
     };
-    expect(parseCommandFindings(planned, FAILED_RUN, { cwd: sandbox.path, root: sandbox.path }).findings).toStrictEqual(
-        [],
-    );
+    expect(
+        parseCommandFindings(planned, buildProcessResult(FAILED_RUN), { cwd: sandbox.path, root: sandbox.path })
+            .findings,
+    ).toStrictEqual([]);
 });
 
 test('spelling tells typos findings from fatal exits', async () => {

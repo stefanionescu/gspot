@@ -37,7 +37,7 @@ test.each([...DOCTOR_RESULTS])('Expo Doctor runs once in each app folder: $name'
     resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
             folders.push(options.cwd);
-            return Promise.resolve(entry.result);
+            return Promise.resolve(buildProcessResult(entry.result));
         }),
     );
 

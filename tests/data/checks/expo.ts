@@ -23,11 +23,11 @@ const DOCTOR_RESULTS = [
     {
         name: 'failed SDK checks',
         expected: DOCTOR_FINDING_MESSAGES,
-        result: { code: 1, missing: false, duration: 1, stdout: FAILED_DOCTOR_REPORT, stderr: '' },
+        result: { code: 1, stdout: FAILED_DOCTOR_REPORT },
     },
     {
         name: 'unstructured failure',
-        result: { code: 1, missing: false, duration: 1, stdout: '', stderr: 'Unable to read Expo configuration' },
+        result: { code: 1, stderr: 'Unable to read Expo configuration' },
         expected: 'The expo-doctor command failed (exit 1): Unable to read Expo configuration',
     },
 ] as const;

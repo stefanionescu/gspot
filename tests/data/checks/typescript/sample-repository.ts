@@ -10,8 +10,10 @@ export const TYPESCRIPT_SANDBOX = {
         include: ['src', 'types'],
     },
     files: {
-        'jsconfig.json':
-            '{ "compilerOptions": { "strict": true, "noFallthroughCasesInSwitch": true, "noUncheckedIndexedAccess": true, "noImplicitOverride": true, "exactOptionalPropertyTypes": true, "noImplicitReturns": true, "noPropertyAccessFromIndexSignature": true, "target": "ES2022", "module": "NodeNext", "moduleResolution": "NodeNext", "types": [], "skipLibCheck": true, "checkJs": true, "noEmit": true }, "include": ["src/**/*.js"] }\n',
+        'jsconfig.json': `${JSON.stringify({
+            compilerOptions: { ...STRICT_COMPILER_OPTIONS, checkJs: true, noEmit: true },
+            include: ['src/**/*.js'],
+        })}\n`,
         'package.json': TYPESCRIPT_PACKAGE,
         '.gitignore': 'node_modules/\n',
         'types/orders.ts': `// Type aliases of the orders module.

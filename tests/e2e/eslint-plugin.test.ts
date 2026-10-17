@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runCommand } from '#tests/setup/processes.ts';
 import { lstat, mkdir, writeFile } from 'node:fs/promises';
+import { NPM_INSTALL_FLAGS } from '#tests/data/test-setup.ts';
 import { packedEnvironment } from '#tests/setup/packed-sandbox.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { TYPE_PROGRAM, MODULE_PROGRAM } from '#tests/data/packed-install.ts';
@@ -48,9 +49,7 @@ test('the installed ESLint plugin loads through import and require and enforces 
             'install',
             `@gspothq/eslint-plugin@${eslintPluginPackage.version}`,
             ...peerPackages,
-            '--ignore-scripts',
-            '--no-audit',
-            '--no-fund',
+            ...NPM_INSTALL_FLAGS,
         ],
         {
             cwd: consumer,

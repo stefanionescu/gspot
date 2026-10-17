@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { FAILED_RUN } from '#tests/data/runs/command-checks.ts';
+import { buildProcessResult } from '#tests/setup/builders.ts';
 import { parseCommandFindings } from '#cli/checks/run/command/output.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
@@ -56,11 +56,10 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
     const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
     const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [SEMGREP_PARSE_ERROR] });
     expect(
-        parseCommandFindings(
-            { check, manifest },
-            { ...FAILED_RUN, code: 3, stdout },
-            { cwd: sandbox.path, root: sandbox.path },
-        ).findings,
+        parseCommandFindings({ check, manifest }, buildProcessResult({ code: 3, stdout }), {
+            cwd: sandbox.path,
+            root: sandbox.path,
+        }).findings,
     ).toStrictEqual([
         {
             check: 'security/semgrep',
@@ -100,17 +99,15 @@ test('Semgrep scanner, rule, unpositioned and malformed reports are errors', asy
     ];
     for (const stdout of outputs)
         expect(
-            parseCommandFindings(
-                { check, manifest },
-                { ...FAILED_RUN, code: 3, stdout },
-                { cwd: sandbox.path, root: sandbox.path },
-            ).note,
+            parseCommandFindings({ check, manifest }, buildProcessResult({ code: 3, stdout }), {
+                cwd: sandbox.path,
+                root: sandbox.path,
+            }).note,
         ).toBeDefined();
     expect(
-        parseCommandFindings(
-            { check, manifest },
-            { ...FAILED_RUN, code: 0, stdout: '{"results":[],"errors":[]}' },
-            { cwd: sandbox.path, root: sandbox.path },
-        ).findings,
+        parseCommandFindings({ check, manifest }, buildProcessResult({ stdout: '{"results":[],"errors":[]}' }), {
+            cwd: sandbox.path,
+            root: sandbox.path,
+        }).findings,
     ).toStrictEqual([]);
 });

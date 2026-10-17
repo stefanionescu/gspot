@@ -7,10 +7,10 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import * as processes from '#cli/system/processes.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { inspectionContext } from '#tests/setup/builders.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { inspectionContext, buildProcessResult } from '#tests/setup/builders.ts';
 import { SYSTEM_PLUGIN_REPORTS, PACKAGE_METADATA_FAILURES } from '#tests/data/tools/installation.ts';
 
 test('a library is found only in the tool project', async () => {
@@ -94,13 +94,9 @@ test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $nam
         ...('pattern' in report ? { version_pattern: report.pattern } : {}),
     };
     using _which = useExecutable('/native/pytest');
-    using versionRun = spyOn(processes, 'spawnProcessBlocking').mockReturnValue({
-        code: report.code,
-        stdout: report.stdout,
-        stderr: '',
-        missing: report.missing,
-        duration: 1,
-    });
+    using versionRun = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(
+        buildProcessResult({ code: report.code, stdout: report.stdout, missing: report.missing }),
+    );
     const inspected = inspectTool(inspectionContext(sandbox.path, { cwd: join(sandbox.path, 'app') }), tool);
     expect(inspected.state).toBe(report.state);
     expect(versionRun).toHaveBeenCalledWith(

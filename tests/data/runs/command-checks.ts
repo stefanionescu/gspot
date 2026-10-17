@@ -19,13 +19,7 @@ export const QUALITY_FIX = [
 export const SLOW_TOOL_PROGRAM =
     'require("node:fs").writeFileSync("started.tmp", String(process.pid)); require("node:fs").renameSync("started.tmp", "started.pid"); await Bun.sleep(60_000);';
 
-export const ESLINT_CRASH = {
-    code: 1,
-    stdout: '',
-    stderr: 'Oops! Something went wrong\n',
-    missing: false,
-    duration: 1,
-} as const;
+export const ESLINT_CRASH = { code: 1, stderr: 'Oops! Something went wrong\n' } as const;
 
 export const ESLINT_TOOL = {
     name: 'eslint',
@@ -45,7 +39,7 @@ export const BASE_CHECK = {
     help: '',
 } as const;
 
-export const FAILED_RUN = { code: 1, stdout: '', stderr: '', missing: false, duration: 1 } as const;
+export const FAILED_RUN = { code: 1 } as const;
 
 export const LOCATED_CHECK = {
     ...BASE_CHECK,

@@ -6,8 +6,8 @@ const MALFORMED_TSCONFIGS = [
     ['[]', "The root value of a 'tsconfig.json' file must be an object."],
 ] as const;
 
-/** Compiler options required by the all-level TypeScript policy. */
-const STRICT_COMPILER_OPTIONS = {
+/** The type-check flags that the all-level TypeScript policy requires. */
+const STRICT_TYPE_FLAGS = {
     strict: true,
     noFallthroughCasesInSwitch: true,
     noUncheckedIndexedAccess: true,
@@ -15,6 +15,11 @@ const STRICT_COMPILER_OPTIONS = {
     exactOptionalPropertyTypes: true,
     noImplicitReturns: true,
     noPropertyAccessFromIndexSignature: true,
+} as const;
+
+/** Compiler options required by the all-level TypeScript policy. */
+const STRICT_COMPILER_OPTIONS = {
+    ...STRICT_TYPE_FLAGS,
     target: 'ES2022',
     module: 'NodeNext',
     moduleResolution: 'NodeNext',
@@ -22,8 +27,7 @@ const STRICT_COMPILER_OPTIONS = {
     skipLibCheck: true,
 } as const;
 
-const STRICT_TSCONFIG_TEXT =
-    '{"compilerOptions":{"strict":true,"noImplicitReturns":true,"noPropertyAccessFromIndexSignature":true,"noFallthroughCasesInSwitch":true,"noUncheckedIndexedAccess":true,"noImplicitOverride":true,"exactOptionalPropertyTypes":true}}';
+const STRICT_TSCONFIG_TEXT = JSON.stringify({ compilerOptions: STRICT_TYPE_FLAGS });
 
 const COMPILER_SOURCE = 'export const value = missing;\n';
 
