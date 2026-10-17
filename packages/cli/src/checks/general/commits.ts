@@ -11,9 +11,9 @@ import { getSiblingCommand, runOverPushedCommits } from '#cli/checks/general/pus
 import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/general/commits.ts';
 
 /**
- * Check every selected commit message, including empty commits with identical source trees.
- * @param session the open session.
- * @param planned the selected commit range and command declaration.
+ * Checks every pushed commit message, including empty commits that change no files.
+ * @param session the repository and its tools.
+ * @param planned the commitlint check and commit range.
  * @returns the check result.
  */
 export async function checkCommitlintPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {

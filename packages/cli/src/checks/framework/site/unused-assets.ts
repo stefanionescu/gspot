@@ -8,8 +8,8 @@ import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { ASSET_FOLDER, TEXT_SUFFIXES } from '#cli/config/checks/framework/site.ts';
 
 /**
- * Every selected asset that no local text or tracked outside reference names.
- * @param input the selected asset paths and repository text reads.
+ * Reports each asset that no text file in the scope or the index names.
+ * @param input the scope files and the tracked files.
  * @returns the findings.
  */
 export function checkSiteUnusedAssets(input: CheckInput): Finding[] {

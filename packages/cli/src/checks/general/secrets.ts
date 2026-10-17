@@ -67,9 +67,9 @@ function findMissingEnvironmentKeys(
 }
 
 /**
- * Scan the exact selected commits, including secrets removed before the final pushed tree.
- * @param session the open session.
- * @param planned the selected history range and scanner command.
+ * Scans each pushed commit with Gitleaks, so a secret removed before the last commit still shows.
+ * @param session the repository and its tools.
+ * @param planned the Gitleaks check and commit range.
  * @returns the check result.
  */
 export async function checkSecretsGitleaksPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
@@ -84,9 +84,9 @@ export async function checkSecretsGitleaksPushed(session: Session, planned: Plan
 }
 
 /**
- * Scan the selected Git range with TruffleHog.
- * @param session the open session.
- * @param planned the selected history range and scanner command.
+ * Scans the pushed commits with TruffleHog.
+ * @param session the repository and its tools.
+ * @param planned the TruffleHog check and commit range.
  * @returns the check result.
  */
 export async function checkSecretsTrufflehogPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
@@ -105,13 +105,13 @@ export async function checkSecretsTrufflehogPushed(session: Session, planned: Pl
 }
 
 /**
- * Reports supported environment reads missing from example environment files, or the absent example prerequisite.
- * @param input the scope inventory, declared example filenames, and environment reader settings.
+ * Reports environment reads that no env example lists, or skips the check without an env example.
+ * @param input the scope to check.
  * @returns the findings.
  */
 export async function checkSecretsEnvExamples(input: CheckInput): Promise<Finding[]> {
     const { env_examples: names, environment_functions: readers } = input.scope.view.options('secrets');
-    // Example files list variable names; reads appear in code, so inspect the whole scope.
+    // Env examples list the names, and code anywhere in the scope reads them.
     const inScope = input.files.filter((file) => isInScope(file.path, input.scope.scope.path));
     const examples = inScope.filter((file) => names.includes(posix.basename(file.path)));
     if (examples.length === 0)

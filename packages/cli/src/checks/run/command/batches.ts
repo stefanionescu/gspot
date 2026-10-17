@@ -1,4 +1,3 @@
-// Split file arguments into command invocations within system limits.
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { Substitutions, CommandInvocation } from '#cli/types/checks/run/command.ts';
 import { expandCommand, buildFileInvocations } from '#cli/checks/run/command/placeholders.ts';
@@ -17,14 +16,14 @@ function computeArgumentSize(argument: string, platform: NodeJS.Platform): numbe
 }
 
 /**
- * Fit command invocations within the system argument budget.
- * @param planned the selected check declaration.
- * @param invocation the execution values.
- * @param invocation.session the repository session.
+ * Splits a command into runs that fit the system argument limit.
+ * @param planned the check to run.
+ * @param invocation what to run.
+ * @param invocation.session the repository and its tools.
  * @param invocation.command the executable and authored arguments.
  * @param invocation.substitutions the file paths and placeholder values.
  * @param invocation.toolPath the resolved executable path.
- * @returns the ordered command invocations.
+ * @returns the runs, in order.
  */
 export function buildInvocations(
     planned: PlannedCheck,
@@ -46,15 +45,13 @@ export function buildInvocations(
 
 /**
  * Splits file arguments while reserving space for the executable and fixed arguments.
- *
- * @param files the file paths.
+ * @param files the paths to split.
  * @param fixed the executable and arguments outside the file list.
- * @param platform the platform that executes the command.
- *
+ * @param platform the system that runs the command.
  * @returns the batches, in order.
  */
 export function splitFileArguments(files: string[], fixed: string[], platform: NodeJS.Platform): string[][] {
-    // Reserve space below cmd.exe's 8191-character limit for the npm wrapper.
+    // Reserve space below the 8191-character limit of cmd.exe for the npm wrapper.
     const limit = platform === 'win32' ? WINDOWS_COMMAND_LIMIT : UNIX_COMMAND_LIMIT;
     const budget = limit - fixed.reduce((size, argument) => size + computeArgumentSize(argument, platform), 0);
     if (budget < 0) throw new Error('Tool arguments exceed the command limit. Shorten the tool arguments.');

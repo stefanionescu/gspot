@@ -7,10 +7,10 @@ import { SEMGREP_TOOL } from '#cli/config/checks/general/security.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 
 /**
- * The selected Semgrep packs and repository rule paths for one scope.
- * @param session the current level and applied tool targets.
- * @param planned the selected scope and its authored rules.
- * @returns the required rule paths, relative to the repository.
+ * List the Semgrep rule files that the configurations and settings of a scope name.
+ * @param session the level and tool files.
+ * @param planned the check for one scope.
+ * @returns the repository-relative paths.
  */
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
     const { selected, scope, view } = planned.scope;
@@ -24,10 +24,10 @@ function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[]
 }
 
 /**
- * Run the selected Semgrep packs and authored rule paths through the command runner.
+ * Runs Semgrep with the rule files of the scope.
  * @param session the repository and installed tools.
- * @param planned the check for one scope and its required rules.
- * @returns findings and execution failures.
+ * @param planned the check for one scope.
+ * @returns the check result.
  */
 export async function checkSemgrep(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const command = planned.check.command as string[];

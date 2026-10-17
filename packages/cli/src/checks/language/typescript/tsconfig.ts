@@ -10,8 +10,8 @@ import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { isProjectChecked, selectRequiredTsconfigOptions } from '#cli/checks/language/typescript/compiler.ts';
 
 /**
- * One finding per required option a scope's tsconfig leaves off.
- * @param input the check input for the scope.
+ * Reports each required compiler option that a scope tsconfig leaves off.
+ * @param input the scope to check.
  * @returns the findings.
  */
 export function checkTypescriptTsconfig(input: CheckInput): Finding[] {

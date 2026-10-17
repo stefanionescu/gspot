@@ -30,7 +30,7 @@ import {
     LICENSE_CHECKER_ARGUMENTS,
 } from '#cli/config/checks/general/licenses.ts';
 
-// A license expression passes when every part of a conjunction, or one part of a choice, passes the allowed-license check.
+// An expression passes when every part of an `AND`, or one part of an `OR`, has an allowed license.
 function isAllowed(license: string, allow: Set<string>): boolean {
     try {
         parseExpression(license);
@@ -91,7 +91,7 @@ function hasProjectDependencies(input: CheckInput, dependencyFile: string): bool
     );
 }
 
-// Each installed project uses its deepest selected scope, while authored exceptions keep their table origin.
+// Each installed project uses its deepest scope; authored exceptions keep the table they came from.
 async function scanLicenses(input: CheckInput) {
     const inventories: ProjectLicenses[] = [];
     const projects = listLicenseProjects(input.files, input.selections, input.settingsFile.settings, input.check);
@@ -137,9 +137,9 @@ const pythonReportSchema = z.array(
 ) satisfies z.ZodType<{ Name: string; Version: string; License: string }[]>;
 
 /**
- * Report prohibited installed licenses and allowed_package records for absent packages.
- * @param input the repository-wide check input.
- * @returns findings from the installed projects and unused allowed_package records.
+ * Reports disallowed licenses of installed packages, and allowed_package records for packages not installed.
+ * @param input the scopes whose dependencies to scan.
+ * @returns the findings.
  */
 export async function checkAllowedLicenses(input: CheckInput): Promise<Finding[]> {
     const { inventories, skipped } = await scanLicenses(input);

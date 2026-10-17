@@ -217,9 +217,9 @@ function checkCallbackVerb(context: NamingContext, parts: string[]) {
 }
 
 /**
- * The first part that appears twice, if any.
+ * Finds the first part that appears twice.
  * @param parts ordered words and digit groups from one declared name.
- * @returns the first duplicate encountered from left to right, or undefined.
+ * @returns the repeated part, or undefined.
  */
 function findRepeatedPart(parts: string[]): string | undefined {
     const seen = new Set<string>();
@@ -231,9 +231,9 @@ function findRepeatedPart(parts: string[]): string | undefined {
 }
 
 /**
- * The path overrides that apply to one identifier.
- * @param settings the effective settings.
- * @param identifier the category, language, and source location that select path exceptions.
+ * Selects the path overrides that apply to an identifier.
+ * @param settings what the scope allows and bans.
+ * @param identifier the name to match.
  * @returns the overrides, in settings order.
  */
 function selectOverrides(settings: NamingSettings, identifier: Identifier): CompiledOverride[] {
@@ -247,11 +247,11 @@ function selectOverrides(settings: NamingSettings, identifier: Identifier): Comp
 }
 
 /**
- * The limits and cases for one identifier after its path overrides.
- * @param settings the effective settings.
- * @param identifier the category and language whose length and case constraints apply.
- * @param overrides the overrides that apply.
- * @returns effective length bounds and allowed cases after language and path exceptions.
+ * Computes the limits and cases for an identifier after its path overrides.
+ * @param settings what the scope allows and bans.
+ * @param identifier the name to check.
+ * @param overrides the matching `[[naming.override]]` records.
+ * @returns the length limits and allowed cases.
  */
 function deriveLimits(settings: NamingSettings, identifier: Identifier, overrides: CompiledOverride[]): CategoryLimits {
     const base = settings.limitsFor(identifier.language, identifier.category);
@@ -269,9 +269,9 @@ function deriveLimits(settings: NamingSettings, identifier: Identifier, override
 }
 
 /**
- * Findings for one identifier under the settings. A path override can exclude the identifier.
- * @param identifier the spelling, category, language, and source location to evaluate.
- * @param inputs the check identity, effective settings, and the file's test status.
+ * Checks an identifier against the naming settings, unless a path override allows it.
+ * @param identifier the name to check.
+ * @param inputs the check and its naming settings.
  * @returns the findings, empty when the name passes.
  */
 export function checkIdentifier(identifier: Identifier, inputs: NamingInputs): Finding[] {

@@ -3,8 +3,8 @@ import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 /**
- * One finding per function call with more arguments than the function reads.
- * @param input the check context.
+ * Reports each function called with more arguments than it reads.
+ * @param input the scope scripts to read.
  * @returns the findings.
  */
 export async function checkBashUnreadArguments(input: CheckInput): Promise<Finding[]> {

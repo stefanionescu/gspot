@@ -48,10 +48,10 @@ import {
 const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
 
 /**
- * Move repository-owned absolute compiler paths into their captured tree.
- * @param value one configured path or an array of paths.
+ * Maps absolute paths inside the repository to the scratch copy.
+ * @param value the compiler path or paths to map.
  * @param input the source and scratch roots.
- * @returns the updated paths.
+ * @returns the mapped paths.
  */
 function convertToScratchPath(value: unknown, input: TypeScriptReferenceCopy): unknown {
     if (Array.isArray(value)) return value.map((path: unknown) => convertToScratchPath(path, input));
@@ -60,9 +60,9 @@ function convertToScratchPath(value: unknown, input: TypeScriptReferenceCopy): u
 }
 
 /**
- * Preserve compiler inputs while keeping reference resolution and outputs in the owned tree.
- * @param input the captured configuration and its source and scratch roots.
- * @returns the configuration for the TypeScript compiler in the scratch copy.
+ * Builds a tsconfig that keeps compiler inputs and sends reference output into the scratch copy.
+ * @param input the parsed tsconfig, and the source and scratch roots.
+ * @returns the tsconfig for the scratch copy.
  */
 function buildReferenceTsconfig(
     input: TypeScriptReferenceCopy & { path: string; config: TypeScriptConfiguration },
@@ -103,10 +103,10 @@ function buildReferenceTsconfig(
 }
 
 /**
- * Keep incremental metadata inside the caller's scratch folder.
- * @param command the compiler command arguments.
- * @param options the resolved options.
- * @param scratch the owned metadata directory.
+ * Points incremental build metadata into the scratch folder.
+ * @param command the tsc arguments to extend.
+ * @param options the parsed compiler flags.
+ * @param scratch the folder for metadata.
  * @param name the metadata basename.
  */
 function appendBuildMetadata(
@@ -120,11 +120,11 @@ function appendBuildMetadata(
 }
 
 /**
- * Restore source paths in a compiler run in a scratch copy.
- * @param result the result, which may have no launched command.
- * @param scratch the scratch copy root.
- * @param sourceRoot the original checkout path that replaces scratch-copy prefixes.
- * @returns the result with source command paths.
+ * Replaces scratch copy paths in the command with repository paths.
+ * @param result the compiler run, which may have no command.
+ * @param scratch the root of the copy.
+ * @param sourceRoot the repository root.
+ * @returns the run with repository paths.
  */
 function restoreCommandPaths(result: CheckResult, scratch: string, sourceRoot: string): CheckResult {
     if (result.command === undefined) return result;
@@ -135,12 +135,12 @@ function restoreCommandPaths(result: CheckResult, scratch: string, sourceRoot: s
 }
 
 /**
- * Share ancestor checks without suppressing another invocation for the same scope.
+ * Shares a project compile across scopes, but never skips a second run in the same scope.
  * @param reads the run cache.
- * @param projectCheck the project check identity.
- * @param projectCheck.check the check identifier.
- * @param projectCheck.path the tsconfig location that identifies a compiled project.
- * @param projectCheck.scope the invoking scope.
+ * @param projectCheck what identifies the compile.
+ * @param projectCheck.check the ID of the planned tsc run.
+ * @param projectCheck.path the tsconfig of the project.
+ * @param projectCheck.scope the folder that runs it.
  * @param projectCheck.required the compiler flags for one scope.
  * @returns whether another scope already checks this project with these flags.
  */
@@ -162,12 +162,12 @@ function isProjectChecked(
 }
 
 /**
- * Run the compiler in an already selected project, with metadata in the caller's owned folder.
- * @param session the source or scratch copy session.
- * @param planned the compiler declaration for one scope.
- * @param metadataRoot the caller-owned metadata lifetime.
- * @param project the selected compiler project, when present.
- * @returns compiler diagnostics and execution status.
+ * Runs tsc on a project and keeps build metadata in metadataRoot.
+ * @param session the repository or its scratch copy.
+ * @param planned the tsc check for one scope.
+ * @param metadataRoot the folder for build metadata.
+ * @param project the parsed tsconfig, if any.
+ * @returns the check result.
  */
 async function runTsc(
     session: Session,
@@ -204,9 +204,9 @@ async function runTsc(
 }
 
 /**
- * Write the compiler project for a caller-owned runtime folder.
- * @param input the source project and relative runtime target.
- * @returns the absolute runtime configuration path.
+ * Writes a tsconfig for the scope.
+ * @param input the scope and target path.
+ * @returns the absolute path.
  */
 function writeTsconfig(input: TsconfigInput): string {
     const target = join(input.root, input.target);
@@ -216,9 +216,8 @@ function writeTsconfig(input: TsconfigInput): string {
 }
 
 /**
- * Keep declarations, bundles, and incremental metadata of reference builds in their scratch copy.
- * @param input the captured reference graph and its owned copy.
- * @returns after replacing only the copied compiler configurations.
+ * Rewrites each copied tsconfig so reference builds write their output into the scratch copy.
+ * @param input the referenced projects and the scratch copy.
  */
 function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
     const { root, scratchRoot, projects, reads } = input;
@@ -240,11 +239,9 @@ function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
 }
 
 /**
- * Preserve authored projects and supply a standalone source project when the scope has none.
- *
- * @param input the scope's source inventory, generated target, and required options.
- *
- * @returns the compiler configuration.
+ * Builds a tsconfig that extends the authored one, or a standalone one when the scope has none.
+ * @param input the scope and target path.
+ * @returns the tsconfig.
  */
 function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
     const { root, typeRootsFolder, reads, target, scope, files, scopes, options } = input;
@@ -303,12 +300,10 @@ function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
 }
 
 /**
- * Required compiler diagnostics and framework settings for generation and authored option auditing.
- *
- * @param level the selected check level.
- * @param selected the applicable configuration manifests.
- *
- * @returns the required compiler options.
+ * Selects the compiler flags that the level and configurations require.
+ * @param level recommended or all.
+ * @param selected the scope manifests.
+ * @returns the flags, by name.
  */
 function selectRequiredTsconfigOptions(level: Level, selected: Manifest[]): Record<string, boolean> {
     const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS) };
@@ -318,9 +313,9 @@ function selectRequiredTsconfigOptions(level: Level, selected: Manifest[]): Reco
 }
 
 /**
- * Apply the scope's explicit rule exclusions to the compiler defaults.
- * @param level the configured check level.
- * @param selection the effective scope configuration.
+ * Drops the compiler flags that the scope turns off.
+ * @param level recommended or all.
+ * @param selection the scope and its settings.
  * @returns the enabled compiler flags.
  */
 function selectCheckedTsconfigOptions(level: Level, selection: ScopeSelection): Record<string, boolean> {
@@ -332,11 +327,11 @@ function selectCheckedTsconfigOptions(level: Level, selection: ScopeSelection): 
 }
 
 /**
- * Write a scope project while preserving its authored compiler configuration.
- * @param session the repository session and captured reads.
- * @param scope the compiler scope.
- * @param target the generated compiler configuration path.
- * @returns the absolute generated configuration path.
+ * Writes the tsconfig for a scope, extending its authored tsconfig.
+ * @param session the repository and read cache.
+ * @param scope where tsc runs, with its settings.
+ * @param target where to write the tsconfig.
+ * @returns the absolute path.
  */
 function writeScopeTsconfig(
     session: Pick<Session, 'root' | 'installedRoot' | 'reads' | 'settingsFile'> & {

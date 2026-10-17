@@ -1,4 +1,3 @@
-// Plan checks, run fixes and checks, and build the run report.
 import pLimit from 'p-limit';
 import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
@@ -34,11 +33,9 @@ import {
 } from '#cli/types/checks/run/check.ts';
 
 /**
- * Match an ignore record against a finding.
- *
- * @param entry the ignore record.
- * @param finding the finding to match.
- *
+ * Checks whether an ignore record covers a finding.
+ * @param entry the `[[ignore]]` record.
+ * @param finding what a check reported.
  * @returns whether the ignore covers this finding.
  */
 function isEntryMatch(entry: IgnoreRecord, finding: Finding): boolean {
@@ -47,7 +44,6 @@ function isEntryMatch(entry: IgnoreRecord, finding: Finding): boolean {
     return entry.paths === undefined || entry.paths.length === 0 || buildPathMatcher(entry.paths)(finding.file);
 }
 
-// The plan and, for each planned check, the function that runs it.
 function planChecks(session: Session, options: RunOptions): RunnableCheck[] {
     const planned = planRun(session, options);
     const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
@@ -80,7 +76,7 @@ async function refreshAfterFixes(session: Session): Promise<void> {
     session.inspections.clear();
 }
 
-// The result of a check that cannot run: canceled, skipped by the plan, or Docker has no installation.
+// The result of a check that cannot run: canceled, skipped by the plan, or without Docker.
 function findUnrunnableResult(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
@@ -95,7 +91,6 @@ function findUnrunnableResult(session: Session, planned: PlannedCheck, base: Che
     return planned.check.needs?.map((need) => preconditions[need]?.()).find((result) => result !== undefined);
 }
 
-// Classify thrown failures at the boundary of each check.
 function checkFailure(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
     if (error instanceof GspotError && error.code === 'skip') return { status: 'skipped', note: error.message };
     if (error instanceof GspotError && error.code === 'tool') return { status: 'missing', note: error.message };
@@ -105,7 +100,6 @@ function checkFailure(name: string, error: unknown): Pick<CheckResult, 'status' 
     };
 }
 
-// Runs one check.
 async function runOne(runState: RunState, executable: RunnableCheck): Promise<CheckResult> {
     const { session, staged } = runState;
     const { check: planned, run } = executable;
@@ -125,7 +119,6 @@ async function runOne(runState: RunState, executable: RunnableCheck): Promise<Ch
     }
 }
 
-// Drops the findings the ignores cover and settles the status on what remains.
 function dropIgnoredFindings(check: PlannedCheck, result: CheckResult, uses: Map<IgnoreRecord, IgnoreUse>): void {
     result.findings = result.findings.filter((finding) => {
         const use = uses.values().find(({ entry }) => entry.check === check.check.name && isEntryMatch(entry, finding));
@@ -136,7 +129,6 @@ function dropIgnoredFindings(check: PlannedCheck, result: CheckResult, uses: Map
     result.status = result.findings.length > 0 ? 'failed' : 'passed';
 }
 
-// Filters a result through the ignores and attaches the line that reproduces a failure.
 function filterResult(runState: RunState, check: PlannedCheck, result: CheckResult): void {
     if (RAN_STATUSES.has(result.status)) dropIgnoredFindings(check, result, runState.uses);
     if (FAILED_STATUSES.has(result.status))
@@ -147,7 +139,6 @@ function filterResult(runState: RunState, check: PlannedCheck, result: CheckResu
         });
 }
 
-// Runs every active check under the job limit and reports each result as it settles.
 async function runActiveChecks(runState: RunState, executables: RunnableCheck[]): Promise<CheckResult[]> {
     const limiter = pLimit(availableParallelism());
     let completed = 0;
@@ -172,7 +163,6 @@ async function runActiveChecks(runState: RunState, executables: RunnableCheck[])
     });
 }
 
-// The plan, replanned after fixers changed the repository so the run checks the corrected files.
 async function planAfterFixes(session: Session, options: RunOptions): Promise<PlanAfterFixes> {
     const executables = planChecks(session, options);
     if (!options.fix) return { executables, fixes: undefined };
@@ -188,10 +178,8 @@ async function planAfterFixes(session: Session, options: RunOptions): Promise<Pl
 
 /**
  * Runs the checks and returns the report.
- *
- * @param opened the session.
+ * @param opened the repository and its tools.
  * @param options stage, skips, and fix flags.
- *
  * @returns the report, the plan, and the fix report when --fix ran.
  */
 export async function runChecks(opened: Session, options: RunOptions): Promise<RunResult> {

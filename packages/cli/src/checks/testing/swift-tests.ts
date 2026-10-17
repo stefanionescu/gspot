@@ -45,8 +45,8 @@ function listUnexplainedSkips(root: Node, lines: string[]): Node[] {
 }
 
 /**
- * One finding for each skipped test without a reason argument or unavailable declaration without an explanation.
- * @param input the selected Swift test sources and parser services.
+ * Reports each skipped test without a reason, and each unavailable declaration without an explanation.
+ * @param input the scope Swift test files.
  * @returns the findings.
  */
 export async function checkSwiftSkipReasons(input: CheckInput): Promise<Finding[]> {

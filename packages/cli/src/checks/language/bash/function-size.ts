@@ -5,9 +5,9 @@ import { COUNT_LIMITS } from '#cli/config/checks/language/bash.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 /**
- * Every size limit of a shell function: code lines and parser counts.
- * @param input the structure input of the scope.
- * @returns the findings over a limit.
+ * Checks each shell function against the size limits: code lines and parser counts.
+ * @param input the scope scripts and limits.
+ * @returns one finding per exceeded limit.
  */
 export async function checkBashFunctionSize(input: CheckInput): Promise<Finding[]> {
     const scripts = await readScripts(input);

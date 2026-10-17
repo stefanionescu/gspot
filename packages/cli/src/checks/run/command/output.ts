@@ -1,4 +1,3 @@
-// Read tool output and build check results.
 import { statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
@@ -69,7 +68,6 @@ function markFailure(
     if (parsed.length === 0) state.findings.push(buildUnexplainedFailure(check, tool, result, undefined));
 }
 
-// Gives every finding without a path the file the command ran over, when the format attributes them that way.
 function setFindingFiles(parsed: Finding[], invocation: CommandInvocation, check: CheckDeclaration): void {
     if (invocation.file === undefined) return;
     // Regex file groups can name a rule or another identifier instead of a path.
@@ -117,13 +115,11 @@ function failBrokenTool(planned: OutputCheck, result: SpawnResult): never {
 }
 
 /**
- * Whether a command crashed: it exited nonzero, its format names files, it runs over many files, and none of its findings names a real file. This rule applies to shipped checks and authored checks.
- *
- * @param check the output format and command placeholders that determine crash detection.
+ * Checks whether a command crashed: it exited nonzero, its format names files, it runs on many files, and no finding names a real file.
+ * @param check the output format and command.
  * @param result what the command returned.
  * @param parsed the findings read from its output.
- * @param paths the working directory and repository root.
- *
+ * @param paths the working folder and repository root.
  * @returns true for a crash.
  */
 function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Finding[], paths: OutputPaths): boolean {
@@ -134,13 +130,11 @@ function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Find
 }
 
 /**
- * Parse findings while rejecting crashes and withholding secret-scanner diagnostics.
- *
- * @param planned the selected check.
- * @param result captured output.
- * @param paths the working directory and repository root.
- *
- * @returns structured findings.
+ * Parses findings, fails on a crash, and withholds secret-scanner output.
+ * @param planned the check that ran.
+ * @param result what the command printed.
+ * @param paths the working folder and repository root.
+ * @returns the findings.
  */
 function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
     const { check } = planned;
@@ -151,14 +145,14 @@ function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths:
 }
 
 /**
- * Collect command status and attributed findings.
- * @param check the selected check declaration.
- * @param completion the execution values.
+ * Builds the check result from the run state.
+ * @param check the declaration that ran.
+ * @param completion what the run collected.
  * @param completion.base the initial check result.
- * @param completion.state the collected findings and failure state.
+ * @param completion.state the findings and failure flag.
  * @param completion.commandArguments the expanded command arguments.
  * @param completion.started the monotonic start time.
- * @returns the completed command result.
+ * @returns the check result.
  */
 export function buildCheckResult(
     check: CheckDeclaration,
@@ -177,12 +171,10 @@ export function buildCheckResult(
 }
 
 /**
- * Parse output or report its refusal.
- *
- * @param planned the check.
- * @param result the process result.
- * @param paths the source and working paths.
- *
+ * Parses the command output, or returns why gspot refused it.
+ * @param planned the check that ran.
+ * @param result what the process returned.
+ * @param paths the repository root and working folder.
  * @returns findings or a refusal note.
  */
 export function parseCommandFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): ParsedFindings {
@@ -195,12 +187,11 @@ export function parseCommandFindings(planned: OutputCheck, result: SpawnResult, 
 }
 
 /**
- * Records a process outcome and attributes its findings to their file and scope.
- *
- * @param planned the check.
- * @param tool the declared tool and its installation pin.
- * @param output the command, captured process result, and parsed findings.
- * @param state the run state.
+ * Records a process result and assigns its findings to their file and scope.
+ * @param planned the check that ran.
+ * @param tool the declaration with its version pin.
+ * @param output what one run printed and parsed.
+ * @param state what the runs collected so far.
  */
 export function recordInvocation(
     planned: PlannedCheck,
@@ -221,13 +212,11 @@ export function recordInvocation(
 }
 
 /**
- * Classify process failures consistently for command checks and built-in checks.
- *
- * @param result the completed process.
- * @param name the tool name.
- * @param view the effective check settings.
- *
- * @returns the execution failure, or undefined for interpretable output.
+ * Classifies a process failure for command checks and built-in checks.
+ * @param result what the process returned.
+ * @param name the tool that the note mentions.
+ * @param view the scope settings.
+ * @returns the failure, or undefined for readable output.
  */
 export function findExecutionFailure(
     result: SpawnResult,
@@ -250,13 +239,11 @@ export function findExecutionFailure(
 }
 
 /**
- * Reject exits outside a declared contract and match fatal diagnostics during checks and fixes.
- *
- * @param check the findings exits and the check pattern that takes precedence over the tool pattern.
- * @param tool the tool the check runs, with the pattern every check of it shares.
- * @param result the completed process.
- *
- * @returns true when an exit violates the declared contract or output reports a crash.
+ * Checks whether a run exited with an undeclared code or printed a crash pattern.
+ * @param check the declared exit codes and crash pattern.
+ * @param tool the declaration with the shared crash pattern.
+ * @param result what the process returned.
+ * @returns whether the tool broke.
  */
 export function hasToolError(check: CheckDeclaration, tool: ToolDeclaration | undefined, result: SpawnResult): boolean {
     if (result.code !== 0 && check.exit_codes !== undefined && !check.exit_codes.includes(result.code)) return true;
@@ -265,12 +252,10 @@ export function hasToolError(check: CheckDeclaration, tool: ToolDeclaration | un
 }
 
 /**
- * Bound diagnostics from tools that do not require secret redaction.
- *
- * @param result captured output.
- * @param placeholder the text used when neither stream contains text.
- *
- * @returns the bounded diagnostic.
+ * Formats the last lines of tool output that needs no redaction.
+ * @param result what the tool printed.
+ * @param placeholder the text when both streams stay empty.
+ * @returns the last lines of output.
  */
 export function formatOutputTail(
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
@@ -283,12 +268,10 @@ export function formatOutputTail(
 }
 
 /**
- * Return reported findings or explain a failed tool that reported none.
- *
- * @param result the tool's exit code and output.
- * @param findings parsed findings from that tool.
+ * Returns the findings, or fails when the tool exited nonzero with none.
+ * @param result the exit code and output.
+ * @param findings what the parser read.
  * @param toolName the program that ran.
- *
  * @returns the parsed findings.
  */
 export function assertToolFindings(

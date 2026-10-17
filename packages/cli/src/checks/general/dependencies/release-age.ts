@@ -1,4 +1,3 @@
-// Reports a package manager too old to hold back new releases.
 import semver from 'semver';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
@@ -10,8 +9,8 @@ import { parsePackageManagerField } from '#cli/tools/npm/package-manager.ts';
 import { HOLD_VERSIONS, PACKAGE_MANAGER_FIELD } from '#cli/config/checks/general/dependencies.ts';
 
 /**
- * Check that the packageManager of the root package.json can hold back new releases.
- * @param input the repository files.
+ * Checks that the packageManager of the root package.json can hold back new releases.
+ * @param input the scope files.
  * @returns one finding for a version that ignores the hold.
  */
 export function checkReleaseAge(input: CheckInput): Finding[] {

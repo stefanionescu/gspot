@@ -78,11 +78,11 @@ function addEnumCases(sink: ExtractSink, root: Node): void {
 }
 
 /**
- * The identifiers a parsed TypeScript or JavaScript file declares.
- * @param syntaxRoot the parsed program that provides bindings and callable nodes.
- * @param file the file path.
+ * Lists the names that a TypeScript or JavaScript file declares.
+ * @param syntaxRoot the parsed program.
+ * @param file the repository path of the source.
  * @param language `typescript` or `javascript`.
- * @returns the declarations found in the tree.
+ * @returns the declared names.
  */
 export function extractTypescriptIdentifiers(syntaxRoot: Node, file: string, language: string): Identifier[] {
     const sink: ExtractSink = { file, language, out: [] };

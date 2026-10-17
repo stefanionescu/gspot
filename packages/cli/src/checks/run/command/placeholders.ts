@@ -31,7 +31,6 @@ import {
     WHOLE_SETTING_PLACEHOLDER,
 } from '#cli/config/configurations.ts';
 
-// Use list values in argument splicing and each-flag expansion.
 function assertArgumentList(value: unknown, name: string): string[] {
     if (!Array.isArray(value) || !value.every((item) => typeof item === 'string'))
         throw new Error(`Command setting ${name} must contain only string arguments.`);
@@ -40,10 +39,8 @@ function assertArgumentList(value: unknown, name: string): string[] {
 
 /**
  * Expands an each part, or returns undefined for another part kind.
- *
  * @param planned the check, whose scope holds the settings.
- * @param part one part of the manifest command.
- *
+ * @param part one argument of the manifest command.
  * @returns the expanded arguments.
  */
 function expandEachPlaceholder(planned: SubstitutionCheck, part: string): string[] | undefined {
@@ -57,10 +54,8 @@ function expandEachPlaceholder(planned: SubstitutionCheck, part: string): string
 
 /**
  * Expands {existing:<flag>:<path>}: the flag and the absolute path when the file exists, and nothing when it does not.
- *
- * @param repositoryRoot the directory against which manifest paths resolve.
- * @param part one part of the manifest command.
- *
+ * @param repositoryRoot the folder that manifest paths start from.
+ * @param part one argument of the manifest command.
  * @returns the arguments, or undefined for another part kind.
  */
 function expandExistingPlaceholder(repositoryRoot: string, part: string): string[] | undefined {
@@ -73,7 +68,7 @@ function expandExistingPlaceholder(repositoryRoot: string, part: string): string
 }
 
 function listToolFiles(session: CommandInputs, planned: SubstitutionCheck): ToolFileDeclaration[] {
-    // A check's own targets come first because toolFilePath selects the first matching target.
+    // The own targets of the check come first, because readToolFileDeclaration takes the first match.
     const own = planned.scope.selected
         .filter((manifest) => manifest.checks.some((check) => check.name === planned.check.name))
         .flatMap((manifest) => manifest.toolFiles);
@@ -111,13 +106,11 @@ function expandPlainPart(
 }
 
 /**
- * Read the tool-file declaration selected by this check.
- *
- * @param session the repository session.
- * @param planned the selected check and its files.
- * @param name the tool or setting name.
- *
- * @returns the selected whole-file declaration.
+ * Finds the whole-file tool file declaration that a check names.
+ * @param session the repository and manifests.
+ * @param planned the check that names it.
+ * @param name the tool or setting it belongs to.
+ * @returns the declaration.
  */
 export function readToolFileDeclaration(
     session: CommandInputs,
@@ -133,11 +126,11 @@ export function readToolFileDeclaration(
 }
 
 /**
- * Resolve the declared tool file through the generated scope groups.
- * @param session the repository session and generated targets.
- * @param planned the selected check and scope.
- * @param name the declared tool-file name.
- * @returns the generated path for this scope.
+ * Resolves the tool file path for the scope of a check.
+ * @param session the repository and tool file targets.
+ * @param planned the check and its scope.
+ * @param name the tool or setting it belongs to.
+ * @returns the repository-relative path.
  */
 export function selectToolFilePath(session: CommandInputs, planned: SubstitutionCheck, name: string): string {
     const target = readToolFileDeclaration(session, planned, name);
@@ -145,12 +138,10 @@ export function selectToolFilePath(session: CommandInputs, planned: Substitution
 }
 
 /**
- * Tool file paths named by a check command or its environment.
- *
- * @param session the open session.
- * @param planned the planned check.
- * @param command the command to read.
- *
+ * Lists the tool files that a check command or its environment names.
+ * @param session the repository and manifests.
+ * @param planned the check that runs.
+ * @param command the arguments to scan.
  * @returns the tool file paths, relative to the root.
  */
 export function listCommandToolFiles(
@@ -179,12 +170,10 @@ export function listCommandToolFiles(
 }
 
 /**
- * Select source and tool files needed by an isolated command.
- *
- * @param session the source repository session.
- * @param planned the check and its selected files.
- * @param command the command with tool-file placeholders.
- *
+ * Lists the source and tool files that a scratch copy needs for a command.
+ * @param session the repository and manifests.
+ * @param planned the check and its files.
+ * @param command the arguments, with tool file placeholders.
  * @returns repository-relative paths for the scratch copy.
  */
 export function listScratchFiles(
@@ -207,12 +196,10 @@ export function listScratchFiles(
 
 /**
  * Expands a scalar command argument or environment value from the check scope.
- *
- * @param session the repository session.
- * @param planned the planned check.
+ * @param session the repository and settings.
+ * @param planned the check and its scope.
  * @param part the value with placeholders.
  * @param substitutions the expansion values.
- *
  * @returns the expanded value.
  */
 export function replacePlaceholders(
@@ -245,13 +232,11 @@ export function replacePlaceholders(
 }
 
 /**
- * Expands settings and scope arguments while retaining individual file slots.
- *
- * @param session the repository session.
- * @param planned the planned check.
- * @param command the original command.
+ * Expands setting and scope placeholders, and keeps a marker for each file slot.
+ * @param session the repository and settings.
+ * @param planned the check and its scope.
+ * @param command the authored arguments.
  * @param substitutions the expansion values.
- *
  * @returns argument text and file markers.
  */
 export function expandCommand(
@@ -274,10 +259,8 @@ export function expandCommand(
 
 /**
  * Replaces every file marker after variable-length arguments have expanded.
- *
  * @param parts the expanded command.
- * @param files the paths relative to the command directory.
- *
+ * @param files the paths relative to the working folder.
  * @returns one command per file, or one command when no file marker exists.
  */
 export function buildFileInvocations(parts: CommandPart[], files: string[]): CommandInvocation[] {

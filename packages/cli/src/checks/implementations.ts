@@ -104,7 +104,7 @@ import {
     checkSiteHtmlValidate,
 } from '#cli/checks/framework/site/pages.ts';
 
-/** Every execution callback, keyed by its check ID. */
+/** Every check implementation, by check ID. */
 export const CHECK_IMPLEMENTATIONS = {
     'gspot/unmatched-patterns': { check: checkUnmatchedPatterns },
     'expo/expo-doctor': { check: checkExpoDoctor },

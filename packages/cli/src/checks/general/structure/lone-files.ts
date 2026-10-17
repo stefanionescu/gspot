@@ -6,8 +6,8 @@ import { filterSourceConfigurations } from '#cli/configurations/select.ts';
 import { listCodeFiles, buildFolderTree, isDependencyFolder } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
- * One finding per leaf folder that holds exactly one code file and nothing else.
- * @param input the check context.
+ * Reports each leaf folder that holds only one code file.
+ * @param input the scope files.
  * @returns the findings.
  */
 export function checkLoneFiles(input: CheckInput): Finding[] {

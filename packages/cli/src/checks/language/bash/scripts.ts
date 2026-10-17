@@ -30,9 +30,9 @@ async function readScript(input: CheckInput, file: TrackedFile): Promise<ScriptF
 }
 
 /**
- * Read the scope's shell index once, sharing syntax data across its checks.
- * @param input the check's scope-owned files and parser resources.
- * @returns the index.
+ * Parses the scope scripts once and shares them across checks.
+ * @param input the scope files and parser resources.
+ * @returns the parsed scripts.
  */
 export function readScripts(input: CheckInput): Promise<ScriptFile[]> {
     const files = input.files.filter(
@@ -47,9 +47,9 @@ export function readScripts(input: CheckInput): Promise<ScriptFile[]> {
 }
 
 /**
- * Find the innermost function that contains a source line.
- * @param functions the parsed functions.
- * @param line the one-based line.
+ * Finds the innermost function that holds a line.
+ * @param functions the parsed definitions.
+ * @param line the number, counted from one.
  * @returns the function, or undefined at the top level.
  */
 export function findEnclosingFunction(functions: ScriptFunction[], line: number): ScriptFunction | undefined {

@@ -6,9 +6,9 @@ import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts'
 import { isInGspotFolder, listTaggedExtensions } from '#cli/repository/classify.ts';
 
 /**
- * The code files the folder checks look at: no Markdown and nothing under .gspot.
- * @param input the selected repository files.
- * @returns source entries outside Markdown documents and the generated gspot folder.
+ * Lists the source files that the folder checks read: no Markdown, and nothing under .gspot.
+ * @param input the scope files.
+ * @returns the code files.
  */
 export function listCodeFiles(input: CheckInput): TrackedFile[] {
     const documents = listTaggedExtensions('markdown');
@@ -21,18 +21,18 @@ export function listCodeFiles(input: CheckInput): TrackedFile[] {
 }
 
 /**
- * Identify dependency directories that tools own.
- * @param folder the repository-relative directory.
- * @returns whether a dependency folder contains the directory.
+ * Checks whether a path lies inside an installed dependency folder.
+ * @param folder the repository-relative path.
+ * @returns whether a dependency folder holds it.
  */
 export function isDependencyFolder(folder: string): boolean {
     return folder.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment));
 }
 
 /**
- * The entries every directory holds, from the tracked files: files and the child directories they imply.
- * @param files the tracked files.
- * @returns directory path to its entries, sorted by name.
+ * Maps each folder to its files and child folders, from the tracked files.
+ * @param files the tracked paths.
+ * @returns each folder path with its files and child folders, sorted by name.
  */
 export function buildFolderTree(files: readonly { path: string }[]): Map<string, FolderEntry[]> {
     const tree = new Map<string, Map<string, FolderEntry['kind']>>();

@@ -4,10 +4,10 @@ import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 
 /**
- * Start a repository history check, or keep its no-Git diagnostic.
+ * Starts a history check result, or skips the check outside a Git repository.
  * @param session the repository to check.
- * @param planned the selected history check.
- * @returns the empty history result or its readiness refusal.
+ * @param planned the history check.
+ * @returns the empty result, or a skipped result.
  */
 function buildHistoryResult(session: Session, planned: PlannedCheck): CheckResult {
     const result = { ...buildBaseResult(planned, session), fileCount: 0 };
@@ -21,8 +21,8 @@ function buildHistoryResult(session: Session, planned: PlannedCheck): CheckResul
 }
 
 /**
- * Keep findings from repeated history runs and the first missing-tool or execution error.
- * @param results the accumulated result and the next tool run.
+ * Merges the findings of history runs and keeps the first missing-tool or run error.
+ * @param results the merged run so far and the next run.
  * @returns their findings and final status.
  */
 function mergeRuns(results: [CheckResult, ...CheckResult[]]): CheckResult {
@@ -36,11 +36,11 @@ function mergeRuns(results: [CheckResult, ...CheckResult[]]): CheckResult {
 }
 
 /**
- * Run one check over each selected pushed commit and retain the first execution failure.
- * @param session the repository session.
- * @param planned the selected history check.
- * @param perCommit the operation to run for each selected commit.
- * @returns the accumulated history result.
+ * Runs a check on each pushed commit and stops at the first missing tool or run error.
+ * @param session the repository and its tools.
+ * @param planned the history check.
+ * @param perCommit the check to run on one commit.
+ * @returns the merged result.
  */
 async function runOverPushedCommits(
     session: Session,
@@ -60,10 +60,10 @@ async function runOverPushedCommits(
 }
 
 /**
- * Read the command of another check declared by the same shipped configuration.
- * @param planned the selected history check.
- * @param checkName the sibling check identifier.
- * @returns the sibling executable and authored arguments.
+ * Reads the command of another check in the same shipped configuration.
+ * @param planned the history check.
+ * @param checkName the sibling ID.
+ * @returns the executable and its arguments.
  */
 function getSiblingCommand(planned: PlannedCheck, checkName: string): string[] {
     const manifest = planned.manifest as NonNullable<PlannedCheck['manifest']>;

@@ -47,7 +47,6 @@ function normalizeDenoPath(root: string, locator: string): string {
     return local === '' || !isInside(local) ? path : local;
 }
 
-// The first error from `deno check` with its reported file and line.
 function parseDenoCheckError(input: CheckInput, folder: string, stderr: string): Finding {
     const output = stripVTControlCharacters(stderr);
     const place = DENO_LOCATION.exec(output)?.groups;
@@ -57,9 +56,9 @@ function parseDenoCheckError(input: CheckInput, folder: string, stderr: string):
 }
 
 /**
- * The parsed project file or its syntax diagnostic; undefined when the scope has no project file.
- * @param input the selected project scope.
- * @returns the parsed configuration or its diagnostic.
+ * Parses the Supabase config.toml of a scope.
+ * @param input the scope to read.
+ * @returns the parsed file, its parse error, or undefined without a file.
  */
 function readProjectFile(input: CheckInput): Parsed<SupabaseConfiguration> | undefined {
     const local = posix.join(input.scope.scope.path, SUPABASE_CONFIG_TOML);
@@ -72,7 +71,6 @@ function readProjectFile(input: CheckInput): Parsed<SupabaseConfiguration> | und
     }
 }
 
-// Validate Supabase project declarations and the structured findings of edge functions.
 const supabaseProjectSchema = z.object({
     storage: z
         .object({ buckets: z.record(z.string(), z.unknown()).optional() } satisfies SchemaShape<
@@ -102,9 +100,9 @@ const denoLintReportSchema = z.object({
 } satisfies SchemaShape<DenoLintReport>);
 
 /**
- * The entry file of each edge function: the first index file of each folder directly under the functions folder,
+ * Lists the entry file of each edge function: the first index file in each folder right under the functions folder,
  * except shared folders.
- * @param input the check input.
+ * @param input the scope files and settings.
  * @returns the entry file paths, repository-relative.
  */
 function listFunctionEntries(input: CheckInput): string[] {
@@ -125,8 +123,8 @@ function listFunctionEntries(input: CheckInput): string[] {
 }
 
 /**
- * Every storage bucket of the project file has a policy on storage.objects that names it, in some migration.
- * @param input the project settings and migrations that declare buckets and their access policies.
+ * Reports each storage bucket that no migration policy on storage.objects names.
+ * @param input the scope with config.toml and migrations.
  * @returns the findings.
  */
 export async function checkSupabaseStoragePolicies(input: CheckInput): Promise<Finding[]> {
@@ -165,8 +163,8 @@ export async function checkSupabaseStoragePolicies(input: CheckInput): Promise<F
 }
 
 /**
- * The deno lint findings of every edge function.
- * @param input the edge-function entries and configured Deno tool environment.
+ * Runs deno lint on each edge function.
+ * @param input the scope files to lint.
  * @returns the findings.
  */
 export async function checkSupabaseDenoLint(input: CheckInput): Promise<Finding[]> {
@@ -209,8 +207,8 @@ export async function checkSupabaseDenoLint(input: CheckInput): Promise<Finding[
 }
 
 /**
- * The first type error of every edge function, from deno check over its entry file.
- * @param input the edge-function entries and project import settings.
+ * Reports the first type error of each edge function, from deno check on its entry file.
+ * @param input the scope files to check.
  * @returns the findings.
  */
 export async function checkSupabaseDenoTypes(input: CheckInput): Promise<Finding[]> {
@@ -229,8 +227,8 @@ export async function checkSupabaseDenoTypes(input: CheckInput): Promise<Finding
 }
 
 /**
- * Reports privileged Supabase keys outside edge functions and the configured test paths.
- * @param input the source paths, edge-function folder, and permitted test patterns.
+ * Reports privileged Supabase keys outside edge functions and test files.
+ * @param input the scope files and allowed paths.
  * @returns the findings.
  */
 export function checkServiceRoleKey(input: CheckInput): Finding[] {

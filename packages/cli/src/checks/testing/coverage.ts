@@ -64,8 +64,8 @@ async function measureXcodeCoverage(input: CheckInput, plan: SwiftBuildPlan, cwd
 }
 
 /**
- * Measure source target coverage in the selected Swift package or Xcode project.
- * @param input the selected scope and tools.
+ * Measures the coverage of source targets in the Swift package or Xcode project.
+ * @param input the scope to test.
  * @returns coverage for source targets.
  */
 async function measureCoverage(input: CheckInput): Promise<CoverageReport> {
@@ -79,7 +79,7 @@ async function measureCoverage(input: CheckInput): Promise<CoverageReport> {
         : await measureXcodeCoverage(input, plan, cwd);
 }
 
-/** The source targets and exact source paths reported by Swift Package Manager. */
+/** The source targets and source paths that Swift Package Manager reports. */
 const swiftPackageCoverageSchema = z.object({
     targets: z.array(
         z.object({
@@ -118,10 +118,10 @@ const swiftCoverageSchema = z.object({
 }>);
 
 /**
- * The targets under their limit.
+ * Lists the targets under their coverage limit.
  * @param report what xccov printed.
- * @param settings the common limit and target overrides of the settings.
- * @returns one line of text for each target under its limit, or missing from the report.
+ * @param settings the line limit and per-target limits.
+ * @returns one message per short or missing target.
  */
 function listCoverageShortfalls(
     report: CoverageReport,
@@ -151,8 +151,8 @@ function listCoverageShortfalls(
 }
 
 /**
- * Runs the tests with coverage and compares each named target with its limit. Uses the common line limit and explicit target overrides.
- * @param input the Swift project scope and configured coverage limits.
+ * Runs the tests with coverage and compares each target with the line limit or its own override.
+ * @param input the scope and coverage limits.
  * @returns the findings.
  */
 async function checkSwiftTestsCoverage(input: CheckInput): Promise<Finding[]> {
@@ -174,11 +174,11 @@ async function checkSwiftTestsCoverage(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * Attribute covered source lines to Swift Package Manager's actual target declarations.
- * @param text compiler coverage report at the reported Swift path.
+ * Sums the covered lines of each source target that Swift Package Manager declares.
+ * @param text the coverage JSON from the compiler.
  * @param packageText the package description, including custom target paths.
- * @param folder the selected package folder in the source copy.
- * @returns source target coverage without test targets or derived runner sources.
+ * @param folder the package path in the source copy.
+ * @returns the coverage of each source target.
  */
 function parseSwiftCoverage(text: string, packageText: string, folder: string): CoverageReport {
     const report = swiftCoverageSchema.parse(JSON.parse(text));

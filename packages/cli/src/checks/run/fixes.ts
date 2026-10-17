@@ -1,4 +1,3 @@
-// Run fixes and publish changes from scratch copies.
 import { createTwoFilesPatch } from 'diff';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
@@ -87,7 +86,7 @@ async function runFixInScratch(
     return result;
 }
 
-// The outcome of one fixer over every pass: a failure stands, and the changed files add up.
+// Merges the passes of one fixer: a failure stands, and the changed files add up.
 function mergeResults(first: FixResult | undefined, next: FixResult): FixResult {
     if (first === undefined) return next;
     const changed = [...new Set([...first.changed, ...next.changed])];
@@ -140,7 +139,7 @@ async function runCommandFix(
     return runFix(session, planned, prepared);
 }
 
-// Canceled and inactive fixes stay outside both publication and executable preparation.
+// A canceled or skipped fix returns before it finds the tool or writes files.
 async function runFixer(session: Session, planned: PlannedCheck, root: string): Promise<FixResult> {
     const check = planned.check.name;
     if (session.cancelSignal?.aborted === true)
@@ -159,12 +158,10 @@ async function runFixer(session: Session, planned: PlannedCheck, root: string): 
 }
 
 /**
- * Capture selected source bytes, retaining missing destinations.
- *
- * @param sourceRoot the base directory for reading selected relative paths.
- * @param paths selected repository paths.
- *
- * @returns captured bytes or absence for each path.
+ * Reads the bytes of each path, with undefined for a missing file.
+ * @param sourceRoot the folder the paths start from.
+ * @param paths the repository-relative files to read.
+ * @returns the bytes of each file, or undefined.
  */
 function readContents(sourceRoot: string, paths: string[]): Map<string, Buffer | undefined> {
     const contents = new Map<string, Buffer | undefined>();
@@ -180,12 +177,10 @@ function readContents(sourceRoot: string, paths: string[]): Map<string, Buffer |
 }
 
 /**
- * Compare captured source bytes and absence.
- *
- * @param before bytes before the operation.
- * @param after bytes after the operation.
- *
- * @returns paths whose bytes or presence changed.
+ * Lists the paths whose bytes changed, appeared, or disappeared.
+ * @param before the earlier bytes.
+ * @param after the later bytes.
+ * @returns the changed paths.
  */
 function listChangedPaths(before: Map<string, Buffer | undefined>, after: Map<string, Buffer | undefined>): string[] {
     return before
@@ -199,14 +194,12 @@ function listChangedPaths(before: Map<string, Buffer | undefined>, after: Map<st
 }
 
 /**
- * Run selected fixers again over changed files so a formatter handles the changes of a later codemod.
- *
- * @param session the execution context.
- * @param checks the selected fixers.
- * @param sourceRoot the working directory that each fixer and content capture uses.
- * @param paths the selected paths.
- *
- * @returns cumulative results for each fixer.
+ * Runs the fixers again on changed files, so a formatter handles the changes of a later codemod.
+ * @param session the repository and its tools.
+ * @param checks the fixers to run.
+ * @param sourceRoot the folder that the fixers change.
+ * @param paths the files to compare between passes.
+ * @returns each fixer result, and the file bytes before and after.
  */
 async function runFixerPasses(
     session: Session,
@@ -239,12 +232,10 @@ async function runFixerPasses(
 }
 
 /**
- * Runs fixes in passes and assembles their outcomes. Dry runs always remove the scratch copy.
- *
- * @param session the repository inventory, execution services, and cancellation state.
- * @param planned the planned checks.
+ * Runs fixes in passes and collects their results. A dry run always removes its scratch copy.
+ * @param session the repository and its tools.
+ * @param planned the checks to fix.
  * @param options whether to run in a scratch copy and report diffs.
- *
  * @returns the fix results, changed paths, and dry-run diffs.
  */
 export async function runFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {

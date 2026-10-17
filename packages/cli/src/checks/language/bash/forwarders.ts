@@ -11,8 +11,8 @@ import {
 } from '#cli/config/checks/language/bash.ts';
 
 /**
- * One finding per deprecated alias or forwarding body.
- * @param input the check context.
+ * Reports each deprecated alias and each script that only forwards to another.
+ * @param input the scope scripts to read.
  * @returns the findings.
  */
 export async function checkBashForwarders(input: CheckInput): Promise<Finding[]> {

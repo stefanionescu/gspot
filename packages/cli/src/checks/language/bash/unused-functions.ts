@@ -4,8 +4,8 @@ import { MAIN_FUNCTION } from '#cli/config/checks/language/bash.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 /**
- * One finding per function that no script references, outside the entry functions.
- * @param input the check context.
+ * Reports each function that no script calls, except main.
+ * @param input the scope scripts to read.
  * @returns the findings.
  */
 export async function checkBashUnusedFunctions(input: CheckInput): Promise<Finding[]> {

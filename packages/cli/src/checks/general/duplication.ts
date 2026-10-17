@@ -44,7 +44,7 @@ const cloneReportSchema = z.object({
 
 /**
  * Runs jscpd over the scope and reports the clones.
- * @param input the selected source paths, generated scanner settings, and tool execution services.
+ * @param input the scope whose source files to compare.
  * @returns the findings.
  */
 export async function checkJscpd(input: CheckInput): Promise<Finding[]> {
@@ -67,7 +67,7 @@ export async function checkJscpd(input: CheckInput): Promise<Finding[]> {
     const generated = files.read(`${TOOL_FILES_FOLDER}/${JSCPD_TOOL_FILE}`);
     if (generated === undefined) throw new Error(`Missing ${TOOL_FILES_FOLDER}/${JSCPD_TOOL_FILE}. Run gspot apply.`);
     const shipped = parseJsonFile(`${TOOL_FILES_FOLDER}/${JSCPD_TOOL_FILE}`, generated.bytes.toString('utf8'));
-    // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.
+    // A long file list overflows a command line, so the paths go into a tool file of their own.
     const toolFile = join(work, JSCPD_TOOL_FILE);
     writeFileSync(toolFile, JSON.stringify({ ...shipped, path: owned.map((path) => join(input.root, path)) }));
     const commandArguments = [JSCPD, '--config', toolFile, ...JSCPD_ARGUMENTS, '--output', work];

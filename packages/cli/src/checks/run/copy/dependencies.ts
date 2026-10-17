@@ -80,7 +80,6 @@ function findCopiedPath(copies: Map<string, string>, source: string): string | u
     return undefined;
 }
 
-// Every dependency link uses the same containment and private-clone policy.
 async function replaceLink(context: DependencyTreeCopy, { source, target }: PendingLink): Promise<void> {
     const copied = findCopiedPath(context.copies, source);
     unlinkSync(target);
@@ -95,11 +94,11 @@ async function replaceLink(context: DependencyTreeCopy, { source, target }: Pend
 }
 
 /**
- * Select paths that Git identifies as ignored.
- * @param repositoryRoot the working directory where Git reads ignore patterns.
+ * Selects the paths that Git ignores.
+ * @param repositoryRoot the repository folder.
  * @param paths the candidate prerequisites.
- * @param cancelSignal the Git query cancellation.
- * @returns paths that Git identifies as ignored.
+ * @param cancelSignal stops the Git query.
+ * @returns the ignored paths.
  */
 export async function readIgnoredPaths(
     repositoryRoot: string,
@@ -113,11 +112,8 @@ export async function readIgnoredPaths(
 }
 
 /**
- * Clone installed dependency trees and repair contained links in the scratch copy.
- *
- * @param input the owned scratch copy and selected dependency operations.
- *
- * @returns completion after every dependency and link has settled.
+ * Clones installed dependency trees into the scratch copy and repairs the links inside them.
+ * @param input the scratch copy and the dependencies to copy.
  */
 export async function copyDependencies(
     input: Pick<ScratchCopyPlan, 'root' | 'target' | 'dependencies' | 'cancelSignal'>,
@@ -147,13 +143,11 @@ export async function copyDependencies(
 }
 
 /**
- * Carry ignored declaration prerequisites selected by the authored compiler configuration.
- *
- * @param workingTree the checkout containing installed declaration files and compiler settings.
- * @param entries the selected tracked revision.
- * @param cancelSignal cancellation for Git queries.
- *
- * @returns declaration copies and configuration paths that must match the revision.
+ * Lists the ignored declaration files that an authored tsconfig needs.
+ * @param workingTree the checkout with installed declaration files.
+ * @param entries the tracked files of the revision.
+ * @param cancelSignal stops the Git queries.
+ * @returns the files to clone, and the tsconfig paths to match.
  */
 export async function readDeclarationDependencies(
     workingTree: string,

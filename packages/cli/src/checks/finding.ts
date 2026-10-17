@@ -2,13 +2,13 @@ import type { Node } from 'web-tree-sitter';
 import type { Finding, CheckInput, FindingPlace } from '#cli/types/checks/run/check.ts';
 
 /**
- * A finding of a check: it names the check, points at a place, and has no automatic fix.
- * @param input the check input of the check.
+ * Builds a finding that names the check and, by default, has no automatic fix.
+ * @param input the check that reports it.
  * @param at the file, and the line and column when known.
- * @param rule the rule the finding breaks.
- * @param message the problem to report.
+ * @param rule the ID of the broken requirement.
+ * @param message the text that says what went wrong.
  * @param options the help and automatic-fix status.
- * @returns the finding with the supplied location fields.
+ * @returns the finding.
  */
 export function buildFinding(
     input: Pick<CheckInput, 'check'>,
@@ -28,7 +28,7 @@ export function buildFinding(
 }
 
 /**
- * The place of a parsed source node: its file, and its line and column counted from one.
+ * Locate a parsed node by line and column, both counted from one.
  * @param file the repository path of the source.
  * @param node what the finding points at.
  * @returns the file, line, and column.

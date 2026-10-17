@@ -34,7 +34,7 @@ import {
     GIT_UPDATE_INDEX,
 } from '#cli/config/checks/run/copy.ts';
 
-// Refuses a copy whose Vale configuration differs from the configuration that selected its installed packages.
+// Refuses a copy whose Vale configuration differs from the one the installed packages came from.
 function assertValeMatches(installed: Files, destination: Files, config: string): void {
     const current = installed.read(config);
     const selected = destination.read(config);
@@ -45,7 +45,6 @@ function assertValeMatches(installed: Files, destination: Files, config: string)
         );
 }
 
-// Copies one package file the copy lacks through the same confined writer.
 function copyPackageFile(installed: Files, destination: Files, path: string): void {
     if (destination.read(path) !== undefined) return;
     const content = installed.read(path);
@@ -54,8 +53,7 @@ function copyPackageFile(installed: Files, destination: Files, path: string): vo
     destination.write(path, content, undefined);
 }
 
-// The dependency folders the copy's projects own, when the working tree has them installed. Python
-// environments stay in place; their tools check the copy's files.
+// Python environments stay in place; their tools check the files of the scratch copy.
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
@@ -79,8 +77,8 @@ function assertDependencyReady(scratch: string, folder: string): void {
         );
 }
 
-// Refuses a copy whose manifests or lockfiles differ from the working tree's, which the installation came from.
-// Git's clean filters decide the comparison, so a manifest checked out with CRLF matches its LF blob.
+// Refuses a copy whose dependency files or lockfiles differ from the working tree, the source of the install.
+// The comparison runs through the Git clean filters, so a dependency file checked out with CRLF matches its LF blob.
 async function assertDependencyFilesUnchanged(
     root: string,
     installed: Files,
@@ -93,7 +91,7 @@ async function assertDependencyFilesUnchanged(
     );
     if (inputs.some((entry) => statSync(join(root, entry.path), { throwIfNoEntry: false }) === undefined))
         throw mismatch;
-    // The confined read refuses a manifest link that leaves the repository before Git follows it.
+    // The confined read refuses a dependency file link that leaves the repository, before Git follows it.
     for (const entry of inputs) installed.readRealPath(entry.path);
     const hashed = await runGit(root, GIT_HASH_PATHS, {
         stdin: inputs.map((entry) => `${entry.path}\n`).join(''),
@@ -109,11 +107,10 @@ async function assertDependencyFilesUnchanged(
 }
 
 /**
- * Copy installed Vale packages only when the copy retains their installation configuration.
- *
- * @param repositoryRoot the directory containing installed style packages and their configuration.
- * @param scratch the package-copy destination.
- * @param paths the copy's files, among them the Vale configurations that name packages.
+ * Copies the installed Vale packages when the scratch copy keeps the Vale configuration they came from.
+ * @param repositoryRoot the repository with the installed packages.
+ * @param scratch where to copy the packages.
+ * @param paths the files of the scratch copy.
  */
 function copyValePackages(repositoryRoot: string, scratch: string, paths: string[]): void {
     const configurations = paths.filter(
@@ -128,14 +125,12 @@ function copyValePackages(repositoryRoot: string, scratch: string, paths: string
 }
 
 /**
- * Select installed packages after checking the copied project inputs.
- *
- * @param repositoryRoot the working tree whose installed dependencies can supply the copy.
+ * Selects installed dependencies to copy, after checking that the dependency files match.
+ * @param repositoryRoot the working tree with installed dependencies.
  * @param scratch the private copy.
- * @param entries Git entries with each project's manifests.
- * @param cancelSignal cancellation for the copy.
- *
- * @returns guarded dependency operations.
+ * @param entries the tracked files of the revision.
+ * @param cancelSignal stops the copy.
+ * @returns the dependencies to clone or link.
  */
 async function selectRevisionDependencies(
     repositoryRoot: string,
@@ -253,11 +248,9 @@ async function writeRevisionFiles(
 }
 
 /**
- * Every file under the styles folder, whether it belongs to a Vale package or to the gspot style.
- *
+ * List every file under the styles folder: the Vale packages and the gspot style.
  * @param files the source root of the styles folder.
- * @param folder the emitted or installed style directory.
- *
+ * @param folder the styles path to walk.
  * @returns the files, relative to the root.
  */
 function listStyleFiles(files: Files, folder: string): string[] {
@@ -271,14 +264,12 @@ function listStyleFiles(files: Files, folder: string): string[] {
 }
 
 /**
- * Write Git revision content without checkout filters, stashing, or working-tree writes.
- *
- * @param repositoryRoot the checkout that provides revision objects and installed prerequisites.
- * @param source selected revision.
- * @param action operation using the scratch copy.
- * @param cancelSignal command cancellation.
- *
- * @returns the operation result.
+ * Writes a Git revision into a scratch copy without checkout filters, stashing, or working-tree writes.
+ * @param repositoryRoot the checkout with the Git objects and installed dependencies.
+ * @param source the revision to copy.
+ * @param action what to run in the scratch copy.
+ * @param cancelSignal stops the copy.
+ * @returns what action returns.
  */
 export async function copyRevision<Result>(
     repositoryRoot: string,

@@ -37,7 +37,6 @@ function deriveConstraintName(node: Constraint, table: string, kind: string, key
     return [tableName, ...(kind === 'CONSTR_PRIMARY' ? [] : keys), suffix].join('_');
 }
 
-// Records a foreign key's columns under the constraint name, with the constraint's declaration position.
 function recordForeignKey(state: SchemaState, at: Location, name: string, columns: string[]): void {
     const constraints = state.constraints.get(at.table) ?? new Map<string, Schema['foreignKeys']>();
     const keys = columns.map((column) => ({
@@ -51,8 +50,7 @@ function recordForeignKey(state: SchemaState, at: Location, name: string, column
     state.constraints.set(at.table, constraints);
 }
 
-// Record a table's foreign keys. Count each primary or unique key as an index on its first
-// column.
+// A primary or unique key counts as an index on its first column.
 function recordConstraint(state: SchemaState, at: Location, node: Constraint, column?: string): void {
     const kind = node.contype ?? '';
     if (!(kind in CONSTRAINT_SUFFIXES)) return;
@@ -83,7 +81,6 @@ const readCreateTable: StatementReader<'CreateStmt'> = (statement, state, migrat
     for (const node of inTable) recordConstraint(state, at, node);
 };
 
-// What each `ALTER TABLE` command changes in the state.
 const ALTERATIONS: SchemaAlterations = {
     AT_EnableRowSecurity: (state, at) => state.secured.add(at.table),
     AT_DisableRowSecurity: (state, at) => state.secured.delete(at.table),
@@ -104,7 +101,7 @@ const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, mig
         if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(state, at, command);
 };
 
-// A dropped table leaves the state, so the checks ask nothing of a table the schema does not hold.
+// A dropped table leaves the state, so no check reports it.
 const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
     for (const item of listNodeFields(statement.fields.objects, 'List')) {
         const parts = listNameParts(item.items);
@@ -140,7 +137,6 @@ const READERS: SqlStatementReaders<void, [SchemaState, Migration]> = {
     },
 };
 
-// The state the checks read: table security, foreign keys, and indexed columns.
 function summarize(state: SchemaState): Schema {
     const foreignKeys = [...state.constraints.values()].flatMap((constraints) => [...constraints.values()].flat());
     const indexed = new Map<string, Set<string>>();
@@ -154,7 +150,7 @@ function summarize(state: SchemaState): Schema {
 
 /**
  * Reads every migration in order and gathers what they declare.
- * @param migrations the migrations, in version order.
+ * @param migrations parsed SQL files in version order.
  * @returns the schema summary.
  */
 export function buildSchema(migrations: Migration[]): Schema {

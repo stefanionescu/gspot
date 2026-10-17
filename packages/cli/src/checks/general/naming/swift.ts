@@ -69,10 +69,10 @@ function addCases(sink: ExtractSink, root: Node): void {
 }
 
 /**
- * The types, functions, methods, parameters, properties, bindings and enum cases a parsed Swift file declares.
- * @param syntaxRoot the parsed compilation unit that provides named declarations.
- * @param file the file path.
- * @returns named declarations with their categories and source positions.
+ * Lists the names that a Swift file declares.
+ * @param syntaxRoot the parsed file.
+ * @param file the repository path of the source.
+ * @returns the declared names.
  */
 export function extractSwiftIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const sink: ExtractSink = { file, language: 'swift', out: [] };

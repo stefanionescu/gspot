@@ -33,8 +33,8 @@ async function readCommittedMigrations(input: CheckInput, paths: string[]): Prom
 }
 
 /**
- * One finding for a version two files share, a file with no version, and a new file that sorts before a committed one.
- * @param input the selected migrations and committed repository history.
+ * Reports a version that two files share, a file with no version, and a new file that sorts before a committed one.
+ * @param input the scope whose migrations to compare with the last commit.
  * @returns the findings.
  */
 export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
@@ -92,8 +92,8 @@ export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Fi
 }
 
 /**
- * One finding for each migration at or before postgres.frozen_through whose text differs from the committed one.
- * @param input the migration paths and configured frozen-version boundary.
+ * Reports each migration at or before postgres.frozen_through whose text differs from the committed text.
+ * @param input the scope whose migrations to compare with the last commit.
  * @returns the findings.
  */
 export async function checkPostgresEditedMigrations(input: CheckInput): Promise<Finding[]> {

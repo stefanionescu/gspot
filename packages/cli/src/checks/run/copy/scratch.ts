@@ -16,7 +16,7 @@ import { SCRATCH_EXTRAS, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/con
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
 import type { ScratchFile, DependencyCopy, ScratchCopyPlan, ScratchCopyPaths } from '#cli/types/checks/run/copy.ts';
 
-// All scratch destinations share writes; source reads retain the repository boundary.
+// Source reads go through the confined reader, so they stay inside the repository.
 function writeScratchFile(files: Files, scratch: string, file: ScratchFile): void {
     const target = join(scratch, ...splitSystemPath(typeof file === 'string' ? file : file.entry.path));
     mkdirSync(dirname(target), { recursive: true });
@@ -35,9 +35,8 @@ function writeScratchFile(files: Files, scratch: string, file: ScratchFile): voi
 }
 
 /**
- * Copy files and Git blobs into an owned scratch root.
- *
- * @param input source root, destination, and files.
+ * Writes files and Git blobs into a scratch copy.
+ * @param input what to write, and where.
  */
 export async function writeScratchFiles(input: ScratchCopyPlan): Promise<void> {
     using files = openFiles(input.root);
@@ -53,12 +52,10 @@ export async function writeScratchFiles(input: ScratchCopyPlan): Promise<void> {
 }
 
 /**
- * Own a scratch folder containing only the supplied files and dependency trees.
- *
- * @param input exact source paths and dependency operations.
- * @param extra the authored additional tool options.
- *
- * @returns the private folder and its disposal.
+ * Lists the paths and dependency trees that a scratch copy of the check needs.
+ * @param input the check and its files.
+ * @param extra more paths to copy.
+ * @returns the paths and dependencies to copy.
  */
 export function checkCopyInputs(input: CheckInput, extra: string[] = []): ScratchCopyPaths {
     return {
@@ -72,11 +69,9 @@ export function checkCopyInputs(input: CheckInput, extra: string[] = []): Scratc
 }
 
 /**
- * Copy selected source files and dependency trees into a disposable folder.
- *
- * @param source the source paths and dependency trees.
- *
- * @returns the disposable source copy.
+ * Copies source files and dependency trees into a new scratch copy.
+ * @param source the paths and dependency trees to copy.
+ * @returns the scratch copy.
  */
 export async function copyIntoScratch(source: ScratchCopyPaths): Promise<ScratchFolder> {
     const folder = createScratchFolder();
@@ -96,13 +91,11 @@ export async function copyIntoScratch(source: ScratchCopyPaths): Promise<Scratch
 }
 
 /**
- * Select scope dependencies and existing configuration extras for a working-tree project copy.
- *
- * @param repositoryRoot the base directory for installed projects and configuration extras.
- * @param paths selected authored files.
- * @param scopes the scope paths owning installed dependencies.
- *
- * @returns exact paths and dependency copy operations.
+ * Selects the paths and installed dependency trees for a scratch copy of the working tree.
+ * @param repositoryRoot the repository folder.
+ * @param paths the authored files to copy.
+ * @param scopes the folders that hold installed dependencies.
+ * @returns the paths and dependency trees to copy.
  */
 export function selectScratchCopyPaths(repositoryRoot: string, paths: string[], scopes: string[]): ScratchCopyPaths {
     const projects = paths.flatMap((path) =>

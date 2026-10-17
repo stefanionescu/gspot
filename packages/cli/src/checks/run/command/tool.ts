@@ -39,14 +39,12 @@ function checkTool(
 }
 
 /**
- * Run a check tool with the shared timeout and classify its process failure.
- *
+ * Runs a check tool with the tool time limit and classifies its process failure.
  * @param commandArguments the executable and expanded arguments.
- * @param options the command options.
- * @param view the resolved scope settings.
- * @param name the tool or setting name.
- *
- * @returns the process result and any execution failure.
+ * @param options how to start the process.
+ * @param view the scope settings.
+ * @param name the tool that a failure note mentions.
+ * @returns the process result and any failure.
  */
 export async function runPlannedTool(
     commandArguments: string[],
@@ -59,13 +57,11 @@ export async function runPlannedTool(
 }
 
 /**
- * Resolve the declared tool once and return its executable or installation error.
- *
- * @param session the repository session.
- * @param cwd the tool working directory.
- * @param tool the declared tool and its installation pin.
+ * Finds the executable of a declared tool, or why it cannot run.
+ * @param session the repository and tool paths.
+ * @param cwd the working folder.
+ * @param tool the declaration with its version pin.
  * @param env the environment for the tool process.
- *
  * @returns the executable path or its installation failure.
  */
 export function findTool(
@@ -78,13 +74,11 @@ export function findTool(
 }
 
 /**
- * Add installed companion directories to the process path, including inside a scratch copy.
- *
- * @param input the source values.
- * @param names the companion tool names.
+ * Add the folders of installed companion tools to the process `PATH`, also in a scratch copy.
+ * @param input the repository and manifests.
+ * @param names the companion tools to add.
  * @param env the environment for the tool process.
- *
- * @returns the process environment with installed companion directories.
+ * @returns the environment with the companion folders on `PATH`.
  */
 export function buildCompanionEnvironment(
     input: Session | CheckInput,
@@ -108,13 +102,11 @@ export function buildCompanionEnvironment(
 }
 
 /**
- * Run a check's tool through the shared execution boundaries.
- *
- * @param input the check and its command session.
+ * Runs the tool of a check with the tool time limit and failure handling.
+ * @param input the check and scope.
  * @param command the executable name and arguments.
- * @param options the working directory, environment, and standard input.
- *
- * @returns captured output after checking process failures.
+ * @param options how to start the process.
+ * @returns the process output.
  */
 export async function runCheckTool(
     input: CheckInput,

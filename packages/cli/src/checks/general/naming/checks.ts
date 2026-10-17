@@ -61,9 +61,9 @@ function listPathIdentifiers(input: CheckInput): Identifier[] {
 }
 
 /**
- * Read lexical declarations and path names using each source file's selected language.
- * @param input the repository for this scope and syntax tree resources.
- * @returns declared names and the existing path-name projection for every readable source.
+ * Reads the declared names and path names of each source file, by its language.
+ * @param input the files and scopes to read.
+ * @returns the names of each file, and syntax findings.
  */
 async function readDeclaredNames(input: CheckInput): Promise<{ files: FileNames[]; findings: Finding[] }> {
     const files: FileNames[] = [];
@@ -117,8 +117,8 @@ async function readDeclaredNames(input: CheckInput): Promise<{ files: FileNames[
 
 /**
  * Reports allowed names in root naming overrides that match no code or path name.
- * @param input the selected check and repository files.
- * @returns findings for allowed names without matching declarations.
+ * @param input the settings and tracked files.
+ * @returns the findings.
  */
 export async function checkNamingAllowedNames(input: CheckInput): Promise<Finding[]> {
     const { files, findings } = await readDeclaredNames({ ...input, files: input.repositoryFiles });
@@ -163,9 +163,9 @@ export async function checkNamingAllowedNames(input: CheckInput): Promise<Findin
 }
 
 /**
- * Check the names declared by source files in each selected scope.
- * @param input the selected check and repository files.
- * @returns the findings for declared source names.
+ * Checks the names that source files declare.
+ * @param input the scope files to read.
+ * @returns the findings.
  */
 export async function checkNamingIdentifiers(input: CheckInput): Promise<Finding[]> {
     const settings = readNamingSettings(input);
@@ -185,9 +185,9 @@ export async function checkNamingIdentifiers(input: CheckInput): Promise<Finding
 }
 
 /**
- * Check file and directory names against their naming settings.
- * @param input the selected check and repository files.
- * @returns the findings for file and directory names.
+ * Checks file and folder names against the naming settings.
+ * @param input the scope files to check.
+ * @returns the findings.
  */
 export function checkNamingPaths(input: CheckInput): Finding[] {
     const settings = readNamingSettings(input);

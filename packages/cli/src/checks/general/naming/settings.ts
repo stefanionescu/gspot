@@ -73,10 +73,10 @@ function buildLimitsFor(shipped: NamingDefaults, view: Pick<ScopeView, 'options'
 }
 
 /**
- * Compiles a term list into parts.
- * @param terms the terms as written.
- * @param origin the display source and stable group, when the terms belong to a group.
- * @returns the compiled terms, empty ones dropped.
+ * Splits banned words into parts.
+ * @param terms the banned words as written.
+ * @param origin the setting and group that the words come from.
+ * @returns the split words, without empty ones.
  */
 function compileBannedWords(
     terms: string[],
@@ -88,9 +88,9 @@ function compileBannedWords(
 }
 
 /**
- * The settings in force for a scope: the shipped lists with the repository's additions, exemptions, and limits.
- * @param input the effective selection, written settings, and run's source reads.
- * @returns the effective settings.
+ * Reads the naming settings of a scope: the shipped lists plus the repository additions, exemptions, and limits.
+ * @param input the scope and settings file.
+ * @returns the naming settings.
  */
 export function readNamingSettings(
     input: Pick<CheckInput, 'reads'> & {
@@ -120,7 +120,6 @@ export function readNamingSettings(
         ),
         ...compileBannedWords(bannedWords, { setting: 'naming.banned_words' }),
     ];
-    // The shipped overrides first, then what the selected configurations know about their own files, then the repository's.
     const overrides = [
         compileOverride({ allowed_names: shipped.allowed_names }, 'shipped allowed names'),
         ...shipped.override.map((override, index) => compileOverride(override, `shipped rule ${String(index + 1)}`)),
@@ -147,9 +146,9 @@ export function readNamingSettings(
 }
 
 /**
- * The parts of an identifier, lowercased. `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
+ * Splits a name into lowercase parts: `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
  * @param name the identifier.
- * @returns lowercase word and digit groups, preserving recognized numeric words.
+ * @returns the lowercase words and digit groups.
  */
 export function splitParts(name: string): string[] {
     return name

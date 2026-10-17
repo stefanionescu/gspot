@@ -5,10 +5,10 @@ import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { BATS_TAG, DEFAULT_DIALECT, SHELLCHECK_DIALECT_FLAG } from '#cli/config/repository/inventory.ts';
 
 /**
- * Preserve each script's shebang and supply a dialect only for scripts without one.
- * @param session the source inventory and tool context.
- * @param planned the ShellCheck command and selected files.
- * @returns findings from every dialect group, with shared failure handling.
+ * Runs ShellCheck, and passes a dialect only for scripts without a shebang.
+ * @param session the repository and its tools.
+ * @param planned the ShellCheck check and its files.
+ * @returns the check result.
  */
 export async function checkShellcheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const groups = Map.groupBy(planned.files, (file) => {

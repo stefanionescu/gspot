@@ -22,8 +22,8 @@ function checkRootPackage(input: CheckInput, root: PackageJson | undefined): Fin
 }
 
 /**
- * Check the package manager that the root package.json declares.
- * @param input the selected manifests, lockfile paths, and repository settings.
+ * Checks that the root package.json names a package manager.
+ * @param input the scope files.
  * @returns the findings.
  */
 export function checkPackageJson(input: CheckInput): Finding[] {

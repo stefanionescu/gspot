@@ -77,7 +77,7 @@ function listKnownPaths(input: CheckInput): Set<string> {
                 ),
         );
     for (const path of includeParentFolders(ignored)) known.add(path);
-    // Check names resemble paths. A reference to postgres/migration-order identifies that check.
+    // A check ID such as postgres/migration-order looks like a path, so count it as known.
     for (const check of input.manifests.values().flatMap((manifest) => manifest.checks)) known.add(check.name);
     for (const check of Object.values(input.settingsFile.settings.commandChecks)) known.add(check.name);
     return known;
@@ -178,8 +178,8 @@ function readTaskNames(input: CheckInput, scope: string): TaskNames {
 }
 
 /**
- * Prose and untitled command bodies, with their numbers.
- * @param text the Markdown text.
+ * Lists prose lines and the lines of untitled command blocks, with line numbers.
+ * @param text the Markdown source.
  * @returns the lines a path check reads.
  */
 function extractProseLines(text: string): NumberedLine[] {
@@ -198,9 +198,9 @@ function extractProseLines(text: string): NumberedLine[] {
 }
 
 /**
- * The tokens of one line that look like paths.
- * @param line a single prose row to scan for repository references.
- * @returns reference candidates with trailing punctuation and emphasis markers removed.
+ * Lists the words of a line that look like paths.
+ * @param line the prose to scan.
+ * @returns the path-like words without trailing punctuation and emphasis marks.
  */
 function extractPathTokens(line: string): string[] {
     return line
@@ -222,8 +222,8 @@ function extractPathTokens(line: string): string[] {
 }
 
 /**
- * One finding per path token that names nothing tracked and per run invocation that names no task.
- * @param input the selected Markdown sources, declared tasks, and tracked path inventory.
+ * Reports each path that names no tracked file, and each run command that names no task.
+ * @param input the scope whose Markdown files to read.
  * @returns the findings.
  */
 export function checkDocsMissingPaths(input: CheckInput): Finding[] {
@@ -240,8 +240,8 @@ export function checkDocsMissingPaths(input: CheckInput): Finding[] {
 }
 
 /**
- * One finding per scope without a README.md, and one when the root has no license file.
- * @param input the scope path and repository directory that determine required document locations.
+ * Reports a scope without a README.md, and a root without a license file.
+ * @param input the scope to search.
  * @returns the findings.
  */
 export function checkDocsRequiredFiles(input: CheckInput): Finding[] {

@@ -7,7 +7,7 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { PURGECSS } from '#cli/config/checks/framework/site.ts';
 import type { PurgecssConstructor } from '#cli/types/checks/framework.ts';
 
-/** The PurgeCSS child process invocation data. */
+/** The request that the parent process sends on stdin. */
 const purgecssRequestSchema = z.strictObject({
     toolFile: z.string().min(1),
     css: z.array(z.string().min(1)),

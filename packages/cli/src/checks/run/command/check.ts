@@ -1,4 +1,3 @@
-// Prepare and run tool commands and collect their findings.
 import { join, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
 import { checkInput } from '#cli/checks/run/built-in.ts';
@@ -78,7 +77,6 @@ async function runCommands(
     return buildCheckResult(check, { base, state, commandArguments, started });
 }
 
-// Report a missing tool file before a nested check runs.
 function findMissingToolFile(
     planned: PlannedCheck,
     {
@@ -102,8 +100,7 @@ function findMissingToolFile(
     };
 }
 
-// Runs in the supplied scratch folder or a new scratch copy when the check requires one.
-// Reports the original repository command.
+// Reports the repository command, not the scratch copy command.
 async function runInScratch(run: CommandRun, scratchCopyFolder: string | undefined): Promise<CheckResult> {
     const { session, planned, tool, command, toolPath, environment, base, options } = run;
     const created =
@@ -143,7 +140,6 @@ async function runInScratch(run: CommandRun, scratchCopyFolder: string | undefin
     return { ...result, command: reported.filter((part) => typeof part === 'string') };
 }
 
-// Resolve declared companion tools before this command runs.
 function findUnavailableCompanion(
     session: Session,
     planned: PlannedCheck,
@@ -159,13 +155,13 @@ function findUnavailableCompanion(
 }
 
 /**
- * Copy selected inputs and prepare the command against that scratch copy.
- * @param planned the selected check declaration.
- * @param commandRun the execution values.
- * @param commandRun.session the repository session.
+ * Copies the check files into a scratch copy and prepares the command there.
+ * @param planned the check to run.
+ * @param commandRun what to run.
+ * @param commandRun.session the repository and its tools.
  * @param commandRun.command the executable and authored arguments.
  * @param commandRun.toolPath the resolved executable path.
- * @param commandRun.options the command and scratch-copy options.
+ * @param commandRun.options the overrides from the check implementation.
  * @returns the scratch copy and prepared command.
  */
 export async function prepareInScratch(
@@ -201,13 +197,11 @@ export async function prepareInScratch(
 }
 
 /**
- * Resolve the scope's working directory and expand tool environment values.
- *
- * @param session the repository or scratch session.
- * @param planned the selected check and files.
- * @param options the command and scratch-copy options of this invocation.
- *
- * @returns paths and environment shared by tool inspection and execution.
+ * Resolves the working folder and expands the tool environment values.
+ * @param session the repository or its scratch copy.
+ * @param planned the check and its files.
+ * @param options the overrides from the check implementation.
+ * @returns the paths and environment for the tool.
  */
 export function buildCommandEnvironment(
     session: Session,
@@ -230,13 +224,11 @@ export function buildCommandEnvironment(
 }
 
 /**
- * Derive command placeholders from the selected scope and actual working directory.
- *
- * @param source the command's repository and settings.
- * @param planned the selected check and source files.
- * @param cwd the directory from which the tool reads files.
- *
- * @returns effective settings and file paths relative to that directory.
+ * Computes the placeholder values from the scope and working folder.
+ * @param source the repository and settings.
+ * @param planned the check and its files.
+ * @param cwd the folder that the tool runs in.
+ * @returns the placeholder values, with paths relative to cwd.
  */
 export function buildCommandSubstitutions(
     source: CommandInputs,
@@ -254,14 +246,14 @@ export function buildCommandSubstitutions(
 }
 
 /**
- * Expand check and fix commands into bounded file batches.
- * @param planned the selected check declaration.
- * @param commandRun the execution values.
- * @param commandRun.session the repository session.
+ * Expands a check or fix command into file batches that fit the command line.
+ * @param planned the check to run.
+ * @param commandRun what to run.
+ * @param commandRun.session the repository and its tools.
  * @param commandRun.command the executable and authored arguments.
- * @param commandRun.environment the working paths and tool environment.
+ * @param commandRun.environment the working paths and tool variables.
  * @param commandRun.toolPath the resolved executable path.
- * @returns the working directory and bounded commands.
+ * @returns the working folder and command batches.
  */
 export function prepareCommand(
     planned: PlannedCheck,
@@ -278,13 +270,11 @@ export function prepareCommand(
 }
 
 /**
- * Inspect the selected tool and execute a check's expanded commands.
- *
- * @param session the open repository session.
+ * Finds the tool and runs the expanded commands of a check.
+ * @param session the repository and its tools.
  * @param planned the check to run.
- * @param options optional command and scratch folder supplied by the check.
- *
- * @returns the check result with attributed findings.
+ * @param options the command and scratch folder overrides.
+ * @returns the check result.
  */
 export async function runCheckCommand(
     session: Session,
@@ -309,13 +299,11 @@ export async function runCheckCommand(
 }
 
 /**
- * Merge command groups, retaining earlier findings when a later tool fails.
- *
+ * Runs each command group and merges the findings, keeping earlier findings when a later run fails.
  * @param session the repository and tools.
- * @param planned the planned check.
- * @param groups source files and command arguments for each invocation.
- *
- * @returns the combined findings and the failing invocation when one stops the check.
+ * @param planned the check to run.
+ * @param groups the files and command of each run.
+ * @returns the merged result, or the first failure with the findings so far.
  */
 export async function runCommandGroups(
     session: Session,

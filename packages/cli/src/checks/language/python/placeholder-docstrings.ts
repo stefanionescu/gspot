@@ -5,9 +5,9 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
 
 /**
- * Report Python docstrings that only repeat a name or placeholder.
- * @param input the selected scope, files, and settings.
- * @returns the findings for that check.
+ * Reports Python docstrings that only repeat a name or placeholder.
+ * @param input the scope Python files.
+ * @returns the findings.
  */
 export async function checkPythonPlaceholderDocstrings(input: CheckInput): Promise<Finding[]> {
     const parsed = await parseCached(input, PYTHON_SOURCES);

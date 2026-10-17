@@ -37,8 +37,8 @@ const findingSchema = z.object({
     code?: string | number | undefined;
 }>);
 /**
- * Reads the machine-verbose report of svelte-check.
- * @param input the input for one scope.
+ * Parses the machine-verbose output of svelte-check.
+ * @param input the scope that ran the check.
  * @param stdout what svelte-check printed.
  * @returns one finding for each error and warning.
  */
@@ -69,8 +69,8 @@ function parseSvelteCheckFindings(input: CheckInput, stdout: string): Finding[] 
 }
 
 /**
- * Runs svelte-check over the scope: the compiler warnings, the accessibility warnings, and the types.
- * @param input the selected sources, compiler settings, and tool locations.
+ * Runs svelte-check on the scope for compiler warnings, accessibility warnings, and type errors.
+ * @param input the scope to check.
  * @returns one finding for each error and warning.
  */
 export async function runSvelteCheck(input: CheckInput): Promise<Finding[]> {

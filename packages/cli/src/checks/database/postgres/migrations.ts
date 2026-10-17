@@ -33,7 +33,7 @@ async function parseMigrations(input: CheckInput, paths: string[]): Promise<Migr
 
 /**
  * Reads and parses every tracked migration in version order.
- * @param input the check input.
+ * @param input the scope whose migrations to read.
  * @returns the migrations, empty when the repository has no migrations folder.
  */
 async function readMigrations(input: CheckInput): Promise<MigrationRead> {
@@ -66,9 +66,9 @@ async function readMigrations(input: CheckInput): Promise<MigrationRead> {
 }
 
 /**
- * Select forward SQL migration paths from the effective folder or configuration-owned defaults.
- * @param input the input for one scope.
- * @returns root-relative migration paths without parsing their SQL.
+ * Lists the forward SQL migrations that the postgres/squawk check covers.
+ * @param input the scope whose files to search.
+ * @returns the root-relative paths.
  */
 function listMigrationPaths(input: CheckInput): string[] {
     const migrations = input.scope.selected.flatMap((manifest) =>

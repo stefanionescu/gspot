@@ -4,8 +4,8 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
- * One finding per file whose stem matches a sibling folder's name.
- * @param input the check context.
+ * Reports each file whose stem matches the name of a sibling folder.
+ * @param input the scope files.
  * @returns the findings.
  */
 export function checkFileFolderClashes(input: CheckInput): Finding[] {

@@ -27,7 +27,7 @@ import {
     TRIVY_SCHEMA_VERSION,
 } from '#cli/config/checks/infrastructure/docker.ts';
 
-// Group actual project paths in the order of base files before their overrides for metadata and validation.
+// Group each base Compose file before its overrides so they read and validate in order.
 function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     const groups = new Map<string, ComposeFiles>();
     for (const file of files) {
@@ -52,10 +52,9 @@ function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {
 }
 
 /**
- * Read Compose declarations and resolve their local build contexts.
- * Compose declares the paths; the YAML holds the service, image, and build metadata.
- * @param input the selected Compose files and source reads.
- * @returns the service declarations and their build contexts.
+ * Reads Compose services and resolves their local build contexts.
+ * @param input the scope files to read.
+ * @returns the services and their build contexts.
  */
 function readComposeDocuments(input: CheckInput): ComposeDocuments {
     const patterns = input.manifests
@@ -203,8 +202,8 @@ const composeSchema = z.object({
 } satisfies SchemaShape<{ services?: Record<string, ComposeService> | undefined }>);
 
 /**
- * Scan each literal service image once and attribute its findings to every declaring Compose file.
- * @param input the Compose declarations, image settings, and tool execution services.
+ * Scans each literal service image once and reports its findings in every Compose file that names it.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export async function checkDockerTrivyImage(input: CheckInput): Promise<Finding[]> {
@@ -230,10 +229,10 @@ export async function checkDockerTrivyImage(input: CheckInput): Promise<Finding[
 }
 
 /**
- * Validate each Compose project with its declared overrides through the shared command runner.
- * @param session the open session.
- * @param planned the selected Compose files, overrides, and invoking scope.
- * @returns the findings and process result.
+ * Validates each Compose project with its overrides.
+ * @param session the repository and its tools.
+ * @param planned the Compose check and its files.
+ * @returns the check result.
  */
 export async function checkDockerCompose(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const isCompose = buildPathMatcher(planned.check.files?.paths ?? []);

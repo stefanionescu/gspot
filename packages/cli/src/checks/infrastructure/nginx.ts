@@ -39,7 +39,7 @@ import {
     OPENSSL_CERTIFICATE_FLAG,
 } from '#cli/config/checks/infrastructure/nginx.ts';
 
-// Include paths use the main settings folder, matching nginx prefix semantics.
+// nginx resolves include paths from the folder of the main configuration file.
 function listIncludedFiles(input: CheckInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
     const included: Pick<Mount, 'path' | 'target'>[] = [];
     for (const [name, value] of parseNginxDirectives(text)) {
@@ -150,7 +150,6 @@ function findWordEnd(text: string, at: number): number {
     return end;
 }
 
-// A comment: the hash to the end of the line.
 function scanComment(text: string, at: number): DirectiveScan {
     const end = text.indexOf('\n', at);
     const stop = end === -1 ? text.length : end;
@@ -180,13 +179,13 @@ function splitTokens(text: string): string[] {
 }
 
 /**
- * Docker arguments that run nginx -t over one tool file.
- * @param text the tool file text.
- * @param mounts the host paths: the tool file, certificate, and key.
- * @param mounts.configs the captured tool files and container paths.
- * @param mounts.certificate the throwaway certificate.
- * @param mounts.key the throwaway key.
- * @param image the container tag that supplies the nginx configuration parser.
+ * Builds the Docker arguments that run nginx -t on one nginx configuration.
+ * @param text the nginx configuration, with its includes.
+ * @param mounts the host paths to mount.
+ * @param mounts.configs the copied nginx files and their container paths.
+ * @param mounts.certificate the self-signed certificate file to mount.
+ * @param mounts.key the throwaway private key file to mount.
+ * @param image the nginx container tag.
  * @returns the command arguments after docker.
  */
 function buildNginxTestArguments(text: string, mounts: NginxMounts, image: string): string[] {
@@ -219,8 +218,8 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
 }
 
 /**
- * Read directive arguments without changing quoted whitespace or treating comments as configuration.
- * @param text the nginx configuration text.
+ * Parse nginx directives. Quoted whitespace stays, and comments drop out.
+ * @param text the nginx configuration.
  * @returns each directive as its name followed by its arguments.
  */
 function parseNginxDirectives(text: string): [string, ...string[]][] {
@@ -253,7 +252,7 @@ function parseNginxDirectives(text: string): [string, ...string[]][] {
 
 /**
  * Tests every tracked nginx.conf with the server's own parser.
- * @param input the selected configuration files and container image settings.
+ * @param input the scope files and nginx image.
  * @returns one finding for each file nginx refuses.
  */
 export async function checkNginxSyntax(input: CheckInput): Promise<BuiltInCheckResult> {

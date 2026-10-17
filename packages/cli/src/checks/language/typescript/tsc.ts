@@ -37,10 +37,10 @@ import {
 } from '#cli/checks/language/typescript/compiler.ts';
 
 /**
- * Collect each compiler project's inherited configurations and resolved source dependencies.
- * @param session the captured repository and run reads.
- * @param projects the project scopes and parsed configurations.
- * @returns repository-relative compiler inputs for the scratch copy.
+ * Lists the tsconfig files and sources of each project, for the scratch copy.
+ * @param session the repository and read cache.
+ * @param projects each scope path with its parsed tsconfig.
+ * @returns the repository-relative paths.
  */
 function listCompilerInputs(
     session: Session,
@@ -56,11 +56,11 @@ function listCompilerInputs(
 }
 
 /**
- * Select the source files and type declaration folders for one scope.
+ * Selects the source files and type roots of a scope.
  * @param session the source repository or scratch copy.
- * @param scope the owning scope.
- * @param config the compiler options.
- * @returns the scope-owned compiler project.
+ * @param scope the folder whose files to keep.
+ * @param config the parsed jsconfig.
+ * @returns the file names and compiler options.
  */
 function buildScopeCompilerProject(
     session: Session,
@@ -92,10 +92,10 @@ function selectReferenceProject(project: ReturnType<typeof readTsconfigProject>)
 }
 
 /**
- * Locate one scope's generated project without parsing another scope's authored options.
- * @param session the repository inventory, settings, and generated files.
- * @param planned the JavaScript check and its owning scope.
- * @returns the existing generated project with this scope's content.
+ * Finds the generated jsconfig of a scope without parsing the authored options of another scope.
+ * @param session the repository and settings.
+ * @param planned the JavaScript check and its scope.
+ * @returns the path of the matching jsconfig.
  */
 function findJavascriptProject(session: Session, planned: PlannedCheck): string {
     const toolFile = readToolFileDeclaration(session, planned, extractToolFileName(JSCONFIG_FILE)) as WholeToolFile;
@@ -132,10 +132,10 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
 }
 
 /**
- * Checks ordinary projects and every project named by a solution configuration.
- * @param session the repository session.
+ * Runs tsc on a project, or on every project that a solution tsconfig names.
+ * @param session the repository and its tools.
  * @param planned the compiler check for one scope.
- * @returns compiler findings and the shared tool execution status.
+ * @returns the check result.
  */
 export async function checkTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
@@ -183,10 +183,10 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
 }
 
 /**
- * Check JavaScript with the type declarations the project uses.
- * @param session the selected repository and tool reads.
+ * Type-checks JavaScript with the type declarations the project uses.
+ * @param session the repository and its tools.
  * @param planned the JavaScript compiler check.
- * @returns compiler diagnostics with source paths and the command status.
+ * @returns the check result.
  */
 export async function checkJavascriptTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;

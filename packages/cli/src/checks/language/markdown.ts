@@ -66,7 +66,7 @@ async function findTreeSyntaxError(
 }
 
 /**
- * Read language-tagged Markdown examples with source positions.
+ * Lists the language-tagged code fences of a Markdown file, with line numbers.
  * @param text the Markdown source.
  * @returns the parsed code fences.
  */
@@ -84,10 +84,10 @@ function parseCodeFences(text: string): FencedBlock[] {
 }
 
 /**
- * Parse language-tagged examples and locate errors in their Markdown source lines.
+ * Parses language-tagged code fences and reports syntax errors at their Markdown lines.
  * @param text the Markdown source.
- * @param cache the existing run-owned grammar cache, when checking repository files.
- * @returns one syntax finding per invalid example, with aliases sharing the same outcome.
+ * @param cache the parsed grammars of the run.
+ * @returns one syntax error per invalid code fence.
  */
 async function validateCodeFences(text: string, cache: ParseCache): Promise<FenceSyntaxError[]> {
     const readers: Record<
@@ -123,9 +123,9 @@ async function validateCodeFences(text: string, cache: ParseCache): Promise<Fenc
 }
 
 /**
- * Report invalid tagged examples at their error lines.
- * @param input the selected Markdown files and tool execution state.
- * @returns one syntax finding per invalid code example.
+ * Reports invalid code fences at their error lines.
+ * @param input the scope Markdown files.
+ * @returns one finding per invalid code fence.
  */
 export async function checkMarkdownFences(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
@@ -147,9 +147,9 @@ export async function checkMarkdownFences(input: CheckInput): Promise<Finding[]>
 }
 
 /**
- * Keep Markdown filenames literal in markdownlint-cli2 arguments.
- * @param input the selected check and repository files.
- * @returns the command arguments with the planned Markdown files.
+ * Builds markdownlint-cli2 arguments that keep Markdown file names literal.
+ * @param input the scope Markdown files.
+ * @returns the file arguments.
  */
 export function buildMarkdownlintArguments(input: CheckInput): string[] {
     return input.files.map((file) => `${MARKDOWNLINT_PATH_PREFIX}${file.path}`);

@@ -12,7 +12,7 @@ import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
 import type { Finding, CheckInput, FindingPlace } from '#cli/types/checks/run/check.ts';
 import { REASON_ABOVE, SUPPRESSION_LIMITS, LIMIT_SUPPRESSION_MESSAGE } from '#cli/config/checks/general/gspot.ts';
 
-// A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
+// A reason on the line above covers only the next line. Code or comments between them break the link.
 function findReasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
     if (
         previous === undefined ||
@@ -103,8 +103,8 @@ function checkSuppressionComment(
 }
 
 /**
- * Report forbidden suppressions and missing or invalid required reasons.
- * @param input the check input with the read suppression comments.
+ * Reports forbidden suppressions and suppressions without a valid reason.
+ * @param input the files to scan, by scope.
  * @returns the findings.
  */
 export async function checkSuppressions(input: CheckInput): Promise<Finding[]> {

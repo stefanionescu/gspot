@@ -1,5 +1,3 @@
-// Authored source selectors that match no tracked file or folder.
-
 import { buildFinding } from '#cli/checks/finding.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
@@ -13,9 +11,9 @@ import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { scopeSchema, settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 
 /**
- * Report settings paths that match no repository entry.
- * @param input the selected check and repository files.
- * @returns findings for settings paths without matching files.
+ * Reports setting paths that match no tracked file or folder.
+ * @param input the settings and tracked files.
+ * @returns the findings.
  */
 export function checkUnmatchedPatterns(input: CheckInput): Finding[] {
     const files = input.repositoryFiles;

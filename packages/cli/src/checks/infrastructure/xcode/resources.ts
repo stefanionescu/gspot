@@ -27,7 +27,7 @@ function getAssetSetName(path: string): string {
     return name.slice(0, name.lastIndexOf('.'));
 }
 
-/** String catalog metadata and translation records. */
+/** A string catalog: its source language and translations. */
 const stringsFileSchema = z.object({
     sourceLanguage: z.string().optional(),
     strings: z
@@ -48,15 +48,15 @@ const stringsFileSchema = z.object({
         | Record<string, { shouldTranslate?: boolean | undefined; localizations?: Record<string, unknown> | undefined }>
         | undefined;
 }>);
-/** Image file references consumed from asset catalog contents. */
+/** The image files that an asset catalog Contents.json names. */
 const assetContentsSchema = z.object({
     images: z
         .array(z.object({ filename: z.string().optional() } satisfies SchemaShape<{ filename?: string | undefined }>))
         .optional(),
 } satisfies SchemaShape<{ images?: { filename?: string | undefined }[] | undefined }>);
 /**
- * The findings of every asset catalog: each Contents.json parses, each image set holds its images.
- * @param input the catalog metadata and repository paths that locate the declared images.
+ * Checks that each asset catalog Contents.json parses and each image set holds its images.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkXcodeAssets(input: CheckInput): Finding[] {
@@ -81,8 +81,8 @@ export function checkXcodeAssets(input: CheckInput): Finding[] {
 }
 
 /**
- * Report asset sets that no source or Xcode build setting names.
- * @param input the asset catalogs, source texts, and project settings that name each resource.
+ * Reports asset sets that no source or Xcode build setting names.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkXcodeUnusedAssets(input: CheckInput): Finding[] {
@@ -112,8 +112,8 @@ export function checkXcodeUnusedAssets(input: CheckInput): Finding[] {
 }
 
 /**
- * The findings of every string catalog: it parses, and every string has every locale the catalog uses.
- * @param input the string catalog paths and cached JSON reads.
+ * Checks that each string catalog parses and that every string has every locale the catalog uses.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkXcstrings(input: CheckInput): Finding[] {

@@ -33,7 +33,6 @@ function extractFunctionBody(node: Node, language: CountedLanguage): Node[] {
     );
 }
 
-// Whether a Bash node supplies one executable command or statement.
 function isBashStatement(node: Node): boolean {
     if (BASH_COMMAND_NODES.has(node.type)) return true;
     if (node.type === 'variable_assignment') return !BASH_COMMAND_NODES.has(node.parent?.type ?? '');
@@ -51,7 +50,6 @@ const STATEMENT_COUNTS: Record<CountedLanguage, (node: Node) => number> = {
     bash: (node) => (isBashStatement(node) ? 1 : 0),
 };
 
-// Whether a function holds more executable statements than the trivial limit, ignoring a Python docstring.
 function isSubstantialFunction(node: Node, language: CountedLanguage, limit: number): boolean {
     if (node.type === 'lambda') return false;
     if (node.type === 'computed_property' && !node.namedChildren.some((child) => child.type === 'statements'))
@@ -75,7 +73,7 @@ function isNonReferenceAlias(node: Node): boolean {
     return value !== undefined && !TYPE_REFERENCE_NODES.has(value.type);
 }
 
-// What each kind of node must hold to count as substantial, by node type.
+// What each node type must hold to count as substantial.
 const SUBSTANCE: Record<string, IsSubstantial> = {
     expression_statement: (node, language, limit) => {
         const child = node.namedChildren[0];
@@ -102,13 +100,11 @@ const LANGUAGE_SUBSTANCE: Record<CountedLanguage, Record<string, IsSubstantial>>
     swift: {},
 };
 
-// Nodes that never count as substantial: a comment, an import, a shebang, or a bare name.
 function isInert(node: Node): boolean {
     if (node.type.includes('comment') || node.type.startsWith('import')) return true;
     return node.type === 'hash_bang_line' || BARE_NAME_NODES.has(node.type);
 }
 
-// Identify substantive nodes beyond imports, names, forwarding declarations, and trivial functions.
 function isSubstantial(node: Node, language: CountedLanguage, limit: number): boolean {
     if (isInert(node)) return false;
     if (COUNTED_FUNCTION_NODES.has(node.type)) return isSubstantialFunction(node, language, limit);
@@ -123,10 +119,10 @@ function isSubstantial(node: Node, language: CountedLanguage, limit: number): bo
 }
 
 /**
- * Count executable statements, excluding nested function bodies and type-only declarations.
- * @param nodes the body nodes.
- * @param language the parsing language.
- * @returns executable totals for this body while nested declarations contribute at most one.
+ * Counts executable statements, without nested function bodies or type-only declarations.
+ * @param nodes the body to count.
+ * @param language the grammar of the file.
+ * @returns the count; each nested function counts as one.
  */
 function countExecutableStatements(nodes: Node[], language: CountedLanguage): number {
     let count = 0;
@@ -142,10 +138,10 @@ function countExecutableStatements(nodes: Node[], language: CountedLanguage): nu
 }
 
 /**
- * Whether all declarations contain only imports, aliases, forwarding statements, or trivial functions.
- * @param syntaxRoot the parsed document whose top-level statements determine substance.
- * @param language the parsing language.
- * @param limit the statement count at or under which a function counts as trivial.
+ * Checks whether a file holds only imports, aliases, forwarding statements, or trivial functions.
+ * @param syntaxRoot the parsed file.
+ * @param language the grammar of the file.
+ * @param limit the most statements a trivial function holds.
  * @returns whether the file holds nothing substantial.
  */
 function isTrivialFile(syntaxRoot: Node, language: CountedLanguage, limit: number): boolean {
@@ -170,9 +166,9 @@ function formatAccessorName(node: Node, label: string): string {
 }
 
 /**
- * Name a Swift executable body and the declaration containing its accessor or observer.
- * @param node the body declaration.
- * @returns its existing finding label.
+ * Names a Swift function, or an accessor or observer with its declaration.
+ * @param node the Swift function or accessor.
+ * @returns the label for the finding.
  */
 function formatSwiftFunctionName(node: Node): string {
     const name =
@@ -183,9 +179,9 @@ function formatSwiftFunctionName(node: Node): string {
 }
 
 /**
- * Report trivial source functions and files while leaving anonymous expressions in place.
- * @param input the selected source files and their language-specific statement limits.
- * @returns findings with the original statement counts and locations.
+ * Reports trivial functions and files, and leaves anonymous functions alone.
+ * @param input the scope files and statement limits.
+ * @returns the findings.
  */
 async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
     const parsed = await parseCached(input, CONVENTION_SOURCES);
@@ -233,10 +229,10 @@ async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * The message for a function at or under the statement limit.
- * @param name the function name or the default description.
+ * Formats the message for a function at or under the statement limit.
+ * @param name what to call the function.
  * @param count the executable statements it holds.
- * @param limit the statement limit.
+ * @param limit the most statements that still count as trivial.
  * @returns the message.
  */
 function formatTrivialFunction(name: string, count: number, limit: number): string {

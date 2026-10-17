@@ -26,16 +26,16 @@ function hasInstalledExpo(scopeRoot: string): boolean {
     }
 }
 
-// Whether a Doctor line ends the issues of a failed check: a blank, advice, another check, or the summary.
+// A blank line, advice, another check, or the summary ends the details of a failed check.
 function isBlockEnd(line: string): boolean {
     if (line === '' || BLOCK_END_PREFIXES.some((prefix) => line.startsWith(prefix))) return true;
     return PASSED_CHECKS.test(line);
 }
 
 /**
- * Reads the report Expo Doctor prints.
+ * Parses the Expo Doctor output.
  * @param stdout what Doctor printed.
- * @returns one finding for each check Doctor reports as failed, with its issues.
+ * @returns one message per failed Doctor check, with its details.
  */
 function parseExpoDoctor(stdout: string): string[] {
     const lines = stripVTControlCharacters(stdout)
@@ -53,8 +53,8 @@ function parseExpoDoctor(stdout: string): string[] {
 
 /**
  * Runs Expo Doctor in a scope that depends on expo.
- * @param input the project scope and installed tool environment.
- * @returns one finding for each check Doctor reports as failed.
+ * @param input the scope to check.
+ * @returns one finding per failed Doctor check.
  */
 export async function checkExpoDoctor(input: CheckInput): Promise<Finding[]> {
     const path = joinScope(input.scope.scope.path, 'package.json');

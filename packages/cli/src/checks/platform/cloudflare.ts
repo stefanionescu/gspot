@@ -24,9 +24,9 @@ function splitContentLines(text: string): NumberedLine[] {
 }
 
 /**
- * Read path blocks, their headers and syntax diagnostics with original line numbers.
- * @param text the complete _headers content before line parsing.
- * @returns the blocks and findings.
+ * Parses a _headers file into path blocks and syntax errors, with line numbers.
+ * @param text the _headers file.
+ * @returns the blocks and syntax errors.
  */
 function parseHeadersFile(text: string): HeaderBlocks {
     const blocks: HeaderBlock[] = [];
@@ -59,9 +59,9 @@ function parseHeadersFile(text: string): HeaderBlocks {
 }
 
 /**
- * The findings of one redirects file: each rule contains a source, a destination, and an optional Cloudflare status.
- * @param text the asset contents.
- * @returns the findings, each with its line.
+ * Checks that each redirect holds a source, a destination, and an optional Cloudflare status.
+ * @param text the _redirects file.
+ * @returns the errors, each with its line.
  */
 function validateRedirects(text: string): NumberedLine[] {
     const entries = splitContentLines(text);
@@ -81,8 +81,8 @@ function validateRedirects(text: string): NumberedLine[] {
 }
 
 /**
- * The syntax findings of every redirects file.
- * @param input the selected redirect paths and cached text reads.
+ * Reports syntax errors in each _redirects file.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkCloudflareRedirects(input: CheckInput): Finding[] {
@@ -94,8 +94,8 @@ export function checkCloudflareRedirects(input: CheckInput): Finding[] {
 }
 
 /**
- * The syntax findings of every headers file.
- * @param input the selected header paths and cached text reads.
+ * Reports syntax errors in each _headers file.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkCloudflareHeaders(input: CheckInput): Finding[] {
@@ -107,8 +107,8 @@ export function checkCloudflareHeaders(input: CheckInput): Finding[] {
 }
 
 /**
- * The headers file sets the security headers for every path.
- * @param input the header paths and file reads that supply the wildcard block.
+ * Checks that each _headers file sets the security headers for every path.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkCloudflareSecurityHeaders(input: CheckInput): Finding[] {

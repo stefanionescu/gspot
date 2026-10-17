@@ -36,11 +36,11 @@ function parseSegmentName(
 }
 
 /**
- * The file's own name as an identifier: the stem for most languages, the whole base name for a SQL migration.
- * @param path the repository-relative location that supplies the basename.
- * @param language the language configuration the file belongs to.
- * @param containers the selected configurations’ path punctuation.
- * @returns a spelling and category paired with the original file location.
+ * Builds the identifier of a file name: the stem, or the whole base name for a SQL migration.
+ * @param path the file, relative to the repository root.
+ * @param language the configuration that covers the file.
+ * @param containers the bracket pairs that wrap path segments.
+ * @returns the identifier.
  */
 export function buildFileIdentifier(path: string, language: string, containers: PathContainer[]): Identifier {
     const base = posix.basename(path);
@@ -53,11 +53,11 @@ export function buildFileIdentifier(path: string, language: string, containers: 
 }
 
 /**
- * Every directory on a file's path as an identifier, from the top down. Skip dot folders.
- * @param path the file path.
- * @param language the language configuration the file belongs to.
- * @param containers the selected configurations’ path punctuation.
- * @returns one entry for each nonempty parent segment that does not start with a dot.
+ * Builds an identifier for each folder above a file, from the top down, except dot folders.
+ * @param path the file, relative to the repository root.
+ * @param language the configuration that covers the file.
+ * @param containers the bracket pairs that wrap path segments.
+ * @returns one identifier per nonempty folder without a leading dot.
  */
 export function buildFolderIdentifiers(path: string, language: string, containers: PathContainer[]): Identifier[] {
     const segments = path.split('/').slice(0, -1);
@@ -72,12 +72,12 @@ export function buildFolderIdentifiers(path: string, language: string, container
 }
 
 /**
- * The identifiers a file declares, or none when no extractor reads its language.
- * @param file the file path.
- * @param text the file text.
- * @param language the language configuration the file belongs to.
- * @param context the execution reads and syntax tree resources.
- * @returns the identifiers in document order.
+ * Lists the identifiers a file declares, or none when no extractor reads its language.
+ * @param file the repository path of the source.
+ * @param text the source to parse.
+ * @param language the configuration that covers the file.
+ * @param context the read cache and parser resources.
+ * @returns the identifiers in source order, or a syntax error.
  */
 export async function parseIdentifiers(
     file: string,
@@ -118,10 +118,10 @@ export async function parseIdentifiers(
 }
 
 /**
- * Build a declaration with its source file and the label findings display.
- * @param source the source file and selected language.
- * @param declaration the declaration's name, category, and location.
- * @returns the declaration labeled with its language.
+ * Builds an identifier with its file and the label that findings show.
+ * @param source the file and its language.
+ * @param declaration what the code declares, and where.
+ * @returns the labeled identifier.
  */
 export function createIdentifier(
     source: Pick<ExtractSink, 'file' | 'language'>,
@@ -132,11 +132,11 @@ export function createIdentifier(
 }
 
 /**
- * Add a declaration at its source location. Omit empty names and `_`.
- * @param sink the source file and its collected declarations.
- * @param node the declaration's source node.
- * @param category the naming category.
- * @param name the authored name, after any language-specific spelling change.
+ * Adds an identifier at its source place, except an empty name or `_`.
+ * @param sink the file and the identifiers found so far.
+ * @param node the parsed declaration.
+ * @param category the kind of declared name.
+ * @param name the authored spelling, after any language change.
  */
 export function addIdentifier(sink: ExtractSink, node: Node, category: NamedCategory, name = node.text): void {
     if (name === '' || name === '_') return;

@@ -28,8 +28,8 @@ function validateMessage(text: string): string | undefined {
 }
 
 /**
- * The findings of the message files under the folder the settings name.
- * @param input the message paths, configured base locale, and file reads.
+ * Checks the message files in `translations.messages_folder` against the base locale.
+ * @param input the scope files and translation settings.
  * @returns the findings.
  */
 function checkTranslationMessages(input: CheckInput): Finding[] {

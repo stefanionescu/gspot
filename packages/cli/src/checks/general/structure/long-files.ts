@@ -5,9 +5,9 @@ import { COMMENT_MARKERS } from '#cli/config/checks/general/structure.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 /**
- * Report source files above their language's code-line limit.
- * @param input the selected files and effective scope settings.
- * @returns each file above its limit.
+ * Reports source files over the code-line limit of their language.
+ * @param input the scope files and limits.
+ * @returns one finding per long file.
  */
 export async function checkLongFiles(input: CheckInput): Promise<Finding[]> {
     const sources = input.files.flatMap((file) => {

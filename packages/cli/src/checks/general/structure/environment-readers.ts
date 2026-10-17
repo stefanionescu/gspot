@@ -11,9 +11,9 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sources.ts';
 
 /**
- * Report environment reads outside the scope's declared reader files.
- * @param input the selected sources and effective architecture roles.
- * @returns findings on the original reading lines.
+ * Reports environment reads outside the environment readers.
+ * @param input the scope sources and roles.
+ * @returns one finding per reading line.
  */
 export async function checkEnvironmentReaders(input: CheckInput): Promise<Finding[]> {
     const readerPaths = input.scope.view.roles[ENVIRONMENT_READERS_ROLE];

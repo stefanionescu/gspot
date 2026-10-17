@@ -7,10 +7,10 @@ import { checkInput, buildBuiltInResult } from '#cli/checks/run/built-in.ts';
 import { GENERATED_FILE_HELP, GENERATED_FILE_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 
 /**
- * Compare generated files with the settings output and report changes, missing files, conflicts, and stray outputs.
- * @param session the settings and repository to emit.
+ * Reports each generated file on disk that does not match what the settings generate.
+ * @param session the settings and repository.
  * @param planned the repository-wide drift check.
- * @returns the check result with its generated-file findings.
+ * @returns the check result.
  */
 export function checkGeneratedFiles(session: Session, planned: PlannedCheck): CheckResult {
     const started = performance.now();

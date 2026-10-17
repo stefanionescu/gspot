@@ -75,10 +75,10 @@ function addAssignments(sink: ExtractSink, root: Node): void {
 }
 
 /**
- * The classes, exceptions, functions, methods, parameters, bindings and type aliases a parsed Python file declares.
- * @param syntaxRoot the parsed module that provides declaration nodes.
- * @param file the file path.
- * @returns names and categories with their line and column locations.
+ * Lists the names that a Python module declares.
+ * @param syntaxRoot the parsed module.
+ * @param file the repository path of the module.
+ * @returns the declared names.
  */
 export function extractPythonIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const sink: ExtractSink = { file, language: 'python', out: [] };

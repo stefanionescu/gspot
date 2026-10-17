@@ -1,4 +1,3 @@
-// The access checks of the schema the migrations build: row security, grants, and definer functions.
 import { buildFinding } from '#cli/checks/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
@@ -41,8 +40,8 @@ function checkStatements(
 }
 
 /**
- * One finding for each table in a client schema with row security off.
- * @param input the selected migrations and configured client schemas.
+ * Reports each table in a client schema with row security off.
+ * @param input the scope whose migrations to read.
  * @returns the findings.
  */
 export async function checkRowLevelSecurity(input: CheckInput): Promise<Finding[]> {
@@ -65,8 +64,8 @@ export async function checkRowLevelSecurity(input: CheckInput): Promise<Finding[
 }
 
 /**
- * One finding for each mutable migration that grants every privilege.
- * @param input the selected migrations and the last frozen version.
+ * Reports each grant of every privilege in a migration after the frozen ones.
+ * @param input the scope whose migrations to read.
  * @returns the findings.
  */
 export async function checkPostgresGrants(input: CheckInput): Promise<Finding[]> {
@@ -94,8 +93,8 @@ export async function checkPostgresGrants(input: CheckInput): Promise<Finding[]>
 }
 
 /**
- * One finding for each SECURITY DEFINER function that sets no search_path.
- * @param input the migration paths and SQL parsing services.
+ * Reports each SECURITY DEFINER function that sets no search_path.
+ * @param input the scope whose migrations to read.
  * @returns the findings.
  */
 export async function checkDefinerSearchPath(input: CheckInput): Promise<Finding[]> {

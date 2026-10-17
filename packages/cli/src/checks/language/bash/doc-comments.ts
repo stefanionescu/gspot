@@ -62,8 +62,8 @@ function validateDocComment(
 }
 
 /**
- * One finding per function without a summary line, with a vague summary, or with doc sections out of order.
- * @param input the check context.
+ * Reports each function without a summary line, with a vague summary, or with doc sections out of order.
+ * @param input the scope scripts to read.
  * @returns the findings.
  */
 export async function checkBashDocComments(input: CheckInput): Promise<Finding[]> {

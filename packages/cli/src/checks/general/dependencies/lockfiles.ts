@@ -56,8 +56,8 @@ function checkForeignLockfiles(input: CheckInput): Finding[] {
 }
 
 /**
- * The findings of the lockfile host check over tracked npm, pnpm, Yarn, and text Bun lockfiles.
- * @param input the repository paths, registry allowlist, and cached source bytes.
+ * Checks the registry hosts in tracked npm, pnpm, Yarn, and text Bun lockfiles.
+ * @param input the scope files and allowed registries.
  * @returns the findings.
  */
 export function checkLockfiles(input: CheckInput): Finding[] {

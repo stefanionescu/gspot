@@ -1,4 +1,3 @@
-// Check Next.js options and generate its types before type checking.
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { checkInput } from '#cli/checks/run/built-in.ts';
@@ -31,17 +30,17 @@ function summarizeFailure(text: string): string {
 }
 
 /**
- * Generate Next.js route types and run the shared TypeScript check in the same scratch copy.
- * @param session the repository and tool session.
+ * Generates Next.js route types and runs the TypeScript check in the same scratch copy.
+ * @param session the repository and its tools.
  * @param planned the Next.js compiler check.
- * @returns the compiler findings and execution status.
+ * @returns the compiler findings and status.
  */
 export async function checkNextjsTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     using scratchFolder = await copyIntoScratch(checkCopyInputs(checkInput(session, planned)));
     const root = scratchFolder.path;
     const scratchSession = { ...session, root, reads: createReadCache(root) };
-    // CI prevents package installation; generated Next.js files stay in the compiler's scratch project.
+    // CI stops package installs; the Next.js generator output stays in the scratch copy.
     const generated = await runCheckTool(checkInput(scratchSession, planned), NEXT_TYPEGEN_COMMAND, {
         cwd: join(root, planned.scope.scope.path),
         env: CI_ENVIRONMENT,

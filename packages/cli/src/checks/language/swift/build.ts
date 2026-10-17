@@ -46,7 +46,7 @@ function parseOutputFindings(
             return [groups];
         })
         .map((groups): Finding => {
-            // SwiftLint appends the rule ID in parentheses; compiler diagnostics do not.
+            // SwiftLint appends the rule ID in parentheses; compiler messages do not.
             const text = groups['text'] ?? '';
             const suffix = RULE_SUFFIX.exec(text)?.groups;
             const { rule = defaultRule, text: message = text } = suffix === undefined ? {} : suffix;
@@ -65,7 +65,7 @@ function parseOutputFindings(
         });
 }
 
-// The package manager hands the compiler its sources in a response file, written as @path. The analyzer reads the
+// The build tool hands the compiler its sources in a response file, written as @path. The analyzer reads the
 // file names from the log and opens no response file, so the log spells out each one.
 function expandResponseFiles(line: string, folder: string, files: Files): string {
     if (!line.includes('swiftc ')) return line;
@@ -103,7 +103,7 @@ function stripMacosPrivatePrefix(path: string): string {
 
 /**
  * Builds the scope and reports the compiler errors.
- * @param input the project scope, compiler settings, and installed tool paths.
+ * @param input the scope to build.
  * @returns the findings.
  */
 export async function checkSwiftBuild(input: CheckInput): Promise<Finding[]> {
@@ -116,7 +116,7 @@ export async function checkSwiftBuild(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Runs the SwiftLint analyzer rules over the compiler log of the build.
- * @param input the Swift project settings and the analyzer tool file.
+ * @param input the scope to analyze.
  * @returns the findings.
  */
 export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[]> {
@@ -140,7 +140,7 @@ export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[
 
 /**
  * Runs Periphery over the project and reports every declaration nothing uses.
- * @param input the project scope and the unused-declaration tool file.
+ * @param input the scope to scan.
  * @returns the findings.
  */
 export async function checkSwiftPeriphery(input: CheckInput): Promise<Finding[]> {
@@ -157,9 +157,9 @@ export async function checkSwiftPeriphery(input: CheckInput): Promise<Finding[]>
 }
 
 /**
- * Retain SwiftLint's pointer for one scope, generated tool file and parent tool files in scratch copies.
- * @param input the selected check and repository files.
- * @returns the generated configuration paths for the selected Swift scope.
+ * Lists the SwiftLint files a scratch copy keeps: the scope pointer, the tool file, and SwiftLint files in parent folders.
+ * @param input the scope files and tool files.
+ * @returns the repository-relative paths, sorted.
  */
 export function listSwiftlintToolFiles(input: CheckInput): string[] {
     const paths = [

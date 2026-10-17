@@ -1,4 +1,3 @@
-// Foreign key columns that no index leads with, read from the schema the migrations build.
 import { buildFinding } from '#cli/checks/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
@@ -6,8 +5,8 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 /**
- * One finding for each foreign key column that no index, primary key, or unique key leads with.
- * @param input the migration paths that define foreign keys and indexes.
+ * Reports each foreign key column that no index, primary key, or unique key leads with.
+ * @param input the scope whose migrations to read.
  * @returns the findings.
  */
 export async function checkForeignKeyIndexes(input: CheckInput): Promise<Finding[]> {

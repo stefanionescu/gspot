@@ -6,7 +6,7 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { LinkinatorConstructor } from '#cli/types/checks/framework.ts';
 import { LINKINATOR, LOCAL_HOSTS } from '#cli/config/checks/framework/site.ts';
 
-/** The Linkinator child process invocation data. */
+/** The request that the parent process sends on stdin. */
 const linkinatorRequestSchema = z.strictObject({
     paths: z.array(z.string().min(1)),
     origin: z.url().optional(),

@@ -36,7 +36,7 @@ import {
     XCODE_DESTINATION_FLAG,
 } from '#cli/config/checks/language/swift.ts';
 
-// The sources to build, each as the copy it must have under source/ in the build folder.
+// Maps each source to the file contents it needs under source/ in the build folder.
 function readBuildSources(root: string, paths: string[]): Map<string, FileContents> {
     using source = openFiles(root);
     const wantedFiles = new Map<string, FileContents>();
@@ -47,7 +47,6 @@ function readBuildSources(root: string, paths: string[]): Map<string, FileConten
     return wantedFiles;
 }
 
-// Removes unwanted files and then their containing folders, deepest first.
 function pruneSources(folder: string, files: Files, wantedFiles: Map<string, FileContents>): void {
     const wantedFolders = new Set(
         [...wantedFiles.keys()].flatMap((path) => {
@@ -72,8 +71,8 @@ function pruneSources(folder: string, files: Files, wantedFiles: Map<string, Fil
 }
 
 /**
- * The private build cache for the repository's real path.
- * @param repositoryRoot the working directory whose real path identifies the shared cache.
+ * Computes the private build cache folder from the real path of the repository.
+ * @param repositoryRoot the repository folder.
  * @returns the cache folder for this repository.
  */
 function computeBuildFolder(repositoryRoot: string): string {
@@ -82,8 +81,8 @@ function computeBuildFolder(repositoryRoot: string): string {
 }
 
 /**
- * Prepare and claim one build folder without following existing output links.
- * @param folder the private cache directory to create and lock.
+ * Creates and locks a build folder without following links in it.
+ * @param folder the private cache path.
  * @returns the locked root, which the caller disposes.
  */
 function openBuildCache(folder: string): Files {
@@ -99,10 +98,10 @@ function openBuildCache(folder: string): Files {
 }
 
 /**
- * Locate a separate build folder for one project and tool.
- * @param input the repository root and project scope.
+ * Computes the build folder for a scope and tool.
+ * @param input the repository root and scope.
  * @param purpose the tool whose outputs stay separate.
- * @returns the cache directory assigned to this scope and build purpose.
+ * @returns the cache folder path.
  */
 export function getScopeBuildFolder(input: Pick<CheckInput, 'root' | 'scope'>, purpose: SwiftBuildPurpose): string {
     return join(
@@ -116,11 +115,11 @@ export function getScopeBuildFolder(input: Pick<CheckInput, 'root' | 'scope'>, p
 }
 
 /**
- * The build of one scope: the command, the folder it runs in, and where its log goes.
- * @param input the check input.
+ * Plans the build of a scope: the command, its folder, and its log path.
+ * @param input the scope and its Swift settings.
  * @param purpose the tool whose command uses a separate cache.
  * @param purpose.purpose the tool whose build needs its own cache.
- * @returns the command arguments, private output directory, and compiler log path.
+ * @returns the command, build folder, and log path.
  */
 export function buildPlan(
     input: CheckInput,
@@ -164,10 +163,10 @@ export function buildPlan(
 }
 
 /**
- * Lock a build folder and copy the source files the tool needs.
- * @param input the repository and selected source files.
- * @param folder the tool's build folder.
- * @returns the source path and locked root. The caller disposes a successful result; failures release it.
+ * Locks a build folder and copies in the source files the tool needs.
+ * @param input the repository and scope files.
+ * @param folder the cache path for the tool.
+ * @returns the source path and locked root, which the caller disposes.
  */
 export function prepareBuild(input: Pick<CheckInput, 'root' | 'files'>, folder: string): PreparedSwiftBuild {
     using resources = new DisposableStack();

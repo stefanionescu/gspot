@@ -8,7 +8,6 @@ import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { CountedLanguage, ConventionSource } from '#cli/types/checks/general.ts';
 import { CONVENTION_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/checks/general/structure.ts';
 
-// Keep the selected source files, including shell scripts without extensions.
 function detectLanguage(file: TrackedFile): CountedLanguage | undefined {
     for (const [extension, language] of Object.entries(LANGUAGE_BY_EXTENSION))
         if (file.path.endsWith(extension)) return language;
@@ -30,9 +29,9 @@ function captureSource(source: ConventionSource): void {
 }
 
 /**
- * Read convention captures for selected Bash, Python, and Swift sources.
- * @param input the scope-owned inventory and source reads.
- * @returns observations whose syntax trees stay available until their readers finish.
+ * Parses Bash, Python, and Swift sources and collects their convention captures.
+ * @param input the scope files to parse.
+ * @returns the convention sources, with live syntax trees.
  */
 async function readConventionSources(
     input: Omit<SourceInput, 'files'> & Pick<CheckInput, 'files' | 'scope'>,
@@ -55,12 +54,12 @@ async function readConventionSources(
 }
 
 /**
- * Release syntax trees after all convention readers have finished.
- * @param sources the shared parsed observations.
+ * Frees the syntax trees after every convention check finishes.
+ * @param sources the parsed files to free.
  */
 function releaseConventionSources(sources: ConventionSource[]): void {
     for (const source of sources) source.tree.delete();
 }
 
-/** One identity shares parsed conventions across their checks. */
+/** Lets every convention check share one parse of each file. */
 export const CONVENTION_SOURCES = { read: readConventionSources, dispose: releaseConventionSources };

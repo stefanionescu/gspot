@@ -38,8 +38,8 @@ async function lintProject(input: CheckInput, folder: string): Promise<Finding[]
 }
 
 /**
- * The ansible-lint findings of every playbook project in the repository.
- * @param input the playbook project paths and tool execution services.
+ * Runs ansible-lint on each playbook project.
+ * @param input the scope files to lint.
  * @returns the findings.
  */
 export async function checkAnsibleLint(input: CheckInput): Promise<Finding[]> {

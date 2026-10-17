@@ -7,8 +7,8 @@ import { LFS_FILTER } from '#cli/config/repository/inventory.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 /**
- * One finding per tracked file over `repository.max_file_kilobytes` outside generated, vendored, and Git Large File Storage paths.
- * @param input the full source inventory, Git attributes, and per-scope size ceiling.
+ * Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
+ * @param input the tracked files and size limit.
  * @returns the findings.
  */
 export function checkLargeFiles(input: CheckInput): Finding[] {
@@ -32,9 +32,9 @@ export function checkLargeFiles(input: CheckInput): Finding[] {
 }
 
 /**
- * Report indexed files that their scope's selected configurations declare untracked.
- * @param input the check input with the shared index and resolved selections.
- * @returns one finding per matching indexed path.
+ * Reports indexed files that the scope configurations mark as untracked.
+ * @param input the Git index and each scope.
+ * @returns the findings.
  */
 export function checkIgnoredFilesTracked(input: CheckInput): Finding[] {
     const scopes = input.selections.map(({ scope }) => scope);

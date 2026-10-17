@@ -61,7 +61,7 @@ function listCandidatePages(pathname: string): [string, ...string[]] {
     return path.endsWith(HTML_EXTENSION) ? [path] : [path, `${path}${HTML_EXTENSION}`, `${path}/${INDEX_PAGE}`];
 }
 
-/** Linkinator output from the static-site build in a scratch copy. */
+/** The Linkinator JSON output. */
 const linkinatorReportSchema = z.object({
     links: z.array(
         z.object({
@@ -85,7 +85,7 @@ const linkinatorReportSchema = z.object({
     }[];
 }>);
 
-/** Selectors rejected in each emitted stylesheet. */
+/** The unused selectors in each built stylesheet. */
 const purgecssReportSchema = z.array(
     z.object({ file: z.string().min(1), rejected: z.array(z.string()) } satisfies SchemaShape<{
         file: string;
@@ -94,8 +94,8 @@ const purgecssReportSchema = z.array(
 ) satisfies z.ZodType<{ file: string; rejected: string[] }[]>;
 
 /**
- * The broken links between built pages, stylesheets, and fragments.
- * @param input the site scope, build settings, and allowed external URLs.
+ * Reports broken links between built pages, stylesheets, and fragments.
+ * @param input the scope whose site to check.
  * @returns one finding for each broken link.
  */
 export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]> {
@@ -138,8 +138,8 @@ export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]>
 }
 
 /**
- * html-validate over every built page, with the configuration for built files.
- * @param input the site scope and installed HTML validator configuration.
+ * Runs html-validate on every built page with the tool file for built output.
+ * @param input the scope whose site to check.
  * @returns the findings.
  */
 export async function checkSiteHtmlValidate(input: CheckInput): Promise<Finding[]> {
@@ -178,8 +178,8 @@ export async function checkSiteHtmlValidate(input: CheckInput): Promise<Finding[
 }
 
 /**
- * The selectors of the built stylesheets that no built page or script uses.
- * @param input the site scope and installed stylesheet analysis configuration.
+ * Reports selectors in built stylesheets that no built page or script uses.
+ * @param input the scope whose site to check.
  * @returns one finding for each unused selector.
  */
 export async function checkSitePurgecss(input: CheckInput): Promise<Finding[]> {
@@ -214,9 +214,9 @@ export async function checkSitePurgecss(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * The compressed weight of the built paths each limit names.
- * @param input the site scope and configured compressed-file limits.
- * @returns one finding for each limit passed.
+ * Compares the compressed size of built files with each size limit.
+ * @param input the scope with the size limits.
+ * @returns one finding per exceeded limit.
  */
 export async function checkSiteSize(input: CheckInput): Promise<Finding[]> {
     const limits = input.scope.view.options('site').size_limit;
@@ -242,8 +242,8 @@ export async function checkSiteSize(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * Compare sitemap routes with built pages. Require each built page unless the settings exclude it.
- * @param input the site scope and settings that permit unlisted pages.
+ * Reports sitemap URLs with no built page, and built pages the sitemap leaves out unless the settings allow them.
+ * @param input the scope whose site to check.
  * @returns the findings.
  */
 export async function checkSiteSitemap(input: CheckInput): Promise<Finding[]> {

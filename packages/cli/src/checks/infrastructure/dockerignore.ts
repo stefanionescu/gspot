@@ -16,8 +16,8 @@ import {
 } from '#cli/config/repository/inventory.ts';
 
 /**
- * One finding for each Dockerfile with no ignore file, or with one that lets a required entry through.
- * @param input the Dockerfile paths, Compose contexts, and selected configuration exclusions.
+ * Reports each Dockerfile with no ignore file, or with one that misses a required pattern.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkDockerignore(input: CheckInput): Finding[] {

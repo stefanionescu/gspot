@@ -51,7 +51,7 @@ function replaceReference(text: string, reference: Scalar): string {
 /**
  * Converts self-repository references to local paths for the pinned actionlint parser, preserving offsets.
  * @param text a workflow or action file.
- * @returns the text with each self-repository marker of a reference turned into a local path, at the same offsets.
+ * @returns the text with local paths, at the same offsets.
  */
 function prepareActionlintText(text: string): string {
     const document = parseDocument(text, { keepSourceTokens: true });
@@ -67,8 +67,8 @@ function prepareActionlintText(text: string): string {
 
 /**
  * Runs actionlint. If a workflow or action uses a $/ reference, checks a scratch copy with that reference changed to ./.
- * @param session the open session.
- * @param planned the workflow and action files selected for this invocation.
+ * @param session the repository and its tools.
+ * @param planned the actionlint check and its files.
  * @returns the check result.
  */
 export async function checkActionlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {

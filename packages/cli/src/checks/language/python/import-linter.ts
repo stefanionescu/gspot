@@ -39,8 +39,8 @@ const importLinterSchema = z.object({
 } satisfies SchemaShape<{ tool?: { importlinter?: Record<string, unknown> | undefined } | undefined }>);
 
 /**
- * Run contracts from the first INI or TOML tool file in the scope.
- * @param input the check input.
+ * Runs the import-linter contracts of the first INI or TOML file in the scope that declares them.
+ * @param input the scope to check.
  * @returns each broken contract with its dependency chain.
  */
 export async function importLinter(input: CheckInput): Promise<Finding[]> {

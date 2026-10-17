@@ -9,7 +9,7 @@ import { SPEC_SUFFIX, INDEX_STEMS } from '#cli/config/checks/general/structure.t
 import { extractStem, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
 import { listCodeFiles, buildFolderTree, isDependencyFolder } from '#cli/checks/general/structure/folder-tree.ts';
 
-// A selected configuration declares <name>.<kind>.<ext> file names, such as NestJS, so these do not count as a shared prefix.
+// A configuration such as NestJS declares <name>.<kind>.<ext> file names, so these do not count as a shared prefix.
 function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);
     if (extension.endsWith('x') || !listTaggedExtensions('javascript', 'typescript').includes(extension)) return false;
@@ -19,9 +19,9 @@ function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
 }
 
 /**
- * A grouping prefix: the stem up to its first dash or dot.
- * @param stem a file stem.
- * @returns the initial stem segment before a dash or dot, or the complete stem.
+ * Extracts the grouping prefix: the stem up to its first dash or dot.
+ * @param stem the file name without its extension.
+ * @returns the part before the first dash or dot, or all of it.
  */
 function extractPrefix(stem: string): string {
     const cuts = [stem.indexOf('-'), stem.indexOf('.')].filter((index) => index >= 0);
@@ -29,8 +29,8 @@ function extractPrefix(stem: string): string {
 }
 
 /**
- * One finding per directory and prefix shared by at least the limit's worth of siblings.
- * @param input the check context.
+ * Reports each prefix that at least `limits.shared_prefix_files` siblings in a folder share.
+ * @param input the scope files and limit.
  * @returns the findings.
  */
 export function checkSharedPrefixes(input: CheckInput): Finding[] {

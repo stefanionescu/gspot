@@ -34,9 +34,9 @@ async function runSiteBuild(input: CheckInput, scratch: string): Promise<SiteBui
 }
 
 /**
- * The build of the scope, run the first time a check asks and shared after that.
- * @param input the check input.
- * @returns the shared pending or completed site build for this scope.
+ * Builds the site once per scope and shares the build with later checks.
+ * @param input the scope to build.
+ * @returns the build, shared by every caller.
  */
 function getSiteBuild(input: CheckInput): Promise<SiteBuild> {
     const key = join(input.root, input.scope.scope.path);
@@ -54,8 +54,8 @@ function getSiteBuild(input: CheckInput): Promise<SiteBuild> {
 }
 
 /**
- * Every file under a folder, relative to it, sorted.
- * @param folder the output directory to enumerate without following directory links.
+ * List every file under a folder as sorted relative paths.
+ * @param folder the build output to walk.
  * @returns the relative paths.
  */
 export function listBuiltFiles(folder: string): string[] {
@@ -76,11 +76,11 @@ export function listBuiltFiles(folder: string): string[] {
 }
 
 /**
- * Locate a built file in the original repository's normalized build folder.
- * @param input the settings view owning the build.
- * @param build the build's scratch copy.
- * @param absolute the file location within the build's scratch copy.
- * @returns a confined repository-relative path.
+ * Maps a built file in the scratch copy to its repository path.
+ * @param input the scope with the build folder setting.
+ * @param build the scratch copy that holds the output.
+ * @param absolute the file path in the scratch copy.
+ * @returns the repository-relative path.
  */
 export function deriveBuiltFilePath(
     input: Pick<CheckInput, 'scope'>,
@@ -93,9 +93,9 @@ export function deriveBuiltFilePath(
 }
 
 /**
- * Requires built files before a dependent check reads it.
- * @param input the check input.
- * @returns the successful build, or a skipped-check error.
+ * Returns the site build, or skips the check when the build failed.
+ * @param input the scope to build.
+ * @returns the build.
  */
 export async function getSuccessfulBuild(input: CheckInput): Promise<SiteBuild> {
     const build = await getSiteBuild(input);
@@ -104,8 +104,8 @@ export async function getSuccessfulBuild(input: CheckInput): Promise<SiteBuild> 
 }
 
 /**
- * One finding when the build command fails or writes no build folder.
- * @param input the site scope, build command, and output-folder settings.
+ * Reports a build command that fails or writes no build folder.
+ * @param input the scope to build.
  * @returns the findings.
  */
 export async function checkSiteBuild(input: CheckInput): Promise<Finding[]> {

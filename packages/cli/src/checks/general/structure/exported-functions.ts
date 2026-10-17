@@ -1,4 +1,3 @@
-// Check exported JavaScript and TypeScript forwarders against their actual importing files.
 import ts from 'typescript';
 import { join, relative } from 'node:path';
 import { buildFinding } from '#cli/checks/finding.ts';
@@ -172,9 +171,9 @@ function checkModuleExports(
 }
 
 /**
- * Report exported functions that forward one expression to their only importing file.
- * @param input the selected sources and repository compiler settings.
- * @returns the exported forwarder findings.
+ * Reports exported functions that forward one expression and have one importing file.
+ * @param input the files to check.
+ * @returns the findings.
  */
 export function checkExportedFunctions(input: CheckInput): Finding[] {
     const sources = input.repositoryFiles.filter(

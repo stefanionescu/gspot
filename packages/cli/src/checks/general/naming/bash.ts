@@ -24,10 +24,10 @@ function addDeclarations(sink: ExtractSink, root: Node): void {
 }
 
 /**
- * The functions and variables a parsed shell script declares.
- * @param syntaxRoot the parsed shell document that provides declaration nodes.
- * @param file the file path.
- * @returns the declarations found in the tree.
+ * Lists the functions and variables that a shell script declares.
+ * @param syntaxRoot the parsed script.
+ * @param file the repository path of the script.
+ * @returns the declared names.
  */
 export function extractBashIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const sink: ExtractSink = { file, language: 'bash', out: [] };

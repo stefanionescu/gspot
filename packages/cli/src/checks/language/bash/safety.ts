@@ -4,8 +4,8 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { SAFETY_PATTERNS, ALL_LEVEL_SAFETY_PATTERNS } from '#cli/config/checks/language/bash.ts';
 
 /**
- * One finding per unsafe process kill or removal; all also reports discarded failures.
- * @param input the check context.
+ * Reports each unsafe process kill or removal, and at level `all`, each discarded failure.
+ * @param input the scope scripts and level.
  * @returns the findings.
  */
 export async function checkBashSafety(input: CheckInput): Promise<Finding[]> {

@@ -85,10 +85,10 @@ const docstringStyleSchema = z.object({
     };
 }>);
 /**
- * Preserve written pydoclint options, then inherit Ruff style and avoid repeating signature types in prose.
- * @param text the Python project configuration for one scope.
- * @param convention the scope's Ruff docstring convention.
- * @returns arguments and the declared style, when one exists.
+ * Builds the pydoclint command: keeps written options, takes the Ruff style, and stops docstrings from repeating signature types.
+ * @param text the pyproject.toml of the scope.
+ * @param convention the Ruff docstring style from the settings.
+ * @returns the command, and the style when known.
  */
 function parsePydoclintOptions(text: string, convention: unknown): PydoclintOptions {
     const { tool } = docstringStyleSchema.parse(parse(text));
@@ -103,10 +103,10 @@ function parsePydoclintOptions(text: string, convention: unknown): PydoclintOpti
 }
 
 /**
- * Check docstrings with their declared style, or detect Google and NumPy sections in source docstrings.
+ * Runs pydoclint with the declared docstring style, or with the style each file uses.
  * @param session the repository and installed tools.
  * @param planned the docstring check for one scope.
- * @returns findings across style batches, preserving earlier findings if a later command fails.
+ * @returns the check result, with earlier findings kept when a later batch fails.
  */
 export async function checkPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const configured = parsePydoclintOptions(

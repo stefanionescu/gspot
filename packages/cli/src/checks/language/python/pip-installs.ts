@@ -8,8 +8,8 @@ import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/language/python.ts';
 
 /**
- * pyproject.toml owns every dependency: no hand-kept requirements file, and no unmanaged pip install.
- * @param input the source files, lockfile declarations, and selected project scope.
+ * Reports hand-kept requirements files and unmanaged pip installs, so pyproject.toml owns every dependency.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkPythonPipInstalls(input: CheckInput): Finding[] {

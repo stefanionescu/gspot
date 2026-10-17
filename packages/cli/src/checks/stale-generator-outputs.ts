@@ -88,9 +88,9 @@ function buildGeneratorInputs(input: CheckInput):
 }
 
 /**
- * Run the declared generator in a private copy and compare its outputs.
- * @param input the selected generator and project scope.
- * @returns located missing or stale generated paths.
+ * Runs the declared generator in a scratch copy and reports missing or changed generator output.
+ * @param input the generator check and its scope.
+ * @returns one finding per missing or stale file.
  */
 export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Finding[]> {
     const inputs = buildGeneratorInputs(input);

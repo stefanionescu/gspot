@@ -1,5 +1,3 @@
-// The findings and covered files a built-in check returned, with missing help supplied by its check.
-
 import { buildBaseResult } from '#cli/checks/run/report.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { listWorkspaceDependencyFiles } from '#cli/tools/npm/packages.ts';
@@ -14,13 +12,13 @@ import type {
 } from '#cli/types/checks/run/check.ts';
 
 /**
- * Attach check identity and elapsed time to the built-in findings.
- * @param planned the selected check declaration.
- * @param completion the execution values.
- * @param completion.input the selected sources and execution services.
- * @param completion.result the findings and optional covered files.
+ * Build the check result, with its check ID and run time, from built-in findings.
+ * @param planned the check that ran.
+ * @param completion what the run returned.
+ * @param completion.input the scope and check.
+ * @param completion.result the findings, and the covered files when known.
  * @param completion.started the monotonic start time.
- * @returns the completed built-in result.
+ * @returns the check result.
  */
 export function buildBuiltInResult(
     planned: PlannedCheck,
@@ -44,12 +42,10 @@ export function buildBuiltInResult(
 }
 
 /**
- * Supply execution services and selected files without exposing the repository session.
- *
- * @param session the open session.
- * @param planned the planned check with its scope and files.
- *
- * @returns the execution services and source inventory available to one planned analysis.
+ * Builds the input of a built-in check without the whole session.
+ * @param session the repository and its tools.
+ * @param planned the check to run.
+ * @returns the input.
  */
 export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope' | 'check' | 'files'>): CheckInput {
     return {
@@ -85,10 +81,8 @@ export function checkInput(session: Session, planned: Pick<PlannedCheck, 'scope'
 }
 
 /**
- * Adapt one input-based check to the execution callback used by every built-in check.
- *
- * @param builtInCheck the selected implementation.
- *
+ * Wraps a built-in check implementation as a run callback.
+ * @param builtInCheck the implementation to wrap.
  * @returns the callback that runs a planned check.
  */
 export function runBuiltInCheck(builtInCheck: BuiltInCheck): RunnableCheck['run'] {

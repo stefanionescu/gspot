@@ -84,8 +84,8 @@ function checkScriptAttributes(input: CheckInput, source: SourceTree): Finding[]
 }
 
 /**
- * Inline script, handler attributes and script links in every owned HTML file.
- * @param input the selected source files and parsed markup services.
+ * Reports inline scripts, handler attributes, and script links in each HTML file.
+ * @param input the scope HTML files.
  * @returns the findings.
  */
 export async function checkHtmlScripts(input: CheckInput): Promise<Finding[]> {

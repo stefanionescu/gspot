@@ -1,5 +1,3 @@
-// Runs deptry over the imports declared by a Python project.
-
 import { z } from 'zod';
 import { join, posix } from 'node:path';
 import { parse } from '@decimalturn/toml-patch';
@@ -31,7 +29,7 @@ const deptrySchema = z.object({
  * Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
  * @param session the repository and installed tools.
  * @param planned the dependency check and its scope.
- * @returns the dependency findings, including undeclared application imports.
+ * @returns the check result.
  */
 export async function checkDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const text = readText(session.root, posix.join(planned.scope.scope.path, PYPROJECT_TOML));

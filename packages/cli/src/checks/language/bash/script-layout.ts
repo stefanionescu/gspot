@@ -1,4 +1,3 @@
-// The Bash interpreter contract: shebang, strict mode, entry point, library shape, and temporary cleanup.
 import { listCodeLines } from '#cli/parsers/bash.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
@@ -114,8 +113,8 @@ function checkScriptFile(
 }
 
 /**
- * Remove a declaration word and its flags. Retain the assignment or command.
- * @param code a comment-free code line.
+ * Removes a leading declaration word and its flags, and keeps the assignment or command.
+ * @param code a line without comments.
  * @returns the value after export, readonly, local, declare, or typeset.
  */
 function stripDeclaration(code: string): string {
@@ -127,8 +126,8 @@ function stripDeclaration(code: string): string {
 }
 
 /**
- * The findings of the interpreter contract over every Bash script; leave scripts with another shell's shebang unchanged.
- * @param input the check context.
+ * Checks the layout of each Bash script, and skips scripts with a shebang for another shell.
+ * @param input the scope scripts and environment readers.
  * @returns the findings.
  */
 export async function checkBashScriptLayout(input: CheckInput): Promise<Finding[]> {

@@ -19,9 +19,9 @@ import { PROSE_GRAMMARS, SCRIPT_GRAMMAR } from '#cli/config/generation/vale.ts';
 import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/types/checks/general.ts';
 
 /**
- * Validate Vale JSON before converting alerts to source locations.
- * @param stdout the output.
- * @returns source locations, style names, and messages flattened across reported files.
+ * Parses the Vale JSON output into alerts.
+ * @param stdout what Vale printed.
+ * @returns the alerts of every file.
  */
 function parseValeAlerts(stdout: string): ValeAlert[] {
     return Object.entries(valeReportSchema.parse(JSON.parse(stdout))).flatMap(([file, alerts]) =>
@@ -108,9 +108,9 @@ async function runValeOnStdin(input: CheckInput, route: ProseRoute): Promise<Val
 }
 
 /**
- * The route for a tracked file, or undefined when Vale has nothing to read in it.
- * @param file the tracked file.
- * @returns the supported grammar and input mode, or undefined for unsupported sources.
+ * Selects how Vale reads a file, or undefined when Vale has nothing to read in it.
+ * @param file a tracked source.
+ * @returns the grammar and input mode, or undefined.
  */
 function selectRoute(file: TrackedFile): ProseRoute | undefined {
     const extension = extractExtension(file.path);
@@ -121,8 +121,8 @@ function selectRoute(file: TrackedFile): ProseRoute | undefined {
 }
 
 /**
- * The routes grouped by the argument list they share: every path-read file of one extension together, every stdin file alone.
- * @param files the tracked files.
+ * Groups routes by shared arguments: path-read files by extension, and each stdin file alone.
+ * @param files the scope sources.
  * @returns the groups, path-read first.
  */
 function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
@@ -141,8 +141,8 @@ function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
 }
 
 /**
- * Runs Vale over the scope's files, by path where Vale has a grammar and through stdin elsewhere. Report every alert as a finding.
- * @param input the selected prose sources, installed style packages, and execution services.
+ * Runs Vale on the scope files, by path where Vale has a grammar and through stdin elsewhere.
+ * @param input the scope to check.
  * @returns the findings.
  */
 export async function checkVale(input: CheckInput): Promise<Finding[]> {

@@ -4,8 +4,8 @@ import { RUNTIME_EMBEDS } from '#cli/config/checks/language/bash.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 /**
- * One finding per line that embeds another runtime.
- * @param input the check context.
+ * Reports each line that embeds another runtime.
+ * @param input the scope scripts to read.
  * @returns the findings.
  */
 export async function checkBashInlineScripts(input: CheckInput): Promise<Finding[]> {

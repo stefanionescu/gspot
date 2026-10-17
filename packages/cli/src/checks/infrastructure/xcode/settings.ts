@@ -15,8 +15,8 @@ import {
 } from '#cli/config/checks/infrastructure/xcode.ts';
 
 /**
- * One finding for each invalid xcconfig line.
- * @param input the configuration file paths and cached line reads.
+ * Reports each invalid xcconfig line.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkXcconfig(input: CheckInput): Finding[] {
@@ -45,8 +45,8 @@ export function checkXcconfig(input: CheckInput): Finding[] {
 }
 
 /**
- * One finding for each entitlement outside xcode.allowed_entitlements. The planner requires a configured list.
- * @param input the plist files and settings that list permitted keys.
+ * Reports each entitlement outside xcode.allowed_entitlements, which planning requires.
+ * @param input the scope files and allowed entitlements.
  * @returns the findings.
  */
 export function checkXcodeEntitlements(input: CheckInput): Finding[] {
@@ -70,8 +70,8 @@ export function checkXcodeEntitlements(input: CheckInput): Finding[] {
 }
 
 /**
- * One finding for each plist that turns App Transport Security off for every host.
- * @param input the plist paths and file reads that expose global transport exceptions.
+ * Reports each plist that turns App Transport Security off for every host.
+ * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkAppTransportSecurity(input: CheckInput): Finding[] {
