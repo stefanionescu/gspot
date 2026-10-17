@@ -23,7 +23,6 @@ export const RUNTIME_EMBEDS = [
     [/\$\{\w+\}"?\s+-\s*<</u, 'a heredoc piped into an interpreter variable'],
     [/\bnode\s+-[ep]\b/u, 'an inline Node command'],
     [/\bnode\s+<</u, 'an inline Node heredoc'],
-    [/\bcat\s+>[^<]+<</u, 'a generated script heredoc'],
 ] as const;
 
 /** Safety patterns and their finding text. */

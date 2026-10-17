@@ -158,7 +158,7 @@ help = "Move the embedded code into its own file and run that."
 level = "all"
 name = "inline-scripts"
 stage = "commit"
-summary = "Finds inline Python, Node, and generated-script heredocs in shell scripts."
+summary = "Finds inline Python and Node code, and heredocs piped into an interpreter, in shell scripts."
 why = "No check reads code inside a heredoc."
 
 [[check]]

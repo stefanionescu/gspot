@@ -256,3 +256,12 @@ test('Bash function-size counts C-style loops as branches and nesting, not their
         { status: 'passed', findings: [] },
     ]);
 });
+
+test('inline-scripts: a heredoc that writes a data file is not reported', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['bash'], { level: 'all' }),
+        'source.sh': '#!/usr/bin/env bash\ncat > settings.json <<EOF\n{ "name": "example" }\nEOF\n',
+    });
+    const result = await checkReport(sandbox.path, ['check', '--only', 'bash/inline-scripts', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+});
