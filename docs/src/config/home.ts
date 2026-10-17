@@ -40,6 +40,7 @@ export const PASSED_CHECK = /^\S+(?=\s+passed\s)/gmu;
 export const REPORT_SUMMARY =
     /^Failed: \d+ checks? with \d+ findings?\. Passed: \d+ checks?\. Skipped: \d+ checks?\./gmu;
 export const PASSED_CHECK_LIMIT = 10;
+export const SUMMARY_SENTENCE_BREAK = /(?<=\.) /u;
 export const COMMIT_RECORD = '[main 066501e] feat: Add checkout';
 
 export const INLINE_CODE_SPAN = /(`[^`]+`)/u;
