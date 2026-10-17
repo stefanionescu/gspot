@@ -4,6 +4,7 @@ import { SCHEMA_URL } from '#cli/config/settings/file.ts';
 import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
+import { type TemplateTables } from '#cli/types/settings/templates.ts';
 import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
 import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
@@ -11,13 +12,8 @@ import { toolsSchema as publicToolsSchema } from '#cli/settings/schema/tools.ts'
 import { levelSchema, commandCheckFields } from '#cli/configurations/schema/parts.ts';
 import { ciSchema, rulesSchema, hooksSchema } from '#cli/settings/schema/integrations.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
+import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
-import {
-    type WrittenScope,
-    type ParsedSettings,
-    type TemplateTables,
-    type WrittenSettings,
-} from '#cli/types/settings/file.ts';
 import {
     ALLOWED_WORD,
     LEVEL_SUMMARY,

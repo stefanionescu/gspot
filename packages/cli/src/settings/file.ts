@@ -6,11 +6,12 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
-import type { TomlTable, SettingsFileContents } from '#cli/types/settings/file.ts';
+import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
 
 /**
  * Parse written settings or a template, and keep TOML date kinds and source locations.

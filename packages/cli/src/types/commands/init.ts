@@ -1,6 +1,6 @@
 import type { Session } from '#cli/types/planning.ts';
-import type { Template } from '#cli/types/settings/file.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
+import type { Template } from '#cli/types/settings/templates.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';

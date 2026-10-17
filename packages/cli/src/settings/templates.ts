@@ -11,7 +11,7 @@ import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { templateSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
-import type { Template, ExportedTemplate } from '#cli/types/settings/file.ts';
+import type { Template, ExportedTemplate } from '#cli/types/settings/templates.ts';
 
 import {
     RAW_HOST,

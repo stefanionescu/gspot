@@ -1,9 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { encodeValue } from '#cli/settings/write/values.ts';
+import { type TomlTable } from '#cli/types/settings/file.ts';
+import { type LayoutSection } from '#cli/types/settings/edits.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { type TomlTable, type LayoutSection } from '#cli/types/settings/file.ts';
 import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
 
 import {

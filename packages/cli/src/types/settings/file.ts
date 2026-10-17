@@ -1,7 +1,5 @@
 import type { STAGES } from '#cli/config/configurations.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
 import type { Defined, Optional } from '#cli/types/shapes.ts';
-import type { FileContents } from '#cli/types/system/files.ts';
 import type { ParsedSite } from '#cli/types/checks/framework.ts';
 import type { ParsedSwift } from '#cli/types/checks/language.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
@@ -261,25 +259,6 @@ export type ParsedSettings = ParsedRoot & {
     rules: ParsedRules;
 };
 
-export type TemplateTables = Omit<WrittenSettings, 'scope'>;
-
-export type Template = { source: string; text: string; digest: string; tables: TemplateTables };
-
-export type ExportedTemplate = { text: string; leftOut: string[] };
-
-export type SettingsFileContents = { text: string; original: FileContents };
-
-export type SettingsEdit = { text: string; table: TomlTable; values: TomlTable; original: FileContents };
-
-export type EditedSettings = { text: string; settings: Settings; changed: boolean; original: FileContents };
-
-export type Mutation = (written: TomlTable) => void;
-
-export type SettingKey = { path: string[]; name: string };
-
-/** An ordered header and its written values. */
-export type LayoutSection = { path: KeyPath; table: TomlTable };
-
 export type ArchitectureModule = { name: string; paths: string[]; may_import: string[] };
 
 export type IgnoreRecord = NonNullable<ParsedSettings['ignore']>[number];
@@ -326,8 +305,8 @@ export type WrittenScope = Omit<
     format?: Omit<WrittenFormat, 'override'> | undefined;
 };
 
-export type RuleExcludeError = { index: number; message: string };
-
 export type TomlTable = Record<string, unknown>;
+
+export type RuleExcludeError = { index: number; message: string };
 
 export type StylelintOptions = { severity?: 'error' | undefined };

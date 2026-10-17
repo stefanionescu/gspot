@@ -1,6 +1,6 @@
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { StaleFile, ApplyReport } from '#cli/types/apply.ts';
-import type { Mutation, SettingsEdit } from '#cli/types/settings/file.ts';
+import type { Mutation, SettingsEdit } from '#cli/types/settings/edits.ts';
 
 export type SaveSettingsOptions = { input: SettingsEdit; change: Mutation; summary: string };
 export type SaveSettingsResult = CommandResult<ApplyReport & { changed: boolean }>;

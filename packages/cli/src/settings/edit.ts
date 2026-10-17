@@ -4,12 +4,13 @@ import { stringify } from '@decimalturn/toml-patch';
 import { parseSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
 import { getWrittenValue, replaceWrittenValue } from '#cli/settings/inherit.ts';
 import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
-import type { Mutation, TomlTable, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/file.ts';
+import type { Mutation, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 
 function splitKey(key: string): SettingKey {
     const boundary = key.lastIndexOf('.');

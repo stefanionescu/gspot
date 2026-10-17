@@ -5,7 +5,7 @@ import { stripUndefined } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { Mutation } from '#cli/types/settings/file.ts';
+import type { Mutation } from '#cli/types/settings/edits.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { type ConfigurationsOptions } from '#cli/types/commands/edit-settings.ts';
 import { saveSettings, startConfigurationEdit } from '#cli/apply/save-settings.ts';
