@@ -107,8 +107,26 @@ function buildRulesOffBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
     });
 }
 
+// The size and complexity rules with the limits of one language.
+function buildLimitRules(limit: ScopeView['limit'], language: 'typescript' | 'javascript'): Record<string, unknown> {
+    return {
+        'max-lines': ['error', { max: limit('file_lines', language), skipBlankLines: true, skipComments: true }],
+        'max-lines-per-function': [
+            'error',
+            { max: limit('function_lines', language), skipBlankLines: true, skipComments: true, IIFEs: true },
+        ],
+        'max-params': ['error', { max: limit('function_parameters', language), countVoidThis: false }],
+        'max-depth': ['error', limit('block_nesting', language)],
+        'max-statements': ['error', limit('function_statements', language)],
+        'max-nested-callbacks': ['error', limit('callback_nesting', language)],
+        complexity: ['error', limit('cyclomatic_complexity', language)],
+        'sonarjs/cognitive-complexity': ['error', limit('cognitive_complexity', language)],
+    };
+}
+
 /**
- * Calculate the ESLint limit options from the settings.
+ * Calculate the ESLint limit options from the settings. JavaScript files get the JavaScript limits in their own
+ * block, which comes after the block for every code file.
  *
  * @param view the settings that the limits read.
  * @param view.limit reads one numeric setting.
@@ -127,25 +145,10 @@ function buildLevelRules(
             ...BASE_RULES,
             ...ALL_LEVEL_RULES.code,
             'no-restricted-syntax': ['error', ...selectors],
-            'max-lines': [
-                'error',
-                { max: limit('file_lines', 'typescript'), skipBlankLines: true, skipComments: true },
-            ],
-            'max-lines-per-function': [
-                'error',
-                { max: limit('function_lines', 'typescript'), skipBlankLines: true, skipComments: true, IIFEs: true },
-            ],
-            'max-params': ['error', { max: limit('function_parameters', 'typescript'), countVoidThis: false }],
-            'max-depth': ['error', limit('block_nesting', 'typescript')],
-            'max-statements': ['error', limit('function_statements', 'typescript')],
-            'max-nested-callbacks': ['error', limit('callback_nesting', 'typescript')],
-            complexity: ['error', limit('cyclomatic_complexity', 'typescript')],
-            'sonarjs/cognitive-complexity': ['error', limit('cognitive_complexity', 'typescript')],
+            ...buildLimitRules(limit, 'typescript'),
             'sonarjs/no-identical-functions': ['error', options('duplication').min_lines],
         },
-        javascript: {
-            'max-params': ['error', limit('function_parameters', 'javascript')],
-        },
+        javascript: buildLimitRules(limit, 'javascript'),
         node: { ...NODE_RULES, ...ALL_LEVEL_RULES.node },
         console: ALL_LEVEL_RULES.console,
     };

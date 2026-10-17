@@ -65,6 +65,25 @@ test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum
     },
 );
 
+test('limit-languages > a JavaScript file takes the JavaScript limits, and a TypeScript file the TypeScript ones', async () => {
+    await using folder = await testdir();
+    const body = '(value) { if (value > 1) return 1; if (value > 0) return 2; return 3; }';
+    await createFileTree(folder.path, {
+        'gspot.toml': buildSettingsText(['javascript', 'typescript'], {
+            tables: '[limits.javascript]\ncyclomatic_complexity = 2\n',
+            level: 'all',
+        }),
+        'package.json': '{"private":true,"type":"module"}',
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
+        'example.js': `export function choose${body}\n`,
+        'example.ts': `export function choose${body.replace('(value)', '(value: number)')}\n`,
+    });
+    const eslint = await createEslint(folder.path);
+    expect(await collectLintFindings(eslint, folder.path, ['example.js', 'example.ts'], ['complexity'])).toStrictEqual([
+        { file: 'example.js', rule: 'complexity', line: 1 },
+    ]);
+});
+
 test.each(REQUIRED_RULE_CASES.flatMap((entry) => LEVELS.map((level) => ({ ...entry, level }))))(
     'required-rules > the required $configuration rules for .$ending files are on at $level ($route)',
     async ({ configuration, ending, rules, level, route }) => {

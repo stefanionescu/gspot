@@ -142,7 +142,7 @@ function buildBlocksAfterFragments(
                 rules: { 'package-json/restrict-dependency-ranges': ['error', { rangeType: 'pin' }] },
             },
         ],
-        [{ files: eslintFiles.javascript, rules: rules.javascript }],
+        [{ files: eslintFiles.javascript, rules: { ...rules.javascript, ...config.javascriptAllLevelRules } }],
     ];
 }
 

@@ -121,6 +121,20 @@ function buildProjectOptions(session: ToolFileContext['session'], context: Eslin
                       ],
                   }),
         },
+        javascriptAllLevelRules:
+            repositorySettings.structure.reexports === 'none'
+                ? {}
+                : {
+                      [BARREL_FILES_RULE]: [
+                          'error',
+                          {
+                              amountOfExportsToConsiderModuleAsBarrel: selection.view.limit(
+                                  'index_exports',
+                                  'javascript',
+                              ),
+                          },
+                      ],
+                  },
         importStyleBlocks: buildImportStyleBlocks(scopes, nodeFiles),
         runtimes: buildRuntimeBlocks(scopes),
         boundaryBlocks: buildBoundaryBlocks(context),

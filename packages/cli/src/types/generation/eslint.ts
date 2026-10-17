@@ -77,6 +77,7 @@ export type EslintParts = {
     testFiles: string[];
     scriptFiles: string[];
     allLevelRules: Record<string, unknown>;
+    javascriptAllLevelRules: Record<string, unknown>;
     importStyleBlocks: EslintBlock[];
     runtimes: EslintRuntimeBlock[];
     boundaryBlocks: EslintBlock[];
