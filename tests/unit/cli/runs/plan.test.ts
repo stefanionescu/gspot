@@ -18,9 +18,9 @@ import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { ALWAYS_SELECTED } from '#tests/data/configurations/manifests.ts';
 import { buildRunOptions, buildMobileFiles } from '#tests/setup/builders.ts';
+import { planRun, isActive, stripCoverageArguments } from '#cli/planning/checks.ts';
 import { HISTORY_TABLES, TOOL_FILE_PLANNING_CASES } from '#tests/data/runs/plan.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/data/checks/format.ts';
-import { planRun, isActive, listConfiguredChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
 
 test('coverage arguments leave other commands, your own checks, and given arguments unchanged', async () => {
     await using sandbox = await testdir();
@@ -165,7 +165,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     const excluded = await openSession(sandbox.path);
     const plans = planRun(excluded, { stage: 'commit', only: ['format/prettier'] });
     expect(plans[0]?.skip?.cause).toBe('ignore');
-    expect(listConfiguredChecks(excluded).map((check) => check.check.name)).not.toContain('format/prettier');
+    expect(excluded.configuredChecks.map((check) => check.check.name)).not.toContain('format/prettier');
     expect(excluded.neededToolManifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name))).not.toContain(
         'prettier',
     );
@@ -175,7 +175,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     expect(removed.removed).toContain('.prettierignore');
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(false);
     const settled = await openSession(sandbox.path);
-    expect(listConfiguredChecks(settled).map((check) => check.check.name)).not.toContain('format/prettier');
+    expect(settled.configuredChecks.map((check) => check.check.name)).not.toContain('format/prettier');
     const repeated = writeGeneratedFiles(settled, generate(settled), log);
     expect(repeated.written).toStrictEqual([]);
     expect(repeated.removed).toStrictEqual([]);
@@ -259,7 +259,7 @@ test('Expo Doctor is planned only in the scope that selects Expo', async () => {
     await createFileTree(sandbox.path, buildMobileFiles());
     const session = await openSession(sandbox.path);
     expect(
-        listConfiguredChecks(session)
+        session.configuredChecks
             .filter((check) => check.check.name === 'expo/expo-doctor')
             .map((check) => check.selection.scope.path),
     ).toStrictEqual(['expo-app']);
@@ -270,6 +270,6 @@ test.each([...TOOL_FILE_PLANNING_CASES])(
     async ({ files, check, selected }) => {
         await using sandbox = await testdir(files);
         const session = await openSession(sandbox.path);
-        expect(listConfiguredChecks(session).some((entry) => entry.check.name === check)).toBe(selected);
+        expect(session.configuredChecks.some((entry) => entry.check.name === check)).toBe(selected);
     },
 );

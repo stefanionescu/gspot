@@ -2,11 +2,11 @@ import { GspotError } from '#cli/system/errors.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { formatScopeLabel } from '#cli/system/terminal.ts';
+import { listCoveredInputs } from '#cli/planning/checks.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
-import { listCoveredInputs, listConfiguredChecks } from '#cli/planning/checks.ts';
 import { type Explanation, type PathExplanation } from '#cli/types/commands/explain.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | undefined {
@@ -40,7 +40,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
         fileKind: file.kind,
         tags: file.tags,
         configurations: configurations.map((manifest) => manifest.configuration.name),
-        checks: listConfiguredChecks(session)
+        checks: session.configuredChecks
             .filter((check) => listCoveredInputs(session, check).some((entry) => entry.path === file.path))
             .map((check) => ({
                 check: check.check.name,

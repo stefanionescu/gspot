@@ -134,19 +134,6 @@ export function isActive(check: PlannedCheck): boolean {
 }
 
 /**
- * List the checks that the settings turn on, in each scope.
- *
- * @param session the repository and its scopes.
- *
- * @returns the planned checks.
- */
-export function listConfiguredChecks(session: Session): PlannedCheck[] {
-    return planScopes(session, { stage: 'any' })
-        .flatMap((planned) => skipReplacedChecks(planned))
-        .filter((check) => isActive(check) && check.skip === undefined);
-}
-
-/**
  * List the files that the configurations of a check own, apart from the inputs of a project-wide run.
  *
  * @param session the scopes.

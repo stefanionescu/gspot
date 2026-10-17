@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { planRun } from '#cli/planning/checks.ts';
 import { TSC_REPLACEMENTS } from '#tests/data/runs/plan.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { planRun, listConfiguredChecks } from '#cli/planning/checks.ts';
 
 test.each([...TSC_REPLACEMENTS])(
     '$check replaces typescript/tsc only while it runs',
@@ -51,7 +51,8 @@ test('a nested Next.js check replaces TypeScript only in its own scope', async (
         'source.ts': 'export const port = 8080;\n',
         'app/source.ts': 'export const port = 3000;\n',
     });
-    const configured = listConfiguredChecks(await openSession(sandbox.path))
+    const session = await openSession(sandbox.path);
+    const configured = session.configuredChecks
         .filter((entry) => ['typescript/tsc', 'nextjs/tsc'].includes(entry.check.name))
         .map((entry) => [entry.selection.scope.path, entry.check.name]);
     expect(configured).toStrictEqual([
