@@ -1,5 +1,5 @@
 import type { ReferencePage } from '../types/reference.ts';
-import { MARKDOWN_ESCAPES, HTML_BRACKET_ENTITIES } from '../config/reference.ts';
+import { MARKDOWN_ESCAPES, FLAGS_OUTSIDE_CODE, HTML_BRACKET_ENTITIES } from '../config/reference.ts';
 
 /**
  * Build a reference page with escaped markup and no edit link.
@@ -11,7 +11,10 @@ import { MARKDOWN_ESCAPES, HTML_BRACKET_ENTITIES } from '../config/reference.ts'
 export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
     return {
         data: { title, description, editUrl: false },
-        body: `\n${body.replaceAll(MARKDOWN_ESCAPES, (text) => HTML_BRACKET_ENTITIES[text] ?? text)}`,
+        // A flag outside code goes into a code span, so Markdown does not turn its two hyphens into a dash.
+        body: `\n${body
+            .replaceAll(MARKDOWN_ESCAPES, (text) => HTML_BRACKET_ENTITIES[text] ?? text)
+            .replaceAll(FLAGS_OUTSIDE_CODE, (text) => (text.startsWith('`') ? text : '`' + text + '`'))}`,
     };
 }
 /**

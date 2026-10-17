@@ -1,7 +1,7 @@
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
-import { CHECK_RUN_LABELS, REFERENCE_FOLDERS } from '../config/reference.ts';
 import { formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
+import { CHECK_RUN_LABELS, REFERENCE_FOLDERS, SETTING_PLACEHOLDER } from '../config/reference.ts';
 
 type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 type CheckDeclaration = Manifest['checks'][number];
@@ -12,9 +12,11 @@ type CheckDeclaration = Manifest['checks'][number];
  * @returns the display name
  */
 function formatToolNames(check: CheckDeclaration): string {
-    return typeof check.tool === 'object'
-        ? Object.values(check.tool).join(', ')
-        : (check.tool ?? check.command?.[0] ?? 'gspot');
+    if (typeof check.tool === 'object') return Object.values(check.tool).join(', ');
+    const program = check.tool ?? check.command?.[0] ?? 'gspot';
+    // A command taken from a setting names the setting, not the placeholder.
+    const setting = SETTING_PLACEHOLDER.exec(program)?.groups?.['setting'];
+    return setting === undefined ? program : `the command in \`${setting}\``;
 }
 
 function formatCheckEnvironment(check: CheckDeclaration): string[] {

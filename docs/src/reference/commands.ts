@@ -1,6 +1,6 @@
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
-import { OPTION_NAME, EXIT_CODE_LINE, REFERENCE_FOLDERS, HELP_CONTINUATION } from '../config/reference.ts';
+import { EXIT_CODE_LINE, REFERENCE_FOLDERS, HELP_CONTINUATION } from '../config/reference.ts';
 import { escapeCell, formatTable, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
 
 function formatOptionValues(option: { choices?: string[]; default?: unknown }): string {
@@ -12,12 +12,9 @@ function formatOptionValues(option: { choices?: string[]; default?: unknown }): 
     );
 }
 
-// Keep statuses and command flags literal in the generated reference.
+// Keep statuses literal in the generated reference.
 function formatExitCodes(text: string): string {
-    return text
-        .replaceAll(EXIT_CODE_LINE, '- `$1`: ')
-        .replaceAll(HELP_CONTINUATION, '  ')
-        .replaceAll(OPTION_NAME, '`$&`');
+    return text.replaceAll(EXIT_CODE_LINE, '- `$1`: ').replaceAll(HELP_CONTINUATION, '  ');
 }
 
 /**
@@ -33,20 +30,20 @@ export function buildCommandPages(
         const argumentsBody = formatDefinitions(
             command.arguments.map((argument) => [
                 `\`${argument.name}\``,
-                `${argument.description} ${argument.required ? 'Required.' : 'Optional.'}` +
+                `${argument.description}. ${argument.required ? 'Required.' : 'Optional.'}` +
                     formatOptionValues(argument),
             ]),
         );
         const options = formatDefinitions(
             command.options.map((option) => [
                 `\`${option.flags}\``,
-                option.description.replaceAll(OPTION_NAME, '`$&`') + formatOptionValues(option),
+                `${option.description}.` + formatOptionValues(option),
             ]),
         );
         const page = buildReferencePage(
             `gspot ${command.name}`,
             command.summary,
-            `${command.summary}.\n\n${command.description.replaceAll(OPTION_NAME, '`$&`')}\n` +
+            `${command.summary}.\n\n${command.description}\n` +
                 formatSection('Usage', `\`\`\`shell\n${command.usage}\n\`\`\``) +
                 formatSection('Arguments', command.arguments.length === 0 ? '' : argumentsBody) +
                 formatSection('Options', options) +

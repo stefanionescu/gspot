@@ -6,14 +6,24 @@ import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../co
 
 type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 
+const formatCodeNames = (names: string[]): string => names.map((name) => '`' + name + '`').join(', ');
+
+// The conditions that select: every kind with patterns, apart from the dependencies that rule a selection out.
 function formatDetectionConditions(detect: Manifest['detect']): string[] {
-    return Object.entries(detect).flatMap(([kind, patterns]) =>
-        Array.isArray(patterns)
-            ? [
-                  `${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]}: ${patterns.map((pattern) => '`' + pattern + '`').join(', ')}`,
-              ]
-            : Object.entries(patterns).map(([path, pattern]) => `file \`${path}\` matches \`${pattern}\``),
-    );
+    return Object.entries(detect).flatMap(([kind, patterns]) => {
+        if (kind === 'absent_dependencies') return [];
+        if (Array.isArray(patterns))
+            return patterns.length === 0
+                ? []
+                : [`${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]}: ${formatCodeNames(patterns)}`];
+        return Object.entries(patterns).map(([path, pattern]) => `file \`${path}\` matches \`${pattern}\``);
+    });
+}
+
+function formatAbsentDependencies(detect: Manifest['detect']): string {
+    return detect.absent_dependencies.length === 0
+        ? ''
+        : `, unless the repository depends on ${formatCodeNames(detect.absent_dependencies)}`;
 }
 
 // Rule files of a configuration, with the conditions that install each one.
@@ -22,8 +32,8 @@ function formatRules(manifest: Manifest, paths: string[]): string {
         .map((path) => {
             const condition = manifest.rules[posix.basename(path)];
             if (condition === undefined) return `- \`${path}\``;
-            const conditions = formatDetectionConditions(condition);
-            return `- \`${path}\` when the repository matches any of: ${conditions.join(', ')}.`;
+            const conditions = formatDetectionConditions(condition).join(' or ');
+            return `- \`${path}\` when the repository has ${conditions}${formatAbsentDependencies(condition)}.`;
         })
         .join('\n');
 }
@@ -51,6 +61,26 @@ function formatConfigurationChecks(manifest: Manifest): string {
     return formatDefinitions(rows);
 }
 
+// How a configuration gets selected: always, by its files and dependencies, or by another configuration.
+function formatSelection(manifest: Manifest, data: ReturnType<typeof readReferenceData>): string {
+    const { configuration } = manifest;
+    if (configuration.always_selected)
+        return configuration.when?.git === true ? 'Always selected in a Git repository.' : 'Always selected.';
+    const absent = manifest.detect.absent_dependencies;
+    const selected = [
+        ...formatDetectionConditions(manifest.detect).map((condition) => `- ${condition}`),
+        ...(absent.length === 0 ? [] : [`- Not when the repository depends on ${formatCodeNames(absent)}`]),
+    ].join('\n');
+    const requiredBy = data.configurations
+        .filter((owner) => owner.configuration.requires.includes(configuration.name))
+        .map((owner) => `\`${owner.configuration.name}\``)
+        .join(', ');
+    return (
+        [selected, requiredBy === '' ? '' : `Selected when required by: ${requiredBy}.`].filter(Boolean).join('\n\n') ||
+        `Select explicitly with \`gspot add ${configuration.name}\`.`
+    );
+}
+
 /**
  * Build the reference page of a shipped configuration: how it gets selected, its settings, and its checks.
  * @param manifest the parsed configuration
@@ -67,18 +97,7 @@ function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof read
             ? `\`${toolFile.target}\``
             : `\`${toolFile.target}\` when the [${toolFile.when.configuration} configuration](/reference/${REFERENCE_FOLDERS.configurations}/${toolFile.when.configuration}/) is selected`,
     );
-    const selected = formatDetectionConditions(manifest.detect)
-        .map((condition) => `- ${condition}`)
-        .join('\n');
-    const requiredBy = data.configurations
-        .filter((owner) => owner.configuration.requires.includes(configuration.name))
-        .map((owner) => `\`${owner.configuration.name}\``)
-        .join(', ');
-    const selection = configuration.always_selected
-        ? 'Always selected.'
-        : [selected, requiredBy === '' ? '' : `Selected when required by: ${requiredBy}.`]
-              .filter(Boolean)
-              .join('\n\n') || `Select explicitly with \`gspot add ${configuration.name}\`.`;
+    const selection = formatSelection(manifest, data);
     const defaults = Object.entries(manifest.defaults).map(
         ([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\``,
     );

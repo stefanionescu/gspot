@@ -40,10 +40,13 @@ export const PAGES_FOLDER = 'src/content/docs';
 /** Matches code spans to keep and markup to escape in generated reference text. */
 export const MARKDOWN_ESCAPES = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)|<\/?d[dlt]>|[<>]/gu;
 
+/** Matches code blocks and code spans to keep, and command flags outside them to put in code. */
+export const FLAGS_OUTSIDE_CODE = /```[\s\S]*?```|`[^`]*`|(?<![\w-])--[a-z][a-z-]*/gu;
+
 export const HTML_BRACKET_ENTITIES: Readonly<Record<string, string>> = { '<': '&lt;', '>': '&gt;' };
 
-export const OPTION_NAME = /(?<![\w`-])--[a-z-]*/gu;
 export const SECTION_HEADING = /^## /mu;
+export const SETTING_PLACEHOLDER = /^\{setting:(?<setting>[^}]+)\}$/u;
 export const SETTINGS_SUBPAGES: readonly string[] = ['scope', 'limits', 'naming', 'tools', 'command_check'];
 export const LANGUAGE_SETTING = /^(?<table>limits|naming)\.(?<language>[^.]+)\.(?<key>.+)$/u;
 

@@ -26,8 +26,15 @@ function formatAcceptedValue(schema: JSONSchema.JSONSchema, value: JSONSchema.JS
             .map((entry) => escapeCell(entry))
             .join(': ');
     if (node.enum !== undefined) return node.enum.map((value) => `\`${JSON.stringify(value)}\``).join(', ');
-    if (node.anyOf !== undefined)
+    if (node.anyOf !== undefined) {
+        const branches = node.anyOf.map((entry) => getSchemaNode(schema, entry));
+        // Values that each carry their own meaning read better as a list than as one long sentence.
+        if (branches.every((branch) => branch.const !== undefined && branch.description !== undefined)) {
+            const items = branches.map((branch) => '- ' + formatAcceptedValue(schema, branch));
+            return `One of these values:\n\n${items.join('\n')}\n\n`;
+        }
         return [...new Set(node.anyOf.map((entry) => formatAcceptedValue(schema, entry)))].join(' or ');
+    }
     const labels: Readonly<Record<string, string>> = SCHEMA_TYPE_LABELS;
     return [node.type ?? 'Value']
         .flat()
@@ -35,36 +42,46 @@ function formatAcceptedValue(schema: JSONSchema.JSONSchema, value: JSONSchema.JS
         .join(' or ');
 }
 
+// The keys under a table or a record: its fixed keys, then the keys of each map entry under a <name> placeholder.
 function listSchemaProperties(
     schema: JSONSchema.JSONSchema,
     value: JSONSchema.JSONSchema | boolean,
-): Array<[string, JSONSchema.JSONSchema | boolean]> {
+): Array<{ name: string; node: JSONSchema.JSONSchema; required: boolean }> {
     const node = getSchemaNode(schema, value);
-    const child = node.items ?? node.additionalProperties;
-    const shape = typeof child === 'object' && !Array.isArray(child) ? getSchemaNode(schema, child) : node;
-    if (shape.properties === undefined) return [];
-    return Object.entries(shape.properties).map(([name, node]) => [name, getSchemaNode(schema, node)]);
+    const shape =
+        typeof node.items === 'object' && !Array.isArray(node.items) ? getSchemaNode(schema, node.items) : node;
+    const required = new Set(shape.required);
+    const fixed =
+        shape.properties === undefined
+            ? []
+            : Object.entries(shape.properties).map(([name, child]) => ({
+                  name,
+                  node: getSchemaNode(schema, child),
+                  required: required.has(name),
+              }));
+    const map =
+        typeof shape.additionalProperties === 'object' ? getSchemaNode(schema, shape.additionalProperties) : undefined;
+    return map?.properties === undefined ? fixed : [...fixed, { name: '<name>', node: map, required: false }];
 }
 
-function formatSetting(
-    schema: JSONSchema.JSONSchema,
+// The declared variants of a setting; a language key without its own declaration takes the language default.
+function listSettingVariants(
     name: string,
-    value: JSONSchema.JSONSchema | boolean,
     data: ReturnType<typeof readReferenceData>,
-): [string, string] {
+): ReturnType<typeof readReferenceData>['settings'] {
     const language = LANGUAGE_SETTING.exec(name)?.groups?.['language'];
     const declared = data.settings.filter(({ setting }) => setting.name === name);
-    const variants =
-        declared.length > 0 || language === undefined
-            ? declared
-            : data.settings
-                  .filter(({ setting }) => setting.name === name.replace(LANGUAGE_SETTING, '$1.$3'))
-                  .map(({ setting, owners }) => ({
-                      setting: { ...setting, default: setting.language_defaults?.[language] ?? setting.default },
-                      owners,
-                  }));
-    const node = getSchemaNode(schema, value);
-    const defaults = variants
+    if (declared.length > 0 || language === undefined) return declared;
+    return data.settings
+        .filter(({ setting }) => setting.name === name.replace(LANGUAGE_SETTING, '$1.$3'))
+        .map(({ setting, owners }) => ({
+            setting: { ...setting, default: setting.language_defaults?.[language] ?? setting.default },
+            owners,
+        }));
+}
+
+function formatDefaults(variants: ReturnType<typeof readReferenceData>['settings']): string {
+    return variants
         .map(({ setting, owners }) => {
             const recommended = setting.default;
             const all = setting.default_all ?? recommended;
@@ -75,14 +92,30 @@ function formatSetting(
             return display + (variants.length > 1 ? ' (' + owners.join(', ') + ')' : '');
         })
         .join('; ');
+}
+
+function formatSetting(
+    schema: JSONSchema.JSONSchema,
+    name: string,
+    value: JSONSchema.JSONSchema | boolean,
+    data: ReturnType<typeof readReferenceData>,
+    required = false,
+): [string, string] {
+    const variants = listSettingVariants(name, data);
+    const node = getSchemaNode(schema, value);
     const reasons = [
         ...new Set(
             variants.flatMap(({ setting }) => (setting.reason_needed === undefined ? [] : [setting.reason_needed])),
         ),
     ];
+    const accepted = formatAcceptedValue(schema, value);
+    const sentence = /[.\n]$/u.test(accepted) ? accepted : accepted + '.';
+    // A record field without a declared default takes the default of its schema.
+    const schemaDefault = node.default === undefined ? 'unset' : `\`${JSON.stringify(node.default)}\``;
+    const presence = required ? 'Required.' : `Default: ${formatDefaults(variants) || schemaDefault}.`;
     return [
         `\`${name}\``,
-        `${formatAcceptedValue(schema, value)}. Default: ${defaults || 'unset'}.` +
+        `${sentence} ${presence}` +
             (reasons.length === 0 ? '' : ` Reason needed when: ${reasons.join(', ')}.`) +
             (node.description === undefined ? '' : ` ${escapeCell(node.description)}`),
     ];
@@ -95,12 +128,14 @@ function formatSettingKeys(
     data: ReturnType<typeof readReferenceData>,
 ): string {
     const rows: [string, string][] = [];
-    function collect(name: string, node: JSONSchema.JSONSchema | boolean): void {
+    function collect(name: string, node: JSONSchema.JSONSchema | boolean, required: boolean): void {
         const children = listSchemaProperties(schema, node);
-        if (children.length === 0) rows.push(formatSetting(schema, name, node, data));
-        else for (const [child, shape] of children) collect(name === '' ? child : `${name}.${child}`, shape);
+        if (children.length === 0) rows.push(formatSetting(schema, name, node, data, required));
+        else
+            for (const child of children)
+                collect(name === '' ? child.name : `${name}.${child.name}`, child.node, child.required);
     }
-    collect(prefix, value);
+    collect(prefix, value, false);
     return formatDefinitions(rows);
 }
 
@@ -126,14 +161,14 @@ function formatScopeGuide(node: JSONSchema.JSONSchema | boolean, data: ReturnTyp
         'A scope selects settings for a folder. See [Monorepos and scopes](/configure/monorepos/) for inheritance.\n\n' +
         formatDefinitions(
             properties
-                .filter(([key]) => key === 'path')
-                .map(([, value]) => formatSetting(data.schema, 'scope.path', value, data)),
+                .filter((property) => property.name === 'path')
+                .map((property) => formatSetting(data.schema, 'scope.path', property.node, data, property.required)),
         ) +
         '\n\nAccepted root sections:\n\n' +
         properties
-            .filter(([key]) => key !== 'path')
+            .filter((property) => property.name !== 'path')
             .map(
-                ([key]) =>
+                ({ name: key }) =>
                     `- [\`${key}\`](/reference/gspot-toml/${SETTINGS_SUBPAGES.includes(key) ? key + '/' : '#' + key})`,
             )
             .join('\n')
@@ -163,7 +198,7 @@ function formatNamingGuide(data: ReturnType<typeof readReferenceData>): string {
 export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();
     const sections: string[] = [];
-    for (const [name, node] of listSchemaProperties(data.schema, data.schema)) {
+    for (const { name, node } of listSchemaProperties(data.schema, data.schema)) {
         if (!SETTINGS_SUBPAGES.includes(name)) {
             sections.push(formatSection(name, formatSettingKeys(data.schema, name, node, data)));
             continue;

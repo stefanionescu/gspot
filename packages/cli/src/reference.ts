@@ -1,9 +1,11 @@
+import { posix } from 'node:path';
 import { buildProgram } from '#cli/main.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { SCHEMA_FILE } from '#cli/config/settings/file.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
+import { RULES_PATH } from '#cli/config/system/locations.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { buildJsonSchema } from '#cli/settings/schema/gspot-toml.ts';
@@ -102,7 +104,7 @@ export function readReferenceData(): ReferenceData {
         ruleFiles: Object.fromEntries(
             configurations.map((manifest) => [
                 manifest.configuration.name,
-                listRuleFiles(manifest).map(({ path }) => path),
+                listRuleFiles(manifest).map(({ path }) => posix.join(RULES_PATH, path)),
             ]),
         ),
         configurationSettings: Object.fromEntries(
