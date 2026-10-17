@@ -7,7 +7,6 @@ import type { Finding } from '#cli/types/checks/run/check.ts';
 import { CLEAN_SWIFT } from '#tests/data/checks/swift/lint.ts';
 import { PROPERTY_READERS } from '#tests/data/checks/structure/environment-readers.ts';
 import { EXPORTED_FUNCTION_FILES } from '#tests/data/checks/structure/exported-functions.ts';
-import { runBashSample, expectedSummary, summarizeSample, registerBashSandbox } from '#tests/setup/sample-checks.ts';
 
 import {
     TRIVIAL_FILES,
@@ -16,7 +15,6 @@ import {
     SWIFT_FUNCTION_LIMITS,
     TRIVIAL_FUNCTION_CASES,
     PACKAGE_DOCSTRING_CASES,
-    BASH_TRIVIAL_FUNCTION_CASES,
 } from '#tests/data/checks/structure/trivial-functions.ts';
 
 test('Swift reports constructors, accessors, decorated methods and nested functions, and leaves closures alone', async () => {
@@ -144,12 +142,6 @@ test('exported JavaScript and TypeScript expressions with one importing file are
         { file: 'forward.ts', line: 2, rule: 'trivial-function' },
         { file: 'namespace.mjs', line: 1, rule: 'trivial-function' },
     ]);
-});
-
-const bashSandbox = registerBashSandbox();
-test.each([...BASH_TRIVIAL_FUNCTION_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runBashSample(bashSandbox(), entry);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });
 
 /** Check one source with the same two-statement limit and dispose its compiler resources. */

@@ -13,6 +13,7 @@ import {
     STYLESHEETS,
     TAILWIND_FILES,
     FIXED_STYLESHEETS,
+    STYLELINT_COMMAND,
     TAILWIND_SETTINGS,
     STYLELINT_SETTINGS,
 } from '#tests/data/checks/css.ts';
@@ -22,6 +23,19 @@ const installedSandbox = registerSharedSandbox({
     level: 'all',
     files: { 'package.json': '{"private":true}\n', ...STYLESHEETS },
 });
+
+/**
+ * Apply the settings in the shared sandbox, then run Stylelint, which must fail.
+ * @param sandboxRoot the folder of the shared sandbox.
+ * @returns the report of the failed run.
+ */
+async function runStylelintAfterApply(sandboxRoot: string): Promise<RunReport> {
+    const applied = await spawnGspot(sandboxRoot, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const failed = await spawnGspot(sandboxRoot, [...STYLELINT_COMMAND]);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    return JSON.parse(failed.stdout) as RunReport;
+}
 
 test.each([...LEVELS])(
     "Stylelint at level %s applies each scope's lint rule options and no other lint rules",
@@ -35,12 +49,7 @@ test.each([...LEVELS])(
                 ...STYLESHEETS,
             },
         });
-        const applied = await spawnGspot(root, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const command = ['check', '--only', 'css/stylelint', '--json'];
-        const failed = await spawnGspot(root, command);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const failedReport = JSON.parse(failed.stdout) as RunReport;
+        const failedReport = await runStylelintAfterApply(root);
         expect(failedReport.checks).toMatchObject([
             { check: 'css/stylelint', scope: '', status: 'failed' },
             { check: 'css/stylelint', scope: 'app', status: 'failed' },
@@ -59,7 +68,7 @@ test.each([...LEVELS])(
             level === 'all' ? ['build/site.css', 'app/site.css'] : [],
         );
         await createFileTree(root, FIXED_STYLESHEETS);
-        const corrected = await spawnGspot(root, command);
+        const corrected = await spawnGspot(root, [...STYLELINT_COMMAND]);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const correctedReport = JSON.parse(corrected.stdout) as RunReport;
         expect(correctedReport.checks).toMatchObject([
@@ -103,12 +112,7 @@ test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind
             ...TAILWIND_FILES,
         },
     });
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const command = ['check', '--only', 'css/stylelint', '--json'];
-    const failed = await spawnGspot(root, command);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const report = JSON.parse(failed.stdout) as RunReport;
+    const report = await runStylelintAfterApply(root);
     expect(report.checks.find((check) => check.scope === 'app')).toMatchObject({
         status: 'passed',
         findings: [],
@@ -130,7 +134,7 @@ test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind
     await Bun.write(join(root, 'app/site.css'), TAILWIND_FILES['app/site.css']);
     await Bun.write(join(root, 'build/site.css'), 'a { color: red; }\n');
     await Bun.write(join(root, 'other/site.css'), 'a { color: red; }\n');
-    const corrected = await spawnGspot(root, command);
+    const corrected = await spawnGspot(root, [...STYLELINT_COMMAND]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { scope: '', status: 'passed', findings: [] },

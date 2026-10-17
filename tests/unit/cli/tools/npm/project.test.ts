@@ -10,12 +10,28 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInstallContext } from '#tests/setup/install.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
+import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { readRegistryEnvironment } from '#cli/tools/npm/registry.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/tools/npm/project.ts';
 import { INSTALL_FAILURES, TOOL_REQUIREMENTS } from '#tests/data/tools/npm-tool-project.ts';
+
+/**
+ * Fake bun 1.4.2, and fail every other bun run.
+ * @param failure what a failed run prints, or that it ran out of time.
+ * @returns the mock, which restores bun when disposed.
+ */
+function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' | 'isTimedOut'>>): Disposable {
+    return fakeCommand('bun', (command) =>
+        Promise.resolve(
+            command[1] === '--version'
+                ? { code: 0, missing: false, duration: 0, stdout: '1.4.2\n', stderr: '' }
+                : { code: 1, missing: false, duration: 0, stdout: '', stderr: '', ...failure },
+        ),
+    );
+}
 
 /** Wrap package.json text as the generated tool project file. */
 function buildNpmToolFile(content: string): GeneratedFile {
@@ -61,18 +77,10 @@ test.each([...INSTALL_FAILURES])(
         using owner = openWriter(repository.path);
         using resources = new DisposableStack();
         resources.use(
-            fakeCommand('bun', (command) =>
-                Promise.resolve({
-                    code: command[1] === '--version' ? 0 : 1,
-                    missing: false,
-                    duration: 0,
-                    stdout:
-                        command[1] === '--version'
-                            ? '1.4.2\n'
-                            : `Downloading ${registry}private-check-tool\n${password}\n${token}`,
-                    stderr: command[1] === '--version' ? '' : `${refusal} from ${registry}private-check-tool`,
-                }),
-            ),
+            fakeFailingBun({
+                stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}`,
+                stderr: `${refusal} from ${registry}private-check-tool`,
+            }),
         );
         const installError = await (
             frozen
@@ -103,16 +111,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
     });
     const session = await openSession(repository.path);
     using owner = openWriter(repository.path);
-    using _bun = fakeCommand('bun', (command) =>
-        Promise.resolve({
-            code: command[1] === '--version' ? 0 : 1,
-            missing: false,
-            duration: 0,
-            stdout: command[1] === '--version' ? '1.4.2\n' : '',
-            stderr: '',
-            ...(command[1] === '--version' ? {} : { isTimedOut: true }),
-        }),
-    );
+    using _bun = fakeFailingBun({ isTimedOut: true });
     expect(await captureRejection(installNpmTools(buildInstallContext(session, owner)))).toBe(
         `bun ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,
     );

@@ -10,6 +10,7 @@ import { BASH_HEADER } from '#tests/data/checks/bash/samples.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { NESTED_CONDITION } from '#tests/data/checks/bash/tool-checks.ts';
+import { BASH_TRIVIAL_FUNCTION_CASES } from '#tests/data/checks/structure/trivial-functions.ts';
 import { runBashSample, expectedSummary, summarizeSample, registerBashSandbox } from '#tests/setup/sample-checks.ts';
 
 import {
@@ -115,6 +116,7 @@ test.each([
     ...UNREAD_ARGUMENT_CASES,
     ...UNUSED_FUNCTION_CASES,
     ...SINGLE_CALL_CASES,
+    ...BASH_TRIVIAL_FUNCTION_CASES,
 ])('$check reports $expected.rule and passes after the fix', async (entry) => {
     const result = await runBashSample(bashSandbox(), entry);
     expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));

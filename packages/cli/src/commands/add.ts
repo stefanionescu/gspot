@@ -6,7 +6,6 @@ import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Mutation } from '#cli/types/settings/edits.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
 import { type ConfigurationsOptions } from '#cli/types/commands/edit-settings.ts';
 import { saveSettings, startConfigurationEdit } from '#cli/apply/save-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
@@ -17,10 +16,7 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
  * @returns the command result.
  */
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
-    const { root, input, settings } = startConfigurationEdit(options.cwd, options.configurations);
-    findScopeTable(input.table, options.scope);
-    const scopeSettings =
-        options.scope === undefined ? settings : (settings.scopes[options.scope] as Settings['scopes'][string]);
+    const { root, input, scopeSettings } = startConfigurationEdit(options);
     const current = scopeSettings.configurations;
     const removed = scopeSettings.removed_configurations;
     if (options.configurations.every((name) => current.includes(name) && !removed.includes(name))) {

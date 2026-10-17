@@ -24,8 +24,13 @@ import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { findScopeTable, updateSettings, readSettingsEdit } from '#cli/settings/edit.ts';
 import { refuseAlwaysSelected, listUnknownConfigurations } from '#cli/configurations/select.ts';
-import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/commands/edit-settings.ts';
 import { type Settings, type KnownSettings, type DeclarationMatch } from '#cli/types/settings/values.ts';
+
+import type {
+    SaveSettingsResult,
+    SaveSettingsOptions,
+    ConfigurationsOptions,
+} from '#cli/types/commands/edit-settings.ts';
 
 /**
  * Edit settings, check them, and write them and their generated files. Installs nothing.
@@ -91,30 +96,32 @@ function startSettingsEdit(cwd: string): { root: string; input: SettingsEdit; se
 }
 
 /**
- * Validate the configuration names for add and remove before either command edits a list.
- * @param cwd the folder where the command starts.
- * @param names the configurations to add or remove.
- * @returns the validated edit and its shipped manifests.
+ * Validate the configuration names and the scope for add and remove before either command edits a list.
+ * @param options where the command starts, the configurations, and the scope.
+ * @returns the validated edit, the lists of that scope, and the shipped manifests.
  */
-export function startConfigurationEdit(
-    cwd: string,
-    names: string[],
-): {
+export function startConfigurationEdit(options: ConfigurationsOptions): {
     root: string;
     input: SettingsEdit;
     settings: Settings;
+    scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
     reads: ReadCache;
     manifests: Map<string, Manifest>;
 } {
-    const edit = startSettingsEdit(cwd);
+    const edit = startSettingsEdit(options.cwd);
     const manifests = readManifests(edit.reads);
     const [unknown] = listUnknownConfigurations(
-        names.map((name) => ({ name })),
+        options.configurations.map((name) => ({ name })),
         manifests,
     );
     if (unknown !== undefined) throw new GspotError('arguments', unknown.message);
-    refuseAlwaysSelected(names, manifests);
-    return { ...edit, manifests };
+    refuseAlwaysSelected(options.configurations, manifests);
+    findScopeTable(edit.input.table, options.scope);
+    const scopeSettings =
+        options.scope === undefined
+            ? edit.settings
+            : (edit.settings.scopes[options.scope] as Settings['scopes'][string]);
+    return { ...edit, scopeSettings, manifests };
 }
 
 /**

@@ -48,10 +48,7 @@ function refuseRequirements(configurations: string[], kept: string[], manifests:
  * @returns the command result.
  */
 async function runRemoveCommand(options: ConfigurationsOptions): Promise<CommandResult> {
-    const { root, input, settings, manifests } = startConfigurationEdit(options.cwd, options.configurations);
-    findScopeTable(input.table, options.scope);
-    const scopeSettings =
-        options.scope === undefined ? settings : (settings.scopes[options.scope] as Settings['scopes'][string]);
+    const { root, input, settings, scopeSettings, manifests } = startConfigurationEdit(options);
     const current = scopeSettings.configurations;
     const rootConfigurations = settings.configurations;
     const kept = [...new Set([...rootConfigurations, ...current])].filter((id) => !options.configurations.includes(id));

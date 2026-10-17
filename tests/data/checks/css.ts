@@ -146,3 +146,6 @@ export const VALID_CSS = `a {
     opacity: 1;
 }
 `;
+
+/** The command that runs only Stylelint and prints the JSON report. */
+export const STYLELINT_COMMAND = ['check', '--only', 'css/stylelint', '--json'] as const;
