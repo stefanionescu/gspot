@@ -60,8 +60,9 @@ async function saveSettings(repositoryRoot: string, options: SaveSettingsOptions
             ].join('\n'),
         );
     }
+    const shown = result.changed ? summary : 'No change: gspot.toml already has this value.';
     return {
-        text: `${summary === '' ? '' : summary + '\n'}${formatApplyReport(report)}`,
+        text: `${shown === '' ? '' : shown + '\n'}${formatApplyReport(report)}`,
         json: { ...report, changed: result.changed },
         exitCode: 0,
     };

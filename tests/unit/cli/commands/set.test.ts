@@ -118,6 +118,16 @@ test('set and unset change a setting of a configuration that the files select', 
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
 });
 
+test.each([
+    ['unset level', ['unset', 'level']],
+    ['set level recommended', ['set', 'level', 'recommended']],
+])('%s reports no change when gspot.toml already has the value', async (_name, commandArguments) => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText(['bash']) });
+    const result = await runGspot(sandbox.path, commandArguments);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('No change: gspot.toml already has this value.');
+});
+
 test('an invalid level leaves gspot.toml as it was', async () => {
     await using sandbox = await testdir();
     const settingsPath = join(sandbox.path, 'gspot.toml');
