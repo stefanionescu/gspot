@@ -211,16 +211,6 @@ export const DOCKER_CASES = [
         },
         expected: { file: 'api/compose.yml', message: 'bogus' },
     },
-    {
-        check: 'docker/hadolint',
-        files: {
-            'api/Dockerfile': `FROM node:latest
-COPY . .
-CMD ["node", "index.js"]
-`,
-        },
-        expected: { file: 'api/Dockerfile', rule: 'DL3007', line: 1 },
-    },
 ] as const;
 
 export const ROOT_USER_DOCKERFILE = `FROM node:22.11.0-bookworm-slim

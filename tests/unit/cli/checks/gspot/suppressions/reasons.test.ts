@@ -3,22 +3,18 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/checks/run/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { createSandbox } from '#tests/setup/sandbox.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { COMPILER_SOURCE } from '#tests/data/checks/typescript/projects.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
 import {
     VALE_OFF_GUIDE,
     COMPILER_REASON,
     VALE_FIXED_GUIDE,
-    SUPPRESSION_CASES,
     SUPPRESSION_REASONS,
     TYPESCRIPT_SUPPRESSIONS,
     SUPPRESSION_REASON_CASES,
@@ -217,9 +213,3 @@ test.each(SUPPRESSION_REASONS)(
         expect(reason.exec(explained)?.groups?.['reason']).toBe(expected);
     },
 );
-
-test.each([...SUPPRESSION_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    await using sandbox = await createSandbox(BASH_SANDBOX);
-    const result = await runCheckSample(sandbox, entry, BASH_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-});

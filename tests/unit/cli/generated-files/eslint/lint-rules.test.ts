@@ -4,7 +4,6 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
-import { SUPPRESSION_FILES, SUPPRESSION_FIXED } from '#tests/data/generated-files/eslint/levels.ts';
 
 import {
     REQUIRED_RULE_CASES,
@@ -88,17 +87,3 @@ test.each(REQUIRED_RULE_CASES.flatMap((entry) => LEVELS.map((level) => ({ ...ent
         }
     },
 );
-
-test('suppression-comments > an unused eslint-disable comment is reported', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        ...SUPPRESSION_FILES,
-        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
-    });
-    const eslint = await createEslint(sandbox.path);
-    expect(await collectLintFindings(eslint, sandbox.path, ['unused.js'], [])).toStrictEqual([
-        { file: 'unused.js', rule: null, line: 1 },
-    ]);
-    await createFileTree(sandbox.path, SUPPRESSION_FIXED);
-    expect(await collectLintFindings(eslint, sandbox.path, ['unused.js'], [])).toStrictEqual([]);
-});

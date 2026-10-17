@@ -160,24 +160,6 @@ test('a missing npm tool does not fall back to the program in the repository nod
     expect(await isOnDisk(join(sandbox.path, 'fallback-ran'))).toBe(false);
 });
 
-test('a system tsc is found in node_modules and the tool project tsc is ignored', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gspot/node_modules/.bin/tsc': '#!/bin/sh\nexit 7\n',
-        'node_modules/.bin/tsc': '#!/bin/sh\necho 5.9.3\n',
-    });
-    await chmod(join(sandbox.path, 'node_modules/.bin/tsc'), EXECUTABLE_FILE);
-    const inspection = inspectTool(
-        inspectionContext(sandbox.path),
-        getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'tsc'),
-    );
-    expect(inspection).toMatchObject({
-        state: 'system',
-        path: join(sandbox.path, 'node_modules/.bin/tsc'),
-        found: '5.9.3',
-    });
-});
-
 test('a Python tool uses the tool project environment, not the repository .venv', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

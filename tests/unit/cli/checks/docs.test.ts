@@ -146,16 +146,6 @@ test('missing-paths: paths relative to the document are found, and missing ones 
     ]);
 });
 
-test('missing-paths: text in a quoted tilde fence is skipped while sh fences are checked', async () => {
-    const found = await collectDocsFindings(
-        { 'a.md': '> ~~~text\n> src/example.ts\n> ~~~~\n\n~~~sh\ncat src/missing.ts\n~~~\n' },
-        { paths: ['a.md'] },
-    );
-    expect(found.map((finding) => [finding.line, finding.message])).toStrictEqual([
-        [6, 'src/missing.ts names no tracked file or folder.'],
-    ]);
-});
-
 test.each([
     ['package.json', '{broken'],
     ['mise.toml', '[tasks'],

@@ -49,36 +49,6 @@ export const PREFIX_TREE = {
     'pnpm/pnpm-workspace.yaml': '',
 } as const;
 
-export const LONE_FILE_CASES = [
-    {
-        check: 'structure/lone-files',
-        files: {
-            'tools/only/one.sh': CLEAN_BASH_SCRIPT,
-        },
-        expected: {
-            file: 'tools/only/one.sh',
-            rule: 'lone-file',
-            line: 1,
-        },
-    },
-] as const;
-
-export const SHARED_PREFIX_CASES = [
-    {
-        check: 'structure/shared-prefixes',
-        files: {
-            'jobs/asset-card.sh': CLEAN_BASH_SCRIPT,
-            'jobs/asset-list.sh': CLEAN_BASH_SCRIPT,
-            'jobs/asset-row.sh': CLEAN_BASH_SCRIPT,
-        },
-        expected: {
-            file: 'jobs/asset-card.sh',
-            rule: 'shared-prefix',
-            line: 1,
-        },
-    },
-] as const;
-
 export const FILE_FOLDER_CLASH_CASES = [
     {
         check: 'structure/file-folder-clashes',

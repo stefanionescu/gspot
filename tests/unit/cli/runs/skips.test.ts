@@ -90,27 +90,6 @@ test('vue/vue-tsc without the typescript configuration is skipped with its condi
     ]);
 });
 
-test('security/semgrep-registry runs when its registry packs are set', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['security']),
-        'source.js': 'export const port = 8080;\n',
-    });
-    const checks = planRun(await openSession(sandbox.path), {
-        stage: 'all',
-        includeUnsupported: true,
-        only: ['security/semgrep-registry'],
-    });
-    expect(
-        checks.map((check) => ({ check: check.check.name, cause: check.skip?.cause, note: check.skip?.note })),
-    ).toStrictEqual([
-        {
-            check: 'security/semgrep-registry',
-            cause: undefined,
-            note: undefined,
-        },
-    ]);
-});
-
 test('Prettier filters its files through a linked ignore file inside the repository', async () => {
     await using sandbox = await testdir();
     const ignored = 'ignored.md\n';

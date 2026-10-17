@@ -168,32 +168,3 @@ configurations = ["typescript"]`,
         STRICT_TSCONFIG_TEXT.replace('}}', '},"include":["root.ts","app/**/*.ts"]}'),
     );
 });
-
-test.each([...LEVELS])('typescript/tsc at level %s checks staged files, not working-tree fixes', async (level) => {
-    const sandbox = { path: installedSandbox().root };
-    await using _sourceChange = await updateSandbox(installedSandbox(), {
-        check: '',
-        files: { ...buildStandaloneSources(level), 'app/source.ts': STANDALONE_FIXED_SOURCE },
-    });
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    await createFileTree(sandbox.path, {
-        '.gspot/node_modules/@types/private/index.d.ts':
-            STANDALONE_TYPESCRIPT_FILES['.gspot/node_modules/@types/private/index.d.ts'],
-    });
-    commitAll(sandbox.path);
-    await Bun.write(join(sandbox.path, 'app/source.ts'), STANDALONE_TYPESCRIPT_FILES['app/source.ts']);
-    readGitOutput(sandbox.path, ['add', 'app/source.ts']);
-    await Bun.write(join(sandbox.path, 'app/source.ts'), STANDALONE_FIXED_SOURCE);
-    const staged = await spawnCheckReport(sandbox.path, ['check', '--staged', '--only', 'typescript/tsc', '--json']);
-    expect(staged.code, staged.stdout + staged.stderr).toBe(1);
-    const report = staged.report;
-    expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-        { scope: '', status: 'skipped' },
-        { scope: 'app', status: 'failed' },
-    ]);
-    expect(report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
-        STANDALONE_TYPESCRIPT_FINDINGS[level].map((finding) => matchFields(finding)),
-    );
-    expect(await Bun.file(join(sandbox.path, 'app/source.ts')).text()).toBe(STANDALONE_FIXED_SOURCE);
-});

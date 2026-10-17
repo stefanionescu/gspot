@@ -29,16 +29,6 @@ public func greeting(for name: String) -> String {
 
 export const SWIFT_PACKAGE_CASES = [
     {
-        check: 'swift/build',
-        files: {
-            'Sources/App/Count.swift': '/// A number that holds text.\npublic let count: Int = "three"\n',
-        },
-        expected: { file: 'Sources/App/Count.swift', rule: 'compiler', line: 2 },
-        corrected: {
-            files: { 'Sources/App/Count.swift': '/// A number that holds text.\npublic let count: Int = 3\n' },
-        },
-    },
-    {
         check: 'swift/swiftlint-analyze',
         files: { 'Sources/App/Pair.swift': `import Foundation\n\n${PAIR_SIZE_SOURCE}` },
         expected: { file: 'Sources/App/Pair.swift', rule: 'unused_import', line: 1 },

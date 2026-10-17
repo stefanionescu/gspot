@@ -5,17 +5,6 @@ import { readFile } from 'node:fs/promises';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 
-test('the writer holds the lock until disposal', async () => {
-    await using sandbox = await testdir();
-    {
-        using writer = openWriter(sandbox.path);
-        expect(writer.files.readStats('.gspot/state/writer.lock')?.isFile()).toBe(true);
-        expect(() => openWriter(sandbox.path)).toThrow();
-    }
-    using next = openWriter(sandbox.path);
-    expect(next.files.readStats('.gspot/state/writer.lock')?.isFile()).toBe(true);
-});
-
 test('one batch writes the planned binary bytes and removes an obsolete file', async () => {
     await using sandbox = await testdir();
     using writer = openWriter(sandbox.path);

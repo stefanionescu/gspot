@@ -22,22 +22,6 @@ public func greeting(for name: String) -> String {
 export const SWIFT_CASES = [
     // SwiftLint has no Windows build.
     {
-        check: 'swift/swiftlint',
-        files: { 'Sources/App/Cast.swift': CAST_SWIFT },
-        expected: { file: 'Sources/App/Cast.swift', rule: 'force_cast', line: 5 },
-        corrected: {
-            files: {
-                'Sources/App/Cast.swift': `import Foundation
-
-/// Reads a value as text.
-public func text(from value: Any) -> NSString? {
-    value as? NSString
-}
-`,
-            },
-        },
-    },
-    {
         check: 'swift/swiftformat',
         files: {
             'Sources/App/Greeting.swift': String.raw`import Foundation

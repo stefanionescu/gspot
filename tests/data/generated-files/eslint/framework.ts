@@ -1,5 +1,3 @@
-import { EXPO_DEPENDENCIES } from '#tests/data/checks/react.ts';
-
 const SELECTOR_FILES = {
     'native/App.jsx': `const list = <FlatList data={items} />;
 const scroll = <ScrollView>{items.map(renderItem)}</ScrollView>;
@@ -86,31 +84,6 @@ configurations = [ "expo" ]
 enabled = false
 `;
 
-const REACT_NATIVE_FILES = {
-    'src/Box.tsx': `// A test file.
-
-/**
- * Draws a box.
- * @returns the box
- */
-export function Box(): unknown {
-    return <View style={{ padding: 8 }} />;
-}
-`,
-} as const;
-
-const REACT_NATIVE_FIXES = [
-    {
-        name: 'expo',
-        configurations: ['typescript', 'react-native', 'expo'],
-        dependencies: EXPO_DEPENDENCIES,
-        file: 'src/Box.tsx',
-        source: REACT_NATIVE_FILES['src/Box.tsx'],
-        rule: 'react-native/no-inline-styles',
-        line: 8,
-    },
-] as const;
-
 const MOBILE_SOURCE_FILES = {
     'gspot.toml': MOBILE_SETTINGS,
     'bare/source.js': 'const { EXPO_PUBLIC_URL } = process.env;\n',
@@ -124,6 +97,5 @@ export {
     SELECTOR_FILES,
     COMPONENT_FILES,
     TEXT_COMPONENTS,
-    REACT_NATIVE_FIXES,
     MOBILE_SOURCE_FILES,
 };

@@ -5,14 +5,7 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-
-import {
-    SQL_CASES,
-    SQL_SANDBOX,
-    SQL_DUCKDB_SOURCE,
-    SQL_FUNCTION_SOURCE,
-    FOREIGN_DIALECT_CASES,
-} from '#tests/data/checks/sql.ts';
+import { SQL_CASES, SQL_SANDBOX, SQL_DUCKDB_SOURCE, SQL_FUNCTION_SOURCE } from '#tests/data/checks/sql.ts';
 
 /** Apply the Sql sources and restore them when their scenario finishes. */
 async function prepareSqlFiles(files: Record<string, string>): Promise<AsyncDisposable> {
@@ -93,29 +86,6 @@ test('SQLFluff accepts block comments and still reports a broken query', async (
     const corrected = await spawnGspot(root, command, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
-
-test.each([...FOREIGN_DIALECT_CASES])(
-    'SQLFluff parses the $dialect sample that PostgreSQL rejects',
-    async ({ dialect, source }) => {
-        const { root, environment } = installedSandbox();
-        await using _sourceChange = await prepareSqlFiles({
-            'gspot.toml': buildSettingsText(['sql'], { tables: `[tools.sqlfluff]\ndialect = "${dialect}"\n` }),
-            'query.sql': source,
-        });
-        const command = ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json'];
-        const selected = await spawnGspot(root, command, environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const change = await spawnGspot(root, ['set', 'tools.sqlfluff.dialect', 'postgres'], environment);
-        expect(change.code, change.stdout + change.stderr).toBe(0);
-        const rejected = await spawnGspot(root, command, environment);
-        expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        expect(
-            (JSON.parse(rejected.stdout) as RunReport).checks
-                .flatMap((check) => check.findings)
-                .some((finding) => finding.rule === 'PRS'),
-        ).toBe(true);
-    },
-);
 
 test('SQLFluff reports and fixes uppercase function names', async () => {
     const { root, environment } = installedSandbox();

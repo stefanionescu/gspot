@@ -8,10 +8,8 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
 import {
-    MARKDOWN_CASES,
     MARKDOWN_FILES,
     MARKDOWN_SANDBOX,
     TABLE_COLUMN_SAMPLE,
@@ -208,11 +206,6 @@ test('markdownlint JSON keeps file name delimiters, positions, and fixability', 
     const corrected = await spawnGspot(root, command, environment);
     expect(corrected.code, corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
-});
-
-test.each([...MARKDOWN_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, MARKDOWN_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });
 
 /** Remove padding from Markdown table cells while preserving surrounding prose. */

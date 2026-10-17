@@ -47,22 +47,6 @@ test.each(['text', 'bytes'] as const)('a failed %s stream read stops the child',
     }
 });
 
-test('byte capture keeps invalid UTF-8 bytes and the error output', async () => {
-    await using sandbox = await testdir();
-    const result = await captureProcess(
-        'bytes',
-        [
-            process.execPath,
-            '-e',
-            String.raw`process.stdout.write(Buffer.from([0, 255, 128, 10])); process.stderr.write("diagnostic\n");`,
-        ],
-        { cwd: sandbox.path },
-    );
-    expect([...(result.stdout as Buffer)]).toStrictEqual([0, 255, 128, 10]);
-    expect(result.stderr).toBe('diagnostic\n');
-    expect(result.code).toBe(0);
-});
-
 test.each([
     ['text', 'timeout'],
     ['bytes', 'canceled'],

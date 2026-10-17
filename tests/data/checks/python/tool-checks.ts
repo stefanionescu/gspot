@@ -139,24 +139,6 @@ ${ARITHMETIC_DOUBLE_RETURNS}    return value*2
         },
         expected: { file: ARITHMETIC_MODULE_PATH },
     },
-    {
-        check: 'python/basedpyright',
-        files: {
-            [ARITHMETIC_MODULE_PATH]: `${ARITHMETIC_DOUBLE_HEADER}        value (int): The number.
-${ARITHMETIC_DOUBLE_RETURNS}    return str(value)
-`,
-        },
-        expected: { file: ARITHMETIC_MODULE_PATH, rule: 'reportReturnType', line: 14 },
-    },
-    {
-        check: 'python/pydoclint',
-        files: {
-            [ARITHMETIC_MODULE_PATH]: `${ARITHMETIC_DOUBLE_HEADER}        amount (int): The number.
-${ARITHMETIC_DOUBLE_RETURNS}    return value * 2
-`,
-        },
-        expected: { file: ARITHMETIC_MODULE_PATH, rule: 'DOC103', line: 4 },
-    },
 ] as const;
 
 const ARITHMETIC_TESTS = `"""Tests of the arithmetic."""

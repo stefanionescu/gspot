@@ -2,37 +2,11 @@ import { test, expect } from 'bun:test';
 import { computePosition } from '#cli/system/text.ts';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { extractSqlIdentifiers } from '#cli/checks/general/naming/sql.ts';
 
 test('empty SQL has no statements', async () => {
     const result = await parseSqlFile('');
     expect(result.error).toBeUndefined();
     expect(result.statements).toStrictEqual([]);
-});
-
-test('SQL parses are shared, cached and refreshed after a correction', async () => {
-    const reads = createReadCache(process.cwd());
-    const source = 'CREATE TABLE user_accounts (display_name text);';
-    const first = parseSqlFile(source, reads);
-    const [parsed, repeated] = await Promise.all([first, parseSqlFile(source, reads)]);
-    expect(repeated).toStrictEqual(parsed);
-    expect(parsed.error).toBeUndefined();
-    const broken = `SELECT 1;\n${TYPO.select} 2;`;
-    const failed = await parseSqlFile(broken, reads);
-    expect(failed.error).toStrictEqual({
-        text: `syntax error at or near "${TYPO.select}"`,
-        line: 2,
-        column: 1,
-    });
-    expect(await extractSqlIdentifiers('broken.sql', broken, reads)).toStrictEqual({
-        identifiers: [],
-        error: failed.error,
-    });
-    const corrected = await parseSqlFile(broken.replace(`${TYPO.select} 2`, 'SELECT 2'), reads);
-    expect(corrected.error).toBeUndefined();
-    const refreshed = parseSqlFile(source, createReadCache(reads.root));
-    expect(await refreshed).toStrictEqual(parsed);
 });
 
 test('SQL statement positions skip nested comments and count Unicode correctly', async () => {

@@ -67,25 +67,3 @@ export const UNMATCHED_PATTERN_SETTINGS = {
         },
     ],
 } as const;
-
-export const UNMATCHED_PATTERN_CASES = [
-    {
-        check: 'gspot/unmatched-patterns',
-        files: {},
-        settings: `[[ignore]]
-check = "bash/shellcheck"
-rule = "SC2086"
-paths = ["nowhere/**"]
-reason = "A pattern that matches no file here."
-`,
-        expected: {
-            file: 'gspot.toml',
-            rule: 'unused-record',
-            line: 1,
-        },
-        corrected: {
-            files: {},
-            settings: '',
-        },
-    },
-] as const;

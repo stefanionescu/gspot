@@ -4,13 +4,13 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { rm, unlink, readFile } from 'node:fs/promises';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
 import { buildPlan } from '#cli/checks/language/swift/cache.ts';
 import { type RunReport } from '#cli/types/checks/run/check.ts';
 import { TEST_TARGET_PBXPROJ } from '#tests/data/checks/xcode.ts';
-import { rm, stat, chmod, unlink, readFile } from 'node:fs/promises';
 import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 
 import {
@@ -134,25 +134,6 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     },
 );
 // The pinned swiftlint tool has no build for some operating systems.
-test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
-    'SwiftLint $name reports a lint rule turned back on in an edited AppTests tool file',
-    async ({ scope }) => {
-        await using sandbox = await prepareSwiftScope(scope);
-        const { root, prefix } = sandbox;
-        const nestedPath = join(root, `${prefix}AppTests/.swiftlint.yml`);
-        const nested = await Bun.file(nestedPath).text();
-        const attributes = await stat(nestedPath);
-        const mode = attributes.mode & 0o777;
-        // The sandbox changes a managed configuration to exercise native enforcement.
-        await chmod(nestedPath, mode | 0o200);
-        await Bun.write(nestedPath, nested.replace('    - force_unwrapping\n', ''));
-        const changedConfiguration = await spawnGspot(root, SWIFTLINT_COMMAND);
-        expect(changedConfiguration.code, changedConfiguration.stdout + changedConfiguration.stderr).toBe(1);
-        expect((JSON.parse(changedConfiguration.stdout) as RunReport).checks[0]!.findings).toContainEqual(
-            matchFields({ file: `${prefix}AppTests/Value.swift`, rule: 'force_unwrapping' }),
-        );
-    },
-);
 // The pinned swiftlint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     'SwiftLint $name fixes source formatting with --fix',

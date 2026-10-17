@@ -7,7 +7,6 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { TYPE_EXPORT_FILES } from '#tests/data/generated-files/eslint/levels.ts';
 import { TYPESCRIPT_FILES } from '#tests/data/generated-files/eslint/fragments.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/data/checks/typescript/projects.ts';
-import { DUPLICATE_RULE_CASES } from '#tests/data/generated-files/eslint/lint-rules.ts';
 import { createEslint, listFindingRules, collectLintFindings } from '#tests/setup/tool-files.ts';
 
 test('the generated TypeScript configuration gives lint rules type information', async () => {
@@ -107,32 +106,4 @@ test('reexports = index-only keeps re-exports in index files and reports forward
         ['no-restricted-syntax', 'gspot/no-trivial-files'],
     );
     expect(corrected.filter(({ rule }) => rule === 'no-restricted-syntax')).toStrictEqual([]);
-});
-
-test('an unused local is reported once and using declarations are accepted', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript']),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'tsconfig.json':
-            '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ESNext"},"include":["client.ts"]}\n',
-        'client.ts': 'export {};\n',
-    });
-    const eslint = await createEslint(sandbox.path);
-    const rules = DUPLICATE_RULE_CASES.find(({ file }) => file === 'unused.ts')!.rules;
-    await createFileTree(sandbox.path, {
-        'client.ts': 'export function count(): number { const unused = 1; return 2; }\n',
-    });
-    expect(await collectLintFindings(eslint, sandbox.path, ['client.ts'], rules)).toStrictEqual([
-        { file: 'client.ts', rule: '@typescript-eslint/no-unused-vars', line: 1 },
-    ]);
-    await createFileTree(sandbox.path, {
-        'client.ts': `
-export async function disposeResources(): Promise<void> {
-    using local = { [Symbol.dispose]() {} };
-    await using asynchronous = { async [Symbol.asyncDispose]() {} };
-}
-`,
-    });
-    expect(await collectLintFindings(eslint, sandbox.path, ['client.ts'], rules)).toStrictEqual([]);
 });

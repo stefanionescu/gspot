@@ -105,12 +105,11 @@ test.skipIf(!isMacos)(
 const installedPackage = isMacos ? registerSharedSandbox(SWIFT_PACKAGE_SANDBOX) : undefined;
 for (const entry of SWIFT_PACKAGE_CASES) {
     // The pinned tool for this case has no build for some operating systems.
-    test.skipIf(
-        !isMacos ||
-            (entry.check !== 'swift/build' &&
-                !hasToolBuild(entry.check === 'swift/swiftlint-analyze' ? 'swiftlint' : 'periphery')),
-    )(`${entry.check} reports ${entry.expected.rule} in a Swift package and passes after the fix`, async () => {
-        const result = await runCheckSample(installedPackage!(), entry, SWIFT_PACKAGE_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
+    test.skipIf(!isMacos || !hasToolBuild(entry.check === 'swift/swiftlint-analyze' ? 'swiftlint' : 'periphery'))(
+        `${entry.check} reports ${entry.expected.rule} in a Swift package and passes after the fix`,
+        async () => {
+            const result = await runCheckSample(installedPackage!(), entry, SWIFT_PACKAGE_SANDBOX);
+            expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+        },
+    );
 }

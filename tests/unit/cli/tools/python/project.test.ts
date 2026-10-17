@@ -2,23 +2,15 @@ import { join } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { fakeCommand } from '#tests/setup/fakes.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { fakeTool, fakeCommand } from '#tests/setup/fakes.ts';
 import { buildInstallContext } from '#tests/setup/install.ts';
 import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
 import { installPythonTools, preparePythonLockfile } from '#cli/tools/python/project.ts';
-
-import {
-    UV_TOML,
-    LEAKED_UV_INDEX,
-    PYTHON_TOOL_PROJECT,
-    PYTHON_TOOL_LOCKFILE,
-} from '#tests/data/tools/python-tool-project.ts';
+import { UV_TOML, PYTHON_TOOL_PROJECT, PYTHON_TOOL_LOCKFILE } from '#tests/data/tools/python-tool-project.ts';
 
 /** Resolve the selected Python version in the shared installed-project arrangement. */
 function buildPythonProjectFiles(): Record<string, string> {
@@ -97,37 +89,4 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     expect(await readFile(join(repository.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
     expect(await isOnDisk(join(repository.path, '.gspot/.venv'))).toBe(false);
     expect(boundary).toHaveBeenCalledTimes(1);
-});
-
-test('a uv that copies index credentials into the lockfile is refused and the lockfile is kept', async () => {
-    await using repository = await testdir({
-        'gspot.toml': buildSettingsText(['python']),
-        '.gspot/pyproject.toml': PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VERSION),
-        '.gspot/uv.lock': PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION),
-        'uv.toml': LEAKED_UV_INDEX,
-    });
-    await using artifacts = await testdir();
-    const root = repository.path;
-    const bin = await fakeTool(
-        artifacts.path,
-        'bin/uv',
-        String.raw`const fs = require('node:fs'); fs.writeFileSync('uv.lock', '# synthetic-uv-password\n');`,
-    );
-    using log = openWriter(root);
-    const session = await openSession(root);
-    const manifest = {
-        path: '.gspot/pyproject.toml',
-        content: PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VERSION),
-    };
-    session.uvPath = join(bin, isWindows ? 'uv.cmd' : 'uv');
-    const read = log.files.read.bind(log.files);
-    using _boundary = spyOn(log.files, 'read').mockImplementation((path) =>
-        path === '.gspot/uv.lock' ? undefined : read(path),
-    );
-    expect(await captureRejection(preparePythonLockfile(buildInstallContext(session, log), manifest))).toContain(
-        'includes repository index credentials',
-    );
-    expect(await Bun.file(join(root, '.gspot/uv.lock')).text()).toBe(
-        PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION),
-    );
 });

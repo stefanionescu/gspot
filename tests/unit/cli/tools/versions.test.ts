@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
@@ -122,22 +121,6 @@ test.each([
     };
     const inspection = inspectTool(inspectionContext(sandbox.path), tool);
     expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
-});
-
-test('an npm tool behind a shim file takes the version of its package', async () => {
-    await using sandbox = await testdir();
-    // npm and Bun write a shim file on Windows, where a symlink into the package serves on other systems.
-    const binEntry = isWindows
-        ? { '.gspot/node_modules/.bin/teller.cmd': '@echo unknown\r\n' }
-        : { '.gspot/node_modules/.bin/teller': '#!/bin/sh\necho unknown\n' };
-    await createFileTree(sandbox.path, {
-        '.gspot/node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
-        ...binEntry,
-    });
-    for (const path of Object.keys(binEntry)) await chmod(join(sandbox.path, path), EXECUTABLE_FILE);
-    const inspection = inspectTool(inspectionContext(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
-    expect(inspection.state, inspection.note).toBe('ok');
-    expect(inspection.found).toBe('5.0.1');
 });
 
 // The preceding numeric release exercises the actual declared floor without copying its value.

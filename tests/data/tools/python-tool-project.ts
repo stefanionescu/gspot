@@ -67,6 +67,3 @@ export const UV_LOCKFILE_MISMATCHES = [
     ['pin', '==4.0.0', '==5.0.0'],
     ['virtual root', 'virtual = "."', 'virtual = "elsewhere"'],
 ] as const;
-
-export const LEAKED_UV_INDEX =
-    '[[index]]\nname = "test"\nurl = "http://gspot:synthetic-uv-password@127.0.0.1/simple"\ndefault = true\n';

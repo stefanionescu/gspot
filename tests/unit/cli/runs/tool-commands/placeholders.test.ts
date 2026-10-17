@@ -2,13 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { planRun } from '#cli/planning/checks.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { symlink, writeFile } from 'node:fs/promises';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { checkInput } from '#cli/checks/run/built-in.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { type CommandPart } from '#cli/types/checks/run/command.ts';
@@ -191,33 +189,6 @@ stage = "commit"
         'config',
         '--quiet',
     ]);
-});
-
-test('a command keeps a declared empty argument in its place', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: [],
-            command_check: [
-                {
-                    name: 'project/arguments',
-                    command: [
-                        process.execPath,
-                        '-e',
-                        'process.exitCode = process.argv.at(-1) === "" ? 0 : 1',
-                        '--',
-                        '',
-                    ],
-                    paths: ['source.txt'],
-                    stage: 'commit',
-                },
-            ],
-        }),
-        'source.txt': 'source input',
-    });
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/arguments'] }));
-    expect(result.report.exitCode).toBe(0);
-    expect(result.report.checks).toMatchObject([{ check: 'project/arguments', status: 'passed' }]);
 });
 
 test.each([

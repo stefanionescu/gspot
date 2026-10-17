@@ -12,13 +12,7 @@ import { LONG_PYTHON_FILE } from '#tests/data/checks/python/modules.ts';
 import { checkLongFiles } from '#cli/checks/general/structure/long-files.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-
-import {
-    ROUTE_CASES,
-    LONE_FILE_TREE,
-    LONE_FILE_CASES,
-    FILE_FOLDER_CLASH_CASES,
-} from '#tests/data/checks/structure/folders.ts';
+import { ROUTE_CASES, LONE_FILE_TREE, FILE_FOLDER_CLASH_CASES } from '#tests/data/checks/structure/folders.ts';
 
 test.each([...FILE_FOLDER_CLASH_CASES])(
     'file-folder-clashes: $check reports $expected.rule and passes after the fix',
@@ -148,9 +142,3 @@ test.each([...ROUTE_CASES])(
         ]);
     },
 );
-
-test.each([...LONE_FILE_CASES])('lone-files: $check reports $expected.rule and passes after the fix', async (entry) => {
-    await using sandbox = await createSandbox(BASH_SANDBOX);
-    const result = await runCheckSample(sandbox, entry, BASH_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-});

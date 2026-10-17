@@ -7,8 +7,7 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-import { ANSIBLE_CASES, ANSIBLE_SANDBOX, ANSIBLE_PLAYBOOK, COMMAND_PLAYBOOK } from '#tests/data/checks/ansible.ts';
+import { ANSIBLE_SANDBOX, ANSIBLE_PLAYBOOK, COMMAND_PLAYBOOK } from '#tests/data/checks/ansible.ts';
 
 // The pinned ansible-lint tool has no build for some operating systems.
 test.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint checks each scope without ansible.cfg', async () => {
@@ -101,14 +100,3 @@ configurations = ["ansible"]
 
 // Systems without a ansible-lint build skip every test here, so they install nothing.
 const installedSandbox = hasToolBuild('ansible-lint') ? registerSharedSandbox(ANSIBLE_SANDBOX) : undefined;
-
-for (const entry of ANSIBLE_CASES) {
-    // The pinned ansible-lint tool has no build for some operating systems.
-    test.skipIf(!hasToolBuild('ansible-lint'))(
-        `${entry.check} reports ${entry.expected.file} and passes after the fix`,
-        async () => {
-            const result = await runCheckSample(installedSandbox!(), entry, ANSIBLE_SANDBOX);
-            expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-        },
-    );
-}

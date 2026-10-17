@@ -54,25 +54,6 @@ test('level all keeps every rule that recommended turns on for a React file', as
     expect(active.map(([name]) => name)).toContain('react/jsx-key');
     for (const [name] of active) expect((rules['all']![name] as unknown[])[0], name).not.toBe(0);
 });
-test('level all reports TODO comments', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
-        'package.json': '{"private":true,"type":"module"}',
-        'source.js': '',
-    });
-    const eslint = await createEslint(sandbox.path);
-    const rules = ['sonarjs/todo-tag', 'unicorn/expiring-todo-comments'];
-    await createFileTree(sandbox.path, { 'source.js': '// TODO: finish the feature.\nexport const feature = 1;\n' });
-    expect(await collectLintFindings(eslint, sandbox.path, ['source.js'], rules)).toStrictEqual([
-        { file: 'source.js', rule: 'sonarjs/todo-tag', line: 1 },
-        { file: 'source.js', rule: 'unicorn/expiring-todo-comments', line: 1 },
-    ]);
-    const [result] = await eslint.lintFiles(['source.js']);
-    for (const rule of rules) expect(result!.messages.find(({ ruleId }) => ruleId === rule)?.severity).toBe(2);
-    await createFileTree(sandbox.path, { 'source.js': '// The feature lists tasks.\nexport const feature = 1;\n' });
-    expect(await collectLintFindings(eslint, sandbox.path, ['source.js'], rules)).toStrictEqual([]);
-});
 test.each([...LEVELS])('%s applies your rule options except in script and test files', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

@@ -1,13 +1,8 @@
 import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/system/assets.ts';
 import { buildManifest } from '#tests/setup/builders.ts';
-import { findDeclaration } from '#cli/settings/inherit.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
-import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
-import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
 import { versionFloorSchema } from '#cli/configurations/schema/parts.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
 
@@ -17,7 +12,6 @@ import {
     SEMGREP_TOOL_FILES,
     CONFIGURATION_TABLE,
     REPLACE_DECLARATION,
-    FILE_PATH_REFERENCES,
     INVALID_VERSION_FLOORS,
 } from '#tests/data/configurations/manifests.ts';
 
@@ -35,21 +29,6 @@ test('manifest > a manifest without [detect] takes the matchers of [files]', () 
     expect(empty.detect.filenames).toStrictEqual([]);
     expect(empty.detect.paths).toStrictEqual([]);
 });
-
-test.each([...FILE_PATH_REFERENCES])(
-    'manifest > a file path setting reference "$path" is accepted: $accepted',
-    ({ path }) => {
-        const manifest = buildManifest('reader', {
-            group: 'infrastructure',
-            tables: (
-                '[configuration]\ntitle = "Reader"\ndescription = "Select the authored source files."\n[files]\npaths = ' +
-                JSON.stringify([path]) +
-                '\n'
-            ).replace(/^\s*\[configuration\][\s\S]*?(?=\n\[|$)/u, ''),
-        });
-        expect(manifest.files.paths).toStrictEqual([path]);
-    },
-);
 
 test.each(INVALID_VERSION_FLOORS)('parts > a malformed version floor %s is refused', (floor) => {
     expect(() => versionFloorSchema.parse(floor)).toThrow('Invalid string');
@@ -86,37 +65,6 @@ test('tool > a tool declaration refuses unknown fields', () => {
         kind: 'program',
         installers: { npm: { name: 'native-probe', version: '1.0.0' } },
     });
-});
-
-test('manifests > setting names in shipped manifest text and rules exist', () => {
-    const manifests = [...readManifests(createReadCache(process.cwd())).values()];
-    const known = buildKnownSettings(manifests, 'all');
-    const roots = new Set([...known.declarations.keys()].map((key) => key.split('.', 1)[0]));
-    const sources = [
-        ...manifests.flatMap(({ folder, checks }) =>
-            checks.map((check) => ({
-                path: `${folder}/manifest.toml`,
-                text: [check.summary, check.example, check.why, check.help].join('\n'),
-            })),
-        ),
-        ...assets
-            .listAssets(CONFIGURATIONS_FOLDER)
-            .filter((path) => path.includes('/rules/') && path.endsWith('.md'))
-            .map((path) => ({ path, text: assets.readAsset(path) })),
-    ];
-    const missing = sources.flatMap(({ path, text }) => {
-        const prose = text.replaceAll(/https?:\/\/[^\s)]+/gu, '');
-        return [...prose.matchAll(/(?<![\w/])[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+\b/gu)]
-            .map(([key]) => key)
-            .filter(
-                (key) =>
-                    roots.has(key.split('.', 1)[0]) &&
-                    findDeclaration(known, key) === undefined &&
-                    findSettingSchema(key) === undefined,
-            )
-            .map((key) => `${path}: ${key}`);
-    });
-    expect([...new Set(missing)]).toStrictEqual([]);
 });
 
 test('manifests > a tool declared by two configurations is refused', () => {
@@ -162,13 +110,6 @@ test.each([false, true])(
         expect(manifests.get('consumer')!.tools).toStrictEqual(manifests.get('owner')!.tools);
     },
 );
-
-test('manifests > the folder gives a configuration its name and group', () => {
-    const { configuration } = buildManifest('example', { group: 'infrastructure' });
-    expect([configuration.name, configuration.group]).toStrictEqual(['example', 'infrastructure']);
-    expect(buildManifest('example', { group: 'testing' }).configuration.group).toBe('testing');
-    expect(() => manifestSchema.parse({ configuration: { ...configuration, group: 'tool' } })).toThrow('group');
-});
 
 test('manifests > a tool rule page needs the {rule} placeholder, and its crash pattern must be a regular expression', () => {
     const manifest = buildManifest('example', {

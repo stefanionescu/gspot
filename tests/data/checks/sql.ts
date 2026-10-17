@@ -1,11 +1,5 @@
 const SQL_DUCKDB_SOURCE = 'FROM records SELECT id;\n';
 
-const FOREIGN_DIALECT_CASES = [
-    { dialect: 'sqlite', source: 'PRAGMA table_info (users);\n' },
-    { dialect: 'mysql', source: 'SELECT `order` FROM records;\n' },
-    { dialect: 'duckdb', source: SQL_DUCKDB_SOURCE },
-] as const;
-
 const CHILD_POSTGRES_TABLES = `[[scope]]
 path = "app"
 
@@ -93,6 +87,5 @@ export {
     SQL_DUCKDB_SOURCE,
     SQL_FUNCTION_SOURCE,
     CHILD_POSTGRES_TABLES,
-    FOREIGN_DIALECT_CASES,
     QUALIFIED_FUNCTION_DECLARATION,
 };

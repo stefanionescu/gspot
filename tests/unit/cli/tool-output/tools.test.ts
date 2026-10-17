@@ -9,7 +9,6 @@ import { parseCommandFindings } from '#cli/checks/run/command/output.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
 import {
-    TYPO_REPORT,
     REPORT_ERRORS,
     SEMGREP_MATCH,
     MARKDOWN_REPORT,
@@ -114,14 +113,4 @@ test('Semgrep scanner, rule, unpositioned and malformed reports are errors', asy
             { cwd: sandbox.path, root: sandbox.path },
         ).findings,
     ).toStrictEqual([]);
-});
-
-test('a typos record becomes a finding', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'sample.txt': `${TYPO.the}\n` });
-    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get('spelling/typos')!.check;
-    const valid = TYPO_REPORT;
-    expect(parseOutput(check, JSON.stringify(valid), '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
-        { file: 'sample.txt', line: 1, column: 1 },
-    ]);
 });

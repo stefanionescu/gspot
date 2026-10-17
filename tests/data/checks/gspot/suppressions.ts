@@ -156,36 +156,6 @@ export const VALE_FIXED_GUIDE = `# A page
 Text remains visible to the prose check.
 `;
 
-export const SUPPRESSION_CASES = [
-    {
-        check: 'gspot/suppressions',
-        files: {
-            'scripts/quiet.sh': `#!/usr/bin/env bash
-#
-# Builds the thing.
-# Runtime: Bash 4.4+, macOS and Linux.
-set -euo pipefail
-shopt -s inherit_errexit
-
-# main: runs the script.
-main() {
-    local name="$1"
-    local greeting="hello \${name}"
-    # shellcheck disable=SC2086
-    echo "\${greeting}"
-}
-
-main "$@"
-`,
-        },
-        expected: {
-            file: 'scripts/quiet.sh',
-            rule: 'shellcheck-no-reason',
-            line: 12,
-        },
-    },
-] as const;
-
 // Each Ruff directive, whether Ruff honors it for F401, and whether gspot records it as a directive on line 1.
 export const RUFF_SUPPRESSIONS = [
     { source: 'import os # noqa: F401\n', suppressed: true, directive: true },

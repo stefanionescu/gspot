@@ -29,9 +29,6 @@ export const KNIP_UNUSED_FILES = [
 
 export const KNIP_ENTRY_TABLES = `\ntest_files = ["native-tests/**"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript"]\ntest_files = ["child/verification/**"]\n[scope.tools.knip]\nentry = ["child/main.js"]\n`;
 
-export const KNIP_PROGRAM_PACKAGE =
-    '{"name":"native-project","private":true,"scripts":{"git":"git status","npm":"npx example","bun":"bunx example","missing":"missing-native-tool"}}';
-
 export const KNIP_DEPENDENCY_PACKAGE =
     '{"name":"native-project","private":true,"type":"module","dependencies":{"vale":"0.0.0","fixture-unused-package":"1.0.0","prettier":"3.8.4","eslint-config-prettier":"10.1.8","@gspothq/eslint-plugin":"0.0.0"}}';
 

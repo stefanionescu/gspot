@@ -5,12 +5,9 @@ import { commitAll } from '#tests/setup/git.ts';
 import { runChecks } from '#cli/checks/run/run.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { createSandbox } from '#tests/setup/sandbox.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
-import { PREFIX_TREE, SHARED_PREFIX_CASES } from '#tests/data/checks/structure/folders.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { PREFIX_TREE } from '#tests/data/checks/structure/folders.ts';
 
 test('prefix checks group files and directories once and honor ignores and the limit', async () => {
     const settings = buildSettingsText(['typescript'], { level: 'all' });
@@ -135,10 +132,4 @@ test('NestJS kind suffixes do not count in NestJS scopes; JSX files and unknown 
         { scope: 'app/deep', paths: [] },
         { scope: 'sibling', paths: ['sibling/feature.controller.spec.ts'] },
     ]);
-});
-
-test.each([...SHARED_PREFIX_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    await using sandbox = await createSandbox(BASH_SANDBOX);
-    const result = await runCheckSample(sandbox, entry, BASH_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });

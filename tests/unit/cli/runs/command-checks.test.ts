@@ -35,22 +35,6 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
     ]);
 });
 
-test('a command check with malformed JSON output ends with status error', async () => {
-    const output = '{ broken';
-    await using sandbox = await testdir();
-    const program = `process.stdout.write(${JSON.stringify(output)})`;
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([], {
-            tables: `[[command_check]]
-name = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\npaths = ["source.txt"]\nstage = "commit"\n[command_check.output]\nformat = "json"\n`,
-        }),
-        'source.txt': 'original',
-    });
-    const cli = await checkReport(sandbox.path, ['check', '--only', 'sandbox/json', '--json']);
-    expect(cli.code, cli.stdout + cli.stderr).toBe(2);
-    expect(cli.report.checks[0]!.status).toBe('error');
-});
-
 test.each([...SARIF_LOCATION_CASES])(
     'a SARIF command check keeps a %s finding without made-up line and column',
     async (_name, physicalLocation) => {

@@ -53,26 +53,4 @@ const VITEST_SANDBOX = {
     },
 } as const;
 
-const VITEST_CASES = [
-    {
-        check: 'vitest/coverage',
-        files: { 'src/public.ts': UNTESTED_SOURCE },
-        expected: { message: 'Coverage for functions (50%) does not meet global threshold (80%)' },
-        corrected: {
-            files: {
-                'src/public.ts': UNTESTED_SOURCE,
-                'src/math.test.ts': `import { test, expect } from 'vitest';
-import { positiveTotal, triple } from './public.js';
-
-test('adds only positive values', () => {
-    expect(positiveTotal([2, 3])).toBe(5);
-    expect(positiveTotal([-2, 3])).toBe(3);
-    expect(positiveTotal([])).toBe(0);
-});
-\ntest("triples a number", () => { expect(triple(3)).toBe(9); });\n`,
-            },
-        },
-    },
-] as const;
-
-export { VITEST_CASES, VITEST_SOURCE, VITEST_PACKAGE, VITEST_SANDBOX, UNTESTED_SOURCE };
+export { VITEST_SOURCE, VITEST_PACKAGE, VITEST_SANDBOX, UNTESTED_SOURCE };

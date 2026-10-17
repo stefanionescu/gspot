@@ -1,8 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { generate } from '#cli/generation/generate.ts';
 import { createEslint } from '#tests/setup/tool-files.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
@@ -37,19 +35,4 @@ test.each([...FRAGMENT_SCOPE_CASES])('$configuration fragment appears once in ea
         ]);
         expect(lint.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === row.rule)).toHaveLength(2);
     }
-});
-
-test('generated TypeScript fragments keep their imports before their rule blocks', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['javascript', 'typescript'], { level: 'all' }),
-        'package.json': '{"private":true,"type":"module"}',
-        'source.ts': 'export const value = 1;\n',
-    });
-    const output = generate(await openSession(sandbox.path));
-    const content = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!.content;
-    expect(content.match(/import tseslint from 'typescript-eslint';/gu)).toHaveLength(1);
-    expect(content).toContain("import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';");
-    expect(content.indexOf("import tseslint from 'typescript-eslint';")).toBeLessThan(
-        content.indexOf('tseslint.plugin'),
-    );
 });

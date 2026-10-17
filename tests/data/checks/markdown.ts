@@ -104,67 +104,6 @@ not code {
     { name: 'fixed JSX', markdown: '```jsx\nexport const panel = <div>Hello</div>;\n```', lines: [] },
 ] as const;
 
-export const MARKDOWN_CASES = [
-    {
-        check: 'markdown/markdownlint',
-        files: {
-            'docs/image.md': `# A page
-
-![](diagram.png)
-`,
-        },
-        expected: { file: 'docs/image.md', line: 3, rule: 'MD045' },
-        corrected: {
-            files: {
-                'docs/image.md': `# A page
-
-![Request flow](diagram.png)
-`,
-            },
-        },
-    },
-    {
-        check: 'markdown/markdownlint',
-        files: {
-            'docs/titles.md': `# First title
-
-# Second title
-`,
-        },
-        expected: { file: 'docs/titles.md', line: 3, rule: 'MD025' },
-        corrected: {
-            files: {
-                'docs/titles.md': `# First title
-
-## Second heading
-`,
-            },
-        },
-    },
-    {
-        check: 'markdown/markdownlint',
-        files: {
-            'docs/skipped.md': `# A page
-
-### A heading two levels down
-
-Text under it.
-`,
-        },
-        expected: { file: 'docs/skipped.md', rule: 'MD001', line: 3 },
-        corrected: {
-            files: {
-                'docs/skipped.md': `# A page
-
-## A heading
-
-Text under it.
-`,
-            },
-        },
-    },
-] as const;
-
 export const MARKDOWN_SANDBOX = {
     configurations: ['markdown'],
     files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },

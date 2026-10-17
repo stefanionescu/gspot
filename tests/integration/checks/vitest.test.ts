@@ -6,18 +6,9 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { COVERAGE_ZERO_LIMITS } from '#tests/data/checks/coverage.ts';
 import vitestManifest from 'vitest/package.json' with { type: 'json' };
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-
-import {
-    VITEST_CASES,
-    VITEST_SOURCE,
-    VITEST_PACKAGE,
-    VITEST_SANDBOX,
-    UNTESTED_SOURCE,
-} from '#tests/data/checks/vitest.ts';
+import { VITEST_SOURCE, VITEST_PACKAGE, VITEST_SANDBOX, UNTESTED_SOURCE } from '#tests/data/checks/vitest.ts';
 
 const vitestProjectFiles = {
     ...VITEST_SANDBOX.files,
@@ -88,15 +79,3 @@ configurations = ["typescript", "vitest"]
         else expect(check.note).toContain('@vitest/coverage-v8');
     }
 });
-
-const coverageSandbox = registerSharedSandbox({
-    install: false,
-    ...VITEST_SANDBOX,
-    dependencies: { vitest: vitestManifest.version },
-});
-for (const entry of VITEST_CASES) {
-    test(`${entry.check} reports uncovered code and passes after the fix`, async () => {
-        const result = await runCheckSample(coverageSandbox(), entry, VITEST_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    });
-}

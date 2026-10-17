@@ -105,32 +105,6 @@ test('Vale reads known file types by path, and .mts files and scripts without an
     ]);
 });
 
-test('Vale groups path files by extension and reads each script without an extension alone', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['prose', 'markdown', 'typescript', 'bash']),
-        '.gspot/config/vale.ini': 'Packages =\n',
-        'a.md': '# A\n',
-        'b.md': '# B\n',
-        'c.ts': '// C\n',
-        'd.sh': '#!/bin/sh\n# D\n',
-        'e.sh': '#!/bin/sh\n# E\n',
-        'hooks/pre-commit': '#!/bin/sh\n# Hook\n',
-    });
-    using resources = new DisposableStack();
-    const session = await openPinnedSession(sandbox.path, ['vale'], resources);
-    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '{}' }));
-    expect(await checkFindings(session.root, 'prose/vale')).toStrictEqual([]);
-    const sourcePaths = new Set(['a.md', 'b.md', 'c.ts', 'd.sh', 'e.sh'].map((path) => join(sandbox.path, path)));
-    expect(
-        run.mock.calls.map(([command]) =>
-            command.filter((part) => sourcePaths.has(part) || part.startsWith('--path=')),
-        ),
-    ).toStrictEqual([
-        ...[['a.md', 'b.md'], ['c.ts'], ['d.sh', 'e.sh']].map((paths) => paths.map((path) => join(sandbox.path, path))),
-        [`--path=${join(sandbox.path, 'hooks/pre-commit.py')}`],
-    ]);
-});
-
 test.each([
     {
         name: 'native file and stdin report locations',

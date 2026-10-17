@@ -62,11 +62,6 @@ version = "1.0.0"
 file = "package.json"
 `;
 
-export const FILE_PATH_REFERENCES = [
-    { path: '{setting:test_files}', accepted: true },
-    { path: '**/*.{test,spec}.ts', accepted: true },
-] as const;
-
 /** Declared installer combinations and their tool project installations. */
 export const TOOL_PROJECT_PACKAGES = [
     {

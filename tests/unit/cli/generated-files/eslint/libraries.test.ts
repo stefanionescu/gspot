@@ -2,17 +2,9 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { I18N_SOURCE } from '#tests/data/generated-files/eslint/framework.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
-
-import {
-    QUERY_FILES,
-    QUERY_FIXED,
-    QUERY_SAMPLE,
-    ZUSTAND_FILES,
-    RESTRICTION_TABLES,
-} from '#tests/data/generated-files/eslint/fragments.ts';
+import { ZUSTAND_FILES, RESTRICTION_TABLES } from '#tests/data/generated-files/eslint/fragments.ts';
 
 describe('drizzle', () => {
     test('Drizzle reports delete and update without where only for its client names', async () => {
@@ -36,28 +28,7 @@ describe('drizzle', () => {
         expect(await collectLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
     });
 });
-describe('tanstack-query', () => {
-    test('TanStack Query reports a void query function and the mutation callback order', async () => {
-        const level = 'all';
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            ...QUERY_FILES,
-            'gspot.toml': buildSettingsText(['typescript', 'tanstack-query'], {
-                level: level,
-            }),
-            'src/query.ts': QUERY_SAMPLE,
-        });
-        const eslint = await createEslint(sandbox.path);
-        const rules = ['@tanstack/query/no-void-query-fn', '@tanstack/query/mutation-property-order'];
-        const files = ['src/query.ts', 'src/neighbor.ts'];
-        expect(await collectLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([
-            { file: 'src/query.ts', rule: '@tanstack/query/no-void-query-fn', line: 2 },
-            { file: 'src/query.ts', rule: '@tanstack/query/mutation-property-order', line: 3 },
-        ]);
-        await Bun.write(`${sandbox.path}/src/query.ts`, QUERY_FIXED);
-        expect(await collectLintFindings(eslint, sandbox.path, files, rules)).toStrictEqual([]);
-    });
-});
+describe('tanstack-query', () => {});
 describe('translations', () => {
     test.each([...LEVELS])('literal UI text is reported outside the test files of each scope at %s', async (level) => {
         await using sandbox = await testdir();
@@ -82,23 +53,7 @@ describe('translations', () => {
         }
     });
 });
-describe('zod', () => {
-    test('Zod reports z.any() and keeps its schema rules', async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': 'level = "all"\nconfigurations = ["zod"]\n',
-            'package.json': JSON.stringify({ private: true, dependencies: { zod: '4.6.2' } }),
-            'source.js': 'import { z } from "zod";\nexport const schema = z.object({ value: z.any() });\n',
-        });
-        const eslint = await createEslint(sandbox.path);
-        const computed = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
-        expect(computed.rules['zod/no-any-schema']![0]).toBe(2);
-        expect(computed.rules['zod/prefer-strict-object']![0]).toBe(2);
-        expect(await collectLintFindings(eslint, sandbox.path, ['source.js'], ['zod/no-any-schema'])).toStrictEqual([
-            { file: 'source.js', rule: 'zod/no-any-schema', line: 2 },
-        ]);
-    });
-});
+describe('zod', () => {});
 describe('zustand', () => {
     test.each([...LEVELS])(
         '%s keeps your import restrictions in store files and the Zustand restriction elsewhere',

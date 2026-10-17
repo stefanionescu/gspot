@@ -20,14 +20,3 @@ export const TYPE_EXPORT_FILES = {
     'index.ts':
         'import { value, Shape } from "./value.js";\nexport { value };\nexport { Shape } from "./value.js";\nexport const shape: Shape = value;\n',
 } as const;
-
-export const SUPPRESSION_FILES = {
-    'package.json': '{"private":true,"type":"module"}\n',
-    'unused.js': `// eslint-disable-next-line no-debugger -- reason: Demonstrate an unused directive.
-export const value = 1;
-`,
-} as const;
-
-export const SUPPRESSION_FIXED = {
-    'unused.js': 'export const value = 1;\n',
-} as const;

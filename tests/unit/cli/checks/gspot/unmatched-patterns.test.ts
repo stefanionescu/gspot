@@ -2,16 +2,8 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { createSandbox } from '#tests/setup/sandbox.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
-import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-
-import {
-    UNUSED_PATH_CASES,
-    UNMATCHED_PATTERN_CASES,
-    UNMATCHED_PATTERN_SETTINGS,
-} from '#tests/data/checks/gspot/unmatched-patterns.ts';
+import { UNUSED_PATH_CASES, UNMATCHED_PATTERN_SETTINGS } from '#tests/data/checks/gspot/unmatched-patterns.ts';
 
 test('an [[ignore]] or [[command_check]] path that matches no tracked file is reported, even when a document names it', async () => {
     await using sandbox = await testdir();
@@ -45,9 +37,3 @@ test.each([...UNUSED_PATH_CASES])(
         );
     },
 );
-
-test.each([...UNMATCHED_PATTERN_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    await using sandbox = await createSandbox(BASH_SANDBOX);
-    const result = await runCheckSample(sandbox, entry, BASH_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-});

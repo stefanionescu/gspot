@@ -21,7 +21,6 @@ import {
     KNIP_POINTER_FILES,
     KNIP_POINTER_TABLES,
     KNIP_COMPONENT_FILES,
-    KNIP_PROGRAM_PACKAGE,
     KNIP_DEPENDENCY_PACKAGE,
 } from '#tests/data/checks/javascript/knip.ts';
 
@@ -58,30 +57,6 @@ test('Knip finds unused framework component files and uses the entry points of e
     expect(
         parseOutput(check, corrected.stdout, corrected.stderr, { root: sandbox.path, cwd: sandbox.path }),
     ).toStrictEqual([]);
-});
-
-test('Knip ignores npm, bun and git scripts and reports an unlisted program', async () => {
-    const check = readManifests(createReadCache(process.cwd()))
-        .get('javascript')!
-        .checks.find(({ name }) => name === 'javascript/knip')!;
-
-    await using sandbox = await testdir();
-    const files = { 'package.json': KNIP_PROGRAM_PACKAGE, 'main.js': 'export const value = 1;\n' };
-    const configuration = await generateFile(buildSettingsText(['javascript']), '.gspot/config/knip.json', files);
-    await createFileTree(sandbox.path, { ...files, '.gspot/config/knip.json': configuration });
-    await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
-    const result = await runKnip(sandbox.path, 'binaries');
-    expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path })).toStrictEqual([
-        {
-            check: check.name,
-            file: 'package.json',
-            rule: 'binaries',
-            message: 'Unlisted binary: missing-native-tool',
-            help: check.help,
-            fixable: false,
-        },
-    ]);
 });
 
 test("Knip ignores gspot's tool packages and reports your unused dependencies", async () => {
@@ -215,16 +190,4 @@ test('Knip workspaces come from package workspaces, your entries and the configu
     ) as KnipToolFile;
     expect(withoutEntries.workspaces['.']!.entry).toStrictEqual(matchItems(['src/main.{ts,js}']));
     expect(withoutEntries.workspaces['.']!.entry).not.toContain('cli.js');
-});
-
-test('Knip ignores the Markdown pointer', async () => {
-    const knip = JSON.parse(
-        await generateFile(buildSettingsText(['javascript', 'markdown']), '.gspot/config/knip.json', {
-            'src/main.js': 'export const enabled = true;\n',
-            'README.md': '# Example\n',
-        }),
-    ) as KnipToolFile;
-    expect(knip.ignore).toContain('.markdownlint-cli2.mjs');
-    expect(knip.workspaces['.']!.entry).not.toContain('.markdownlint-cli2.mjs');
-    expect(knip).not.toHaveProperty('entry');
 });

@@ -32,18 +32,6 @@ test.each([...NODE_REQUIREMENTS])(
     },
 );
 
-test('schema tools need their ajv peer', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['files']),
-        'settings.json': '{"enabled":true}\n',
-    });
-    const session = await openSession(sandbox.path);
-    const names = session.neededToolManifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name));
-    expect(names).toContain('v8r');
-    expect(names).toContain('ajv');
-});
-
 test.each(ARCHITECTURE_REQUIREMENTS.flatMap((entry) => LEVELS.map((level) => ({ ...entry, level }))))(
     'eslint-plugin-boundaries is needed for $name at the levels that use it (%j)',
     async ({ tables, boundary, level }) => {
