@@ -30,7 +30,7 @@ test.each(['', 'app'])(
         });
         commitAll(sandbox.path);
         await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
-        const command = ['node', '--input-type=module', '-e', STYLELINT_LOOKUP_SCRIPT, stylesheet];
+        const command = [process.execPath, '-e', STYLELINT_LOOKUP_SCRIPT, stylesheet];
         const before = await runCommand(command, { cwd: sandbox.path });
         expect(before.code, before.stdout + before.stderr).toBe(0);
         expect(before.stdout).toBe('[]');
@@ -76,7 +76,7 @@ test('init replaces a standalone .stylelintrc.mjs without adding a package.json 
     });
     commitAll(sandbox.path);
     await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
-    const command = ['node', '--input-type=module', '-e', STYLELINT_LOOKUP_SCRIPT, 'source.css'];
+    const command = [process.execPath, '-e', STYLELINT_LOOKUP_SCRIPT, 'source.css'];
     const before = await runCommand(command, { cwd: sandbox.path });
     expect(before.code, before.stdout + before.stderr).toBe(0);
     expect(before.stdout).toBe('[]');
@@ -144,7 +144,7 @@ test.each([...KNIP_FILES])('init replaces your Knip file $file and keeps knip.co
     commitAll(sandbox.path);
     await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
     const command = [
-        'node',
+        process.execPath,
         '.gspot/node_modules/knip/bin/knip.js',
         '--no-progress',
         '--reporter',
@@ -171,13 +171,12 @@ test.each([...KNIP_FILES])('init replaces your Knip file $file and keeps knip.co
     expect(await Bun.file(join(sandbox.path, 'knip.config.mjs')).text()).toBe('export default {};\n');
     const after = await runCommand([...command, '--config', '.gspot/config/knip.json'], { cwd: sandbox.path });
     expect(after.code, after.stdout + after.stderr).toBe(1);
-    expect(JSON.parse(after.stdout)).toMatchObject({
-        issues: [
-            { file: 'knip.config.mjs', files: [{ name: 'knip.config.mjs' }] },
-            { file: 'main.js', files: [{ name: 'main.js' }] },
-            { file: 'unused.js', files: [{ name: 'unused.js' }] },
-        ],
-    });
+    const unused = (JSON.parse(after.stdout) as { issues: { file: string }[] }).issues.map(({ file }) => file);
+    expect(unused.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        'knip.config.mjs',
+        'main.js',
+        'unused.js',
+    ]);
     const changed = await runGspot(sandbox.path, [
         'set',
         'tools.knip.entry',

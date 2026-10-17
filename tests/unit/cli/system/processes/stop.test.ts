@@ -56,11 +56,11 @@ test.each([
         await using sandbox = await testdir();
         const marker = join(sandbox.path, 'descendant-survived');
         const descendant = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); console.log("descendant-ready"); setInterval(() => {}, 1000);`;
-        const parent = `Bun.spawn([process.execPath, "-e", ${JSON.stringify(descendant)}], {stdout:"inherit", stderr:"inherit"}); await Bun.sleep(10000);`;
+        const parent = `Bun.spawn([process.execPath, "-e", ${JSON.stringify(descendant)}], {stdout:"inherit", stderr:"inherit"}); await Bun.sleep(60000);`;
         const controller = new AbortController();
         const running = captureProcess(capture, [process.execPath, '-e', parent], {
             cwd: sandbox.path,
-            ...(termination === 'timeout' ? { timeoutSeconds: 1.5 } : {}),
+            ...(termination === 'timeout' ? { timeoutSeconds: 5 } : {}),
             ...(termination === 'canceled' ? { cancelSignal: controller.signal } : {}),
         });
         if (termination === 'canceled') {

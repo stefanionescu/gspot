@@ -38,7 +38,7 @@ test('a dry-run copy holds workspace dependencies and working bin links, and edi
         ),
     );
     const scratch = copy.path;
-    const result = runCommandBlocking(['node', 'node_modules/.bin/tool'], { cwd: scratch });
+    const result = runCommandBlocking([process.execPath, 'node_modules/.bin/tool'], { cwd: scratch });
     expect(result.code, result.stderr).toBe(0);
     expect(result.stdout.trim()).toBe('tool works');
     await writeFile(join(scratch, 'node_modules/core/value.js'), 'preview edit');

@@ -182,8 +182,8 @@ test('ignore merges matching paths, keeps different reasons apart, and an entry 
 
 test('an ignore without paths stops a command check and its fixer until unignore', async () => {
     await using folder = await testdir();
-    const command = ['bash', '-c', 'printf executed > read.txt; exit 1'];
-    const fix = ['bash', '-c', 'printf corrected > corrected.txt'];
+    const command = [process.execPath, '-e', "await Bun.write('read.txt', 'executed'); process.exitCode = 1;"];
+    const fix = [process.execPath, '-e', "await Bun.write('corrected.txt', 'corrected');"];
     const settings = buildSettingsText([], {
         tables: `[[command_check]]
 name = "project/quality"
