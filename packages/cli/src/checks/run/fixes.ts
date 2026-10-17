@@ -180,7 +180,7 @@ function readContents(sourceRoot: string, paths: string[]): Map<string, Buffer |
  * Lists the paths whose bytes changed, appeared, or disappeared.
  * @param before the earlier bytes.
  * @param after the later bytes.
- * @returns the changed paths.
+ * @returns each path whose bytes differ.
  */
 function listChangedPaths(before: Map<string, Buffer | undefined>, after: Map<string, Buffer | undefined>): string[] {
     return before

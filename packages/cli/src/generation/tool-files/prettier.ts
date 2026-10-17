@@ -131,7 +131,7 @@ function convertFormatSettings(format: Partial<FormatSettings>): Record<string, 
  *
  * @param input what the Prettier file holds.
  *
- * @returns the Prettier options.
+ * @returns the settings to write as JSON.
  */
 function buildPrettierOptions(input: PrettierInput): Record<string, unknown> {
     const { settings, format, targetPath, extra, plugins } = input;

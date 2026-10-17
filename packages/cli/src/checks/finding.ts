@@ -8,7 +8,7 @@ import type { Finding, CheckInput, FindingPlace } from '#cli/types/checks/run/ch
  * @param rule the ID of the broken requirement.
  * @param message the text that says what went wrong.
  * @param options the help and automatic-fix status.
- * @returns the finding.
+ * @returns a finding ready for the report.
  */
 export function buildFinding(
     input: Pick<CheckInput, 'check'>,

@@ -134,7 +134,7 @@ function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Find
  * @param planned the check that ran.
  * @param result what the command printed.
  * @param paths the working folder and repository root.
- * @returns the findings.
+ * @returns the parsed tool results.
  */
 function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
     const { check } = planned;
@@ -152,7 +152,7 @@ function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths:
  * @param completion.state the findings and failure flag.
  * @param completion.commandArguments what the process ran, placeholders expanded.
  * @param completion.started the monotonic start time.
- * @returns the check result.
+ * @returns the status, findings, and duration.
  */
 export function buildCheckResult(
     check: CheckDeclaration,

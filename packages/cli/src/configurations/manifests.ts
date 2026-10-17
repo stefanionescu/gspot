@@ -148,7 +148,7 @@ function readManifests(reads: ReadCache): Map<string, Manifest> {
  * List the shipped check IDs and the command check IDs of the repository.
  * @param checks the [[command_check]] records.
  * @param reads the run cache.
- * @returns the check IDs.
+ * @returns the shipped IDs, then your command check IDs.
  */
 function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[], reads: ReadCache): string[] {
     const shipped = [...listChecksById(readManifests(reads).values()).keys()];

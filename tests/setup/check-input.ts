@@ -35,7 +35,7 @@ async function createCompilerCache(): Promise<AsyncDisposableStack> {
  * @param options.scope a folder to check; the root by default.
  * @param options.paths files to check; every file by default.
  * @param options.resources what to dispose of with the check.
- * @returns the check input.
+ * @returns the files and settings that the check reads.
  */
 function buildCheckInput(
     session: Session,

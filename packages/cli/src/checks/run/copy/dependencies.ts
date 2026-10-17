@@ -98,7 +98,7 @@ async function replaceLink(context: DependencyTreeCopy, { source, target }: Pend
  * @param repositoryRoot the repository folder.
  * @param paths the candidate prerequisites.
  * @param cancelSignal stops the Git query.
- * @returns the ignored paths.
+ * @returns the candidates that Git ignores.
  */
 export async function readIgnoredPaths(
     repositoryRoot: string,

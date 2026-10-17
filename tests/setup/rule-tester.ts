@@ -18,7 +18,7 @@ RuleTester.describeSkip = describe.skip;
  * A rule tester using the TypeScript parser and a fixed repository root.
  * @param repositoryRoot folder the rules resolve paths against.
  * @param languageOptions settings for the runtime under test.
- * @returns the rule tester.
+ * @returns a tester that runs the ESLint plugin rules.
  */
 export function createRuleTester(
     repositoryRoot = RULE_TESTER_ROOT,

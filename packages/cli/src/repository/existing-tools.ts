@@ -272,7 +272,7 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
  * @param files the tracked inventory.
  * @param dependencyFiles the parsed package declarations.
  * @param reads the run cache.
- * @returns the existing tools.
+ * @returns what to replace, keep, or report.
  */
 export function readExistingTools(
     repositoryRoot: string,

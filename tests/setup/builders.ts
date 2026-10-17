@@ -46,7 +46,7 @@ export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnR
  * @param name executable to pin.
  * @param version release to pin.
  * @param npm package that ships the program.
- * @returns the pin.
+ * @returns a tool record with that program pinned.
  */
 export function buildProgramPin(name: string, version: string, npm?: string): ToolDeclaration {
     return {
@@ -90,7 +90,7 @@ export function buildManifest(
 /**
  * Options for an in-process run of every stage, with no fixes.
  * @param overrides what the test changes.
- * @returns the run options.
+ * @returns the defaults with the overrides applied.
  */
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
     return { stage: 'all', fix: false, isDryRun: false, ...overrides };
@@ -100,7 +100,7 @@ export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
  * One tracked source file of one byte with no captured prefix.
  * @param path location from the repository root.
  * @param tags labels that the file extension gives.
- * @returns the tracked file.
+ * @returns a one-byte source file for the inventory.
  */
 export function buildTrackedFile(path: string, tags: string[] = ['text']): TrackedFile {
     return { path, kind: 'source', tags, executable: false, size: 1 };

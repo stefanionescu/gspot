@@ -62,7 +62,7 @@ export function assertWithinTimeLimit(name: string, result: SpawnResult, timeout
  *
  * @param view the scope settings with the timeout.
  *
- * @returns the timeout in seconds.
+ * @returns how long a tool may run, in seconds.
  */
 export function getToolTimeoutSeconds(view: Pick<ScopeView, 'settings'>): number {
     return Number(view.settings[TOOL_TIMEOUT_SETTING]);

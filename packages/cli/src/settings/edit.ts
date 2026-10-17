@@ -134,7 +134,7 @@ function removeFromList(document: TomlTable, key: string, entries: unknown[]): v
  * Find the table that a command writes into: the document, or the scope table with that path.
  * @param written the parsed document.
  * @param scope the folder of a nested table, if any.
- * @returns the table.
+ * @returns the document or the matching scope table.
  */
 function findScopeTable(written: TomlTable, scope: string | undefined): TomlTable {
     if (scope === undefined) return written;

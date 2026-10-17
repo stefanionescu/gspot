@@ -22,7 +22,7 @@ function readLine(line: string): { key: string; value: string } | undefined {
  * Read the one key that a flat .npmrc key path names.
  * @param path where the file sits, for the error message.
  * @param keys the requested key path.
- * @returns the key.
+ * @returns the single key name.
  */
 function readFlatKey(path: string, keys: KeyPath): string {
     const [key] = keys;

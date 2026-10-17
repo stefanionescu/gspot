@@ -14,7 +14,7 @@ import { GSPOT_PACKAGES, TOOL_HOLD_FILES, PNPM_IGNORE_WORKSPACE } from '#cli/con
  * @param work the scratch folder that the package manager runs in.
  * @param command the arguments to run.
  * @param packageManager npm, pnpm, Yarn, or Bun, with its version.
- * @param days the hold.
+ * @param days how long a new release waits.
  *
  * @returns the command to run.
  */

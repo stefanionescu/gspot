@@ -8,7 +8,7 @@ import { isInGspotFolder, listTaggedExtensions } from '#cli/repository/classify.
 /**
  * Lists the source files that the folder checks read: no Markdown, and nothing under .gspot.
  * @param input the scope files.
- * @returns the code files.
+ * @returns the scope files without Markdown or .gspot files.
  */
 export function listCodeFiles(input: CheckInput): TrackedFile[] {
     const documents = listTaggedExtensions('markdown');

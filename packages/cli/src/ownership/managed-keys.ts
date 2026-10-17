@@ -48,7 +48,7 @@ function openKeysDocument(path: string, current: FileContents | undefined): Edit
  * Open a file in the editor that matches its name.
  * @param path the file, which also picks the format.
  * @param text the contents, or undefined when generation creates the file.
- * @returns the editable file.
+ * @returns an editor that sets keys and keeps other text.
  */
 function openEditableFile(path: string, text: string | undefined): EditableFile {
     const source = text ?? '';

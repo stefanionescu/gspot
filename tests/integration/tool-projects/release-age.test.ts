@@ -18,7 +18,7 @@ import { DAY_MILLISECONDS, PUBLISH_TIME_APIS } from '#tests/data/tools/installat
  * Call a registry API, and name the refusal when it answers with an error.
  * @param url the API address.
  * @param init the request headers.
- * @returns the response.
+ * @returns the successful answer.
  * @throws when the registry refuses, for example GitHub without GITHUB_TOKEN after its rate limit.
  */
 async function readRegistryResponse(url: string, init?: RequestInit): Promise<Response> {
@@ -50,7 +50,7 @@ async function readPackagePublishTime(tool: ToolDeclaration): Promise<string | u
 /**
  * Read when a tool's GitHub release came out.
  * @param github repository and release tag.
- * @returns the publish time.
+ * @returns when GitHub published the release.
  */
 async function readReleasePublishTime(github: InstallerPin & { version: string }): Promise<string> {
     const token = readEnvironmentVariable('GITHUB_TOKEN');

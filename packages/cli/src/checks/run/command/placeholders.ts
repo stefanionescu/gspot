@@ -110,7 +110,7 @@ function expandPlainPart(
  * @param session the repository and manifests.
  * @param planned the check that names it.
  * @param name the tool or setting it belongs to.
- * @returns the declaration.
+ * @returns the manifest record of that tool file.
  */
 export function readToolFileDeclaration(
     session: CommandInputs,

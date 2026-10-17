@@ -37,7 +37,7 @@ export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 's
 /**
  * Builds the report of a finished run, which check --json prints.
  * @param input the plan and what ran.
- * @returns the report.
+ * @returns the checks, skips, and exit code.
  */
 export function buildRunReport(input: ReportInput): RunReport {
     const { session, options, started, planned, ran, uses, fixes } = input;

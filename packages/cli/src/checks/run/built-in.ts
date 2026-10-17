@@ -45,7 +45,7 @@ export function buildBuiltInResult(
  * Builds the input of a built-in check without the whole session.
  * @param session the repository and its tools.
  * @param planned the check to run.
- * @returns the input.
+ * @returns the files, settings, and reads that the check uses.
  */
 export function checkInput(session: Session, planned: Pick<PlannedCheck, 'selection' | 'check' | 'files'>): CheckInput {
     return {

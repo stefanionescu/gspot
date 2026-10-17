@@ -66,7 +66,7 @@ function formatBlocks(
 /**
  * Create the writer for the ESLint blocks of one level and scope.
  * @param input what the blocks cover, with your own options.
- * @returns the block writer.
+ * @returns the functions that format each ESLint block.
  */
 function createBlockWriter(input: BlockWriterInput): BlockWriter {
     const { allRules, isAll, codeFiles, scope } = input;

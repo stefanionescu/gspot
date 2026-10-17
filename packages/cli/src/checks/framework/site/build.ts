@@ -95,7 +95,7 @@ export function deriveBuiltFilePath(
 /**
  * Returns the site build, or skips the check when the build failed.
  * @param input the scope to build.
- * @returns the build.
+ * @returns the built site, when the build succeeded.
  */
 export async function getSuccessfulBuild(input: CheckInput): Promise<SiteBuild> {
     const build = await getSiteBuild(input);

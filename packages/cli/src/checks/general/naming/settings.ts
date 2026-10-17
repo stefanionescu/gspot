@@ -90,7 +90,7 @@ function compileBannedWords(
 /**
  * Reads the naming settings of a scope: the shipped lists plus the repository additions, exemptions, and limits.
  * @param input the scope and settings file.
- * @returns the naming settings.
+ * @returns the word lists, exemptions, and limits.
  */
 export function readNamingSettings(
     input: Pick<CheckInput, 'reads'> & {

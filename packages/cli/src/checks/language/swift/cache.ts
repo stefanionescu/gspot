@@ -72,7 +72,7 @@ function pruneSources(folder: string, files: Files, wantedFiles: Map<string, Fil
 
 /**
  * Computes the private build cache folder from the real path of the repository.
- * @param repositoryRoot the repository folder.
+ * @param repositoryRoot the top folder, whose real path names the cache.
  * @returns the cache folder for this repository.
  */
 function computeBuildFolder(repositoryRoot: string): string {

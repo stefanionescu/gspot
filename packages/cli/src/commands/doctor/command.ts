@@ -71,7 +71,7 @@ function formatGspotVersion(report: DoctorReport): string {
 }
 
 /**
- * Build the doctor report.
+ * Inspect the tools, the Git hooks, and the version pin.
  * @param session the tools and scopes to inspect.
  * @param pinned the version that `.gspot/version` pins, if any.
  * @returns the report, with exit code 1 when tools or Git hooks need changes.

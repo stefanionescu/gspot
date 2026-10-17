@@ -25,7 +25,7 @@ import {
 /**
  * Write a hold of some days in the unit that the installer reads.
  * @param unit what the installer counts in.
- * @param days the hold.
+ * @param days how long a new release waits.
  * @returns the value for the settings file.
  */
 function formatHold(unit: HoldUnit, days: number): number | string {
@@ -49,7 +49,7 @@ function readHoldDays(unit: HoldUnit, value: number | string): number | undefine
 
 /**
  * Read a uv or mise duration, such as `7 days` or `2w`, into days.
- * @param value the duration.
+ * @param value what the settings file holds.
  * @returns the days, or undefined for another form.
  */
 function readDurationDays(value: string): number | undefined {
@@ -129,7 +129,7 @@ function buildReleaseHoldEdits(repositoryRoot: string, scopes: ScopeSelection[])
 /**
  * Read the hold that the root gspot.toml asks for. The tool installs in .gspot use it.
  * @param scopes every scope.
- * @returns the hold in days.
+ * @returns the days that a new release waits.
  */
 function readRootHoldDays(scopes: ScopeSelection[]): number {
     const root = scopes.find((selection) => selection.scope.path === '') as ScopeSelection;

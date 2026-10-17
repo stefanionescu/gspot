@@ -27,7 +27,7 @@ function parseSegmentName(
  * @param path the file, relative to the repository root.
  * @param language the configuration that covers the file.
  * @param containers the bracket pairs that wrap path segments.
- * @returns the identifier.
+ * @returns the name to check and its category.
  */
 export function buildFileIdentifier(path: string, language: string, containers: PathContainer[]): Identifier {
     const base = posix.basename(path);

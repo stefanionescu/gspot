@@ -71,7 +71,7 @@ export function checkCopyInputs(input: CheckInput, extra: string[] = []): Scratc
 /**
  * Copies source files and dependency trees into a new scratch copy.
  * @param source the paths and dependency trees to copy.
- * @returns the scratch copy.
+ * @returns the new folder, deleted on dispose.
  */
 export async function copyIntoScratch(source: ScratchCopyPaths): Promise<ScratchFolder> {
     const folder = createScratchFolder();

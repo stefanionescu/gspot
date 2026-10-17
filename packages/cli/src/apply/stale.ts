@@ -101,7 +101,7 @@ export function listStaleFiles(
  * @param session the repository and its package manager.
  * @param generated the files that this run generates.
  *
- * @returns the paths.
+ * @returns every path that this run writes or keeps.
  */
 export function listExpectedPaths(
     session: Pick<Session, 'requirePackageManagerName'>,

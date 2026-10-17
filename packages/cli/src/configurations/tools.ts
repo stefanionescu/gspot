@@ -35,7 +35,7 @@ function findMiseInstaller(tool: ToolDeclaration): InstallerPin | undefined {
  * Select the tools that mise installs, apart from those in the npm and Python tool projects.
  * @param manifests the configurations in use.
  * @param reads the run cache.
- * @returns the mise pins.
+ * @returns the name and version of each mise tool.
  */
 export function listMisePins(manifests: Manifest[], reads: ReadCache): MisePin[] {
     const tools = listDistinctTools(manifests);

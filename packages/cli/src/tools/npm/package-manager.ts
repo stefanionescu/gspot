@@ -32,7 +32,7 @@ const exactVersionSchema = z
 
 /**
  * Split a packageManager field such as `npm@11.17.0+sha512.abc` into a name and a version.
- * @param value the field.
+ * @param value the text of the field in package.json.
  * @returns the name and the version, without the hash.
  */
 function parsePackageManagerField(value: string): PackageManagerDeclaration {

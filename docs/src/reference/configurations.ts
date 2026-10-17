@@ -55,7 +55,7 @@ function formatConfigurationChecks(manifest: Manifest): string {
  * Build the reference page of a shipped configuration: how it gets selected, its settings, and its checks.
  * @param manifest the parsed configuration
  * @param data everything the CLI exports for the reference
- * @returns the page
+ * @returns the title, summary, and Markdown body
  */
 function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof readReferenceData>): ReferencePage {
     const { configuration } = manifest;

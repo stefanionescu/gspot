@@ -77,7 +77,7 @@ export function buildPathKey(path: string): string {
 /**
  * Extract the parent folder of a path, '' at the root.
  * @param path the slash-separated location to split at the last separator.
- * @returns the folder.
+ * @returns everything before the last slash.
  */
 export function extractParentFolder(path: string): string {
     const slash = path.lastIndexOf('/');

@@ -242,7 +242,7 @@ function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
 /**
  * Builds a tsconfig that extends the authored one, or a standalone one when the scope has none.
  * @param input the scope and target path.
- * @returns the tsconfig.
+ * @returns the compiler settings to write as JSON.
  */
 function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
     const { root, typeRootsFolder, reads, target, scope, files, scopes, options } = input;
