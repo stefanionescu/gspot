@@ -9,9 +9,6 @@ import type { SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts
 import type { Scope, Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Session, PlanOptions, StageFilter, PlannedCheck } from '#cli/types/planning.ts';
 
-/** A built-in fix writes through the same repository or scratch copy boundary as command fixes. */
-type BuiltInFix = (planned: PlannedCheck, root: string) => FixResult | Promise<FixResult>;
-
 type RunReportOptions = PlanOptions & {
     stage: StageFilter;
     onResult?: (result: CheckResult, progress: CheckProgress) => void;
@@ -27,10 +24,8 @@ type CheckStatus = (typeof CHECK_STATUSES)[number];
 /** Execution callbacks, keyed by the declared check ID. */
 export type CheckImplementations = Record<
     string,
-    ({ check: BuiltInCheck; run?: never } | { run: RunnableCheck['run']; check?: never }) & { fix?: BuiltInFix } & Pick<
-            CheckRunOptions,
-            'arguments' | 'toolFiles'
-        >
+    ({ check: BuiltInCheck; run?: never } | { run: RunnableCheck['run']; check?: never }) &
+        Pick<CheckRunOptions, 'arguments' | 'toolFiles'>
 >;
 
 export type FixResult = { check: string; changed: string[] } & (

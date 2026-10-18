@@ -73,15 +73,10 @@ async function refreshAfterFixes(session: Session): Promise<void> {
 function findUnrunnableResult(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
-    const preconditions = {
-        build: undefined,
-        network: undefined,
-        docker: () =>
-            'status' in findTool(session, session.root, getToolDeclaration(session.manifests.values(), DOCKER_TOOL))
-                ? { ...base, status: 'missing' as const, note: DOCKER_MISSING_MESSAGE }
-                : undefined,
-    };
-    return planned.check.needs?.map((need) => preconditions[need]?.()).find((result) => result !== undefined);
+    if (planned.check.needs?.includes('docker') !== true) return undefined;
+    return 'status' in findTool(session, session.root, getToolDeclaration(session.manifests.values(), DOCKER_TOOL))
+        ? { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE }
+        : undefined;
 }
 
 function checkFailure(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
@@ -112,9 +107,9 @@ async function runOne(runState: RunState, executable: RunnableCheck): Promise<Ch
     }
 }
 
-function dropIgnoredFindings(check: PlannedCheck, result: CheckResult, uses: Map<IgnoreRecord, IgnoreUse>): void {
+function dropIgnoredFindings(result: CheckResult, uses: Map<IgnoreRecord, IgnoreUse>): void {
     result.findings = result.findings.filter((finding) => {
-        const use = uses.values().find(({ entry }) => entry.check === check.check.name && isEntryMatch(entry, finding));
+        const use = uses.values().find(({ entry }) => isEntryMatch(entry, finding));
         if (use === undefined) return true;
         use.matched += 1;
         return false;
@@ -122,8 +117,8 @@ function dropIgnoredFindings(check: PlannedCheck, result: CheckResult, uses: Map
     result.status = result.findings.length > 0 ? 'failed' : 'passed';
 }
 
-function filterResult(runState: RunState, check: PlannedCheck, result: CheckResult): void {
-    if (RAN_STATUSES.has(result.status)) dropIgnoredFindings(check, result, runState.uses);
+function filterResult(runState: RunState, result: CheckResult): void {
+    if (RAN_STATUSES.has(result.status)) dropIgnoredFindings(result, runState.uses);
     if (FAILED_STATUSES.has(result.status))
         result.reproduce = formatReproduceCommand(result.check, result.scope, {
             ...(runState.options.messageFile === undefined ? {} : { messageFile: runState.options.messageFile }),
@@ -140,7 +135,7 @@ async function runActiveChecks(runState: RunState, executables: RunnableCheck[])
         executables.map((executable) =>
             limiter(async () => {
                 const result = await runOne(runState, executable);
-                filterResult(runState, executable.check, result);
+                filterResult(runState, result);
                 runState.options.onResult?.(result, {
                     completed: ++completed,
                     total: executables.length,

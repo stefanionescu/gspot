@@ -83,8 +83,7 @@ export async function checkActionlint(session: Session, planned: PlannedCheck): 
         const prepared = prepareActionlintText(source);
         if (prepared !== source) replacements.set(file.path, prepared);
     }
-    if (replacements.size === 0)
-        return runCheckCommand(session, planned, { command: planned.check.command as string[] });
+    if (replacements.size === 0) return runCheckCommand(session, planned);
     using workspace = await copyIntoScratch({
         root: session.root,
         paths: session.repository.files.filter((file) => file.path.startsWith('.github/')).map((file) => file.path),
@@ -97,8 +96,5 @@ export async function checkActionlint(session: Session, planned: PlannedCheck): 
         chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
-    return await runCheckCommand(session, planned, {
-        command: planned.check.command as string[],
-        scratchRoot: workspace.path,
-    });
+    return await runCheckCommand(session, planned, { scratchRoot: workspace.path });
 }

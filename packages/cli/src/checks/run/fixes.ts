@@ -148,13 +148,10 @@ async function runFixer(session: Session, planned: PlannedCheck, root: string): 
         return { check, status: 'skipped', changed: [] };
     const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
     const builtIn = implementations[check];
-    if (builtIn === undefined) return runCommandFix(session, planned, root, {});
-    return builtIn.fix === undefined
-        ? runCommandFix(session, planned, root, {
-              arguments: builtIn.arguments,
-              toolFiles: builtIn.toolFiles,
-          })
-        : builtIn.fix(planned, root);
+    return runCommandFix(session, planned, root, {
+        arguments: builtIn?.arguments,
+        toolFiles: builtIn?.toolFiles,
+    });
 }
 
 /**
@@ -240,10 +237,7 @@ async function runFixerPasses(
  */
 export async function runFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {
     const { isDryRun } = options;
-    const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
-    const checks = planned.filter(
-        (check) => check.check.fix !== undefined || implementations[check.check.name]?.fix !== undefined,
-    );
+    const checks = planned.filter((check) => check.check.fix !== undefined);
     const paths = [
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
     ].toSorted((a, b) => a.localeCompare(b));

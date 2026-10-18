@@ -87,6 +87,7 @@ function buildScopeCompilerProject(
     };
 }
 
+// A project with references builds them first; a project without them needs no prerequisites.
 function selectReferenceProject(project: ReturnType<typeof readTsconfigProject>) {
     return (project?.config.projectReferences ?? []).length > 0 ? project : undefined;
 }

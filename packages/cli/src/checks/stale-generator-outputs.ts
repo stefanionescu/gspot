@@ -47,7 +47,6 @@ function readOutputContents(
 
 function buildGeneratorInputs(input: CheckInput):
     | {
-          planned: CheckInput;
           values: Substitutions;
           commandText: string;
           declaration: string[];
@@ -56,15 +55,14 @@ function buildGeneratorInputs(input: CheckInput):
           selected: string[];
       }
     | undefined {
-    const planned = input;
     const values = buildCommandSubstitutions(input, input, join(input.root, input.selection.scope.path));
     const declaration = input.check.command ?? [];
-    const command = expandCommand(input, planned, declaration, values);
+    const command = expandCommand(input, input, declaration, values);
     if (command.length === 0) return undefined;
 
     const declared = (input.check.generator_outputs ?? []).flatMap((entry): GeneratorOutput[] => {
         const { kind, path: original } = entry;
-        let path = replacePlaceholders(input, planned, original, values);
+        let path = replacePlaceholders(input, input, original, values);
         if (kind === 'pattern' && original.includes('{setting:') && input.selection.scope.path !== '') {
             const prefix = path.startsWith('**/') ? '**/' : '';
             const scopePath = path.slice(prefix.length);
@@ -84,7 +82,7 @@ function buildGeneratorInputs(input: CheckInput):
 
     if (targets.length === 0 && selected.length === 0) return undefined;
     const commandText = command.filter((part) => typeof part === 'string').join(' ');
-    return { planned, values, commandText, declaration, patterns, targets, selected };
+    return { values, commandText, declaration, patterns, targets, selected };
 }
 
 /**
@@ -95,7 +93,7 @@ function buildGeneratorInputs(input: CheckInput):
 export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Finding[]> {
     const inputs = buildGeneratorInputs(input);
     if (inputs === undefined) return [];
-    const { planned, values, commandText, declaration, patterns, targets, selected } = inputs;
+    const { values, commandText, declaration, patterns, targets, selected } = inputs;
     const missing = checkMissingOutputs(input, targets, commandText);
     if (missing.length > 0) return missing;
     using folder = await copyIntoScratch(
@@ -106,7 +104,7 @@ export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Fin
     );
     const cwd = join(folder.path, input.selection.scope.path);
     const before = readOutputContents(folder.path, input.selection.scope.path, patterns, targets);
-    const commandArguments = expandCommand({ ...input, root: folder.path }, planned, declaration, {
+    const commandArguments = expandCommand({ ...input, root: folder.path }, input, declaration, {
         ...values,
         root: folder.path,
     });

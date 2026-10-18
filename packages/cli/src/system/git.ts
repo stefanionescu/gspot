@@ -37,11 +37,6 @@ import {
     GIT_NONLOCAL_ENVIRONMENT_NAME,
 } from '#cli/config/system/git.ts';
 
-// Git output defines the protocol boundary, including variable names from the installed Git version.
-function parseLocalEnvironment(text: string): string[] {
-    return text.replace(TRAILING_NEWLINE, '').split('\n');
-}
-
 // The original working folder of the hook decides relative paths and the implicit Git worktree root.
 function readInheritedGitEnvironment(origin: string): GitLookup {
     const env = Object.fromEntries(
@@ -126,7 +121,10 @@ export function buildGitEnvironment(
     if (sourceMetadata === undefined) {
         const declared = spawnProcessBlocking(['git', ...GIT_LOCAL_VARIABLES_ARGUMENTS], { cwd: origin, env: {} });
         if (declared.code !== 0) return { failure: declared };
-        const metadata = parseLocalEnvironment(declared.stdout).filter((name) => !GIT_COMMAND_CONFIGURATION.has(name));
+        // The installed Git version lists its own local variable names.
+        const metadata = trimGitLine(declared.stdout)
+            .split('\n')
+            .filter((name) => !GIT_COMMAND_CONFIGURATION.has(name));
         sourceMetadata = { metadata };
     }
     const { metadata } = sourceMetadata;

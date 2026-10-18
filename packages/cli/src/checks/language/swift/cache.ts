@@ -71,16 +71,6 @@ function pruneSources(folder: string, files: Files, wantedFiles: Map<string, Fil
 }
 
 /**
- * Computes the private build cache folder from the real path of the repository.
- * @param repositoryRoot the top folder, whose real path names the cache.
- * @returns the cache folder for this repository.
- */
-function computeBuildFolder(repositoryRoot: string): string {
-    const identity = hashContent(realpathSync(repositoryRoot));
-    return join(readCacheFolder(), identity);
-}
-
-/**
  * Creates and locks a build folder without following links in it.
  * @param folder the private cache path.
  * @returns the locked root, which the caller disposes.
@@ -104,8 +94,10 @@ function openBuildCache(folder: string): Files {
  * @returns the cache folder path.
  */
 export function getScopeBuildFolder(input: Pick<CheckInput, 'root' | 'selection'>, purpose: SwiftBuildPurpose): string {
+    // The real path of the repository names its private build cache.
     return join(
-        computeBuildFolder(input.root),
+        readCacheFolder(),
+        hashContent(realpathSync(input.root)),
         SWIFT_BUILD_FOLDER,
         input.selection.scope.path === ''
             ? ROOT_BUILD_FOLDER

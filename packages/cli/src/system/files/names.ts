@@ -24,15 +24,6 @@ function splitPortablePath(path: string): string[] {
 }
 
 /**
- * Refuses a path inside gspot state.
- * @param path the proposed file.
- */
-function assertOutsideStateFolder(path: string): void {
-    if (STATE_FOLDER_PATTERN.test(path.normalize('NFC')))
-        throw new Error(`${path} is inside .gspot/state. Choose a path outside it.`);
-}
-
-/**
  * Split a path into segments, and refuse an empty, dot, parent, or null segment.
  * @param path a repository-relative file with forward slashes.
  * @returns the segments of the path.
@@ -53,5 +44,6 @@ export function splitSystemPath(path: string): string[] {
  */
 export function assertWritablePath(path: string): void {
     splitPortablePath(path);
-    assertOutsideStateFolder(path);
+    if (STATE_FOLDER_PATTERN.test(path.normalize('NFC')))
+        throw new Error(`${path} is inside .gspot/state. Choose a path outside it.`);
 }
