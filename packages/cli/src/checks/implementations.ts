@@ -52,6 +52,7 @@ import { checkEnvironmentReaders } from '#cli/checks/general/structure/environme
 import { type RunnableCheck, type CheckImplementations } from '#cli/types/checks/run/check.ts';
 import { checkDockerCompose, checkDockerTrivyImage } from '#cli/checks/infrastructure/docker.ts';
 import { checkMarkdownFences, buildMarkdownlintArguments } from '#cli/checks/language/markdown.ts';
+import { checkCloudflareHeaders, checkCloudflareRedirects } from '#cli/checks/platform/cloudflare.ts';
 import { checkPythonPlaceholderDocstrings } from '#cli/checks/language/python/placeholder-docstrings.ts';
 import { checkXcodeEntitlements, checkAppTransportSecurity } from '#cli/checks/infrastructure/xcode/settings.ts';
 import { checkPostgresMigrationOrder, checkPostgresEditedMigrations } from '#cli/checks/database/postgres/history.ts';
@@ -76,11 +77,6 @@ import {
     checkSecretsGitleaksPushed,
     checkSecretsTrufflehogPushed,
 } from '#cli/checks/general/secrets.ts';
-import {
-    checkCloudflareHeaders,
-    checkCloudflareRedirects,
-    checkCloudflareSecurityHeaders,
-} from '#cli/checks/platform/cloudflare.ts';
 import {
     checkSwiftBuild,
     checkSwiftPeriphery,
@@ -133,7 +129,6 @@ export const CHECK_IMPLEMENTATIONS = {
     'site/size': { check: checkSiteSize },
     'site/sitemap': { check: checkSiteSitemap },
     'site/unused-assets': { check: checkSiteUnusedAssets },
-    'cloudflare/security-headers': { check: checkCloudflareSecurityHeaders },
     'html/scripts': { check: checkHtmlScripts },
     'python/placeholder-docstrings': { check: checkPythonPlaceholderDocstrings },
     'python/import-linter': { check: importLinter },

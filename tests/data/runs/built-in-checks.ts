@@ -42,7 +42,7 @@ export const SCOPE_FINDINGS = [
         nested: [{ file: 'apps/backend/messages/de.json' }],
     },
     {
-        check: 'cloudflare/security-headers',
+        check: 'cloudflare/headers',
         root: [],
         nested: [
             { file: 'apps/backend/_headers', rule: 'missing-header' },

@@ -58,6 +58,21 @@ function parseHeadersFile(text: string): HeaderBlocks {
     return { blocks, findings };
 }
 
+// The required security headers that the block for every path does not set.
+function listMissingHeaders(blocks: HeaderBlock[]): string[] {
+    const held = new Map(
+        blocks
+            .filter((block) => block.path === '/*')
+            .flatMap((block) => block.headers.map(({ name, value }) => [name, value])),
+    );
+    const hasFrameRule = FRAME_ANCESTORS.test(held.get('content-security-policy') ?? '');
+    return Object.entries(REQUIRED_HEADERS)
+        .filter(
+            ([name, pattern]) => !pattern.test(held.get(name) ?? '') && !(name === 'x-frame-options' && hasFrameRule),
+        )
+        .map(([name]) => name);
+}
+
 /**
  * Checks that each redirect holds a source, a destination, and an optional Cloudflare status.
  * @param text the _redirects file.
@@ -94,44 +109,23 @@ export function checkCloudflareRedirects(input: CheckInput): Finding[] {
 }
 
 /**
- * Reports syntax errors in each _headers file.
+ * Reports syntax errors in each _headers file, and each security header that the block for every path does not set.
  * @param input the scope files to read.
  * @returns the findings.
  */
 export function checkCloudflareHeaders(input: CheckInput): Finding[] {
-    return listSourcePaths(input.files, ['_headers']).flatMap((path) =>
-        parseHeadersFile(readCachedBytes(input.reads, path).toString('utf8')).findings.map((entry) =>
-            buildFinding(input, { file: path, line: entry.number }, 'syntax', entry.text),
-        ),
-    );
-}
-
-/**
- * Checks that each _headers file sets the security headers for every path.
- * @param input the scope files to read.
- * @returns the findings.
- */
-export function checkCloudflareSecurityHeaders(input: CheckInput): Finding[] {
     return listSourcePaths(input.files, ['_headers']).flatMap((path) => {
-        const { blocks } = parseHeadersFile(readCachedBytes(input.reads, path).toString('utf8'));
-        const held = new Map(
-            blocks
-                .filter((block) => block.path === '/*')
-                .flatMap((block) => block.headers.map(({ name, value }) => [name, value])),
-        );
-        const hasFrameRule = FRAME_ANCESTORS.test(held.get('content-security-policy') ?? '');
-        return Object.entries(REQUIRED_HEADERS)
-            .filter(
-                ([name, pattern]) =>
-                    !pattern.test(held.get(name) ?? '') && !(name === 'x-frame-options' && hasFrameRule),
-            )
-            .map(([name]) =>
+        const { blocks, findings } = parseHeadersFile(readCachedBytes(input.reads, path).toString('utf8'));
+        return [
+            ...findings.map((entry) => buildFinding(input, { file: path, line: entry.number }, 'syntax', entry.text)),
+            ...listMissingHeaders(blocks).map((name) =>
                 buildFinding(
                     input,
                     { file: path, line: 1 },
                     'missing-header',
                     `The block for /* sets no valid ${name} header.`,
                 ),
-            );
+            ),
+        ];
     });
 }

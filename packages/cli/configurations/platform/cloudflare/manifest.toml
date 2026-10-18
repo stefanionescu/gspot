@@ -33,14 +33,13 @@ when = { configuration = "security" }
 
 [[check]]
 example = "An indented `X-Frame-Options: DENY` at the top of `_headers` reports a header with no path. Put a path such as `/*` on an unindented line above it."
-help = "Write each block as a path, then indented lines of a name, a colon, and a value."
+help = "Write each block as a path, then indented lines of a name, a colon, and a value. Add each missing security header to the block for `/*`."
 level = "recommended"
 name = "headers"
 runs = "scope"
 stage = "commit"
-summary = "Checks that `_headers` holds only blocks of a path followed by indented name-value lines."
-why = "Cloudflare skips a line it cannot read, so a typo silently drops a security header."
-
+summary = "Checks that `_headers` holds only blocks of a path followed by indented name-value lines, and that the block for every path sets the content type, referrer, and framing headers."
+why = "Cloudflare skips a line it cannot read, and a static site has no server code to set these protections, so a typo or a missing line silently drops a security header."
 [[check]]
 example = "The `_redirects` line `/old /new 999` reports an unsupported redirect status. For a permanent redirect, change it to `/old /new 301`."
 help = "Write the rule as source, destination, and status."
@@ -63,13 +62,3 @@ stage = "push"
 summary = "Checks that a tracked environment types file matches what wrangler writes."
 tool = "wrangler"
 why = "Stale binding types let code compile against a binding the configuration dropped."
-
-[[check]]
-example = "A path block without a required security header reports it as missing. Add the header, with the value from the settings, to every path block."
-help = "Add the header to the block for every path."
-level = "recommended"
-name = "security-headers"
-runs = "scope"
-stage = "commit"
-summary = "Checks that the headers file sets the content type, referrer, and framing headers for every path."
-why = "A static site has no server code, so these protections can live only in the headers file."
