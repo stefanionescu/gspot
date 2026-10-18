@@ -4,9 +4,10 @@ description: Read a finding, explain it, fix it, and read the report.
 ---
 
 A failed check prints one line with its check ID, `failed`, and the number of findings. In a nested scope, the line
-starts with the scope path. Under it, each finding prints its file, line and column, lint rule, and message. `help:` says
-what to do, and `run again:` gives the command that runs that check alone. Without `--verbose`, the report prints the
-first 200 findings of each check.
+starts with the scope path. Under it, each finding prints its file, line and column, lint rule, and message.
+
+`help:` says what to do, and `run again:` gives the command that runs that check alone. Without `--verbose`, the report
+prints the first 200 findings of each check.
 
 ```text
 javascript/eslint  failed  2 findings
@@ -43,9 +44,15 @@ A check that reads the whole project, such as `typescript/tsc`, still reports fi
 
 ## Fix findings automatically
 
-`gspot check --fix` runs the formatters and the other fixers, then checks again. The changes stay in your working
-tree, unstaged, so review them before you commit. `gspot check --fix --dry-run` shows the changes without writing
-them. To add a fixer for your own command, see [command checks](/configure/command-checks/#add-a-fix-command).
+Run the formatters and the other fixers, then check again. Add `--dry-run` to see the changes without writing them:
+
+```shell
+gspot check --fix
+gspot check --fix --dry-run
+```
+
+The changes stay in your working tree, unstaged, so review them before you commit. To add a fixer for your own command,
+see [command checks](/configure/command-checks/#add-a-fix-command).
 
 ## Statuses and exit codes
 

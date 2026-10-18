@@ -9,7 +9,9 @@ under `.gspot/configurations/`. The rules guide agents; the checks still block f
 ## The `AGENTS.md` section
 
 gspot writes one section between gspot markers and keeps your own text outside it. The section lists the rules and
-names `gspot check --staged`, the command to run before a commit. It also names the commands that change settings, and
+names `gspot check --staged`, the command to run before a commit.
+
+It also names the commands that change settings, and
 the generated files that agents must not edit, with the keys gspot sets in your own files.
 
 An agent that reads another file needs a pointer. For Claude Code, add the line `@AGENTS.md` to `CLAUDE.md`.

@@ -17,5 +17,7 @@ description: Review the init plan and move the settings you need.
 
 init copies the indent width, line width, and quote style from your Prettier JSON settings or `.editorconfig` into
 `[format]`. It copies no other settings. A tool that gspot does not run can run as a
-[command check](/configure/command-checks/). If Husky, Lefthook, or your own hooks folder runs your Git hooks, gspot
+[command check](/configure/command-checks/).
+
+If Husky, Lefthook, or your own hooks folder runs your Git hooks, gspot
 keeps it and prints three lines to add; see [Existing hook managers](/use/hooks/#existing-hook-managers).

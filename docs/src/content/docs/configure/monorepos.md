@@ -37,6 +37,7 @@ To add a configuration that init did not find: `gspot add pytest --scope service
 ## Which scope a file belongs to
 
 A file belongs to the deepest scope that contains it. Files outside every scope belong to the root.
+
 A whole-project check, such as a type check, can read other files of the same project when you
 name one file. Checks that read project files look inside the scope only, and each child scope checks its own files.
 
@@ -52,7 +53,9 @@ gspot set limits.function_lines 80 --scope api --reason "The parser is one state
 
 Root settings cover every scope. Write paths relative to the repository root. The default paths of a configuration resolve inside the scope that selects it.
 
-A list setting adds up: a scope gets the values of its configurations, the root, and every scope that contains it, without repeats. A single-value setting takes the nearest value. If two selected configurations give
+A list setting adds up: a scope gets the values of its configurations, the root, and every scope that contains it, without repeats. A single-value setting takes the nearest value.
+
+If two selected configurations give
 different defaults for the same setting, gspot names both. To pick one, set the value at the
 root or in a scope.
 

@@ -22,10 +22,17 @@ tools.
 
 ### Systems
 
-gspot runs on macOS, Linux, and Windows. Some checks need more: Swift checks need the Swift toolchain, and SwiftLint,
-SwiftFormat, and Swift package builds run on macOS and Linux. `xcode/plutil`, Periphery, the SwiftLint analyzer, and
-builds of an Xcode project need macOS with Xcode selected by `xcode-select`. Some container checks need a running
-Docker daemon, and some scans need network access. Each [check page](/reference/checks/) lists its systems.
+gspot runs on macOS, Linux, and Windows. Some checks need more:
+
+| Checks                                                                  | Need                                         |
+| ----------------------------------------------------------------------- | -------------------------------------------- |
+| Swift checks                                                            | The Swift toolchain                          |
+| SwiftLint, SwiftFormat, and Swift package builds                        | macOS or Linux                               |
+| `xcode/plutil`, Periphery, the SwiftLint analyzer, Xcode project builds | macOS, with Xcode selected by `xcode-select` |
+| Some container checks                                                   | A running Docker daemon                      |
+| Some scans                                                              | Network access                               |
+
+Each [check page](/reference/checks/) lists its systems.
 
 ## Choose how to install
 

@@ -30,7 +30,9 @@ The gspot section of `AGENTS.md` lists your repository's generated files and the
 ## Do not edit generated files
 
 Do not edit a generated file. Each one has a gspot header or sits in a section between gspot markers; gspot finds its
-files by these markers and the generated text. `gspot apply` replaces those files from your settings, even files with
+files by these markers and the generated text.
+
+`gspot apply` replaces those files from your settings, even files with
 local edits or merge markers. Move any change you need into `gspot.toml` before you apply.
 
 ## Dependency bots
