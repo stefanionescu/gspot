@@ -309,3 +309,6 @@ export const BASE_RULES = {
     ...REGEXP_RULES,
     ...IMPORT_RULES,
 } as const;
+
+/** The root package.json names its package manager, at level all. */
+export const ROOT_PACKAGE_JSON_RULES = { 'package-json/require-packageManager': 'error' } as const;

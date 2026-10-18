@@ -77,17 +77,6 @@ summary = "Checks that the package manager in the root package.json holds back r
 why = "gspot writes a release hold for each package manager. An older version ignores it and installs a new release the day it appears."
 
 [[check]]
-example = "A root package.json without packageManager reports a finding. Declare the package manager and its exact version."
-files = { filenames = ["package.json"] }
-help = "Name one packageManager in the root package.json."
-level = "all"
-name = "package-json"
-runs = "once"
-stage = "commit"
-summary = "Checks that the root package.json names a packageManager."
-why = "A declared package manager keeps installs and the lockfile format consistent."
-
-[[check]]
 example = "A lockfile URL outside `dependencies.allowed_registries` reports its host. Install the package again from an allowed registry, or add that host to the list."
 files = { filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"], kinds = ["source", "generated"] }
 help = "Install the package from the registry again, or add the host to dependencies.allowed_registries."

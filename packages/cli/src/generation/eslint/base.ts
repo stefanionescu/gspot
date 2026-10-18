@@ -2,9 +2,9 @@ import { stripUndefined } from '#cli/system/values.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { buildScopeFiles } from '#cli/generation/eslint/files.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { buildLevelRules } from '#cli/generation/eslint/lint-rules.ts';
 import { pickPresetFields, buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
-import { TEST_RULES, SCRIPT_RULES, BASE_SELECTORS, JAVASCRIPT_RULES } from '#cli/config/generation/eslint-rules.ts';
 
 import {
     CODE_PRESETS,
@@ -12,6 +12,13 @@ import {
     PACKAGE_JSON_PATTERN,
     ESLINT_PLUGIN_IMPORTS,
 } from '#cli/config/generation/eslint.ts';
+import {
+    TEST_RULES,
+    SCRIPT_RULES,
+    BASE_SELECTORS,
+    JAVASCRIPT_RULES,
+    ROOT_PACKAGE_JSON_RULES,
+} from '#cli/config/generation/eslint-rules.ts';
 import {
     type BlockWriter,
     type EslintPlugins,
@@ -118,6 +125,9 @@ function buildBlocksAfterFragments(
             `languageOptions: { sourceType: ${JSON.stringify(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${JSON.stringify(names)}] }`,
         ];
     });
+    const rootPackage: Parameters<BlockWriter['block']>[] = isAll
+        ? [[{ files: [PACKAGE_JSON], rules: ROOT_PACKAGE_JSON_RULES }]]
+        : [];
     return [
         ...runtimes,
         ...fragmentSelectors.map(
@@ -142,6 +152,7 @@ function buildBlocksAfterFragments(
                 rules: { 'package-json/restrict-dependency-ranges': ['error', { rangeType: 'pin' }] },
             },
         ],
+        ...rootPackage,
         [{ files: eslintFiles.javascript, rules: { ...rules.javascript, ...config.javascriptAllLevelRules } }],
     ];
 }

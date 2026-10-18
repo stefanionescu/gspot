@@ -33,7 +33,6 @@ import { checkGeneratedFiles } from '#cli/checks/general/gspot/generated-files.t
 import { checkBashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
 import { checkBashScriptLayout } from '#cli/checks/language/bash/script-layout.ts';
 import { checkSiteUnusedAssets } from '#cli/checks/framework/site/unused-assets.ts';
-import { checkPackageJson } from '#cli/checks/general/dependencies/package-json.ts';
 import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
 import { checkBashInlineScripts } from '#cli/checks/language/bash/inline-scripts.ts';
 import { checkPythonPipInstalls } from '#cli/checks/language/python/pip-installs.ts';
@@ -126,7 +125,6 @@ export const CHECK_IMPLEMENTATIONS = {
     'duplication/jscpd': { check: checkJscpd },
     'secrets/env-examples': { check: checkSecretsEnvExamples },
     'repository/local-files': { check: checkIgnoredFilesTracked },
-    'dependencies/package-json': { check: checkPackageJson },
     'dependencies/release-age': { check: checkReleaseAge },
     'licenses/allowed': { check: checkAllowedLicenses },
     'dependencies/lockfiles': { check: checkLockfiles },

@@ -120,7 +120,7 @@ test.each([...LEVELS])(
     },
 );
 
-test('package-json > every package.json gets the package-json rules and no code rules, also beside a test runner', async () => {
+test('package-json > every package.json gets the package-json rules and no code rules, and only the root names its package manager', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': `level = "all"\nconfigurations = ["typescript", "vitest"]\n[rules]\nenabled = false\n`,
@@ -139,6 +139,9 @@ test('package-json > every package.json gets the package-json rules and no code 
     expect(findings.filter(({ rule }) => rule === 'package-json/sort-collections')).toStrictEqual([
         { file: 'package.json', rule: 'package-json/sort-collections', line: 1 },
         { file: 'tests/package.json', rule: 'package-json/sort-collections', line: 1 },
+    ]);
+    expect(findings.filter(({ rule }) => rule === 'package-json/require-packageManager')).toStrictEqual([
+        { file: 'package.json', rule: 'package-json/require-packageManager', line: 1 },
     ]);
     expect(findings.filter(({ rule }) => rule?.startsWith('package-json/') !== true)).toStrictEqual([]);
 });
