@@ -1,6 +1,6 @@
 [configuration]
 description = "pytest suites: Ruff style rules for tests, test-name prefixes, and a coverage floor at push."
-requires = ["python", "coverage"]
+requires = ["python"]
 title = "pytest"
 
 [detect]

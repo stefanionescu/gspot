@@ -85,31 +85,31 @@ export const SETTING_DECLARATIONS = {
         description: 'Environment interface name passed to wrangler types; OpenNext uses CloudflareEnv.',
     },
     'coverage.lines': {
-        configurations: ['coverage'],
+        configurations: ['jest', 'pytest', 'vitest', 'swift-tests'],
         description: 'The minimum percentage of source lines covered by tests.',
         default_all: 80,
         reason_needed: 'lowering',
     },
     'coverage.branches': {
-        configurations: ['coverage'],
+        configurations: ['jest', 'pytest', 'vitest', 'swift-tests'],
         description: 'The minimum percentage of source branches covered by tests.',
         default_all: 80,
         reason_needed: 'lowering',
     },
     'coverage.functions': {
-        configurations: ['coverage'],
+        configurations: ['jest', 'pytest', 'vitest', 'swift-tests'],
         description: 'The minimum percentage of source functions covered by tests.',
         default_all: 80,
         reason_needed: 'lowering',
     },
     'coverage.statements': {
-        configurations: ['coverage'],
+        configurations: ['jest', 'pytest', 'vitest', 'swift-tests'],
         description: 'The minimum percentage of source statements covered by tests.',
         default_all: 80,
         reason_needed: 'lowering',
     },
     'coverage.swift_target': {
-        configurations: ['coverage'],
+        configurations: ['swift-tests'],
         description: 'Line coverage floors for named Swift targets.',
     },
     'dependencies.min_release_age_days': {

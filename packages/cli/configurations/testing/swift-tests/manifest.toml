@@ -1,6 +1,6 @@
 [configuration]
 description = "Swift test files under XCTest and Swift Testing. A disabled test says why, and coverage holds a floor."
-requires = ["swift", "coverage"]
+requires = ["swift"]
 title = "Swift Tests"
 
 [detect]

@@ -1,6 +1,6 @@
 [configuration]
 description = "Jest lint rules and coverage floors for the repository test suites."
-requires = ["javascript", "coverage"]
+requires = ["javascript"]
 title = "Jest"
 
 [detect]
