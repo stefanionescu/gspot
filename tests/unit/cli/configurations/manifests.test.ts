@@ -1,5 +1,7 @@
+import type { ZodError } from 'zod';
 import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/system/assets.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { buildManifest } from '#tests/setup/builders.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -16,7 +18,7 @@ import {
     INVALID_VERSION_FLOORS,
 } from '#tests/data/configurations/manifests.ts';
 
-test('manifest > a manifest without [detect] takes the matchers of [files]', () => {
+test('a manifest without [detect] takes the matchers of [files]', () => {
     const tables = '[files]\nfilenames = ["native.project"]\npaths = ["source/**"]\n';
     const inherited = buildManifest('native', { tables });
     expect(inherited.detect.filenames).toStrictEqual(['native.project']);
@@ -31,18 +33,18 @@ test('manifest > a manifest without [detect] takes the matchers of [files]', () 
     expect(empty.detect.paths).toStrictEqual([]);
 });
 
-test.each(INVALID_VERSION_FLOORS)('parts > a malformed version floor %s is refused', (floor) => {
+test.each(INVALID_VERSION_FLOORS)('a malformed version floor %s is refused', (floor) => {
     expect(versionFloorSchema.safeParse(floor).success).toBe(false);
 });
 
-test('tool > a replace_key record refuses both a key and a table', () => {
+test('a replace_key record refuses both a key and a table', () => {
     expect(() =>
         buildManifest('example', { tables: REPLACE_DECLARATION + 'key = "eslintConfig"\ntable = "tool.ruff"\n' }),
-    ).toThrow('A replace_key record selects one key or table.');
+    ).toThrow(matchFields<ZodError>({ issues: [matchFields<ZodError['issues'][number]>({ path: ['tool', 0] })] }));
 });
 
 test.each(['".native"', '[""]', '[7]'])(
-    'tool > replacement lists keep owned files and shared sections and refuse invalid items (%j)',
+    'replacement lists keep owned files and shared sections and refuse invalid items (%j)',
     (invalid) => {
         const tables =
             '[[tool]]\nname = "native"\nversion = "1.0.0"\nreplace = [".native", "native.json"]\n[[tool.replace_key]]\nfile = "package.json"\nkey = "native"\n';
@@ -57,7 +59,7 @@ test.each(['".native"', '[""]', '[7]'])(
     },
 );
 
-test('tool > a tool declaration refuses unknown fields', () => {
+test('a tool declaration refuses unknown fields', () => {
     expect(toolDeclarationSchema.safeParse('probe').success).toBe(false);
     expect(toolDeclarationSchema.safeParse({ name: 'probe', mystery: true }).success).toBe(false);
     const tool = toolDeclarationSchema.parse({ name: 'probe', version: '1.0.0', npm: 'native-probe' });
@@ -68,7 +70,7 @@ test('tool > a tool declaration refuses unknown fields', () => {
     });
 });
 
-test('manifests > a tool declared by two configurations is refused', () => {
+test('a tool declared by two configurations is refused', () => {
     const paths = ['configurations/general/owner/manifest.toml', 'configurations/general/second/manifest.toml'];
     using resources = new DisposableStack();
     resources.use(
@@ -85,7 +87,7 @@ test('manifests > a tool declared by two configurations is refused', () => {
 });
 
 test.each([false, true])(
-    'manifests > a tool named without a declaration links to the configuration that declares it, and fails when none does (%j)',
+    'a tool named without a declaration links to the configuration that declares it, and fails when none does (%j)',
     (ownerFirst) => {
         expect(toolDeclarationSchema.parse({ name: 'probe' })).toBe('probe');
         const consumer = 'configurations/infrastructure/consumer/manifest.toml';
@@ -112,7 +114,7 @@ test.each([false, true])(
     },
 );
 
-test('manifests > a tool rule page needs the {rule} placeholder, and its crash pattern must be a regular expression', () => {
+test('a tool rule page needs the {rule} placeholder, and its crash pattern must be a regular expression', () => {
     const manifest = buildManifest('example', {
         group: 'infrastructure',
         tables: `${TOOL_DECLARATION}rule_url = "https://example.test/rules/{rule}"\nrule_prefix = "@example/plugin"\ncrash_pattern = '^Fatal:'\n`,
@@ -136,16 +138,16 @@ test('manifests > a tool rule page needs the {rule} placeholder, and its crash p
     ).toThrow('regular expression');
 });
 
-test('manifests > a companion tool file needs a tool or check that reads it', () => {
+test('a companion tool file needs a tool or check that reads it', () => {
     expect(() =>
         buildManifest('consumer', {
             group: 'infrastructure',
             tables: '[[tool_file]]\ntarget = "example.json"\nrequired_tools = ["example"]\n',
         }),
-    ).toThrow('Companion tools require a consuming tool or check.');
+    ).toThrow(matchFields<ZodError>({ issues: [matchFields<ZodError['issues'][number]>({ path: ['tool_file', 0] })] }));
 });
 
-test('manifests > the only tool of a configuration reads each of its tool files that names no consumer', () => {
+test('the only tool of a configuration reads each of its tool files that names no consumer', () => {
     using _assets = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
         prefix === 'configurations/'
             ? ['configurations/language/example/manifest.toml']
@@ -167,7 +169,7 @@ test('manifests > the only tool of a configuration reads each of its tool files 
     ]);
 });
 
-test('manifests > tool-files assets are discovered and their metadata selects their consumers', () => {
+test('tool-files assets are discovered and their metadata selects their consumers', () => {
     using _assets = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
         prefix === 'configurations/'
             ? ['configurations/language/example/manifest.toml']

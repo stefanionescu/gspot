@@ -118,7 +118,7 @@ test('a plugin prefix with an npm scope must match a manifest declaration', asyn
     expect(unknownTypescriptPrefix.json).toMatchObject({ page: null });
 });
 
-test('rule pages work in the root and in a child scope', async () => {
+test('explain finds rule pages from the root and from a child scope', async () => {
     await using sandbox = await testdir();
     const settings = `level = "all"
 configurations = ["python"]

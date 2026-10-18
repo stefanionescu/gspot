@@ -31,7 +31,7 @@ async function generateRuleFiles(level: Level, files: Record<string, string>): P
     return new Map(output.files.filter((file) => file.kind === 'rules').map((file) => [file.path, file.content]));
 }
 
-test('rules > level filtering respects fenced examples, nested sections, and the next heading of the same depth', async () => {
+test('level filtering respects fenced examples, nested sections, and the next heading of the same depth', async () => {
     const before = '# Guide\n\n## Required\n\n```md\n## Example\n<!-- level: all -->\n```\n\n';
     const omitted =
         '## Convention\n<!-- level: all -->\n\nContent.\n\n### Detail\n<!-- level: all -->\n\n```md\n## Not a boundary\n```\n\n';
@@ -78,7 +78,7 @@ test('rules > level filtering respects fenced examples, nested sections, and the
 });
 
 test.each(['', 'app'].flatMap((scope) => RUNTIME_RULE_CASES.map((row) => ({ ...row, scope }))))(
-    'rules > $runtime rules with $dependency in $scope select DENO.md and NODE.md',
+    '$runtime rules with $dependency in scope $scope select DENO.md and NODE.md',
     async ({ scope, runtime, dependency, hasNode }) => {
         const prefix = scope === '' ? '' : scope + '/';
         await using sandbox = await testdir({
@@ -118,7 +118,7 @@ test('the AGENTS.md block names the folders of a scoped rule without parentheses
     expect(agents).not.toContain('(app/)');
 });
 
-test('rules > an always-selected configuration installs its rule file once', async () => {
+test('an always-selected configuration installs its rule file once', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([], { rules: true, level: 'all' }) });
     const session = await openSession(sandbox.path);
     const engineering = listSelectedManifests(session.scopes).find(
@@ -156,7 +156,7 @@ async function buildManagedBlock(root: string): Promise<string> {
     });
 }
 
-test('rules > the managed block > with no configurations the block still lists the general rules and the check command', async () => {
+test('with no configurations the block still lists the general rules and the check command', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': buildSettingsText([], { rules: true }) });
     const block = await buildManagedBlock(sandbox.path);
@@ -165,7 +165,7 @@ test('rules > the managed block > with no configurations the block still lists t
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
-test('rules > the managed block > with a check selected the block names the command, and an excluded file leaves the index', async () => {
+test('with a check selected the block names the command, and an excluded file leaves the index', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['spelling'], {

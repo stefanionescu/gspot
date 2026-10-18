@@ -205,13 +205,16 @@ test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep 
     ).toStrictEqual({ 'docs/Notes.md': '# Notes\n', 'docs/NOTES.md': '# NOTES\n' });
 });
 
-test.skipIf(!isCaseFolding())('a case-folding disk refuses them', async () => {
-    await using sandbox = await createCaseClashingSandbox();
-    const result = await checkReport(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    const failure = JSON.parse(result.stdout) as CommandFailureJson;
-    expect(failure).toStrictEqual({ error: 'files', message: expect.stringContaining('docs/NOTES.md') as string });
-});
+test.skipIf(!isCaseFolding())(
+    'staged paths that differ only by letter case are refused on a case-folding disk',
+    async () => {
+        await using sandbox = await createCaseClashingSandbox();
+        const result = await checkReport(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']);
+        expect(result.code, result.stdout + result.stderr).toBe(2);
+        const failure = JSON.parse(result.stdout) as CommandFailureJson;
+        expect(failure).toStrictEqual({ error: 'files', message: expect.stringContaining('docs/NOTES.md') as string });
+    },
+);
 
 test('staged checks use index bytes and settings on an unborn branch while preserving unstaged edits', async () => {
     await using folder = await testdir();

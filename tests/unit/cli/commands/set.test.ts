@@ -230,7 +230,7 @@ test.each([
         commandArguments: ['unset', 'level', 'extra'],
         message: 'level is not a list or a table, so it takes no items. Run gspot unset level.',
     },
-])('gspot $argv refuses the change and preserves gspot.toml', async ({ commandArguments, message }) => {
+])('gspot $commandArguments refuses the change and preserves gspot.toml', async ({ commandArguments, message }) => {
     await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([]) });
     const path = join(sandbox.path, 'gspot.toml');
     const before = await Bun.file(path).text();

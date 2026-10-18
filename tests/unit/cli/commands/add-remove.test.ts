@@ -60,7 +60,7 @@ configurations = ${JSON.stringify(command === 'add' ? [] : ['bash'])}
 });
 
 test.each([false, true].flatMap((json) => ['add', 'remove'].map((command) => ({ command, json }))))(
-    'add refuses an always-selected configuration before writing (%j)',
+    '$command refuses an always-selected configuration before writing (json: $json)',
     async ({ command, json }) => {
         await using sandbox = await testdir({
             'gspot.toml': 'configurations = []\n',

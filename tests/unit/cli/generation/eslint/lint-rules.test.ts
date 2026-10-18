@@ -8,7 +8,7 @@ import { APP_JEST, VITEST_FILES } from '#tests/data/generation/eslint/fragments.
 import { DUPLICATE_RULE_CASES, DUPLICATE_RULE_FILES } from '#tests/data/generation/eslint/lint-rules.ts';
 
 test.each([...DUPLICATE_RULE_CASES])(
-    'duplicate-rules > each pair of duplicate rules reports a defect once, from the kept rule (%j)',
+    'each pair of duplicate rules reports a defect once, from the kept rule (%j)',
     async ({ file, rules, kept }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -27,7 +27,7 @@ test.each([...DUPLICATE_RULE_CASES])(
 );
 
 test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum) => ({ language, maximum }))))(
-    'parameter-limits > ESLint for $language counts declared parameters with maximum $maximum',
+    'ESLint for $language counts declared parameters with maximum $maximum',
     async ({ language, maximum }) => {
         await using folder = await testdir();
         const extension = { javascript: 'js', typescript: 'ts' }[language]!;

@@ -22,7 +22,7 @@ import {
     PYDOCLINT_PROJECT_CASES,
 } from '#tests/data/checks/python/docstrings.ts';
 
-test('deptry: deptry skips a scope without pyproject.toml', async () => {
+test('deptry skips a scope without pyproject.toml', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['python']),
@@ -36,7 +36,7 @@ test('deptry: deptry skips a scope without pyproject.toml', async () => {
     ]);
 });
 
-test('deptry: deptry excludes nested scopes and keeps your own exclude patterns', async () => {
+test('deptry excludes nested scopes and keeps your own exclude patterns', async () => {
     await using sandbox = await testdir();
     const scopes = ['', 'app', 'app/nested', 'other'];
     await createFileTree(sandbox.path, {
@@ -83,7 +83,7 @@ test('deptry: deptry excludes nested scopes and keeps your own exclude patterns'
         expect(patterns.some((pattern) => new RegExp(pattern).test('appish/sample.py'))).toBe(false);
     }
 });
-test('import-linter: import-linter skips a project without contracts', async () => {
+test('import-linter skips a project without contracts', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['python']),
@@ -97,7 +97,7 @@ test('import-linter: import-linter skips a project without contracts', async () 
     expect(report.checks).toMatchObject([{ check: 'python/import-linter', status: 'skipped' }]);
 });
 
-test('import-linter: import-linter reads setup.cfg first and reports each broken contract with its import chain', async () => {
+test('import-linter reads setup.cfg first and reports each broken contract with its import chain', async () => {
     await using sandbox = await testdir();
     const config = '[importlinter]\nroot_package = example\n';
     await createFileTree(sandbox.path, {
@@ -146,7 +146,7 @@ test('import-linter: import-linter reads setup.cfg first and reports each broken
     ]);
     expect(command.mock.calls.map(([, options]) => options.env?.['PYTHONDONTWRITEBYTECODE'])).toStrictEqual(['1']);
 });
-test.each(PYDOCLINT_PROJECT_CASES)('pydoclint: pydoclint $name', async ({ project, setting, expected, command }) => {
+test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting, expected, command }) => {
     await using sandbox = await testdir();
     const executable = buildVenvExecutablePath('.gspot/.venv', 'pydoclint');
     await createFileTree(sandbox.path, {
@@ -171,7 +171,7 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint: pydoclint $name', async ({ projec
     ]);
 });
 
-test('pydoclint: pydoclint keeps earlier style findings when a later style batch fails', async () => {
+test('pydoclint keeps earlier style findings when a later style batch fails', async () => {
     await using sandbox = await testdir();
     const executable = buildVenvExecutablePath('.gspot/.venv', 'pydoclint');
     await createFileTree(sandbox.path, {
