@@ -234,6 +234,18 @@ export const SQLFLUFF_CAPITALISATION = {
 
 export const TOML_FORMAT = { inlineTableStart: Number.MAX_SAFE_INTEGER, bracketSpacing: false } as const;
 
+/** The first lines of a tool file that also exists to keep the tool from reading another file. */
+export const TOOL_FILE_NOTES = {
+    lychee: [
+        '# This file stops lychee from reading a lychee.toml in the folder where it runs.',
+        '# Allow a URL with the docs.allowed_urls setting.',
+    ],
+    osvScanner: [
+        '# This file stops OSV-Scanner from reading an osv-scanner.toml next to a lockfile.',
+        '# Accept a vulnerability with gspot ignore dependencies/osv-scanner --rule <ID> and a reason.',
+    ],
+} as const;
+
 export const KNIP_JAVASCRIPT_ENTRY_FILES = ['src/main.{ts,js}', 'src/index.{ts,js}'] as const;
 
 /** Preview Ansible rules stay disabled at both levels. */

@@ -7,6 +7,7 @@ import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import {
     MISE_SCHEMA,
     TOML_FORMAT,
+    TOOL_FILE_NOTES,
     TAPLO_FORMATTING,
     PURGECSS_EXTRACTOR,
     PURGECSS_TOKEN_END,
@@ -40,18 +41,18 @@ function buildGixyFile(context: ToolFileContext): string {
 /**
  * Build the Lychee file from the settings.
  * @param context the tool file to build.
- * @returns the Lychee link exclusions as TOML.
+ * @returns a note on why the file exists, and the lychee link exclusions as TOML.
  */
 function buildLycheeFile(context: ToolFileContext): string {
     const { options } = context.selection.view;
 
     const exclude = options('docs').allowed_urls;
-    return stringifyToml(exclude.length === 0 ? {} : { exclude }, TOML_FORMAT).trimEnd();
+    return [...TOOL_FILE_NOTES.lychee, stringifyToml(exclude.length === 0 ? {} : { exclude }, TOML_FORMAT)].join('\n');
 }
 /**
  * Build the `osv-scanner` tool file from the settings.
  * @param context the tool file to build.
- * @returns the package ignores, reasons, and expiration dates for the scanner.
+ * @returns a note on why the file exists, and the package ignores, reasons, and expiration dates.
  */
 function buildOsvScannerFile(context: ToolFileContext): string {
     const { ignoresFor } = context.selection.view;
@@ -59,18 +60,15 @@ function buildOsvScannerFile(context: ToolFileContext): string {
     const entries = ignoresFor('dependencies/osv-scanner').filter(
         (entry) => entry.rule !== undefined && entry.paths.length === 0,
     );
-    return stringifyToml(
-        entries.length === 0
-            ? {}
-            : {
-                  IgnoredVulns: entries.map((entry) => ({
-                      id: entry.rule,
-                      ...(entry.until ? { ignoreUntil: entry.until } : {}),
-                      reason: entry.reason,
-                  })),
-              },
-        TOML_FORMAT,
-    ).trimEnd();
+    const vulnerabilities = entries.map((entry) => ({
+        id: entry.rule,
+        ...(entry.until ? { ignoreUntil: entry.until } : {}),
+        reason: entry.reason,
+    }));
+    return [
+        ...TOOL_FILE_NOTES.osvScanner,
+        stringifyToml(entries.length === 0 ? {} : { IgnoredVulns: vulnerabilities }, TOML_FORMAT),
+    ].join('\n');
 }
 /**
  * Build the Periphery file from the settings.
