@@ -115,3 +115,12 @@ path = "other"
 [scope.tools.markdownlint.rules]
 MD046 = { style = "indented" }
 `;
+
+/** The Packages line of vale.ini at level all: each upstream style at its pinned release. */
+export const PINNED_PACKAGES = [
+    'https://github.com/vale-cli/Google/releases/download/v0.7.1/Google.zip',
+    'https://github.com/vale-cli/write-good/releases/download/v0.4.1/write-good.zip',
+    'https://github.com/vale-cli/proselint/releases/download/v0.3.4/proselint.zip',
+    'https://github.com/vale-cli/alex/releases/download/v0.2.3/alex.zip',
+    'https://github.com/vale-cli/Harper/releases/download/v0.1.0/Harper.zip',
+].join(', ');

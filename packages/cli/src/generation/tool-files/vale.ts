@@ -2,10 +2,15 @@ import { stringify } from 'yaml';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { VALE_PACKAGES, PROSE_FORMATS } from '#cli/config/tools/vale.ts';
 import { VALE_STYLES_PATH, VALE_PACKAGES_PATH } from '#cli/config/system/locations.ts';
 import { type ProseInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
 
+import {
+    VALE_PACKAGES,
+    PROSE_FORMATS,
+    VALE_PACKAGE_RELEASES,
+    VALE_PACKAGE_REPOSITORY,
+} from '#cli/config/tools/vale.ts';
 import {
     ACRONYMS,
     LENGTH_STYLES,
@@ -65,6 +70,16 @@ function buildAcronymsStyle(context: ToolFileContext): string {
     });
 }
 /**
+ * Name the release archive of one upstream style, so Vale installs that release and not the latest.
+ * @param name the style.
+ * @returns the archive address.
+ */
+function formatPackageUrl(name: (typeof VALE_PACKAGES)[number]): string {
+    const release = VALE_PACKAGE_RELEASES[name];
+    return `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${release}/${name}.zip`;
+}
+
+/**
  * Build the Vale INI file from the settings.
  * @param context the tool file to build.
  * @returns the Vale style locations and rule levels for the prose checks.
@@ -79,7 +94,9 @@ function buildValeIniFile(context: ToolFileContext): string {
         ...styles.map((path) => `StylesPath = ${path}`),
         'MinAlertLevel = suggestion',
         `SkippedScopes = ${VALE_SKIPPED_SCOPES}`,
-        ...(isAll ? [`Packages = ${VALE_PACKAGES.join(', ')}`, 'Vocab = words'] : []),
+        ...(isAll
+            ? [`Packages = ${VALE_PACKAGES.map((name) => formatPackageUrl(name)).join(', ')}`, 'Vocab = words']
+            : []),
         '',
         '[formats]',
         ...PROSE_FORMATS.map(([extension, format]) => `${extension} = ${format}`),

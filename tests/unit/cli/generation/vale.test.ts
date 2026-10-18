@@ -8,8 +8,8 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { RECOMMENDED_VALE_FILES } from '#tests/data/generation/tool-files.ts';
 import { VALE_OFF_RULES, VALE_MARKUP_FILES } from '#cli/config/generation/vale.ts';
+import { PINNED_PACKAGES, RECOMMENDED_VALE_FILES } from '#tests/data/generation/tool-files.ts';
 
 test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (level) => {
     await using sandbox = await testdir();
@@ -22,7 +22,7 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
     const paths = new Set(output.files.map((file) => file.path));
     expect(paths.has('.gspot/configurations/general/prose/styles/gspot/link-text.yml')).toBe(true);
     const configuration = output.files.find((file) => file.path === '.gspot/configurations/general/prose/vale.ini')!;
-    expect(configuration.content.includes(`Packages = ${VALE_PACKAGES.join(', ')}`)).toBe(level === 'all');
+    expect(configuration.content.includes(`Packages = ${PINNED_PACKAGES}`)).toBe(level === 'all');
     expect(configuration.content).toContain(
         `BasedOnStyles = ${level === 'all' ? ['gspot', 'Vale', ...VALE_PACKAGES].join(', ') : 'gspot'}`,
     );
