@@ -210,7 +210,10 @@ function formatInitPlan(plan: InitPlan): string {
         ...formatTemplateSection(plan.template),
         ...formatConfigurationSection(plan.configurations, plan.level),
         ...formatFileSection('write', plan.write),
-        ...formatFileSection(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.delete),
+        ...formatFileSection(
+            `delete ${dim('(your own rules in them do not carry over; read them with git show HEAD:<path>)')}`,
+            plan.delete,
+        ),
         ...formatFileSection('left in place', plan.retained),
         ...formatFileSection('change', plan.change),
         ...formatFileSection('no longer runs; delete when ready', plan.noLongerRuns),
