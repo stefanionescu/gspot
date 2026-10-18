@@ -72,3 +72,11 @@ export const PLAIN_TOOL_FILES = [
     'swiftformat',
     'trivyignore',
 ] as const;
+
+export const RECOMMENDED_VALE_FILES = [
+    '.gspot/config/vale.ini',
+    '.gspot/config/vale/styles/gspot/alt-text.yml',
+    '.gspot/config/vale/styles/gspot/dates.yml',
+    '.gspot/config/vale/styles/gspot/link-text.yml',
+    '.gspot/config/vale/styles/LICENSES.md',
+] as const;

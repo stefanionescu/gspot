@@ -9,8 +9,6 @@ export const VALE_PACKAGE_FOLDERS = [...VALE_PACKAGES, 'config/dictionaries'] as
 export const VALE_TOOL = 'vale';
 export const VALE_ARGUMENTS = ['--output', 'JSON', '--no-exit'] as const;
 
-export const VALE_RULE_EXTENSION = '.yml';
-
 /** Comment extensions and their Vale format. */
 export const PROSE_FORMATS = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
     'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],

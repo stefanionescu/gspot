@@ -8,6 +8,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { RECOMMENDED_VALE_FILES } from '#tests/data/generated-files/tool-files.ts';
 
 test('the Vale vocabulary joins selected product words and your words once each', async () => {
     await using sandbox = await testdir();
@@ -49,6 +50,18 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
     expect(configuration.content).toContain(
         `BasedOnStyles = ${level === 'all' ? ['gspot', 'Vale', ...VALE_PACKAGES].join(', ') : 'gspot'}`,
     );
+    expect(configuration.content.includes(' = NO')).toBe(level === 'all');
+    expect(configuration.content.includes('Vocab = words')).toBe(level === 'all');
+});
+
+test('at level recommended, gspot writes only the Vale styles that run', async () => {
+    await using sandbox = await testdir({
+        'sample.md': '# Sample\n',
+        'gspot.toml': buildSettingsText(['prose'], { level: 'recommended' }),
+    });
+    const output = generate(await openSession(sandbox.path));
+    const paths = output.files.map((file) => file.path).filter((path) => path.startsWith('.gspot/config/vale'));
+    expect(paths.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([...RECOMMENDED_VALE_FILES]);
 });
 
 test('your banned headings and the shipped ones reach the heading style once', async () => {

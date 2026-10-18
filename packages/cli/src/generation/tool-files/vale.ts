@@ -1,10 +1,10 @@
 import { stringify } from 'yaml';
+import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { dirname, basename, relative } from 'node:path/posix';
+import { VALE_PACKAGES, PROSE_FORMATS } from '#cli/config/tools/vale.ts';
 import { VALE_STYLES_PATH, VALE_PACKAGES_PATH } from '#cli/config/system/locations.ts';
 import { type ProseInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
-import { VALE_PACKAGES, PROSE_FORMATS, VALE_RULE_EXTENSION } from '#cli/config/tools/vale.ts';
 
 import {
     ACRONYMS,
@@ -16,7 +16,6 @@ import {
     BANNED_HEADINGS,
     VALE_MARKUP_FILES,
     VALE_REGEX_SYMBOLS,
-    RECOMMENDED_STYLES,
     VALE_SKIPPED_SCOPES,
 } from '#cli/config/generation/vale.ts';
 
@@ -72,55 +71,36 @@ function buildAcronymsStyle(context: ToolFileContext): string {
  */
 function buildValeIniFile(context: ToolFileContext): string {
     const isAll = context.level === 'all';
-    const prose = buildProseInputs(context.session, context.manifests);
-    const { targetPath } = context;
-
-    const rules: Record<string, string> = isAll
-        ? Object.fromEntries(Object.keys(VALE_OFF_RULES).map((rule) => [rule, 'NO']))
-        : Object.fromEntries(
-              prose.rules.filter((rule) => !RECOMMENDED_STYLES.has(rule)).map((rule) => [`gspot.${rule}`, 'NO']),
-          );
-    const folders = [VALE_STYLES_PATH];
-    const basedOn = ['gspot'];
-    const packages: string[] = [];
-    const markupRules: string[] = [];
-    if (isAll) {
-        folders.push(VALE_PACKAGES_PATH);
-        basedOn.push('Vale', ...VALE_PACKAGES);
-        packages.push(`Packages = ${VALE_PACKAGES.join(', ')}`);
-        markupRules.push('gspot.merge-conflict-markers = YES');
-    }
-    const styles = folders.map((path) => relative(dirname(targetPath), path));
+    const folders = isAll ? [VALE_STYLES_PATH, VALE_PACKAGES_PATH] : [VALE_STYLES_PATH];
+    const styles = folders.map((path) => relative(dirname(context.targetPath), path));
+    // The gspot style holds only the files of this level, so no line turns a gspot rule off.
     const lines = [
-        '# Vale reads several StylesPath lines in order and installs packages in the last folder.',
+        ...(isAll ? ['# Vale reads both StylesPath lines in order and installs packages in the last folder.'] : []),
         ...styles.map((path) => `StylesPath = ${path}`),
         'MinAlertLevel = suggestion',
         `SkippedScopes = ${VALE_SKIPPED_SCOPES}`,
-        ...packages,
-        'Vocab = words',
+        ...(isAll ? [`Packages = ${VALE_PACKAGES.join(', ')}`, 'Vocab = words'] : []),
         '',
         '[formats]',
         ...PROSE_FORMATS.map(([extension, format]) => `${extension} = ${format}`),
         '',
         '[*]',
-        `BasedOnStyles = ${basedOn.join(', ')}`,
+        `BasedOnStyles = ${(isAll ? ['gspot', 'Vale', ...VALE_PACKAGES] : ['gspot']).join(', ')}`,
         `BlockIgnores = ${BLOCK_IGNORES.join(', ')}`,
         `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
-    ];
-    for (const [rule, value] of Object.entries(rules)) {
-        const reason = VALE_OFF_RULES[rule];
-        if (reason !== undefined) lines.push(`# ${reason}`);
-        lines.push(`${rule} = ${value}`);
-    }
-    lines.push(
-        '# Markup checks read markup only.',
-        'gspot.merge-conflict-markers = NO',
+        ...(isAll
+            ? [
+                  ...Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]),
+                  '# Markup checks read markup only.',
+                  'gspot.merge-conflict-markers = NO',
+              ]
+            : []),
         '',
         `[${VALE_MARKUP_FILES}]`,
         'gspot.alt-text = YES',
-        ...markupRules,
+        ...(isAll ? ['gspot.merge-conflict-markers = YES'] : []),
         '',
-    );
+    ];
     return `${lines.join('\n')}\n`;
 }
 /**
@@ -240,14 +220,7 @@ function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs 
     const cached = session.reads.memo.get(manifests) as ProseInputs | undefined;
     if (cached !== undefined) return cached;
     const words = session.settingsFile.settings.allowed_words;
-    const prose = {
-        words: [...new Set([...listProductNames(session), ...words])],
-        rules: manifests.flatMap((manifest) =>
-            manifest.toolFiles
-                .filter((file) => file.tool.includes('vale') && file.target.endsWith(VALE_RULE_EXTENSION))
-                .map((file) => basename(file.target, VALE_RULE_EXTENSION)),
-        ),
-    };
+    const prose = { words: [...new Set([...listProductNames(session), ...words])] };
     session.reads.memo.set(manifests, prose);
     return prose;
 }

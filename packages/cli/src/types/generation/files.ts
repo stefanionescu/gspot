@@ -59,7 +59,7 @@ export type PythonInputs = {
     ruffRules: string[];
 };
 
-export type ProseInputs = { words: string[]; rules: string[] };
+export type ProseInputs = { words: string[] };
 
 export type SemgrepDocument = { rules: SemgrepRule[] };
 
