@@ -88,13 +88,10 @@ function buildValeIniFile(context: ToolFileContext): string {
         `BasedOnStyles = ${(isAll ? ['gspot', 'Vale', ...VALE_PACKAGES] : ['gspot']).join(', ')}`,
         `BlockIgnores = ${BLOCK_IGNORES.join(', ')}`,
         `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
-        ...(isAll
-            ? [
-                  ...Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]),
-                  '# Markup checks read markup only.',
-                  'gspot.merge-conflict-markers = NO',
-              ]
-            : []),
+        ...(isAll ? Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]) : []),
+        '# Markup checks read markup only.',
+        'gspot.alt-text = NO',
+        ...(isAll ? ['gspot.merge-conflict-markers = NO'] : []),
         '',
         `[${VALE_MARKUP_FILES}]`,
         'gspot.alt-text = YES',

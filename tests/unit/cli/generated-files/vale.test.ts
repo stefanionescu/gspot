@@ -8,6 +8,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { VALE_OFF_RULES, VALE_MARKUP_FILES } from '#cli/config/generation/vale.ts';
 import { RECOMMENDED_VALE_FILES } from '#tests/data/generated-files/tool-files.ts';
 
 test('the Vale vocabulary joins selected product words and your words once each', async () => {
@@ -50,7 +51,10 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
     expect(configuration.content).toContain(
         `BasedOnStyles = ${level === 'all' ? ['gspot', 'Vale', ...VALE_PACKAGES].join(', ') : 'gspot'}`,
     );
-    expect(configuration.content.includes(' = NO')).toBe(level === 'all');
+    const [general = '', markup = ''] = configuration.content.split(`[${VALE_MARKUP_FILES}]`);
+    expect(general.match(/ = NO$/gmu)?.length).toBe(level === 'all' ? Object.keys(VALE_OFF_RULES).length + 2 : 1);
+    expect(general).toContain('gspot.alt-text = NO');
+    expect(markup).toContain('gspot.alt-text = YES');
     expect(configuration.content.includes('Vocab = words')).toBe(level === 'all');
 });
 
