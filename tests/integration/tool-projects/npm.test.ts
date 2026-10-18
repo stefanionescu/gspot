@@ -64,7 +64,7 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
         await using sandbox = await createPackageManagerSandbox(packageManager, projectPath);
         const { root, rootPackage } = sandbox;
         await installToolProjects(root);
-        const { manifest, lockfilePath, lockfile } = await readToolProjectFiles(root, packageManager);
+        const { lockfilePath, lockfile } = await readToolProjectFiles(root, packageManager);
         const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierManifest.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
         const conflict = `<<<<<<< edited\n${stale}\n=======\n${Buffer.from(lockfile).toString('utf8')}\n>>>>>>> generated\n`;
@@ -73,11 +73,14 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
             join(root, projectPath),
             JSON.stringify({ ...JSON.parse(rootPackage), packageManager: `${packageManager}@99.0.0` }),
         );
+        const pinned = await spawnGspot(root, ['apply', '--json']);
+        expect(pinned.code, pinned.stdout + pinned.stderr).toBe(0);
+        const pinnedManifest = await readFile(join(root, '.gspot/package.json'));
         const refused = await spawnGspot(root, ['install', '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(refused.stdout).toContain('Install that package manager version first');
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
-        expect(await readFile(join(root, '.gspot/package.json'))).toStrictEqual(Buffer.from(manifest));
+        expect(await readFile(join(root, '.gspot/package.json'))).toStrictEqual(pinnedManifest);
         await writeFile(join(root, projectPath), rootPackage);
         const applied = await spawnGspot(root, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
