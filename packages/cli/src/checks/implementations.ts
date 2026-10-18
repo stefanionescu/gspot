@@ -53,6 +53,7 @@ import { type RunnableCheck, type CheckImplementations } from '#cli/types/checks
 import { checkDockerCompose, checkDockerTrivyImage } from '#cli/checks/infrastructure/docker.ts';
 import { checkMarkdownFences, buildMarkdownlintArguments } from '#cli/checks/language/markdown.ts';
 import { checkPythonPlaceholderDocstrings } from '#cli/checks/language/python/placeholder-docstrings.ts';
+import { checkXcodeEntitlements, checkAppTransportSecurity } from '#cli/checks/infrastructure/xcode/settings.ts';
 import { checkPostgresMigrationOrder, checkPostgresEditedMigrations } from '#cli/checks/database/postgres/history.ts';
 
 import {
@@ -70,11 +71,6 @@ import {
     checkRowLevelSecurity,
     checkDefinerSearchPath,
 } from '#cli/checks/database/postgres/access.ts';
-import {
-    checkXcconfig,
-    checkXcodeEntitlements,
-    checkAppTransportSecurity,
-} from '#cli/checks/infrastructure/xcode/settings.ts';
 import {
     checkSecretsEnvExamples,
     checkSecretsGitleaksPushed,
@@ -144,7 +140,6 @@ export const CHECK_IMPLEMENTATIONS = {
     'python/pip-installs': { check: checkPythonPipInstalls },
     'swift-tests/skip-reasons': { check: checkSwiftSkipReasons },
     'swift-tests/coverage': { check: checkSwiftTestsCoverage },
-    'xcode/xcconfig': { check: checkXcconfig },
     'xcode/entitlements': { check: checkXcodeEntitlements },
     'xcode/app-transport-security': { check: checkAppTransportSecurity },
     'xcode/xcstrings': { check: checkXcstrings },

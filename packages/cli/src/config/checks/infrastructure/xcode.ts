@@ -6,10 +6,6 @@ export const IMAGE_SET = '.imageset/Contents.json';
 
 export const NAMED_SETS = [IMAGE_SET, '.colorset/Contents.json'] as const;
 
-export const SETTING_NAME = /^[A-Za-z_][\w.[\]=*,-]*$/u;
-
-export const INCLUDE_LINE = /^#include\??\s+"[^"]+"$/u;
-
 export const PLIST_KEY = /<key>(?<name>[^<]+)<\/key>/gu;
 
 export const ARBITRARY_LOADS = /<key>NSAllowsArbitraryLoads<\/key>\s*<true\s*\/>/u;
@@ -25,8 +21,6 @@ export const ASSET_KIND_SUFFIX = /(?:Color|Image)$/u;
 export const XCSTRINGS_SUFFIX = '.xcstrings';
 
 export const DEFAULT_SOURCE_LANGUAGE = 'en';
-
-export const XCCONFIG_SUFFIX = '.xcconfig';
 
 export const ENTITLEMENTS_SUFFIX = '.entitlements';
 

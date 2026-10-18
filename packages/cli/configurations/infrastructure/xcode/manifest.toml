@@ -33,17 +33,6 @@ summary = "Parses every property list and entitlements file with plutil."
 why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."
 
 [[check]]
-example = "A non-comment line `PRODUCT_NAME App` in an `.xcconfig` file lacks an assignment operator. Change it to `PRODUCT_NAME = App`."
-files = { extensions = [".xcconfig"] }
-help = "Write the line as a name, an equals sign, and a value."
-level = "recommended"
-name = "xcconfig"
-runs = "scope"
-stage = "commit"
-summary = "Checks that each line of an `.xcconfig` file holds a setting, an include, or a comment."
-why = "Xcode silently skips a line it cannot parse, so a typo turns a setting off."
-
-[[check]]
 example = "A catalog string that lacks a required locale reports a finding. Add the translation, or mark the string as not translated."
 files = { extensions = [".xcstrings"] }
 help = "Add the translation, or mark the string as not translated in the catalog."

@@ -159,7 +159,6 @@ export const UNREADABLE_RESOURCES = [
 ] as const;
 
 export const DEEPEST_SCOPE_SETTINGS = [
-    ['xcode/xcconfig', 'Build.xcconfig', 'PRODUCT_NAME App\n', 'PRODUCT_NAME = App\n', 'xcconfig-line'],
     [
         'xcode/entitlements',
         'App.entitlements',

@@ -6,43 +6,10 @@ import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 
 import {
     PLIST_KEY,
-    INCLUDE_LINE,
     PLIST_SUFFIX,
-    SETTING_NAME,
     ARBITRARY_LOADS,
-    XCCONFIG_SUFFIX,
     ENTITLEMENTS_SUFFIX,
 } from '#cli/config/checks/infrastructure/xcode.ts';
-
-/**
- * Reports each invalid xcconfig line.
- * @param input the scope files to read.
- * @returns the findings.
- */
-export function checkXcconfig(input: CheckInput): Finding[] {
-    return listSourcePaths(input.files, [XCCONFIG_SUFFIX]).flatMap((path) =>
-        readCachedBytes(input.reads, path)
-            .toString('utf8')
-            .split('\n')
-            .flatMap((raw, index): Finding[] => {
-                const line = raw.trim();
-                // Conditions in brackets can contain equals signs before the assignment itself.
-                const sign = line.indexOf('=', line.lastIndexOf(']') + 1);
-                const isSetting = sign > 0 && SETTING_NAME.test(line.slice(0, sign).trim());
-                const isValid = line === '' || line.startsWith('//') || isSetting || INCLUDE_LINE.test(line);
-                return isValid
-                    ? []
-                    : [
-                          buildFinding(
-                              input,
-                              { file: path, line: index + 1 },
-                              'xcconfig-line',
-                              'Write this line as KEY = value.',
-                          ),
-                      ];
-            }),
-    );
-}
 
 /**
  * Reports each entitlement outside xcode.allowed_entitlements, which planning requires.
