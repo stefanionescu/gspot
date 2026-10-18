@@ -8,8 +8,13 @@ documentation and comments. gspot selects both in every repository.
 
 ## Spelling
 
-typos checks American English by default. Set another variant with `gspot set spelling.locale en-gb`; the setting
-accepts `en`, `en-us`, `en-gb`, `en-ca`, and `en-au`. To accept a word, add it with a reason:
+typos checks American English by default. `spelling.locale` accepts `en`, `en-us`, `en-gb`, `en-ca`, and `en-au`:
+
+```shell
+gspot set spelling.locale en-gb
+```
+
+To accept a word, add it with a reason:
 
 ```shell
 gspot set allowed_words Acmeflow --reason "Acmeflow is our product name."

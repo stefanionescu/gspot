@@ -1,5 +1,5 @@
-import type { ReferencePage } from '../types/reference.ts';
-import type { readReferenceData } from '#cli/reference.ts';
+import { readReferenceData } from '#cli/reference.ts';
+import type { GuideCheck, ReferencePage } from '../types/reference.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import { formatList, escapeCell, formatTable, formatSection, buildReferencePage } from './markdown.ts';
 
@@ -166,4 +166,20 @@ export function listSuppressions(configurations: Manifest[]): Map<string, Suppre
             ),
         ),
     );
+}
+
+/**
+ * List the checks of some configurations for a guide page, in the order their manifests declare them.
+ * @param configurations the configuration names
+ * @returns one row per check
+ */
+export function listGuideChecks(configurations: string[]): GuideCheck[] {
+    return readReferenceData()
+        .checks.filter(({ configuration }) => configurations.includes(configuration.configuration.name))
+        .map(({ check }) => ({
+            name: check.name,
+            link: `/reference/${REFERENCE_FOLDERS.checks}/${check.name}/`,
+            stage: check.stage,
+            summary: check.summary,
+        }));
 }

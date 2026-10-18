@@ -1,0 +1,104 @@
+---
+title: JavaScript and TypeScript
+description: Choose runtimes, type checking, and framework rules for JavaScript and TypeScript.
+---
+
+import ChecksTable from '../../../components/ChecksTable.astro';
+
+gspot checks JavaScript and TypeScript with ESLint, the TypeScript compiler, and Knip, which finds code that nothing
+uses. These checks run for the `javascript` and `typescript` configurations:
+
+<ChecksTable configurations={['javascript', 'typescript']} />
+
+Framework configurations, such as `react`, `nextjs`, and `react-native`, add their own lint rules. A React project that
+depends on `react-dom` also gets the `react-dom` configuration and its DOM accessibility lint rules. The
+[configuration reference](/reference/configurations/) lists every framework.
+
+## JavaScript runtimes
+
+Each file gets one ESLint runtime:
+
+| Files                                      | Runtime                                                 |
+| ------------------------------------------ | ------------------------------------------------------- |
+| Ordinary modules and build scripts         | Node.js built-ins                                       |
+| `.cjs` and `.cts` files                    | Node.js built-ins and CommonJS globals                  |
+| React, Vue, and Svelte application sources | Browser globals                                         |
+| React Native sources                       | Native globals                                          |
+| Next.js sources                            | Node.js built-ins, since server components can use them |
+
+To give some files another runtime, add a `[[tools.eslint.override]]` record. Write paths relative to the repository
+root. When records overlap, the later one counts.
+
+```toml title="gspot.toml"
+[[tools.eslint.override]]
+paths = ["src/client/**"]
+runtime = "browser"
+
+[[tools.eslint.override]]
+paths = ["src/workers/**"]
+runtime = "worker"
+
+[[tools.eslint.override]]
+paths = ["src/serviceworker.js"]
+runtime = "serviceworker"
+```
+
+Use an explicit `node` runtime for server code inside a browser or React Native project. Runtime names follow the
+pinned [globals package](https://github.com/sindresorhus/globals). Use `serviceworker` for service workers, which have
+other APIs than Web Workers. An unknown runtime name stops gspot before it writes tool files.
+
+Browser and native files get no Node.js lint rules. React Native files keep the `process` and `require` globals, but
+get no other Node.js globals, such as `Buffer` and `__dirname`.
+
+## TypeScript compiler
+
+TypeScript source files or your own `tsconfig.json` select the TypeScript checks. A TypeScript tool dependency or
+declaration files alone do not.
+
+The checks use the TypeScript compiler of your project. Without one, gspot uses its pinned compiler from the tool
+project before any global compiler. `gspot install` installs the pinned compiler.
+
+Your own `tsconfig.json` keeps its compiler options and gets the strict ones that the selected level requires. When a
+scope has no `tsconfig.json` of your own, gspot writes a standalone compiler project for its source files and
+declarations. That project leaves out generator output, vendored files, and child scopes.
+
+JavaScript checks extend your own `jsconfig.json`, or your `tsconfig.json` when no `jsconfig.json` exists. From a
+`tsconfig.json`, they keep the compiler options and declarations but select only JavaScript sources.
+
+Your own JSX setting stays; without one, the generated project uses `jsx: "preserve"`. A scope with neither file uses
+Bundler resolution when imports without extensions name JavaScript source files. Ambient types come from the source
+project, including your own type roots.
+
+## Next.js
+
+The Next.js configuration runs `nextjs/tsc` instead of `typescript/tsc`, at level `recommended` and stage `push`. The
+check has Next.js write its types, then type-checks the app with the strict compiler options. The project must provide
+Next.js 15.5 or later. The Next.js Semgrep rules run in `security/semgrep`.
+
+## React Native
+
+`gspot init` selects `react-native` and `expo` from their dependencies. The Expo configuration requires React Native and
+adds Expo lint rules and `expo/expo-doctor`. A bare React Native project needs no Expo tool. Native sources keep the
+React hooks and component lint rules.
+
+If a component wraps the React Native `Text`, add its name to the `skip` option of the lint rule:
+
+```shell
+gspot set tools.eslint.rules '{ "react-native/no-raw-text" = [{ skip = ["ThemedText"] }] }'
+```
+
+This allows text inside `ThemedText`. The lint rule still reports bare text inside a `View`. When other projects use
+other components, set the option in the scope of the native project.
+
+## Settings that change lint rule options
+
+| Setting                              | What it sets                                                                                                                  |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `structure.environment_readers`      | The files that may read environment variables, for `n/no-process-env`, `no-restricted-properties`, and `no-restricted-syntax` |
+| `tools.eslint.import_extension`      | The import extension option of `n/file-extension-in-import`                                                                   |
+| `limits.index_exports`               | `amountOfExportsToConsiderModuleAsBarrel` of `barrel-files/avoid-barrel-files`                                                |
+| `structure.reexports = "index-only"` | Lets index files re-export; ESLint re-export rules and `gspot/no-trivial-files` skip them                                     |
+
+The environment reader checks run at level `all`. The limits on index files that re-export other files run at level
+`all` too, and only when you allow re-exports. The [ESLint plugin](/reference/eslint-plugin/) page lists the options of
+its lint rules.

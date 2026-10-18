@@ -1,0 +1,35 @@
+---
+title: Python
+description: Lint, format, type-check, and test Python projects.
+---
+
+import ChecksTable from '../../../components/ChecksTable.astro';
+
+gspot checks Python with Ruff for lint and format, basedpyright, import-linter, pydoclint, and deptry, plus built-in
+checks. These checks run for the `python` configuration:
+
+<ChecksTable configurations={['python']} />
+
+## Before you start
+
+Install gspot with mise, as the [Quickstart](/start/quickstart/) shows for a repository without `package.json`. Use uv for
+your project. basedpyright and pytest read the `.venv` of the project, so sync it before you run the checks:
+
+```shell
+uv sync
+```
+
+## Docstring style
+
+pydoclint takes its docstring style from the first source that sets one:
+
+1. A `[tool.pydoclint]` style in `pyproject.toml`.
+2. The pydocstyle convention in the Ruff options of the project.
+3. `tools.ruff.docstring_convention`, when it equals `google` or `numpy`.
+4. Google or NumPy sections that gspot finds in your docstrings.
+
+Otherwise, pydoclint uses its default.
+
+## Tests
+
+[Tests and coverage](/checks/testing/#python-with-pytest) covers pytest.

@@ -1,0 +1,78 @@
+---
+title: Swift
+description: Lint, format, build, and test Swift packages and Xcode projects.
+---
+
+import ChecksTable from '../../../components/ChecksTable.astro';
+
+gspot checks Swift packages and Xcode projects. SwiftLint and SwiftFormat run at commit. At push, gspot builds the
+package or Xcode scheme, finds declarations that nothing uses, and measures test coverage. These checks run for the
+`swift` and `xcode` configurations:
+
+<ChecksTable configurations={['swift', 'xcode']} />
+
+## Before you start
+
+Install the Swift toolchain, then install gspot with mise, as the [Quickstart](/start/quickstart/) shows.
+
+## Xcode projects
+
+`gspot init` writes the Xcode project, scheme, and destination that it finds. To set them yourself:
+
+```toml title="gspot.toml"
+[swift]
+xcode_project = "App.xcodeproj"
+xcode_scheme = "App"
+xcode_destination = "generic/platform=iOS Simulator"
+```
+
+With `swift.xcode_project` set, the build, Periphery, analyzer, and coverage checks use that project or workspace. These
+checks need macOS with Xcode selected by `xcode-select`, and Periphery runs on macOS only.
+
+The `xcode` configuration also checks property lists, build settings files, string catalogs, asset catalogs, and
+entitlements against `xcode.allowed_entitlements`. Only `xcode/plutil` needs macOS.
+
+## Analyzer
+
+`swift/swiftlint-analyze` runs the SwiftLint analyzer on the build log. It runs only on macOS, and only when you name it:
+
+```shell
+gspot check --only swift/swiftlint-analyze
+```
+
+List an import it flags in error under `tools.swiftlint.always_keep_imports`.
+
+## Tests
+
+The `swift` configuration also checks your XCTest and Swift Testing tests. gspot writes a `.swiftlint.yml` into each
+`Tests` or `*Tests` folder. It turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, while your
+source files keep those lint rules.
+
+`gspot check --only swift/swiftlint` reads these nested files. In an editor, run SwiftLint without `--config`, because
+that option turns off the nested files.
+
+`swift/skip-reasons` asks each disabled test for a reason. `swift/coverage` measures each target against its coverage
+floor, and skips a scope that holds no tests.
+
+## Coverage
+
+To set a line coverage limit for a Swift target, write a record by hand; `gspot set` writes no record lists:
+
+```toml title="gspot.toml"
+[[coverage.swift_target]]
+name = "Orders"
+lines = 80
+```
+
+Replace `Orders` with the target named in the coverage report. Add `reason` when `lines` falls below `coverage.lines`.
+Then apply the record and run the check:
+
+```shell
+gspot apply
+gspot check --only swift/coverage
+```
+
+## Security rules
+
+Semgrep also runs the Swift security lint rules of the `swift` configuration on Swift sources and plist files. The
+[Swift configuration](/reference/configurations/swift/) lists them.

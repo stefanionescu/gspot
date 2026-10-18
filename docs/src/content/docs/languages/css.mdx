@@ -1,0 +1,21 @@
+---
+title: CSS
+description: Check style sheets and the style blocks inside components.
+---
+
+import ChecksTable from '../../../components/ChecksTable.astro';
+
+gspot checks style sheets, and the style blocks inside Vue and Svelte components, with Stylelint. Its options come from
+`gspot.toml`; [Lint rule options](/configure/lint-rules/#stylelint) shows how to change them.
+
+<ChecksTable configurations={['css']} />
+
+## Component styles
+
+The Vue and Svelte configurations hold their own style parsers and syntax exemptions; plain CSS gets neither. gspot
+installs the HTML parser package only when Stylelint reads component styles from a selected framework.
+
+Tailwind directives and `theme()` need a `tailwindcss` dependency in the nearest npm project.
+
+Value checks skip declarations that contain `theme()` or the Vue `v-bind()`. Variables inside `v-bind()` keep their
+case, but CSS keywords need lowercase letters.

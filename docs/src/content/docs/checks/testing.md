@@ -64,6 +64,11 @@ The [Swift](/languages/swift/#tests) page covers Swift tests and their coverage 
 ## Test files
 
 `test_files` names the files that test lint rules treat as tests, such as the Ruff rules for pytest. It does not take
-files out of other checks. By default it holds `**/test/**`, `**/tests/**`, `**/__tests__/**`, `**/*.test.*`,
-`**/*.spec.*`, `**/test_*.py`, `**/*_test.py`, `**/conftest.py`, `**/Tests/**`, and `**/*Tests.swift`. Your patterns
-add to the list: `gspot set test_files "e2e/**"`. The patterns of a scope add to the root list.
+files out of other checks. Its default covers the usual test folders and file names; the
+[settings reference](/reference/gspot-toml/#test_files) lists them.
+
+Your patterns add to the list, and the patterns of a scope add to the root list:
+
+```shell
+gspot set test_files "e2e/**"
+```
