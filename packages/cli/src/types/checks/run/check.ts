@@ -37,8 +37,6 @@ export type FixReport = { results: FixResult[]; changed: string[]; diffs: string
 
 export type RunnableCheck = {
     check: PlannedCheck;
-    arguments?: CheckRunOptions['arguments'];
-    toolFiles?: CheckRunOptions['toolFiles'];
     run: (session: Session, planned: PlannedCheck, options?: CheckRunOptions) => CheckResult | Promise<CheckResult>;
 };
 

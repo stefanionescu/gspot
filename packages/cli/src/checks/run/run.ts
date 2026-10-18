@@ -7,13 +7,13 @@ import { findTool } from '#cli/checks/run/command/tool.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { selectCheckRun } from '#cli/checks/implementations.ts';
 import { listActiveIgnores } from '#cli/settings/scope-view.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
-import { selectCheckRun, CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { buildRunReport, buildBaseResult, formatReproduceCommand } from '#cli/checks/run/report.ts';
 import { RAN_STATUSES, FAILED_STATUSES, DOCKER_MISSING_MESSAGE } from '#cli/config/checks/run/run.ts';
 
@@ -26,7 +26,6 @@ import {
     type CheckResult,
     type RunnableCheck,
     type PlanAfterFixes,
-    type CheckImplementations,
 } from '#cli/types/checks/run/check.ts';
 
 /**
@@ -42,17 +41,7 @@ function isEntryMatch(entry: IgnoreRecord, finding: Finding): boolean {
 }
 
 function planChecks(session: Session, options: RunOptions): RunnableCheck[] {
-    const planned = planRun(session, options);
-    const implementations: CheckImplementations = CHECK_IMPLEMENTATIONS;
-    return planned.map((check) => {
-        const builtIn = implementations[check.check.name];
-        return {
-            check,
-            run: selectCheckRun(check.check),
-            arguments: builtIn?.arguments,
-            toolFiles: builtIn?.toolFiles,
-        };
-    });
+    return planRun(session, options).map((check) => ({ check, run: selectCheckRun(check.check) }));
 }
 
 // Rereads the repository after fixers changed it, so the next run checks the corrected files.
@@ -97,11 +86,7 @@ async function runOne(runState: RunState, executable: RunnableCheck): Promise<Ch
     const started = performance.now();
     // Each thrown failure belongs to this check; the other results of the run survive.
     try {
-        return await run(session, planned, {
-            arguments: executable.arguments,
-            toolFiles: executable.toolFiles,
-            ...(staged === undefined ? {} : { staged }),
-        });
+        return await run(session, planned, staged === undefined ? {} : { staged });
     } catch (error) {
         return { ...base, duration: performance.now() - started, ...checkFailure(planned.check.name, error) };
     }

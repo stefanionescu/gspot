@@ -198,5 +198,8 @@ export function selectCheckRun(check: CheckDeclaration): RunnableCheck['run'] {
     if (check.generator_outputs !== undefined) return runBuiltInCheck(checkStaleGeneratorOutputs);
     const builtIn = (CHECK_IMPLEMENTATIONS as CheckImplementations)[check.name];
     if (builtIn?.check !== undefined) return runBuiltInCheck(builtIn.check);
-    return builtIn?.run ?? runCheckCommand;
+    const run = builtIn?.run ?? runCheckCommand;
+    // A tool check with its own arguments or tool files gets them on every run.
+    return (session, planned, options) =>
+        run(session, planned, { ...options, arguments: builtIn?.arguments, toolFiles: builtIn?.toolFiles });
 }
