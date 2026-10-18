@@ -9,6 +9,7 @@ import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
 import {
     SEMGREP_ASSETS,
     TOOL_DECLARATION,
+    SINGLE_TOOL_FILES,
     SEMGREP_TOOL_FILES,
     CONFIGURATION_TABLE,
     REPLACE_DECLARATION,
@@ -142,6 +143,28 @@ test('manifests > a companion tool file needs a tool or check that reads it', ()
             tables: '[[tool_file]]\ntarget = ".gspot/config/example.json"\nfragment = true\nrequired_tools = ["example"]\n',
         }),
     ).toThrow('Companion tools require a consuming tool or check.');
+});
+
+test('manifests > the only tool of a configuration reads each of its tool files that names no consumer', () => {
+    using _assets = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
+        prefix === 'configurations/'
+            ? ['configurations/language/example/manifest.toml']
+            : SEMGREP_ASSETS.filter((path) => path.startsWith(prefix)),
+    );
+    const readAsset = assets.readAsset;
+    using _sources = spyOn(assets, 'readAsset').mockImplementation((path) =>
+        path === 'configurations/language/example/manifest.toml'
+            ? CONFIGURATION_TABLE + SINGLE_TOOL_FILES
+            : readAsset(path),
+    );
+
+    const manifest = readManifests(createReadCache(process.cwd())).get('example')!;
+
+    expect(manifest.toolFiles.map(({ target, tool, check }) => [target, tool, check])).toStrictEqual([
+        ['.gspot/config/semgrep/first.yml', ['semgrep'], []],
+        ['.gspot/config/semgrep/second.yml', [], ['example/scan']],
+        ['.gspot/config/semgrep/not-a-pack.txt', ['semgrep'], []],
+    ]);
 });
 
 test('manifests > tool-files assets are discovered and their metadata selects their consumers', () => {

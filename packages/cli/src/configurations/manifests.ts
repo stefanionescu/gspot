@@ -33,8 +33,15 @@ const MANIFESTS = { create: readShippedManifests };
 
 const NAMING_DEFAULTS = { create: readShippedNamingDefaults };
 
+// A configuration with exactly one tool gives that tool to each tool file that names no consumer.
+function findOnlyToolName(tools: unknown): string | undefined {
+    if (!Array.isArray(tools) || tools.length !== 1) return undefined;
+    const tool: unknown = tools.at(0);
+    return isRecord(tool) && typeof tool['name'] === 'string' ? tool['name'] : undefined;
+}
+
 // Every tool-files asset has one canonical output; metadata adds consumers and generation settings.
-function readToolFileDeclarations(configurationFolder: string, toolFiles: unknown): unknown {
+function readToolFileDeclarations(configurationFolder: string, toolFiles: unknown, tools: unknown): unknown {
     if (toolFiles !== undefined && !Array.isArray(toolFiles)) return toolFiles;
     const declarations: unknown[] = toolFiles === undefined ? [] : toolFiles;
     const declaredTargets = new Set(declarations.flatMap((entry) => (isRecord(entry) ? [entry['target']] : [])));
@@ -42,7 +49,12 @@ function readToolFileDeclarations(configurationFolder: string, toolFiles: unknow
     const copied = listAssets(folder)
         .map((path) => ({ target: TOOL_FILE_PREFIX + posix.relative(folder, path) }))
         .filter(({ target }) => !declaredTargets.has(target));
-    return [...declarations, ...copied];
+    const tool = findOnlyToolName(tools);
+    return [...declarations, ...copied].map((entry) =>
+        tool === undefined || !isRecord(entry) || entry['tool'] !== undefined || entry['check'] !== undefined
+            ? entry
+            : { ...entry, tool },
+    );
 }
 
 /**
@@ -78,7 +90,7 @@ function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manife
 function parseManifest(text: string, configurationFolder: string): ManifestDeclaration {
     const parsed = parseToml(text) as Record<string, unknown>;
     const toolFiles = parsed['tool_file'];
-    const discoveredToolFiles = readToolFileDeclarations(configurationFolder, toolFiles);
+    const discoveredToolFiles = readToolFileDeclarations(configurationFolder, toolFiles, parsed['tool']);
     const result = manifestSchema.safeParse({
         ...parsed,
         tool_file: discoveredToolFiles,

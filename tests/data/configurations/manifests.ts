@@ -30,6 +30,21 @@ per_scope = true
 when = { configuration = "security" }
 `;
 
+/** One tool, a tool file that names no consumer, and one that names a check. */
+export const SINGLE_TOOL_FILES = `
+[[tool]]
+name = "semgrep"
+version = "1.0.0"
+
+[[tool_file]]
+target = ".gspot/config/semgrep/first.yml"
+level = "all"
+
+[[tool_file]]
+target = ".gspot/config/semgrep/second.yml"
+check = "example/scan"
+`;
+
 export const REPLACE_DECLARATION = `[[tool]]
 name = "example"
 version = "1.0.0"

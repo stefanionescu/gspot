@@ -22,243 +22,185 @@ winget = "errata-ai.Vale"
 
 [[tool_file]]
 target = ".gspot/config/vale.ini"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/acronyms.yml"
-tool = "vale"
 
 [[tool_file]]
 target = ".gspot/config/vale/styles/gspot/alt-text.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/banned-headings.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/heading-case.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/item-length.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/paragraph-length.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/possessives.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/sentence-length.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/title-case.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/config/vocabularies/words/accept.txt"
-tool = "vale"
-
-[[tool_file]]
-target = ".gspot/config/vale/styles/LICENSES.md"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/numbered-units.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/future.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/modals.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/product-centric-writing.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/contractions.yml"
-tool = "vale"
-
-[[tool_file]]
-target = ".gspot/config/vale/styles/gspot/dates.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/hedging.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/since.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/leading-conjunctions.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/date-ordinals.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/suspended-hyphens.yml"
-tool = "vale"
-
-[[tool_file]]
-target = ".gspot/config/vale/styles/gspot/link-text.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/locations.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/obvious-fields.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/symbols.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/merge-conflict-markers.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/percentage-numbers.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/militaristic-language.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/currency.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/marketing.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/straight-quotes.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/placeholders.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/history.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/dashes.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/ordinal-adverbs.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/interface-verbs.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/punctuated-headings.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/file-paths.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/self-reference.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/jargon.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/session-identifiers.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/url-prepositions.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/version-range.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/ampm.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/time-ranges.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/conscious-language.yml"
-tool = "vale"
 
 [[tool_file]]
 level = "all"
 target = ".gspot/config/vale/styles/gspot/idioms.yml"
-tool = "vale"
 
 [[check]]
 example = "`Release on 03/04/2026.` reports an ambiguous date. Write `Release on March 4, 2026.` instead."
