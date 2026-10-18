@@ -129,6 +129,14 @@ export const CONFIGURATION_GUIDES: Readonly<Record<string, { path: string; title
     spelling: GUIDES.prose,
 };
 
-export const EXIT_CODE_LINE = /^ {2}(\d+(?:(?:, | or )\d+)?) {2,}/gmu;
+/** One status line of the exit codes in the CLI help: the codes, then what they mean. */
+export const EXIT_CODE_ROW = /^ {2}(?<codes>\d+(?:(?:, | or )\d+)?) {2,}(?<meaning>\S.*)$/u;
 
-export const HELP_CONTINUATION = /^ {4,}(?=\S)/gmu;
+/** The environment variables that change what gspot does, and what each one does. */
+export const ENVIRONMENT_VARIABLES: readonly [name: string, meaning: string][] = [
+    [
+        '`GITHUB_TOKEN`',
+        'Lets gspot read a template from a private GitHub repository. mise also reads it for tool downloads from GitHub.',
+    ],
+    ['`NO_COLOR`', 'Any nonempty value turns color off.'],
+];

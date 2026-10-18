@@ -43,4 +43,4 @@ Use local paths, HTTPS URLs, or `github:owner/repository[/path][@ref]`. A GitHub
 
 Then check the carried paths against the files of the new repository. `gspot/unmatched-patterns` reports each path that matches nothing.
 
-[Export](/reference/commands/export/) and [init](/reference/commands/init/) list the accepted inputs.
+[gspot export](/reference/commands/#gspot-export) and [gspot init](/reference/commands/#gspot-init) list the accepted inputs.

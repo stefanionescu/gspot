@@ -24,7 +24,7 @@ export const COMMAND_HELP = {
         summary: 'Install the tools and turn on the Git hooks in this clone',
         group: 'Set up a repository:',
         description:
-            'Install the tools that `gspot.toml` needs, at the pinned versions:\n  - npm tools into `.gspot/node_modules`, from `.gspot/package-lock.json`\n  - Python tools into `.gspot/.venv`, from `.gspot/uv.lock`\n  - programs with mise, from `.gspot/mise.toml` (gspot runs `mise trust` for this file)\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\ninstall also sets the Git setting `core.hooksPath` to `.gspot/hooks`, or removes it when you set `hooks.enabled` to false.\nWithout mise, install names the programs that you must install yourself.',
+            'Install the tools that `gspot.toml` needs, at the pinned versions:\n  - npm tools into `.gspot/node_modules`, from `.gspot/package-lock.json`\n  - Python tools into `.gspot/.venv`, from `.gspot/uv.lock`\n  - programs with mise, from `.gspot/mise.toml` (gspot runs `mise trust` for this file)\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\ninstall also sets the Git setting `core.hooksPath` to `.gspot/hooks`, or removes it when you set `hooks.enabled` to false.\nWithout mise, install names the programs that you must install yourself.',
         arguments: {},
         options: {
             '--json': 'Print the result as JSON',

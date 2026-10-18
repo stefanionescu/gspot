@@ -42,3 +42,5 @@
 /reference/configurations/swift-tests/ /reference/configurations/swift/ 301
 /reference/checks/swift-tests/coverage/ /reference/checks/swift/coverage/ 301
 /reference/checks/swift-tests/skip-reasons/ /reference/checks/swift/skip-reasons/ 301
+/reference/commands/:command/ /reference/commands/#gspot-:command 301
+/reference/environment-variables/ /reference/commands/#environment-variables 301
