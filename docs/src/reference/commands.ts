@@ -80,7 +80,7 @@ export function buildCommandPages({
             formatSection('Exit codes', formatExitCodes(exitCodes)) +
             '\nSee also [Environment variables](/reference/environment-variables/).\n',
     );
-    index.data.sidebar = { order: 0 };
+    index.data.sidebar = { order: 0, label: 'All commands' };
     pages.set(`${REFERENCE_FOLDERS.commands}/index.md`, index);
     return pages;
 }
