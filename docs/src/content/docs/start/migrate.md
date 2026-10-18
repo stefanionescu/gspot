@@ -5,12 +5,17 @@ description: Review the init plan and move the settings you need.
 
 ## Read the plan
 
-Run `gspot init --dry-run` to read the plan before you accept it. The plan names the existing tool files that it replaces, such as `.eslintrc.json` and `ruff.toml`. `init` deletes those files and writes its own; it copies no settings from them. Move settings you still need into `gspot.toml` with `gspot set` and `gspot ignore`. A tool without a tool file can run as a [command check](/configure/command-checks/).
+`gspot init --dry-run` prints the plan and writes nothing. Read it before you accept. The plan has these parts:
 
-### What init leaves alone
+| Part                                | What gspot does                                                                                                                                                      | What you do                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `write`                             | Writes `gspot.toml`, `.gspot/`, and the generated files.                                                                                                             | Commit them after `gspot install`.                                     |
+| `delete`                            | Deletes the tool files that gspot replaces, such as `.eslintrc.json` and `ruff.toml`. Git keeps them: `git show HEAD:<path>`.                                        | Move the settings you need with `gspot set` and `gspot ignore`.        |
+| `left in place`                     | Keeps tool sections in shared files, such as `[tool.ruff]` in `pyproject.toml`, which no longer apply, and keeps CI files and existing lint jobs.                    | Delete each tool section after you move its settings.                  |
+| `change`                            | Adds its sections to `.gitignore` and `.gitattributes`, sets keys in your own files, such as `.npmrc`, and names the lint tools that `.gspot/package.json` now pins. | Remove those tools from `devDependencies` when nothing else uses them. |
+| `no longer runs; delete when ready` | Names folders of lint scripts, such as `lint/`.                                                                                                                      | Check that nothing uses them, then delete them.                        |
 
-gspot does not change your application settings or your text outside sections between gspot markers. Tool sections in shared files, such as `[tool.ruff]` in `pyproject.toml` or `prettier` in `package.json`, stay in place. The plan names each one; the generated tool files take over. Delete a section after you move its settings.
-
-If Husky, Lefthook, or your own hooks folder already runs your Git hooks, gspot keeps them and prints three hook lines to add. See [Git hooks](/use/hooks/). Until you add the lines, the checks do not run on commit or push.
-
-The list under `no longer runs` in the plan names folders of lint scripts and dependency files that list only lint tools. Check that nothing else uses them, then delete them.
+init copies the indent width, line width, and quote style from your Prettier JSON settings or `.editorconfig` into
+`[format]`. It copies no other settings. A tool that gspot does not run can run as a
+[command check](/configure/command-checks/). If Husky, Lefthook, or your own hooks folder runs your Git hooks, gspot
+keeps it and prints three lines to add; see [Existing hook managers](/use/hooks/#existing-hook-managers).

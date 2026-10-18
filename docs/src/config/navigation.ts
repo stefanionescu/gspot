@@ -20,6 +20,7 @@ export const SIDEBAR = [
             { slug: 'use/ignore' },
             { slug: 'use/hooks' },
             { slug: 'use/ci' },
+            { slug: 'use/editors' },
             { slug: 'use/coding-agents' },
             { slug: 'use/troubleshooting' },
         ],

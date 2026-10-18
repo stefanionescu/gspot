@@ -5,43 +5,19 @@ description: Understand configurations, checks, findings, settings, levels, and 
 
 import { buildLevelRows } from '../../../reference/levels.ts';
 
-## Configuration
-
-A configuration holds checks, tool files, and rules for one language, framework, library, platform, or topic.
-The [configuration reference](/reference/configurations/) lists them.
-
-## Check
-
-A check runs a tool or code implemented by gspot, then reports findings.
-
-## Finding
-
-A finding states a problem. It can name a file, line, column, and lint rule, with help to fix it.
-
-## Lint rule
-
-A lint rule gives one instruction for a linter to check, such as `no-console`.
-
-## Agent rules
-
-Rules give coding agents Markdown instructions. gspot writes the rules that match your configurations under
-`.gspot/configurations/<group>/<configuration>/rules/` and lists them in `AGENTS.md`.
-
-## Settings
-
-`gspot.toml` stores settings. They select configurations, levels, limits, and ignores.
-
-## Stage
-
-A stage states when a check runs: `commit`, `push`, `message`, or `manual`. The `message` stage checks commit messages.
-
-## Scope
-
-A scope supplies configurations and settings for a folder. See [Monorepos and scopes](/configure/monorepos/).
-
-## Generated file
-
-A generated file holds output that gspot writes from your settings. See [Generated files](/reference/generated-files/).
+| Term                                            | Meaning                                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <span id="configuration">Configuration</span>   | The checks, tool files, and rules for one language, framework, library, platform, or topic, such as `python`. The [configuration reference](/reference/configurations/) lists them.                                                                                                                 |
+| <span id="check">Check</span>                   | A tool check runs a tool, such as ESLint. A built-in check runs code in gspot. A [command check](/configure/command-checks/) runs your own command.                                                                                                                                                 |
+| <span id="check-id">Check ID</span>             | `<configuration>/<name>`, such as `python/ruff`. `--only`, `gspot ignore`, and `gspot explain` take it. A command check takes its `name` as its ID.                                                                                                                                                 |
+| <span id="finding">Finding</span>               | One result of a check: a message, often with a file, line, column, lint rule, and help.                                                                                                                                                                                                             |
+| <span id="lint-rule">Lint rule</span>           | One instruction for a linter, such as `no-console`.                                                                                                                                                                                                                                                 |
+| <span id="rules">Rules</span>                   | Markdown for coding agents, under `.gspot/configurations/<group>/<configuration>/rules/` and listed in `AGENTS.md`. See [Coding agents](/use/coding-agents/).                                                                                                                                       |
+| <span id="settings">Settings</span>             | The values in `gspot.toml`. See [gspot.toml](/configure/gspot-toml/).                                                                                                                                                                                                                               |
+| <span id="level">Level</span>                   | `recommended` or `all`. See [Levels](#levels).                                                                                                                                                                                                                                                      |
+| <span id="stage">Stage</span>                   | When a check runs. `commit` checks run in the pre-commit hook. `push` checks run with the commit checks in the pre-push hook, in CI, and in `gspot check`. `message` checks run in the commit-msg hook. `manual` checks run only when `--only` names them, and in the CI job on the default branch. |
+| <span id="scope">Scope</span>                   | A folder with its own configurations and settings. See [Monorepos](/configure/monorepos/).                                                                                                                                                                                                          |
+| <span id="generated-file">Generated file</span> | A file that gspot writes from your settings. See [Generated files](/reference/generated-files/).                                                                                                                                                                                                    |
 
 ## Levels
 

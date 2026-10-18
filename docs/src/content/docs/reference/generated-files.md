@@ -27,11 +27,13 @@ Change `gspot.toml`, then run `gspot apply`; gspot writes every generated file f
 
 The gspot section of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Some tools have no pointer; gspot passes their tool file when it runs them, so give your editor the same path. Run `gspot install` in each new clone.
 
-## Before you apply
+## Do not edit generated files
 
 Do not edit a generated file. Each one has a gspot header or sits in a section between gspot markers; gspot finds its
 files by these markers and the generated text. `gspot apply` replaces those files from your settings, even files with
 local edits or merge markers. Move any change you need into `gspot.toml` before you apply.
+
+## Dependency bots
 
 gspot updates the files in `.gspot/` when you upgrade gspot. Tell dependency bots to skip that folder;
 for Renovate, set `"ignorePaths": [".gspot/**"]`.

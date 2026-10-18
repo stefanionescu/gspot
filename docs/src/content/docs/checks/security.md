@@ -1,17 +1,17 @@
 ---
 title: Security and secrets
-description: The security checks gspot runs, and how to run Semgrep and the Swift security rules.
+description: The security checks gspot runs, and how to run Semgrep.
 ---
 
 These configurations hold security checks. gspot always selects `secrets`, `dependencies`, and `security`. It selects `docker` and `github-actions` when it finds their files:
 
-| Configuration    | What it checks                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------- |
-| `secrets`        | Gitleaks scans staged changes and pushed commits. TruffleHog scans pushed commits.                            |
-| `dependencies`   | OSV-Scanner checks lockfiles for known vulnerable packages at push.                                           |
-| `security`       | Semgrep runs shipped and local rules at push, and selected public rule packs manually.                        |
-| `docker`         | Trivy checks container settings and a selected image. See [Docker checks](/reference/configurations/docker/). |
-| `github-actions` | zizmor finds unsafe workflows and unpinned actions at commit.                                                 |
+| Configuration    | What it checks                                                                                                                                      |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `secrets`        | Gitleaks scans staged changes and pushed commits. TruffleHog scans pushed commits.                                                                  |
+| `dependencies`   | OSV-Scanner checks lockfiles for known vulnerable packages at push.                                                                                 |
+| `security`       | Semgrep runs shipped and local rules at push, including the rules of the Next.js and Swift configurations, and selected public rule packs manually. |
+| `docker`         | Trivy checks container settings and a selected image. See [Docker checks](/reference/configurations/docker/).                                       |
+| `github-actions` | zizmor finds unsafe workflows and unpinned actions at commit.                                                                                       |
 
 At push, TruffleHog sends possible secrets to their issuing service to check whether they still work. This needs
 network access.
@@ -36,7 +36,3 @@ gspot check --only security/semgrep-registry
 
 The rule packs need network access. To turn a lint rule off for some paths, add an ignore with a
 reason. See [Ignore a finding](/use/ignore/).
-
-## Swift security rules
-
-Semgrep also runs the Swift security lint rules of the `swift` configuration on Swift sources and plist files. The [swift configuration](/reference/configurations/swift/) lists them.

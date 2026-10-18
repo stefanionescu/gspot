@@ -32,18 +32,17 @@ gspot install
 gspot check api
 ```
 
+To add a configuration that init did not find: `gspot add pytest --scope services/api`.
+
 ## Which scope a file belongs to
 
 A file belongs to the deepest scope that contains it. Files outside every scope belong to the root.
 A whole-project check, such as a type check, can read other files of the same project when you
-name one file.
+name one file. Checks that read project files look inside the scope only, and each child scope checks its own files.
 
 To see the scope and the checks of a file, run `gspot explain` with the path. Start the path
 with `./` when it also names a configuration or a check: `gspot explain bash` describes the configuration, and
 the `./` form describes the file.
-
-When a scope needs a tool file with other text than the shared copy, gspot writes it to
-`.gspot/configurations/<group>/<configuration>/scopes/<scope path>/<file>`.
 
 ## Settings in a scope
 
@@ -57,22 +56,7 @@ A list setting adds up: a scope gets the values of its configurations, the root,
 different defaults for the same setting, gspot names both. To pick one, set the value at the
 root or in a scope.
 
-## Files a scope reads
-
-Checks that read project files look inside the scope only. Each child scope checks its own files.
-
-## TypeScript app and Python API
-
-For an npm project under `apps/web` and a Python project under `services/api`, `gspot init` plans one scope
-for each. To add a configuration that init did not detect:
-
-```shell
-gspot add pytest --scope services/api
-gspot install
-gspot check services/api
-```
-
-## Settings below the Git root
+## gspot.toml in a subfolder
 
 gspot uses the nearest `gspot.toml` in the current folder or a folder above it.
 To use the one in `api/`, run gspot from there: `cd api && gspot check`.

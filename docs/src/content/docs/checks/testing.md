@@ -11,7 +11,8 @@ functions, and statements need 80%. A limit you set holds at both levels. For a 
 
 ## Jest
 
-Run `gspot add jest`, then run the coverage check:
+gspot selects `jest` when your project depends on `jest` or has a `jest.config.*` file; otherwise, run
+`gspot add jest`. Then run the coverage check:
 
 ```shell
 gspot check --only jest/coverage
@@ -34,8 +35,8 @@ It reads test functions from `@jest/globals`.
 
 ## Vitest
 
-Run `gspot add vitest`, with Vitest and its coverage provider installed in your project. Then
-run:
+gspot selects `vitest` when your project depends on `vitest`; otherwise, run `gspot add vitest`. Install Vitest and
+its coverage provider in your project. Then run:
 
 ```shell
 gspot check --only vitest/coverage
@@ -46,16 +47,23 @@ Set the minimums under `coverage`: `lines`, `branches`, `functions`, and
 
 ## Python with pytest
 
-Run `gspot add pytest`, and install pytest and pytest-cov in your project's `.venv`. Then run:
+gspot selects `pytest` when your project depends on `pytest` or has `conftest.py` or `pytest.ini`; otherwise, run
+`gspot add pytest`. Install pytest and pytest-cov in the `.venv` of your project. Then run:
 
 ```shell
 gspot check --only pytest/coverage
 ```
 
 `coverage.lines` sets the line coverage limit. The check runs pytest with `--strict-markers`
-and `--strict-config`. The Ruff lint rules for pytest cover your test files, and your
-app code keeps its own lint rules.
+and `--strict-config`.
 
 ## Swift
 
-The [Swift](/languages/swift/#swift-tests) page covers Swift tests and their coverage floors.
+The [Swift](/languages/swift/#tests) page covers Swift tests and their coverage floors.
+
+## Test files
+
+`test_files` names the files that test lint rules treat as tests, such as the Ruff rules for pytest. It does not take
+files out of other checks. By default it holds `**/test/**`, `**/tests/**`, `**/__tests__/**`, `**/*.test.*`,
+`**/*.spec.*`, `**/test_*.py`, `**/*_test.py`, `**/conftest.py`, `**/Tests/**`, and `**/*Tests.swift`. Your patterns
+add to the list: `gspot set test_files "e2e/**"`. The patterns of a scope add to the root list.

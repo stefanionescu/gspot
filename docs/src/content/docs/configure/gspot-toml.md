@@ -24,11 +24,13 @@ level = "recommended"
 ```
 
 A configuration groups checks, tool files, and rules for a language, framework, or concern.
-gspot always selects the general configurations, such as `secrets` and `spelling`, even when you write the list yourself. Run `gspot add <configuration>` to select a configuration,
+gspot always selects most general configurations, such as `secrets`, `spelling`, and `security`, even when you write
+the list yourself. Run `gspot add <configuration>` to select a configuration,
 or `gspot remove <configuration>` to drop a language or framework.
 
 `gspot remove nextjs` writes `nextjs` into `removed_configurations`, so detection does not select it again; `gspot add nextjs` reverses that. gspot does not remove a configuration that another selected configuration needs. When the tools change, gspot prints a reminder to run `gspot install`.
-You cannot remove a general configuration. Change the level with `gspot set level`, or turn off one of its checks with an [ignore](/use/ignore/).
+`gspot add` and `gspot remove` refuse these. To run fewer of their checks, change the level with `gspot set level`, or
+turn one check off with an [ignore](/use/ignore/).
 
 Framework lint rules follow your dependencies. For example, a NestJS project that uses `@nestjs/swagger` also gets the Swagger lint rules.
 
@@ -44,8 +46,8 @@ Neither enables experimental or preview lint rules.
 ## Other ways to write a setting
 
 - `gspot unset <setting>` removes your value and its reason, so the default takes effect again.
-- On a list, `gspot set` adds items and `gspot unset <setting> <item...>` removes them.
-  To replace a whole list, run `gspot unset <setting>`, then `gspot set <setting> <items...>`.
+- On a list, `gspot set` adds items to the shipped ones. `gspot unset <setting> <item...>` removes items that you
+  wrote, and `gspot unset <setting>` removes all of them. The shipped items stay.
 
 To change a setting in one folder only, see [Settings in a scope](/configure/monorepos/#settings-in-a-scope).
 
@@ -60,7 +62,7 @@ function_lines = { value = 80, reason = "The parser is one state machine." }
 
 gspot.toml uses TOML 1.0. Keep each inline table on one line.
 The [JSON Schema](https://generativespotting.com/gspot.schema.json) describes every key. Editors apply it on their own
-once SchemaStore lists gspot. Omit schema comments from `gspot.toml`.
+once SchemaStore lists gspot, so `gspot.toml` needs no `#:schema` comment. See [Editors](/use/editors/).
 
 After an edit, run `gspot apply` and `gspot install`. `gspot apply --dry-run` previews the changes.
 

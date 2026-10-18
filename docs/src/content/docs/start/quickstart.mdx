@@ -24,8 +24,9 @@ Run these commands in the root of your repository.
 </Tabs>
 
 1. The first command adds gspot to the project, pinned to one version.
-2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the tool files, `AGENTS.md`, the agent
-   rules, and the Git hooks.
+2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the tool files, `AGENTS.md` and the
+   rules, the Git hooks, and the CI workflow, and deletes the tool files it replaces.
+   [Read the plan](/start/migrate/#read-the-plan) first.
 3. `gspot install` installs the pinned tools and turns on the hooks. From then on, every commit runs the checks.
 
 gspot starts at level `recommended`. For stricter checks, run `gspot set level all`, then `gspot install` again.
@@ -53,13 +54,14 @@ Agents read the steps in [/llms.txt](/llms.txt). Read the whole documentation in
 </TabItem>
 </Tabs>
 
-## After setup
+## After you install
 
-Commit as usual. The pre-commit hook checks the staged files and stops the commit when a check fails. Run
-`gspot check` for every file, including work that you did not commit.
+Commit `gspot.toml` and the files that gspot wrote; [Generated files](/reference/generated-files/) lists them. Then
+commit as usual. The pre-commit hook checks the staged files and stops the commit when a check fails. Run
+`gspot check` to check every file, including work that you did not commit.
 
 ## Next steps
 
-- [Read and fix findings](/use/run-checks/)
-- [Choose checks in gspot.toml](/configure/gspot-toml/)
+- [Run checks](/use/run-checks/)
+- [gspot.toml](/configure/gspot-toml/)
 - [Coding agents](/use/coding-agents/)

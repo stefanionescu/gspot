@@ -10,18 +10,22 @@ import { SETUP_COMMANDS } from '../../../config/setup.ts';
 
 Git and Node.js 24.15 or newer. The tools that your checks run need these:
 
-| Tools                                                    | What you need                                                                                           |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Tools from npm                                           | Node.js and the project's npm, pnpm, Yarn, or Bun package manager. With no declaration, gspot uses npm. |
-| Tools from PyPI                                          | uv; gspot installs its pinned Python version when needed.                                               |
-| Other programs                                           | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                          |
-| Your project's own commands, such as its tests and build | Your project's runtime, dependencies, and build tools.                                                  |
+| Tools                                                    | What you need                                                                                                                                                                                                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tools from npm                                           | Node.js and the npm, pnpm, Yarn, or Bun package manager of the project. gspot uses the package manager that `package.json` names in `packageManager` or `devEngines.packageManager`, else the one whose lockfile it finds, else npm. |
+| Tools from PyPI                                          | uv; gspot installs its pinned Python version when needed.                                                                                                                                                                            |
+| Other programs                                           | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                                                                                                                                                       |
+| Your project's own commands, such as its tests and build | Your project's runtime, dependencies, and build tools.                                                                                                                                                                               |
 
-`gspot init --dry-run` shows which tools your repository needs.
+`gspot init --dry-run` shows the configurations that gspot picks. After init, `gspot doctor` lists the missing
+tools.
 
-### Operating system limits
+### Systems
 
-Swift checks need the Swift toolchain. SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage need macOS with Xcode selected by `xcode-select`. Some container checks need a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) lists its systems and other requirements.
+gspot runs on macOS, Linux, and Windows. Some checks need more: Swift checks need the Swift toolchain, and SwiftLint,
+SwiftFormat, and Swift package builds run on macOS and Linux. `xcode/plutil`, Periphery, the SwiftLint analyzer, and
+builds of an Xcode project need macOS with Xcode selected by `xcode-select`. Some container checks need a running
+Docker daemon, and some scans need network access. Each [check page](/reference/checks/) lists its systems.
 
 ## Choose how to install
 
@@ -62,8 +66,9 @@ Install `@gspothq/cli` before you run `npx gspot`. npm has no package named `gsp
 
 ## Set up a clone
 
-Use the gspot version in `.gspot/version`. `gspot init` stops where `gspot.toml` exists, so run `gspot install` instead.
-Install the app dependencies from the committed lockfile first.
+Install the dependencies from the committed lockfile first; it pins the gspot version of the repository. Without
+`package.json`, `mise.toml` pins it. When the versions differ, gspot stops with `This repository pins gspot <version>`
+and prints the install command. `gspot init` refuses to run where `gspot.toml` exists, so run `gspot install` instead.
 
 <Tabs syncKey="package-manager">
 <TabItem label="npm">
@@ -128,15 +133,17 @@ Keep credentials in environment variables or your user settings, never in `gspot
 
 To stop checking one language or framework instead, see [gspot.toml](/configure/gspot-toml/#choose-configurations).
 
-gspot has no uninstall command. Keep a copy of the tool files and settings you want, then:
+gspot has no uninstall command. Commit first, so you can go back.
 
-1. Restore earlier tool files from Git or a backup, or set up the tools you want to use.
-2. Delete the sections between gspot markers from `AGENTS.md`, your other instruction files, `.gitignore`, and
-   `.gitattributes`. Keep your own text outside them.
-3. Delete the pointers to the tool files and the gspot CI file: `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`.
-4. If Git uses `.gspot/hooks`, run `git config --unset core.hooksPath`. If another hook manager runs your hooks,
-   delete the gspot hook lines from them.
-5. Remove gspot: `npm uninstall @gspothq/cli`, the remove command of your package manager, or
-   `mise unuse npm:@gspothq/cli`. Then delete `gspot.toml` and `.gspot/`.
+1. Copy the list under "Generated files" in the gspot section of `AGENTS.md`. It names every file gspot writes outside
+   `.gspot/` and each key it sets in your files.
+2. Run `gspot set rules.enabled false`, `gspot set ci.enabled false`, and `gspot set hooks.enabled false`, then
+   `gspot install`. gspot deletes the rules, its `AGENTS.md` section, the CI workflow, and the hook scripts, and
+   `gspot install` removes `core.hooksPath`. If Husky, Lefthook, or your own hooks run gspot, delete those lines.
+3. Restore your earlier tool files from Git, such as `git show <commit>:.eslintrc.json`, or set up the tools you want.
+4. Delete the files and keys from step 1, the gspot sections in `.gitignore` and `.gitattributes`, `gspot.toml`, and
+   `.gspot/`.
+5. Remove the package: `npm uninstall @gspothq/cli`, the remove command of your package manager, or
+   `mise unuse npm:@gspothq/cli`.
 
-Run your other checks and review the diff. To undo, restore your saved files and run `gspot install`.
+Review the diff. To undo, go back to the first commit and run `gspot install`.

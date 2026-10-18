@@ -1,26 +1,25 @@
 ---
 title: Coding agents
-description: Write rules and preserve your own text.
+description: What gspot writes for coding agents, and how to change it.
 ---
 
-gspot writes rules: Markdown files that tell coding agents how to write code that passes the checks. The rules
-only guide agents; the checks still block failing code.
+gspot writes rules: Markdown files for your configurations and level, in the `rules/` folder of each configuration
+under `.gspot/configurations/`. The rules guide agents; the checks still block failing code.
 
-## Rules for agents
+## The `AGENTS.md` section
 
-When `rules.enabled = true`, gspot writes the rules that fit your languages, frameworks, and level
-in the `rules/` folder of each configuration under `.gspot/configurations/`. A section between gspot markers in
-`AGENTS.md` lists them.
+gspot writes one section between gspot markers and keeps your own text outside it. The section lists the rules and
+names `gspot check --staged`, the command to run before a commit. It also names the commands that change settings, and
+the generated files that agents must not edit, with the keys gspot sets in your own files.
 
-gspot writes the rules into `AGENTS.md` only, and keeps your own text outside its section. Point a coding agent that
-reads another file to `AGENTS.md`.
+An agent that reads another file needs a pointer. For Claude Code, add the line `@AGENTS.md` to `CLAUDE.md`.
 
-## Instructions in the section
+## Leave out some rules
 
-The section lists the rules, gives the command to run before a commit, and says how to change settings. Do not edit
-files under `.gspot/`. To accept a finding, run `gspot ignore` with a reason.
+`gspot set rules.exclude .gspot/configurations/language/javascript/rules/BUN.md` leaves out one file. A folder, such
+as `.gspot/configurations/language/bash`, leaves out every rule in it.
 
 ## Turn rules off
 
-Run `gspot set rules.enabled false`. gspot then deletes the rules and its section between gspot markers. It also removes
-an instruction file that it created, unless you edited that file. Your own text stays.
+Run `gspot set rules.enabled false`. gspot deletes the rules and its section. If `AGENTS.md` holds nothing else,
+gspot deletes the file.

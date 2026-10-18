@@ -6,6 +6,17 @@ description: Set lint rule options in gspot.toml instead of the tool files.
 Set lint rule options in `gspot.toml`; gspot writes them into the tool file. Options take effect only for lint rules
 that the selected level turns on. To turn a lint rule off, use an [ignore](/use/ignore/) with a reason.
 
+None of these settings turns a lint rule on or off, and none takes a severity; the level decides which rules run.
+
+| Tool                  | Setting                                              | Takes                                 |
+| --------------------- | ---------------------------------------------------- | ------------------------------------- |
+| ESLint                | `tools.eslint.rules`                                 | An option array for each rule ID      |
+| ESLint for some files | `[[tools.eslint.override]]` with `paths` and `rules` | The same, for the files of `paths`    |
+| Stylelint             | `tools.stylelint.rules`                              | The options of each rule              |
+| markdownlint          | `tools.markdownlint.rules`                           | An option table for each rule ID      |
+| yamllint              | `tools.yamllint.rules`                               | The options of each rule              |
+| commitlint            | `tools.commitlint.rules`, `types`, and `scopes`      | Rule options, and the accepted values |
+
 ## ESLint
 
 For `export const matches = (value) => value == null;`, the `eqeqeq` lint rule can report:
@@ -28,7 +39,8 @@ gspot set tools.eslint.rules '{ eqeqeq = ["always", { null = "ignore" }] }'
 ```
 
 This table holds options only; do not put a severity such as `"off"` in it.
-Run `gspot explain eslint/eqeqeq` to read the options of the lint rule.
+`gspot explain eslint/eqeqeq` links the documentation of the lint rule, which lists its options, and prints the
+commands that set its options or ignore it.
 
 ## Ruff
 
@@ -68,15 +80,3 @@ MD024 = { siblings_only = false }
 This reports repeated headings throughout a document, not only under the same parent heading.
 
 See [tool options](/reference/gspot-toml/tools/) for the accepted fields.
-
-## Custom text components
-
-If a component wraps the React Native `Text`, add its name to the `skip` option of the lint rule:
-
-```toml
-[tools.eslint.rules]
-"react-native/no-raw-text" = [{ skip = ["ThemedText"] }]
-```
-
-This allows text inside `ThemedText`. The lint rule still reports bare text inside a `View`.
-When other projects use different components, set the option in the scope of the native project.

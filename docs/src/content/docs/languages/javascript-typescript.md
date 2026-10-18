@@ -3,6 +3,11 @@ title: JavaScript and TypeScript
 description: Choose runtimes, type checking, and framework rules for JavaScript and TypeScript.
 ---
 
+The `javascript` and `typescript` configurations run ESLint with the shipped lint rules, the TypeScript compiler, and
+Knip for code that nothing uses. Framework configurations, such as `react`, `nextjs`, and `react-native`, add their own
+lint rules. A React project that depends on `react-dom` also gets the `react-dom` configuration and its DOM
+accessibility lint rules. The [configuration reference](/reference/configurations/) lists every check.
+
 ## JavaScript runtimes
 
 Each file gets one ESLint runtime. Ordinary modules use Node.js built-ins; `.cjs` and `.cts`
@@ -34,6 +39,8 @@ service workers, which have other APIs than Web Workers. Browser and native
 files get no Node.js lint rules. React Native files keep the `process` and `require` globals, but get no other
 Node.js globals, such as `Buffer` and `__dirname`. An unknown runtime name stops gspot before it writes tool files.
 
+## TypeScript compiler
+
 JavaScript checks extend your own `jsconfig.json`, or your `tsconfig.json` when no `jsconfig.json` exists. From a `tsconfig.json`, they keep the compiler options and declarations but select only JavaScript sources. Your own JSX setting stays; without one, the generated project uses `jsx: "preserve"`. A scope with neither file uses Bundler resolution when imports without extensions name JavaScript source files. Ambient types come from the source project, including your own type roots.
 
 JavaScript and TypeScript checks use the TypeScript compiler of the project. Without one, gspot uses its pinned compiler from the tool project before any global compiler. Run `gspot install` to install the pinned compiler.
@@ -49,11 +56,17 @@ provide Next.js 15.5 or later. The Next.js Semgrep rules run in `security/semgre
 ## React Native
 
 `gspot init` selects `react-native` and `expo` from their dependencies. The Expo configuration requires React
-Native and adds Expo lint rules and `expo/expo-doctor`. A bare React Native project needs no Expo tool. A React web
-project that depends on `react-dom` also gets the React DOM configuration and its DOM accessibility plugin.
+Native and adds Expo lint rules and `expo/expo-doctor`. A bare React Native project needs no Expo tool.
 Native sources keep the React hooks and component lint rules.
 
-See [Lint rule options](/configure/lint-rules/) for custom React Native text components.
+If a component wraps the React Native `Text`, add its name to the `skip` option of the lint rule:
+
+```shell
+gspot set tools.eslint.rules '{ "react-native/no-raw-text" = [{ skip = ["ThemedText"] }] }'
+```
+
+This allows text inside `ThemedText`. The lint rule still reports bare text inside a `View`. When other projects use
+different components, set the option in the scope of the native project.
 
 ## Settings that change lint rule options
 
