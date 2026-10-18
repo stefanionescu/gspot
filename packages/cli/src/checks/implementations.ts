@@ -86,7 +86,7 @@ import {
 } from '#cli/checks/site/pages.ts';
 
 /** Every check implementation, by check ID. */
-export const CHECK_IMPLEMENTATIONS = {
+const CHECK_IMPLEMENTATIONS = {
     'gspot/unmatched-patterns': { check: checkUnmatchedPatterns },
     'expo/expo-doctor': { check: checkExpoDoctor },
     'svelte/svelte-check': { check: runSvelteCheck },
@@ -181,7 +181,9 @@ export const CHECK_IMPLEMENTATIONS = {
  * @param check the check to run.
  * @returns the implementation, or undefined for a tool check that runs only its command.
  */
-export function selectCheckImplementation(check: CheckDeclaration): CheckImplementation | undefined {
+export function selectCheckImplementation(
+    check: Pick<CheckDeclaration, 'name' | 'generator_outputs'>,
+): CheckImplementation | undefined {
     if (check.generator_outputs !== undefined) return { check: checkStaleGeneratorOutputs };
     return (CHECK_IMPLEMENTATIONS as CheckImplementations)[check.name];
 }

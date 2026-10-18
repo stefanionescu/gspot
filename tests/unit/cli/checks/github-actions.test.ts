@@ -6,12 +6,12 @@ import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
+import { findCheckRun } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { CALLED_WORKFLOW, ACTIONLINT_EXITS, CALLED_WORKFLOW_REFERENCES } from '#tests/data/checks/github-actions.ts';
 
 // The workflow text actionlint reads: each self-repository marker of a reference becomes a local path at the same
@@ -44,7 +44,7 @@ test.each([
         return buildProcessResult();
     });
     const [planned] = planRun(session, { stage: 'commit', only: ['github-actions/actionlint'] });
-    const result = await CHECK_IMPLEMENTATIONS['github-actions/actionlint'].run(session, planned!);
+    const result = await findCheckRun('github-actions/actionlint')(session, planned!);
     expect(result.status, JSON.stringify(result)).toBe('passed');
     expect(run).toHaveBeenCalledTimes(1);
     expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(before);
@@ -69,7 +69,7 @@ test.each([...ACTIONLINT_EXITS])(
         const plans = planRun(session, { stage: 'commit', only: ['github-actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
-        const result = await CHECK_IMPLEMENTATIONS['github-actions/actionlint'].run(session, planned);
+        const result = await findCheckRun('github-actions/actionlint')(session, planned);
         expect(result.status, JSON.stringify(result)).toBe(status);
         const workspace = await Bun.file(record).text();
         expect(workspace).not.toBe(sandbox.path);

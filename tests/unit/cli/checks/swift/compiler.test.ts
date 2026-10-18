@@ -9,10 +9,16 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/swift/cache.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { matchFields, matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
-import { checkFindings, buildCheckInput, prepareSwiftInput, createCompilerCache } from '#tests/setup/check-input.ts';
+
+import {
+    checkFindings,
+    buildCheckInput,
+    findBuiltInCheck,
+    prepareSwiftInput,
+    createCompilerCache,
+} from '#tests/setup/check-input.ts';
 
 test.each([
     { buildCode: 7, analyzerCode: 0, message: /build exited 7/u },
@@ -33,9 +39,7 @@ test.each([
                 .mockResolvedValueOnce(buildProcessResult({ code: buildCode }))
                 .mockResolvedValue(buildProcessResult({ code: analyzerCode })),
         );
-        expect(await captureRejection(CHECK_IMPLEMENTATIONS['swift/swiftlint-analyze'].check(prepared.input))).toMatch(
-            message,
-        );
+        expect(await captureRejection(findBuiltInCheck('swift/swiftlint-analyze')(prepared.input))).toMatch(message);
     },
 );
 
@@ -62,8 +66,8 @@ test('analyzer: manual analysis clears its own compiler state without consuming 
             .mockResolvedValue(buildProcessResult()),
     );
 
-    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(input)).toStrictEqual([]);
-    expect(await CHECK_IMPLEMENTATIONS['swift/swiftlint-analyze'].check(input)).toStrictEqual([]);
+    expect(await findBuiltInCheck('swift/build')(input)).toStrictEqual([]);
+    expect(await findBuiltInCheck('swift/swiftlint-analyze')(input)).toStrictEqual([]);
     expect(await readFile(compilerState, 'utf8')).toBe('incremental');
     expect(await isOnDisk(analyzerState)).toBe(false);
     expect(await readFile(analyzer.log, 'utf8')).toContain('complete compiler log');
@@ -121,8 +125,8 @@ test('compiler: a later Swift session reads a failed build after an earlier succ
             ),
     );
 
-    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(first)).toStrictEqual([]);
-    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(first)).toStrictEqual([]);
+    expect(await findBuiltInCheck('swift/build')(first)).toStrictEqual([]);
+    expect(await findBuiltInCheck('swift/build')(first)).toStrictEqual([]);
     expect(await checkFindings(sandbox.path, 'swift/build')).toStrictEqual([
         {
             check: 'swift/build',
@@ -183,7 +187,7 @@ test('compiler: Swift response files stay inside the compiler cache before log p
         ),
     );
 
-    expect(await captureRejection(CHECK_IMPLEMENTATIONS['swift/build'].check(input))).toContain(
+    expect(await captureRejection(findBuiltInCheck('swift/build')(input))).toContain(
         'is not a safe repository-relative path',
     );
     expect(await isOnDisk(plan.log)).toBe(false);
@@ -209,7 +213,7 @@ test('compiler: a failed Swift source preparation releases its build claim befor
     const plan = buildPlan(input);
     await rm(join(sandbox.path, 'Main.swift'));
     const run = resources.use(spyOn(processes, 'spawnProcess'));
-    expect(await captureRejection(CHECK_IMPLEMENTATIONS['swift/build'].check(input))).toContain('ENOENT');
+    expect(await captureRejection(findBuiltInCheck('swift/build')(input))).toContain('ENOENT');
     expect(run).not.toHaveBeenCalled();
     expect(await isOnDisk(join(plan.folder, 'build.lock'))).toBe(false);
     {
@@ -236,7 +240,7 @@ test('compiler: Swift compiler diagnostics drop the macOS /private prefix from s
             }),
         ),
     );
-    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(input)).toStrictEqual([
+    expect(await findBuiltInCheck('swift/build')(input)).toStrictEqual([
         matchFields({
             // eslint-disable-next-line sonarjs/publicly-writable-directories -- reason: This expected compiler path serves as parser text and creates no filesystem entry.
             file: '/tmp/project/Main.swift',

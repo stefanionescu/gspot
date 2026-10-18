@@ -7,9 +7,8 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { checkFindings, openPinnedSession } from '#tests/setup/check-input.ts';
+import { findCheckRun, checkFindings, openPinnedSession } from '#tests/setup/check-input.ts';
 
 import {
     MIXED_REPORT,
@@ -169,7 +168,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
         );
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));
         const planned = planRun(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        expect(await CHECK_IMPLEMENTATIONS['docker/compose'].run(session, planned)).toMatchObject({
+        expect(await findCheckRun('docker/compose')(session, planned)).toMatchObject({
             status: 'passed',
             findings: [],
         });

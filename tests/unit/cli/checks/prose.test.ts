@@ -10,10 +10,9 @@ import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { checkFindings, buildCheckInput, openPinnedSession } from '#tests/setup/check-input.ts';
+import { checkFindings, buildCheckInput, findBuiltInCheck, openPinnedSession } from '#tests/setup/check-input.ts';
 
 test('Vale gets the timeout setting, and its alerts become findings with file, line and column', async () => {
     await using folder = await testdir();
@@ -69,7 +68,7 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
             return Promise.resolve(buildProcessResult({ stdout: JSON.stringify({ 'source.mts.ts': [VALE_ALERT] }) }));
         }),
     );
-    const findings = await CHECK_IMPLEMENTATIONS['prose/vale'].check(buildCheckInput(session, 'prose/vale', { paths }));
+    const findings = await findBuiltInCheck('prose/vale')(buildCheckInput(session, 'prose/vale', { paths }));
     expect(run.mock.calls.map(([command]) => command.includes('--ext=.ts'))).toStrictEqual(paths.map(() => true));
     expect(scanned).toStrictEqual(original);
     expect(nativePaths).toStrictEqual(paths.map((path) => `--path=${join(folder.path, path)}.ts`));

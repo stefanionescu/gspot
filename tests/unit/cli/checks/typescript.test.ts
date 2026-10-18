@@ -8,8 +8,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { checkJavascriptTsc } from '#cli/checks/typescript/tsc.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
-import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
+import { checkFindings, buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 import {
     ROOT_PORT_SOURCE,
@@ -57,7 +56,7 @@ test.each([...TSCONFIG_READ_ERRORS])(
             'tsconfig.json': tsconfig,
         });
         const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
-        expect(() => CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input)).toThrow(error);
+        expect(() => findBuiltInCheck('typescript/tsconfig')(input)).toThrow(error);
         await writeFile(join(sandbox.path, fixed), STRICT_TSCONFIG_TEXT);
         expect(await checkFindings(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
     },
@@ -67,7 +66,7 @@ test('tsconfig: a scope needs no tsconfig of its own but still checks one that i
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': buildSettingsText(['typescript']) });
     expect(
-        CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(
+        await findBuiltInCheck('typescript/tsconfig')(
             buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'),
         ),
     ).toStrictEqual([]);
@@ -103,13 +102,13 @@ test('tsconfig: nested configurations inherit the configuration an ancestor pack
         [`node_modules/@example/config/${filename}`]: '{"compilerOptions":{"strict":true}}',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
-    const inherited = CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input);
+    const inherited = await findBuiltInCheck('typescript/tsconfig')(input);
     expect(inherited.filter((finding) => finding.rule === 'strict')).toStrictEqual([]);
     await writeFile(
         join(sandbox.path, 'apps/web/tsconfig.json'),
         '{"extends":"@example/config","compilerOptions":{"strict":false}}',
     );
-    expect(CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input)).toStrictEqual(inherited);
+    expect(await findBuiltInCheck('typescript/tsconfig')(input)).toStrictEqual(inherited);
     const overridden = await checkFindings(sandbox.path, 'typescript/tsconfig');
     expect(
         overridden
@@ -194,13 +193,11 @@ test('tsconfig: a covering ancestor tsconfig is checked once and a child-only pr
     const session = await openSession(sandbox.path);
 
     expect(
-        CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(
+        await findBuiltInCheck('typescript/tsconfig')(
             buildCheckInput(session, 'typescript/tsconfig', { scope: 'app', paths: ['app/source.ts'] }),
         ),
     ).toMatchObject([{ file: 'tsconfig.json', rule: 'strict' }]);
-    expect(() =>
-        CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(buildCheckInput(session, 'typescript/tsconfig')),
-    ).toThrow(
+    expect(() => findBuiltInCheck('typescript/tsconfig')(buildCheckInput(session, 'typescript/tsconfig'))).toThrow(
         expect.objectContaining({
             name: 'GspotError',
             code: 'skip',
@@ -209,12 +206,10 @@ test('tsconfig: a covering ancestor tsconfig is checked once and a child-only pr
     );
     const reopened = await openSession(sandbox.path);
     expect(
-        CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(buildCheckInput(reopened, 'typescript/tsconfig')),
+        await findBuiltInCheck('typescript/tsconfig')(buildCheckInput(reopened, 'typescript/tsconfig')),
     ).toMatchObject([{ file: 'tsconfig.json', rule: 'strict' }]);
     expect(() =>
-        CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(
-            buildCheckInput(reopened, 'typescript/tsconfig', { scope: 'app' }),
-        ),
+        findBuiltInCheck('typescript/tsconfig')(buildCheckInput(reopened, 'typescript/tsconfig', { scope: 'app' })),
     ).toThrow(
         expect.objectContaining({
             name: 'GspotError',

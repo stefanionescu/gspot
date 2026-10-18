@@ -195,5 +195,4 @@ export {
     removeFromList,
     getWrittenValue,
     readSettingsEdit,
-    replaceWrittenValue,
 };

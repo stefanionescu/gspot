@@ -6,8 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { unlink, readFile } from 'node:fs/promises';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { copyRevision } from '#cli/runs/scratch-copy/revision.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
-import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
+import { checkFindings, buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 test("an asset in a scope's assets folder counts as used when a file outside the scope links to it", async () => {
     await using resources = new AsyncDisposableStack();
@@ -53,7 +52,7 @@ test.each([
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'site/unused-assets');
     expect(input.index).toStrictEqual([]);
-    expect(CHECK_IMPLEMENTATIONS['site/unused-assets'].check(input)).toMatchObject([
+    expect(await findBuiltInCheck('site/unused-assets')(input)).toMatchObject([
         { file: 'assets/unused.svg', rule: 'dead-asset' },
     ]);
 });
@@ -67,7 +66,7 @@ test('an unstaged deletion removes the reference without failing the asset check
     await unlink(join(root, 'README.md'));
     const input = buildCheckInput(await openSession(root), 'site/unused-assets', { scope: 'docs' });
     expect(input.index.map((entry) => entry.path)).toContain('README.md');
-    expect(CHECK_IMPLEMENTATIONS['site/unused-assets'].check(input)).toMatchObject([
+    expect(await findBuiltInCheck('site/unused-assets')(input)).toMatchObject([
         { file: 'docs/assets/logo.svg', rule: 'dead-asset' },
     ]);
 });

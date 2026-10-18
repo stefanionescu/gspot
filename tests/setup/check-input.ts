@@ -1,10 +1,10 @@
 // Builds check inputs for tests and keeps compiler state in a temporary folder.
 import { spyOn } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { buildCheckRun } from '#cli/runs/run.ts';
 import { checkInput } from '#cli/runs/built-in.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { type Session } from '#cli/types/planning.ts';
+import { buildCheckRun } from '#cli/runs/check-run.ts';
 import * as environment from '#cli/system/environment.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -12,9 +12,9 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
 import { selectCheckImplementation } from '#cli/checks/implementations.ts';
+import type { Finding, CheckInput, RunnableCheck } from '#cli/types/runs/check.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**
@@ -123,4 +123,35 @@ async function openPinnedSession(
     return session;
 }
 
-export { checkFindings, buildCheckInput, openPinnedSession, prepareSwiftInput, createCompilerCache };
+/**
+ * Find the code of a built-in check, as a function that resolves to its findings.
+ * @param checkId the check ID.
+ * @returns the built-in check.
+ */
+function findBuiltInCheck(checkId: string): (input: CheckInput) => Promise<Finding[]> {
+    const check = selectCheckImplementation({ name: checkId })?.check;
+    if (check === undefined) throw new Error(`${checkId} has no built-in check.`);
+    return async (input) => {
+        const result = await check(input);
+        return Array.isArray(result) ? result : result.findings;
+    };
+}
+
+/**
+ * Build the run of a check from its check implementation.
+ * @param checkId the check ID.
+ * @returns the run function.
+ */
+function findCheckRun(checkId: string): RunnableCheck['run'] {
+    return buildCheckRun(selectCheckImplementation({ name: checkId }));
+}
+
+export {
+    findCheckRun,
+    checkFindings,
+    buildCheckInput,
+    findBuiltInCheck,
+    openPinnedSession,
+    prepareSwiftInput,
+    createCompilerCache,
+};

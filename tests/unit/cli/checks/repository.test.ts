@@ -6,8 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildCheckInput } from '#tests/setup/check-input.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
+import { buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
 import { TRACKED_PATTERNS, LARGE_FILE_SETTINGS, LARGE_FILE_ATTRIBUTES } from '#tests/data/checks/repository.ts';
 
 test("tracked-files follows each scope's configurations: env files, dependency folders and build output are reported", async () => {
@@ -22,7 +21,7 @@ test("tracked-files follows each scope's configurations: env files, dependency f
     const staged = runGit(sandbox.path, ['add', '-f', '.']);
     expect(staged.code, staged.stderr).toBe(0);
     const input = buildCheckInput(await openSession(sandbox.path), 'repository/local-files', { paths: [] });
-    const found = CHECK_IMPLEMENTATIONS['repository/local-files'].check({
+    const found = await findBuiltInCheck('repository/local-files')({
         ...input,
         index: [...input.index, ...input.index, ...indexOnly.map((path) => ({ ...input.index[0]!, path }))],
     });

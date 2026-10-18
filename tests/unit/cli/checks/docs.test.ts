@@ -7,9 +7,8 @@ import { type Finding } from '#cli/types/runs/check.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
-import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
+import { checkFindings, buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 import {
     README,
@@ -133,7 +132,7 @@ test.each([...MALFORMED_TASK_FILES])(
         await Bun.write(join(sandbox.path, path), text);
         session.reads = createReadCache(sandbox.path);
         const input = buildCheckInput(session, 'docs/missing-paths', { paths: [document] });
-        expect(() => CHECK_IMPLEMENTATIONS['docs/missing-paths'].check(input)).toThrow(
+        expect(() => findBuiltInCheck('docs/missing-paths')(input)).toThrow(
             `Cannot read task definitions from ${path}.`,
         );
     },
@@ -159,7 +158,7 @@ test('missing-paths: a document in a child scope does not read unrelated or shad
     await createFileTree(sandbox.path, { 'package.json': '{broken', 'sibling/package.json': '{broken' });
 
     expect(
-        CHECK_IMPLEMENTATIONS['docs/missing-paths'].check(
+        await findBuiltInCheck('docs/missing-paths')(
             buildCheckInput(session, 'docs/missing-paths', { paths: ['app/nested/guide.md'] }),
         ),
     ).toStrictEqual([]);

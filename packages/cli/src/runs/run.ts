@@ -3,10 +3,9 @@ import { runFixers } from '#cli/runs/fixes.ts';
 import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
 import { findTool } from '#cli/runs/command/tool.ts';
-import { runBuiltInCheck } from '#cli/runs/built-in.ts';
+import { buildCheckRun } from '#cli/runs/check-run.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
-import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listActiveIgnores } from '#cli/settings/scope-view.ts';
@@ -27,7 +26,6 @@ import {
     type CheckResult,
     type RunnableCheck,
     type PlanAfterFixes,
-    type CheckImplementation,
 } from '#cli/types/runs/check.ts';
 
 /**
@@ -40,23 +38,6 @@ function isEntryMatch(entry: IgnoreRecord, finding: Finding): boolean {
     if (entry.check !== finding.check) return false;
     if (entry.rule !== undefined && entry.rule !== finding.rule) return false;
     return entry.paths === undefined || entry.paths.length === 0 || buildPathMatcher(entry.paths)(finding.file);
-}
-
-/**
- * Build the run of one check. A built-in check runs its own code. A tool check runs its command, with the arguments
- * and tool files of its check implementation on every run.
- * @param implementation the check implementation, or undefined for a tool check that runs only its command.
- * @returns the run function.
- */
-function buildCheckRun(implementation: CheckImplementation | undefined): RunnableCheck['run'] {
-    if (implementation?.check !== undefined) return runBuiltInCheck(implementation.check);
-    const run = implementation?.run ?? runCheckCommand;
-    return (session, planned, options) =>
-        run(session, planned, {
-            ...options,
-            arguments: implementation?.arguments,
-            toolFiles: implementation?.toolFiles,
-        });
 }
 
 function planChecks(session: Session, options: RunOptions): RunnableCheck[] {
@@ -209,4 +190,4 @@ async function runChecks(opened: Session, options: RunOptions): Promise<RunResul
     return fixes ? { report, planned, fixes } : { report, planned };
 }
 
-export { runChecks, buildCheckRun };
+export { runChecks };

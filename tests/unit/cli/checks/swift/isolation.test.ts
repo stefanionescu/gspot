@@ -5,10 +5,9 @@ import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import * as processes from '#cli/system/processes.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { buildPlan, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
 import { open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { checkFindings, buildCheckInput, prepareSwiftInput } from '#tests/setup/check-input.ts';
+import { checkFindings, buildCheckInput, findBuiltInCheck, prepareSwiftInput } from '#tests/setup/check-input.ts';
 
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {
     using resources = new DisposableStack();
@@ -38,7 +37,7 @@ test('Swift build side effects stay in the source copy and do not become later i
             return buildProcessResult();
         }),
     );
-    expect(await CHECK_IMPLEMENTATIONS['swift/build'].check(initial)).toStrictEqual([]);
+    expect(await findBuiltInCheck('swift/build')(initial)).toStrictEqual([]);
     expect(await checkFindings(sandbox.path, 'swift/build')).toStrictEqual([]);
     expect(sources).toStrictEqual(['let value = 1\n', 'let value = 1\n']);
     expect(artifacts).toStrictEqual([
@@ -73,7 +72,7 @@ test('Periphery build side effects stay in its source copy and findings name ori
             return buildProcessResult({ code: 1, stdout: `${cwd}/Main.swift:1:5: warning: Property unused is unused` });
         }),
     );
-    expect(await CHECK_IMPLEMENTATIONS['swift/periphery'].check(input)).toMatchObject([
+    expect(await findBuiltInCheck('swift/periphery')(input)).toMatchObject([
         { file: 'Main.swift', line: 1, column: 5, rule: 'unused' },
     ]);
     expect(sources).toStrictEqual(['let unused = 1\n']);
@@ -104,8 +103,8 @@ test('concurrent Swift compilation and Periphery keep separate source and build 
     try {
         expect(
             await Promise.all([
-                CHECK_IMPLEMENTATIONS['swift/build'].check(compile),
-                CHECK_IMPLEMENTATIONS['swift/periphery'].check(periphery),
+                findBuiltInCheck('swift/build')(compile),
+                findBuiltInCheck('swift/periphery')(periphery),
             ]),
         ).toStrictEqual([[], []]);
         expect(new Set(folders).size).toBe(2);

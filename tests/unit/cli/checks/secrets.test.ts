@@ -5,9 +5,8 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
-import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
+import { checkFindings, buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 import {
     READER_FILES,
@@ -115,9 +114,7 @@ test('a scope with env reads and no example env file is skipped with a note', as
         scope: 'app',
         paths: ['.env.example', 'app/source.ts'],
     });
-    expect(await captureRejection(CHECK_IMPLEMENTATIONS['secrets/env-examples'].check(input))).toContain(
-        'secrets.env_examples',
-    );
+    expect(await captureRejection(findBuiltInCheck('secrets/env-examples')(input))).toContain('secrets.env_examples');
     const checked = await checkReport(sandbox.path, [
         'check',
         'app/source.ts',

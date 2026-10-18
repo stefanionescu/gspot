@@ -9,15 +9,14 @@ import { checkReport } from '#tests/setup/run-gspot.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { runCheckSample } from '#tests/setup/sample-checks.ts';
 import { SITE_SANDBOX } from '#tests/data/checks/site/project.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { BUILT_PAGE_CASES } from '#tests/data/checks/site/built-pages.ts';
 import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/site/build.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
+import { buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 import {
     SITE_SETTINGS,
@@ -56,7 +55,7 @@ ${SITE_BUILD_SCRIPT}`,
         paths: ['build.js'],
         resources: resources,
     });
-    expect(await CHECK_IMPLEMENTATIONS['site/build'].check(request)).toStrictEqual([
+    expect(await findBuiltInCheck('site/build')(request)).toStrictEqual([
         matchFields({ rule: 'build', message: matchSubstring('local-input.txt') }),
     ]);
     const corrected = await getSuccessfulBuild(

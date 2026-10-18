@@ -7,10 +7,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { buildSchema } from '#cli/checks/postgres/schema.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { readMigrations } from '#cli/checks/postgres/migrations.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { DEFAULT_MIGRATION_FOLDER_FILES } from '#tests/data/checks/postgres.ts';
+import { buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 test('unreadable SQL reports its syntax location and the fixed migration is read', async () => {
     await using sandbox = await testdir();
@@ -44,7 +43,7 @@ test('dbmate and golang-migrate replays exclude rollback SQL', async () => {
     const { migrations } = await readMigrations(input);
     expect(migrations.map((migration) => migration.name)).toStrictEqual(['1_teams.sql', '2_secure.up.sql']);
     expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
-    expect(await CHECK_IMPLEMENTATIONS['postgres/migration-order'].check(input)).toStrictEqual([]);
+    expect(await findBuiltInCheck('postgres/migration-order')(input)).toStrictEqual([]);
 });
 
 test.each(['', 'app'])('the default migration folders are read and a set folder replaces them in %j', async (scope) => {

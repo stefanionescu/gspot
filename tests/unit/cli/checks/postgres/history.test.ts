@@ -8,12 +8,11 @@ import { buildSchema } from '#cli/checks/postgres/schema.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { readMigrations } from '#cli/checks/postgres/migrations.ts';
-import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
-import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { MIGRATION_FILE, TEAMS_MIGRATION } from '#tests/data/checks/postgres.ts';
+import { checkFindings, buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 test('history: migration history reports changed committed SQL and an earlier new version, then passes after fixes', async () => {
-    const frozenCheck = CHECK_IMPLEMENTATIONS['postgres/edited-migrations'].check;
+    const frozenCheck = findBuiltInCheck('postgres/edited-migrations');
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' }),
@@ -78,7 +77,7 @@ test.each(['', 'V'])('history: unpadded %s migration versions replay and freeze 
     const { migrations } = await readMigrations(input);
     expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10', '11']);
     expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
-    expect(await CHECK_IMPLEMENTATIONS['postgres/migration-order'].check(input)).toMatchObject([
+    expect(await findBuiltInCheck('postgres/migration-order')(input)).toMatchObject([
         { file: `migrations/${prefix}8_earlier.sql`, rule: 'order' },
     ]);
     await Bun.write(join(sandbox.path, `migrations/${prefix}10_secure.sql`), 'SELECT 10;');
