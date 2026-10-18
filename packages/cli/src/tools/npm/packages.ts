@@ -1,7 +1,6 @@
 // Read npm workspaces, installed packages, and their source files.
 
 import { createRequire } from 'node:module';
-import { GspotError } from '#cli/system/errors.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { realpathSync, readFileSync } from 'node:fs';
 import { isInScope } from '#cli/repository/scopes.ts';
@@ -15,6 +14,7 @@ import { join, posix, dirname, basename, relative } from 'node:path';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
+import { GspotError, isMissingFileError } from '#cli/system/errors.ts';
 import { type Files, type ReadCache } from '#cli/types/system/files.ts';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/tools';
@@ -145,7 +145,7 @@ export function readHostPackage(path: string): PackageJson | undefined {
     try {
         text = readFileSync(path, 'utf8');
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        if (isMissingFileError(error)) return undefined;
         throw error;
     }
     return parseJsonFile(path, text, packageJsonSchema);
@@ -163,7 +163,7 @@ export function readToolProjectPackage(files: Files, repositoryRoot: string, pat
     try {
         target = files.readRealPath(convertToPosixPath(relative(repositoryRoot, path)));
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        if (isMissingFileError(error)) return undefined;
         throw error;
     }
     const local = convertToPosixPath(relative(repositoryRoot, target));

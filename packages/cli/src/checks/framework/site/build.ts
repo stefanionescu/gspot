@@ -1,13 +1,13 @@
-import { join, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
+import { join, relative, normalize } from 'node:path';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { type SiteBuild } from '#cli/types/checks/framework.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { OUTPUT_TAIL_LINES } from '#cli/config/checks/framework/site.ts';
+import { formatOutputTail } from '#cli/checks/run/command/output.ts';
 import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
 
@@ -24,12 +24,7 @@ async function runSiteBuild(input: CheckInput, scratch: string): Promise<SiteBui
     if (built?.isSymbolicLink() === true)
         throw new Error(`The build output folder is a link: ${convertToPosixPath(relative(scratch, folder))}`);
     const isBuilt = built?.isDirectory() === true;
-    const outputTail = [result.stderr, result.stdout]
-        .join('\n')
-        .trim()
-        .split('\n')
-        .slice(-OUTPUT_TAIL_LINES)
-        .join(' | ');
+    const outputTail = formatOutputTail(result).replaceAll('\n', ' | ');
     return { cwd, command, folder, isBuilt, outputTail };
 }
 
@@ -76,20 +71,13 @@ export function listBuiltFiles(folder: string): string[] {
 }
 
 /**
- * Maps a built file in the scratch copy to its repository path.
+ * Maps a built file to its repository path.
  * @param input the scope with the build folder setting.
- * @param build the scratch copy that holds the output.
- * @param absolute the file path in the scratch copy.
+ * @param path the file path inside the build folder.
  * @returns the repository-relative path.
  */
-export function deriveBuiltFilePath(
-    input: Pick<CheckInput, 'selection'>,
-    build: Pick<SiteBuild, 'folder'>,
-    absolute: string,
-): string {
-    const path = convertToPosixPath(relative(build.folder, absolute));
-
-    return `${input.selection.view.options('site')['build_folder']}/${path}`;
+export function deriveBuiltFilePath(input: Pick<CheckInput, 'selection'>, path: string): string {
+    return `${input.selection.view.options('site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
 }
 
 /**

@@ -1,5 +1,6 @@
 // Read and write contained files through verified folder paths.
 import { posix } from 'node:path';
+import { isMissingFileError } from '#cli/system/errors.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import type { Files, FilesState } from '#cli/types/system/files.ts';
 import { releaseLocks, lockForWriting } from '#cli/system/files/lock.ts';
@@ -39,7 +40,7 @@ export function openFiles(baseFolder: string): Files {
                     throw new Error(`${path ?? '.'} is not a directory. Choose a directory.`);
                 return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
             } catch (error) {
-                if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+                if (isMissingFileError(error)) return [];
                 throw error;
             }
         },
@@ -49,7 +50,7 @@ export function openFiles(baseFolder: string): Files {
                 if (stat.isSymbolicLink()) throw new Error(`${path} is a link. gspot does not write through links.`);
                 return stat;
             } catch (error) {
-                if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+                if (isMissingFileError(error)) return undefined;
                 throw error;
             }
         },

@@ -2,6 +2,7 @@
 import { isUtf8 } from 'node:buffer';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
+import { isMissingFileError } from '#cli/system/errors.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
@@ -30,7 +31,7 @@ function readUtf8(path: string, read: () => Buffer): string | undefined {
         if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
         return text;
     } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
+        if (isMissingFileError(error)) return undefined;
         throw error;
     }
 }

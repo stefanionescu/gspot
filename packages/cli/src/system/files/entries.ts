@@ -2,6 +2,7 @@
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { isMissingFileError } from '#cli/system/errors.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { type FilesState, type FileContents } from '#cli/types/system/files.ts';
 import { TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
@@ -34,7 +35,7 @@ function prepareParentFolder(folder: string): Stats {
     try {
         return lstatSync(folder);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+        if (!isMissingFileError(error)) throw error;
     }
     try {
         mkdirSync(folder);
@@ -150,7 +151,7 @@ export function readEntry(bounds: FilesState, path: string): FileContents | unde
         const target = verifyPath(bounds, path);
         return readRegularFile(target, lstatSync(target), path);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        if (isMissingFileError(error)) return undefined;
         throw error;
     }
 }
@@ -167,7 +168,7 @@ export function readEntryKeepingLinks(bounds: FilesState, path: string): FileCon
         const stat = lstatSync(target);
         return stat.isSymbolicLink() ? readSymbolicLink(target, stat) : readRegularFile(target, stat, path);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        if (isMissingFileError(error)) return undefined;
         throw error;
     }
 }

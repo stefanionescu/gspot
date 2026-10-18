@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
-import { join, isAbsolute } from 'node:path';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { join, relative, isAbsolute } from 'node:path';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { parseReport } from '#cli/parsers/output/json.ts';
@@ -129,7 +129,7 @@ export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]>
             const page = candidates.find((path) => pages.has(path)) ?? candidates[0];
             return buildFinding(
                 input,
-                { file: deriveBuiltFilePath(input, build, join(build.folder, page)), line: 1 },
+                { file: deriveBuiltFilePath(input, page), line: 1 },
                 'broken-link',
                 link.status === HTTP_OK_STATUS && link.url.includes('#')
                     ? `${link.url} has no matching fragment.`
@@ -171,7 +171,7 @@ export async function checkSiteHtmlValidate(input: CheckInput): Promise<Finding[
         findings.push(
             ...parsed.map((finding) => ({
                 ...finding,
-                file: deriveBuiltFilePath(input, build, join(build.folder, finding.file)),
+                file: deriveBuiltFilePath(input, finding.file),
             })),
         );
     }
@@ -202,8 +202,7 @@ export async function checkSitePurgecss(input: CheckInput): Promise<Finding[]> {
                 {
                     file: deriveBuiltFilePath(
                         input,
-                        build,
-                        isAbsolute(sheet.file) ? sheet.file : join(build.folder, sheet.file),
+                        isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file,
                     ),
                     line: 1,
                 },
@@ -226,7 +225,7 @@ export async function checkSiteSize(input: CheckInput): Promise<Finding[]> {
     return limits.flatMap((limit) => {
         const isCounted = buildPathMatcher(limit.paths);
         const bytes = files
-            .filter((entry) => isCounted(deriveBuiltFilePath(input, build, join(build.folder, entry))))
+            .filter((entry) => isCounted(deriveBuiltFilePath(input, entry)))
             .reduce((sum, path) => sum + gzipSync(readBytes(build.folder, path)).length, 0);
         const weight = Math.ceil(bytes / BYTES_PER_KILOBYTE);
         return weight <= limit.kilobytes
@@ -261,7 +260,7 @@ export async function checkSiteSitemap(input: CheckInput): Promise<Finding[]> {
             buildFinding(
                 input,
                 {
-                    file: deriveBuiltFilePath(input, build, join(build.folder, sitemapFile)),
+                    file: deriveBuiltFilePath(input, sitemapFile),
                     line: 1,
                 },
                 'missing-page',
@@ -271,14 +270,12 @@ export async function checkSiteSitemap(input: CheckInput): Promise<Finding[]> {
     const unlisted = [...files]
         .filter(
             (path) =>
-                path.endsWith(HTML_EXTENSION) &&
-                !listed.has(path) &&
-                !isLeftOut(deriveBuiltFilePath(input, build, join(build.folder, path))),
+                path.endsWith(HTML_EXTENSION) && !listed.has(path) && !isLeftOut(deriveBuiltFilePath(input, path)),
         )
         .map((path) =>
             buildFinding(
                 input,
-                { file: deriveBuiltFilePath(input, build, join(build.folder, path)), line: 1 },
+                { file: deriveBuiltFilePath(input, path), line: 1 },
                 'unlisted-page',
                 'The build wrote this page, and the sitemap does not list it.',
             ),

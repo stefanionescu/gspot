@@ -35,9 +35,6 @@ export const TEXT_SUFFIXES = new Set([
 
 export const ASSET_FOLDER = /(?:^|\/)(?:assets|public|static)\//u;
 
-/** How many lines of build output accompany a failure. */
-export const OUTPUT_TAIL_LINES = 10;
-
 export const LINKINATOR_STATES = ['OK', 'BROKEN', 'SKIPPED'] as const;
 export const LINKINATOR = 'linkinator';
 export const LOCAL_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1']);

@@ -10,7 +10,6 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/parsers/output.ts';
 import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
@@ -19,6 +18,7 @@ import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import type { PathIndex, TaskNames } from '#cli/types/checks/general.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { findScope, isInScope, joinScope } from '#cli/repository/scopes.ts';
+import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { listExecutableNames, includeParentFolders } from '#cli/system/paths.ts';
 import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/existing-tools.ts';
 
@@ -85,20 +85,22 @@ function listKnownPaths(input: CheckInput): Set<string> {
 }
 
 function readMiseTasks(input: CheckInput, file: string): string[] {
+    const text = readCachedText(input.reads, file);
+    if (text === undefined) return [];
     try {
-        return parseMiseTasks(readCachedBytes(input.reads, file).toString('utf8'));
+        return parseMiseTasks(text);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
         throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
     }
 }
 
 function readPackageScripts(input: CheckInput, file: string): string[] | undefined {
+    const text = readCachedText(input.reads, file);
+    if (text === undefined) return undefined;
     try {
-        const manifest = parseJsonFile(file, readCachedBytes(input.reads, file).toString('utf8'), packageJsonSchema);
+        const manifest = parseJsonFile(file, text, packageJsonSchema);
         return manifest.scripts === undefined ? [] : Object.keys(manifest.scripts);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
         throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
     }
 }

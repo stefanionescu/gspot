@@ -1,7 +1,6 @@
 import { realpathSync } from 'node:fs';
 import { isOwned } from '#cli/ownership/plans.ts';
 import { findRoot } from '#cli/repository/read.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { isGitRepository } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -14,6 +13,7 @@ import { readIndexEntries } from '#cli/repository/tracked.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { dirname, resolve, basename, relative } from 'node:path';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
+import { GspotError, isMissingFileError } from '#cli/system/errors.ts';
 import { type ExportJson, type ExportOptions } from '#cli/types/commands/export.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
@@ -34,8 +34,7 @@ async function runExportCommand(options: ExportOptions): Promise<CommandResult<E
     try {
         parent = realpathSync(parentPath);
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT')
-            throw new GspotError('files', `The folder ${parentPath} does not exist.`);
+        if (isMissingFileError(error)) throw new GspotError('files', `The folder ${parentPath} does not exist.`);
         throw error;
     }
     using destination = openFiles(parent);

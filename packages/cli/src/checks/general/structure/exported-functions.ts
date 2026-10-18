@@ -7,13 +7,20 @@ import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readTsconfig, buildCompilerHost } from '#cli/parsers/tsconfig.ts';
+import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { EXPORTED_FUNCTION_EXTENSIONS } from '#cli/config/checks/general/structure.ts';
+
+// The compiler project of a scope: its tsconfig.json, or its jsconfig.json when it has none.
+function readScopeProject(input: CheckInput, scope: string) {
+    return (
+        readTsconfig(input.root, join(input.root, scope, TSCONFIG_FILE), input.reads) ??
+        readTsconfig(input.root, join(input.root, scope, JSCONFIG_FILE), input.reads)
+    );
+}
 
 function buildExportProgram(input: CheckInput, paths: string[]): ts.Program {
     const scope = input.selection.scope.path;
-    const config =
-        readTsconfig(input.root, join(input.root, scope, 'tsconfig.json'), input.reads) ??
-        readTsconfig(input.root, join(input.root, scope, 'jsconfig.json'), input.reads);
+    const config = readScopeProject(input, scope);
     const options = {
         module: ts.ModuleKind.Preserve,
         moduleResolution: ts.ModuleResolutionKind.Bundler,
@@ -29,9 +36,7 @@ function buildExportProgram(input: CheckInput, paths: string[]): ts.Program {
     host.resolveModuleNameLiterals = (literals, file) => {
         const path = convertToPosixPath(relative(input.root, file));
         const scope = findScope(path, input.scopes).path;
-        const config =
-            readTsconfig(input.root, join(input.root, scope, 'tsconfig.json'), input.reads) ??
-            readTsconfig(input.root, join(input.root, scope, 'jsconfig.json'), input.reads);
+        const config = readScopeProject(input, scope);
         return literals.map(({ text: name }) => {
             const importedModule = ts.resolveModuleName(
                 name,

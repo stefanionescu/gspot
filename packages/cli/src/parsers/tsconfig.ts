@@ -4,6 +4,7 @@ import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { isMissingFileError } from '#cli/system/errors.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
@@ -156,7 +157,7 @@ function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache
         }
         return readCachedText(reads, local);
     } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
+        if (isMissingFileError(error)) return undefined;
         throw error;
     }
 }

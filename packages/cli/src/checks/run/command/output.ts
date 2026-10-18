@@ -82,17 +82,13 @@ function isOnDisk(file: string, roots: string[]): boolean {
     );
 }
 
-function parseRedactedFindings(
-    check: CheckDeclaration,
-    result: SpawnResult,
-    paths: OutputPaths,
-    broken: boolean,
-): Finding[] {
-    if ((result.code !== 0 && check.exit_codes?.includes(result.code) !== true) || broken)
-        throw new GspotError(
-            'output',
-            `${check.name} failed with exit ${String(result.code)}; raw output was withheld.`,
-        );
+// A secret scanner that fails shows its exit code only, never its output.
+function buildWithheldError(check: CheckDeclaration, result: SpawnResult): GspotError {
+    return new GspotError('output', `${check.name} failed with exit ${String(result.code)}; raw output was withheld.`);
+}
+
+function parseRedactedFindings(check: CheckDeclaration, result: SpawnResult, paths: OutputPaths): Finding[] {
+    if (result.code !== 0 && check.exit_codes?.includes(result.code) !== true) throw buildWithheldError(check, result);
     const findings = parseOutput(check, result.stdout, result.stderr, paths);
     if (result.code !== 0 && findings.length === 0)
         throw new GspotError(
@@ -100,12 +96,6 @@ function parseRedactedFindings(
             `${check.name} reported findings without valid structured data; raw output was withheld.`,
         );
     return findings;
-}
-
-function parseFindings(check: CheckDeclaration, result: SpawnResult, paths: OutputPaths, broken: boolean): Finding[] {
-    if (outputFormats[check.output.format].redactsOutput) return parseRedactedFindings(check, result, paths, broken);
-    if (broken) return [];
-    return parseOutput(check, result.stdout, result.stderr, paths);
 }
 
 function failBrokenTool(planned: OutputCheck, result: SpawnResult): never {
@@ -138,9 +128,15 @@ function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Find
  */
 function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
     const { check } = planned;
-    const broken = hasToolError(check, planned.tool, result);
-    const parsed = parseFindings(check, result, paths, broken);
-    if (broken || isToolBroken(check, result, parsed, paths)) failBrokenTool(planned, result);
+    const redacts = outputFormats[check.output.format].redactsOutput;
+    if (hasToolError(check, planned.tool, result)) {
+        if (redacts) throw buildWithheldError(check, result);
+        failBrokenTool(planned, result);
+    }
+    const parsed = redacts
+        ? parseRedactedFindings(check, result, paths)
+        : parseOutput(check, result.stdout, result.stderr, paths);
+    if (isToolBroken(check, result, parsed, paths)) failBrokenTool(planned, result);
     return parsed;
 }
 

@@ -4,6 +4,7 @@ import { statSync } from 'node:fs';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
+import { isMissingFileError } from '#cli/system/errors.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import type { LocateOptions } from '#cli/types/tools/find.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
@@ -33,7 +34,7 @@ function isCandidatePresent(files: Files, root: string, path: string): boolean {
         files.readRealPath(local);
         return true;
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+        if (!isMissingFileError(error)) throw error;
         return false;
     }
 }

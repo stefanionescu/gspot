@@ -2,6 +2,7 @@ import { createTwoFilesPatch } from 'diff';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { isMissingFileError } from '#cli/system/errors.ts';
 import { hasToolError } from '#cli/checks/run/command/output.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
@@ -171,7 +172,7 @@ function readContents(sourceRoot: string, paths: string[]): Map<string, Buffer |
         try {
             contents.set(path, readBytes(sourceRoot, path));
         } catch (error) {
-            if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+            if (!isMissingFileError(error)) throw error;
             contents.set(path, undefined);
         }
     }

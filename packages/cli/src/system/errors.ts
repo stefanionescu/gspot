@@ -36,3 +36,12 @@ export function formatZodIssue(issue: z.core.$ZodIssue): string[] {
           ]
         : [line];
 }
+
+/**
+ * Check whether a file operation failed because the path does not exist.
+ * @param error the caught value.
+ * @returns whether the error says the file does not exist.
+ */
+export function isMissingFileError(error: unknown): boolean {
+    return error instanceof Error && 'code' in error && error.code === 'ENOENT';
+}

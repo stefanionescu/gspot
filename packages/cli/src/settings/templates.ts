@@ -2,7 +2,6 @@ import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { isRecord } from '#cli/system/values.ts';
 import { hashContent } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
@@ -10,6 +9,7 @@ import { readManifests } from '#cli/configurations/manifests.ts';
 import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { templateSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { GspotError, isMissingFileError } from '#cli/system/errors.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import type { Template, ExportedTemplate } from '#cli/types/settings/templates.ts';
 
@@ -45,8 +45,7 @@ function readLocalText(source: string, cwd: string): string {
     try {
         return readFileSync(path, 'utf8');
     } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
-            throw new GspotError('template', `There is no template at ${source}.`);
+        if (isMissingFileError(error)) throw new GspotError('template', `There is no template at ${source}.`);
         throw error;
     }
 }
