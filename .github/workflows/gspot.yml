@@ -55,7 +55,7 @@ jobs:
       - name: Install gspot tools
         env:
           MISE_GITHUB_TOKEN: ${{ github.token }}
-        run: mise exec node@24 npm:@gspothq/cli@0.3.0 bun@1.4.3 -- gspot install
+        run: mise exec node@24 npm:@gspothq/cli@0.3.1 bun@1.4.3 -- gspot install
 
       - name: Check
         env:
@@ -63,9 +63,9 @@ jobs:
         run: |
           base="${GSPOT_CI_BASE:-}"
           case "${base}" in
-              '' | 0000000000000000000000000000000000000000 | 0000000000000000000000000000000000000000000000000000000000000000) mise exec node@24 npm:@gspothq/cli@0.3.0 bun@1.4.3 -- gspot check ;;
+              '' | 0000000000000000000000000000000000000000 | 0000000000000000000000000000000000000000000000000000000000000000) mise exec node@24 npm:@gspothq/cli@0.3.1 bun@1.4.3 -- gspot check ;;
               *)
-                  mise exec node@24 npm:@gspothq/cli@0.3.0 bun@1.4.3 -- gspot check --changed "${base}"
+                  mise exec node@24 npm:@gspothq/cli@0.3.1 bun@1.4.3 -- gspot check --changed "${base}"
                   ;;
           esac
 
@@ -108,11 +108,11 @@ jobs:
       - name: Install gspot tools
         env:
           MISE_GITHUB_TOKEN: ${{ github.token }}
-        run: mise exec node@24 npm:@gspothq/cli@0.3.0 bun@1.4.3 -- gspot install
+        run: mise exec node@24 npm:@gspothq/cli@0.3.1 bun@1.4.3 -- gspot install
 
       - name: Manual checks
         env:
           MISE_GITHUB_TOKEN: ${{ github.token }}
         run: |
           (cd .gspot && mise install lychee)
-          mise exec node@24 npm:@gspothq/cli@0.3.0 bun@1.4.3 -- gspot check --only docs/lychee-external security/semgrep-registry
+          mise exec node@24 npm:@gspothq/cli@0.3.1 bun@1.4.3 -- gspot check --only docs/lychee-external security/semgrep-registry

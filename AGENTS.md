@@ -85,10 +85,7 @@ Do not edit these files. Change `gspot.toml`, then run `mise exec -- gspot apply
 - `eslint.config.mjs`
 - `prettier.config.mjs`
 
-gspot also sets these keys in `bunfig.toml`: `install.minimumReleaseAge` and `install.minimumReleaseAgeExcludes` and `install.security.scanner`.
-You can edit the other keys of that file.
-
-gspot also sets these keys in `mise.toml`: `settings.minimum_release_age` and `settings.minimum_release_age_excludes`.
+gspot also sets one key in `bunfig.toml`: `install.security.scanner`.
 You can edit the other keys of that file.
 
 <!-- <<< gspot managed <<< -->
