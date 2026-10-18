@@ -38,3 +38,4 @@
 /configure/prose/ /checks/prose/ 301
 /reference/json-report/ /reference/json-output/ 301
 /maintain/generated-files/ /reference/generated-files/ 301
+/reference/checks/dependencies/release-age/ /checks/dependencies/ 301
