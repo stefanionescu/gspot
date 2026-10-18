@@ -91,3 +91,6 @@ export {
     SETTINGS_REFERENCE_URL,
     TEMPLATE_COMMENT_PREFIX,
 };
+
+/** The commands that change gspot.toml. */
+export const SETTINGS_COMMANDS = ['set', 'unset', 'add', 'remove', 'ignore', 'unignore'] as const;

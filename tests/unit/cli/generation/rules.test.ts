@@ -161,7 +161,7 @@ test('with no configurations the block still lists the general rules and the che
     await createFileTree(sandbox.path, { 'gspot.toml': buildSettingsText([], { rules: true }) });
     const block = await buildManagedBlock(sandbox.path);
     expect(block).toContain('engineering/rules/WORKING.md');
-    expect(block).toContain('Run `mise exec -- gspot check --staged`.');
+    expect(block).toContain('gspot check --staged');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
@@ -174,7 +174,7 @@ test('with a check selected the block names the command, and an excluded file le
         }),
     });
     const block = await buildManagedBlock(sandbox.path);
-    expect(block).toContain('Run `mise exec -- gspot check --staged`.');
+    expect(block).toContain('gspot check --staged');
     expect(block).not.toContain('ACCESSIBILITY.md');
     expect(block).toContain('engineering/rules/TESTING.md');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);

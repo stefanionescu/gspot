@@ -1,4 +1,5 @@
 import { HOOKS_PATH } from '#cli/config/system/locations.ts';
+import { SETTINGS_COMMANDS } from '#cli/config/settings/file.ts';
 import { HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 
@@ -18,8 +19,7 @@ export const DETECTION_LABEL_WIDTH = 20;
 
 export const DETECTION_GAP_WIDTH = 3;
 
-export const PREFACE_BODY =
-    '# gspot settings for this repository. Change them with gspot set, unset, ignore, add, and remove.\n\n';
+export const PREFACE_BODY = `# gspot settings for this repository. Change them with gspot ${new Intl.ListFormat('en', { type: 'conjunction' }).format(SETTINGS_COMMANDS)}.\n\n`;
 
 /** The shared attributes row in every initialization plan. */
 export const ATTRIBUTES_ROW = {

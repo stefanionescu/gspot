@@ -8,6 +8,7 @@ import type { SourcePosition } from '#cli/types/text.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
+import { SETTINGS_COMMANDS } from '#cli/config/settings/file.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
@@ -77,7 +78,8 @@ function formatRulesIndex(files: RuleFile[]): string[] {
         '',
         ...FIRST_READ.map((path) => `- \`${GSPOT_CONFIGURATIONS_PATH}/${path}\``),
         '',
-        'Read each rule below when its sentence applies. A rule followed by folders applies only in those folders.',
+        'Read a rule below when its sentence fits your task.',
+        'A rule marked `in <folder>/` applies only to files in that folder.',
         'A more specific rule wins over a general one.',
         '',
         ...groupFilesByArea(files).flatMap(([area, paths]) => [
@@ -87,6 +89,12 @@ function formatRulesIndex(files: RuleFile[]): string[] {
             '',
         ]),
     ];
+}
+
+// The first command carries the start command; the others read as its subcommands.
+function formatSettingsCommands(startCommand: string): string {
+    const commands = SETTINGS_COMMANDS.map((command, index) => (index === 0 ? `${startCommand} ${command}` : command));
+    return new Intl.ListFormat('en', { type: 'disjunction' }).format(commands.map((command) => '`' + command + '`'));
 }
 
 /**
@@ -177,11 +185,11 @@ function buildAgentsBlock({ files, generatedPaths, fileEdits, hasChecks, startCo
         RULES_HEADING,
         '',
         ...index,
-        ...(hasChecks ? ['## Before you commit', '', `Run \`${startCommand} check --staged\`.`, ''] : []),
-        '## Settings',
+        '## Commands',
         '',
-        `- To change \`gspot.toml\`, run \`${startCommand} set\`, \`unset\`, \`ignore\`, or \`unignore\`.`,
-        `- After you edit \`gspot.toml\` by hand, run \`${startCommand} apply\`.`,
+        ...(hasChecks ? [`Before you commit, run \`${startCommand} check --staged\`.`, ''] : []),
+        `To change \`gspot.toml\`, run ${formatSettingsCommands(startCommand)}.`,
+        `After you edit \`gspot.toml\` by hand, run \`${startCommand} apply\`.`,
         '',
         '## Generated files',
         '',

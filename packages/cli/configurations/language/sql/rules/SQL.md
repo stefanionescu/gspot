@@ -60,15 +60,8 @@ Follow the migration tool's file names. Name each migration for its durable data
 
 <!-- level: all -->
 
-- SQL function names use verb phrases or domain operations. These verbs apply to functions,
-  not migration filenames.
-
-- Retrieval functions use `get_` whether they return one row,
-  an optional one, a collection, or a paginated one. Do not use
-  `read_`, `find_`, `fetch_`, `load_`, or `list_` as retrieval synonyms.
-- Data-access mutation functions use `set_`, `insert_`, `update_`, or
-  `delete_` according to the operation they perform. Do not use `create_`,
-  `add_`, `save_`, `write_`, `put_`, `upsert_`, or `remove_` as synonyms.
+- SQL function names use the verbs of `NAMING.md`. These verbs apply to functions, not migration
+  filenames.
 - Parameter names never collide with table columns.
 - `SECURITY DEFINER` functions must have names that make the privileged action
   clear.
