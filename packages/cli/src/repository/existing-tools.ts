@@ -81,9 +81,16 @@ function listFolder(root: string, folder: string): string[] {
         .filter((entry) => !entry.startsWith('.') || entry === KEPT_DOT_FILE);
 }
 
+// List the hook scripts in a folder: its files, without the folders that a hook manager keeps there.
+function listHookFiles(root: string, folder: string): string[] {
+    return listFolder(root, folder).filter(
+        (name) => statSync(join(root, folder, name), { throwIfNoEntry: false })?.isFile() === true,
+    );
+}
+
 function detectHookFolder(root: string, folder: string, hooksPath: string): ExistingTools['hooks'][number] | undefined {
     if (hooksPath === folder) return undefined;
-    const files = listFolder(root, folder);
+    const files = listHookFiles(root, folder);
     if (files.length === 0 && lstatSync(join(root, folder), { throwIfNoEntry: false })?.isSymbolicLink() !== true)
         return undefined;
     return { kind: folder === HUSKY_PATH ? 'husky' : 'githooks', path: folder, files };
@@ -199,6 +206,14 @@ function hasToolSection(text: string, path: string, selector: Pick<FoundToolFile
     return true;
 }
 
+// Read the folder that core.hooksPath names. Husky points it at its stubs in .husky/_, or at .husky in Husky 8, and
+// keeps the hooks of the user in .husky, which the Husky entry lists.
+function readHooksPathEntry(root: string, hooksPath: string, isHuskyPath: boolean): ExistingTools['hooks'] {
+    if (hooksPath === '' || isHuskyPath) return [];
+    const location = readHooksFolder(root);
+    return [{ kind: 'hooksPath', path: hooksPath, files: listHookFiles(dirname(location), basename(location)) }];
+}
+
 /**
  * Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
  * @param repositoryRoot the repository to read.
@@ -208,7 +223,7 @@ export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
     const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
     const packageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
     const hooksPath = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
-    const location = hooksPath === '' ? undefined : readHooksFolder(repositoryRoot);
+    const isHuskyPath = hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
     const hookNames = [
         ...LEFTHOOK_NAMES.flatMap((name) =>
             LEFTHOOK_EXTENSIONS.flatMap((extension) =>
@@ -222,17 +237,9 @@ export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
     );
     const lefthook = present.find((name) => name !== PRE_COMMIT_FILE);
     return [
-        ...(location === undefined
-            ? []
-            : [
-                  {
-                      kind: 'hooksPath' as const,
-                      path: hooksPath,
-                      files: listFolder(dirname(location), basename(location)),
-                  },
-              ]),
+        ...readHooksPathEntry(repositoryRoot, hooksPath, isHuskyPath),
         ...HOOK_FOLDERS.filter((folder) => folder !== HOOKS_PATH && folder !== MISE_HOOKS_PATH)
-            .map((folder) => detectHookFolder(repositoryRoot, folder, hooksPath))
+            .map((folder) => detectHookFolder(repositoryRoot, folder, isHuskyPath ? '' : hooksPath))
             .filter((hook) => hook !== undefined),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
         ...(present.includes(PRE_COMMIT_FILE)

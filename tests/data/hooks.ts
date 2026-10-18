@@ -1,3 +1,10 @@
+/** The stubs that Husky 9 writes in .husky/_/, the folder that core.hooksPath names. */
+export const HUSKY_STUBS = {
+    '.husky/_/.gitignore': '*\n',
+    '.husky/_/h': '#!/usr/bin/env sh\n',
+    '.husky/_/pre-commit': '#!/usr/bin/env sh\n. "$(dirname "$0")/h"\n',
+};
+
 /** The authored hook managers and the local Git hook script that init must keep. */
 export const HOOK_REPOSITORIES = [
     {
@@ -16,6 +23,18 @@ export const HOOK_REPOSITORIES = [
             '.husky/pre-commit': 'npm test\n',
         },
         setting: undefined,
+        gitHook: false,
+    },
+    {
+        name: 'a Husky 9 folder',
+        startProgram: 'npm',
+        files: {
+            'package.json':
+                '{"private":true,"packageManager":"npm@11.10.1","devDependencies":{"@gspothq/cli":"0.1.0"}}',
+            '.husky/pre-commit': 'npm test\n',
+            ...HUSKY_STUBS,
+        },
+        setting: ['config', 'core.hooksPath', '.husky/_'],
         gitHook: false,
     },
     {

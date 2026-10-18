@@ -1,6 +1,7 @@
 import * as files from 'node:fs';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { HUSKY_STUBS } from '#tests/data/hooks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { readRepository } from '#cli/repository/read.ts';
@@ -77,6 +78,15 @@ test('hook discovery reports other hook folders and leaves gspot and task script
     expect(hooks.toSorted((left, right) => left.path.localeCompare(right.path))).toStrictEqual([
         { kind: 'githooks', path: '.git-hooks', files: ['pre-commit'] },
         { kind: 'githooks', path: '.githooks', files: ['pre-commit'] },
+        { kind: 'husky', path: '.husky', files: ['pre-commit'] },
+    ]);
+});
+
+test('Husky 9 counts as Husky, and its stub folder is no hook file', async () => {
+    await using sandbox = await testdir({ '.husky/pre-commit': 'npm test\n', ...HUSKY_STUBS });
+    readGitOutput(sandbox.path, ['init', '-q']);
+    readGitOutput(sandbox.path, ['config', 'core.hooksPath', '.husky/_']);
+    expect(readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path)).hooks).toStrictEqual([
         { kind: 'husky', path: '.husky', files: ['pre-commit'] },
     ]);
 });
