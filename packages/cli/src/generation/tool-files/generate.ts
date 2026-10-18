@@ -2,6 +2,7 @@
 import { join } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
 import { buildToolFile } from '#cli/generation/tool-files/build.ts';
+import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { TOOL_FILE_SCOPES_FOLDER } from '#cli/config/generation/files.ts';
 import { listPointerPaths, buildPointerFiles } from '#cli/generation/pointers.ts';
 import { listToolFileDeclarations } from '#cli/generation/tool-files/declarations.ts';
@@ -40,14 +41,9 @@ function groupToolOutputs(
     );
 }
 
-// The first text keeps the declared path. A root file with other text goes to its scope, and any other tool file to
-// scopes/<scope>/ in the folder of its configuration.
+// The first text keeps the declared path; another text goes to the path of its scope.
 function chooseTarget(declared: string, index: number, first: ToolFileContent): string {
-    if (index === 0) return declared;
-    const { file, root } = first.toolFile;
-    const scope = first.owner.selection.scope.path;
-    if (root) return join(scope, declared);
-    return join(declared.slice(0, declared.length - file.length), TOOL_FILE_SCOPES_FOLDER, scope, file);
+    return index === 0 ? declared : formatScopeTarget(first.toolFile, first.owner.selection.scope.path);
 }
 
 // Record one text group at its chosen path and map every participating scope to it.
@@ -142,4 +138,17 @@ function buildToolFiles(session: Session): ToolFileGeneration {
     return { files: [...state.files.values()], targets: state.targets };
 }
 
-export { buildToolFiles };
+/**
+ * Name the path of a tool file that a scope writes with its own text: a root file in the scope folder, and any other
+ * tool file in scopes/<scope>/ of the folder of its configuration.
+ * @param toolFile the declaration.
+ * @param scope the folder of the scope.
+ * @returns the repository-relative path.
+ */
+function formatScopeTarget(toolFile: Pick<ToolFileDeclaration, 'target' | 'file' | 'root'>, scope: string): string {
+    if (toolFile.root) return join(scope, toolFile.target);
+    const folder = toolFile.target.slice(0, toolFile.target.length - toolFile.file.length);
+    return join(folder, TOOL_FILE_SCOPES_FOLDER, scope, toolFile.file);
+}
+
+export { buildToolFiles, formatScopeTarget };

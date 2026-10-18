@@ -20,7 +20,7 @@ target = "html-validate.json"
 tool = "html-validate"
 
 [[check]]
-command = ["html-validate", "--config", "{tool_file:html-validate-source}", "--formatter", "json", "{files}"]
+command = ["html-validate", "--config", "{tool_file:html-validate}", "--formatter", "json", "{files}"]
 example = "An `<img src=\"logo.png\">` without alternative text reports a finding. Add `alt` text, or leave it empty for a decorative image."
 help = "Change the markup the way the rule page says. Turn one rule off with `gspot ignore html/html-validate --rule <name> --reason \"<why>\"`."
 level = "recommended"

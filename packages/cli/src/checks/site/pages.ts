@@ -149,7 +149,7 @@ export async function checkSiteHtmlValidate(input: CheckInput): Promise<Finding[
         .filter((path) => path.endsWith(HTML_EXTENSION))
         .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
-    const toolFile = join(input.root, selectToolFilePath(input, input, 'html-validate-built'));
+    const toolFile = join(input.root, selectToolFilePath(input, input, HTML_VALIDATE));
     using reports = createScratchFolder();
     const command = [
         HTML_VALIDATE,

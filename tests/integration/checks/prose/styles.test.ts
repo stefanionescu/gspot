@@ -17,7 +17,7 @@ test("Vale's dashes rule checks the reason text of ESLint comments and skips the
         'gspot.toml': buildSettingsText(['prose', 'typescript']),
         '.gspot/configurations/general/prose/vale.ini': VALE_INI,
         '.gspot/configurations/general/prose/styles/Example/Dashes.yml': readAsset(
-            'configurations/general/prose/tool-files/vale/styles/gspot/dashes.yml',
+            'configurations/general/prose/tool-files/styles/gspot/dashes.yml',
         ),
         'source.ts': [
             '// eslint-disable -- reason: The external declaration requires this signature.',
@@ -45,7 +45,7 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
         'gspot.toml': buildSettingsText(['prose', 'markdown']),
         '.gspot/configurations/general/prose/vale.ini': VALE_INI,
         '.gspot/configurations/general/prose/styles/Example/Versions.yml': readAsset(
-            'configurations/general/prose/tool-files/vale/styles/gspot/version-range.yml',
+            'configurations/general/prose/tool-files/styles/gspot/version-range.yml',
         ),
         'versions.md': [
             'Use Node.js 24.2.0 or later.',

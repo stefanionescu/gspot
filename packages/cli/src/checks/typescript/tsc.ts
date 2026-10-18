@@ -1,11 +1,11 @@
 import ts from 'typescript';
 import { checkInput } from '#cli/runs/built-in.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
+import { join, dirname, relative } from 'node:path';
 import { findScope } from '#cli/repository/scopes.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { join, posix, dirname, relative } from 'node:path';
 import { listCoveredInputs } from '#cli/planning/checks.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { extractToolFileName } from '#cli/planning/files.ts';
@@ -17,6 +17,7 @@ import type { WholeToolFile } from '#cli/types/generation/files.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
+import { formatScopeTarget } from '#cli/generation/tool-files/generate.ts';
 import { readToolFileDeclaration } from '#cli/runs/command/placeholders.ts';
 import { type TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
@@ -102,15 +103,7 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
     const toolFile = readToolFileDeclaration(session, planned, extractToolFileName(JSCONFIG_FILE)) as WholeToolFile;
     const paths = new Set([
         toolFile.target,
-        // A tool-file path names a repository file with forward slashes on every system.
-        ...session.scopes.map(({ scope }) =>
-            posix.join(
-                posix.dirname(toolFile.target),
-                posix.basename(toolFile.target, posix.extname(toolFile.target)),
-                scope.path,
-                posix.basename(toolFile.target),
-            ),
-        ),
+        ...session.scopes.map(({ scope }) => formatScopeTarget(toolFile, scope.path)),
     ]);
     using files = openFiles(session.root);
     for (const path of paths) {
