@@ -153,7 +153,7 @@ export const COMMITLINT_RULES = {
     'footer-leading-blank': [COMMITLINT_ERROR_SEVERITY, 'always'],
 } as const;
 
-export const JSCPD_IGNORED = [`**/${DOT_GSPOT}/**`, '**/*.md', '**/*.mdx'] as const;
+export const JSCPD_IGNORED = ['**/*.md', '**/*.mdx'] as const;
 
 export const TAPLO_FORMATTING = {
     align_entries: false,
@@ -180,8 +180,6 @@ export const SHELLCHECK_OPTIONS = [
 ] as const;
 
 export const KNIP_SCHEMA_URL = 'https://unpkg.com/knip@6/schema.json';
-
-export const KNIP_IGNORED = [`${DOT_GSPOT}/**`] as const;
 
 export const KNIP_IGNORED_DEPENDENCIES = ['@gspothq/cli'] as const;
 

@@ -1,72 +1,18 @@
 // Build each distinct tool file text once, and give its path to every scope that uses it.
 import type { Session } from '#cli/types/planning.ts';
 import { join, extname, basename } from 'node:path/posix';
-import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { buildToolFile } from '#cli/generation/tool-files/build.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { isConfigurationSelected } from '#cli/configurations/select.ts';
-import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { listPointerPaths, buildPointerFiles } from '#cli/generation/pointers.ts';
+import { listToolFileDeclarations } from '#cli/generation/tool-files/declarations.ts';
 
 import type {
     WholeToolFile,
     ToolFileContent,
-    NeededToolFiles,
     ToolFileSelection,
     ToolFileGeneration,
     ToolFileGenerationState,
 } from '#cli/types/generation/files.ts';
-
-// Constraints select declarations without treating an empty constraint as a requirement.
-function isToolFileNeeded(
-    session: Session,
-    selection: ScopeSelection,
-    file: ToolFileDeclaration,
-    needed: NeededToolFiles,
-): boolean {
-    if (file.level === 'all' && session.settingsFile.settings.level !== 'all') return false;
-    const constraints = [
-        [file.tool, needed.tools],
-        [file.check, needed.checks],
-    ] as const;
-    if (constraints.some(([names, available]) => names.length > 0 && !names.some((name) => available.has(name))))
-        return false;
-    return (
-        file.when === undefined ||
-        isConfigurationSelected(file.per_scope ? [selection] : session.scopes, file.when.configuration)
-    );
-}
-
-// Each scope uses its own checks for scoped declarations and the repository programs for shared declarations.
-function listScopeDeclarations(
-    session: Session,
-    selection: ScopeSelection,
-    repository: NeededToolFiles,
-): ToolFileSelection[] {
-    const checks = session.configuredChecks.filter(
-        (planned) => planned.selection.scope.path === selection.scope.path || planned.check.runs === 'once',
-    );
-    const needed = {
-        tools: new Set(checks.flatMap((planned) => listRequiredTools(planned))),
-        checks: new Set(checks.map((planned) => planned.check.name)),
-    };
-    return selection.selected.flatMap((manifest) =>
-        manifest.toolFiles
-            .filter((file) => isToolFileNeeded(session, selection, file, file.per_scope ? needed : repository))
-            .map((toolFile) => ({
-                toolFile,
-                owner: {
-                    session,
-                    selection,
-                    manifest,
-                    scopes: session.scopes,
-                    files: session.repository.files,
-                    manifests: session.neededToolManifests,
-                },
-            })),
-    );
-}
 
 // Root outputs win the shared path; other equal-content groups prefer the most scopes.
 function groupToolOutputs(
@@ -192,11 +138,7 @@ function writePointers(
  * @returns the tool files, and the path that each scope uses.
  */
 function buildToolFiles(session: Session): ToolFileGeneration {
-    const repository = {
-        tools: new Set(session.neededToolManifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name))),
-        checks: new Set(session.configuredChecks.map((planned) => planned.check.name)),
-    };
-    const declarations = session.scopes.flatMap((selection) => listScopeDeclarations(session, selection, repository));
+    const declarations = listToolFileDeclarations(session);
     const state: ToolFileGenerationState = { targets: new Map(), files: new Map() };
     buildWholeFiles(session, declarations, state);
     for (const entry of declarations) writePointers(entry, declarations, state);

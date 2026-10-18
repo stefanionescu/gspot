@@ -4,14 +4,18 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { readGitOutput } from '#tests/setup/git.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
+import { buildIgnoreSections } from '#cli/generation/ignore-files.ts';
+import { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
 
 import {
     LANGUAGE_IGNORES,
     PATH_IGNORE_CASES,
     PRETTIER_IGNORE_CASES,
+    IGNORE_LIST_REPOSITORY,
     PRETTIER_IGNORE_SETTINGS,
     PRETTIER_IGNORE_ATTRIBUTES,
 } from '#tests/data/generated-files/ignore-files.ts';
@@ -101,3 +105,21 @@ test.each([...LANGUAGE_IGNORES])(
         expect(files.has('.gspot/config/prettierignore')).toBe(false);
     },
 );
+
+test('the ignore lists name only the files that gspot writes, and Ruff gets only folders and Python files', async () => {
+    await using sandbox = await testdir(IGNORE_LIST_REPOSITORY);
+    readGitOutput(sandbox.path, ['init', '-q']);
+    const session = await openSession(sandbox.path);
+    const files = generate(session).files;
+    const written = files.map(({ path }) => path).filter((path) => !path.startsWith('.gspot/'));
+    const listed = buildIgnoreSections(session)
+        .find(({ title }) => title === IGNORE_SECTION_TITLES.gspot)!
+        .patterns.filter((pattern) => !pattern.startsWith('.gspot/'));
+    expect(listed.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+        written.toSorted((left, right) => left.localeCompare(right)),
+    );
+    const ruff = files.find(({ path }) => path.startsWith('.gspot/') && path.endsWith('ruff.toml'))!;
+    const excluded = (parse(ruff.content) as { 'extend-exclude': string[] })['extend-exclude'];
+    expect(excluded.length).toBeGreaterThan(0);
+    for (const pattern of excluded) expect(pattern.endsWith('/**') || pattern.endsWith('.py')).toBe(true);
+});

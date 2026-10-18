@@ -18,7 +18,12 @@ function buildPythonInputs(context: ToolFileContext): PythonInputs {
     const { session, selection, level } = context;
     const root = session.installedRoot;
     const base = posix.relative(posix.dirname(context.targetPath), '.');
-    const exclusions = buildGlobSections(buildIgnoreSections(session));
+    // Ruff and basedpyright read only Python files. Give them folders and Python file patterns only.
+    const exclusions = buildGlobSections(buildIgnoreSections(session)).filter(
+        (pattern) =>
+            pattern.endsWith('/**') ||
+            context.manifest.files.extensions.some((extension) => pattern.endsWith(extension)),
+    );
     return {
         ruffRules: selection.selected.flatMap((manifest) => [
             ...manifest.ruff.recommended,

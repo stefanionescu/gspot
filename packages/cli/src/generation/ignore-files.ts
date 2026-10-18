@@ -1,14 +1,15 @@
 // Build the shared ignore sections for .prettierignore and the tool exclusions.
-import { basename } from 'node:path/posix';
+import { join, basename } from 'node:path/posix';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
+import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { listPointerPaths } from '#cli/generation/pointers.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { type ScopeView } from '#cli/types/settings/values.ts';
 import { IGNORE_FILE_PURPOSES } from '#cli/config/generation/formatting.ts';
-import { isInGspotFolder, listFileDeclarations } from '#cli/repository/classify.ts';
+import { listToolFileDeclarations } from '#cli/generation/tool-files/declarations.ts';
 import { type IgnoreSection, type ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
@@ -19,22 +20,17 @@ import {
     LOCAL_ENVIRONMENT_PATTERNS,
 } from '#cli/config/generation/ignore-files.ts';
 
-// Collect the generated destinations and pointers that external scanners must leave alone.
-function collectToolExclusions(session: Parameters<typeof buildIgnoreSections>[0]): string[] {
-    const { repository, scopes } = session;
-    const needed = new Set(session.neededToolManifests.map((manifest) => manifest.configuration.name));
-    return scopes.flatMap((selection) =>
-        selection.selected
-            .filter((manifest) => needed.has(manifest.configuration.name))
-            .flatMap((manifest) =>
-                manifest.toolFiles.flatMap((file) => [
-                    ...(!file.fragment && !isInGspotFolder(file.target)
-                        ? [file.per_scope ? joinScope(selection.scope.path, file.target) : file.target]
-                        : []),
-                    ...listPointerPaths({ files: repository.files, selection, manifest, scopes }, file),
-                ]),
-            ),
-    );
+// Collect the generated files and pointers outside .gspot that this run writes, so that scanners leave them alone.
+function collectToolExclusions(session: Session): string[] {
+    const paths = listToolFileDeclarations(session).flatMap(({ toolFile, owner }) => {
+        if (toolFile.fragment) return [];
+        const whole =
+            toolFile.source === undefined || isInGspotFolder(toolFile.target)
+                ? []
+                : [toolFile.per_scope ? joinScope(owner.selection.scope.path, toolFile.target) : toolFile.target];
+        return [...whole, ...listPointerPaths(owner, toolFile)];
+    });
+    return [...new Set(paths)];
 }
 
 /**
@@ -42,11 +38,12 @@ function collectToolExclusions(session: Parameters<typeof buildIgnoreSections>[0
  * @param session the repository to read.
  * @returns the exclusion groups in order.
  */
-function buildIgnoreSections(
-    session: Pick<Session, 'reads' | 'repository' | 'scopes' | 'neededToolManifests'>,
-): IgnoreSection[] {
+function buildIgnoreSections(session: Session): IgnoreSection[] {
     const { reads, repository, scopes } = session;
-    const declarations = listFileDeclarations(new Map(scopes.map(({ scope, selected }) => [scope.path, selected])));
+    // The tool files and pointers have their own section. Keep only the files that project generators write.
+    const generatorOutputs = scopes.flatMap(({ scope, selected }) =>
+        selected.flatMap((manifest) => manifest.generated.map((file) => join(scope.path, file))),
+    );
     const tracked = repository.index.length === 0 ? repository.files : repository.index;
     const folders = [
         ...new Set(scopes.flatMap(({ selected }) => selected.flatMap((manifest) => manifest.ignored_folders))),
@@ -74,7 +71,7 @@ function buildIgnoreSections(
                     reads,
                     tracked.map(({ path }) => path),
                 ),
-                ...declarations.flatMap(({ paths }) => paths),
+                ...generatorOutputs,
             ],
         },
         {

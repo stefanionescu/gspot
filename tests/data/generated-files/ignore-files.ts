@@ -81,3 +81,16 @@ export const PATH_IGNORE_CASES = [
 ] as const;
 
 export const PRETTIER_IGNORE_ATTRIBUTES = '/generated/** linguist-generated\n/vendored/** linguist-vendored\n';
+
+/** A repository whose scopes select different tools, so each scope writes different pointers. */
+export const IGNORE_LIST_REPOSITORY = {
+    'gspot.toml':
+        'level = "all"\nconfigurations = ["javascript", "python", "markdown"]\n\n[[scope]]\npath = "apps/web"\nconfigurations = ["javascript", "css"]\n\n[[scope]]\npath = "services/api"\nconfigurations = ["python"]\n',
+    'apps/web/package.json': '{"name":"web","private":true}\n',
+    'apps/web/source.js': 'export const value = 1;\n',
+    'apps/web/style.css': 'a { color: red; }\n',
+    'services/api/pyproject.toml': '[project]\nname = "api"\nversion = "0.1.0"\n',
+    'services/api/source.py': 'VALUE = 1\n',
+    'README.md': '# Example\n',
+    'source.js': 'export const other = 2;\n',
+} as const;

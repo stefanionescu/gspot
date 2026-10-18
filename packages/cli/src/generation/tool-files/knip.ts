@@ -1,7 +1,6 @@
 // Find the entry files of a folder: the ones in the settings, then the ones that the configurations of the nearest scope know.
 
 import { joinScopeSelector } from '#cli/settings/paths.ts';
-import { listPointerPaths } from '#cli/generation/pointers.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
@@ -12,7 +11,6 @@ import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
 
 import {
-    KNIP_IGNORED,
     KNIP_SCHEMA_URL,
     KNIP_ENTRY_SETTING,
     KNIP_IGNORED_DEPENDENCIES,
@@ -84,7 +82,7 @@ function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Sco
  * @returns the workspace entry points, project selectors, and dependency exclusions.
  */
 function buildKnipFile(context: ToolFileContext): string {
-    const { selection, scopes, files, manifests } = context;
+    const { selection, scopes, manifests } = context;
     const { settingsFile, root, startRunner } = context.session;
     const { extra } = selection.view;
     const options = selection.view.options('tools.knip');
@@ -93,13 +91,6 @@ function buildKnipFile(context: ToolFileContext): string {
         ...buildIgnoreSections(context.session),
         ...buildSettingsSections(context.selection.view, 'javascript/knip'),
     ]);
-    const pointers = scopes.flatMap((selection) =>
-        selection.selected.flatMap((manifest) =>
-            manifest.toolFiles.flatMap((toolFile) =>
-                listPointerPaths({ files, selection, manifest, scopes }, toolFile),
-            ),
-        ),
-    );
     const tools = listDistinctTools(manifests);
     const toolBinaries = [
         ...tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),
@@ -112,7 +103,7 @@ function buildKnipFile(context: ToolFileContext): string {
     return JSON.stringify(
         {
             $schema: KNIP_SCHEMA_URL,
-            ignore: [...new Set([...KNIP_IGNORED, ...pointers, ...ignoredPaths])],
+            ignore: ignoredPaths,
             ignoreDependencies: [
                 ...new Set([
                     ...KNIP_IGNORED_DEPENDENCIES,
