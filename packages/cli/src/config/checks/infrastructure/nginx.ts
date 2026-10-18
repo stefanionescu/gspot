@@ -19,24 +19,6 @@ export const HOST_PATTERNS = new Map([
     ['server', /^([A-Za-z][\w.-]*)/u],
 ]);
 
-export const NGINX_ESCAPES: Readonly<Record<string, string>> = {
-    t: '\t',
-    r: '\r',
-    n: '\n',
-    '"': '"',
-    "'": "'",
-    '\\': '\\',
-} as const;
-
-export const WORD_START_STOPS = /[\s"'{};#\\]/u;
-
-export const WORD_STOPS = /[\s{};\\]/u;
-
-export const NGINX_PUNCTUATION = new Set([';', '{', '}']);
-
-/** A bare-word escape contains a backslash and its escaped character. */
-export const ESCAPE_LENGTH = 2;
-
 export const NGINX_FOLDER = '/etc/nginx';
 
 export const ERROR_LOCATION = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u;
@@ -66,9 +48,6 @@ export const LOOPBACK_ADDRESS = '127.0.0.1';
 export const READ_ONLY_MOUNT = ':ro';
 
 export const NGINX_TEST_COMMAND = ['nginx', '-T'] as const;
-
-export const QUOTED_ARGUMENT = /^(["'])([\s\S]*)\1$/u;
-export const ESCAPED_CHARACTER = /\\([trn"'\\])/gu;
 
 export const NGINX_KEY_FILE = 'key.pem';
 export const NGINX_CERTIFICATE_FILE = 'certificate.pem';

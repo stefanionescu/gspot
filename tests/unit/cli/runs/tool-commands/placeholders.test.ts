@@ -10,8 +10,8 @@ import { spawnProcess } from '#cli/system/processes.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { type CommandPart } from '#cli/types/runs/command.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { listSwiftlintToolFiles } from '#cli/checks/swift/build.ts';
 import { WORKSPACE_SCOPE_CASES } from '#tests/data/runs/command-checks.ts';
-import { listSwiftlintToolFiles } from '#cli/checks/language/swift/build.ts';
 import { prepareCommand, buildCommandEnvironment } from '#cli/runs/command/check.ts';
 import { expandCommand, listScratchFiles, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
 

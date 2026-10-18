@@ -6,10 +6,10 @@ import { join, dirname, resolve } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeNpmTool } from '#tests/setup/fakes.ts';
 import * as processes from '#cli/system/processes.ts';
+import { runSvelteCheck } from '#cli/checks/svelte.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
-import { runSvelteCheck } from '#cli/checks/framework/svelte.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT } from '#tests/data/checks/svelte.ts';
 

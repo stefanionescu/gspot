@@ -39,42 +39,42 @@ cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/framework/site/linkinator-process.ts"]
+paths = ["packages/cli/src/checks/site/linkinator-process.ts"]
 allowed_names = ["LinkChecker"]
 reason = "Linkinator exports LinkChecker under this exact name."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/framework/site/purgecss-process.ts"]
+paths = ["packages/cli/src/checks/site/purgecss-process.ts"]
 allowed_names = ["PurgeCSS"]
 reason = "PurgeCSS exports its class under this exact name."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/general/licenses.ts"]
+paths = ["packages/cli/src/checks/licenses.ts"]
 allowed_names = ["License", "Name", "Version"]
 reason = "pip-licenses identifies these JSON fields with this exact capitalization."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/general/prose.ts"]
+paths = ["packages/cli/src/checks/prose.ts"]
 allowed_names = ["Check", "Line", "Message", "Span"]
 reason = "Vale identifies these JSON diagnostic fields with this exact capitalization."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/infrastructure/docker.ts", "packages/cli/src/checks/infrastructure/dockerignore.ts"]
+paths = ["packages/cli/src/checks/docker/trivy-image.ts", "packages/cli/src/checks/docker/dockerignore.ts"]
 allowed_names = ["ArtifactName", "PkgName", "Results", "RuleID", "SchemaVersion", "Secrets", "Target", "Title", "Vulnerabilities", "VulnerabilityID"]
 reason = "Trivy identifies these JSON report fields with these exact names."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/infrastructure/xcode/resources.ts"]
+paths = ["packages/cli/src/checks/xcode/resources.ts"]
 allowed_names = ["shouldTranslate"]
 reason = "The Xcode string format names its translation control shouldTranslate."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/language/python/deptry.ts"]
+paths = ["packages/cli/src/checks/python/deptry.ts"]
 allowed_names = ["extend_exclude"]
 reason = "deptry names this TOML setting extend_exclude."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/testing/coverage.ts", "packages/cli/src/checks/testing/swift-tests.ts"]
+paths = ["packages/cli/src/checks/swift-tests/coverage.ts", "packages/cli/src/checks/swift-tests/skip-reasons.ts"]
 allowed_names = ["module_type"]
 reason = "Swift coverage JSON names the module type field module_type."
 
@@ -141,7 +141,7 @@ allowed_names = ["ARBITRARY_LOADS"]
 reason = "Apple names the key NSAllowsArbitraryLoads."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/general/dependencies/lockfiles.ts"]
+paths = ["packages/cli/src/checks/dependencies/lockfiles.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
@@ -473,7 +473,7 @@ import_extension = "ts"
 
 [tools.knip]
 ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build imports these packages through CSS or copies their grammar files by path." }
-entry = ["tests/setup/prepare-run.ts", "tests/setup/integration.ts", "packages/cli/src/checks/framework/site/linkinator-process.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/eslint-runtime.mjs"]
+entry = ["tests/setup/prepare-run.ts", "tests/setup/integration.ts", "packages/cli/src/checks/site/linkinator-process.ts", "packages/cli/src/checks/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/eslint-runtime.mjs"]
 
 [tools.typos]
 extra = { value = { type = { license_names = { extend-glob = ["gspot.toml"], extend-words = { axe = "axe" } }, zod_types = { extend-glob = ["shapes.ts"], extend-words = { optin = "optin" } } } }, reason = "Typos splits the published axe-core license name; Zod names its optional input marker optin." }

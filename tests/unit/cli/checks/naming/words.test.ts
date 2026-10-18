@@ -4,14 +4,14 @@ import { buildKnownSettings } from '#cli/settings/known.ts';
 import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { checkIdentifier } from '#cli/checks/naming/names.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { buildNamingSettings } from '#tests/setup/builders.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { BANNED_WORDS } from '#tests/data/checks/naming/settings.ts';
-import { checkIdentifier } from '#cli/checks/general/naming/names.ts';
+import { splitParts, readNamingSettings } from '#cli/checks/naming/settings.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import { type Identifier, type NamingInputs } from '#cli/types/checks/general.ts';
-import { splitParts, readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 
 test('a number word such as base64 counts as one word; repeated, extra, banned and digit words are still reported', () => {
     const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(

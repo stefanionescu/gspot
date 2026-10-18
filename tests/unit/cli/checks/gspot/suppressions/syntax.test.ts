@@ -2,10 +2,10 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { checkSuppressions } from '#cli/checks/gspot/suppressions.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
-import { checkSuppressions } from '#cli/checks/general/gspot/suppressions.ts';
 import { SUPPRESSION_DIRECTIVE_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 import { LIMIT_SUPPRESSION_CASES } from '#tests/data/checks/gspot/suppression-limits.ts';
 

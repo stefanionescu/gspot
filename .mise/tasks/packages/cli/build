@@ -9,7 +9,7 @@ mkdir -p dist
     printf '%s\n' '#!/usr/bin/env node'
     bun build src/main.ts --target node --format esm --packages external
 } >dist/gspot.js
-bun build src/checks/framework/site/linkinator-process.ts src/checks/framework/site/purgecss-process.ts --outdir dist --target node --format esm --packages external
+bun build src/checks/site/linkinator-process.ts src/checks/site/purgecss-process.ts --outdir dist --target node --format esm --packages external
 
 mkdir -p grammars/licenses
 for grammar in bash css html javascript python typescript; do

@@ -5,10 +5,10 @@ import { test, spyOn, expect } from 'bun:test';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { buildPlan } from '#cli/checks/swift/cache.ts';
 import * as environment from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildPlan } from '#cli/checks/language/swift/cache.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { checkFindings, buildCheckInput, createCompilerCache } from '#tests/setup/check-input.ts';
 

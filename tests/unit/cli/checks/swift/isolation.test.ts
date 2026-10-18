@@ -6,8 +6,8 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import * as processes from '#cli/system/processes.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
+import { buildPlan, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
 import { open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { buildPlan, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
 import { checkFindings, buildCheckInput, prepareSwiftInput } from '#tests/setup/check-input.ts';
 
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {

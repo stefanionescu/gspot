@@ -16,8 +16,8 @@ import { SITE_SANDBOX } from '#tests/data/checks/site/project.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { BUILT_PAGE_CASES } from '#tests/data/checks/site/built-pages.ts';
+import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/site/build.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
 
 import {
     SITE_SETTINGS,

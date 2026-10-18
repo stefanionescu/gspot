@@ -18,7 +18,7 @@ import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { fakeTool, fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { checkStaleGeneratorOutputs } from '#cli/checks/stale-generator-outputs.ts';
+import { checkStaleGeneratorOutputs } from '#cli/checks/gspot/stale-generator-outputs.ts';
 import { GENERATOR_CASES, GENERATOR_SCRIPT, SUPABASE_TYPES_OUTPUT } from '#tests/data/checks/generator-outputs.ts';
 
 import {

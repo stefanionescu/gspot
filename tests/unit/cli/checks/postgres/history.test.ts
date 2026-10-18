@@ -4,11 +4,11 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildSchema } from '#cli/checks/postgres/schema.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
+import { readMigrations } from '#cli/checks/postgres/migrations.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
-import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { MIGRATION_FILE, TEAMS_MIGRATION } from '#tests/data/checks/postgres.ts';
 

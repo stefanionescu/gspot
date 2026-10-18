@@ -1,20 +1,16 @@
 import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { type Identifier } from '#cli/types/checks/general.ts';
+import { extractSqlIdentifiers } from '#cli/checks/naming/sql.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
-import { extractSqlIdentifiers } from '#cli/checks/general/naming/sql.ts';
 import { SQL_DECLARATIONS, QUALIFIED_FUNCTION_DECLARATION } from '#tests/data/checks/sql.ts';
+import { parseIdentifiers, buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/naming/identifiers.ts';
 
 import {
     NAME_POSITION_CASES,
     DECLARATION_SAMPLES,
     DECLARATION_ORDER_CASES,
 } from '#tests/data/checks/naming/sources.ts';
-import {
-    parseIdentifiers,
-    buildFileIdentifier,
-    buildFolderIdentifiers,
-} from '#cli/checks/general/naming/identifiers.ts';
 
 // Several language cases compare the same category of extracted declarations.
 function listCategoryNames(found: Identifier[], category: string): string[] {

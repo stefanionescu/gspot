@@ -7,8 +7,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
+import { checkJavascriptTsc } from '#cli/checks/typescript/tsc.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
-import { checkJavascriptTsc } from '#cli/checks/language/typescript/tsc.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 
 import {

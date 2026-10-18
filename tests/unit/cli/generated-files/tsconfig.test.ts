@@ -5,7 +5,7 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { writeScopeTsconfig } from '#cli/checks/language/typescript/compiler.ts';
+import { writeScopeTsconfig } from '#cli/checks/typescript/compiler.ts';
 import { MALFORMED_TSCONFIGS, STRICT_TSCONFIG_TEXT } from '#tests/data/checks/typescript/projects.ts';
 
 test.each(MALFORMED_TSCONFIGS)(

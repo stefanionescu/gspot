@@ -15,7 +15,7 @@ import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildCheckInput, createCompilerCache } from '#tests/setup/check-input.ts';
-import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
+import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/data/checks/swift/projects.ts';
 
 test.each(['default', 'platform=macOS'])(

@@ -8,12 +8,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
 import { type Session } from '#cli/types/planning.ts';
+import { checkNextjsTsc } from '#cli/checks/nextjs.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
-import { checkNextjsTsc } from '#cli/checks/framework/nextjs.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 

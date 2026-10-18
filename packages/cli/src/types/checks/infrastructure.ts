@@ -24,8 +24,6 @@ export type ComposeService = {
         | undefined;
 };
 
-export type DirectiveScan = { token: string | undefined; end: number };
-
 export type ParsedOpenapi = { document?: string | undefined; generate_command?: string[] | undefined };
 
 export type ParsedXcode = {
