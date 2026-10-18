@@ -3,13 +3,20 @@ import SiteTitle from './SiteTitle.astro';
 import ThemeSelect from './ThemeSelect.astro';
 import Search from '@astrojs/starlight/components/Search.astro';
 import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
+
+// The landing page links to the docs from its footer; search and the Docs link sit on docs pages.
+const isHome = Astro.url.pathname === '/';
 ---
 
-<div class="site-header">
+<div class:list={['site-header', { home: isHome }]}>
     <SiteTitle />
-    <div class="search print:hidden">
-        <Search />
-    </div>
+    {
+        !isHome && (
+            <div class="search print:hidden">
+                <Search />
+            </div>
+        )
+    }
     <div class="controls print:hidden">
         <div class="social">
             <SocialIcons />
@@ -24,6 +31,9 @@ import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
     align-items: center;
     gap: 4px;
     height: 100%;
+}
+.site-header.home {
+    grid-template-columns: minmax(0, 1fr) auto;
 }
 .search {
     justify-self: end;
@@ -76,7 +86,7 @@ import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 }
 
 @media (width >= 50rem) {
-    .site-header {
+    .site-header:not(.home) {
         grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) minmax(0, 1fr);
         gap: 24px;
     }
