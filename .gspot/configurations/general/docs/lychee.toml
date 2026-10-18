@@ -1,0 +1,3 @@
+# This file stops lychee from reading a lychee.toml in the folder where it runs.
+# Allow a URL with the docs.allowed_urls setting.
+exclude = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$"]

@@ -1,8 +1,0 @@
-{
-    "mode": "strict",
-    "minLines": 8,
-    "minTokens": 40,
-    "absolute": true,
-    "gitignore": true,
-    "ignore": ["**/.gspot/**", "**/*.md", "**/*.mdx"]
-}

@@ -2,4 +2,11 @@
 
 # >>> gspot managed >>>
 .gspot/** linguist-generated
+/.editorconfig linguist-generated
+/.github/workflows/gspot.yml linguist-generated
+/.markdownlint.jsonc linguist-generated
+/.prettierignore linguist-generated
+/docs/.stylelintrc.json linguist-generated
+/eslint.config.mjs linguist-generated
+/prettier.config.mjs linguist-generated
 # <<< gspot managed <<<

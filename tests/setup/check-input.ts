@@ -125,8 +125,8 @@ async function openPinnedSession(
 
 /**
  * Find the code of a built-in check, as a function that resolves to its findings.
- * @param checkId the check ID.
- * @returns the built-in check.
+ * @param checkId a check with built-in code, such as `structure/lone-files`.
+ * @returns a function that runs the check on an input and resolves to its findings.
  */
 function findBuiltInCheck(checkId: string): (input: CheckInput) => Promise<Finding[]> {
     const check = selectCheckImplementation({ name: checkId })?.check;
@@ -139,7 +139,7 @@ function findBuiltInCheck(checkId: string): (input: CheckInput) => Promise<Findi
 
 /**
  * Build the run of a check from its check implementation.
- * @param checkId the check ID.
+ * @param checkId a shipped check, such as `bash/shellcheck`.
  * @returns the run function.
  */
 function findCheckRun(checkId: string): RunnableCheck['run'] {

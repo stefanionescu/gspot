@@ -1,1 +1,0 @@
-exclude = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$"]

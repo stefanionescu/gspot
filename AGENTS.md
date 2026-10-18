@@ -2,70 +2,94 @@
 
 # Rules
 
-Level: `all`.
+Read these rules first:
 
-Read `.gspot/rules/general/engineering/agent/WORKING.md` and `.gspot/rules/general/prose/WRITING.md` first. Then read the rules for the files you change. A more specific rule wins over a general one.
+- `.gspot/configurations/general/engineering/rules/WORKING.md`
+- `.gspot/configurations/general/prose/rules/WRITING.md`
+- `.gspot/configurations/general/engineering/rules/TALKING.md`
 
-Languages:
+Read a rule below when its sentence fits your task.
+A rule marked `in <folder>/` applies only to files in that folder.
+A more specific rule wins over a general one.
 
-- `.gspot/rules/language/javascript/BUN.md`
-- `.gspot/rules/language/javascript/COMPONENTS.md`
-- `.gspot/rules/language/javascript/JAVASCRIPT.md`
-- `.gspot/rules/language/javascript/NAMING.md`
-- `.gspot/rules/language/javascript/NODE.md`
-- `.gspot/rules/language/typescript/NAMING.md`
-- `.gspot/rules/language/typescript/TYPESCRIPT.md`
-- `.gspot/rules/language/bash/BASH.md`
-- `.gspot/rules/language/bash/LANGUAGE.md`
-- `.gspot/rules/language/bash/NAMING.md`
-- `.gspot/rules/language/bash/OPERATIONS.md`
-- `.gspot/rules/language/bash/SAFETY.md`
-- `.gspot/rules/language/css/CSS.md`
-- `.gspot/rules/language/css/NAMING.md`
-- `.gspot/rules/language/html/HTML.md`
-- `.gspot/rules/language/html/NAMING.md`
+## Languages
 
-Infrastructure:
+- `.gspot/configurations/language/javascript/rules/BUN.md`: when code runs on Bun.
+- `.gspot/configurations/language/javascript/rules/COMPONENTS.md`: when you change an Astro, Svelte, Vue, or React component.
+- `.gspot/configurations/language/javascript/rules/JAVASCRIPT.md`: when you change JavaScript or TypeScript code.
+- `.gspot/configurations/language/javascript/rules/NODE.md`: when code runs on Node.
+- `.gspot/configurations/language/typescript/rules/TYPESCRIPT.md`: when you change TypeScript code.
+- `.gspot/configurations/language/bash/rules/BASH.md`: when you write or change a shell script.
+- `.gspot/configurations/language/bash/rules/LANGUAGE.md`: when you write Bash functions, variables, quoting, or loops.
+- `.gspot/configurations/language/bash/rules/OPERATIONS.md`: when you write a deployment, publishing, or remote shell script.
+- `.gspot/configurations/language/bash/rules/SAFETY.md`: when a shell script runs commands, handles paths, downloads files, or deletes files.
+- `.gspot/configurations/language/css/rules/CSS.md` in `docs/`: when you change a stylesheet.
+- `.gspot/configurations/language/html/rules/HTML.md` in `docs/`: when you change HTML or an HTML template.
 
-- `.gspot/rules/infrastructure/github-actions/GITHUB-ACTIONS.md`
+## Infrastructure
 
-General:
+- `.gspot/configurations/infrastructure/github-actions/rules/GITHUB-ACTIONS.md`: when you change a GitHub Actions workflow or action.
 
-- `.gspot/rules/general/commits/GIT.md`
-- `.gspot/rules/general/dependencies/DEPENDENCIES.md`
-- `.gspot/rules/general/docs/DOCS.md`
-- `.gspot/rules/general/engineering/agent/PLANNING.md`
-- `.gspot/rules/general/engineering/agent/SUPPRESSIONS.md`
-- `.gspot/rules/general/engineering/agent/TALKING.md`
-- `.gspot/rules/general/engineering/agent/TASKS.md`
-- `.gspot/rules/general/engineering/code/ACCESSIBILITY.md`
-- `.gspot/rules/general/engineering/code/CLI.md`
-- `.gspot/rules/general/engineering/code/COMMENTS.md`
-- `.gspot/rules/general/engineering/code/CONFIGURATION.md`
-- `.gspot/rules/general/engineering/code/ERRORS.md`
-- `.gspot/rules/general/engineering/code/HTTP.md`
-- `.gspot/rules/general/engineering/code/LOGGING.md`
-- `.gspot/rules/general/engineering/code/TESTING.md`
-- `.gspot/rules/general/files/YAML.md`
-- `.gspot/rules/general/gspot/GENERATED.md`
-- `.gspot/rules/general/naming/NAMING.md`
-- `.gspot/rules/general/secrets/SECRETS.md`
-- `.gspot/rules/general/security/SECURITY.md`
+## General
 
-Frameworks:
+- `.gspot/configurations/general/commits/rules/GIT.md`: before you commit, push, tag, or open a pull request.
+- `.gspot/configurations/general/dependencies/rules/DEPENDENCIES.md`: before you add, upgrade, or remove a dependency.
+- `.gspot/configurations/general/docs/rules/DOCS.md`: when you write or change documentation.
+- `.gspot/configurations/general/engineering/rules/ACCESSIBILITY.md`: when you change a user interface.
+- `.gspot/configurations/general/engineering/rules/CLI.md`: when you change a command-line program that the project ships.
+- `.gspot/configurations/general/engineering/rules/COMMENTS.md`: when you write or change a comment.
+- `.gspot/configurations/general/engineering/rules/CONFIGURATION.md`: when you change how a program reads its configuration or environment.
+- `.gspot/configurations/general/engineering/rules/ERRORS.md`: when you write code that raises, catches, or reports an error.
+- `.gspot/configurations/general/engineering/rules/HTTP.md`: when you change an HTTP service.
+- `.gspot/configurations/general/engineering/rules/LOGGING.md`: when you add or change logging.
+- `.gspot/configurations/general/engineering/rules/PLANNING.md`: before you write a plan.
+- `.gspot/configurations/general/engineering/rules/SUPPRESSIONS.md`: before you add a suppression comment or run `gspot ignore`.
+- `.gspot/configurations/general/engineering/rules/TASKS.md`: when you change `mise` tasks, `package.json` scripts, a `Makefile`, or another task runner.
+- `.gspot/configurations/general/engineering/rules/TESTING.md`: when you write or change a test.
+- `.gspot/configurations/general/files/rules/YAML.md`: when you change a `.yml` or `.yaml` file.
+- `.gspot/configurations/general/gspot/rules/GENERATED.md`: when you change a generated file, or the code that writes one.
+- `.gspot/configurations/general/naming/rules/NAMING.md`: when you name a file, folder, type, function, or variable.
+- `.gspot/configurations/general/secrets/rules/SECRETS.md`: when code reads, stores, or logs a secret.
+- `.gspot/configurations/general/security/rules/SECURITY.md`: when code handles input, authentication, redirects, or downloads.
 
-- `.gspot/rules/framework/astro/ASTRO.md`
-- `.gspot/rules/framework/site/SITE.md`
+## Frameworks
 
-Libraries:
+- `.gspot/configurations/framework/astro/rules/ASTRO.md` in `docs/`: when you change Astro components, pages, or content collections.
+- `.gspot/configurations/framework/site/rules/SITE.md` in `docs/`: when you change a site that a build turns into static HTML.
 
-- `.gspot/rules/library/zod/ZOD.md`
+## Libraries
 
-Platforms:
+- `.gspot/configurations/library/zod/rules/ZOD.md` in `docs/`, `packages/cli/`, `tests/`: when you write or change a Zod schema.
 
-- `.gspot/rules/platform/cloudflare/CLOUDFLARE.md`
+## Platforms
 
-Run `mise exec -- gspot check --staged` before you commit. To change gspot.toml, use `mise exec -- gspot set`, `mise exec -- gspot unset`, `mise exec -- gspot ignore`, or `mise exec -- gspot unignore`. After you edit gspot.toml by hand, run `mise exec -- gspot apply`. Never edit files under `.gspot/`, or these generated files: `.editorconfig`, `.github/workflows/gspot.yml`, `.markdownlint-cli2.mjs`, `.prettierignore`, `.semgrepignore`, `bunfig.toml`, `docs/.stylelintrc.json`, `eslint.config.mjs`, `prettier.config.mjs`. Change `gspot.toml` and run `mise exec -- gspot apply` instead.
+- `.gspot/configurations/platform/cloudflare/rules/CLOUDFLARE.md` in `docs/`: when code runs on Cloudflare Workers.
+
+## Commands
+
+Before you commit, run `mise exec -- gspot check --staged`.
+
+To change `gspot.toml`, run `mise exec -- gspot set`, `unset`, `add`, `remove`, `ignore`, or `unignore`.
+After you edit `gspot.toml` by hand, run `mise exec -- gspot apply`.
+
+## Generated files
+
+Do not edit these files. Change `gspot.toml`, then run `mise exec -- gspot apply`.
+
+- every file under `.gspot/`
+- `.editorconfig`
+- `.github/workflows/gspot.yml`
+- `.markdownlint.jsonc`
+- `.prettierignore`
+- `docs/.stylelintrc.json`
+- `eslint.config.mjs`
+- `prettier.config.mjs`
+
+gspot also sets these keys in `bunfig.toml`: `install.minimumReleaseAge` and `install.minimumReleaseAgeExcludes` and `install.security.scanner`.
+You can edit the other keys of that file.
+
+gspot also sets these keys in `mise.toml`: `settings.minimum_release_age` and `settings.minimum_release_age_excludes`.
+You can edit the other keys of that file.
 
 <!-- <<< gspot managed <<< -->
 

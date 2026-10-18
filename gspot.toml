@@ -1,4 +1,4 @@
-#:schema https://unpkg.com/@gspothq/cli@0.1.1/gspot.schema.json
+#:schema https://unpkg.com/@gspothq/cli@0.3.0/gspot.schema.json
 
 # gspot settings for this repository. Change them with gspot set, unset, add, remove, ignore, and unignore.
 
@@ -290,152 +290,11 @@ paths = ["tests/unit/cli/repository/package-manager.test.ts"]
 allowed_names = ["package-manager.test"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
-[architecture.roles]
+[structure]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/environment.ts"]
 
-# A module may import itself and the modules in its may_import list.
-[[architecture.module]]
-name = "cli-config"
-paths = ["packages/cli/src/config/**"]
-may_import = []
-
-[[architecture.module]]
-name = "cli-types"
-paths = ["packages/cli/src/types/**"]
-may_import = ["cli-config"]
-
-[[architecture.module]]
-name = "plugin-config"
-paths = ["packages/eslint-plugin/src/config/**"]
-may_import = ["cli-config", "cli-types"]
-
-[[architecture.module]]
-name = "plugin-types"
-paths = ["packages/eslint-plugin/src/types/**"]
-may_import = ["cli-config", "cli-types", "plugin-config"]
-
-[[architecture.module]]
-name = "docs-config"
-paths = ["docs/src/config/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types"]
-
-[[architecture.module]]
-name = "docs-types"
-paths = ["docs/src/types/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "reference"]
-
-[[architecture.module]]
-name = "tests-data"
-paths = ["tests/data/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types"]
-
-[[architecture.module]]
-name = "tests-types"
-paths = ["tests/types/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data"]
-
-[[architecture.module]]
-name = "system"
-paths = ["packages/cli/src/system/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types"]
-
-[[architecture.module]]
-name = "parsers"
-paths = ["packages/cli/src/parsers/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system"]
-
-[[architecture.module]]
-name = "configurations"
-paths = ["packages/cli/src/configurations/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers"]
-
-[[architecture.module]]
-name = "repository"
-paths = ["packages/cli/src/repository/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations"]
-
-[[architecture.module]]
-name = "ownership"
-paths = ["packages/cli/src/ownership/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository"]
-
-[[architecture.module]]
-name = "settings"
-paths = ["packages/cli/src/settings/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership"]
-
-[[architecture.module]]
-name = "planning"
-paths = ["packages/cli/src/planning/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings"]
-
-[[architecture.module]]
-name = "generation"
-paths = ["packages/cli/src/generation/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning"]
-
-[[architecture.module]]
-name = "tools"
-paths = ["packages/cli/src/tools/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation"]
-
-[[architecture.module]]
-name = "session"
-paths = ["packages/cli/src/session.ts"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools"]
-
-[[architecture.module]]
-name = "install"
-paths = ["packages/cli/src/install/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session"]
-
-[[architecture.module]]
-name = "apply"
-paths = ["packages/cli/src/apply/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install"]
-
-[[architecture.module]]
-name = "runs"
-paths = ["packages/cli/src/runs/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply"]
-
-[[architecture.module]]
-name = "checks"
-paths = ["packages/cli/src/checks/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "runs"]
-
-[[architecture.module]]
-name = "commands"
-paths = ["packages/cli/src/commands/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "runs", "checks"]
-
-[[architecture.module]]
-name = "main"
-paths = ["packages/cli/src/main.ts"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "runs", "checks", "commands"]
-
-[[architecture.module]]
-name = "plugin"
-paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "runs", "checks", "commands", "main"]
-
-[[architecture.module]]
-name = "reference"
-paths = ["packages/cli/src/reference.ts"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "runs", "checks", "commands", "main", "plugin"]
-
-[[architecture.module]]
-name = "docs"
-paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "runs", "checks", "commands", "main", "plugin", "reference"]
-
-[[architecture.module]]
-name = "tests"
-paths = ["tests/{unit,integration,e2e,setup}/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "runs", "checks", "commands", "main", "plugin", "reference", "docs"]
-
 [dependencies]
-scanner = "@socketsecurity/bun-security-scanner"
+bun_scanner = "@socketsecurity/bun-security-scanner"
 
 [docs]
 allowed_urls = { value = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$"], reason = "The npm package page returns HTTP 403 to automated requests." }
@@ -499,14 +358,128 @@ configurations = ["zod"]
 removed_configurations = ["astro", "jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue", "cloudflare"]
 tools.knip.ignore_dependencies = { value = ["@darraghor/eslint-plugin-nestjs-typed", "@next/eslint-plugin-next", "@react-native/eslint-plugin", "@vitest/eslint-plugin", "bats", "eslint-plugin-drizzle", "eslint-plugin-expo", "eslint-plugin-i18next", "eslint-plugin-jest", "eslint-plugin-react", "eslint-plugin-react-hooks", "eslint-plugin-react-native", "eslint-plugin-react-refresh", "eslint-plugin-svelte", "eslint-plugin-testing-library", "eslint-plugin-vue", "eslint-plugin-vuejs-accessibility", "pnpm", "supabase", "svelte-eslint-parser", "vue-eslint-parser", "yarn", "@nestjs/common", "@nestjs/core", "@tanstack/eslint-plugin-query", "eslint-plugin-jsx-a11y", "reflect-metadata", "rxjs", "vue"], reason = "Native sandbox commands load these packages from the linked tests installation." }
 
+# Code may import its own files and the files of every import rule above it; can_also_import names rules below.
+[[import_rule]]
+name = "cli-config"
+paths = ["packages/cli/src/config/**"]
+
+[[import_rule]]
+name = "cli-types"
+paths = ["packages/cli/src/types/**"]
+
+[[import_rule]]
+name = "plugin-config"
+paths = ["packages/eslint-plugin/src/config/**"]
+
+[[import_rule]]
+name = "plugin-types"
+paths = ["packages/eslint-plugin/src/types/**"]
+
+[[import_rule]]
+name = "docs-config"
+paths = ["docs/src/config/**"]
+
+[[import_rule]]
+name = "docs-types"
+paths = ["docs/src/types/**"]
+can_also_import = ["reference"]
+
+[[import_rule]]
+name = "tests-data"
+paths = ["tests/data/**"]
+
+[[import_rule]]
+name = "tests-types"
+paths = ["tests/types/**"]
+
+[[import_rule]]
+name = "system"
+paths = ["packages/cli/src/system/**"]
+
+[[import_rule]]
+name = "parsers"
+paths = ["packages/cli/src/parsers/**"]
+
+[[import_rule]]
+name = "configurations"
+paths = ["packages/cli/src/configurations/**"]
+
+[[import_rule]]
+name = "repository"
+paths = ["packages/cli/src/repository/**"]
+
+[[import_rule]]
+name = "ownership"
+paths = ["packages/cli/src/ownership/**"]
+
+[[import_rule]]
+name = "settings"
+paths = ["packages/cli/src/settings/**"]
+
+[[import_rule]]
+name = "planning"
+paths = ["packages/cli/src/planning/**"]
+
+[[import_rule]]
+name = "generation"
+paths = ["packages/cli/src/generation/**"]
+
+[[import_rule]]
+name = "tools"
+paths = ["packages/cli/src/tools/**"]
+
+[[import_rule]]
+name = "session"
+paths = ["packages/cli/src/session.ts"]
+
+[[import_rule]]
+name = "install"
+paths = ["packages/cli/src/install/**"]
+
+[[import_rule]]
+name = "apply"
+paths = ["packages/cli/src/apply/**"]
+
+[[import_rule]]
+name = "runs"
+paths = ["packages/cli/src/runs/**"]
+
+[[import_rule]]
+name = "checks"
+paths = ["packages/cli/src/checks/**"]
+
+[[import_rule]]
+name = "commands"
+paths = ["packages/cli/src/commands/**"]
+
+[[import_rule]]
+name = "main"
+paths = ["packages/cli/src/main.ts"]
+
+[[import_rule]]
+name = "plugin"
+paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**"]
+
+[[import_rule]]
+name = "reference"
+paths = ["packages/cli/src/reference.ts"]
+
+[[import_rule]]
+name = "docs"
+paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
+
+[[import_rule]]
+name = "tests"
+paths = ["tests/{unit,integration,e2e,setup}/**"]
+
 [[ignore]]
-check = "dependencies/osv"
+check = "dependencies/osv-scanner"
 rule = "GHSA-ch52-4w7c-c8xp"
 reason = "As checked on 2026-10-09, http-cache-semantics 4.3.0 has no patched release and is used only in development without sharing cached responses between users."
 until = 2026-11-08
 
 [[ignore]]
-check = "dependencies/osv"
+check = "dependencies/osv-scanner"
 rule = "GHSA-vfj7-8cjw-p6xm"
 reason = "As checked on 2026-10-09, braces 3.0.3 has no patched release and is used only by development tools to expand patterns written in this repository."
 until = 2026-11-08
@@ -515,12 +488,6 @@ until = 2026-11-08
 check = "docs/lychee"
 paths = ["docs/src/content/docs/**"]
 reason = "Starlight builds these source links into site routes; site/linkinator checks their targets in the built site."
-
-[[ignore]]
-check = "docs/missing-paths"
-paths = ["docs/src/content/docs/configure/monorepos.md", "docs/src/content/docs/reference/generated-files.md", "docs/src/content/docs/use/coding-agents.md", "docs/src/content/docs/use/editors.md"]
-reason = "The docs describe the .gspot/configurations layout of gspot 0.3.0; this repository runs 0.1.1 until it moves to 0.3.0."
-until = 2026-12-01
 
 [[ignore]]
 check = "docs/missing-paths"
@@ -645,24 +612,9 @@ paths = ["docs/**"]
 reason = "Starlight and Expressive Code write this markup."
 
 [[ignore]]
-check = "site/svgo"
-paths = ["docs/public/tools/knip.svg", "docs/public/tools/trivy.svg"]
-reason = "These exact supplied official assets retain their approved bytes; the owner removed the SVG byte-saving check in CHK050 and decision 25."
-
-[[ignore]]
 check = "spelling/typos"
 paths = ["tests/data/checks/spelling.ts"]
 reason = "This literal supplies a deliberate misspelling to the spelling checks and their corrections."
-
-[[ignore]]
-check = "structure/lone-files"
-paths = ["docs/src/pages/index.astro"]
-reason = "Astro routes the home page by this file."
-
-[[ignore]]
-check = "structure/lone-files"
-paths = ["docs/src/types/reference.ts"]
-reason = "The docs site has one shared type, ReferencePage, and keeps it in docs/src/types/ like every package."
 
 [[ignore]]
 check = "structure/shared-prefixes"
@@ -683,3 +635,13 @@ reason = "ESLint rule IDs are the file names, and they share their first word by
 check = "structure/shared-prefixes"
 paths = ["tests/data/checks/swift-tests.ts", "tests/integration/checks/swift-tests.test.ts", "tests/unit/cli/checks/swift-tests.test.ts"]
 reason = "The test files are named after the swift and swift-tests configurations."
+
+[[ignore]]
+check = "structure/trivial-functions"
+paths = ["packages/cli/src/system/environment.ts"]
+reason = "normalizeEnvironmentKey holds the Windows rule for environment names, which environment.ts and git.ts both apply."
+
+[[ignore]]
+check = "structure/trivial-functions"
+paths = ["packages/cli/src/system/git.ts"]
+reason = "isOutsideGit names the not-a-repository answer of Git, which git.ts and repository/read.ts both test."

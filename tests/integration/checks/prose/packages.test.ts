@@ -10,6 +10,21 @@ import { updateSandbox, shareProseSandbox } from '#tests/setup/sandbox.ts';
 
 const installedSandbox = shareProseSandbox();
 
+/**
+ * Add a file of your own and an authored file inside the Google style to the installed sandbox.
+ * @param sandbox the installed sandbox
+ * @returns the change, undone when disposed
+ */
+function addAuthoredFiles(sandbox: ReturnType<typeof installedSandbox>): ReturnType<typeof updateSandbox> {
+    return updateSandbox(sandbox, {
+        check: '',
+        files: {
+            'authored.txt': 'keep\n',
+            '.gspot/configurations/general/prose/styles/Google/legacy.yml': 'authored legacy bytes\n',
+        },
+    });
+}
+
 test('gspot install restores deleted Vale dictionaries, and prose/vale passes again', async () => {
     const { root: sandbox, environment } = installedSandbox();
     await rm(join(sandbox, '.gspot', 'vale', 'config', 'dictionaries'), {
@@ -29,13 +44,7 @@ test('gspot install restores deleted Vale dictionaries, and prose/vale passes ag
 });
 test('Vale package install deletes a package gspot no longer ships', async () => {
     const sandbox = installedSandbox();
-    await using _change = await updateSandbox(sandbox, {
-        check: '',
-        files: {
-            'authored.txt': 'keep\n',
-            '.gspot/configurations/general/prose/styles/Google/legacy.yml': 'authored legacy bytes\n',
-        },
-    });
+    await using _change = await addAuthoredFiles(sandbox);
     await createFileTree(sandbox.root, { '.gspot/vale/Retired/terms.yml': 'old rule\n' });
     const installed = await spawnGspot(sandbox.root, ['install'], sandbox.environment);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
@@ -49,13 +58,7 @@ test('Vale package install deletes a package gspot no longer ships', async () =>
 
 test('Vale package install replaces an edited package and keeps your files', async () => {
     const sandbox = installedSandbox();
-    await using _change = await updateSandbox(sandbox, {
-        check: '',
-        files: {
-            'authored.txt': 'keep\n',
-            '.gspot/configurations/general/prose/styles/Google/legacy.yml': 'authored legacy bytes\n',
-        },
-    });
+    await using _change = await addAuthoredFiles(sandbox);
     const original = await readFile(join(sandbox.root, GOOGLE_TERMS_FILE));
     await chmod(join(sandbox.root, GOOGLE_TERMS_FILE), 0o644);
     await writeFile(join(sandbox.root, GOOGLE_TERMS_FILE), 'edited\n');

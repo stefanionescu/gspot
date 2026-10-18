@@ -1,13 +1,13 @@
 [tools]
 actionlint = "1.7.12"
+"github:editorconfig-checker/editorconfig-checker" = {version = "3.4.0", rename_exe = "editorconfig-checker"}
 gitleaks = "8.30.1"
 lychee = "0.24.2"
 osv-scanner = "2.6.0"
-pinact = "5.0.0"
 shellcheck = "0.11.0"
 shfmt = "3.12.0"
 taplo = "0.10.0"
 trufflehog = "3.97.5"
 typos = "1.43.5"
-vale = "3.21.0"
 uv = "0.12.22"
+vale = "3.21.0"

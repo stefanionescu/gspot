@@ -1,0 +1,22 @@
+{
+    "extends": [
+        "html-validate:recommended"
+    ],
+    "rules": {
+        "doctype-style": "off",
+        "no-inline-style": "off",
+        "no-raw-characters": "off",
+        "void-style": "off",
+        "no-trailing-whitespace": "off",
+        "valid-id": [
+            "error",
+            {
+                "relaxed": true
+            }
+        ],
+        "element-permitted-content": "off",
+        "no-implicit-button-type": "off",
+        "text-content": "off",
+        "unique-landmark": "off"
+    }
+}

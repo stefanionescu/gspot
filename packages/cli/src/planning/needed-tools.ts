@@ -126,7 +126,7 @@ export function listRequiredTools(check: PlannedCheck): string[] {
  * List the configured checks of one scope: its own checks and the checks that run once for the repository.
  *
  * @param session the repository and its configured checks.
- * @param selection the scope.
+ * @param selection the scope whose checks to list.
  *
  * @returns the checks whose tools the scope needs.
  */

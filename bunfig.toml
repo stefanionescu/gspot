@@ -1,6 +1,7 @@
 [install]
 minimumReleaseAge = 604800
 exact = true
+minimumReleaseAgeExcludes = ["@gspothq/cli", "@gspothq/eslint-plugin"]
 
 [install.security]
 scanner = "@socketsecurity/bun-security-scanner"

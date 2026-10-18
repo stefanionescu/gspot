@@ -183,8 +183,8 @@ function fillTableValues(namespaces: Record<string, unknown>, rows: EffectiveSet
 
 /**
  * Find the selection of the repository root, which every run has.
- * @param scopes every scope selection.
- * @returns the root selection.
+ * @param scopes the selection of each scope, the root among them.
+ * @returns the selection of the scope with an empty path.
  */
 function findRootSelection(scopes: readonly ScopeSelection[]): ScopeSelection {
     const root = scopes.find((selection) => selection.scope.path === '');

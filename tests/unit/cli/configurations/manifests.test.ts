@@ -18,6 +18,28 @@ import {
     INVALID_VERSION_FLOORS,
 } from '#tests/data/configurations/manifests.ts';
 
+/**
+ * Serve one example manifest with these tool file tables, beside the shipped Semgrep assets.
+ * @param toolFiles the `[[tool_file]]` tables after the configuration table
+ * @returns the asset spies, restored when disposed
+ */
+function serveExampleManifest(toolFiles: string): Disposable {
+    const listing = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
+        prefix === 'configurations/'
+            ? ['configurations/language/example/manifest.toml']
+            : SEMGREP_ASSETS.filter((path) => path.startsWith(prefix)),
+    );
+    const readAsset = assets.readAsset;
+    const reading = spyOn(assets, 'readAsset').mockImplementation((path) =>
+        path === 'configurations/language/example/manifest.toml' ? CONFIGURATION_TABLE + toolFiles : readAsset(path),
+    );
+    return {
+        [Symbol.dispose]: () => {
+            reading.mockRestore();
+            listing.mockRestore();
+        },
+    };
+}
 test('a manifest without [detect] takes the matchers of [files]', () => {
     const tables = '[files]\nfilenames = ["native.project"]\npaths = ["source/**"]\n';
     const inherited = buildManifest('native', { tables });
@@ -148,17 +170,7 @@ test('a companion tool file needs a tool or check that reads it', () => {
 });
 
 test('the only tool of a configuration reads each of its tool files that names no consumer', () => {
-    using _assets = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
-        prefix === 'configurations/'
-            ? ['configurations/language/example/manifest.toml']
-            : SEMGREP_ASSETS.filter((path) => path.startsWith(prefix)),
-    );
-    const readAsset = assets.readAsset;
-    using _sources = spyOn(assets, 'readAsset').mockImplementation((path) =>
-        path === 'configurations/language/example/manifest.toml'
-            ? CONFIGURATION_TABLE + SINGLE_TOOL_FILES
-            : readAsset(path),
-    );
+    using _assets = serveExampleManifest(SINGLE_TOOL_FILES);
 
     const manifest = readManifests(createReadCache(process.cwd())).get('example')!;
 
@@ -170,17 +182,7 @@ test('the only tool of a configuration reads each of its tool files that names n
 });
 
 test('tool-files assets are discovered and their metadata selects their consumers', () => {
-    using _assets = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
-        prefix === 'configurations/'
-            ? ['configurations/language/example/manifest.toml']
-            : SEMGREP_ASSETS.filter((path) => path.startsWith(prefix)),
-    );
-    const readAsset = assets.readAsset;
-    using _sources = spyOn(assets, 'readAsset').mockImplementation((path) =>
-        path === 'configurations/language/example/manifest.toml'
-            ? CONFIGURATION_TABLE + SEMGREP_TOOL_FILES
-            : readAsset(path),
-    );
+    using _assets = serveExampleManifest(SEMGREP_TOOL_FILES);
     const manifest = readManifests(createReadCache(process.cwd())).get('example')!;
     expect(manifest.toolFiles.map(({ source, target }) => [source, target])).toStrictEqual([
         ['tool-files/other.yml', '.gspot/configurations/language/example/other.yml'],

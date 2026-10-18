@@ -30,7 +30,7 @@ import {
 
 /**
  * Checks whether an ignore record covers a finding.
- * @param record the `[[ignore]]` record.
+ * @param record one `[[ignore]]` entry of gspot.toml.
  * @param finding what a check reported.
  * @returns whether the ignore covers this finding.
  */

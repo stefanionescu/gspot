@@ -1,0 +1,27 @@
+{
+    "mode": "strict",
+    "minLines": 8,
+    "minTokens": 40,
+    "absolute": true,
+    "gitignore": true,
+    "ignore": [
+        "**/*.md",
+        "**/*.mdx",
+        "**/build/**",
+        ".gspot/**",
+        "**/eslint.config.mjs",
+        "**/.markdownlint.jsonc",
+        "**/.editorconfig",
+        "**/prettier.config.mjs",
+        "**/.prettierignore",
+        "docs/.markdownlint.jsonc",
+        "docs/.stylelintrc.json",
+        "packages/cli/.markdownlint.jsonc",
+        "packages/eslint-plugin/.markdownlint.jsonc",
+        "docs/worker-configuration.d.ts",
+        "**/node_modules/**",
+        "**/bower_components/**",
+        "**/bun.lock",
+        "**/.env*"
+    ]
+}
