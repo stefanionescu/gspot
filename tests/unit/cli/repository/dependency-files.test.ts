@@ -16,7 +16,6 @@ import {
     INVALID_DEPENDENCY_FILES,
     PROJECT_DEPENDENCY_FILES,
     PROJECT_DEPENDENCY_SCOPES,
-    INVALID_PYTHON_DEPENDENCIES,
     ROOT_PACKAGE_WITHOUT_DEPENDENCIES,
 } from '#tests/data/repository/dependency-files.ts';
 
@@ -39,20 +38,13 @@ test('a pytest table counts as a pytest dependency', async () => {
     expect(manifests[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
 });
 
-test.each([...INVALID_PYTHON_DEPENDENCIES])('an invalid $name in $path names the file', async ({ path, source }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { [path]: source });
-    const files = [buildTrackedFile(path)];
-    expect(await captureRejection(readDependencyFiles(createReadCache(sandbox.path), files))).toContain(
-        `Cannot read the dependency file ${path}`,
-    );
-});
-
 test.each(INVALID_DEPENDENCY_FILES)('invalid %s content %s is a dependency file error', async (path, content) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
     const files = [buildTrackedFile(path)];
-    expect(await captureRejection(readDependencyFiles(createReadCache(sandbox.path), files))).toContain(path);
+    expect(await captureRejection(readDependencyFiles(createReadCache(sandbox.path), files))).toContain(
+        `Cannot read the dependency file ${path}`,
+    );
 });
 
 test('Python dependency file reads keep their dependencies and report invalid text', async () => {

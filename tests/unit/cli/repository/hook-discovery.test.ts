@@ -57,12 +57,6 @@ test('pre-commit is found from its configuration file', async () => {
     ]);
 });
 
-test('hook discovery ignores a package.json without hooks', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'package.json': '{}' });
-    expect(readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path)).hooks).toStrictEqual([]);
-});
-
 test('hook discovery refuses a malformed package.json', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': '{' });
@@ -148,9 +142,13 @@ test('a read error in a hooks folder reaches the caller', async () => {
     expect(read).toHaveBeenCalledTimes(1);
 });
 
-test('simple-git-hooks is found from its package.json key', async () => {
-    await using sandbox = await testdir({ 'package.json': '{"simple-git-hooks":{"pre-commit":"echo authored"}}' });
-    expect(readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path)).hooks).toStrictEqual([
-        { kind: 'simple-git-hooks', path: 'package.json', files: [] },
-    ]);
+test.each([
+    {
+        text: '{"simple-git-hooks":{"pre-commit":"echo authored"}}',
+        hooks: [{ kind: 'simple-git-hooks', path: 'package.json', files: [] as string[] }],
+    },
+    { text: '{}', hooks: [] },
+])('hook discovery reads simple-git-hooks from the package.json key: $text', async ({ text, hooks }) => {
+    await using sandbox = await testdir({ 'package.json': text });
+    expect(readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path)).hooks).toStrictEqual([...hooks]);
 });

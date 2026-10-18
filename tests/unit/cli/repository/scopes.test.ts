@@ -15,7 +15,6 @@ import { joinScope, findScopes, findProjectFolder } from '#cli/repository/scopes
 
 import {
     SCOPE_PATHS,
-    NOT_PROJECT_FILES,
     PROJECT_FILE_FOLDERS,
     WORKSPACE_DECLARATIONS,
     INVALID_WORKSPACE_FILES,
@@ -44,10 +43,6 @@ test('a command check reads each matching file once across nested scopes', async
 
 test.each(PROJECT_FILE_FOLDERS)('%s with the project file %s marks the folder %j', (path, pattern, folder) => {
     expect(findProjectFolder(path, pattern)).toBe(folder);
-});
-
-test.each(NOT_PROJECT_FILES)('%s is no project file for %s', (path, pattern) => {
-    expect(findProjectFolder(path, pattern)).toBeUndefined();
 });
 
 test.each([...WORKSPACE_DECLARATIONS])(

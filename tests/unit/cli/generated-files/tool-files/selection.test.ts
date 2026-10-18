@@ -11,12 +11,10 @@ import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
-import { EDITORCONFIG_SETTINGS } from '#tests/data/checks/format.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, parseToolFile } from '#tests/setup/tool-files.ts';
-import { SWIFT_FORMAT_SETTINGS } from '#tests/data/checks/swift/projects.ts';
 import { NESTED_PYTHON_SETTINGS } from '#tests/data/checks/python/project.ts';
-import { PLAIN_TOOL_FILES, TOOL_FILE_PROJECT } from '#tests/data/generated-files/tool-files.ts';
+import { PLAIN_TOOL_FILES, TOOL_FILE_PROJECT, IGNORED_CHECK_FILES } from '#tests/data/generated-files/tool-files.ts';
 
 test('a Ruff-only Python scope gets no type checker file or pointer', async () => {
     await using sandbox = await testdir();
@@ -46,29 +44,16 @@ test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
     expect(paths).toContain('.gspot/config/knip.json');
     expect(paths).not.toContain('.gspot/config/jsconfig.json');
 });
-test('ignoring SwiftLint and Periphery keeps SwiftFormat and drops their files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': SWIFT_FORMAT_SETTINGS,
-        'main.swift': 'let value = 1\n',
-    });
-    const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
-    expect(paths).toContain('.gspot/config/swiftformat');
-    expect(paths).not.toContain('.gspot/config/swiftlint.yml');
-    expect(paths).not.toContain('.gspot/config/periphery.yml');
-    expect(paths).not.toContain('.gspot/package.json');
-});
-test('EditorConfig stays without a Prettier file or ignore file', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': EDITORCONFIG_SETTINGS,
-        'sample.json': '{"value":1}\n',
-    });
-    const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
-    expect(paths).toContain('.editorconfig');
-    expect(paths).not.toContain('.gspot/config/prettier.json');
-    expect(paths).not.toContain('.prettierignore');
-});
+test.each([...IGNORED_CHECK_FILES])(
+    '$name and drops the files of the ignored checks',
+    async ({ settings, files, kept, dropped }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': settings, ...files });
+        const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
+        for (const path of kept) expect(paths).toContain(path);
+        for (const path of dropped) expect(paths).not.toContain(path);
+    },
+);
 test('Go and Rust sources get only the formatter files and tools they use', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

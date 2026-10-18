@@ -1,3 +1,6 @@
+import { EDITORCONFIG_SETTINGS } from '#tests/data/checks/format.ts';
+import { SWIFT_FORMAT_SETTINGS } from '#tests/data/checks/swift/projects.ts';
+
 export const ODD_KEY = 'custom"key\\name\ncafé';
 
 export const ODD_VALUE = 'yes: # quoted "value"';
@@ -79,4 +82,22 @@ export const RECOMMENDED_VALE_FILES = [
     '.gspot/config/vale/styles/gspot/dates.yml',
     '.gspot/config/vale/styles/gspot/link-text.yml',
     '.gspot/config/vale/styles/LICENSES.md',
+] as const;
+
+/** A whole-check ignore drops the files of that check and keeps those of the other checks of its configuration. */
+export const IGNORED_CHECK_FILES = [
+    {
+        name: 'ignoring SwiftLint and Periphery keeps SwiftFormat',
+        settings: SWIFT_FORMAT_SETTINGS,
+        files: { 'main.swift': 'let value = 1\n' },
+        kept: ['.gspot/config/swiftformat'],
+        dropped: ['.gspot/config/swiftlint.yml', '.gspot/config/periphery.yml', '.gspot/package.json'],
+    },
+    {
+        name: 'ignoring Prettier keeps EditorConfig',
+        settings: EDITORCONFIG_SETTINGS,
+        files: { 'sample.json': '{"value":1}\n' },
+        kept: ['.editorconfig'],
+        dropped: ['.gspot/config/prettier.json', '.prettierignore'],
+    },
 ] as const;

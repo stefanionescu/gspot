@@ -20,6 +20,18 @@ test.each([
             'migrations/V9007199254740992_large.sql',
         ],
     ],
+    [
+        'all',
+        [
+            'migrations/10_next.sql',
+            'migrations/2_initial.sql',
+            'migrations/9007199254740992_large.sql',
+            'migrations/9007199254740993_later.sql',
+            'migrations/V2_initial.sql',
+            'migrations/V9007199254740992_large.sql',
+            'migrations/V9007199254740993_later.sql',
+        ],
+    ],
 ])('Squawk skips migrations through version %s without rounding', async (through, expected) => {
     const text = await generateFile(
         buildSettingsText(['postgres'], { tables: `[postgres]\nfrozen_through = "${through}"\n` }),
@@ -35,15 +47,6 @@ test.each([
         },
     );
     expect(getValueAt(parse(text), ['excluded_paths'])).toStrictEqual(expected);
-});
-
-test('frozen_through = all skips every migration', async () => {
-    const text = await generateFile(
-        buildSettingsText(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' }),
-        '.gspot/config/squawk.toml',
-        { 'migrations/20260101_initial.sql': 'select 1;\n' },
-    );
-    expect(getValueAt(parse(text), ['excluded_paths'])).toStrictEqual(['migrations/20260101_initial.sql']);
 });
 
 test('a Postgres child scope writes its frozen migrations', async () => {

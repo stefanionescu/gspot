@@ -25,13 +25,10 @@ export const PROJECT_FILE_FOLDERS = [
     ['ios/App.xcodeproj/project.pbxproj', '*.xcodeproj', 'ios'],
     ['apps/web/supabase/config.toml', 'supabase/config.toml', 'apps/web'],
     ['supabase/config.toml', 'supabase/config.toml', ''],
-] as const;
-
-export const NOT_PROJECT_FILES = [
-    ['api/package-lock.json', 'package.json'],
-    ['docs/supabase.md', 'supabase/config.toml'],
-    ['ios/App.xcworkspace/contents.xcworkspacedata', '*.xcodeproj'],
-    ['requirements.txt.bak', 'requirements*.txt'],
+    ['api/package-lock.json', 'package.json', undefined],
+    ['docs/supabase.md', 'supabase/config.toml', undefined],
+    ['ios/App.xcworkspace/contents.xcworkspacedata', '*.xcodeproj', undefined],
+    ['requirements.txt.bak', 'requirements*.txt', undefined],
 ] as const;
 
 export const WORKSPACE_DECLARATIONS = [

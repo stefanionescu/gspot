@@ -73,24 +73,16 @@ export const PROJECT_DEPENDENCY_SCOPES = [
     { scope: 'empty/src', dependencies: {} },
 ] as const;
 
-/** Invalid Python dependency declarations in each file form. */
-export const INVALID_PYTHON_DEPENDENCIES = [
-    { name: 'Poetry numeric dependency', path: 'pyproject.toml', source: '[tool.poetry.dependencies]\nFastAPI = 7\n' },
-    {
-        name: 'Poetry boolean group dependency',
-        path: 'pyproject.toml',
-        source: '[tool.poetry.group.web.dependencies]\nFastAPI = false\n',
-    },
-    { name: 'Pipfile numeric dependency', path: 'Pipfile', source: '[packages]\nFastAPI = 7\n' },
-] as const;
-
-/** Invalid package.json fields stay errors of the dependency file reader. */
+/** Invalid dependency file fields stay errors of the dependency file reader. */
 export const INVALID_DEPENDENCY_FILES = [
     ['package.json', '{"dependencies":{"typescript":7}}'],
     ['package.json', '{"scripts":{"lint":false}}'],
     ['package.json', '{"workspaces":[7]}'],
     ['pyproject.toml', '[project'],
     ['pyproject.toml', '[project]\ndependencies = [7]\n'],
+    ['pyproject.toml', '[tool.poetry.dependencies]\nFastAPI = 7\n'],
+    ['pyproject.toml', '[tool.poetry.group.web.dependencies]\nFastAPI = false\n'],
+    ['Pipfile', '[packages]\nFastAPI = 7\n'],
 ] as const;
 
 /** Root and child packages with different dependencies, read in one repository scan. */

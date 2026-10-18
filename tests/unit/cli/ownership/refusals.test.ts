@@ -8,51 +8,36 @@ import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { planBlock, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
 
-test('a planned key edit writes nothing and refuses a later edit', async () => {
-    await using folder = await testdir();
-    const original = 'extends = "./authored.json"\nstrict = true\n';
-    await createFileTree(folder.path, { 'config.toml': original });
-    {
-        using log = openWriter(folder.path);
-
-        const plan = planManagedKeys(log, 'config.toml', [{ path: ['extends'], value: './managed.json' }]);
-        expect(await readFile(join(folder.path, 'config.toml'), 'utf8')).toBe(original);
-        const edited = 'extends = "./authored.json"\nstrict = false\n';
-        await writeFile(join(folder.path, 'config.toml'), edited);
-        expect(() => {
-            writePlans(log, [plan]);
-        }).toThrow('Destination changed during the operation: config.toml');
-        expect(await readFile(join(folder.path, 'config.toml'), 'utf8')).toBe(edited);
-    }
-});
-
-test.each(['replacement', 'block'] as const)(
+test.each(['replacement', 'block', 'keys'] as const)(
     '%s plans refuse a file edited after planning and do not record it',
     async (kind) => {
         await using folder = await testdir();
-        await createFileTree(folder.path, { 'config.txt': 'authored\n' });
-        await chmod(join(folder.path, 'config.txt'), 0o640);
+        await createFileTree(folder.path, { 'config.toml': 'strict = true\n' });
+        await chmod(join(folder.path, 'config.toml'), 0o640);
         {
             using log = openWriter(folder.path);
 
-            const plan =
-                kind === 'replacement'
-                    ? planReplacement(log, {
-                          path: 'config.txt',
-                          next: { bytes: Buffer.from('replacement\n'), mode: 0o444 },
-                          canReplace: true,
-                      })
-                    : planBlock(log, 'config.txt', 'managed content', 'hash');
-            expect(log.files.read('config.txt')).toStrictEqual({
-                bytes: Buffer.from('authored\n'),
+            const plans = {
+                replacement: () =>
+                    planReplacement(log, {
+                        path: 'config.toml',
+                        next: { bytes: Buffer.from('strict = false\n'), mode: 0o444 },
+                        canReplace: true,
+                    }),
+                block: () => planBlock(log, 'config.toml', 'managed content', 'hash'),
+                keys: () => planManagedKeys(log, 'config.toml', [{ path: ['extends'], value: './managed.json' }]),
+            };
+            const plan = plans[kind]();
+            expect(log.files.read('config.toml')).toStrictEqual({
+                bytes: Buffer.from('strict = true\n'),
                 mode: normalizeFileMode({ mode: 0o640 }),
             });
-            await writeFile(join(folder.path, 'config.txt'), 'edited after plan\n');
+            await writeFile(join(folder.path, 'config.toml'), 'edited = true\n');
             expect(() => {
                 writePlans(log, [plan]);
-            }).toThrow('Destination changed during the operation: config.txt');
-            expect(log.files.read('config.txt')).toStrictEqual({
-                bytes: Buffer.from('edited after plan\n'),
+            }).toThrow('Destination changed during the operation: config.toml');
+            expect(log.files.read('config.toml')).toStrictEqual({
+                bytes: Buffer.from('edited = true\n'),
                 mode: normalizeFileMode({ mode: 0o640 }),
             });
         }

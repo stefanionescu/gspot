@@ -11,31 +11,6 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { VALE_OFF_RULES, VALE_MARKUP_FILES } from '#cli/config/generation/vale.ts';
 import { RECOMMENDED_VALE_FILES } from '#tests/data/generated-files/tool-files.ts';
 
-test('the Vale vocabulary joins selected product words and your words once each', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'sample.md': '# Sample\n',
-        'gspot.toml': buildSettingsText(['prose', 'javascript'], {
-            level: 'all',
-            tables: '[allowed_words]\nvalue = ["NebulaConfiguration", "TypeScript"]\nreason = "The repository uses the reviewed product names."\n',
-        }),
-    });
-    const session = await openSession(sandbox.path);
-    const output = generate(session);
-    const vocabulary = output.files.find(
-        (file) => file.path === '.gspot/config/vale/styles/config/vocabularies/words/accept.txt',
-    )!;
-    const words = vocabulary.content.trimEnd().split('\n');
-    expect(words).toContain('TypeScript');
-    expect(words).toContain('JavaScript');
-    expect(words).toContain('ESLint');
-    for (const word of ['Swift', 'Ruff', 'Xcode']) expect(words).not.toContain(word);
-    expect(words).toContain('NebulaConfiguration');
-    expect(words.filter((word) => word === 'NebulaConfiguration')).toHaveLength(1);
-    expect(words.filter((word) => word === 'TypeScript')).toHaveLength(1);
-    expect(vocabulary.content.endsWith('\n')).toBe(true);
-});
-
 test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -86,22 +61,21 @@ test('your banned headings and the shipped ones reach the heading style once', a
     expect(style.toLowerCase()).not.toContain('table of contents');
 });
 
-test('the Vale vocabulary and heading exceptions include products of child scopes', async () => {
+test('the Vale vocabulary and heading exceptions hold the products of every scope and your words, once each', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['prose'], {
             level: 'all',
-            tables: '[allowed_words]\nvalue = ["NebulaProduct"]\nreason = "The project uses this reviewed product name."\n[[scope]]\npath = "app"\n\nconfigurations = ["python"]\n[[scope]]\npath = "sibling"\n\nconfigurations = []\n',
+            tables: '[allowed_words]\nvalue = ["NebulaProduct", "Python"]\nreason = "The project uses these reviewed product names."\n[[scope]]\npath = "app"\n\nconfigurations = ["python"]\n[[scope]]\npath = "sibling"\n\nconfigurations = []\n',
         }),
         'sample.md': '# Guide\n',
         'app/sample.py': 'value = 1\n',
     });
     const session = await openSession(sandbox.path);
     const files = generate(session).files;
-    const vocabulary = files
-        .find(({ path }) => path.endsWith('/vocabularies/words/accept.txt'))!
-        .content.trimEnd()
-        .split('\n');
+    const text = files.find(({ path }) => path.endsWith('/vocabularies/words/accept.txt'))!.content;
+    expect(text.endsWith('\n')).toBe(true);
+    const vocabulary = text.trimEnd().split('\n');
     expect(vocabulary).toContain('Python');
     expect(vocabulary).toContain('basedpyright');
     expect(vocabulary).toContain('NebulaProduct');

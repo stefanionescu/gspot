@@ -99,31 +99,38 @@ test('pnpm keeps the comments and packages of pnpm-workspace.yaml, and the hold 
     expect(await readFile(join(repository.path, 'pnpm-workspace.yaml'), 'utf8')).toBe(written);
 });
 
-test('generation names a malformed pnpm-workspace.yaml', async () => {
+test.each([
+    {
+        lockfile: 'pnpm-lock.yaml',
+        lock: "lockfileVersion: '9.0'\n",
+        path: 'pnpm-workspace.yaml',
+        source: 'packages: [\n',
+        format: 'YAML',
+    },
+    {
+        lockfile: 'bun.lock',
+        lock: '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
+        path: 'bunfig.toml',
+        source: '[install\n',
+        format: 'TOML',
+    },
+    {
+        lockfile: 'apps/api/bun.lock',
+        lock: '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
+        path: 'apps/api/bunfig.toml',
+        source: '[install\n',
+        format: 'TOML',
+    },
+])('generation names a malformed $path', async ({ lockfile, lock, path, source, format }) => {
     await using repository = await testdir();
-    await createFileTree(repository.path, {
-        'gspot.toml': buildSettingsText(['dependencies']),
-        'pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
-        'pnpm-workspace.yaml': 'packages: [\n',
-    });
-    const session = await openSession(repository.path);
-    expect(() => generate(session)).toThrow(
-        'pnpm-workspace.yaml is not valid YAML. Fix the file, then run gspot apply.',
-    );
-});
-
-test.each(['', 'apps/api/'])('Bun generation names a malformed %sbunfig.toml', async (prefix) => {
-    await using repository = await testdir();
-    const source = '[install\n';
-    const path = `${prefix}bunfig.toml`;
     await createFileTree(repository.path, {
         'gspot.toml': buildSettingsText(['dependencies'], {
             tables: '[[scope]]\npath = "apps/api"\n\nconfigurations = ["dependencies"]\n',
         }),
-        [`${prefix}bun.lock`]: '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
+        [lockfile]: lock,
         [path]: source,
         'apps/api/source.js': 'export const value = 1;\n',
     });
     const session = await openSession(repository.path);
-    expect(() => generate(session)).toThrow(`${path} is not valid TOML. Fix the file, then run gspot apply.`);
+    expect(() => generate(session)).toThrow(`${path} is not valid ${format}. Fix the file, then run gspot apply.`);
 });
