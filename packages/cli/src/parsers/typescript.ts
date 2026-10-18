@@ -1,4 +1,4 @@
-// Reads TypeScript imports and source declarations.
+// Walks TypeScript syntax and reads environment variable access.
 import ts from 'typescript';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 

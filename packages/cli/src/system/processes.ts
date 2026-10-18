@@ -31,8 +31,6 @@ import {
     TASKKILL_GONE_CODE,
 } from '#cli/config/system/processes.ts';
 
-// Execa captures output and uses system shims. This code watches each asynchronous process tree.
-
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env = buildSpawnEnvironment(options.env);
     // The launcher of a tool must find its sibling runtime and commands before unrelated tools on the executable search path.
@@ -75,7 +73,6 @@ function isExecutableAbsent(executable: string, cwd: string): boolean {
 }
 
 // The result of a command whose executable file does not exist, decided before any process starts.
-
 function buildNotFoundCompletion(executable: string): SpawnCompletion {
     return {
         code: 'ENOENT',

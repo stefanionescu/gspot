@@ -57,7 +57,6 @@ import {
 } from '#cli/config/repository/inventory.ts';
 
 // Every tracked path has one kind: source, generated, vendored, binary.
-
 function findDeclaredKind(path: string, inputs: ClassificationInputs): FileClassification | undefined {
     const attribute = findAttributeKind(inputs.attributes.get(path));
     if (attribute !== undefined) return attribute;

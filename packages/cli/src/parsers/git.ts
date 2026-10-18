@@ -23,7 +23,6 @@ import {
 } from '#cli/config/parsers/git.ts';
 
 // Validate the fields captured from an index or committed-tree entry.
-
 const gitEntrySchema = z.object({
     mode: z.enum(GIT_ENTRY_MODES),
     hash: z.string(),

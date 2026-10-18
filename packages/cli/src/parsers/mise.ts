@@ -1,4 +1,4 @@
-// Reads mise tasks and tool pins.
+// Reads mise task names and their aliases.
 import { z } from 'zod';
 import { parse } from '@decimalturn/toml-patch';
 import { isRecord } from '#cli/system/values.ts';

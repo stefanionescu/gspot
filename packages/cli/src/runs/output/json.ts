@@ -6,8 +6,7 @@ import { JSON_START } from '#cli/config/runs/output.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { type ReportInput, type JsonFindingSpec } from '#cli/types/runs/output.ts';
 
-// Findings from a tool that prints JSON: the manifest names the list location and the field for each value.
-
+// The manifest names where the list of findings sits and the field of each value.
 function listAt(value: unknown, path: string | undefined): unknown[] {
     const found = path === undefined || path === '' ? value : getValueAt(value, path.split('.'));
     if (!Array.isArray(found)) throw new Error(`Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
