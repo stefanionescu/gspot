@@ -1,7 +1,7 @@
 export const SITE_URL = 'https://generativespotting.com';
 /** The site description: the hero lead and the page metadata. */
 export const DESCRIPTION =
-    'gspot installs linters in your repository and runs them on every commit. It also writes rules for your AI agent.';
+    'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.';
 export const REPOSITORY_URL = 'https://github.com/stefanionescu/gspot';
 export const EDIT_URL = `${REPOSITORY_URL}/edit/main/docs/`;
 export const FAVICON = '/favicon.ico';

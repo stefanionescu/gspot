@@ -38,7 +38,7 @@ export const AGENT_PROMPT = `Set up gspot in a repository. Run ${LLMS_COMMAND} a
 
 /** The summary at the top of llms.txt. */
 export const LLMS_DESCRIPTION =
-    'gspot installs linters, formatters, and rules for coding agents into a repository from one gspot.toml, and runs them in Git hooks and CI.';
+    'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.';
 
 export const AGENT_STEPS = `## Steps for coding agents
 

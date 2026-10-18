@@ -3,7 +3,7 @@ title: Introduction
 description: See what gspot checks and how it fits your Git work.
 ---
 
-gspot sets up linters, formatters, and security scanners for your repository and runs them before every commit.
+gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 
 - **Picks the checks.** `gspot init` reads your files and turns on the checks for the languages and frameworks it
   finds.

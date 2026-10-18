@@ -60,7 +60,7 @@ function formatProgramHelp(program: Command): string {
  */
 function buildProgram(onResult: CommandCompletion): Command {
     const program: Command = new Command('gspot')
-        .description('Lint AI-generated code and write rules for AI coding agents.')
+        .description('Lint AI-generated code and install rules for AI coding agents.')
         .version(packageManifest.version, '--version', 'Print the version')
         .helpOption('-h, --help', 'Print help for the command')
         .helpCommand(false)

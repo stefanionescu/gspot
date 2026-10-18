@@ -588,6 +588,12 @@ paths = ["docs/README.md"]
 reason = "CC0-1.0 is the official license identifier for the supplied Simple Icons assets, not a numeric range."
 
 [[ignore]]
+check = "prose/vale"
+rule = "write-good.E-Prime"
+paths = ["README.md", "packages/cli/README.md", "docs/src/content/docs/start/overview.md"]
+reason = "These files open with the owner's product description, which keeps its wording."
+
+[[ignore]]
 check = "site/html-validate"
 rule = "element-permitted-content"
 paths = ["docs/**"]

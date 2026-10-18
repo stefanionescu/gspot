@@ -1,8 +1,8 @@
 /** Each docs page has a Markdown copy at its address plus this file name. */
 export const MARKDOWN_COPY_FILE = 'index.md';
 export const MARKDOWN_TYPE = 'text/markdown';
-/** Collection entries without a Markdown copy. */
-export const PAGES_WITHOUT_MARKDOWN: readonly string[] = ['404'];
+/** The not-found page gets no Markdown copy. */
+export const NOT_FOUND_PAGE = '404';
 /** The Markdown copy of the home page repeats llms.txt, the summary for agents. */
 export const LLMS_FILE = 'llms.txt';
 /** The Agent Skills discovery index: https://github.com/cloudflare/agent-skills-discovery-rfc */

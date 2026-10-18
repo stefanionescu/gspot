@@ -99,6 +99,8 @@ You can edit the other keys of that file.
 - Name a tool check after its tool. Name a built-in check after what it checks.
 - Unit tests make no network calls.
 - Do not use subagents or parallel agents unless asked in the conversation.
+- Keep the owner's descriptions word for word: the first sentence of `README.md`, and the `description` in
+  `packages/cli/package.json`. Their copies in the docs, `llms.txt`, and `gspot --help` match them.
 
 ## Folders
 

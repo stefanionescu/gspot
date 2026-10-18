@@ -3,6 +3,10 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Content-Security-Policy: frame-ancestors 'none'; object-src 'none'; base-uri 'self'
+  Vary: Accept
+
+/
+  Link: </index.md>; rel="alternate"; type="text/markdown", </llms.txt>; rel="describedby"; type="text/plain", </sitemap-index.xml>; rel="sitemap"; type="application/xml"
 
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
@@ -27,31 +31,3 @@
 
 /open-graph.png
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
-
-/
-  Link: </index.md>; rel="alternate"; type="text/markdown", </llms.txt>; rel="describedby"; type="text/plain", </sitemap-index.xml>; rel="sitemap"; type="application/xml"
-  Vary: Accept
-
-/start/*
-  Link: <index.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept
-
-/use/*
-  Link: <index.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept
-
-/configure/*
-  Link: <index.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept
-
-/checks/*
-  Link: <index.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept
-
-/languages/*
-  Link: <index.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept
-
-/reference/*
-  Link: <index.md>; rel="alternate"; type="text/markdown"
-  Vary: Accept

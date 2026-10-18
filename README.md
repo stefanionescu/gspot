@@ -1,6 +1,6 @@
 # ![gspot](docs/assets/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/assets/readme/banner/dark.svg#gh-dark-mode-only)
 
-gspot sets up linters, formatters, and security scanners for your repository and runs them before every commit.
+gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 
 ## What it does
 
