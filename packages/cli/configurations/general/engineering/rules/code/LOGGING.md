@@ -40,7 +40,7 @@ Use `lower_snake_case` for new event names and field keys unless an existing log
 
 ## Sensitive values
 
-Follow the secrets rules. Never log secrets, personal data, raw user content, full request or response bodies,
+Follow the secrets rules. Never log personal data, raw user content, full request or response bodies,
 provider payloads, or database rows.
 
 Redaction lives in the logging module. When a new sensitive key can reach logs, update the redaction list; do not filter at one call site.

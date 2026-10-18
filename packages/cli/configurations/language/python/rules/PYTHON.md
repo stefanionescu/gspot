@@ -67,10 +67,10 @@ Imports resolve in the declared project environment, never through the script fo
 
 <!-- level: all -->
 
-Place imports at the top after the docstring and future statements, one per line. Take typing and
+Take typing and
 `collections.abc` symbols directly. Use absolute cross-package imports. Explicit
 relative ones serve siblings inside a package where surrounding code does that. Never use an
-implicit relative, wildcard, or dynamic import through `importlib.import_module`, `__import__`, or
+implicit relative or dynamic import through `importlib.import_module`, `__import__`, or
 `builtins.__import__`. In runtime code, never import inside a function, method, or class body.
 
 Direct symbol imports keep call sites readable. Import the module instead when
@@ -138,8 +138,6 @@ communication and locks or conditions for shared state, which stays small and ex
 
 <!-- level: all -->
 
-- CLI flags use lowercase kebab case, such as `--account-name` and
-  `--output-dir`.
 - Avoid single-letter names except loop counters and math notation.
 - Preserve provider capitalization in external names such as `AWS_REGION` and
   resource IDs.
@@ -149,8 +147,6 @@ communication and locks or conditions for shared state, which stays small and ex
 <!-- level: all -->
 
 - Name test files `test_<behavior>.py`, grouped by behavior.
-
-- Do not create package-level re-export layers only to preserve old names.
 - Keep `__all__` names accurate and ordered according to local lint rules.
 
 Import `AccountSettings` under its declared name. An alias such as `Thing`
@@ -183,4 +179,3 @@ hides the contract and provides no collision information.
   the two differ.
 - Keep path construction with the code that owns the resource instead of repeating it in
   unrelated operations.
-- Name functions that cross boundaries for the operation they perform.

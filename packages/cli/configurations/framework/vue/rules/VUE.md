@@ -6,7 +6,6 @@ Read this rule when you change Vue components, composables, or stores.
 
 <!-- level: all -->
 
-- Use `computed` for derived template values.
 - Pass a prop or call an exposed method instead of changing state through a template ref.
 
 ## Props and events

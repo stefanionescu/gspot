@@ -125,7 +125,7 @@ development source or host dependencies.
 
 ## Verification
 
-Do not build or run images unless the user asks or the repository's checks require it. Give the user a checklist: image user, command, runtime files, permissions, exposed ports, startup,
+Give the user a checklist: image user, command, runtime files, permissions, exposed ports, startup,
 readiness, shutdown, and resource limits. Image documentation names the current build arguments,
 supported platforms, runtime environment, and artifact paths.
 

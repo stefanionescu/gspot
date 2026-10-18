@@ -13,13 +13,6 @@ uv sync --frozen
 Update lockfiles only
 when the task includes dependency maintenance.
 
-### pip installs
-
-<!-- level: all -->
-
-`python/pip-installs` reports each `pip install`. Replace it with uv. When the project requires pip, follow the suppression
-rules.
-
 ## Import correctness
 
 - Respect the import-linter contracts the project declares.

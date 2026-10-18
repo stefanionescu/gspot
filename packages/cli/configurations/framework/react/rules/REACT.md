@@ -16,10 +16,6 @@ Read this rule when you change React components, hooks, or state.
   section, or its route.
 - Domain-neutral primitives such as button, input, dialog, popover, and tooltip live in the shared UI folder
   and take values and callbacks. They never fetch or import a feature.
-- Keep a component small enough that its JSX reads as one screen region. Extract by visual
-  responsibility, not by line count.
-
-- Keep one primary component per file and name it for what it renders.
 - Declare the props type on the parameter rather than using `React.FC`.
 
 ## Hooks
@@ -41,8 +37,7 @@ Read this rule when you change React components, hooks, or state.
 - Reset private state across identity and tenant changes; give each request its own server stores.
 
 - Handle every promise by awaiting, returning, or explicitly catching failure. A `void` expression
-  alone does not handle rejection. Retries need a retry-safe operation and bounded policy.
-  Cancellation must not look like confirmed success.
+  alone does not handle rejection. Cancellation must not look like confirmed success.
 
 ## Read states and writes
 
@@ -50,8 +45,6 @@ Read this rule when you change React components, hooks, or state.
   fallback, an explanation of the empty result, or safe error and retry UI for the matching state.
 - Keep existing content during a background refresh or a pending next page. A failed refresh does
   not erase a successful result. Revoked access removes stale private content.
-- Capture the resource identity when work starts. A superseded request must not overwrite the
-  resource now in view.
 - An optimistic update defines how to confirm or undo the operation.
 - Show the result of a save apart from that of a refresh.
 
@@ -91,7 +84,6 @@ UI updates after hydration. Fix the mismatch instead of hiding warnings globally
 
 ## Lists and keys
 
-- Use stable IDs for keys, never indices.
 - Virtualize a list only when it can grow without bound. Subscribe to the data each row needs.
 
 ## Forms and inputs

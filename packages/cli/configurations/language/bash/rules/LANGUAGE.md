@@ -4,16 +4,7 @@ Read this rule when you write Bash functions, variables, quoting, or loops.
 
 ## Functions
 
-Declare function-local variables with `local`. When the exit code of a command substitution
-matters, assign it apart from the declaration: `local`, `declare`, `readonly`, and `export`
-report their own status:
-
-```bash
-local output
-output="$(some_command)" || return 1
-```
-
-Preserve the documented status contract: a predicate may return 1 for false, distinct from an
+Declare function-local variables with `local`. Preserve the documented status contract: a predicate may return 1 for false, distinct from an
 execution error.
 
 ```bash
@@ -62,8 +53,7 @@ export PROJECT_ROOT
 ## Quoting and expansion
 
 Forward arguments with `"$@"`, and use `$*` only to join them into one string on
-purpose. Use single quotes for literals, double for expansions. Command substitution
-output never supplies an unquoted argument list. Word splitting never parses data. Use functions,
+purpose. Use single quotes for literals, double for expansions. Word splitting never parses data. Use functions,
 not aliases. Parameter expansion replaces external tools for string work:
 
 ```bash
@@ -85,8 +75,6 @@ while IFS= LC_ALL=C read -r -d '' file; do
   files+=("${file}")
 done < <(find . -type f -name '*.sql' -print0)
 ```
-
-Do not use arrays to imitate nested data structures. A need for those structures signals that the work belongs outside Bash.
 
 ## Conditionals and arithmetic
 
@@ -124,7 +112,7 @@ fi
 
 ## Loops and delimited data
 
-Iterate arguments with `for arg in "$@"; do`, globs directly rather than `ls`, and files with
+Iterate arguments with `for arg in "$@"; do`, globs directly, and files with
 `while IFS= read -r line || [[ -n ${line} ]]; do ... done <"${file}"`, which keeps the last
 unterminated line. A pipe into `while` runs the loop in a subshell, so variables set inside it
 vanish; use process substitution or a redirected file. A here-string with command
@@ -143,7 +131,7 @@ while IFS= LC_ALL=C read -r -d '' file; do
 done <"${file_list}"
 ```
 
-`IFS= read -r` prevents trimming and backslash handling. Do not save and restore `IFS` with
+Do not save and restore `IFS` with
 `old_ifs="${IFS}"`, which loses the distinction between unset and empty; use a function-local
 `IFS` or a subshell. `read` treats `IFS` as a terminator, so a controlled delimited line
 keeps its trailing empty field only with an appended delimiter. Parse general CSV in
@@ -160,7 +148,7 @@ join_path_parts() {
 ## Paths, globs, and file names
 
 Quote paths, put `--` before them where the command supports it, prefer globs with
-an explicit prefix such as `./*.sql`, and never filter filenames with `grep`. Filenames can
+an explicit prefix such as `./*.sql`. Filenames can
 hold spaces, newlines, quotes, brackets, and leading dashes. Never assume the current
 folder; compute it, and check `cd` explicitly. A broken symlink needs `-L` beside `-e`
 when existence matters, and a basename pattern reads `"${path##*/}"`. Handle the no-match
@@ -194,11 +182,10 @@ content="${content_with_sentinel%x}"
 
 ## Pipelines and redirection
 
-Read `PIPESTATUS` immediately when individual statuses matter. Order redirections to show the intent, `>file 2>&1`, and never close a standard descriptor as a shortcut for `/dev/null`. Never
-read from and write to the same file in one pipeline. Rewrite it through a temporary file
-and an atomic rename. Parallel `xargs` jobs do not produce ordered, unmixed
+Read `PIPESTATUS` immediately when individual statuses matter. Order redirections to show the intent, `>file 2>&1`, and never close a standard descriptor as a shortcut for `/dev/null`. Rewrite a file in place
+through a temporary file and an atomic rename. Parallel `xargs` jobs do not produce ordered, unmixed
 output: write per-job files and combine them, or use a tool that serializes. Check a command
-directly or capture its status in a named variable rather than `(( ! $? )) || die`.
+directly or capture its status in a named variable.
 
 ```bash
 tar -cf - ./* | (cd -- "${target_dir}" && tar -xf -)

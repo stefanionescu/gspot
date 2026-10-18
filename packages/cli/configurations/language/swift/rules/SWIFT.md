@@ -189,7 +189,7 @@ Keep route enums within their feature and name them for the flow. Give them stab
 such as `TemplateDestination.editTemplate`, never view models, views, repository implementations, SDK
 clients, database records, or DTOs.
 
-### Methods, labels, and delegates
+### Method names
 
 <!-- level: all -->
 
@@ -198,21 +198,6 @@ such as `submitButtonTapped()`, `cameraPermissionDenied()`, or `selectedItemChan
 with a verb such as `enqueueFileUpload(_:)`, `refreshOrderHistory(for:)`, or
 `validateEmailAddress(_:)`. `handle`, `process`, and `didTap` describe neither. Reserve `handle...` for
 literal UIKit target-action and notification handlers marked `@objc`.
-
-Call sites read as grammatical English: omit the first label when the base
-name and argument form a phrase. Include it when it clarifies a weak type. Initializer
-arguments that set stored properties take the same names with explicit `self.`.
-Factories use `make...`, such as `makeTemplateView(for:)`. Nonmutating methods without side effects
-read as noun phrases; mutating ones as imperatives. Pairs follow `sort`/`sorted`,
-`append`/`appending`, and `formUnion`/`union`.
-
-A delegate method passes the source object first and unlabeled, and never trims its signature because
-one caller owns it. A source-only `Void` event combines the type name with a tense
-phrase: `draftStore(_:didDeleteDraft:)`. A source-only `Bool` answer uses `can`, `is`, or
-another predicate, never `should` or `may`: `draftStoreCanDeleteDraft`. Name a source-only value with a
-noun phrase and a natural preposition: `numberOfSections(in:)`. Extra arguments make the
-second label describe the event or requested value:
-`messageListDataSource(_:heightForMessageAt:)`.
 
 ### Protocols and identifiers
 

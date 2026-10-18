@@ -18,7 +18,7 @@ A doc comment says what a function does, what its parameters mean, and what it r
 <!-- level: all -->
 
 Write the doc comment that the language check requires. Say what the signature does not. Never write a comment that only repeats a name or a
-type. Name an object parameter for its role, such as `options`, never `root0`. Add other comments only when a
+type. Add other comments only when a
 function:
 
 - handles a failure that its public interface does not explain

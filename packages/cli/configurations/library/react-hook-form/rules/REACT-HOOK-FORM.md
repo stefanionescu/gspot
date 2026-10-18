@@ -33,7 +33,6 @@ Read this rule when you change a form built with React Hook Form.
   starting a request and returning early makes `isSubmitting` misleading.
 - Show field errors beside their inputs and form errors at the boundary. Keep entered values
   after a failed save so the user can correct or retry them.
-- A save captures the edited record's identity. Its late result must not reset a different record.
 - When the project uses TanStack Query and submission needs the mutation result, await `mutateAsync`.
   Handle its rejection in the form's error path.
 - When the project uses Next.js Server Actions, await the action and map its returned validation or

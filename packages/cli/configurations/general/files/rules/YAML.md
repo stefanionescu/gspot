@@ -19,7 +19,6 @@ Read this rule when you change a `.yml` or `.yaml` file.
   `uses: jdx/mise-action@<sha> # v5.1.1`.
 - When the format has a description field, such as `description` in `action.yml`, put the text there, not in a
   comment.
-- A comment describes the current file. Do not write work status in a comment, such as "jobs stay paused."
 
 ## Organization
 

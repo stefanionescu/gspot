@@ -8,8 +8,7 @@ into a second store to share it with another component.
 ## Ownership and identity
 
 Create a server QueryClient per request and keep the browser client stable across rerenders and
-initial suspension. Clear or partition private state when identity or tenant changes. A late
-response must not refill the next session's cache.
+initial suspension. Clear or partition private state when identity or tenant changes.
 
 Include every result-changing input in the key. Give list previews, detail records, and infinite
 pages different identities. When the project has tRPC, use its generated options and key factories.
@@ -19,13 +18,12 @@ See [server rendering and hydration](https://tanstack.com/query/latest/docs/fram
 
 ## Writes and recovery
 
-Apply a save result to the resource captured at its start, not the current selection.
 An optimistic rollback reverses only its own change; restoring a whole snapshot can erase a newer
 success. Reconcile with the committed response, then invalidate affected lists and aggregates.
 A committed write stays successful when its refresh fails.
 
 Required cache updates belong to code that receives every completion, not a per-call callback
-that can disappear on unmount. Retry a write only under an idempotency contract.
+that can disappear on unmount.
 
 See [optimistic updates](https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates).
 

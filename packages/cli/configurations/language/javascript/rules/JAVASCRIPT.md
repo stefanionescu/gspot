@@ -2,9 +2,7 @@
 
 Read this rule when you change JavaScript or TypeScript code.
 
-Keep development tools out of production runtime imports. Keep inputs and side effects explicit. Validate the
-values that the security rules list where the program receives them, before you send them to a database or another
-service.
+Keep development tools out of production runtime imports. Keep inputs and side effects explicit.
 
 ## Runtime
 

@@ -71,8 +71,6 @@ Fetched server data stays in the query cache.
 - Slices organize one cohesive store, and each field and action lives in exactly one, so spreading
   them cannot silently overwrite names. Middleware wraps the whole store, not each slice, and slice
   creator types stay compatible with it.
-- Asynchronous actions keep request identity and cancellation explicit. A delayed action never
-  updates the next resource after the reader moves on.
 
 ## Persisted state
 
@@ -89,11 +87,6 @@ Fetched server data stays in the query cache.
 - Sign-out and identity or tenant changes reset live private state and clear or partition its
   persisted copy. Clearing storage alone leaves the in-memory store unchanged.
 - A pending restoration never reapplies the previous identity's data.
-
-## Verification
-
-Check independent provider instances, nested updates, resets, and malformed stored state. A delayed
-update must not change another resource or restore a previous identity's private state.
 
 ## References
 

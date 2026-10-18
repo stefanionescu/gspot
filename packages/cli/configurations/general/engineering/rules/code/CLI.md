@@ -16,9 +16,8 @@ Read this rule when you change a command-line program that the project ships.
   version and exits.
 - Every value a prompt asks for also has a flag. If the process has no terminal, fail. Name the missing flag.
 - A destructive command prompts for confirmation on a terminal and requires `--yes` otherwise.
-- Help and explain text says what the user can do. It shows no regular expression, internal identifier, source path
-  of the program, or value that the user cannot change.
-- Every command, flag, and setting that help text names exists. A test checks each name.
+- Help text says what the user can do, and names only commands, flags, and settings that exist. It shows no regular
+  expression, internal identifier, source path of the program, or value that the user cannot change.
 
 ## Behavior
 

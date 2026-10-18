@@ -192,35 +192,3 @@ system-specific branch with the operation that owns it. Handle `realpath` and `d
 parsing differences. macOS `/bin/bash` runs an old Bash version. Linux-only utilities need
 checks in scripts that also run on macOS. CI does not share the `PATH` of the developer. Symlink-aware absolute paths come from `pwd -P` after `cd`, or from
 product-owned application code.
-
-## Verification and debugging
-
-Run the configured syntax, ShellCheck, and shfmt commands. Run destructive or provider tests
-only in a throwaway environment.
-
-Production scripts gain no test-only flags, branches, or command replacements. When
-debugging, start from the exact error and line Bash reports. Run `bash -n` and ShellCheck,
-reduce to the smallest reproducing block, and expose invisible characters with
-`printf '%q\n'`.
-
-Trace with `bash -x` or a local `set -x` block whose `PS4` names file, line, and function,
-only while you debug. Never commit broad tracing, `trap DEBUG`, or stepping
-code. Bash 4.4 supports `BASH_XTRACEFD`. A debug helper preserves the status it diagnoses.
-
-`unexpected EOF` indicates an unmatched quote, an unterminated here document,
-a missing `fi`, `done`, or `esac`, or a CRLF ending hiding the delimiter.
-
-`too many arguments` indicates an unquoted expansion inside `[ ... ]`. `event not found` indicates interactive history expansion
-of `!`. Use `type -a` to find an alias, function, builtin, or `PATH` collision when a command behaves differently.
-Failure before the shebang indicates a byte order mark (BOM) or CRLF.
-
-## Refactoring existing scripts
-
-Read the whole script and its sourced libraries. Identify the caller interface: local, CI,
-remote host, or package script. Preserve behavior before you change style.
-
-Fix quoting and argument arrays near the touched logic, and add explicit checks around dangerous commands.
-Share a helper across the script family only when it has a real common contract. Do not
-convert a large script in one pass or change shebangs across a family without verifying the
-runtime. Run the narrow shell lint and format command before the broader checks. Move complex script
-logic into application code and call it directly.

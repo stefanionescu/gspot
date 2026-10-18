@@ -83,8 +83,6 @@ export async function createProviderOperation(request: ProviderOperationRequest)
 
 <!-- level: all -->
 
-- Do not use namespaces, `module`, triple-slash references, or
-  `import x = require(...)` to simulate ownership.
 - Keep generator-style file names only for generator output.
 
 ### TypeScript variables

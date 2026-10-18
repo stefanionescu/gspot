@@ -49,8 +49,6 @@ other destructive recovery. Preserve exact public errors and remove private data
 Do not write the current release number in prose or examples. Write `<version>` and say once where to find the
 number, or generate the text from the dependency file.
 
-A test runs or parses each command and each settings file that a page shows.
-
 ## Reference pages
 
 Use the names and values of the API the page documents. Explain public behavior without requiring
@@ -87,7 +85,7 @@ per-system steps in a fixed order.
 ## Links
 
 Use maintained primary sources for external APIs and relative paths for repository content.
-Link text identifies the destination. A public procedure states any account or permission needed
+A public procedure states any account or permission needed
 to open a required page.
 See [Diátaxis](https://diataxis.fr/), [Google documentation guidance](https://developers.google.com/style),
 and [W3C image guidance](https://www.w3.org/WAI/tutorials/images/).

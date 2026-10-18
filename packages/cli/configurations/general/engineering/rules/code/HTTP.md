@@ -16,7 +16,6 @@ Read this rule when you change an HTTP service.
 ## Responses
 
 - One handler formats error responses. Feature code throws and never builds an HTTP error body.
-- Give clients generic, stable messages. Detail stays in server diagnostics.
 - The service documents one shape for success and one for errors, and keeps both stable.
 - Use precise status codes: 201 for creation, 204 with no body, 4xx for caller errors, and 5xx
   only for failures the caller cannot fix.

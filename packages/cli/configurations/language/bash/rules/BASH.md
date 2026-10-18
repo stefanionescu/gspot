@@ -6,34 +6,17 @@ Read this rule when you write or change a shell script.
 
 <!-- level: all -->
 
-Use Bash as glue code that runs commands, not for application logic. Prefer
-small scripts with explicit inputs and outputs and clear failure behavior.
-Treat every path, argument, environment value, command output, and user input as unsafe until
-quoted, validated, or parsed by a structured tool. A script that builds, deploys, deletes, or
-publishes artifacts makes its inputs, effects, and failure behavior explicit.
+Use Bash to run commands and wire tools together. Parsing, data structures, long-running work, and typed contracts
+belong in application code. Treat every path, argument, environment value, command output, and user input as unsafe
+until quoted, validated, or parsed by a structured tool. A script that builds, deploys, deletes, or publishes artifacts
+makes its inputs, effects, and failure behavior explicit.
 
 `set -euo pipefail` does not replace checks around dangerous commands.
-
-## Bash tasks
-
-<!-- level: all -->
-
-Use Bash when the script mostly calls other command-line tools or wires together
-installation, lint, build, runtime, publication, or cleanup steps. Use it to validate the
-environment and dispatch to project commands, or for file movement, process checks,
-and retry loops. Do not use Bash for complex text parsing. Do not use it
-for JSON, YAML, XML, or HTML transformations beyond extraction with a dedicated
-parser. Large mutable data structures, long-lived daemons, high-performance work,
-security-sensitive parsing of untrusted input, and behavior that needs typed contracts belong
-elsewhere. A workflow that needs nested maps, large
-arrays, state machines, non-trivial validation, complex retries, concurrent work, or domain
-rules exceeds the scope of a script.
 
 ## Deprecated and forbidden syntax
 
 Do not use `function`, `typeset`, `&>`, `|&`, or `for arg; {`. Use `name() { ...; }`,
 `local`, `declare`, `readonly`, explicit redirections, and `for arg in "$@"; do` instead.
-ShellCheck reports `$[ ... ]`, backticks, and `-a` or `-o` inside `[ ... ]`.
 `trap ERR` does not provide general error handling. Check failure where it matters, and reserve traps
 for cleanup that can run safely on the relevant exit path.
 

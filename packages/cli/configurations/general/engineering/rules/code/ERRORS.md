@@ -20,6 +20,12 @@ Read this rule when you write code that raises, catches, or reports an error.
 - Do not swallow failures. Handle, record, or re-raise each caught error.
 - Run required cleanup in `finally` or the language's equivalent.
 
+## Async work
+
+- Capture the identity of the resource when async work starts. A late result never overwrites a newer resource or
+  another session.
+- Retry a write only when the operation has an idempotency key.
+
 ## Error messages
 
 A developer tool may name the file, line, and setting that the user must fix. Keep unrelated

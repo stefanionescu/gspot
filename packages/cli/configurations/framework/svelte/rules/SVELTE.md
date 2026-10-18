@@ -6,7 +6,6 @@ Read this rule when you change Svelte components or SvelteKit routes.
 
 <!-- level: all -->
 
-- Use `$derived` for values in markup.
 - Pass a prop or callback instead of changing state through `bind:this`.
 
 ## Runes and reactivity

@@ -28,7 +28,7 @@ need one source of the data or coordinated refresh.
 
 Cookie-setting operations use a transport that can finish headers before streaming. Configure
 serialization at both ends and preserve transformer metadata. Bound batch sizes and expensive
-work. One layer owns retries, and a retried write requires an idempotency contract.
+work. One layer owns retries.
 
 See [TanStack integration](https://trpc.io/docs/client/tanstack-react-query/setup)
 and [links](https://trpc.io/docs/client/links).
@@ -37,7 +37,6 @@ and [links](https://trpc.io/docs/client/links).
 
 Forward cancellation to the code that does the work and release listeners and streams. A disconnected client
 does not prove that a write failed; recover its state by operation identity before retrying.
-Late responses must not update another resource or session.
 
 Subscriptions reauthorize after identity changes. Resumable events use stable identifiers,
 deduplicate replay, and restore a fresh snapshot when retention has expired.

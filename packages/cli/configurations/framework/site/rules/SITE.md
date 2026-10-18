@@ -9,8 +9,6 @@ with the deployed site.
 
 ## Templates and browser assets
 
-Templates and root HTML files stay declarative.
-
 - Browser scripts check that required elements exist before binding behavior and do not
   swallow programming errors.
 - A plain script has no module system, so it uses no `import`. A module script resolves imports
