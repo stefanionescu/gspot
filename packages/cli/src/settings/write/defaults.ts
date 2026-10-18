@@ -2,15 +2,16 @@ import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { buildSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { DETECTED_SETTINGS } from '#cli/config/settings/defaults.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { findDeclaration, getSettingValue } from '#cli/settings/inherit.ts';
-import { detectDefaults, buildKnownSettings } from '#cli/settings/known.ts';
 import { type Settings, type WrittenTable } from '#cli/types/settings/values.ts';
 
 function isInheritedValueChanged(
@@ -130,8 +131,7 @@ function dropDefaults(settings: TomlTable): TomlTable {
         }),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     // The writer has no project input to prove a computed default. Keep a written choice until the writer knows that input.
-    const unproved = [...detectDefaults({})].filter(([, value]) => value === undefined);
-    for (const [key] of unproved) for (const table of tables) table.known.defaults.delete(key);
+    for (const key of DETECTED_SETTINGS) for (const table of tables) table.known.defaults.delete(key);
     for (const [index, table] of scopes.entries()) {
         const scope = trimTrailingSlashes(table['path'] as string);
         const writtenTable = tables.find((entry) => entry.scope === scope) as WrittenTable;

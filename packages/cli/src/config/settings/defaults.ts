@@ -43,3 +43,6 @@ export const SETTING_DEFAULTS = {
     minProperties: 2,
     tool_timeout_seconds: 600,
 } as const;
+
+/** Settings whose default comes from project files, which the settings writer cannot read. */
+export const DETECTED_SETTINGS = ['openapi.document', 'site.build_command', 'swift.xcode_destination'] as const;

@@ -4,6 +4,7 @@ import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { readAsset, listAssets } from '#cli/system/assets.ts';
+import type { Settings } from '#cli/types/settings/values.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
@@ -223,4 +224,23 @@ function formatUnknownCheck(name: string, known: string[]): string {
     return `There is no check called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''}`;
 }
 
-export { listCheckIds, readManifests, listRuleFiles, listChecksById, readNamingDefaults, formatUnknownCheck };
+/**
+ * Refuse a check ID that no configuration or command check declares.
+ * @param name the requested check ID.
+ * @param settings the command checks of gspot.toml.
+ * @param reads the run cache.
+ */
+function assertKnownCheck(name: string, settings: Pick<Settings, 'commandChecks'>, reads: ReadCache): void {
+    const known = listCheckIds(Object.values(settings.commandChecks), reads);
+    if (!known.includes(name)) throw new GspotError('arguments', formatUnknownCheck(name, known));
+}
+
+export {
+    listCheckIds,
+    readManifests,
+    listRuleFiles,
+    listChecksById,
+    assertKnownCheck,
+    readNamingDefaults,
+    formatUnknownCheck,
+};

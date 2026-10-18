@@ -90,7 +90,7 @@ test('doctor reports hooks this clone has not installed and accepts them after i
     const diagnosed = await spawnGspot(sandbox.path, ['doctor', '--json'], environment);
     expect(diagnosed.code, diagnosed.stdout + diagnosed.stderr).toBe(0);
     const report = JSON.parse(diagnosed.stdout) as DoctorReport;
-    expect(report.hooks).toContain('.gspot/hooks: installed');
+    expect(report.hooks).toBe('installed');
     expect(report.tools.filter(({ state }) => state !== 'ok' && state !== 'system')).toStrictEqual([]);
 });
 

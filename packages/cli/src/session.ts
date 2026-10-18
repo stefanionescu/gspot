@@ -6,11 +6,13 @@ import { selectRunner } from '#cli/generation/hooks.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
+import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
+import { BUILD_SCRIPT } from '#cli/config/settings/defaults.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -22,7 +24,6 @@ import { buildToolFiles } from '#cli/generation/tool-files/generate.ts';
 import type { ToolFileGeneration } from '#cli/types/generation/files.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
-import { detectDefaults, buildKnownSettings } from '#cli/settings/known.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { classifyFile, listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Settings, SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
@@ -52,6 +53,8 @@ function buildSession(values: Omit<Session, 'toolFiles' | 'generatedPaths' | 'uv
         },
         set miseBinPaths(paths: string[]) {
             miseBinPaths = paths;
+            // uv may come from the new mise folders, so the next read looks it up again.
+            uvPath = undefined;
         },
         get miseBinPaths() {
             if (miseBinPaths === undefined) {
@@ -140,7 +143,7 @@ async function buildScopeSelections(
                 const { name } = await getPackageManagerIdentity();
                 known.defaults.set('site.build_command', {
                     ...build,
-                    value: detectDefaults({ packageManager: name }).get('site.build_command'),
+                    value: [name, ...BUILD_SCRIPT],
                 });
             }
             const view = buildScopeView(known, effective, selected, scope.path);

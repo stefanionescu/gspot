@@ -4,6 +4,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
+import { readMiseBinPaths } from '#cli/tools/locate.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -11,7 +12,6 @@ import { redactInstallOutput } from '#cli/tools/credentials.ts';
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISE_TRUST_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/install.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
@@ -85,12 +85,5 @@ export async function installMiseTools(context: InstallContext): Promise<string>
         timeoutSeconds,
         steps,
     );
-    session.uvPath =
-        locateCandidates(session.root, UV_TOOL, {
-            search: 'path',
-            searchFolders: [],
-            miseBinPaths: session.miseBinPaths,
-            timeoutSeconds,
-        })[0] ?? UV_TOOL;
     return 'trusted .gspot/mise.toml for mise';
 }

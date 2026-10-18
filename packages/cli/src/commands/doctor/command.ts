@@ -126,7 +126,7 @@ function formatDoctorReport(report: DoctorReport): string {
         `tools: ${String(report.tools.filter(isToolAvailable).length)} ready`,
         '',
         ...formatSuggestions(report.suggestions),
-        `hooks: ${report.hooks.endsWith(': installed') ? 'installed' : report.hooks}`,
+        `hooks: ${report.hooks}`,
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci: ${report.ci}`,
         `rules: ${formatCount(report.ruleFiles, 'file')}`,

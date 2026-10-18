@@ -1,6 +1,5 @@
 import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type Command } from '@commander-js/extra-typings';
@@ -21,12 +20,11 @@ async function runInstallCommand(cwd: string, cancelSignal?: AbortSignal): Promi
     const session = await openSession(root);
     const generated = generate(session);
     using writer = openWriter(root);
-    const { note, exitCode, steps } = await installTools(session, writer, generated, cancelSignal);
-    if (exitCode !== 0) throw new GspotError('installation', note);
+    const { note, steps } = await installTools(session, writer, generated, cancelSignal);
     return {
         text: `${note === '' ? 'No change: every tool is installed.' : note}\n`,
         json: { installed: true, steps },
-        exitCode,
+        exitCode: 0,
     };
 }
 

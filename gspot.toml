@@ -186,11 +186,6 @@ allowed_names = ["buildPackageManagerAccess", "getPackageManagerIdentity", "pack
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["packages/cli/src/settings/known.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
 paths = ["packages/cli/src/tools/npm/lockfiles.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."

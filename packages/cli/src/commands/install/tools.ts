@@ -2,7 +2,6 @@ import which from 'which';
 import { installHooks } from '#cli/apply/hooks.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { listStaleFiles } from '#cli/apply/stale.ts';
-import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { MISE_PROGRAM } from '#cli/config/tools/find.ts';
@@ -66,14 +65,12 @@ export async function installTools(
             ),
             programNote,
         );
-        return { note: notes.filter(Boolean).join('\n'), exitCode: 0, steps };
+        return { note: notes.filter(Boolean).join('\n'), steps };
     } catch (error) {
         cancelSignal?.throwIfAborted();
         if (!(error instanceof GspotError) || !['tool', 'installation'].includes(error.code)) throw error;
-        return {
-            note: `${error.message}\nTool installation is incomplete. Run: gspot install`,
-            exitCode: EXIT_ERROR,
-            steps,
-        };
+        throw new GspotError('installation', `${error.message}\nTool installation is incomplete. Run: gspot install`, {
+            cause: error,
+        });
     }
 }

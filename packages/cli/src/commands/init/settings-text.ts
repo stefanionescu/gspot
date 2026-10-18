@@ -4,7 +4,6 @@ import { readGitSetting } from '#cli/system/git.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { detectDefaults } from '#cli/settings/known.ts';
 import { parseBuildSettings } from '#cli/parsers/xcode.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
@@ -13,7 +12,9 @@ import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
 import { ORIGIN_URL_SETTING } from '#cli/config/system/git.ts';
 import { readLintJobs } from '#cli/repository/existing-tools.ts';
 import { formatSettingsText } from '#cli/settings/write/text.ts';
+import { buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import { PBXPROJ, PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
+import { XCODE_DESTINATIONS } from '#cli/config/settings/defaults.ts';
 import { TEMPLATE_COMMENT_PREFIX } from '#cli/config/settings/file.ts';
 import type { ConfigurationSelection } from '#cli/types/repository/selection.ts';
 import { type Repository, type ExistingTools } from '#cli/types/repository/inventory.ts';
@@ -37,14 +38,10 @@ function buildOpenapiTables(
         );
     return new Map(
         openapiSelections.flatMap(({ scope, openapi }) => {
-            const document = detectDefaults({
-                openapi: {
-                    filenames: openapi.detect.filenames,
-                    paths: repository.files
-                        .filter((file) => findScope(file.path, draft.scopes).path === scope)
-                        .map((file) => file.path),
-                },
-            }).get('openapi.document');
+            const isDocument = buildFilenameMatcher(openapi.detect.filenames);
+            const document = repository.files.find(
+                (file) => findScope(file.path, draft.scopes).path === scope && isDocument(file.path),
+            )?.path;
             return document === undefined ? [] : [[scope, { openapi: { document } }] as const];
         }),
     );
@@ -95,7 +92,7 @@ function buildHeadTables(
         swiftFiles.map(({ scope, file }) => {
             const text = readText(repository.root, file);
             const sdkRoot = text === undefined ? undefined : parseBuildSettings(text).sdkRoot;
-            const destination = detectDefaults(sdkRoot === undefined ? {} : { sdkRoot }).get('swift.xcode_destination');
+            const destination = XCODE_DESTINATIONS.get(sdkRoot);
             const swiftSettings = {
                 ...(scope === '' ? swift : {}),
                 xcode_project: posix.dirname(file),

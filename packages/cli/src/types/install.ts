@@ -6,7 +6,7 @@ import type { Repository } from '#cli/types/repository/inventory.ts';
 import type { HookName, StartRunner, GenerationResult } from '#cli/types/generation/files.ts';
 
 /** The install commands, summary, and exit code. */
-export type InstallationResult = { note: string; exitCode: number; steps: readonly (readonly string[])[] };
+export type InstallationResult = { note: string; steps: readonly (readonly string[])[] };
 
 /** Settings and repository evidence for installing and inspecting clone-local Git hooks. */
 export type HookContext = {

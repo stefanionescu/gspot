@@ -3,22 +3,14 @@ import { stripUndefined } from '#cli/system/values.ts';
 import { mergeIgnore } from '#cli/settings/write/text.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { type ReadCache } from '#cli/types/system/files.ts';
 import { type TomlTable } from '#cli/types/settings/file.ts';
-import { type Settings } from '#cli/types/settings/values.ts';
 import { stringify, LocalDate } from '@decimalturn/toml-patch';
 import { calendarDateSchema } from '#cli/settings/schema/parts.ts';
+import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type IgnoreOptions } from '#cli/types/commands/edit-settings.ts';
 import { saveSettings, startSettingsEdit } from '#cli/apply/save-settings.ts';
-import { listCheckIds, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-
-function assertKnownCheck(checkName: string, settings: Settings, reads: ReadCache): void {
-    const known = listCheckIds(Object.values(settings.commandChecks), reads);
-    if (known.includes(checkName)) return;
-    throw new GspotError('arguments', formatUnknownCheck(checkName, known));
-}
 
 /**
  * Write an ignore with its reason.

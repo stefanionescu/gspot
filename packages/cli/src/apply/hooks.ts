@@ -32,6 +32,11 @@ function readForeignHooks(root: string, own: string): ExistingTools['hooks'] {
           ];
 }
 
+// The hooks folder of gspot, relative to the Git top level, as core.hooksPath names it.
+function readHooksPath(root: string): string {
+    return `${readGitPrefix(root)}${HOOKS_PATH}`;
+}
+
 // List the commands that another hook setup must run. Install and the status line share this text.
 function formatForeignHooks(hooks: ExistingTools['hooks'], { runner, hooks: names }: HookContext): string {
     const lines = names.map((name) => `  ${name}: ${runner.command} ${HOOK_ARGUMENTS[name]}`);
@@ -47,7 +52,7 @@ function formatForeignHooks(hooks: ExistingTools['hooks'], { runner, hooks: name
  */
 function planHooks(context: HookContext): HookPlan {
     const { settings, repository } = context;
-    const path = `${readGitPrefix(repository.root)}${HOOKS_PATH}`;
+    const path = readHooksPath(repository.root);
     if (settings.hooks?.enabled !== true)
         return readGitSetting(repository.root, HOOKS_PATH_SETTING) === path
             ? { path, command: UNSET_HOOKS_PATH, note: 'disabled hooks: unset core.hooksPath' }
@@ -92,9 +97,8 @@ export function readHookStatus(context: HookContext): HookStatus {
     const { settings, repository } = context;
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
     if (!repository.hasGit) return { ready: false, text: 'not installed: no Git repository' };
-    const path = planHooks(context).path;
-    if (readGitSetting(repository.root, HOOKS_PATH_SETTING) === path)
-        return { ready: true, text: `${path}: installed` };
+    const path = readHooksPath(repository.root);
+    if (readGitSetting(repository.root, HOOKS_PATH_SETTING) === path) return { ready: true, text: 'installed' };
     const foreign = readForeignHooks(repository.root, path);
     if (foreign.length > 0) {
         const paths = foreign.flatMap((hook) => {

@@ -1,11 +1,10 @@
 import { formatCount } from '#cli/system/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
+import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import { saveSettings, startSettingsEdit } from '#cli/apply/save-settings.ts';
-import { listCheckIds, formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/edit-settings.ts';
 
@@ -76,8 +75,7 @@ async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
     const { root, input, settings, reads } = startSettingsEdit(options.cwd);
-    const known = listCheckIds(Object.values(settings.commandChecks), reads);
-    if (!known.includes(options.check)) throw new GspotError('arguments', formatUnknownCheck(options.check, known));
+    assertKnownCheck(options.check, settings, reads);
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
     const [verb, pronoun] = everywhere === 1 ? ['covers', 'it'] : ['cover', 'them'];
     const warning =

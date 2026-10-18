@@ -4,14 +4,12 @@ import { mergeValue } from '#cli/settings/inherit.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { OVERRIDING_KINDS } from '#cli/config/settings/values.ts';
-import { buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import type { KnownSettings, SettingDefault } from '#cli/types/settings/values.ts';
-import { BUILD_SCRIPT, XCODE_DESTINATIONS } from '#cli/config/settings/defaults.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 
 // Read setting declarations and resolve their shipped and detected defaults.
@@ -153,33 +151,6 @@ function buildKnownSettings(selected: Manifest[], level: Level, reads: ReadCache
 }
 
 /**
- * Detect the defaults that come from project files for init and a session.
- * @param inputs what detection found.
- * @param inputs.packageManager the detected npm, pnpm, Yarn, or Bun.
- * @param inputs.sdkRoot the detected Xcode SDK.
- * @param inputs.openapi the filenames and places to search.
- * @param inputs.openapi.filenames the names that mark an OpenAPI document.
- * @param inputs.openapi.paths the repository-relative places to search.
- * @returns computed setting defaults, with undefined when their project input does not exist.
- */
-function detectDefaults(inputs: {
-    packageManager?: string;
-    sdkRoot?: string;
-    openapi?: { filenames: string[]; paths: string[] };
-}): Map<string, unknown> {
-    const matches = inputs.openapi === undefined ? undefined : buildFilenameMatcher(inputs.openapi.filenames);
-    const document = inputs.openapi?.paths.find((path) => matches?.(path) === true);
-    return new Map<string, unknown>([
-        ['openapi.document', document],
-        [
-            'site.build_command',
-            inputs.packageManager === undefined ? undefined : [inputs.packageManager, ...BUILD_SCRIPT],
-        ],
-        ['swift.xcode_destination', XCODE_DESTINATIONS.get(inputs.sdkRoot)],
-    ]);
-}
-
-/**
  * Read the declarations and defaults from their field schemas.
  * @param configuration the name whose fields to read.
  * @returns the settings of this configuration.
@@ -211,4 +182,4 @@ function listConfigurationSettings(configuration: string): SettingDeclaration[] 
     return declarations;
 }
 
-export { detectDefaults, buildKnownSettings, listConfigurationSettings };
+export { buildKnownSettings, listConfigurationSettings };
