@@ -3,7 +3,7 @@ import Example from '../components/home/Example.astro';
 import InlineText from '../components/home/InlineText.astro';
 import { TOOLS, USE_CASES, HOME_TITLE } from '../config/home.ts';
 import '../components/home/page.css';
-import { DESCRIPTION, REPOSITORY_URL  } from '../config/site.ts';
+import { DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '../config/site.ts';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 ---
 
@@ -91,7 +91,7 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
             <div class="home-footer-content">
                 <span>gspot · Apache-2.0</span>
                 <nav aria-label="Footer">
-                    <a href="/start/overview/">Docs</a>
+                    <a href={DOCS_PATH}>Docs</a>
                     <a href="https://www.npmjs.com/package/@gspothq/cli">npm</a>
                     <a href={REPOSITORY_URL}>GitHub</a>
                 </nav>

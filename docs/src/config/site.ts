@@ -3,6 +3,8 @@ export const SITE_URL = 'https://generativespotting.com';
 export const DESCRIPTION =
     'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.';
 export const REPOSITORY_URL = 'https://github.com/stefanionescu/gspot';
+/** The first docs page, where every Docs link goes. */
+export const DOCS_PATH = '/start/overview/';
 export const EDIT_URL = `${REPOSITORY_URL}/edit/main/docs/`;
 export const FAVICON = '/favicon.ico';
 export const APPLE_TOUCH_ICON = '/apple-touch-icon.png';

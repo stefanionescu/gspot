@@ -1,3 +1,7 @@
+---
+import { DOCS_PATH } from '../../config/site.ts';
+---
+
 <div class="brand-navigation">
     <a class="site-title" href="/" aria-label="gspot home">
         <img class="brand-mark" src="/brand/mark.webp" alt="" width="28" height="28" />
@@ -5,7 +9,7 @@
     </a>
     {
         Astro.url.pathname !== '/' && (
-            <a href="/start/overview/" aria-current="location">
+            <a href={DOCS_PATH} aria-current="location">
                 Docs
             </a>
         )
