@@ -179,13 +179,13 @@ export const orderCount = 1;
 // The entry may import the orders, and the orders only each other.
 
 export const ARCHITECTURE_SETTINGS = `
-[[architecture.module]]
-may_import = ["orders"]
+[[import_rule]]
+can_also_import = ["orders"]
 name = "orders"
 paths = ["src/orders/**"]
 
-[[architecture.module]]
-may_import = ["entry", "orders"]
+[[import_rule]]
+can_also_import = ["entry", "orders"]
 name = "entry"
 paths = ["src/main.ts"]
 `;

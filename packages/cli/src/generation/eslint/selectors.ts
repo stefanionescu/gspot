@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import type { SelectorGroup } from '#cli/types/generation/eslint.ts';
 import type { SelectorPaths } from '#cli/types/generation/fragments.ts';
 import { REEXPORT_SELECTORS } from '#cli/config/generation/eslint-rules.ts';
@@ -64,6 +65,24 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
     }));
 }
 
+// The selectors that settings turn on: environment reads outside the readers at level all, and alias suffixes.
+function listSettingSelectors(selection: ScopeSelection, isAll: boolean): SelectorPaths[] {
+    const selectors: SelectorPaths[] = [];
+    const owners = selection.view.values.structure?.environment_readers ?? [];
+    if (isAll && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, except: owners });
+    const styles = selection.view.values[ESLINT_SETTINGS_TABLE]?.import_extension;
+    if (styles !== undefined)
+        selectors.push({ ...ALIAS_IMPORT_SELECTORS[styles === 'extensionless' ? 'never' : 'always'], except: [] });
+    return selectors;
+}
+
+// A selector covers the files that its setting lists in the scope, or every source file when it names no setting.
+function buildSelectorPaths(selection: ScopeSelection, entry: Manifest['eslint']['selectors'][number]): SelectorPaths {
+    const listed = entry.files_setting === undefined ? undefined : selection.view.settings[entry.files_setting];
+    const files = entry.files_setting === undefined ? {} : { files: (listed as string[] | undefined) ?? [] };
+    return { selector: entry.selector, message: entry.message, ...files, except: [] };
+}
+
 /**
  * Resolve the selectors that fragments add in each project scope.
  *
@@ -84,20 +103,7 @@ export function groupFragmentSelectors(
         const declarations = selection.selected.flatMap((manifest) => (isAll ? manifest.eslint.selectors : []));
         const applied: SelectorPaths[] = [
             ...new Map(declarations.map((entry) => [entry.selector, entry])).values(),
-        ].map((entry) => {
-            const files =
-                entry.role === undefined
-                    ? undefined
-                    : Object.entries(selection.view.roles).flatMap(([name, paths]) =>
-                          name === entry.role ? paths : [],
-                      );
-            return {
-                selector: entry.selector,
-                message: entry.message,
-                ...(files === undefined ? {} : { files }),
-                except: [],
-            };
-        });
+        ].map((entry) => buildSelectorPaths(selection, entry));
         if (isAll) {
             const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];
             applied.push(
@@ -108,14 +114,7 @@ export function groupFragmentSelectors(
                 })),
             );
         }
-        const owners = selection.view.roles.environment_readers;
-        if (isAll && owners.length > 0) applied.push({ ...ENVIRONMENT_SELECTOR, except: owners });
-        const styles = selection.view.values[ESLINT_SETTINGS_TABLE]?.import_extension;
-        if (styles !== undefined)
-            applied.push({
-                ...ALIAS_IMPORT_SELECTORS[styles === 'extensionless' ? 'never' : 'always'],
-                except: [],
-            });
+        applied.push(...listSettingSelectors(selection, isAll));
         return groupSelectors(applied).map((group) => ({
             ...group,
             scope: selection.scope.path,

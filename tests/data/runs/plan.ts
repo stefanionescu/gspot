@@ -168,7 +168,7 @@ reason = "This sandbox exercises native tools without the license scanner."
 const ARCHITECTURE_REQUIREMENTS = [
     {
         name: 'root modules',
-        tables: `[[architecture.module]]
+        tables: `[[import_rule]]
 name = "app"
 paths = ["src/**"]
 `,

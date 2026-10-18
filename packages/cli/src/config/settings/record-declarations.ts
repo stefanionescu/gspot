@@ -7,9 +7,9 @@ export const RECORD_DECLARATIONS = {
     'ignore.paths': { description: 'Where the ignore applies.' },
     'ignore.reason': { description: 'Why you accept the findings.' },
     'format.override.paths': { description: 'The files these formatting values apply to.' },
-    'architecture.module.name': { description: 'The name that other modules use in may_import.' },
-    'architecture.module.paths': { description: 'The files of the module.' },
-    'architecture.module.may_import': { description: 'The modules it may import, besides itself.' },
+    'import_rule.name': { description: 'The name that other import rules use in can_also_import.' },
+    'import_rule.paths': { description: 'The files of the import rule.' },
+    'import_rule.can_also_import': { description: 'The import rules listed below this one that its files may import.' },
     'coverage.swift_target.name': { description: 'A Swift target named in the coverage report.' },
     'coverage.swift_target.lines': {
         description: 'The least share of lines that the target must cover, in place of `coverage.lines`.',

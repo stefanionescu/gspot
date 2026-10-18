@@ -16,7 +16,6 @@ const FIRST_TABLES = [
     'format',
     'limits',
     'naming',
-    'architecture',
     'structure',
     'dependencies',
     'docs',
@@ -25,7 +24,7 @@ const FIRST_TABLES = [
 ] as const;
 
 /** The last tables, with command checks before ignores. */
-const LAST_TABLES = ['tools', 'scope', 'command_check', 'ignore'] as const;
+const LAST_TABLES = ['tools', 'scope', 'import_rule', 'command_check', 'ignore'] as const;
 
 /** How the TOML writer orders keys and lays out arrays. */
 const TOML_FORMAT = { updateOrder: true, bracketSpacing: true, trailingComma: false } as const;
@@ -42,7 +41,7 @@ const RECORD_FIELDS = {
     scope: ['path', 'configurations', 'removed_configurations', 'test_files'],
     command_check: ['name', 'command', 'paths', 'stage', 'summary', 'help', 'fix', 'exit_codes', 'output'],
     ignore: ['check', 'rule', 'paths', 'reason', 'until'],
-    'architecture.module': ['name', 'paths', 'may_import'],
+    import_rule: ['name', 'paths', 'can_also_import'],
     'format.override': [
         'paths',
         'indent_style',

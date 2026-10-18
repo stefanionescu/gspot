@@ -7,9 +7,9 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildZustandFragment(
-    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'roles' | 'eslint'>,
+    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'settings' | 'eslint'>,
 ): EslintFragment {
-    const { blockWriter, eslintFiles, roles, eslint } = context;
+    const { blockWriter, eslintFiles, settings, eslint } = context;
 
     const imports: string[] = [];
 
@@ -17,7 +17,7 @@ function buildZustandFragment(
         '\n',
         blockWriter.block({
             files: eslintFiles.code,
-            ignores: roles.stores,
+            ignores: (settings['zustand.store_files'] as string[] | undefined) ?? [],
             rules: {
                 'no-restricted-imports': [
                     'error',

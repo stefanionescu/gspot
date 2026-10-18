@@ -19,7 +19,7 @@ main() {
 main "$@"
 `,
         },
-        settings: '[architecture]\nroles = { environment_readers = ["scripts/environment.sh"] }\n',
+        settings: '[structure]\nenvironment_readers = ["scripts/environment.sh"]\n',
         expected: { file: 'scripts/reader.sh', rule: 'read-outside-owner', line: 10 },
         corrected: {
             files: {

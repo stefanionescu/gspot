@@ -4,9 +4,9 @@ import { SCHEMA_URL } from '#cli/config/settings/file.ts';
 import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
+import { importRulesSchema } from '#cli/settings/schema/imports.ts';
 import { type TemplateTables } from '#cli/types/settings/templates.ts';
 import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
-import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/settings/schema/tools.ts';
 import { levelSchema, commandCheckFields } from '#cli/configurations/schema/parts.ts';
@@ -106,14 +106,10 @@ const scopeBody = {
         NonNullable<ParsedSettings['scope']>[number]['naming'],
         WrittenScope['naming']
     >,
-    architecture: z
-        .strictObject({
-            roles: architectureSchema.shape.roles,
-        } satisfies SchemaShape<
-            NonNullable<NonNullable<ParsedSettings['scope']>[number]['architecture']>,
-            NonNullable<WrittenScope['architecture']>
-        >)
-        .optional(),
+    structure: rootStructure.unwrap().pick({ environment_readers: true }).optional() satisfies z.ZodType<
+        NonNullable<ParsedSettings['scope']>[number]['structure'],
+        WrittenScope['structure']
+    >,
     format: formatSchema.omit({ override: true }).optional() satisfies z.ZodType<
         NonNullable<ParsedSettings['scope']>[number]['format'],
         WrittenScope['format']
@@ -190,6 +186,7 @@ const settingsSchema = z
             .describe(SETTING_DECLARATIONS['removed_configurations'].description),
         scope: z.array(scopeSchema).optional(),
         ...rootBody,
+        import_rule: importRulesSchema,
         ignore: z.array(ignoreSchema).optional(),
         command_check: z.array(commandCheckSchema).optional(),
         structure: rootStructure,

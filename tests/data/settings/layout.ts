@@ -205,28 +205,21 @@ paths = ["src/**"]
 `,
     },
     {
-        name: `module array and subtable`,
-        source: `# Architecture owner
-[architecture]
-
-# Module owner
-[[architecture.module]]
+        name: `top-level record array`,
+        source: `# Import rule owner
+[[import_rule]]
 name="core"
 paths=["src/**"]
-may_import = ["core"] # Limit inline
+can_also_import = ["core"] # Limit inline
 `,
-        target: `[architecture]
-module = [ { name = "core", paths = [ "src/**" ], may_import = ["core"] } ]
+        target: `import_rule = [ { name = "core", paths = [ "src/**" ], can_also_import = ["core"] } ]
 `,
-        expected: `# Architecture owner
-[architecture]
-
-# Module owner
-[[architecture.module]]
+        expected: `# Import rule owner
+[[import_rule]]
 name = "core"
 paths = ["src/**"]
 # Limit inline
-may_import = ["core"]
+can_also_import = ["core"]
 `,
     },
 ] as const;

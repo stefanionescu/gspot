@@ -5,10 +5,8 @@ export const UNUSED_PATH_CASES = [
         files: { 'scripts/kept.sh': 'echo kept\n', 'src/kept.txt': 'kept\n' },
         settings: {
             configurations: ['bash'],
-            architecture: {
-                module: [{ name: 'core', paths: ['src/**', 'gone/**'] }],
-                roles: { environment_readers: ['scripts/kept.sh', 'scripts/gone.sh'] },
-            },
+            import_rule: [{ name: 'core', paths: ['src/**', 'gone/**'] }],
+            structure: { environment_readers: ['scripts/kept.sh', 'scripts/gone.sh'] },
         },
         unmatched: ['gone/**', 'scripts/gone.sh'],
     },
@@ -17,12 +15,12 @@ export const UNUSED_PATH_CASES = [
         files: { 'app/kept.sh': 'echo kept\n', 'app/deep/kept.sh': 'echo kept\n' },
         settings: {
             configurations: ['bash'],
-            architecture: { roles: { environment_readers: ['root-gone.sh'] } },
+            structure: { environment_readers: ['root-gone.sh'] },
             scope: [
-                { path: 'app', architecture: { roles: { environment_readers: ['app/kept.sh', 'app/gone.sh'] } } },
+                { path: 'app', structure: { environment_readers: ['app/kept.sh', 'app/gone.sh'] } },
                 {
                     path: 'app/deep',
-                    architecture: { roles: { environment_readers: ['app/deep/kept.sh', 'app/deep/gone.sh'] } },
+                    structure: { environment_readers: ['app/deep/kept.sh', 'app/deep/gone.sh'] },
                 },
             ],
         },

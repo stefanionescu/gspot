@@ -11,33 +11,35 @@ import type {
 import {
     CODE_LANGUAGES,
     TRPC_CONFIGURATION,
-    TRPC_SERVER_MODULE,
     TEST_IMPORT_POLICY,
     OTHER_BOUNDARY_FILE,
+    IMPORT_RULE_CATEGORY,
+    TRPC_SERVER_CATEGORY,
     TRPC_DEPENDENCY_NODES,
     UNKNOWN_IMPORT_POLICIES,
     TRPC_SERVER_VALUE_POLICY,
     TRPC_DEPENDENCY_SELECTORS,
 } from '#cli/config/generation/eslint.ts';
 
-// Your module edges precede the fixed test and server-value restrictions.
+// Your import rules precede the fixed test and server-value restrictions. A rule allows its own files, the files of
+// every rule above it, and the rules in can_also_import.
 function buildDependencyPolicies({
-    modules,
+    importRules,
     enforceTests,
     tests,
     trpcPaths,
 }: EslintBoundaryContext): EslintBoundaryPolicy[] {
-    const policies: EslintBoundaryPolicy[] = modules.map((module, index) => ({
-        from: { file: { categories: `module:${module.name}` } },
+    const policies: EslintBoundaryPolicy[] = importRules.map((rule, index) => ({
+        from: { file: { categories: `${IMPORT_RULE_CATEGORY}${rule.name}` } },
         allow: {
             to: {
                 file: {
                     categories: {
                         anyOf: [
-                            ...modules.slice(0, index).map(({ name }) => name),
-                            module.name,
-                            ...module.may_import,
-                        ].map((name) => `module:${name}`),
+                            ...importRules.slice(0, index).map(({ name }) => name),
+                            rule.name,
+                            ...rule.can_also_import,
+                        ].map((name) => `${IMPORT_RULE_CATEGORY}${name}`),
                     },
                 },
             },
@@ -50,7 +52,9 @@ function buildDependencyPolicies({
             { allow: { to: { file: { path: tests } } } },
         );
     if (enforceTests) {
-        const outsideModules = { categories: { noneOf: modules.map(({ name }) => `module:${name}`) } };
+        const outsideModules = {
+            categories: { noneOf: importRules.map(({ name }) => `${IMPORT_RULE_CATEGORY}${name}`) },
+        };
         policies.push(
             { from: { file: outsideModules }, allow: { to: { file: { path: '**/*' } } } },
             { allow: { to: { file: outsideModules } } },
@@ -70,15 +74,17 @@ function buildDependencyPolicies({
 
 // Test files win over module categories. The elements also cover unknown endpoints.
 function buildBoundarySettings({
-    modules,
+    importRules,
     enforceTests,
     tests,
     trpcPaths,
+    serverFiles,
 }: EslintBoundaryContext): NonNullable<EslintBlock['settings']> {
-    const files: { category: string; pattern: string[]; stopMatching?: boolean }[] = modules.map((module) => ({
-        category: `module:${module.name}`,
-        pattern: module.paths,
+    const files: { category: string; pattern: string[]; stopMatching?: boolean }[] = importRules.map((rule) => ({
+        category: `${IMPORT_RULE_CATEGORY}${rule.name}`,
+        pattern: rule.paths,
     }));
+    if (serverFiles.length > 0) files.push({ category: TRPC_SERVER_CATEGORY, pattern: serverFiles });
     if (enforceTests) {
         files.unshift({ category: 'tests', pattern: tests, stopMatching: true });
         files.push({ ...OTHER_BOUNDARY_FILE, pattern: [...OTHER_BOUNDARY_FILE.pattern] });
@@ -107,23 +113,23 @@ export function buildBoundaryBlocks(
     context: Pick<EslintContext, 'repositorySettings' | 'scopes' | 'nodeFiles'>,
 ): EslintBlock[] {
     const { repositorySettings: settings, scopes, nodeFiles } = context;
-    const modules = scopes
-        .filter(({ scope }) => scope.path === '')
-        .flatMap(({ view }) => view.values.architecture?.module ?? []);
+    const importRules = settings.import_rule;
     const javascriptScopes = scopes.filter(({ selected }) =>
         selected.some(
             ({ configuration }) => configuration.name === 'javascript' || configuration.name === 'typescript',
         ),
     );
     const enforceTests = settings.level === 'all' && javascriptScopes.length > 0;
-    if (modules.length === 0 && !enforceTests) return [];
+    const trpcScopes = scopes.filter(({ selected }) =>
+        selected.some(({ configuration }) => configuration.name === TRPC_CONFIGURATION),
+    );
+    const serverFiles = [...new Set(trpcScopes.flatMap(({ view }) => view.values.trpc?.server_files ?? []))];
+    // Other files of a tRPC scope import the server files only as types.
+    const trpcPaths =
+        serverFiles.length === 0 ? [] : trpcScopes.map(({ scope }) => joinScope(escapeGlob(scope.path), '**/*'));
+    if (importRules.length === 0 && !enforceTests && trpcPaths.length === 0) return [];
     const tests = [...new Set(javascriptScopes.flatMap(({ view }) => view.test_files))];
-    const trpcPaths = modules.some(({ name }) => name === TRPC_SERVER_MODULE)
-        ? scopes
-              .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === TRPC_CONFIGURATION))
-              .map(({ scope }) => joinScope(escapeGlob(scope.path), '**/*'))
-        : [];
-    const input = { modules, tests, enforceTests, trpcPaths };
+    const input = { importRules, tests, enforceTests, trpcPaths, serverFiles };
     return [
         {
             files: [buildSourcePattern(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, '')],
@@ -132,7 +138,7 @@ export function buildBoundaryBlocks(
                 'boundaries/dependencies': [
                     'error',
                     {
-                        default: modules.length > 0 ? 'disallow' : 'allow',
+                        default: importRules.length > 0 ? 'disallow' : 'allow',
                         policies: buildDependencyPolicies(input),
                         checkInternals: trpcPaths.length > 0 || enforceTests,
                     },

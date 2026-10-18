@@ -182,7 +182,6 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
         eslintPresets: readEslintPresets(session),
         configurations: view.configurations,
         settings: view.settings,
-        roles: view.roles,
         testFiles: view.test_files,
         scope: selection.scope.path,
         scopeDependencies: listProjectDependencyNames(session.repository.dependencyFiles, selection.scope.path),

@@ -5,7 +5,6 @@ import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 import { ISO_DATE_LENGTH } from '#cli/config/settings/values.ts';
 import { tableValuesSchema } from '#cli/settings/schema/tables.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
-import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { limitTableSchema, namingCategorySchema } from '#cli/settings/schema/parts.ts';
 import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { listSettings, getSettingValue, getSettingTable, listApplicableTables } from '#cli/settings/inherit.ts';
@@ -63,7 +62,6 @@ function buildScopeView(known: KnownSettings, settings: Settings, selected: Mani
         test_files: testFiles,
         settings: entries,
         values,
-        roles: values.architecture?.roles ?? architectureSchema.shape.roles.parse(undefined),
         format,
         limit: (key, language) => {
             const value = limits[`${language ?? ''}.${key}`] ?? limits[`.${key}`];

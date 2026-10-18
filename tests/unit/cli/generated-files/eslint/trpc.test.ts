@@ -10,7 +10,7 @@ describe('trpc', () => {
         await using sandbox = await testdir();
         const settings = buildSettingsText(['trpc', 'typescript'], {
             level: 'all',
-            tables: `${TRPC_MODULES.replace('paths = ["private/**", "app/api/trpc/**"]', 'paths = ["private/**", "app/api/trpc/**", "app/private/**", "app/child/private/**", "flat/router.ts"]')}
+            tables: `${TRPC_MODULES.replaceAll('["private/**", "app/api/trpc/**"]', '["private/**", "app/api/trpc/**", "app/private/**", "app/child/private/**", "flat/router.ts"]')}
 [[scope]]
 path = "app"
 [[scope]]
@@ -82,7 +82,7 @@ describe('trpc', () => {
             await createFileTree(sandbox.path, {
                 'gspot.toml': buildSettingsText(['trpc', 'typescript'], {
                     level,
-                    tables: '[architecture.roles]\nrouters = [ "custom/**", "child/handlers/**" ]\n\n[[scope]]\npath = "child"\n\n[[scope]]\npath = "inherited"\n\n[[scope]]\npath = "plain"\nremoved_configurations = [ "trpc" ]\n',
+                    tables: '[trpc]\nrouter_files = [ "custom/**", "child/handlers/**" ]\n\n[[scope]]\npath = "child"\n\n[[scope]]\npath = "inherited"\n\n[[scope]]\npath = "plain"\nremoved_configurations = [ "trpc" ]\n',
                 }),
                 'package.json': '{"private":true,"type":"module"}',
                 'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}',

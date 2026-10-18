@@ -22,19 +22,22 @@ export { type router as SpecifierExport } from "./private/router.js";
 export type * from "./private/router.js";
 `;
 
-/** The server module holds the router and adapter paths; the other authored import rules still apply. */
-export const TRPC_MODULES = `[[architecture.module]]
+/** The server files hold the router and adapter paths; the authored import rules still apply. */
+export const TRPC_MODULES = `[trpc]
+server_files = ["private/**", "app/api/trpc/**"]
+
+[[import_rule]]
 name = "server"
 paths = ["private/**", "app/api/trpc/**"]
-may_import = ["server"]
-[[architecture.module]]
+can_also_import = ["server"]
+[[import_rule]]
 name = "client"
 paths = ["client/**"]
-may_import = ["server", "client"]
-[[architecture.module]]
+can_also_import = ["server", "client"]
+[[import_rule]]
 name = "storage"
 paths = ["storage/**"]
-may_import = ["storage"]
+can_also_import = ["storage"]
 `;
 
 export const TRPC_FAILURES = {

@@ -60,12 +60,12 @@ summary = "Finds functions with too few statements and files that only forward t
 why = "A function of one statement makes the reader jump for nothing."
 
 [[check]]
-example = "A Python file that uses `os.environ` outside `architecture.roles.environment_readers` reports a finding. Move that access into an environment reader, and pass the value to callers."
+example = "A Python file that uses `os.environ` outside `structure.environment_readers` reports a finding. Move that access into an environment reader, and pass the value to callers."
 files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
-help = "Move the environment read into a file listed in architecture.roles.environment_readers, then pass the value to callers."
+help = "Move the environment read into a file listed in structure.environment_readers, then pass the value to callers."
 level = "all"
 name = "environment-readers"
 runs = "scope"
 stage = "commit"
-summary = "Finds environment reads outside the files listed in architecture.roles.environment_readers."
+summary = "Finds environment reads outside the files listed in structure.environment_readers."
 why = "Environment reads spread through the code hide which settings a program needs."

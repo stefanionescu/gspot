@@ -54,7 +54,7 @@ test('init keeps the commit settings of a template', async () => {
         'team.template.toml': stringify({
             configurations: ['python', 'commits'],
             tools: { commitlint: { types: ['project'], scopes: ['team'] } },
-            architecture: { roles: { environment_readers: ['tests/env.sh'] } },
+            structure: { environment_readers: ['tests/env.sh'] },
         }),
     });
     const result = await runGspot(sandbox.path, ['init', '--from', 'team.template.toml', '--dry-run', '--json']);
@@ -64,7 +64,7 @@ test('init keeps the commit settings of a template', async () => {
     expect(settings.tools['commitlint']?.['types']).toStrictEqual(['project']);
     expect(settings.tools['commitlint']?.['scopes']).toStrictEqual(['team']);
     expect(parse(output.settings)).toMatchObject({
-        architecture: { roles: { environment_readers: ['tests/env.sh'] } },
+        structure: { environment_readers: ['tests/env.sh'] },
     });
 });
 

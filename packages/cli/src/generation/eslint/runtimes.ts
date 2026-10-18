@@ -28,7 +28,7 @@ function selectFrameworkRuntime(configurations: string[]): string | undefined {
  * @returns repository-relative paths whose files use script rules.
  */
 export function listScriptPaths({ selection }: Pick<EslintContext, 'selection'>): string[] {
-    const scripts = selection.view.roles['scripts'];
+    const scripts = selection.view.values.javascript?.script_files ?? [];
     return [...scripts, joinScope(escapeGlob(selection.scope.path), MISE_SCRIPT_PATH)];
 }
 

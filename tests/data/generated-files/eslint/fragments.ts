@@ -48,8 +48,8 @@ export const store = create(() => ({ readFile }));
 
 export const RESTRICTION_TABLES = `[tools.eslint]
 restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
-[architecture.roles]
-stores = ["**/store.js"]
+[zustand]
+store_files = ["**/store.js"]
 `;
 
 export const TYPESCRIPT_FILES = {

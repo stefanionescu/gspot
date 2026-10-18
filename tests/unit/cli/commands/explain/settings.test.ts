@@ -177,9 +177,9 @@ test('explain tells you to write a record list by hand, not with gspot set', asy
         'index.js': 'export const example = 1;\n',
         'app/index.js': 'export const example = 1;\n',
     });
-    const explained = await runGspot(sandbox.path, ['explain', 'architecture.module']);
+    const explained = await runGspot(sandbox.path, ['explain', 'import_rule']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(explained.stdout).toContain('write [[architecture.module]] records by hand in gspot.toml');
+    expect(explained.stdout).toContain('write [[import_rule]] records by hand in gspot.toml');
     expect(explained.stdout).not.toContain('gspot set');
     expect(explained.stdout).not.toContain('--scope');
 });

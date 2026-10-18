@@ -58,6 +58,8 @@ export type TypeScriptReferenceCopy = {
     projects: Map<string, TypeScriptConfiguration>;
 };
 
+export type ParsedJavascript = { script_files: string[] };
+
 export type ParsedSwift = {
     xcode_project?: string | undefined;
     xcode_scheme?: string | undefined;

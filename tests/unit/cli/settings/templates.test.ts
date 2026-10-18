@@ -74,17 +74,17 @@ test('template export keeps advisory ignores with until dates and path rows', as
 });
 
 test('template export keeps empty tables as written and adds no defaults', () => {
-    const written = 'configurations = []\n[naming]\n[architecture]\n[structure]\n[tools.eslint.rules]\n';
+    const written = 'configurations = []\n[naming]\n[javascript]\n[structure]\n[tools.eslint.rules]\n';
     const exported = exportTemplate(written);
     const exportedTables = parse(exported.text) as TomlTable;
     expect({
         naming: exportedTables['naming'],
-        architecture: exportedTables['architecture'],
+        javascript: exportedTables['javascript'],
         structure: exportedTables['structure'],
         tools: exportedTables['tools'],
-    }).toStrictEqual({ naming: {}, architecture: {}, structure: {}, tools: { eslint: { rules: {} } } });
+    }).toStrictEqual({ naming: {}, javascript: {}, structure: {}, tools: { eslint: { rules: {} } } });
     const absent = parse(exportTemplate('configurations = []\n').text) as TomlTable;
-    for (const table of ['naming', 'architecture', 'structure', 'tools'])
+    for (const table of ['naming', 'javascript', 'structure', 'tools'])
         expect(Object.hasOwn(absent, table)).toBe(false);
 });
 

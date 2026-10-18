@@ -12,12 +12,12 @@ export const MODULE_TABLES = {
 path = "apps/api"
 configurations = [ "typescript" ]
 `,
-    root: `[[architecture.module]]
+    root: `[[import_rule]]
 name = "app"
 paths = [ "app/**" ]
-may_import = [ "app" ]
+can_also_import = [ "app" ]
 
-[[architecture.module]]
+[[import_rule]]
 name = "storage"
 paths = [ "storage/**" ]
 
@@ -29,12 +29,12 @@ configurations = [ "typescript" ]
 path = "apps/api"
 configurations = [ "typescript" ]
 
-[[architecture.module]]
+[[import_rule]]
 name = "app"
 paths = [ "apps/api/app/**" ]
-may_import = [ "app" ]
+can_also_import = [ "app" ]
 
-[[architecture.module]]
+[[import_rule]]
 name = "storage"
 paths = [ "apps/api/storage/**" ]
 `,
@@ -80,7 +80,7 @@ export const ROLE_TARGETS = {
     'other/value.test.ts': 'export const value = 1;\n',
 } as const;
 
-export const ENVIRONMENT_TABLES = `[architecture.roles]
+export const ENVIRONMENT_TABLES = `[structure]
 environment_readers = ["config/**", "app/src/env/**", "literal/config/**"]
 
 [[scope]]
@@ -112,21 +112,21 @@ export const ENVIRONMENT_COMPOSED = "export * from './other.js';\nconst port = i
 // Authored test globs add to the defaults and scope exclusions; production imports stay checked.
 export const QA_MODULE_TABLES = `test_files = ["app/qa/**"]
 
-[[architecture.module]]
+[[import_rule]]
 name = "app"
 paths = ["app/**"]
-may_import = ["app"]
+can_also_import = ["app"]
 
-[[architecture.module]]
+[[import_rule]]
 name = "storage"
 paths = ["storage/**"]
 
-[[architecture.module]]
+[[import_rule]]
 name = "api-app"
 paths = ["apps/api/app/**"]
-may_import = ["api-app"]
+can_also_import = ["api-app"]
 
-[[architecture.module]]
+[[import_rule]]
 name = "api-storage"
 paths = ["apps/api/storage/**"]
 

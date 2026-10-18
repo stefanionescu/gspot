@@ -161,7 +161,7 @@ rule_prefix = "boundaries"
 version = "7.2.0"
 
 [[tool.when]]
-setting = "architecture.module"
+setting = "import_rule"
 
 [[tool.when]]
 level = "all"

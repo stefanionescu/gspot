@@ -1,15 +1,15 @@
 import type { LEVELS } from '#cli/config/configurations.ts';
 import type { ParsedSite } from '#cli/types/checks/framework.ts';
-import type { ParsedSwift } from '#cli/types/checks/language.ts';
 import type { ParsedPostgres } from '#cli/types/checks/database.ts';
 import type { ParsedTools } from '#cli/types/settings/tool-tables.ts';
 import type { CASE_NAMES } from '#cli/config/checks/general/naming.ts';
+import type { ParsedNamingOverride } from '#cli/types/settings/file.ts';
 import type { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
+import type { ParsedSwift, ParsedJavascript } from '#cli/types/checks/language.ts';
 import type { ParsedXcode, ParsedOpenapi } from '#cli/types/checks/infrastructure.ts';
-import type { ParsedDrizzle, ParsedTranslations } from '#cli/types/checks/library.ts';
 import type { ParsedSupabase, ParsedCloudflare } from '#cli/types/checks/platform.ts';
 import type { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declarations.ts';
-import type { ArchitectureModule, ParsedNamingOverride } from '#cli/types/settings/file.ts';
+import type { ParsedTrpc, ParsedDrizzle, ParsedZustand, ParsedTranslations } from '#cli/types/checks/library.ts';
 
 import type {
     CI_PROVIDERS,
@@ -49,13 +49,15 @@ type SettingDeclaration = {
 };
 
 type TableValues = {
-    architecture?: ParsedArchitecture | undefined;
     cloudflare?: ParsedCloudflare | undefined;
     coverage?: ParsedCoverage | undefined;
     dependencies?: ParsedDependencies | undefined;
     docs?: ParsedDocs | undefined;
     drizzle?: ParsedDrizzle | undefined;
     format: ParsedFormat;
+    javascript?: ParsedJavascript | undefined;
+    trpc?: ParsedTrpc | undefined;
+    zustand?: ParsedZustand | undefined;
     licenses?: ParsedLicenses | undefined;
     limits?: ParsedLimits | undefined;
     naming?: ParsedNaming | undefined;
@@ -179,11 +181,6 @@ type ParsedNaming = ParsedNamingFields & {
     override: ParsedNamingOverride[];
 };
 
-type ParsedArchitecture = {
-    module: ArchitectureModule[];
-    roles: { environment_readers: string[]; scripts: string[]; stores: string[]; routers: string[] };
-};
-
 type ParsedFormat = {
     indent_style: (typeof FORMAT_INDENT_STYLES)[number];
     indent_width: number;
@@ -215,7 +212,7 @@ type ParsedRoot = {
     configurations: string[];
 };
 
-type ParsedStructure = { reexports: (typeof REEXPORT_MODES)[number] };
+type ParsedStructure = { reexports: (typeof REEXPORT_MODES)[number]; environment_readers: string[] };
 
 type ParsedHooks = { enabled: boolean };
 
@@ -249,7 +246,6 @@ export type {
     SettingDeclaration,
     LanguageLimitField,
     ParsedNamingFields,
-    ParsedArchitecture,
     LanguageLimitFields,
     NamingLanguageFields,
     ParsedNamingLanguageFields,

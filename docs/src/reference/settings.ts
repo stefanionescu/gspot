@@ -251,7 +251,7 @@ function formatSettingAnchor(schema: JSONSchema.JSONSchema, path: string[], node
 /**
  * Link a setting to its row, or a table or record to its heading, on the gspot.toml pages.
  * @param schema the JSON Schema of gspot.toml
- * @param key the dotted key, such as format.indent_style or architecture.module
+ * @param key the dotted key, such as format.indent_style or import_rule
  * @returns the Markdown link
  */
 export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string {

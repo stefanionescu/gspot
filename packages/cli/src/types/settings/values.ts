@@ -1,8 +1,17 @@
 import type { Defined } from '#cli/types/shapes.ts';
 import type { Scope } from '#cli/types/repository/inventory.ts';
+import type { ImportRule } from '#cli/types/settings/imports.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 
+import type {
+    TomlTable,
+    ToolTable,
+    IgnoreRecord,
+    WrittenFormat,
+    FormatSettings,
+    ParsedSettings,
+} from '#cli/types/settings/file.ts';
 import type {
     ParsedCi,
     TableName,
@@ -11,15 +20,6 @@ import type {
     TableSettings,
     SettingDeclaration,
 } from '#cli/types/settings/tables.ts';
-import type {
-    TomlTable,
-    ToolTable,
-    IgnoreRecord,
-    WrittenFormat,
-    FormatSettings,
-    ParsedSettings,
-    ArchitectureModule,
-} from '#cli/types/settings/file.ts';
 
 type ScopeSelection = {
     scope: Scope;
@@ -46,7 +46,6 @@ type ScopeView = {
     test_files: Settings['test_files'];
     settings: Record<string, unknown>;
     format: FormatSettings;
-    roles: Settings['architecture']['roles'];
     limit: (key: string, language?: string) => number;
     values: TableValues;
     options: <Name extends TableName>(name: Name) => TableSettings<Name>;
@@ -91,7 +90,7 @@ type Settings = Omit<
     | 'tools'
     | 'limits'
     | 'naming'
-    | 'architecture'
+    | 'import_rule'
     | 'structure'
     | 'format'
     | 'hooks'
@@ -106,7 +105,7 @@ type Settings = Omit<
     removed_configurations: string[];
     limits: NonNullable<ParsedSettings['limits']>;
     naming: NonNullable<ParsedSettings['naming']>;
-    architecture: ArchitectureSettings;
+    import_rule: ImportRule[];
     structure: StructureSettings;
     format: WrittenFormat;
     allowed_words: NonNullable<ParsedSettings['allowed_words']>;
@@ -117,7 +116,7 @@ type Settings = Omit<
     hooks?: Defined<Required<NonNullable<ParsedSettings['hooks']>>>;
     ci?: ParsedCi;
     rules: ParsedRules;
-    scopes: Record<string, Partial<Settings> & Pick<Settings, 'written' | 'configurations' | 'removed_configurations'>>;
+    scopes: Record<string, SettingsTable & Pick<Settings, 'configurations' | 'removed_configurations'>>;
 };
 
 type WrittenSetting = Pick<EffectiveSetting, 'value' | 'reason'>;
@@ -127,12 +126,13 @@ type CommandCheck = CheckDeclaration & {
     files: NonNullable<CheckDeclaration['files']>;
 };
 
-type ArchitectureSettings = Omit<Defined<Required<NonNullable<ParsedSettings['architecture']>>>, 'module'> & {
-    module: ArchitectureModule[];
-};
-
 /** Root or scoped values and their source-document location. */
-type WrittenScopeTable = { table: Partial<Settings> & Pick<Settings, 'written'>; scope?: string; path: KeyPath };
+/** The root or one scope of the settings: every table optional, and a scope structure table with its scope keys only. */
+type SettingsTable = Partial<Omit<Settings, 'structure'>> & {
+    structure?: Partial<StructureSettings>;
+} & Pick<Settings, 'written'>;
+
+type WrittenScopeTable = { table: SettingsTable; scope?: string; path: KeyPath };
 
 /** A setting default and the configuration responsible for it. */
 type SettingDefault = { value: unknown; configuration: string };
@@ -153,6 +153,7 @@ export type {
     WrittenTable,
     ScopeSettings,
     KnownSettings,
+    SettingsTable,
     ScopeSelection,
     WrittenSetting,
     SettingDefault,

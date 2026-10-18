@@ -24,7 +24,7 @@ test('Swift environment reads outside the env files are reported; comments and s
         `${sandbox.path}/gspot.toml`,
         buildSettingsText(['swift'], {
             level: 'all',
-            tables: '[architecture.roles]\nenvironment_readers = ["Sources/Environment.swift"]\n',
+            tables: '[structure]\nenvironment_readers = ["Sources/Environment.swift"]\n',
         }),
     );
     const result = await checkFindings(sandbox.path, 'structure/environment-readers');
@@ -36,7 +36,7 @@ test('Swift environment reads outside the env files are reported; comments and s
         `${sandbox.path}/gspot.toml`,
         buildSettingsText(['swift'], {
             level: 'all',
-            tables: '[architecture.roles]\nenvironment_readers = ["Sources/Screen.swift"]\n',
+            tables: '[structure]\nenvironment_readers = ["Sources/Screen.swift"]\n',
         }),
     );
     expect(await checkFindings(sandbox.path, 'structure/environment-readers')).toStrictEqual([]);
@@ -46,7 +46,7 @@ test('Python reads through os aliases are reported; shadowed and unrelated names
     await using sandbox = await testdir({
         'gspot.toml': buildSettingsText(['python'], {
             level: 'all',
-            tables: '[architecture.roles]\nenvironment_readers = ["environment.py"]\n',
+            tables: '[structure]\nenvironment_readers = ["environment.py"]\n',
         }),
         'environment.py': 'import os\nVALUE = os.environ["KEY"]\n',
         'main.py': PYTHON_ENVIRONMENT_SOURCE,
@@ -70,7 +70,7 @@ test('each scope uses its own env files', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSettingsText(['python'], {
             level: 'all',
-            tables: '[architecture.roles]\nenvironment_readers = ["environment.py"]\n[[scope]]\npath = "app"\nconfigurations = ["python"]\n[scope.architecture.roles]\nenvironment_readers = ["app/environment.py"]\n',
+            tables: '[structure]\nenvironment_readers = ["environment.py"]\n[[scope]]\npath = "app"\nconfigurations = ["python"]\n[scope.structure]\nenvironment_readers = ["app/environment.py"]\n',
         }),
         'environment.py': 'import os\nVALUE = os.environ["KEY"]\n',
         'main.py': 'import os\nVALUE = os.environ["KEY"]\n',

@@ -10,34 +10,34 @@ import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { REFUSED_RULE_OPTIONS } from '#tests/data/settings/errors.ts';
 import { UNSAFE_FOLDERS, UNTIL_DATE_CASES } from '#tests/data/settings/schema.ts';
 
-describe('architecture', () => {
-    test('module import edges name declared module and preserve authored absence', () => {
-        const text = `[[architecture.module]]
+describe('import rules', () => {
+    test('can_also_import names a declared import rule, and an absent list stays absent in the written table', () => {
+        const text = `[[import_rule]]
 name = "app"
 paths = ["app/**"]
-may_import = ["storage"]
+can_also_import = ["storage"]
 
-[[architecture.module]]
+[[import_rule]]
 name = "storage"
 paths = ["storage/**"]
 `;
         const settings = parseSettings(text, undefined, createReadCache(process.cwd()));
-        expect(settings.architecture.module).toStrictEqual([
-            { name: 'app', paths: ['app/**'], may_import: ['storage'] },
-            { name: 'storage', paths: ['storage/**'], may_import: [] },
+        expect(settings.import_rule).toStrictEqual([
+            { name: 'app', paths: ['app/**'], can_also_import: ['storage'] },
+            { name: 'storage', paths: ['storage/**'], can_also_import: [] },
         ]);
-        expect(settings.written).toMatchObject({ architecture: { module: [{ name: 'app' }, { name: 'storage' }] } });
-        expect(settings.written).not.toHaveProperty('architecture.module.1.may_import');
+        expect(settings.written).toMatchObject({ import_rule: [{ name: 'app' }, { name: 'storage' }] });
+        expect(settings.written).not.toHaveProperty('import_rule.1.can_also_import');
         expect(() =>
             parseSettings(
-                text.replace('may_import = ["storage"]', 'may_import = ["missing"]'),
+                text.replace('can_also_import = ["storage"]', 'can_also_import = ["missing"]'),
                 undefined,
                 createReadCache(process.cwd()),
             ),
-        ).toThrow('architecture.module.0.may_import.0');
+        ).toThrow('import_rule.0.can_also_import.0');
         expect(() =>
             parseSettings(text.replace('paths = ["app/**"]', 'paths = [3]'), undefined, createReadCache(process.cwd())),
-        ).toThrow('architecture.module.0.paths.0');
+        ).toThrow('import_rule.0.paths.0');
     });
 });
 describe('parts', () => {

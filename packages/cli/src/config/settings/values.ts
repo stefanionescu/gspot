@@ -27,8 +27,6 @@ export const COMMAND_CHECK_DEFAULTS = {
 
 export const TOOL_TIMEOUT_SETTING = 'tool_timeout_seconds';
 
-export const ENVIRONMENT_READERS_ROLE = 'environment_readers';
-
 /** Scope tables leave out these root records but keep their normalized list fields. */
 export const SCOPE_EMPTY_RECORDS = [
     ['naming', 'override'],

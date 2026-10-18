@@ -4,10 +4,10 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
+import type { Settings, SettingsTable } from '#cli/types/settings/values.ts';
 import { listRuleFiles, listChecksById } from '#cli/configurations/manifests.ts';
 import { type Manifest, type ToolDeclaration } from '#cli/types/configurations.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
@@ -110,7 +110,7 @@ function validateScopePaths(repositoryRoot: string, settings: Settings): Setting
  * @param tools the declarations with option limits.
  * @returns each refused tool option at its written path.
  */
-function validateExtraOptions(table: Partial<Settings>, tools: ToolDeclaration[]): SettingsError[] {
+function validateExtraOptions(table: SettingsTable, tools: ToolDeclaration[]): SettingsError[] {
     const errors: SettingsError[] = [];
     for (const tool of tools) {
         const options = table.tools?.[tool.name]?.['extra'];

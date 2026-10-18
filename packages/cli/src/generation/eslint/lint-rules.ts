@@ -216,11 +216,14 @@ function buildEnvironmentRuleBlocks(
         const parent = findParentSelection(scopes, selection.scope.path);
         return (
             parent === undefined ||
-            !isDeepStrictEqual(selection.view.roles.environment_readers, parent.view.roles.environment_readers)
+            !isDeepStrictEqual(
+                selection.view.values.structure?.environment_readers,
+                parent.view.values.structure?.environment_readers,
+            )
         );
     });
     return environmentScopes.flatMap((selection) => {
-        const owners = selection.view.roles.environment_readers;
+        const owners = selection.view.values.structure?.environment_readers ?? [];
         return owners.length === 0
             ? []
             : [

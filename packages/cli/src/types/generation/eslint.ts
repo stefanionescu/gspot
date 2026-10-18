@@ -64,10 +64,12 @@ export type EslintBoundaryPolicy = {
 
 /** Classification data shared by the settings and dependency settings constructors. */
 export type EslintBoundaryContext = {
-    modules: NonNullable<NonNullable<ScopeView['values']['architecture']>['module']>;
+    importRules: Settings['import_rule'];
     enforceTests: boolean;
     tests: string[];
     trpcPaths: string[];
+    /** The tRPC server files, which other files of a tRPC scope import only as types. */
+    serverFiles: string[];
 };
 
 /** The parts of the ESLint configuration that the settings and the scope decide. */
@@ -177,7 +179,6 @@ export type EslintContext = {
     eslintPresets: Map<string, EslintPresets>;
     configurations: string[];
     settings: ScopeView['settings'];
-    roles: ScopeView['roles'];
     testFiles: string[];
     scope: string;
     scopeDependencies: string[];

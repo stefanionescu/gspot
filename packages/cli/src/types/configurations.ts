@@ -34,7 +34,8 @@ export type ParsedManifest = {
     eslint: {
         presets: Record<string, { package: string; source: string }>;
         all_level_rules: EslintAllRules;
-        selectors: { selector: string; message: string; role?: string | undefined }[];
+        /** A syntax selector, for every source file or for the files that a setting lists. */
+        selectors: { selector: string; message: string; files_setting?: string | undefined }[];
         rules_off: { rules: string[]; reason: string; files?: string[] | undefined }[];
         /** Whether the configuration adds a block to the ESLint tool file of javascript. */
         fragment: boolean;

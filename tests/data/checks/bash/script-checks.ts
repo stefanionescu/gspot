@@ -127,6 +127,6 @@ export const SCOPE_READER_FILES = { 'tools/env.sh': '#!/usr/bin/env bash\nload_e
 export const SCOPE_READER_SETTINGS = `[[scope]]
 path = "tools"
 configurations = ["bash"]
-[scope.architecture.roles]
+[scope.structure]
 environment_readers = ["tools/env.sh"]
 `;

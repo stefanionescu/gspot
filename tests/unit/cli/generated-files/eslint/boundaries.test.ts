@@ -26,7 +26,7 @@ import {
 } from '#tests/data/generated-files/eslint/architecture.ts';
 
 test.each([...MODULE_CASES])(
-    'modules > $level loads eslint-plugin-boundaries for $declarations architecture modules',
+    'modules > $level loads eslint-plugin-boundaries for $declarations import rules',
     async ({ level, declarations }) => {
         await using sandbox = await testdir();
         const settings = buildSettingsText(['typescript'], { level, tables: MODULE_TABLES[declarations] });

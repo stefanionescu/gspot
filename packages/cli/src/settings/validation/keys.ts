@@ -1,16 +1,16 @@
 import { z } from 'zod';
-import { isRecord, getValueAt } from '#cli/system/values.ts';
+import { isRecord } from '#cli/system/values.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
-import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { isLoosening, validateReason, isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 
 import type {
     Settings,
     KnownSettings,
+    SettingsTable,
     WrittenSetting,
     EffectiveSetting,
     DeclarationMatch,
@@ -68,7 +68,7 @@ function validateScalar(
 function validateWrittenKey(
     known: KnownSettings,
     settings: Settings,
-    table: Partial<Settings> & Pick<Settings, 'written'>,
+    table: SettingsTable,
     scope: string | undefined,
     key: string,
 ): SettingsError[] {
@@ -93,7 +93,7 @@ function validateWrittenKey(
     return validateScalar(key, written, match, scope, shipped);
 }
 
-function validateExtraKeys(known: KnownSettings, table: Partial<Settings>): SettingsError[] {
+function validateExtraKeys(known: KnownSettings, table: SettingsTable): SettingsError[] {
     const errors: SettingsError[] = [];
     const { tools = {} } = table;
     for (const [tool, toolTable] of Object.entries(tools)) {
@@ -147,7 +147,7 @@ function isKeyGroup(known: KnownSettings, key: string, value: unknown): value is
  * @param known the declarations, with nested tool keys.
  * @returns all known written keys, plus unknown keys from open settings tables.
  */
-function listWrittenKeys(settings: Partial<Settings> & Pick<Settings, 'written'>, known: KnownSettings): string[] {
+function listWrittenKeys(settings: SettingsTable, known: KnownSettings): string[] {
     const keys: string[] = [];
     const pending = (settings.tools === undefined ? [] : Object.entries(settings.tools)).flatMap(([tool, table]) =>
         Object.entries(table)
@@ -239,21 +239,7 @@ function validateKeys(
             defaults: new Map([...everywhere.defaults, ...active.defaults]),
             errors: active.errors,
         };
-        const roleKnown =
-            scope === undefined
-                ? { declarations: new Map([known, ...scopeKnown.values()].flatMap((entry) => [...entry.declarations])) }
-                : active;
-        const roles = getValueAt(table.written, ['architecture', 'roles']);
-        const undeclaredRoles = Object.keys(isRecord(roles) ? roles : {}).filter(
-            (role) =>
-                !roleKnown.declarations.has(`architecture.roles.${role}`) &&
-                !(role === ENVIRONMENT_READERS_ROLE && roleKnown.declarations.has('architecture.roles')),
-        );
         const found = [
-            ...undeclaredRoles.map((role) => ({
-                path: ['architecture', 'roles', role],
-                message: `The role ${role} is not declared by a selected configuration.`,
-            })),
             ...listWrittenKeys(table, selectedKnown).flatMap((key) =>
                 validateWrittenKey(selectedKnown, settings, table, scope, key),
             ),

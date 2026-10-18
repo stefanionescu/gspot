@@ -68,9 +68,14 @@ export const UNKNOWN_IMPORT_POLICIES = [
 ] as const;
 
 /** The final policy refuses server values even when your own module rule permits the import. */
+/** The boundary category of the files of each import rule, before the name of the rule. */
+export const IMPORT_RULE_CATEGORY = 'import-rule:';
+/** The boundary category of the tRPC server files. */
+export const TRPC_SERVER_CATEGORY = 'trpc:server';
+
 export const TRPC_SERVER_VALUE_POLICY = {
-    from: { file: [{ isUnknown: true }, { categories: { noneOf: ['module:server'] } }] },
-    disallow: { to: { file: { categories: 'module:server' } }, dependency: { kind: 'value' } },
+    from: { file: [{ isUnknown: true }, { categories: { noneOf: [TRPC_SERVER_CATEGORY] } }] },
+    disallow: { to: { file: { categories: TRPC_SERVER_CATEGORY } }, dependency: { kind: 'value' } },
 } as const;
 
 /** Selectors that cover alias import suffixes next to the relative-import rule. */
@@ -137,7 +142,6 @@ export const TEST_IMPORT_POLICY = {
 } as const;
 
 export const TRPC_CONFIGURATION = 'trpc';
-export const TRPC_SERVER_MODULE = 'server';
 export const IMPORT_BOUNDARIES_RULE = 'gspot/import-boundaries';
 export const EXPORTS_LAST_RULE = 'import-x/exports-last';
 export const BARREL_FILES_RULE = 'barrel-files/avoid-barrel-files';

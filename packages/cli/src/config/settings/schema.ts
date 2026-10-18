@@ -65,7 +65,7 @@ export const SETTINGS_EXAMPLES = [
             ],
         },
     },
-    { architecture: { roles: { environment_readers: ['src/environment.ts'] } } },
+    { structure: { environment_readers: ['src/environment.ts'] } },
     {
         structure: {
             reexports: { value: 'index-only', reason: 'The library uses index files to publish its public API.' },
@@ -101,7 +101,7 @@ export const SETTINGS_EXAMPLES = [
     { ci: { enabled: true, provider: 'github', operating_systems: ['linux'] } },
     { rules: { enabled: true } },
     { tool_timeout_seconds: 300 },
-    { architecture: { module: [{ name: 'core', paths: ['src/core/**'], may_import: [] }] } },
+    { import_rule: [{ name: 'core', paths: ['src/core/**'], can_also_import: [] }] },
     {
         tools: {
             prettier: {
@@ -162,8 +162,11 @@ export const INTERNAL_SCHEMA_METADATA = [
 /** What each top-level table of gspot.toml holds, for editors that show the schema on hover. */
 export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     scope: 'Settings for one folder: its configurations and the tables that differ from the root.',
-    architecture:
-        'The order of code layers for imports, and the files that hold scripts, stores, routers, or read environment variables.',
+    import_rule:
+        'Groups of files in import order: code may import the files of its own rule and of every rule listed above it.',
+    javascript: 'The script files, which may print to the console and exit.',
+    trpc: 'The files that declare tRPC procedures, and the server files that other files import only as types.',
+    zustand: 'The files that may create a Zustand store.',
     format: 'Indentation, line width, quotes, and line endings for every formatter, with overrides for some paths.',
     limits: 'Size and complexity limits for files and functions, with values per language.',
     naming: 'Banned words, case, and length for the names of files, folders, and identifiers, with values per language.',
@@ -189,7 +192,8 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     tools: 'Options for single tools, such as lint rule options. gspot writes them into the tool files.',
     ignore: 'Checks and lint rules turned off for some paths or everywhere, each with a reason.',
     command_check: 'Your own commands, run as checks with a stage, a file list, and an output format.',
-    structure: 'Whether files may re-export the exports of other files.',
+    structure:
+        'Whether files may re-export the exports of other files, and which files may read environment variables.',
     hooks: 'Whether gspot install turns on the Git hooks.',
     ci: 'Whether gspot writes a CI workflow, for which provider, and on which systems it runs.',
     rules: 'Whether gspot writes rules for coding agents, and which rule files it leaves out.',

@@ -3,7 +3,6 @@ import { listCodeLines } from '#cli/parsers/bash.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';
 import type { ScriptFile, ScriptReport } from '#cli/types/checks/language.ts';
 import { readScripts, findEnclosingFunction } from '#cli/checks/bash/scripts.ts';
 
@@ -131,7 +130,7 @@ function stripDeclaration(code: string): string {
  * @returns the findings.
  */
 export async function checkBashScriptLayout(input: CheckInput): Promise<Finding[]> {
-    const isEnvironmentReader = buildPathMatcher(input.selection.view.roles[ENVIRONMENT_READERS_ROLE]);
+    const isEnvironmentReader = buildPathMatcher(input.selection.view.values.structure?.environment_readers ?? []);
     const scripts = await readScripts(input);
     return scripts
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))

@@ -4,6 +4,7 @@ import { mergeValue } from '#cli/settings/inherit.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { OVERRIDING_KINDS } from '#cli/config/settings/values.ts';
+import { importRulesSchema } from '#cli/settings/schema/imports.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
@@ -176,6 +177,7 @@ function listConfigurationSettings(configuration: string): SettingDeclaration[] 
                 collectDeclarations(child as z.ZodType, `${name}.${field}`);
     }
     for (const [name, schema] of Object.entries(configurationTableSchemas)) collectDeclarations(schema, name);
+    collectDeclarations(importRulesSchema, 'import_rule');
     for (const [tool, schema] of Object.entries(toolsSchema.shape)) collectDeclarations(schema, `tools.${tool}`);
     return declarations;
 }

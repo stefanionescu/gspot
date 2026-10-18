@@ -110,8 +110,8 @@ process.exit(0);
     'vendor/run': NODE_SCRIPT_SOURCE,
 } as const;
 
-const NODE_SCRIPT_TABLES = `[architecture.roles]
-scripts = ["scripts/**", "child/scripts/**", "build.config.ts"]
+const NODE_SCRIPT_TABLES = `[javascript]
+script_files = ["scripts/**", "child/scripts/**", "build.config.ts"]
 
 [limits.javascript]
 trivial_function_statements = 3

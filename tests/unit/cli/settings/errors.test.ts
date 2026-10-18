@@ -45,30 +45,6 @@ test.each([...FIRST_READ.slice(0, 1), 'general/prose'])('a first-read entry %s c
     ).toThrow('every agent opens first');
 });
 
-test('a role must be declared by a configuration selected in that scope or above', () => {
-    expect(() =>
-        parseSettings(
-            'configurations = ["bash"]\n[architecture.roles]\nscripts = ["scripts/**"]\n',
-            undefined,
-            createReadCache(process.cwd()),
-        ),
-    ).toThrow('not declared by a selected configuration');
-    expect(() =>
-        parseSettings(
-            'configurations = ["javascript"]\n[[scope]]\npath = "app"\narchitecture.roles.scripts = ["app/scripts/**"]\n',
-            undefined,
-            createReadCache(process.cwd()),
-        ),
-    ).not.toThrow();
-    expect(() =>
-        parseSettings(
-            '[[scope]]\npath = "web"\nconfigurations = ["javascript"]\n[[scope]]\npath = "other"\narchitecture.roles.scripts = ["other/scripts/**"]\n',
-            undefined,
-            createReadCache(process.cwd()),
-        ),
-    ).toThrow('not declared by a selected configuration');
-});
-
 test('a limit looser than the default needs a reason, and a tighter one does not', () => {
     expect(() =>
         parseSettings(

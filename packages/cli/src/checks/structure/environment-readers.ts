@@ -6,7 +6,6 @@ import { readPythonEnvironment } from '#cli/parsers/python.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
-import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/structure/convention-sources.ts';
 import { readBashEnvironment, findEnclosingFunction } from '#cli/parsers/bash.ts';
 
@@ -16,7 +15,7 @@ import { readBashEnvironment, findEnclosingFunction } from '#cli/parsers/bash.ts
  * @returns one finding per reading line.
  */
 export async function checkEnvironmentReaders(input: CheckInput): Promise<Finding[]> {
-    const readerPaths = input.selection.view.roles[ENVIRONMENT_READERS_ROLE];
+    const readerPaths = input.selection.view.values.structure?.environment_readers ?? [];
     if (readerPaths.length === 0) return [];
     const isReader = buildPathMatcher(readerPaths);
     const readers = input.selection.view.configurations.includes('secrets')
@@ -44,7 +43,7 @@ export async function checkEnvironmentReaders(input: CheckInput): Promise<Findin
         const lines = new Map<number, EnvironmentRead>();
         for (const read of reads) if (!lines.has(read.line)) lines.set(read.line, read);
         return [...lines].map(([line, read]) => {
-            const message = `${read.key ?? 'An environment variable'} is read here. Read environment variables only in the files that architecture.roles.environment_readers lists, and pass the value in.`;
+            const message = `${read.key ?? 'An environment variable'} is read here. Read environment variables only in the files that structure.environment_readers lists, and pass the value in.`;
             return buildFinding(input, { file: source.path, line }, 'read-outside-owner', message);
         });
     });

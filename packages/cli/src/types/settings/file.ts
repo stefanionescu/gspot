@@ -1,15 +1,16 @@
 import type { STAGES } from '#cli/config/configurations.ts';
 import type { Defined, Optional } from '#cli/types/shapes.ts';
 import type { ParsedSite } from '#cli/types/checks/framework.ts';
-import type { ParsedSwift } from '#cli/types/checks/language.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ParsedPostgres } from '#cli/types/checks/database.ts';
 import type { REEXPORT_MODES } from '#cli/config/settings/schema.ts';
 import type { OutputSpec, OutputInput } from '#cli/types/runs/output.ts';
+import type { ParsedSwift, ParsedJavascript } from '#cli/types/checks/language.ts';
+import type { ImportRule, WrittenImportRule } from '#cli/types/settings/imports.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
 import type { ParsedXcode, ParsedOpenapi } from '#cli/types/checks/infrastructure.ts';
-import type { ParsedDrizzle, ParsedTranslations } from '#cli/types/checks/library.ts';
 import type { ParsedSupabase, ParsedCloudflare } from '#cli/types/checks/platform.ts';
+import type { ParsedTrpc, ParsedDrizzle, ParsedZustand, ParsedTranslations } from '#cli/types/checks/library.ts';
 
 import {
     type ParsedDocs,
@@ -37,7 +38,6 @@ import type {
     LimitLanguage,
     SettingLanguage,
     ParsedStructure,
-    ParsedArchitecture,
     LanguageLimitFields,
     NamingLanguageFields,
 } from '#cli/types/settings/tables.ts';
@@ -73,6 +73,11 @@ type WrittenSite = Optional<Omit<ParsedSite, 'allowed_unlisted_pages'>> & {
     allowed_unlisted_pages?: SettingValue<string[]> | undefined;
 };
 
+type WrittenStructure = Optional<{
+    reexports: SettingValue<(typeof REEXPORT_MODES)[number]>;
+    environment_readers: string[];
+}>;
+
 export type ReasonedValue<Value> = { value: Value; reason: string };
 
 export type SettingValue<Value> = Value | ReasonedValue<Value>;
@@ -106,11 +111,6 @@ export type WrittenNaming = NamingFields<SettingValue<number>, SettingValue<Nami
     override?: WrittenNamingOverride[] | undefined;
 };
 
-export type WrittenArchitecture = {
-    module?: { name: string; paths: string[]; may_import?: string[] | undefined }[] | undefined;
-    roles?: Optional<ParsedArchitecture['roles']> | undefined;
-};
-
 export type WrittenFormat = Optional<ParsedFormat>;
 
 export type WrittenSettings = Optional<
@@ -124,7 +124,7 @@ export type WrittenSettings = Optional<
         | 'site'
         | 'limits'
         | 'naming'
-        | 'architecture'
+        | 'import_rule'
         | 'tools'
         | 'format'
         | 'command_check'
@@ -135,6 +135,9 @@ export type WrittenSettings = Optional<
         | 'rules'
         | 'cloudflare'
         | 'drizzle'
+        | 'javascript'
+        | 'trpc'
+        | 'zustand'
         | 'openapi'
         | 'postgres'
         | 'secrets'
@@ -151,6 +154,9 @@ export type WrittenSettings = Optional<
     licenses?: WrittenLicenses | undefined;
     cloudflare?: Optional<ParsedCloudflare> | undefined;
     drizzle?: Optional<ParsedDrizzle> | undefined;
+    javascript?: Optional<ParsedJavascript> | undefined;
+    trpc?: Optional<ParsedTrpc> | undefined;
+    zustand?: Optional<ParsedZustand> | undefined;
     openapi?: Optional<ParsedOpenapi> | undefined;
     postgres?: Optional<ParsedPostgres> | undefined;
     secrets?: Optional<ParsedSecrets> | undefined;
@@ -178,11 +184,11 @@ export type WrittenSettings = Optional<
     site?: WrittenSite | undefined;
     limits?: WrittenLimits | undefined;
     naming?: WrittenNaming | undefined;
-    architecture?: WrittenArchitecture | undefined;
+    import_rule?: WrittenImportRule[] | undefined;
     tools?: WrittenTools | undefined;
     format?: WrittenFormat | undefined;
     command_check?: (CommandCheckFields & { output?: OutputInput | undefined })[] | undefined;
-    structure?: { reexports?: SettingValue<(typeof REEXPORT_MODES)[number]> | undefined } | undefined;
+    structure?: WrittenStructure | undefined;
     hooks?: Optional<ParsedHooks> | undefined;
     ci?: Optional<ParsedCi> | undefined;
     rules?: Optional<ParsedRules> | undefined;
@@ -200,6 +206,10 @@ export type ParsedSettings = ParsedRoot & {
               dependencies?: ParsedDependencies | undefined;
               docs?: Omit<ParsedDocs, 'banned_headings'> | undefined;
               drizzle?: ParsedDrizzle | undefined;
+              javascript?: ParsedJavascript | undefined;
+              trpc?: ParsedTrpc | undefined;
+              zustand?: ParsedZustand | undefined;
+              structure?: Pick<ParsedStructure, 'environment_readers'> | undefined;
               licenses?: Omit<ParsedLicenses, 'allowed_package'> | undefined;
               openapi?: ParsedOpenapi | undefined;
               postgres?: ParsedPostgres | undefined;
@@ -215,7 +225,6 @@ export type ParsedSettings = ParsedRoot & {
               swift?: ParsedSwift | undefined;
               limits?: ParsedLimits | undefined;
               naming?: Omit<ParsedNaming, 'override'> | undefined;
-              architecture?: Omit<ParsedArchitecture, 'module'> | undefined;
               tools?:
                   | (Omit<ParsedTools, 'eslint' | 'v8r'> & {
                         eslint?: Omit<NonNullable<ParsedTools['eslint']>, 'override'> | undefined;
@@ -229,6 +238,9 @@ export type ParsedSettings = ParsedRoot & {
     dependencies?: ParsedDependencies | undefined;
     docs?: ParsedDocs | undefined;
     drizzle?: ParsedDrizzle | undefined;
+    javascript?: ParsedJavascript | undefined;
+    trpc?: ParsedTrpc | undefined;
+    zustand?: ParsedZustand | undefined;
     licenses?: ParsedLicenses | undefined;
     openapi?: ParsedOpenapi | undefined;
     postgres?: ParsedPostgres | undefined;
@@ -244,7 +256,7 @@ export type ParsedSettings = ParsedRoot & {
     swift?: ParsedSwift | undefined;
     limits?: ParsedLimits | undefined;
     naming?: ParsedNaming | undefined;
-    architecture?: ParsedArchitecture | undefined;
+    import_rule: ImportRule[];
     tools?: ParsedTools | undefined;
     format?: ParsedFormat | undefined;
     ignore?:
@@ -262,8 +274,6 @@ export type ParsedSettings = ParsedRoot & {
     ci?: ParsedCi | undefined;
     rules: ParsedRules;
 };
-
-export type ArchitectureModule = { name: string; paths: string[]; may_import: string[] };
 
 export type IgnoreRecord = NonNullable<ParsedSettings['ignore']>[number];
 
@@ -290,7 +300,7 @@ export type WrittenScope = Omit<
     | 'licenses'
     | 'site'
     | 'naming'
-    | 'architecture'
+    | 'import_rule'
     | 'tools'
     | 'format'
 > & {
@@ -300,7 +310,7 @@ export type WrittenScope = Omit<
     licenses?: Omit<WrittenLicenses, 'allowed_package'> | undefined;
     site?: Omit<WrittenSite, 'size_limit'> | undefined;
     naming?: Omit<WrittenNaming, 'override'> | undefined;
-    architecture?: Omit<WrittenArchitecture, 'module'> | undefined;
+    structure?: { environment_readers?: string[] | undefined } | undefined;
     tools?:
         | (Omit<WrittenTools, 'eslint' | 'v8r'> & {
               eslint?: Omit<NonNullable<WrittenTools['eslint']>, 'override'> | undefined;

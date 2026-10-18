@@ -19,7 +19,7 @@ banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", 
 
 [[naming.override]]
 paths = ["packages/cli/src/types/settings/**"]
-allowed_names = ["may_import", "tool_timeout_seconds", "test_files", "removed_configurations", "final_newline", "v8r", "ParsedV8r"]
+allowed_names = ["can_also_import", "tool_timeout_seconds", "test_files", "removed_configurations", "final_newline", "v8r", "ParsedV8r"]
 reason = "These fields carry the gspot.toml key names."
 
 [[naming.override]]

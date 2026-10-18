@@ -6,7 +6,6 @@ import { limitsSchema } from '#cli/settings/schema/limits.ts';
 import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { commandSchema } from '#cli/configurations/schema/parts.ts';
-import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
 import { type TableValues, type TableSettings } from '#cli/types/settings/tables.ts';
@@ -39,7 +38,6 @@ const licensesSchema = z.strictObject({
 } satisfies SchemaShape<TableSettings<'licenses'>, WrittenLicenses>);
 
 const configurationTableSchemas = {
-    architecture: architectureSchema.optional(),
     format: formatSchema.optional(),
     limits: limitsSchema.optional(),
     naming: namingSchema.optional(),
@@ -48,6 +46,13 @@ const configurationTableSchemas = {
             reexports: allowReasonedValue(z.enum(REEXPORT_MODES))
                 .default('none')
                 .meta(SETTING_DECLARATIONS['structure.reexports']),
+            environment_readers: z
+                .array(relativePath)
+                .default([])
+                .meta({
+                    configurations: ['structure'],
+                    description: 'The files that may read environment variables; other files get the values passed in.',
+                }),
         } satisfies SchemaShape<TableSettings<'structure'>, NonNullable<WrittenSettings['structure']>>)
         .optional(),
     cloudflare: z
@@ -102,6 +107,41 @@ const configurationTableSchemas = {
         .strictObject({
             client_names: nonemptyStrings.default(['db']).meta(SETTING_DECLARATIONS['drizzle.client_names']),
         } satisfies SchemaShape<TableSettings<'drizzle'>, NonNullable<WrittenSettings['drizzle']>>)
+        .optional(),
+    javascript: z
+        .strictObject({
+            script_files: z
+                .array(relativePath)
+                .default(['scripts/**', '**/*.config.{js,mjs,cjs,ts}'])
+                .meta({
+                    configurations: ['javascript'],
+                    description: 'Script files, which may print to the console and call process.exit.',
+                }),
+        } satisfies SchemaShape<TableSettings<'javascript'>, NonNullable<WrittenSettings['javascript']>>)
+        .optional(),
+    trpc: z
+        .strictObject({
+            router_files: z
+                .array(relativePath)
+                .default(['**/routers/**', '**/*router*.ts', '**/trpc/**'])
+                .meta({ configurations: ['trpc'], description: 'The files that declare tRPC procedures.' }),
+            server_files: z
+                .array(relativePath)
+                .default([])
+                .meta({
+                    configurations: ['trpc'],
+                    description:
+                        'The server files that other files of a tRPC scope may import only as types; empty turns the rule off.',
+                }),
+        } satisfies SchemaShape<TableSettings<'trpc'>, NonNullable<WrittenSettings['trpc']>>)
+        .optional(),
+    zustand: z
+        .strictObject({
+            store_files: z
+                .array(relativePath)
+                .default(['**/store.*', '**/stores/*', '**/store/*', '**/*.store.*'])
+                .meta({ configurations: ['zustand'], description: 'The files that may create a store.' }),
+        } satisfies SchemaShape<TableSettings<'zustand'>, NonNullable<WrittenSettings['zustand']>>)
         .optional(),
     licenses: licensesSchema.optional(),
     openapi: z

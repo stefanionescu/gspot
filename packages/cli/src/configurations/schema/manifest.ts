@@ -53,11 +53,11 @@ const filesSchema = z.strictObject({
     kinds: z.array(fileKindSchema).default(['source']),
 } satisfies SchemaShape<ParsedManifest['files'], FileMatchInput>);
 
-// A syntax selector applies to every source file or to an architecture role.
+// A syntax selector applies to every source file, or to the files that a setting lists.
 const selectorSchema = z.strictObject({
     selector: z.string().min(1),
     message: z.string().min(1),
-    role: z.string().min(1).optional(),
+    files_setting: z.string().min(1).optional(),
 } satisfies SchemaShape<ParsedManifest['eslint']['selectors'][number]>);
 
 const pointerSchema = z.strictObject({

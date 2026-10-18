@@ -7,7 +7,6 @@ import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
-import { architectureSchema } from '#cli/settings/schema/architecture.ts';
 import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts';
 import { type TomlTable, type ParsedSettings } from '#cli/types/settings/file.ts';
 import { SCOPE_EMPTY_RECORDS, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/values.ts';
@@ -47,7 +46,7 @@ function normalizeScopeTables(
     parsed: NonNullable<ParsedSettings['scope']>[number],
     written: TomlTable,
 ): Settings['scopes'][string] {
-    const { architecture, tools, naming, coverage, docs, licenses, site, ...table } = parsed;
+    const { tools, naming, coverage, docs, licenses, site, ...table } = parsed;
     const normalized = Object.fromEntries(
         SCOPE_EMPTY_RECORDS.flatMap(([name, field]) => {
             const value = { naming, coverage, docs, licenses, site }[name];
@@ -65,21 +64,8 @@ function normalizeScopeTables(
         ...table,
         ...normalized,
         written,
-        architecture: architecture === undefined ? undefined : normalizeArchitecture({ ...architecture, module: [] }),
         tools: normalizedTools,
     });
-}
-
-/**
- * Fill the lists of the architecture table, and keep its optional keys only when written.
- * @param written the authored table, if any.
- * @returns the architecture settings.
- */
-function normalizeArchitecture(written: ParsedSettings['architecture']): Settings['architecture'] {
-    return {
-        module: written?.module ?? [],
-        roles: written?.roles ?? architectureSchema.shape.roles.parse(undefined),
-    };
 }
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
@@ -139,10 +125,8 @@ function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
         removed_configurations: parsed.removed_configurations,
         limits: parsed.limits ?? limitsSchema.parse({}),
         naming: parsed.naming ?? namingSchema.parse({}),
-        architecture: normalizeArchitecture(parsed.architecture),
-        structure: {
-            reexports: settingsSchema.shape.structure.unwrap().shape.reexports.parse(parsed.structure?.reexports),
-        },
+        import_rule: parsed.import_rule,
+        structure: settingsSchema.shape.structure.unwrap().prefault({}).parse(parsed.structure),
         format: stripUndefined({ ...parsed.format }),
         allowed_words: parsed.allowed_words,
         tools: stripUndefined({ ...parsed.tools }),
