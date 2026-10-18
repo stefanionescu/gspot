@@ -48,7 +48,7 @@ function getFacts(
     const settings = (configuration === undefined ? [] : listConfigurationSettings(configuration.configuration.name))
         .filter(
             (setting) =>
-                (check.name === 'structure/shared-prefixes' && setting.name === 'limits.shared_prefix_files') ||
+                check.settings?.includes(setting.name) === true ||
                 (tool !== undefined && setting.name.startsWith(`tools.${tool}.`)),
         )
         .map((setting) => setting.name);

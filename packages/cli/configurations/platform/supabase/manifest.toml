@@ -38,6 +38,7 @@ version_command = ["--version"]
 
 [[tool_file]]
 per_scope = true
+rule_paths_setting = "supabase.functions_folder"
 target = ".gspot/config/semgrep/supabase.yml"
 tool = "semgrep"
 when = { configuration = "security" }

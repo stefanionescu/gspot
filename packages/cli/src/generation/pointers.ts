@@ -68,9 +68,7 @@ function buildBodyPointer(
 ): GeneratedFile {
     const body = fillTarget(pointer.body ?? '', pointerPath, targetPath);
     const ended = body.endsWith('\n') ? body : `${body}\n`;
-    const notes = [`The tool file is ${targetPath}.`];
-    if (pointerPath.endsWith('eslint.config.mjs'))
-        notes.push('Run gspot install before you use ESLint in your editor.');
+    const notes = [`The tool file is ${targetPath}.`, ...(pointer.note === undefined ? [] : [pointer.note])];
     return {
         path: pointerPath,
         content: `${formatHeader(pointerPath, notes)}${ended}`,

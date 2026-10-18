@@ -10,22 +10,27 @@ import { type SemgrepDocument, type ToolFileContext } from '#cli/types/generatio
  * @returns the Semgrep rules with paths relative to the tool file.
  */
 function buildSemgrepFile(context: ToolFileContext): string {
-    const { selection } = context;
+    const { selection, toolFile } = context;
     const { scopes } = context.session;
     const { dependencyFiles } = context.session.repository;
-    const source = readAsset(`${context.manifest.folder}/${context.toolFile.source}`);
-    const configuration = context.manifest.configuration.name;
-
-    const scopeDependencies = Object.keys(getProjectDependencies(dependencyFiles, selection.scope.path));
-    const document = parse(source) as SemgrepDocument;
-    if (configuration === 'javascript' && !scopeDependencies.includes('jsonwebtoken'))
-        document.rules = document.rules.filter((rule) => !rule.id.startsWith('gspot.javascript.jwt-'));
-    if (configuration === 'supabase') {
-        const functions = scopes
-            .filter(({ view }) => view.configurations.includes('supabase'))
+    const document = parse(readAsset(`${context.manifest.folder}/${toolFile.source}`)) as SemgrepDocument;
+    const scopeDependencies = new Set(Object.keys(getProjectDependencies(dependencyFiles, selection.scope.path)));
+    const conditions = toolFile.rule_dependencies;
+    const dropped =
+        conditions === undefined
+            ? []
+            : Object.entries(conditions)
+                  .filter(([, packages]) => !packages.some((name) => scopeDependencies.has(name)))
+                  .map(([prefix]) => prefix);
+    document.rules = document.rules.filter((rule) => !dropped.some((prefix) => rule.id.startsWith(prefix)));
+    const setting = toolFile.rule_paths_setting;
+    if (setting !== undefined) {
+        const configuration = context.manifest.configuration.name;
+        const folders = scopes
+            .filter(({ view }) => view.configurations.includes(configuration))
             .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path))
-            .map(({ view: { settings } }) => `/${String(settings['supabase.functions_folder'])}/**`);
-        for (const rule of document.rules) if (rule.paths !== undefined) rule.paths.include = functions;
+            .map(({ view: { settings } }) => `/${String(settings[setting])}/**`);
+        for (const rule of document.rules) if (rule.paths !== undefined) rule.paths.include = folders;
     }
     return stringify(document).trimEnd();
 }

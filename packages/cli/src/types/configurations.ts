@@ -83,10 +83,16 @@ export type ParsedManifest = {
                   when?: { configuration: string } | undefined;
                   folders?: string[] | undefined;
                   body?: string | undefined;
+                  /** A line for the header of the pointer, after the tool file path. */
+                  note?: string | undefined;
               }
             | undefined;
         per_scope: boolean;
         when?: { configuration: string } | undefined;
+        /** Rule ID prefixes of a Semgrep pack that stay only when the scope depends on one of the packages. */
+        rule_dependencies?: Record<string, string[]> | undefined;
+        /** The setting that names the folder each rule of a Semgrep pack covers, in every scope with this configuration. */
+        rule_paths_setting?: string | undefined;
     } & (
         | { fragment: true }
         | { fragment: false; source: string }
@@ -97,6 +103,7 @@ export type ParsedManifest = {
                   path: string;
                   folders: string[];
                   body?: string | undefined;
+                  note?: string | undefined;
                   when?: { configuration: string } | undefined;
               };
           }
@@ -129,6 +136,8 @@ export type ParsedCheck = {
     instead_of?: string | undefined;
     when?: Optional<Pick<ConditionFields, 'configuration' | 'setting' | 'git' | 'dependencies'>> | undefined;
     crash_pattern?: string | undefined;
+    /** Settings outside tools.<tool> that change what the check reports, for gspot explain. */
+    settings?: string[] | undefined;
     needs?: (typeof CHECK_NEEDS)[number][] | undefined;
     operating_systems?: (typeof OPERATING_SYSTEMS)[number]['name'][] | undefined;
     tool?: string | undefined;

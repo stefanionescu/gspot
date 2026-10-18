@@ -65,6 +65,7 @@ const pointerSchema = z.strictObject({
     when: conditionSchema.pick({ configuration: true }).optional(),
     folders: z.array(z.string().min(1)).min(1).optional(),
     body: z.string().optional(),
+    note: z.string().min(1).optional(),
 } satisfies SchemaShape<NonNullable<ToolFileDeclaration['pointer']>>);
 
 // A tool-file consumer accepts one declared name or a nonempty list of names.
@@ -86,6 +87,8 @@ const toolFileSchema = z
         fragment: z.boolean().default(false),
         per_scope: z.boolean().default(false),
         when: conditionSchema.pick({ configuration: true }).optional(),
+        rule_dependencies: z.record(z.string().min(1), z.array(z.string().min(1)).min(1)).optional(),
+        rule_paths_setting: z.string().min(1).optional(),
     } satisfies SchemaShape<Omit<ToolFileDeclaration, 'source' | 'fragment'> & { fragment: boolean }, ToolFileInput>)
     .refine(
         (toolFile) => toolFile.required_tools.length === 0 || toolFile.tool.length > 0 || toolFile.check.length > 0,
@@ -156,6 +159,7 @@ const checkFields = z.strictObject({
         .partial()
         .optional(),
     crash_pattern: regexSchema.optional(),
+    settings: z.array(z.string().min(1)).min(1).optional(),
     needs: z.array(z.enum(CHECK_NEEDS)).min(1).optional(),
     operating_systems: z.array(operatingSystemSchema).optional(),
     tool: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]).optional(),

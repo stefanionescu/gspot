@@ -22,6 +22,7 @@ help = "Move the files into a folder named after the shared prefix, or allow the
 level = "all"
 name = "shared-prefixes"
 runs = "scope"
+settings = ["limits.shared_prefix_files"]
 stage = "commit"
 summary = "Finds sibling files that share a name prefix, such as `asset-card`, `asset-list`, and `asset-row`."
 why = "Sibling files with one prefix split a single concept by suffix, and a folder of that name groups them."

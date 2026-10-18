@@ -233,6 +233,7 @@ tool = "eslint"
 
 [tool_file.pointer]
 body = "export { default } from {target_module};"
+note = "Run gspot install before you use ESLint in your editor."
 path = "eslint.config.mjs"
 
 [[tool_file]]
@@ -247,6 +248,7 @@ tool = "knip"
 
 [[tool_file]]
 per_scope = true
+rule_dependencies = { "gspot.javascript.jwt-" = ["jsonwebtoken"] }
 target = ".gspot/config/semgrep/javascript.yml"
 tool = "semgrep"
 when = { configuration = "security" }
