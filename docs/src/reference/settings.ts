@@ -2,8 +2,8 @@ import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
-import { LANGUAGE_SETTING, SETTINGS_SUBPAGES, SCHEMA_TYPE_LABELS } from '../config/reference.ts';
 import { escapeCell, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
+import { LANGUAGE_SETTING, SETTINGS_SUBPAGES, SCHEMA_TYPE_LABELS, LISTED_VALUES_LIMIT } from '../config/reference.ts';
 
 function getSchemaNode(schema: JSONSchema.JSONSchema, value: JSONSchema.JSONSchema | boolean): JSONSchema.JSONSchema {
     if (typeof value === 'boolean') return value ? {} : { not: {} };
@@ -25,7 +25,10 @@ function formatAcceptedValue(schema: JSONSchema.JSONSchema, value: JSONSchema.JS
             .filter((entry) => entry !== undefined)
             .map((entry) => escapeCell(entry))
             .join(': ');
-    if (node.enum !== undefined) return node.enum.map((value) => `\`${JSON.stringify(value)}\``).join(', ');
+    if (node.enum !== undefined)
+        return node.enum.length > LISTED_VALUES_LIMIT
+            ? `One of ${String(node.enum.length)} names`
+            : node.enum.map((value) => `\`${JSON.stringify(value)}\``).join(', ');
     if (node.anyOf !== undefined) {
         const branches = node.anyOf.map((entry) => getSchemaNode(schema, entry));
         // Values that each carry their own meaning read better as a list than as one long sentence.

@@ -47,6 +47,8 @@ export const HTML_BRACKET_ENTITIES: Readonly<Record<string, string>> = { '<': '&
 
 export const SECTION_HEADING = /^## /mu;
 export const SETTING_PLACEHOLDER = /^\{setting:(?<setting>[^}]+)\}$/u;
+/** A list of allowed values longer than this prints as a count; editors read the full list from the schema. */
+export const LISTED_VALUES_LIMIT = 12;
 export const SETTINGS_SUBPAGES: readonly string[] = ['scope', 'limits', 'naming', 'tools', 'command_check'];
 export const LANGUAGE_SETTING = /^(?<table>limits|naming)\.(?<language>[^.]+)\.(?<key>.+)$/u;
 

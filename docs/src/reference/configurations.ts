@@ -50,8 +50,7 @@ function formatLintRulesOff(manifest: Manifest): string {
 }
 
 function formatConfigurationChecks(manifest: Manifest): string {
-    if (manifest.checks.length === 0)
-        return 'This configuration adds tool files or rules and has no checks of its own.';
+    if (manifest.checks.length === 0) return '';
     const rows = manifest.checks.map((check): [string, string] => {
         return [
             `[\`${check.name}\`](/reference/${REFERENCE_FOLDERS.checks}/${check.name}/)`,
@@ -89,8 +88,10 @@ function formatSelection(manifest: Manifest, data: ReturnType<typeof readReferen
  */
 function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof readReferenceData>): ReferencePage {
     const { configuration } = manifest;
-    const tools = manifest.tools.map((tool) =>
-        tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
+    const tools = manifest.tools.map(
+        (tool) =>
+            (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`) +
+            (Object.keys(tool.installers).length === 0 ? ' (install it yourself)' : ''),
     );
     const targets = manifest.toolFiles.map((toolFile) =>
         toolFile.when === undefined
@@ -103,13 +104,6 @@ function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof read
     );
     const sections: [string, string][] = [
         ['Selected when', selection],
-        [
-            'Tools you install yourself',
-            manifest.tools
-                .filter((tool) => Object.keys(tool.installers).length === 0)
-                .map((tool) => tool.name)
-                .join(', '),
-        ],
         ['Tools and versions', tools.map((item) => '- ' + item).join('\n')],
         ['Files gspot writes', targets.map((item) => '- ' + item).join('\n')],
         ['Kept out of Git', manifest.ignored_folders.map((path) => '- `' + path + '`').join('\n')],

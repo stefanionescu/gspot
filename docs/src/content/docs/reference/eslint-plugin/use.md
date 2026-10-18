@@ -42,17 +42,6 @@ src/orders.js
 
 ## Rules
 
-| Rule                           | In          | What it finds                                                                     |
-| ------------------------------ | ----------- | --------------------------------------------------------------------------------- |
-| `gspot/no-client-env`          | recommended | Private environment reads in client modules.                                      |
-| `gspot/no-comments-in-imports` | all         | Comments inside or right after the import block.                                  |
-| `gspot/import-boundaries`      | all         | Relative imports that leave the nearest boundary folder.                          |
-| `gspot/no-alias-exports`       | all         | Exported constants that only rename another value.                                |
-| `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.    |
-| `gspot/no-trivial-files`       | all         | Files with only forwarding code, aliases, re-exports, or small functions.         |
-| `gspot/no-trivial-functions`   | all         | Unexported named functions of two statements or fewer, used in one place at most. |
-| `gspot/require-server-only`    | none        | Selected server modules that do not import `server-only` or declare `use server`. |
-
 The [rule reference](/reference/eslint-plugin/) gives the options, defaults,
 and examples of each lint rule.
 

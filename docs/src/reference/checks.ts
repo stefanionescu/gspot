@@ -1,6 +1,6 @@
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
-import { formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
+import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
 import { CHECK_RUN_LABELS, REFERENCE_FOLDERS, SETTING_PLACEHOLDER } from '../config/reference.ts';
 
 type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
@@ -41,20 +41,19 @@ function formatCheckEnvironment(check: CheckDeclaration): string[] {
  * @returns the page data and Markdown
  */
 export function buildCheckPage(check: CheckDeclaration, manifest: Manifest): ReferencePage {
+    const stage =
+        check.stage === 'manual' ? `manual; runs only with \`gspot check --only ${check.name}\`` : check.stage;
     const lines = [
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Details\n\n`,
-        `- Configuration: [${manifest.configuration.name}](/reference/${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
+        `- Configuration: [${manifest.configuration.name}](/reference/${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}/)\n- Stage: ${stage}\n- Level: ${check.level}\n`,
         ...formatCheckEnvironment(check),
         formatSection('Example', check.example ?? ''),
-        check.stage === 'message'
-            ? '\nThe commit-msg hook checks the message of each commit.\n'
-            : `\nRun it with \`gspot check --only ${check.name}\`, and add an ignore with \`gspot ignore ${check.name} --paths <glob> --reason "<why>"\`.\n`,
     ];
     return buildReferencePage(check.name, check.summary, lines.join(''));
 }
 
 /**
- * Build the check index sorted by group, then by configuration.
+ * Build the check index: one table per group, each check linked to its page.
  * @param checks every declaration, with the configuration that owns it
  * @param groups the title of each folder of configurations
  * @returns the index page
@@ -67,31 +66,16 @@ export function buildCheckIndex(
         'Checks',
         `${String(checks.length)} checks declared by shipped configurations.`,
         Object.entries(groups)
-            .map(([group, title]) =>
-                formatSection(
-                    title,
-                    [
-                        ...new Set(
-                            checks
-                                .filter(({ configuration }) => configuration.configuration.group === group)
-                                .map(({ configuration }) => configuration.configuration.name),
-                        ),
-                    ]
-                        .map(
-                            (name) =>
-                                `\n### ${name}\n\n` +
-                                formatDefinitions(
-                                    checks
-                                        .filter(({ configuration }) => configuration.configuration.name === name)
-                                        .map(({ check }) => [
-                                            `[\`${check.name}\`](/reference/checks/${check.name}/)`,
-                                            `Stage \`${check.stage}\`, level \`${check.level}\`. ${check.summary}`,
-                                        ]),
-                                ),
-                        )
-                        .join('\n'),
-                ),
-            )
+            .map(([group, title]) => {
+                const rows = checks
+                    .filter(({ configuration }) => configuration.configuration.group === group)
+                    .map(({ check }) => [
+                        `[\`${check.name}\`](/reference/${REFERENCE_FOLDERS.checks}/${check.name}/)`,
+                        `\`${check.stage}\``,
+                        `\`${check.level}\``,
+                    ]);
+                return formatSection(title, rows.length === 0 ? '' : formatTable(['Check', 'Stage', 'Level'], rows));
+            })
             .join(''),
     );
 }

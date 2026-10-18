@@ -34,16 +34,16 @@ export function buildCommandPages(
                     formatOptionValues(argument),
             ]),
         );
+        // The Commands index lists --help with the global options.
         const options = formatDefinitions(
-            command.options.map((option) => [
-                `\`${option.flags}\``,
-                `${option.description}.` + formatOptionValues(option),
-            ]),
+            command.options
+                .filter((option) => option.flags !== '-h, --help')
+                .map((option) => [`\`${option.flags}\``, `${option.description}.` + formatOptionValues(option)]),
         );
         const page = buildReferencePage(
             `gspot ${command.name}`,
             command.summary,
-            `${command.summary}.\n\n${command.description}\n` +
+            `${command.description}\n` +
                 formatSection('Usage', `\`\`\`shell\n${command.usage}\n\`\`\``) +
                 formatSection('Arguments', command.arguments.length === 0 ? '' : argumentsBody) +
                 formatSection('Options', options) +
