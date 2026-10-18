@@ -1,3 +1,5 @@
+/** The ESLint runtime helper, which the ESLint tool file imports from its own folder. */
+const ESLINT_RUNTIME_FILE = 'eslint-runtime.mjs';
 const ESLINT_INDENT_WIDTH = 4;
 const FRAGMENT_BLANK_LINES = 3;
 
@@ -178,8 +180,6 @@ export const FILE_PRESETS = [
     ['prettier', 'prettierConfig'],
 ] as const;
 export const PACKAGE_JSON_PATTERN = '**/package.json';
-
-export const ESLINT_RUNTIME_FILE = 'eslint-runtime.mjs';
 
 export const ESLINT_BASE_IMPORTS = [
     ['{ root, runtimeMatches, stripRuntimeGlobals, componentMatches }', './' + ESLINT_RUNTIME_FILE],
