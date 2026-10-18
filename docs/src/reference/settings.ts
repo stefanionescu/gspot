@@ -9,11 +9,12 @@ import {
     MAP_KEY_NAME,
     ANGLE_BRACKETS,
     PAGE_TITLE_LEVEL,
-    LANGUAGE_SETTING,
     SETTINGS_SUBPAGES,
     HEADING_ID_DROPPED,
     SCHEMA_TYPE_LABELS,
     LISTED_VALUES_LIMIT,
+    LANGUAGE_PLACEHOLDER,
+    CATEGORY_PLACEHOLDER,
     REASONED_VALUE_LABEL,
 } from '../config/reference.ts';
 
@@ -92,22 +93,6 @@ function listSchemaProperties(
     return map?.properties === undefined ? fixed : [...fixed, { name: MAP_KEY_NAME, node: map, required: false }];
 }
 
-// The declared variants of a setting; a language key without its own declaration takes the language default.
-function listSettingVariants(
-    name: string,
-    data: ReturnType<typeof readReferenceData>,
-): ReturnType<typeof readReferenceData>['settings'] {
-    const language = LANGUAGE_SETTING.exec(name)?.groups?.['language'];
-    const declared = data.settings.filter(({ setting }) => setting.name === name);
-    if (declared.length > 0 || language === undefined) return declared;
-    return data.settings
-        .filter(({ setting }) => setting.name === name.replace(LANGUAGE_SETTING, '$1.$3'))
-        .map(({ setting, owners }) => ({
-            setting: { ...setting, default: setting.language_defaults?.[language] ?? setting.default },
-            owners,
-        }));
-}
-
 function formatDefaults(variants: ReturnType<typeof readReferenceData>['settings']): string {
     return variants
         .map(({ setting, owners }) => {
@@ -122,6 +107,15 @@ function formatDefaults(variants: ReturnType<typeof readReferenceData>['settings
         .join('; ');
 }
 
+// The languages whose default differs from the default of the key.
+function formatLanguageDefaults(variants: ReturnType<typeof readReferenceData>['settings']): string {
+    const defaults = variants.flatMap(({ setting }) =>
+        setting.language_defaults === undefined ? [] : Object.entries(setting.language_defaults),
+    );
+    const entries = defaults.map(([language, value]) => language + ' `' + JSON.stringify(value) + '`');
+    return entries.length === 0 ? '' : ` Language defaults: ${entries.join(', ')}.`;
+}
+
 function formatSetting(
     schema: JSONSchema.JSONSchema,
     key: string,
@@ -129,7 +123,7 @@ function formatSetting(
     data: ReturnType<typeof readReferenceData>,
     required: boolean,
 ): string {
-    const variants = listSettingVariants(key, data);
+    const variants = data.settings.filter(({ setting }) => setting.name === key);
     const node = getSchemaNode(schema, value);
     const reasons = [
         ...new Set(
@@ -144,6 +138,7 @@ function formatSetting(
     return (
         `${sentence} ${presence}` +
         (reasons.length === 0 ? '' : ` Reason needed when: ${reasons.join(', ')}.`) +
+        formatLanguageDefaults(variants) +
         (node.description === undefined ? '' : ` ${escapeCell(node.description)}`)
     );
 }
@@ -177,6 +172,41 @@ function formatSettingRows(
     );
 }
 
+// A table whose keys all repeat keys of the table around it sets those keys for one language or one category.
+function listVariantTables(
+    schema: JSONSchema.JSONSchema,
+    node: JSONSchema.JSONSchema,
+): ReturnType<typeof listSchemaProperties> {
+    const children = listSchemaProperties(schema, node);
+    const names = new Set(children.filter((child) => isSettingValue(schema, child.node)).map(({ name }) => name));
+    return children.filter((child) => {
+        const keys = listSchemaProperties(schema, child.node).filter((entry) => isSettingValue(schema, entry.node));
+        return !isSettingValue(schema, child.node) && keys.length > 0 && keys.every(({ name }) => names.has(name));
+    });
+}
+
+// One section for all the language tables of a table, and the categories of names each language takes.
+function formatVariantSection(schema: JSONSchema.JSONSchema, key: string, node: JSONSchema.JSONSchema, level: number) {
+    const languages = listVariantTables(schema, node);
+    if (languages.length === 0) return '';
+    const pattern = `${key}.${LANGUAGE_PLACEHOLDER}`;
+    const categories = languages.map(({ name, node: table }) => [name, listVariantTables(schema, table)] as const);
+    const named = categories.filter(([, tables]) => tables.length > 0);
+    return (
+        `\n${'#'.repeat(level)} \`${pattern}\`\n\n` +
+        `The keys of \`[${key}]\` for one language: ${languages.map(({ name }) => '`' + name + '`').join(', ')}. ` +
+        `A key you leave out takes the value of \`[${key}]\`.\n` +
+        (named.length === 0
+            ? ''
+            : `\n\`${pattern}.${CATEGORY_PLACEHOLDER}\` sets the same keys for one category of names, and a key you ` +
+              `leave out takes the value of \`${pattern}\`. The categories of each language:\n\n` +
+              named
+                  .map(([name, tables]) => `- \`${name}\`: ${tables.map((table) => '`' + table.name + '`').join(', ')}`)
+                  .join('\n') +
+              '\n')
+    );
+}
+
 // A table or a record: its description and keys, then the tables and records inside it, one heading level down.
 // The page title takes the first level, so a table with its own page starts without a heading.
 function formatSettingTable(
@@ -189,14 +219,16 @@ function formatSettingTable(
     const node = getSchemaNode(schema, value);
     const children = listSchemaProperties(schema, node);
     const keys = children.filter((child) => isSettingValue(schema, child.node));
+    const variants = new Set(listVariantTables(schema, node).map(({ name }) => name));
     return (
         (level === PAGE_TITLE_LEVEL ? '' : `\n${'#'.repeat(level)} ${formatTableHeader(key, node)}\n\n`) +
         (node.description === undefined ? '' : `${node.description}\n\n`) +
         (keys.length === 0 ? '' : `${formatSettingRows(data, key, keys)}\n`) +
         children
-            .filter((child) => !isSettingValue(schema, child.node))
+            .filter((child) => !isSettingValue(schema, child.node) && !variants.has(child.name))
             .map((child) => formatSettingTable(data, `${key}.${child.name}`, child.node, level + 1))
-            .join('')
+            .join('') +
+        formatVariantSection(schema, key, node, level + 1)
     );
 }
 

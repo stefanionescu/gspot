@@ -147,20 +147,22 @@ export function buildConfigurationPages(data: ReturnType<typeof readReferenceDat
             buildReferencePage(
                 'Configurations',
                 'Choose configurations by the files and tools they check.',
-                Object.entries(data.groups)
-                    .map(([group, title]) =>
-                        formatSection(
-                            title,
-                            data.configurations
-                                .filter((manifest) => manifest.configuration.group === group)
-                                .map(
-                                    ({ configuration }) =>
-                                        `- [\`${configuration.name}\`](/reference/configurations/${configuration.name}/): ${configuration.title}. ${configuration.description}`,
-                                )
-                                .join('\n'),
-                        ),
-                    )
-                    .join(''),
+                'gspot selects configurations from the files of each scope. `gspot add <name>` and ' +
+                    '`gspot remove <name>` change the selection, and `gspot list` shows it.\n' +
+                    Object.entries(data.groups)
+                        .map(([group, title]) =>
+                            formatSection(
+                                title,
+                                data.configurations
+                                    .filter((manifest) => manifest.configuration.group === group)
+                                    .map(
+                                        ({ configuration }) =>
+                                            `- [\`${configuration.name}\`](/reference/configurations/${configuration.name}/): ${configuration.title}. ${configuration.description}`,
+                                    )
+                                    .join('\n'),
+                            ),
+                        )
+                        .join(''),
             ),
         ],
     ]);

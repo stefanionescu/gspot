@@ -36,9 +36,13 @@ export const LLMS_COMMAND = `curl -fsSL ${LLMS_URL}`;
 
 export const AGENT_PROMPT = `Set up gspot in this repository. Run ${LLMS_COMMAND} and follow its steps.`;
 
+/** The summary at the top of llms.txt. */
+export const LLMS_DESCRIPTION =
+    'gspot installs linters, formatters, and rules for coding agents into a repository from one gspot.toml, and runs them in Git hooks and CI.';
+
 export const AGENT_STEPS = `## Steps for coding agents
 
-Set up gspot in the repository of the user. Run each command in the root of the repository. gspot needs Git and
+Set up gspot in the repository of the user. Run each command at the root of the repository. gspot needs Git and
 Node.js 24.15 or newer.
 
 1. Add gspot, pinned to one version, with the package manager of the repository:
@@ -50,24 +54,43 @@ Node.js 24.15 or newer.
 
    Start the next commands with \`npx gspot\`, \`pnpm exec gspot\`, \`yarn exec gspot\`, \`bunx gspot\`, or
    \`mise exec -- gspot\`.
-2. Run \`gspot init --dry-run\`. Show the user the plan: the configurations that gspot found, the tool files that it
+2. Run \`gspot init --dry-run\`. Show the user the plan: the configurations, the scopes, the tool files that gspot
    replaces, the Git hooks, and the CI workflow.
 3. Ask the user two questions, and wait for the answers:
-   - Is the plan right? After init, \`gspot add <configuration>\` and \`gspot remove <configuration>\` change the
-     configurations.
+   - Is the plan right? After init, \`gspot add <configuration>\` and \`gspot remove <configuration>\` change it.
    - Which level? \`recommended\`, the default, finds bugs, security and accessibility problems, type errors, and
      formatting. \`all\` also checks naming, wording, structure, doc comments, duplication, and complexity, and it
      installs a few more tools. Suggest \`recommended\` for an existing codebase, and \`all\` for a new repository or
      one that agents write.
-4. Run \`gspot init --yes\`. For level \`all\`, run \`gspot set level all\` next, before you install.
+4. Run \`gspot init --yes\`. For level \`all\`, run \`gspot set level all\` next.
 5. Run \`gspot install\`. It installs the pinned tools and turns on the Git hooks. If it names a program that it
-   cannot install, tell the user; \`gspot doctor\` lists the missing tools.
+   cannot install, tell the user. \`gspot doctor\` lists what is missing.
 6. Run \`gspot check\`, and show the user its last line. Fix the findings in the files that you changed. Ask the user
-   before you fix findings in other files, and before you add an ignore or a suppression.
-   \`gspot explain <check or lint rule>\` explains a finding.
-7. Read \`AGENTS.md\` and the rules it lists under \`.gspot/configurations/\` before you write more code. Commit
-   with the hooks on, and do not use \`git commit --no-verify\`.
-8. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
+   before you fix findings in other files.
+7. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
+
+## Rules for daily work
+
+- Read \`AGENTS.md\` and the rules it lists under \`.gspot/configurations/\` before you write code.
+- Stages: \`commit\` checks run on the staged files before each commit, \`push\` checks before each push, \`message\`
+  checks on the commit message, and \`manual\` checks only with \`gspot check --only <check>\`. \`gspot check\` alone
+  runs the commit and push checks.
+- Exit codes: \`0\` every check that ran passed, \`1\` findings remain, \`2\` a check could not run. After \`2\`, run
+  \`gspot install\`, then \`gspot doctor\`.
+- \`gspot explain <check, lint rule, setting, or file>\` explains it and names the commands that change it.
+  \`gspot check --fix\` runs the formatters and other fixers. Each check has a page at
+  ${SITE_URL}/reference/checks/<check>/.
+- Fix the code first. Ask the user before you ignore a finding:
+  \`gspot ignore <check> --reason "<why>"\`, with \`--rule <rule>\` and \`--paths "<glob>"\` to narrow it.
+  A suppression comment needs a reason, such as
+  \`// eslint-disable-next-line no-console -- the command prints its result\`.
+- Never suppress a size or complexity limit. Split the code, or ask the user to raise the limit with
+  \`gspot set limits.<name> <value> --reason "<why>"\`.
+- Change settings only with \`gspot add\`, \`remove\`, \`set\`, \`unset\`, \`ignore\`, and \`unignore\`. Do not edit files
+  under \`.gspot/\` or other generated files. After you edit \`gspot.toml\` by hand, run \`gspot apply\`.
+- In a monorepo, each \`[[scope]]\` record in \`gspot.toml\` holds the settings of one folder. Add \`--scope <path>\` to
+  \`add\`, \`remove\`, \`set\`, or \`unset\` to change one scope.
+- Commit with the hooks on. Never use \`--no-verify\`.
 `;
 
 /**
@@ -87,4 +110,21 @@ export const LLMS_PAGES = {
     ],
     // The hidden "Section titled" link text of each heading.
     customSelectors: { all: ['.sl-anchor-link'] },
+    optionalLinks: [
+        {
+            label: 'Commands',
+            url: `${SITE_URL}/reference/commands/`,
+            description: 'every command, its options, and exit codes',
+        },
+        {
+            label: 'Settings',
+            url: `${SITE_URL}/reference/gspot-toml/`,
+            description: 'every key of gspot.toml, its accepted values, and its default',
+        },
+        {
+            label: 'JSON output',
+            url: `${SITE_URL}/reference/json-output/`,
+            description: 'the fields of gspot check --json',
+        },
+    ],
 };

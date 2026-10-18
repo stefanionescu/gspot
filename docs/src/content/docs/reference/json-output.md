@@ -15,13 +15,13 @@ gspot check --json
 | Field             | Meaning                                                                                       |
 | ----------------- | --------------------------------------------------------------------------------------------- |
 | `version`         | The gspot version that made the report.                                                       |
-| `stage`           | The selected stage, or the default combined selection.                                        |
+| `stage`           | The selected stage: `commit`, `push`, `message`, `manual`, or `all` for the default run.      |
 | `started`         | Start time as an ISO 8601 timestamp.                                                          |
 | `duration`        | Elapsed run time in milliseconds.                                                             |
 | `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference.  |
 | `checks`          | Results for checks that ran, including their findings.                                        |
 | `ignores`         | Ignores in effect, with their check, optional lint rule and paths, reason, and matched count. |
-| `skips`           | Checks that did not run and the cause. A skipped check did not pass.                          |
+| `skips`           | Checks that did not run, each with its `cause`. A skipped check did not pass.                 |
 | `unstagedChanges` | Number of changed files left out when the run reads the staging area.                         |
 | `partial`         | Whether the run selected only staged files, changed files, or named paths.                    |
 | `failed`          | Check IDs that failed, including checks whose fixer failed.                                   |
@@ -36,25 +36,42 @@ It can also have `files`, `note`, `reproduce`, and `command`. The status takes o
 Each finding has `check`, `file`, `message`, and `fixable`. Optional fields include `line`, `column`, `rule`, and
 `help`. Source lines and columns start at `1`. A finding without a source location can have an empty `file`.
 
+The `cause` of a skip takes one of `level`, `flag`, `system`, `replaced`, `setting`, `condition`, `ignore`, or
+`inputs`.
+
+## Push report
+
+`gspot check --hook pre-push --json` checks each pushed tree and prints one object:
+
+| Field                  | Meaning                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| `revisions`            | One item per distinct tree: `hash`, `refs`, `commits`, `historyComplete`, and `report`. |
+| `skipped`              | Pushed refs that gspot did not check, with `ref`, `hash`, and `reason`.                 |
+| `exitCode`             | The process exit code.                                                                  |
+| `canceled.pendingRefs` | When a signal stopped the run, the refs that were not checked.                          |
+
+Each `report` holds the report fields above. `historyComplete` holds `false` when the pushed history reaches the
+boundary of a shallow clone. Checks that read history then refuse to run.
+
 ## Command errors
 
 Commands with `--json` report an error with `error` and `message`. `error` holds one of the codes below.
 `message` describes the failure and the action to take.
 
-| Code           | What failed                                |
-| -------------- | ------------------------------------------ |
-| `arguments`    | Command arguments or flags.                |
-| `git`          | A Git operation.                           |
-| `files`        | Preparing files for a check.               |
-| `writing`      | Saving gspot.toml.                         |
-| `filesystem`   | Reading or accessing a file.               |
-| `settings`     | A setting or the gspot.toml format.        |
-| `manifest`     | A shipped configuration manifest.          |
-| `installation` | Installing tools.                          |
-| `tool`         | Finding or running a tool.                 |
-| `output`       | Reading a tool's output.                   |
-| `pin`          | The repository's version pin.              |
-| `template`     | Reading or using a template.               |
-| `prompt`       | Asking for a plan to be accepted.          |
-| `failure`      | An unexpected error; the message names it. |
-| `canceled`     | A signal stopped the command.              |
+| Code           | What failed                                                     |
+| -------------- | --------------------------------------------------------------- |
+| `arguments`    | Command arguments or flags.                                     |
+| `git`          | A Git operation.                                                |
+| `files`        | Preparing files for a check.                                    |
+| `writing`      | Saving gspot.toml.                                              |
+| `filesystem`   | Reading or accessing a file.                                    |
+| `settings`     | A setting or the gspot.toml format.                             |
+| `manifest`     | A shipped configuration manifest.                               |
+| `installation` | Installing tools.                                               |
+| `tool`         | Finding or running a tool.                                      |
+| `output`       | Reading a tool's output.                                        |
+| `pin`          | The repository's version pin.                                   |
+| `template`     | Reading or using a template.                                    |
+| `prompt`       | Asking for a plan to be accepted.                               |
+| `failure`      | An unexpected error; the message names it.                      |
+| `canceled`     | A signal stopped the command. The object also holds `exitCode`. |

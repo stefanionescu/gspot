@@ -5,8 +5,8 @@ import { buildPluginPages } from './eslint-plugin.ts';
 import { readReferenceData } from '#cli/reference.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import type { ReferencePage } from '../types/reference.ts';
-import { buildCheckPage, buildCheckIndex } from './checks.ts';
 import { buildConfigurationPages } from './configurations.ts';
+import { buildCheckPage, buildCheckIndex, listSuppressions } from './checks.ts';
 
 import {
     PAGES_FOLDER,
@@ -29,8 +29,9 @@ function buildReferencePages(): Map<string, ReferencePage> {
         ...buildPluginPages(),
         [`${REFERENCE_FOLDERS.checks}/index.md`, buildCheckIndex(data.checks, data.groups)],
     ]);
+    const suppressions = listSuppressions(data.configurations);
     for (const { check, configuration } of data.checks)
-        pages.set(`${REFERENCE_FOLDERS.checks}/${check.name}.md`, buildCheckPage(check, configuration));
+        pages.set(`${REFERENCE_FOLDERS.checks}/${check.name}.md`, buildCheckPage(check, configuration, suppressions));
     return pages;
 }
 

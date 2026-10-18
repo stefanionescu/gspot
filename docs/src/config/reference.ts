@@ -82,6 +82,9 @@ export const SECTION_HEADING = /^## /mu;
 export const SETTING_PLACEHOLDER = /^\{setting:(?<setting>[^}]+)\}$/u;
 /** A list of allowed values longer than this prints as a count; editors read the full list from the schema. */
 export const LISTED_VALUES_LIMIT = 12;
+/** The check that reads the suppression comments of every tool. */
+export const SUPPRESSIONS_CHECK = 'gspot/suppressions';
+
 /** The tables with their own settings page: the title and description of each page. */
 export const SETTINGS_SUBPAGES = new Map([
     [
@@ -101,7 +104,9 @@ export const PAGE_TITLE_LEVEL = 1;
 export const REASONED_VALUE_LABEL = 'a reasoned value `{ value = …, reason = "…" }`';
 /** The characters that a heading ID leaves out of the heading text, as Starlight writes it. */
 export const HEADING_ID_DROPPED = /[^\p{L}\p{N} _-]/gu;
-export const LANGUAGE_SETTING = /^(?<table>limits|naming)\.(?<language>[^.]+)\.(?<key>.+)$/u;
+/** The placeholders of the language and the category of names in a language table key. */
+export const LANGUAGE_PLACEHOLDER = '<language>';
+export const CATEGORY_PLACEHOLDER = '<category>';
 
 /** The guide page of each configuration that has one. */
 export const CONFIGURATION_GUIDES: Readonly<Record<string, { path: string; title: string }>> = {

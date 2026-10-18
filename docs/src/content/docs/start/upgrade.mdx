@@ -34,3 +34,6 @@ mise exec -- gspot check
 `gspot apply` writes the new version to `.gspot/version` and updates the generated files. Review the diff and fix any findings. Then commit `gspot.toml`, the files in `.gspot/`,
 and either `package.json` with its lockfile or `mise.toml`, together. Every other clone then runs `gspot install`. See
 [Set up a clone](/start/install/#set-up-a-clone).
+
+If `gspot apply` names a JSON file it did not overwrite, delete that file and run `gspot apply` again. A JSON file has
+no header that marks it as generated, so gspot 0.1 kept that mark in a log that newer versions do not read.
