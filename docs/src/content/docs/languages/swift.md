@@ -26,11 +26,14 @@ it: run
 
 ## Tests
 
-Run `gspot add swift-tests`. gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder
-that turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, while your
-source files keep those lint rules. `gspot check --only swift/swiftlint` reads these nested files. In an editor, run SwiftLint without `--config`, because that option turns off the nested files.
+The `swift` configuration also checks your XCTest and Swift Testing tests. gspot writes a `.swiftlint.yml` into each
+`Tests` or `*Tests` folder that turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, while your
+source files keep those lint rules. `gspot check --only swift/swiftlint` reads these nested files. In an editor, run
+SwiftLint without `--config`, because that option turns off the nested files.
 
-[swift-tests](/reference/configurations/swift-tests/) declares checks for test reasons and coverage.
+[`swift/skip-reasons`](/reference/checks/swift/skip-reasons/) asks each disabled test for a reason.
+[`swift/coverage`](/reference/checks/swift/coverage/) measures each target against its coverage floor, and skips a
+scope that holds no tests.
 
 ## Coverage
 
@@ -43,7 +46,7 @@ lines = 80
 ```
 
 Replace `Orders` with the target named in the coverage report. Add `reason` when `lines` falls below `coverage.lines`.
-Then run `gspot apply` and `gspot check --only swift-tests/coverage`. Write these records by hand;
+Then run `gspot apply` and `gspot check --only swift/coverage`. Write these records by hand;
 `gspot set` writes no record lists.
 
 ## Security rules

@@ -30,7 +30,7 @@ export const XCTEST_SCOPES = [
     { name: 'in a scope whose path has a space and #', scope: 'ios # app' },
 ] as const;
 
-export const XCTEST_SETTINGS = `configurations = ["swift-tests", "xcode"]
+export const XCTEST_SETTINGS = `configurations = ["swift", "xcode"]
 [[coverage.swift_target]]
 name = "Example"
 lines = 80
@@ -44,7 +44,7 @@ export const XCTEST_FAILURES = [
     {
         failure: 'no-project',
         note: undefined,
-        settings: `configurations = ["swift-tests", "xcode"]
+        settings: `configurations = ["swift", "xcode"]
 [[coverage.swift_target]]
 name = "Example"
 lines = 80

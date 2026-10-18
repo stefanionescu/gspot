@@ -19,7 +19,7 @@ import {
     SWIFT_PACKAGE_COVERAGE_FILES,
     SWIFT_TARGET_COVERAGE_REPORT,
     SWIFT_PACKAGE_COVERAGE_TARGETS,
-} from '#tests/data/checks/swift-tests.ts';
+} from '#tests/data/checks/swift/tests.ts';
 
 test.each([
     {
@@ -65,7 +65,7 @@ test.each([
         await using sandbox = await testdir();
         await using _cache = await createCompilerCache();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['swift-tests', 'xcode'], {
+            'gspot.toml': buildSettingsText(['swift', 'xcode'], {
                 tables: `[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n[coverage]\nlines = ${String(lines)}\nswift_target = ${JSON.stringify(target).replaceAll(':', ' = ')}\n`,
             }),
             'ExampleTests.swift': 'import XCTest\n',
@@ -79,7 +79,7 @@ test.each([
         );
         const result = await runChecks(
             await openSession(sandbox.path),
-            buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
+            buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
         );
         expect(
             result.report.checks[0]?.findings.map((finding) => finding.message),
@@ -90,7 +90,7 @@ test.each([
 );
 
 test.each([...XCTEST_FAILURES])(
-    'swift-tests: XCTest coverage classifies $failure and passes after the fix',
+    'swift/coverage: XCTest coverage classifies $failure and passes after the fix',
     async ({ settings, build, coverage, code, status, produced, note }) => {
         using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
         await using sandbox = await testdir();
@@ -108,7 +108,7 @@ test.each([...XCTEST_FAILURES])(
         );
         const result = await runChecks(
             await openSession(sandbox.path),
-            buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
+            buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
         );
         expect(result.report.exitCode).toBe(code);
         expect(result.report.checks[0]!.status).toBe(status);
@@ -116,7 +116,7 @@ test.each([...XCTEST_FAILURES])(
         expect(await isOnDisk(join(sandbox.path, 'viewed.txt'))).toBe(false);
         await writeFile(join(sandbox.path, 'gspot.toml'), XCTEST_SETTINGS);
         const viewed = join(
-            buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), {
+            buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift/coverage'), {
                 purpose: 'coverage',
             }).folder,
             'source/viewed.txt',
@@ -132,16 +132,14 @@ test.each([...XCTEST_FAILURES])(
         );
         const corrected = await runChecks(
             await openSession(sandbox.path),
-            buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
+            buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
         );
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
-        expect(corrected.report.checks).toMatchObject([
-            { check: 'swift-tests/coverage', status: 'passed', findings: [] },
-        ]);
+        expect(corrected.report.checks).toMatchObject([{ check: 'swift/coverage', status: 'passed', findings: [] }]);
     },
 );
 
-test('swift-tests: XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
+test('swift/coverage: XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
     await using sandbox = await testdir();
     await using outside = await testdir();
@@ -161,7 +159,7 @@ test('swift-tests: XCTest coverage refuses an external result link and removes a
         'node_modules/.bin/xcrun',
         `#!${process.execPath}\nconsole.log(JSON.stringify({targets:[{name:'Example',lineCoverage:1}]}));\n`,
     );
-    const cache = buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), {
+    const cache = buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift/coverage'), {
         purpose: 'coverage',
     }).folder;
     await writeFile(join(outside.path, 'authored.txt'), 'preserved');
@@ -170,7 +168,7 @@ test('swift-tests: XCTest coverage refuses an external result link and removes a
     await symlink(outside.path, bundle, 'dir');
     const refused = await runChecks(
         await openSession(sandbox.path),
-        buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
+        buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
     expect(refused.report.exitCode).toBe(2);
     expect(refused.report.checks[0]?.note).toContain('is a link. gspot does not write through links.');
@@ -181,7 +179,7 @@ test('swift-tests: XCTest coverage refuses an external result link and removes a
     await writeFile(join(bundle, 'data/previous'), 'old result', { mode: 0o444 });
     const corrected = await runChecks(
         await openSession(sandbox.path),
-        buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
+        buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
     expect(await isOnDisk(bundle)).toBe(false);
@@ -192,11 +190,11 @@ test('swift-tests: XCTest coverage refuses an external result link and removes a
 test.each([...SKIP_REASON_CASES])('Swift skip reason belongs to its argument: $body', async ({ body, missing }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['swift-tests']),
+        'gspot.toml': buildSettingsText(['swift']),
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const findings = await checkFindings(session.root, 'swift-tests/skip-reasons');
+    const findings = await checkFindings(session.root, 'swift/skip-reasons');
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual(
         missing ? [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }] : [],
     );
@@ -208,13 +206,14 @@ test('Swift package coverage measures actual custom target paths and applies eve
     await using _cache = await createCompilerCache();
     const reportPath = join(sandbox.path, 'coverage-input.json');
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['swift-tests'], {
+        'gspot.toml': buildSettingsText(['swift'], {
             tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "Core"\nlines = 51\n[[coverage.swift_target]]\nname = "API"\nlines = 67\n',
         }),
         'Package.swift': '// swift-tools-version: 6.0\nimport PackageDescription\n',
         'Custom/Core/First.swift': 'func first() -> Int { 1 }\n',
         'Custom/Core/Second.swift': 'func second() -> Int { 2 }\n',
         'Sources/API/API.swift': 'func request() -> Int { 3 }\n',
+        'Tests/CoreTests/CoreTests.swift': 'import XCTest\nfinal class CoreTests: XCTestCase {}\n',
     });
     await writeFile(reportPath, JSON.stringify(SWIFT_PACKAGE_COVERAGE_FILES));
     await fakeTool(
@@ -230,7 +229,7 @@ else if (process.argv.includes('describe')) console.log(${JSON.stringify(JSON.st
     );
     const measured = await runChecks(
         await openSession(sandbox.path),
-        buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
+        buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
     expect(measured.report.exitCode, JSON.stringify(measured.report)).toBe(1);
     expect(measured.report.checks[0]?.findings.map(({ message }) => message)).toStrictEqual([
@@ -243,8 +242,28 @@ else if (process.argv.includes('describe')) console.log(${JSON.stringify(JSON.st
     );
     const omitted = await runChecks(
         await openSession(sandbox.path),
-        buildRunOptions({ stage: 'push', only: ['swift-tests/coverage'] }),
+        buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
     expect(omitted.report.exitCode).toBe(2);
     expect(omitted.report.checks[0]?.note).toContain('The Swift coverage report has no source lines for target API.');
+});
+
+test('Swift coverage skips a scope that holds no Swift tests', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['swift']),
+        'Package.swift': '// swift-tools-version: 6.0\nimport PackageDescription\n',
+        'Sources/App/App.swift': 'func value() -> Int { 1 }\n',
+    });
+    const { report } = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
+    );
+    expect(report.checks).toMatchObject([
+        {
+            check: 'swift/coverage',
+            status: 'skipped',
+            note: 'Needs files marked swift-test or swift-test-target in this scope.',
+        },
+    ]);
 });

@@ -21,14 +21,14 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
         const folder = scope.startsWith('AppTests') ? scope : `${prefix}AppTests`;
         const child = `${prefix}ChildTests`;
         const scopeTable =
-            scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\nconfigurations = ["swift-tests"]\n`;
+            scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\nconfigurations = ["swift"]\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(scope === '' ? ['swift-tests'] : [], {
+            'gspot.toml': buildSettingsText(scope === '' ? ['swift'] : [], {
                 level: 'all',
                 tables:
                     scopeTable +
-                    `[[scope]]\npath = ${JSON.stringify(child)}\nremoved_configurations = ["swift-tests"]\nconfigurations = ["swift"]\n` +
-                    '[[scope]]\npath = "omitted"\n\nremoved_configurations = ["swift-tests"]\nconfigurations = ["swift"]\n',
+                    `[[scope]]\npath = ${JSON.stringify(child)}\nconfigurations = ["swift"]\n` +
+                    '[[scope]]\npath = "omitted"\n\nremoved_configurations = ["swift"]\n',
             }),
             [`${folder}/Value.swift`]: 'import XCTest\n',
             [`${folder}/Deep/Value.swift`]: 'import XCTest\n',
@@ -65,7 +65,7 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
                 (posix.dirname(childPointer.path) === '.' ? './' : '') +
                 posix.relative(posix.dirname(childPointer.path), childConfig),
         });
-        expect(parse(childPointer.content)).not.toHaveProperty('disabled_rules');
+        expect(parse(childPointer.content)).toHaveProperty('disabled_rules');
     },
 );
 

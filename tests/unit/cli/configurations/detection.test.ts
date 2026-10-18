@@ -103,11 +103,6 @@ test.each([...SWIFT_TEST_SAMPLES])('Swift test detection: $name', async ({ sourc
         manifests: readManifests(createReadCache(process.cwd())),
     });
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
-    expect(
-        detectConfigurations(sandbox.path, repository.files, readManifests(createReadCache(process.cwd())), []).some(
-            ({ configuration }) => configuration === 'swift-tests',
-        ),
-    ).toBe(selected);
 });
 
 test.each([...SWIFT_TARGET_CASES])('Swift package test targets: $name', async ({ source, declared }) => {
@@ -118,11 +113,7 @@ test.each([...SWIFT_TARGET_CASES])('Swift package test targets: $name', async ({
         scopes: [],
         manifests: readManifests(createReadCache(process.cwd())),
     });
-    expect(
-        detectConfigurations(sandbox.path, repository.files, readManifests(createReadCache(process.cwd())), []).some(
-            ({ configuration }) => configuration === 'swift-tests',
-        ),
-    ).toBe(declared);
+    expect(repository.files[0]!.tags.includes('swift-test-target')).toBe(declared);
 });
 
 test.each(PRISMA_CONTENT_CASES.flatMap((entry) => ['', 'apps/api'].map((scope) => ({ ...entry, scope }))))(

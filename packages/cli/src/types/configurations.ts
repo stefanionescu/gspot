@@ -143,7 +143,7 @@ export type ParsedCheck = {
     fix?: string[] | undefined;
     exit_codes?: number[] | undefined;
     instead_of?: string | undefined;
-    when?: Optional<Pick<ConditionFields, 'configuration' | 'setting' | 'git' | 'dependencies'>> | undefined;
+    when?: Optional<Pick<ConditionFields, 'configuration' | 'setting' | 'git' | 'dependencies' | 'tags'>> | undefined;
     crash_pattern?: string | undefined;
     /** Settings outside tools.<tool> that change what the check reports, for gspot explain. */
     settings?: string[] | undefined;

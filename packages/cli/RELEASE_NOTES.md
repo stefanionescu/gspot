@@ -2,6 +2,32 @@
 
 The newest version comes first. The release task copies the section of the version it publishes into the GitHub release.
 
+## 0.3.2
+
+`@gspothq/cli` 0.3.2 folds the `swift-tests` configuration into `swift`. `@gspothq/eslint-plugin` stays at 0.2.0.
+
+### Upgrade from 0.3.1
+
+1. Install 0.3.2 with your package manager, such as `npm i -D -E @gspothq/cli@0.3.2`, or with
+   `mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@0.3.2`.
+2. In `gspot.toml`, remove `swift-tests` from each `configurations` and `removed_configurations` list. `swift` now
+   holds its checks.
+3. Rename the check IDs in your `[[ignore]]` records and `--only` flags:
+
+    | 0.3.1                      | 0.3.2                |
+    | -------------------------- | -------------------- |
+    | `swift-tests/coverage`     | `swift/coverage`     |
+    | `swift-tests/skip-reasons` | `swift/skip-reasons` |
+
+4. Run `gspot apply`, then `gspot install` and `gspot check`.
+
+### Changes
+
+- `swift` checks Swift tests too. `swift/coverage` runs in a scope that holds XCTest or Swift Testing files, or a
+  Swift package with a test target, and skips the others. `SWIFT-TESTS.md` installs under the same condition.
+- Each `Tests` or `*Tests` folder of a `swift` scope gets the SwiftLint test overrides, including a folder that forms
+  its own scope.
+
 ## 0.3.1
 
 `@gspothq/cli` 0.3.1 fixes repositories that use Husky, names the fix when `gspot.toml` holds a key that gspot

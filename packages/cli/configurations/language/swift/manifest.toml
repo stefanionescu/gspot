@@ -2,7 +2,7 @@ allowed_words = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
 ignored_folders = [".build", "DerivedData", "Pods"]
 
 [configuration]
-description = "Swift sources: lint and analyzer rules for each level, one format, a clean build, and no unused code."
+description = "Swift sources and their XCTest and Swift Testing tests: lint and analyzer rules for each level, one format, a clean build, no unused code, a reason on each disabled test, and a coverage floor."
 suggests = []
 title = "Swift"
 
@@ -12,10 +12,11 @@ project_files = ["Package.swift"]
 
 [files]
 extensions = [".swift"]
-filenames = ["Package.swift", "Package.resolved"]
+filenames = ["Package.swift", "Package.resolved", "*.xctestplan"]
 
 [rules]
 "SWIFTUI.md" = { tags = ["swift-import:SwiftUI"] }
+"SWIFT-TESTS.md" = { tags = ["swift-test", "swift-test-target"] }
 "UIKIT.md" = { tags = ["swift-import:UIKit"] }
 
 [[tool]]
@@ -72,7 +73,7 @@ tool = "swiftlint"
 
 [[tool_file]]
 per_scope = true
-pointer = { path = ".swiftlint.yml", folders = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n", when = { configuration = "swift-tests" } }
+pointer = { path = ".swiftlint.yml", folders = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
 target = "swiftlint.yml"
 tool = "swiftlint"
 
@@ -157,3 +158,27 @@ stage = "push"
 summary = "Scans the built project for declarations nothing uses."
 tool = "periphery"
 why = "People read, maintain, and migrate dead code without knowing that nothing uses it."
+
+[[check]]
+example = "`throw XCTSkip()` in a Swift test reports a missing reason. Restore the test, or give a reason such as `throw XCTSkip(\"Requires the hardware test device\")`."
+files = { tags = ["swift-test"] }
+help = "Write why the test stays off and what turns it on again, or delete it."
+level = "recommended"
+name = "skip-reasons"
+stage = "commit"
+summary = "Checks that skip calls and disabled traits name a nonempty reason, and unavailable tests carry an explanation."
+why = "A skipped test with no reason stays off, because nobody can tell when to restore it."
+
+[[check]]
+example = "A Swift target reports 85% line coverage against a 90% floor. Add a test that exercises its uncovered lines, then rerun the target."
+files = { extensions = [".swift"] }
+help = "Add tests for the target, or lower its floor with a reason."
+level = "recommended"
+name = "coverage"
+needs = ["build"]
+operating_systems = ["macos", "linux"]
+runs = "scope"
+stage = "push"
+summary = "Measures each source target in Xcode projects and Swift packages against `coverage.lines` and its `coverage.swift_target` floor."
+when = { tags = ["swift-test", "swift-test-target"] }
+why = "A floor for each target exposes Swift code that no test runs."

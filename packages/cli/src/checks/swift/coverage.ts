@@ -10,24 +10,24 @@ import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, resolve, relative } from 'node:path';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
-import { type CoverageReport } from '#cli/types/checks/testing.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
-import { type SwiftBuildPlan } from '#cli/types/checks/language.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/swift/cache.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import { SWIFT_PROGRAM, SCRATCH_PATH_FLAG } from '#cli/config/checks/language/swift.ts';
+import { type SwiftBuildPlan, type CoverageReport } from '#cli/types/checks/language.ts';
 
 import {
+    SWIFT_PROGRAM,
     XCCOV_COMMAND,
     COVERAGE_BUNDLE,
     TEST_TARGET_TYPE,
     APP_TARGET_SUFFIX,
+    SCRATCH_PATH_FLAG,
     SWIFT_TARGET_MODULE,
     XCODE_COVERAGE_FLAGS,
     SWIFT_CODECOV_COMMAND,
     SWIFT_DESCRIBE_COMMAND,
-} from '#cli/config/checks/testing.ts';
+} from '#cli/config/checks/language/swift.ts';
 
 async function measurePackageCoverage(
     input: CheckInput,
@@ -156,7 +156,7 @@ function listCoverageShortfalls(
  * @param input the scope and coverage limits.
  * @returns the findings.
  */
-async function checkSwiftTestsCoverage(input: CheckInput): Promise<Finding[]> {
+async function checkSwiftCoverage(input: CheckInput): Promise<Finding[]> {
     const settings = input.selection.view.options('coverage');
     const report = await measureCoverage(input);
     return listCoverageShortfalls(report, settings).map((text) =>
@@ -213,4 +213,4 @@ const xccovSchema = z.object({
     ),
 } satisfies SchemaShape<CoverageReport>);
 
-export { checkSwiftTestsCoverage };
+export { checkSwiftCoverage };

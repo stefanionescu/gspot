@@ -65,3 +65,6 @@ export type ParsedSwift = {
     xcode_scheme?: string | undefined;
     xcode_destination: string;
 };
+
+/** Target coverage accepted by the xccov report schema. */
+export type CoverageReport = { targets: { name: string; lineCoverage: number }[] };

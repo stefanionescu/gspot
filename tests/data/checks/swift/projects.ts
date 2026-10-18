@@ -32,7 +32,7 @@ swift = { xcode_project = "app/Choice.xcworkspace", xcode_scheme = "App" }
 export const SWIFT_BUILD_PURPOSES = [
     { purpose: 'compile', check: 'swift/build' },
     { purpose: 'analyze', check: 'swift/swiftlint-analyze' },
-    { purpose: 'coverage', check: 'swift-tests/coverage' },
+    { purpose: 'coverage', check: 'swift/coverage' },
 ] as const;
 
 /** SwiftFormat stays active when an ignore skips both other external Swift checks. */

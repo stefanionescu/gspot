@@ -20,15 +20,15 @@ import {
     FIXED_PARSER_SOURCE,
     XCTEST_COVERAGE_TESTS,
     XCTEST_COVERAGE_SOURCE,
-} from '#tests/data/checks/swift-tests.ts';
+} from '#tests/data/checks/swift/tests.ts';
 
 // This check needs the Xcode toolchain supplied by macOS.
 test.skipIf(!isMacos)(
-    'swift-tests/coverage reports a target under its coverage limit and passes after testing the uncovered function',
+    'swift/coverage reports a target under its coverage limit and passes after testing the uncovered function',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['swift-tests', 'xcode'], {
+            'gspot.toml': buildSettingsText(['swift', 'xcode'], {
                 tables: `[[coverage.swift_target]]
 name = "Inspection.xctest"
 lines = 100
@@ -47,13 +47,13 @@ xcode_destination = "platform=macOS"
             'ValueTests.swift': XCTEST_COVERAGE_TESTS,
         });
         try {
-            const command = ['check', '--only', 'swift-tests/coverage', '--json'];
+            const command = ['check', '--only', 'swift/coverage', '--json'];
             const failedCommand = await spawnGspot(sandbox.path, command);
             const failed = JSON.parse(failedCommand.stdout) as RunReport;
             expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
             expect(failed.checks).toMatchObject([
                 {
-                    check: 'swift-tests/coverage',
+                    check: 'swift/coverage',
                     status: 'failed',
                     findings: [{ rule: 'coverage', line: 1, message: matchSubstring('under the limit of 100') }],
                 },
@@ -68,14 +68,14 @@ xcode_destination = "platform=macOS"
             const correctedCommand = await spawnGspot(sandbox.path, command);
             const corrected = JSON.parse(correctedCommand.stdout) as RunReport;
             expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
-            expect(corrected.checks).toMatchObject([{ check: 'swift-tests/coverage', status: 'passed', findings: [] }]);
+            expect(corrected.checks).toMatchObject([{ check: 'swift/coverage', status: 'passed', findings: [] }]);
             expect(await readFile(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(XCTEST_COVERAGE_SOURCE);
             expect(await readFile(join(sandbox.path, 'Inspection.xcodeproj/project.pbxproj'), 'utf8')).toBe(
                 TEST_TARGET_PBXPROJ,
             );
         } finally {
             await rm(
-                buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift-tests/coverage'), {
+                buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift/coverage'), {
                     purpose: 'coverage',
                 }).folder,
                 { recursive: true, force: true },
@@ -90,14 +90,14 @@ async function prepareSwiftScope(scope: string) {
     const root = sandbox.path;
     const prefix = scope === '' ? '' : `${scope}/`;
     await createFileTree(root, {
-        'gspot.toml': buildSettingsText(scope === '' ? ['swift-tests'] : [], {
+        'gspot.toml': buildSettingsText(scope === '' ? ['swift'] : [], {
             level: 'all',
             tables:
                 scope === ''
                     ? ''
                     : `[[scope]]
 path = ${JSON.stringify(scope)}
-configurations = ["swift-tests"]
+configurations = ["swift"]
 `,
         }),
         [`${prefix}Sources/Value.swift`]: FIXED_PARSER_SOURCE,
@@ -159,14 +159,14 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     },
 );
 test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
-    'a swift-tests scope %s gets one complete SwiftLint tool file',
+    'a Swift test scope %s gets one complete SwiftLint tool file',
     async (scope) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSettingsText([], {
                 tables: `[[scope]]
 path = "${scope}"
-configurations = ["swift-tests"]
+configurations = ["swift"]
 `,
                 level: 'all',
             }),

@@ -118,7 +118,6 @@ export const CONFIGURATION_GUIDES: Readonly<Record<string, { path: string; title
     css: GUIDES.css,
     swift: GUIDES.swift,
     xcode: GUIDES.swift,
-    'swift-tests': GUIDES.swift,
     security: GUIDES.security,
     secrets: GUIDES.security,
     jest: GUIDES.testing,

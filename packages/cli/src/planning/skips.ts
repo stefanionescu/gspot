@@ -1,30 +1,49 @@
 import ignore from 'ignore';
-import { isScopeCovered } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning.ts';
 import { findMissingBuild } from '#cli/configurations/tools.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import type { Repository } from '#cli/types/repository/inventory.ts';
+import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { Skip, System, Session, ToolIgnore, PlanInputs, PlannedCheck, SettingsSkip } from '#cli/types/planning.ts';
 
+// A check that needs a dependency skips a scope whose projects declare none of them.
+function findDependencySkip(
+    dependencies: string[] | undefined,
+    scope: string,
+    dependencyFiles: Repository['dependencyFiles'],
+): Skip {
+    if (dependencies === undefined) return undefined;
+    const declared = listProjectDependencyNames(dependencyFiles, scope);
+    return dependencies.some((name) => declared.includes(name))
+        ? undefined
+        : { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
+}
+
+// A check that needs marked files skips a scope that holds none, as configuration detection does.
+function findTagSkip(tags: string[] | undefined, scope: string, files: Repository['files']): Skip {
+    if (tags === undefined) return undefined;
+    const marked = files.some(
+        (file) => file.kind === 'source' && isInScope(file.path, scope) && file.tags.some((tag) => tags.includes(tag)),
+    );
+    return marked ? undefined : { cause: 'condition', note: `Needs files marked ${tags.join(' or ')} in this scope.` };
+}
+
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
-function findConditionSkip(check: PlannedCheck, hasGit: boolean, dependencyFiles: DependencyFile[]): Skip {
-    const { configuration, git, dependencies } = { ...check.manifest?.configuration.when, ...check.check.when };
+function findConditionSkip(check: PlannedCheck, repository: Repository): Skip {
+    const { configuration, git, dependencies, tags } = { ...check.manifest?.configuration.when, ...check.check.when };
+    const scope = check.selection.scope.path;
     if (configuration !== undefined && !check.selection.view.configurations.includes(configuration))
         return {
             cause: 'condition',
             note: `Needs the ${configuration} configuration, which this scope does not select.`,
         };
-    if (
-        dependencies !== undefined &&
-        !dependencies.some((name) =>
-            listProjectDependencyNames(dependencyFiles, check.selection.scope.path).includes(name),
-        )
-    )
-        return { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
-    if (git !== true || hasGit) return undefined;
+    const skip =
+        findDependencySkip(dependencies, scope, repository.dependencyFiles) ??
+        findTagSkip(tags, scope, repository.files);
+    if (skip !== undefined || git !== true || repository.hasGit) return skip;
     return {
         cause: 'condition',
         note: 'This folder is not a Git repository, so the check has no history to read.',
@@ -128,11 +147,10 @@ export function findSettingsSkip(
 export function findFirstSkip(check: PlannedCheck, inputs: PlanInputs): Skip {
     const { session, options, platform } = inputs;
     const settings = session.settingsFile.settings;
-    const hasGit = session.repository.hasGit;
     const host = { platform, arch: process.arch };
     const selected = findSettingsSkip(settings, check.selection, check.check);
     if (selected !== undefined) return selected;
-    const condition = findConditionSkip(check, hasGit, session.repository.dependencyFiles);
+    const condition = findConditionSkip(check, session.repository);
     if (condition !== undefined) return condition;
     return options.forConfiguration === true ? undefined : findSystemSkip(check.check, check.tool, host);
 }

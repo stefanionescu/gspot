@@ -79,7 +79,7 @@ allowed_names = ["extend_exclude"]
 reason = "deptry names this TOML setting extend_exclude."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/swift-tests/coverage.ts", "packages/cli/src/checks/swift-tests/skip-reasons.ts"]
+paths = ["packages/cli/src/checks/swift/coverage.ts", "packages/cli/src/checks/swift/skip-reasons.ts"]
 allowed_names = ["module_type"]
 reason = "Swift coverage JSON names the module type field module_type."
 
@@ -631,11 +631,6 @@ reason = "The files are named after their topic and their npm packages."
 check = "structure/shared-prefixes"
 paths = ["packages/eslint-plugin/src/rules/**", "tests/unit/eslint-plugin/**"]
 reason = "ESLint rule IDs are the file names, and they share their first word by convention."
-
-[[ignore]]
-check = "structure/shared-prefixes"
-paths = ["tests/data/checks/swift-tests.ts", "tests/integration/checks/swift-tests.test.ts", "tests/unit/cli/checks/swift-tests.test.ts"]
-reason = "The test files are named after the swift and swift-tests configurations."
 
 [[ignore]]
 check = "structure/trivial-functions"

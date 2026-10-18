@@ -18,6 +18,7 @@ import { checkActionlint } from '#cli/checks/github-actions.ts';
 import { checkShellcheck } from '#cli/checks/bash/shellcheck.ts';
 import { checkPydoclint } from '#cli/checks/python/pydoclint.ts';
 import { checkDockerCompose } from '#cli/checks/docker/compose.ts';
+import { checkSwiftCoverage } from '#cli/checks/swift/coverage.ts';
 import { checkLoneFiles } from '#cli/checks/structure/lone-files.ts';
 import { checkLongFiles } from '#cli/checks/structure/long-files.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
@@ -31,6 +32,7 @@ import { checkBashFunctionSize } from '#cli/checks/bash/function-size.ts';
 import { checkBashScriptLayout } from '#cli/checks/bash/script-layout.ts';
 import { checkDockerTrivyImage } from '#cli/checks/docker/trivy-image.ts';
 import { checkSiteUnusedAssets } from '#cli/checks/site/unused-assets.ts';
+import { checkSwiftSkipReasons } from '#cli/checks/swift/skip-reasons.ts';
 import { checkGeneratedFiles } from '#cli/checks/gspot/generated-files.ts';
 import { checkBashInlineScripts } from '#cli/checks/bash/inline-scripts.ts';
 import { checkPythonPipInstalls } from '#cli/checks/python/pip-installs.ts';
@@ -38,11 +40,9 @@ import { checkLargeFiles, checkLocalFiles } from '#cli/checks/repository.ts';
 import { checkTsc, checkJavascriptTsc } from '#cli/checks/typescript/tsc.ts';
 import { checkTypescriptTsconfig } from '#cli/checks/typescript/tsconfig.ts';
 import { checkForeignKeyIndexes } from '#cli/checks/postgres/foreign-keys.ts';
-import { checkSwiftTestsCoverage } from '#cli/checks/swift-tests/coverage.ts';
 import { checkSharedPrefixes } from '#cli/checks/structure/shared-prefixes.ts';
 import { checkBashUnreadArguments } from '#cli/checks/bash/unread-arguments.ts';
 import { checkBashUnusedFunctions } from '#cli/checks/bash/unused-functions.ts';
-import { checkSwiftSkipReasons } from '#cli/checks/swift-tests/skip-reasons.ts';
 import { checkUnmatchedPatterns } from '#cli/checks/gspot/unmatched-patterns.ts';
 import { checkTrivialFunctions } from '#cli/checks/structure/trivial-functions.ts';
 import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/docs.ts';
@@ -119,8 +119,8 @@ const CHECK_IMPLEMENTATIONS = {
     'python/placeholder-docstrings': { check: checkPythonPlaceholderDocstrings },
     'python/import-linter': { check: checkImportLinter },
     'python/pip-installs': { check: checkPythonPipInstalls },
-    'swift-tests/skip-reasons': { check: checkSwiftSkipReasons },
-    'swift-tests/coverage': { check: checkSwiftTestsCoverage },
+    'swift/skip-reasons': { check: checkSwiftSkipReasons },
+    'swift/coverage': { check: checkSwiftCoverage },
     'xcode/entitlements': { check: checkXcodeEntitlements },
     'xcode/app-transport-security': { check: checkAppTransportSecurity },
     'xcode/xcstrings': { check: checkXcstrings },
