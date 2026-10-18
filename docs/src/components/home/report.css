@@ -65,28 +65,6 @@
     line-height: 1.5;
 }
 
-.passed-list {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 2px 16px;
-    margin: 12px 0 0;
-    padding: 0;
-    list-style: none;
-    font-family: var(--sl-font-mono);
-    color: var(--sl-color-gray-1);
-}
-
-.passed-list li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-}
-
-.passed-list .icon-16 {
-    color: var(--home-pass);
-}
-
 .summary {
     margin-block-start: 16px;
     padding-block-start: 12px;
@@ -105,12 +83,6 @@
 
 .summary .passed {
     color: var(--home-pass);
-}
-
-@media (width >= 50rem) {
-    .passed-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
 }
 
 @media (width >= 50rem) {

@@ -2,16 +2,7 @@
 import assert from 'node:assert/strict';
 import InlineText from './InlineText.astro';
 import example from '../../config/example.json';
-import { Icon } from '@astrojs/starlight/components';
-
-import {
-    CODE_TOKENS,
-    PASSED_CHECK,
-    COMMIT_RECORD,
-    REPORT_SUMMARY,
-    PASSED_CHECK_LIMIT,
-    SUMMARY_SENTENCE_BREAK,
-} from '../../config/home.ts';
+import { CODE_TOKENS, COMMIT_RECORD, SUMMARY_SENTENCE_BREAK } from '../../config/home.ts';
 
 type ExampleToken = { text: string; kind: string };
 type ExampleLine = { number: number; tokens: ExampleToken[] };
@@ -66,10 +57,6 @@ const failedChecks = [...new Set(example.findings.map(({ check }) => check))].ma
                 .join(':'),
         })),
 }));
-const passedChecks = [...example.accepted.matchAll(PASSED_CHECK)].map((match) => match[0]);
-const visiblePassedChecks = passedChecks.slice(0, PASSED_CHECK_LIMIT);
-const remainingPassedChecks = passedChecks.length - visiblePassedChecks.length;
-const rejectedSummary = [...example.rejected.matchAll(REPORT_SUMMARY)].map((match) => match[0]).join('');
 ---
 
 <div class="example-grid">
@@ -148,7 +135,7 @@ const rejectedSummary = [...example.rejected.matchAll(REPORT_SUMMARY)].map((matc
                 </>
             ))}
             <p class="summary">
-                {rejectedSummary.split(SUMMARY_SENTENCE_BREAK).map((sentence, index) => (
+                {example.rejected_summary.split(SUMMARY_SENTENCE_BREAK).map((sentence, index) => (
                     <>
                         {index > 0 && ' '}
                         {index === 0 ? <strong class="failed">{sentence}</strong> : sentence}
@@ -192,15 +179,6 @@ const rejectedSummary = [...example.rejected.matchAll(REPORT_SUMMARY)].map((matc
         </figcaption>
         <div class="panel-body terminal">
             <p class="muted">Checked the staged files.</p>
-            <ul class="passed-list" aria-label="Passed checks">
-                {visiblePassedChecks.map((name) => (
-                    <li>
-                        <Icon name="approve-check" size="1rem" class="icon-16" />
-                        {name}
-                    </li>
-                ))}
-                <li class="muted">and {remainingPassedChecks} more</li>
-            </ul>
             <p class="summary">
                 {example.passed.split(SUMMARY_SENTENCE_BREAK).map((sentence, index) => (
                     <>

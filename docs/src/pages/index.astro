@@ -1,16 +1,16 @@
 ---
-import { REPOSITORY_URL } from '../config/site.ts';
 import Example from '../components/home/Example.astro';
 import InlineText from '../components/home/InlineText.astro';
-import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { DESCRIPTION, REPOSITORY_URL  } from '../config/site.ts';
 import '../components/home/page.css';
-import { TOOLS, HOME_TITLE, CHECK_AREAS, HOME_DESCRIPTION } from '../config/home.ts';
+import { TOOLS, HOME_TITLE, CHECK_AREAS } from '../config/home.ts';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 ---
 
 <StarlightPage
     frontmatter={{
         title: HOME_TITLE,
-        description: HOME_DESCRIPTION,
+        description: DESCRIPTION,
         hero: { title: HOME_TITLE },
         template: 'splash',
         editUrl: false,

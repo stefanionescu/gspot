@@ -1,4 +1,4 @@
-/* Hero. Phone: logo above a centered column. From 50rem: text left, logo right, as today. */
+/* Hero. Phone: logo above a centered column. From 50rem: text left, logo right. */
 .hero {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

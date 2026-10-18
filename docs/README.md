@@ -17,9 +17,10 @@ person who releases.
 
 Keep the required notices with every distributed copy of the assets.
 
-- Tool logos use Simple Icons 16.33.0, CC0-1.0. The owners hold the trademarks for these names and logos.
-- [Semgrep license notice](public/licenses/semgrep.txt).
-- [ShellCheck license notice](public/licenses/shellcheck.txt).
-- [Turborepo license notice](public/licenses/turborepo.txt).
+- Tool logos, except Semgrep and ShellCheck, come from Simple Icons 16.33.0 under CC0-1.0. The owners hold the trademarks
+  for these names and logos.
+- The Semgrep logo: [Semgrep license notice](public/licenses/semgrep.txt).
+- The ShellCheck icon: [ShellCheck license notice](public/licenses/shellcheck.txt).
+- The home page layout adapts the Turborepo homepage: [Turborepo license notice](public/licenses/turborepo.txt).
 - The site self-hosts Geist Sans and Geist Mono from pinned Fontsource packages. The build keeps each font license
   under `licenses/` in the output.

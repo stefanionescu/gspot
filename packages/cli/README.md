@@ -27,10 +27,10 @@ ShellCheck.
 
 | Package manager                | Install                                                                          | Run                  |
 | ------------------------------ | -------------------------------------------------------------------------------- | -------------------- |
-| npm                            | `npm install --save-dev --save-exact @gspothq/cli`                               | `npx gspot`          |
-| pnpm                           | `pnpm add --save-dev --save-exact @gspothq/cli`                                  | `pnpm exec gspot`    |
-| Yarn                           | `yarn add --dev --exact @gspothq/cli`                                            | `yarn exec gspot`    |
-| Bun                            | `bun add --dev --exact @gspothq/cli`                                             | `bunx gspot`         |
+| npm                            | `npm i -D -E @gspothq/cli`                                                       | `npx gspot`          |
+| pnpm                           | `pnpm add -D -E @gspothq/cli`                                                    | `pnpm exec gspot`    |
+| Yarn                           | `yarn add -D -E @gspothq/cli`                                                    | `yarn exec gspot`    |
+| Bun                            | `bun add -d -E @gspothq/cli`                                                     | `bunx gspot`         |
 | mise, without a `package.json` | `mise use --pin node@24 --tool-option allow_low_downloads=true npm:@gspothq/cli` | `mise exec -- gspot` |
 
 ## Set up

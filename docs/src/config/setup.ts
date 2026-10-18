@@ -1,3 +1,5 @@
+import { SITE_URL } from './site.ts';
+
 // Two ways to start with gspot: the commands for each package manager, or a prompt that sends a coding agent to the
 // steps in /llms.txt. The home page and the Quickstart share these values.
 export const SETUP_COMMANDS = [
@@ -28,11 +30,11 @@ export const SETUP_COMMANDS = [
     },
 ] as const;
 
-export const AGENT_PROMPT =
-    'Set up gspot in this repository. Run curl -fsSL https://generativespotting.com/llms.txt and follow its steps.';
+/** The llms.txt address, and the command that prints it. */
+export const LLMS_URL = `${SITE_URL}/llms.txt`;
+export const LLMS_COMMAND = `curl -fsSL ${LLMS_URL}`;
 
-export const LLMS_DESCRIPTION =
-    'gspot installs linters and agent rules for a repository, then runs them on every commit.';
+export const AGENT_PROMPT = `Set up gspot in this repository. Run ${LLMS_COMMAND} and follow its steps.`;
 
 export const AGENT_STEPS = `## Steps for coding agents
 

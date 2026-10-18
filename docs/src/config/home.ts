@@ -1,6 +1,4 @@
 export const HOME_TITLE = 'Lint the code your AI agent writes';
-export const HOME_DESCRIPTION =
-    'gspot installs linters and agent rules for your repository, then runs them on every commit.';
 export const TOOLS = [
     { name: 'ESLint', icon: '/tools/eslint.svg' },
     { name: 'Prettier', icon: '/tools/prettier.svg' },
@@ -30,11 +28,9 @@ export const CHECK_AREAS = [
 ] as const;
 export const CODE_TOKENS =
     /(?<string>'[^']*')|(?<keyword>\b(?:import type|import|from|export async function|try|catch|await)\b)|(?<type>\bCart\b)|(?<function>\b(?:pay|charge)\b)/gu;
-export const PASSED_CHECK = /^\S+(?=\s+passed\s)/gmu;
-export const REPORT_SUMMARY =
-    /^Failed: \d+ checks? with \d+ findings?\. Passed: \d+ checks?\. Skipped: \d+ checks?\./gmu;
-export const PASSED_CHECK_LIMIT = 10;
 export const SUMMARY_SENTENCE_BREAK = /(?<=\.) /u;
+/** The places a long URL may wrap: after each slash that ends a part of the address. */
+export const URL_BREAK = /(?<=\/)(?!\/)/u;
 export const COMMIT_RECORD = '[main 066501e] feat: Add checkout';
 
 export const INLINE_CODE_SPAN = /(`[^`]+`)/u;

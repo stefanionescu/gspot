@@ -1,9 +1,10 @@
 ---
+import { URL_BREAK } from '../../config/home.ts';
 import { Icon } from '@astrojs/starlight/components';
-import { AGENT_PROMPT, SETUP_COMMANDS } from '../../config/setup.ts';
+import { LLMS_URL, AGENT_PROMPT, LLMS_COMMAND, SETUP_COMMANDS } from '../../config/setup.ts';
 
 const [first] = SETUP_COMMANDS;
-const [promptStart, promptEnd] = AGENT_PROMPT.split('curl -fsSL https://generativespotting.com/llms.txt');
+const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
 ---
 
 <home-setup class="setup" data-mode="human">
@@ -67,11 +68,13 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split('curl -fsSL https://generati
             <p class="agent-prompt">
                 {promptStart}
                 <span class="em">
-                    <span class="nowrap">curl -fsSL</span> https://
-                    <wbr />
-                    generativespotting.com/
-                    <wbr />
-                    llms.txt
+                    <span class="nowrap">curl -fsSL</span>{' '}
+                    {LLMS_URL.split(URL_BREAK).map((part, index) => (
+                        <>
+                            {index > 0 && <wbr />}
+                            {part}
+                        </>
+                    ))}
                 </span>
                 {promptEnd}
             </p>

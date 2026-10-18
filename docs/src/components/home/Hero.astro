@@ -1,12 +1,13 @@
 ---
 import Setup from './Setup.astro';
-import { HOME_TITLE, HOME_DESCRIPTION } from '../../config/home.ts';
+import { HOME_TITLE } from '../../config/home.ts';
+import { DESCRIPTION } from '../../config/site.ts';
 ---
 
 <section class="hero" aria-labelledby="_top">
     <div class="hero-copy">
         <h1 id="_top">{HOME_TITLE}</h1>
-        <p class="lead">{HOME_DESCRIPTION}</p>
+        <p class="lead">{DESCRIPTION}</p>
         <Setup />
     </div>
     <div class="hero-visual" aria-hidden="true">

@@ -67,7 +67,7 @@ main:has(.landing) {
     white-space: nowrap;
 }
 
-/* Tools. Equal tiles in a grid: 3 per row on phones, 6 on tablets, 12 on desktops. */
+/* Tools: 4 per row on phones, 8 in one row from 50rem. */
 .tools {
     padding-block: 32px 56px;
     border-top: 1px solid var(--sl-color-gray-5);
@@ -82,7 +82,7 @@ main:has(.landing) {
 
 .tools ul {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 20px 8px;
     margin-block-start: 24px;
     padding: 0;
@@ -111,14 +111,8 @@ main:has(.landing) {
 
 @media (width >= 50rem) {
     .tools ul {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(8, minmax(0, 1fr));
         gap: 24px 8px;
-    }
-}
-
-@media (width >= 72rem) {
-    .tools ul {
-        grid-template-columns: repeat(12, minmax(0, 1fr));
     }
 }
 

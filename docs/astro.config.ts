@@ -5,13 +5,14 @@ import { pruneUnusedStyles } from './src/styles.ts';
 import { SIDEBAR } from './src/config/navigation.ts';
 import { readReferenceData } from '#cli/reference.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
+import { LLMS_PAGES, AGENT_STEPS } from './src/config/setup.ts';
 import { description } from '@gspothq/cli/package.json' with { type: 'json' };
-import { LLMS_PAGES, AGENT_STEPS, LLMS_DESCRIPTION } from './src/config/setup.ts';
 
 import {
     LOGO,
     EDIT_URL,
     SITE_URL,
+    DESCRIPTION,
     SOCIAL_IMAGE,
     FONT_PACKAGES,
     REPOSITORY_URL,
@@ -62,7 +63,7 @@ export default defineConfig({
             plugins: [
                 starlightLlmsTxt({
                     projectName: 'gspot',
-                    description: LLMS_DESCRIPTION,
+                    description: DESCRIPTION,
                     details: AGENT_STEPS,
                     ...LLMS_PAGES,
                 }),
