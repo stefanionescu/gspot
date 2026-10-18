@@ -39,7 +39,7 @@ refused_options = [
 replace = [".shellcheckrc"]
 rule_url = "https://www.shellcheck.net/wiki/{rule}"
 scoop = "shellcheck"
-suppression = { marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reason>\\S.*)" }
+suppression = { marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reason>\\S.*)", example = "# shellcheck disable=SC2086 # reason: the word splitting is wanted here" }
 version = "0.11.0"
 winget = "koalaman.shellcheck"
 

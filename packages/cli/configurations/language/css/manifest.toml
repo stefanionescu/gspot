@@ -17,7 +17,7 @@ extensions = [".css"]
 name = "stylelint"
 npm = "stylelint"
 replace = [".stylelintrc", ".stylelintrc.json", ".stylelintrc.js", ".stylelintrc.cjs", ".stylelintrc.mjs", ".stylelintrc.yml", ".stylelintrc.yaml", "stylelint.config.js", "stylelint.config.cjs", "stylelint.config.mjs"]
-suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:\\*/)?$" }
+suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:\\*/)?$", example = "/* stylelint-disable-next-line declaration-no-important -- the vendor widget sets its own color */" }
 version = "16.23.1"
 
 [[tool.replace_key]]

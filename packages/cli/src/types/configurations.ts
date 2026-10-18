@@ -234,6 +234,7 @@ export type ToolDeclaration = {
         reason: string;
         inline_marker?: string | undefined;
         forbidden?: boolean | undefined;
+        example?: string | undefined;
     };
     env?: Record<string, string>;
     refused_options?: { paths: string[]; message: string }[];

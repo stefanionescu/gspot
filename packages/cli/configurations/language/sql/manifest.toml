@@ -16,7 +16,7 @@ mise = "pipx:sqlfluff"
 name = "sqlfluff"
 pypi = "sqlfluff"
 replace = [".sqlfluff", ".sqlfluffignore"]
-suppression = { marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)" }
+suppression = { marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)", example = "SELECT * FROM orders -- noqa: AM04 -- the view mirrors every column" }
 version = "4.3.0"
 
 [[tool.replace_key]]

@@ -19,7 +19,7 @@ install_hint = "Run: python -m pip install pytest"
 min_version = "7.0.0"
 name = "pytest"
 pypi = "pytest"
-suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)" }
+suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "if TYPE_CHECKING:  # pragma: no cover # imports for type checkers only" }
 system = true
 version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 

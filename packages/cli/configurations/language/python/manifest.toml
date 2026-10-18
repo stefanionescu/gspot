@@ -103,7 +103,7 @@ name = "ruff"
 pypi = "ruff"
 replace = ["ruff.toml", ".ruff.toml"]
 rule_url = "https://docs.astral.sh/ruff/rules/{rule}/"
-suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)[^#]*# ?(?<reason>\\S.*)" }
+suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)[^#]*# ?(?<reason>\\S.*)", example = "import plugins  # noqa: F401 # the module registers its plugins on import" }
 version = "0.16.8"
 
 [[tool.replace_key]]
@@ -115,7 +115,7 @@ min_version = "1.20.0"
 name = "basedpyright"
 npm = "basedpyright"
 replace = ["pyrightconfig.json"]
-suppression = { marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)" }
+suppression = { marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "value = payload['key']  # type: ignore[index] # the payload is checked above" }
 version = "1.40.1"
 
 [[tool.replace_key]]

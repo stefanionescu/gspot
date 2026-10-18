@@ -11,7 +11,7 @@ extensions = [".html", ".htm"]
 name = "html-validate"
 npm = "html-validate"
 replace = [".htmlvalidate.json", ".htmlvalidate.js", ".htmlvalidate.cjs"]
-suppression = { marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=\\s|\\]|$)", reason = "(?: -- |: )(?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*\\]?\\s*(?:--!?>)?$" }
+suppression = { marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=\\s|\\]|$)", reason = "(?: -- |: )(?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*\\]?\\s*(?:--!?>)?$", example = "<!-- [html-validate-disable-next no-inline-style -- the email client strips classes] -->" }
 version = "11.6.1"
 
 [[tool_file]]

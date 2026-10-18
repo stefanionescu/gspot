@@ -19,8 +19,8 @@ import { Command, type Argument } from '@commander-js/extra-typings';
 import { VERSION_PIN_COMMANDS } from '#cli/config/commands/program.ts';
 import { PROCESS_ARGUMENTS_START } from '#cli/config/system/processes.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { COMMAND_HELP, HELP_TERM_WIDTH, PROGRAM_HELP_FOOTER } from '#cli/config/commands/help.ts';
 import { printResult, printFailure, isColorAllowed, setOutputOptions } from '#cli/system/terminal.ts';
+import { CODE_MARK, COMMAND_HELP, HELP_TERM_WIDTH, PROGRAM_HELP_FOOTER } from '#cli/config/commands/help.ts';
 
 if (import.meta.main) process.exitCode = await runProgram(process.argv.slice(PROCESS_ARGUMENTS_START));
 
@@ -88,6 +88,8 @@ function buildProgram(onResult: CommandCompletion): Command {
         command.helpOption('-h, --help', help.options['-h, --help']);
         command.option('--json', help.options['--json']);
         command.addHelpText('after', `\nExit codes:\n${help.exitCodes}\n\nExample:\n  ${help.example}\n`);
+        // The help text marks code for the reference pages; the terminal prints it without the marks.
+        command.configureHelp({ styleDescriptionText: (text) => text.replaceAll(CODE_MARK, '') });
     }
     program.configureHelp({ formatHelp: () => formatProgramHelp(program) });
     return program;

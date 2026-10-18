@@ -27,7 +27,7 @@ mise = "swiftlint"
 name = "swiftlint"
 replace = [".swiftlint.yml", ".swiftlint.yaml"]
 rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
-suppression = { marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)" }
+suppression = { marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)", example = "// swiftlint:disable:next force_unwrapping - the URL is a literal" }
 version = "0.63.2"
 version_command = ["version"]
 
@@ -36,7 +36,7 @@ builds = ["macos", "linux"]
 min_version = "0.54.0"
 name = "swiftformat"
 replace = [".swiftformat"]
-suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)" }
+suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)", example = "// swiftformat:disable:next redundantSelf - the closure needs self" }
 version = "0.61.1"
 # The GitHub release ships an app bundle beside the executable, which mise skips.
 brew = "swiftformat"
@@ -51,7 +51,7 @@ min_version = "3.0.0"
 mise = "periphery"
 name = "periphery"
 replace = [".periphery.yml", ".periphery.yaml"]
-suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)" }
+suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)", example = "// periphery:ignore - the runtime calls it by name" }
 version = "3.6.0"
 version_command = ["version"]
 

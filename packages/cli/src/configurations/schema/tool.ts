@@ -83,7 +83,12 @@ const toolSchema = z
                 inline_marker: regexSchema.optional(),
                 reason: regexSchema,
                 forbidden: z.boolean().optional(),
+                example: z.string().optional(),
             } satisfies SchemaShape<NonNullable<ToolDeclaration['suppression']>>)
+            .refine((form) => form.forbidden === true || form.example !== undefined, {
+                message: 'A suppression that gspot accepts shows an example with a reason.',
+                path: ['example'],
+            })
             .optional(),
         env: z.record(z.string(), z.string()).optional(),
         refused_options: z

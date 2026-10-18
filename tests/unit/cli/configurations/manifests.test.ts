@@ -194,3 +194,26 @@ test('tool-files assets are discovered and their metadata selects their consumer
     ]);
     expect(() => buildManifest('example', { tables: 'tool_file = "invalid"\n' })).toThrow('tool_file');
 });
+
+test('each accepted suppression example matches its marker and gives a reason', () => {
+    const forms = [...readManifests(createReadCache(process.cwd())).values()].flatMap((manifest) =>
+        manifest.tools.flatMap((tool) =>
+            typeof tool === 'string' || tool.suppression === undefined || tool.suppression.forbidden === true
+                ? []
+                : [{ name: tool.name, ...tool.suppression }],
+        ),
+    );
+    expect(forms.length).toBeGreaterThan(0);
+    for (const form of forms) {
+        const example = form.example ?? '';
+        const markers = [form.marker, form.inline_marker ?? form.marker].map((pattern) => new RegExp(pattern, 'u'));
+        expect(
+            markers.some((marker) => marker.test(example)),
+            form.name,
+        ).toBe(true);
+        expect(
+            new RegExp(form.reason, 'u').exec(example)?.groups?.['reason']?.split(' ').length,
+            form.name,
+        ).toBeGreaterThan(1);
+    }
+});
