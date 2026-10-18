@@ -28,6 +28,13 @@ export const CHECK_RUN_LABELS = {
     history: 'once for pushed history',
 } as const;
 
+/** What each need of a check asks for. */
+export const CHECK_NEEDS_LABELS = {
+    build: 'a build of the project',
+    docker: 'Docker, running',
+    network: 'network access',
+} as const;
+
 export const REFERENCE_FOLDERS = {
     commands: 'commands',
     configurations: 'configurations',

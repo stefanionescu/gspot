@@ -1,7 +1,7 @@
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
 import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
-import { CHECK_RUN_LABELS, REFERENCE_FOLDERS, SETTING_PLACEHOLDER } from '../config/reference.ts';
+import { CHECK_RUN_LABELS, REFERENCE_FOLDERS, CHECK_NEEDS_LABELS, SETTING_PLACEHOLDER } from '../config/reference.ts';
 
 type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 type CheckDeclaration = Manifest['checks'][number];
@@ -25,13 +25,12 @@ function formatCheckEnvironment(check: CheckDeclaration): string[] {
         ['Runs', runs],
         ['Tool', formatToolNames(check)],
         ['Operating systems', check.operating_systems?.join(', ')],
-        ['Needs', check.needs?.join(', ')],
-        [
-            'Required setting',
-            check.when?.setting === undefined ? undefined : `\`${check.when.setting}\`; skipped until it is set.`,
-        ],
+        ['Needs', check.needs?.map((need) => CHECK_NEEDS_LABELS[need]).join(', ')],
     ];
-    return attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`]));
+    return [
+        ...attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`])),
+        ...(check.when?.setting === undefined ? [] : [`- Skipped while \`${check.when.setting}\` is empty.\n`]),
+    ];
 }
 
 /**
@@ -45,7 +44,7 @@ export function buildCheckPage(check: CheckDeclaration, manifest: Manifest): Ref
         check.stage === 'manual' ? `manual; runs only with \`gspot check --only ${check.name}\`` : check.stage;
     const lines = [
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Details\n\n`,
-        `- Configuration: [${manifest.configuration.name}](/reference/${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}/)\n- Stage: ${stage}\n- Level: ${check.level}\n`,
+        `- Configuration: [${manifest.configuration.name}](/reference/${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}/)\n- [Stage](/start/concepts/#stage): ${stage}\n- [Level](/start/concepts/#levels): ${check.level}\n`,
         ...formatCheckEnvironment(check),
         formatSection('Example', check.example ?? ''),
     ];
