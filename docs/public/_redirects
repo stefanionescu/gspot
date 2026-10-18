@@ -25,7 +25,7 @@
 /guides/dependency-licenses/ /checks/dependencies/ 301
 /guides/security/ /checks/security/ 301
 /guides/troubleshooting/ /use/troubleshooting/ 301
-/guides/client-environment/ /reference/eslint-plugin/use/ 301
+/guides/client-environment/ /reference/eslint-plugin/ 301
 /reference/exit-codes/ /reference/commands/#exit-codes 301
 /reference/gspot-toml/scope/ /reference/gspot-toml/#scope 301
 /start/adopt/ /start/migrate/ 301
@@ -48,3 +48,4 @@
 /reference/gspot-toml/limits/ /reference/gspot-toml/ 301
 /reference/gspot-toml/naming/ /reference/gspot-toml/ 301
 /reference/gspot-toml/command_check/ /reference/gspot-toml/ 301
+/reference/eslint-plugin/use/ /reference/eslint-plugin/ 301

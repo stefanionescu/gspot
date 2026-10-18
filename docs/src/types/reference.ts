@@ -8,3 +8,6 @@ export type ReferencePage = {
     };
     body: string;
 };
+
+/** One plugin rule on the ESLint plugin page: its name, page, the configs that turn it on, and what it finds. */
+export type PluginRule = { name: string; link: string; configs: string[]; summary: string };

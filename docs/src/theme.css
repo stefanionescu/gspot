@@ -387,41 +387,6 @@ mobile-starlight-toc .display-current {
     font-size: 0.8125rem;
 }
 
-/* Definition lists on reference pages: a name, then its meaning; two columns from 50rem. */
-.sl-markdown-content:where(:not(:has(> .landing))) dl {
-    border-top: 1px solid var(--sl-color-gray-5);
-}
-
-.sl-markdown-content:where(:not(:has(> .landing))) dt {
-    padding-top: 12px;
-    font-weight: 500;
-}
-
-.sl-markdown-content:where(:not(:has(> .landing))) dd {
-    margin: 4px 0 0;
-    padding: 0 0 12px;
-    border-bottom: 1px solid var(--sl-color-gray-5);
-    font-size: 0.9375rem;
-    line-height: 1.6;
-}
-
-@media (width >= 50rem) {
-    .sl-markdown-content:where(:not(:has(> .landing))) dl {
-        display: grid;
-        grid-template-columns: 13rem minmax(0, 1fr);
-    }
-
-    .sl-markdown-content:where(:not(:has(> .landing))) :is(dt, dd) {
-        margin: 0;
-        padding-block: 12px;
-        border-bottom: 1px solid var(--sl-color-gray-5);
-    }
-
-    .sl-markdown-content:where(:not(:has(> .landing))) dd {
-        padding-inline-start: 16px;
-    }
-}
-
 /* Tabs: 44 px targets that fit five labels on a phone. */
 starlight-tabs .tab > [role='tab'] {
     min-height: 44px;

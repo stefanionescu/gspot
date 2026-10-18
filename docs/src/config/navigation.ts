@@ -59,7 +59,7 @@ export const SIDEBAR = [
             { label: 'Checks', slug: 'reference/checks/index' },
             { slug: 'reference/configurations/index' },
             { slug: 'reference/gspot-toml/index' },
-            { slug: 'reference/eslint-plugin/index' },
+            { slug: 'reference/eslint-plugin' },
             { slug: 'reference/json-output' },
             { slug: 'reference/generated-files' },
         ],

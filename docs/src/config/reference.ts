@@ -1,7 +1,7 @@
 /** A code span, which generated reference text keeps as written. */
 const CODE_SPAN = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)/u;
-/** A tag that generated reference text writes on purpose: a heading with its anchor, code, or a definition list. */
-const KEPT_TAG = /<\/?(?:h[2-6]|code|d[dlt])(?:\s[^<>]*)?>/u;
+/** A tag that generated reference text writes on purpose: a heading with its anchor, or code. */
+const KEPT_TAG = /<\/?(?:h[2-6]|code)(?:\s[^<>]*)?>/u;
 
 const GUIDES = {
     javascript: { path: '/languages/javascript-typescript/', title: 'JavaScript and TypeScript' },
@@ -58,15 +58,14 @@ export const LEVEL_DESCRIPTIONS = {
     all: 'Also naming, wording, code structure, doc comments, declaration order, duplication, API style, and complexity. Choose it for a new repository or one that coding agents write.',
 } as const;
 
-/** The level of a plugin rule that no level turns on. */
-export const PLUGIN_RULE_WITHOUT_LEVEL = 'none; turn it on in your ESLint config';
-
 export const REFERENCE_FOLDERS = {
     commands: 'commands',
     configurations: 'configurations',
     checks: 'checks',
     eslintPlugin: 'eslint-plugin',
 } as const;
+/** The first sentence of a text: everything up to the first period that ends a sentence. */
+export const FIRST_SENTENCE = /^[\s\S]*?\.(?=\s|$)/u;
 export const REFERENCE_COLLECTION_NAME = 'gspot-reference';
 export const REFERENCE_IDS_KEY = 'reference-ids';
 export const PAGES_FOLDER = 'src/content/docs';
