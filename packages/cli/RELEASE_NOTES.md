@@ -2,6 +2,49 @@
 
 The newest version comes first. The release task copies the section of the version it publishes into the GitHub release.
 
+## 0.3.1
+
+`@gspothq/cli` 0.3.1 fixes repositories that use Husky, names the fix when `gspot.toml` holds a key that gspot
+refuses, and stops changing how your project installs packages. `@gspothq/eslint-plugin` stays at 0.2.0.
+
+### Upgrade from 0.3.0
+
+1. Install 0.3.1 with your package manager, such as `npm i -D -E @gspothq/cli@0.3.1`, or with
+   `mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@0.3.1`.
+2. Delete any `[[ignore]]` record for `dependencies/release-age`.
+3. Run `gspot apply`, then `gspot install` and `gspot check`.
+4. gspot no longer writes a release hold into the install settings of your project. The keys it wrote before stay in
+   your files. Delete them if you do not want your own installs held back:
+
+    | File                  | Keys                                                             |
+    | --------------------- | ---------------------------------------------------------------- |
+    | `bunfig.toml`         | `[install] minimumReleaseAge`, `minimumReleaseAgeExcludes`       |
+    | `.npmrc`              | `min-release-age`, `min-release-age-exclude[]`                   |
+    | `pnpm-workspace.yaml` | `minimumReleaseAge`, `minimumReleaseAgeExclude`                  |
+    | `.yarnrc.yml`         | `npmMinimalAgeGate`, `npmPreapprovedPackages`                    |
+    | `pyproject.toml`      | `[tool.uv] exclude-newer`                                        |
+    | `mise.toml`           | `[settings] minimum_release_age`, `minimum_release_age_excludes` |
+
+### Changes
+
+- The release hold covers only the tools that gspot installs in `.gspot/`, and `dependencies.min_release_age_days`
+  sets it. The `dependencies/release-age` check goes with the project hold. The Bun scanner still goes into
+  `bunfig.toml` when `dependencies.bun_scanner` names one.
+- Level `recommended` asks every tsconfig for `strict` only, as the recommended base of tsconfig/bases does.
+  `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, and `noFallthroughCasesInSwitch`
+  move to level `all`.
+- A refused `gspot.toml` key names the keys of its table that look like it, such as `bun_scanner` for `scanner`. When
+  `.gspot/version` differs from the running gspot, the refusal also links the release notes of the running version.
+- Vale installs fixed releases of its upstream styles: Google 0.7.1, write-good 0.4.1, proselint 0.3.4, alex 0.2.3,
+  and Harper 0.1.0.
+- The init plan says that the rules in the tool files it replaces do not carry over.
+
+### Fixes
+
+- Husky 9: `gspot check` and `gspot doctor` stopped with `EISDIR` after install, because gspot read the `.husky/_`
+  folder as a hook file. The init plan also listed Husky's stubs as your own hooks.
+- The package description and the README open with the gspot description again.
+
 ## 0.3.0
 
 `@gspothq/cli` 0.3.0 moves the files gspot writes into one folder per configuration, replaces the `[architecture]`
