@@ -4,6 +4,7 @@ import { afterAll, beforeAll } from 'bun:test';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { linkPackages } from '#tests/setup/modules.ts';
+import { runCommand } from '#tests/setup/processes.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
@@ -21,6 +22,20 @@ import type { Sandbox, SandboxPlan, SandboxFiles, InstalledSandboxPlan } from '#
 import { JSON_INDENT, REGISTRY_HOST, SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/data/test-setup.ts';
 import { rm, open, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
+/**
+ * Name the installed npm in the root package.json, as a repository at level all must.
+ * @param root the sandbox folder with a package.json.
+ */
+async function pinSandboxNpm(root: string): Promise<void> {
+    const npm = await runCommand(['npm', '--version'], { cwd: root });
+    const path = join(root, 'package.json');
+    const manifest = JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
+    await writeFile(
+        path,
+        JSON.stringify({ ...manifest, packageManager: `npm@${npm.stdout.trim()}` }, null, JSON_INDENT) + '\n',
+    );
+}
+
 /** Write the files, package.json, and tsconfig.json of a sandbox. */
 async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     await createFileTree(root, {
@@ -37,6 +52,7 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
             : { 'tsconfig.json': JSON.stringify(plan.tsconfig, null, JSON_INDENT) + '\n' }),
         ...plan.files,
     });
+    if (plan.dependencies !== undefined) await pinSandboxNpm(root);
 }
 
 /** Build one isolated sandbox and run its checks in the current process. */
@@ -271,6 +287,7 @@ function shareProseSandbox(): () => Sandbox {
 }
 
 export {
+    pinSandboxNpm,
     createSandbox,
     changeSandbox,
     updateSandbox,

@@ -4,6 +4,7 @@ import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { pinSandboxNpm } from '#tests/setup/sandbox.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
@@ -15,6 +16,7 @@ async function prepareLooseSchemaProject(root: string): Promise<Record<string, s
     await createFileTree(root, {
         ...ZOD_PROJECT_FILES,
     });
+    await pinSandboxNpm(root);
     await linkInstalledModules(join(root, 'node_modules'));
     commitAll(root);
     return { PATH: buildSandboxPath() };

@@ -133,15 +133,14 @@ test('a packed install runs the pinned language tools, reports their findings, a
         expect(passed.code, passed.stdout + passed.stderr).toBe(0);
         expect(passed.report.skips).toStrictEqual([]);
         expect(passed.report.checks).toMatchObject([{ check: check.only, status: 'passed', findings: [] }]);
-        if (check === PROSE_CHECK) {
-            const vocabulary = await readFile(
-                join(installation.root, '.gspot/config/vale/styles/config/vocabularies/words/accept.txt'),
-                'utf8',
-            );
-            const acceptedWords = vocabulary.trim().split('\n');
-            expect(acceptedWords).toContain('NebulaConfiguration');
-            expect(acceptedWords).toContain('Python');
-        }
     }
+    // The Vale word list exists at level all, which the Swift check turned on.
+    const vocabulary = await readFile(
+        join(installation.root, '.gspot/config/vale/styles/config/vocabularies/words/accept.txt'),
+        'utf8',
+    );
+    const acceptedWords = vocabulary.trim().split('\n');
+    expect(acceptedWords).toContain('NebulaConfiguration');
+    expect(acceptedWords).toContain('Python');
     await assertInstalledSql(installation);
 });

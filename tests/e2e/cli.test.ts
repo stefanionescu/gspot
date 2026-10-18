@@ -20,11 +20,12 @@ async function assertReplacedFiles(root: string, output: string): Promise<void> 
         'prettier.config.mjs',
         '.editorconfig',
     ]);
+    const formatter = await readFile(join(root, 'prettier.config.mjs'), 'utf8');
     expect({
         settings: await isOnDisk(join(root, 'gspot.toml')),
-        formatter: await isOnDisk(join(root, 'prettier.config.mjs')),
+        authoredFormatter: formatter.includes('formatter stdout'),
         instructions: await isOnDisk(join(root, 'CLAUDE.md')),
-    }).toStrictEqual({ settings: true, formatter: false, instructions: true });
+    }).toStrictEqual({ settings: true, authoredFormatter: false, instructions: true });
     expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(STARTING_FILES['CLAUDE.md']);
     const agents = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect({
