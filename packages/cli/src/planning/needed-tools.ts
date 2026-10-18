@@ -115,6 +115,20 @@ export function listRequiredTools(check: PlannedCheck): string[] {
 }
 
 /**
+ * List the configured checks of one scope: its own checks and the checks that run once for the repository.
+ *
+ * @param session the repository and its configured checks.
+ * @param selection the scope.
+ *
+ * @returns the checks whose tools the scope needs.
+ */
+export function listScopeChecks(session: Session, selection: ScopeSelection): PlannedCheck[] {
+    return session.configuredChecks.filter(
+        (planned) => planned.selection.scope.path === selection.scope.path || planned.check.runs === 'once',
+    );
+}
+
+/**
  * Select the tools that checks, fixers, and their tool files use.
  * The selection covers every supported system, so committed output does not depend on this machine.
  *

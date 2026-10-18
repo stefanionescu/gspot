@@ -15,6 +15,7 @@ import {
     type ScopeView,
     type KnownSettings,
     type ScopeSettings,
+    type ScopeSelection,
     type EffectiveSetting,
 } from '#cli/types/settings/values.ts';
 
@@ -182,4 +183,15 @@ function fillTableValues(namespaces: Record<string, unknown>, rows: EffectiveSet
     }
 }
 
-export { buildScopeView, listActiveIgnores };
+/**
+ * Find the selection of the repository root, which every run has.
+ * @param scopes every scope selection.
+ * @returns the root selection.
+ */
+function findRootSelection(scopes: readonly ScopeSelection[]): ScopeSelection {
+    const root = scopes.find((selection) => selection.scope.path === '');
+    if (root === undefined) throw new Error('The scopes hold no repository root.');
+    return root;
+}
+
+export { buildScopeView, findRootSelection, listActiveIgnores };

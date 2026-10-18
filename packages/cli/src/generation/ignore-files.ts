@@ -53,13 +53,12 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
         {
             title: IGNORE_SECTION_TITLES.build,
             patterns: [
-                ...BUILD_OUTPUT_PATTERNS.filter((pattern) =>
-                    repository.files.some((file) =>
-                        buildPathMatcher(
-                            buildGlobSections([{ title: IGNORE_SECTION_TITLES.build, patterns: [pattern] }]),
-                        )(file.path),
-                    ),
-                ),
+                ...BUILD_OUTPUT_PATTERNS.filter((pattern) => {
+                    const matches = buildPathMatcher(
+                        buildGlobSections([{ title: IGNORE_SECTION_TITLES.build, patterns: [pattern] }]),
+                    );
+                    return repository.files.some((file) => matches(file.path));
+                }),
                 ...folders.filter((folder) => BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
             ],
         },
@@ -173,4 +172,15 @@ function buildPrettierignore(context: ToolFileContext): string {
     });
 }
 
-export { buildGlobSections, buildIgnoreSections, buildPrettierignore, buildSettingsSections };
+/**
+ * List the globs that a tool leaves out: the shared ignore sections, then the path ignores of one check.
+ * @param session the repository to read.
+ * @param view the settings of the scope.
+ * @param check the ID whose path ignores to add.
+ * @returns the globs, each once.
+ */
+function listIgnoredGlobs(session: Session, view: ScopeView, check: string): string[] {
+    return buildGlobSections([...buildIgnoreSections(session), ...buildSettingsSections(view, check)]);
+}
+
+export { listIgnoredGlobs, buildGlobSections, buildIgnoreSections, buildPrettierignore, buildSettingsSections };

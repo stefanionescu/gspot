@@ -9,7 +9,6 @@ import { planRun, isActive } from '#cli/planning/checks.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
-import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { BUILD_SCRIPT } from '#cli/config/settings/defaults.ts';
@@ -24,6 +23,7 @@ import { buildToolFiles } from '#cli/generation/tool-files/generate.ts';
 import type { ToolFileGeneration } from '#cli/types/generation/files.ts';
 import { locateCandidates, readMiseBinPaths } from '#cli/tools/locate.ts';
 import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
+import { buildScopeView, findRootSelection } from '#cli/settings/scope-view.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { classifyFile, listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Settings, SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
@@ -39,7 +39,7 @@ function buildSession(values: Omit<Session, 'toolFiles' | 'generatedPaths' | 'uv
     const session: Session = {
         ...values,
         toolFiles: () => (toolFiles ??= buildToolFiles(session)),
-        // Checks use applied targets; content generation here parses unrelated scopes.
+        // The tracked files that the repository marks as generated.
         generatedPaths: () =>
             (generatedPaths ??= new Set(
                 repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),
@@ -65,8 +65,6 @@ function buildSession(values: Omit<Session, 'toolFiles' | 'generatedPaths' | 'uv
     };
     return session;
 }
-
-// Read repository settings and prepare shared state for checks and generation.
 
 function buildPackageManagerAccess(installedRoot: string, timeoutSeconds: number) {
     let identity: PackageManagerDeclaration | undefined;
@@ -220,9 +218,7 @@ export async function openSession(
     const settings = { ...settingsFile.settings };
     const repository = await readSessionRepository({ root, settings, text: settingsFile.text, manifests, reads });
     const [scopes, getPackageManagerIdentity] = await buildScopeSelections(settings, repository, manifests, reads);
-    const timeoutSeconds = getToolTimeoutSeconds(
-        (scopes.find((selection) => selection.scope.path === '') as ScopeSelection).view,
-    );
+    const timeoutSeconds = getToolTimeoutSeconds(findRootSelection(scopes).view);
     const packageManager = buildPackageManagerAccess(installedRoot, timeoutSeconds);
     const session = buildSession({
         neededToolManifests: [],

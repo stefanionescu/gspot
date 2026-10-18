@@ -201,7 +201,7 @@ function findParentSelection(scopes: ScopeSelection[], path: string): ScopeSelec
 }
 
 /**
- * Build the environment limits and trivial-code limits for each project.
+ * Build the environment-variable rule blocks for each project with its own environment readers.
  *
  * @param input what the lint rules cover.
  *

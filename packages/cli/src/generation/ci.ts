@@ -2,11 +2,11 @@
 import type { Node, YAMLMap, YAMLSeq } from 'yaml';
 import { Scalar, Document, stringify } from 'yaml';
 import { quoteArgument } from '#cli/system/text.ts';
-import { name as cliName } from '../../package.json';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { TOOL_BUILDS } from '#cli/config/configurations.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
@@ -58,7 +58,7 @@ function buildCheckScript(command: string): string {
 // The package manager runs through the same mise command as Node and the published CLI.
 function buildGspotCommand(pipeline: Pipeline): string {
     const { packageManager } = pipeline;
-    const tools = [CI_NODE, `npm:${cliName}@${pipeline.version}`];
+    const tools = [CI_NODE, `npm:${packageManifest.name}@${pipeline.version}`];
     if (packageManager !== undefined && packageManager.name !== 'npm')
         tools.push(`${packageManager.name}@${packageManager.version}`);
     return `mise exec ${tools.map((tool) => quoteArgument(tool)).join(' ')} -- gspot`;

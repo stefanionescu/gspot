@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { selectRunner } from '#cli/generation/hooks.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { VERSION_PIN_FILE } from '#cli/config/system/locations.ts';
-import packageManifest from '../../package.json' with { type: 'json' };
 
 /**
  * Read the pinned gspot version.

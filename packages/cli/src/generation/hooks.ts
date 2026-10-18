@@ -1,7 +1,7 @@
-import { name as cliName } from '../../package.json';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { HOOKS_PATH } from '#cli/config/system/locations.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { readGitPrefix, isGitRepository } from '#cli/system/git.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { selectPackageManager } from '#cli/tools/npm/package-manager.ts';
@@ -20,7 +20,7 @@ import {
 function buildHookScript(name: HookName, runner: StartRunner, prefix: string): string {
     const program = runner.name;
     const { missing, pin } = runner;
-    const install = pin.includes('<version>') ? pin : `${pin} ${cliName}@<version>`;
+    const install = pin.includes('<version>') ? pin : `${pin} ${packageManifest.name}@<version>`;
     const quoted = prefix.replaceAll("'", String.raw`'\''`);
     const absolutePath = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
     const body = [
@@ -43,11 +43,12 @@ function buildHookScript(name: HookName, runner: StartRunner, prefix: string): s
 export async function selectRunner(repositoryRoot: string): Promise<StartRunner> {
     const manifest = readPackageJson(repositoryRoot, 'package.json');
     const hasDependency =
-        manifest?.dependencies?.[cliName] !== undefined || manifest?.devDependencies?.[cliName] !== undefined;
+        manifest?.dependencies?.[packageManifest.name] !== undefined ||
+        manifest?.devDependencies?.[packageManifest.name] !== undefined;
     const packageManager = hasDependency ? await selectPackageManager(repositoryRoot, []) : undefined;
     const name = packageManager === undefined ? 'mise' : packageManager.name;
     const runner = RUNNERS[name];
-    return { name, ...runner, pin: runner.pin.replace('<package>', cliName) };
+    return { name, ...runner, pin: runner.pin.replace('<package>', packageManifest.name) };
 }
 
 /**

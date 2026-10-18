@@ -6,6 +6,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
+import { listIgnoredGlobs } from '#cli/generation/ignore-files.ts';
 import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
@@ -17,7 +18,6 @@ import { listFragmentConfigurations } from '#cli/generation/eslint/fragments/bui
 import { buildFilePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 import { listScriptPaths, buildRuntimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 import type { EslintParts, EslintFacts, EslintPresets, EslintContext } from '#cli/types/generation/eslint.ts';
-import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
 
 import {
     buildImportStyleBlocks,
@@ -65,10 +65,7 @@ function buildEslintFacts({ session, selection }: ToolFileContext): EslintFacts 
         repositorySettings: session.settingsFile.settings,
         selection,
         nodeFiles,
-        generatedPatterns: buildGlobSections([
-            ...buildIgnoreSections(session),
-            ...buildSettingsSections(selection.view, 'javascript/eslint'),
-        ]),
+        generatedPatterns: listIgnoredGlobs(session, selection.view, 'javascript/eslint'),
     };
 }
 

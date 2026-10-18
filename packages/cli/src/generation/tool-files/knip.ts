@@ -4,11 +4,11 @@ import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
+import { listIgnoredGlobs } from '#cli/generation/ignore-files.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
-import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
 
 import {
     KNIP_SCHEMA_URL,
@@ -87,10 +87,7 @@ function buildKnipFile(context: ToolFileContext): string {
     const { extra } = selection.view;
     const options = selection.view.options('tools.knip');
     const scanner = selection.view.options('dependencies').bun_scanner;
-    const ignoredPaths = buildGlobSections([
-        ...buildIgnoreSections(context.session),
-        ...buildSettingsSections(context.selection.view, 'javascript/knip'),
-    ]);
+    const ignoredPaths = listIgnoredGlobs(context.session, selection.view, 'javascript/knip');
     const tools = listDistinctTools(manifests);
     const toolBinaries = [
         ...tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),

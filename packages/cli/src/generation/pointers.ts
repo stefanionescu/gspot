@@ -7,9 +7,9 @@ import type { FileEdit } from '#cli/types/ownership.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { type ToolFileDeclaration } from '#cli/types/configurations.ts';
+import { listScopeChecks, listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { isInScope, joinScope, listNestedScopes, buildScopeTarget } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 import { type GeneratedFile, type ToolFileInputs, type PointerFieldInputs } from '#cli/types/generation/files.ts';
@@ -181,11 +181,7 @@ function buildPointerFieldEdits(
     const paths = new Set(generated.map(({ path }) => path));
     const scopePaths = scopes.map(({ scope }) => scope.path);
     const tools = scopes.flatMap((selection) => {
-        const required = new Set(
-            session.configuredChecks
-                .filter((check) => check.selection.scope.path === selection.scope.path || check.check.runs === 'once')
-                .flatMap((element) => listRequiredTools(element)),
-        );
+        const required = new Set(listScopeChecks(session, selection).flatMap((check) => listRequiredTools(check)));
         return selection.selected.flatMap((manifest) =>
             manifest.tools.map((tool) => ({ selection, manifest, tool, consumed: required.has(tool.name) })),
         );

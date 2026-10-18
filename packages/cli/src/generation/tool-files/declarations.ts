@@ -1,9 +1,9 @@
 // Decide which tool file declarations each scope needs, before gspot builds any text.
 import type { Session } from '#cli/types/planning.ts';
-import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
+import { listScopeChecks, listRequiredTools } from '#cli/planning/needed-tools.ts';
 import type { NeededToolFiles, ToolFileSelection } from '#cli/types/generation/files.ts';
 
 // Constraints select declarations without treating an empty constraint as a requirement.
@@ -32,9 +32,7 @@ function listScopeDeclarations(
     selection: ScopeSelection,
     repository: NeededToolFiles,
 ): ToolFileSelection[] {
-    const checks = session.configuredChecks.filter(
-        (planned) => planned.selection.scope.path === selection.scope.path || planned.check.runs === 'once',
-    );
+    const checks = listScopeChecks(session, selection);
     const needed = {
         tools: new Set(checks.flatMap((planned) => listRequiredTools(planned))),
         checks: new Set(checks.map((planned) => planned.check.name)),

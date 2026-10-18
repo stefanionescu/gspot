@@ -1,3 +1,4 @@
+// Format check findings, fixes, progress, and the final run summary.
 import { formatCount } from '#cli/system/text.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { warn, getColors } from '#cli/system/terminal.ts';
@@ -22,8 +23,6 @@ function formatFixerFailure(note: string): string {
             ?.replace(FIXER_ERROR_MESSAGE, '') ?? note.split('\n').slice(0, 1).join('')
     );
 }
-
-// Format check findings, fixes, progress, and the final run summary.
 
 function printFailedFixers(fixes: FixReport, verbose: boolean): void {
     for (const result of fixes.results) {

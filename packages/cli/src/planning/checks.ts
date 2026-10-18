@@ -2,6 +2,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { isOutsideChildren } from '#cli/repository/scopes.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
+import { findRootSelection } from '#cli/settings/scope-view.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -41,8 +42,7 @@ function planOne(context: PlanInputs, entry: CheckCandidate): PlannedCheck {
     const { session, selection: scope, options } = context;
     const { check, manifest } = entry;
     const isRootCheck = check.runs === 'once' || check.runs === 'history';
-    // Repository inventory always places the root scope first.
-    const rootScope = session.scopes[0] as ScopeSelection;
+    const rootScope = findRootSelection(session.scopes);
     const name = getToolName(check);
     const tool = name === undefined ? undefined : getToolDeclaration(session.manifests.values(), name, manifest);
     const planned: PlannedCheck = {

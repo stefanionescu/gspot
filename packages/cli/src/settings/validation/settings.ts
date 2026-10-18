@@ -77,8 +77,6 @@ function throwErrors(errors: SettingsError[]): never {
     throw new GspotError('settings', lines.join('\n'));
 }
 
-// Commands and check execution validate the same settings.
-
 /**
  * Validate written selections, tool options, ignores, and paths before a command uses them.
  * @param settings the parsed gspot.toml.

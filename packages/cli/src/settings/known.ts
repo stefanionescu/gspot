@@ -12,8 +12,6 @@ import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import type { KnownSettings, SettingDefault } from '#cli/types/settings/values.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 
-// Read setting declarations and resolve their shipped and detected defaults.
-
 function getSchemaPathRole(input: z.core.JSONSchema.JSONSchema): unknown {
     if (input['pathRole'] !== undefined) return input['pathRole'];
     if (typeof input.items === 'object' && !Array.isArray(input.items)) return input.items['pathRole'];

@@ -5,6 +5,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
 import type { Files } from '#cli/types/system/files.ts';
+import { findRootSelection } from '#cli/settings/scope-view.ts';
 import { openKeysDocument } from '#cli/ownership/managed-keys.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { HoldUnit, ReleaseHold } from '#cli/types/generation/release-holds.ts';
@@ -132,8 +133,7 @@ function buildReleaseHoldEdits(repositoryRoot: string, scopes: ScopeSelection[])
  * @returns the days that a new release waits.
  */
 function readRootHoldDays(scopes: ScopeSelection[]): number {
-    const root = scopes.find((selection) => selection.scope.path === '') as ScopeSelection;
-    return Number(root.view.settings[RELEASE_AGE_SETTING]);
+    return Number(findRootSelection(scopes).view.settings[RELEASE_AGE_SETTING]);
 }
 
 export { formatHold, readRootHoldDays, buildReleaseHoldEdits };
