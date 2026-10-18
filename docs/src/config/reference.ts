@@ -51,6 +51,9 @@ export const CHECK_NEEDS_LABELS = {
     network: 'network access',
 } as const;
 
+/** The level of a plugin rule that no level turns on. */
+export const PLUGIN_RULE_WITHOUT_LEVEL = 'none; turn it on in your ESLint config';
+
 export const REFERENCE_FOLDERS = {
     commands: 'commands',
     configurations: 'configurations',

@@ -1,8 +1,8 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import type { ReferencePage } from '../types/reference.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
-import { REFERENCE_FOLDERS, SCHEMA_TYPE_LABELS } from '../config/reference.ts';
 import { escapeCell, formatDefinitions, buildReferencePage } from './markdown.ts';
+import { REFERENCE_FOLDERS, SCHEMA_TYPE_LABELS, PLUGIN_RULE_WITHOUT_LEVEL } from '../config/reference.ts';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -32,26 +32,25 @@ function formatRuleOptions(schemas: unknown, defaults: unknown): string {
  * @returns the pages, keyed by path inside the reference
  */
 export function buildPluginPages(): Map<string, ReferencePage> {
+    // The lowest level that turns a rule on; the configurations list the levels from lowest to highest.
     const levels = new Map(
-        Object.keys(plugin.rules).map((name) => [
-            name,
-            Object.entries(plugin.configs)
-                .filter(([, configuration]) => configuration.rules[`${PLUGIN_PREFIX}/${name}`] !== undefined)
-                .map(([level]) => level),
-        ]),
+        Object.keys(plugin.rules).map((name) => {
+            const level = Object.entries(plugin.configs).find(
+                ([, configuration]) => configuration.rules[`${PLUGIN_PREFIX}/${name}`] !== undefined,
+            )?.[0];
+            return [name, level === undefined ? PLUGIN_RULE_WITHOUT_LEVEL : `\`${level}\``];
+        }),
     );
     const pages = new Map(
         Object.entries(plugin.rules).map(([name, rule]) => {
             const docs = rule.meta.docs;
-            const configurations = (levels.get(name) ?? []).map((level) => `\`${level}\``);
-            const selected =
-                configurations.length === 0
-                    ? 'No level turns this rule on. Add it to your ESLint configuration for the files it should check.'
-                    : `Enabled by ${configurations.join(' and ')}.`;
+            const facts =
+                `- Level: ${levels.get(name) ?? PLUGIN_RULE_WITHOUT_LEVEL}\n` +
+                (rule.meta.fixable === undefined ? '' : '- Fixable: yes, with `eslint --fix`\n');
             const defaults: unknown = rule.meta.defaultOptions?.[0];
             const optionsBody = formatRuleOptions(rule.meta.schema, defaults);
             const description = docs.description.split('\n\n', 1).join('');
-            const body = `${docs.description}\n\n${selected}\n\n## Why\n\n${docs.why}\n\n## What to do\n\n${docs.fix}\n\n## Example\n\n${docs.example}\n\n## Options\n\n${optionsBody}\n`;
+            const body = `${docs.description}\n\n## Details\n\n${facts}\n## Why\n\n${docs.why}\n\n## What to do\n\n${docs.fix}\n\n## Example\n\n${docs.example}\n\n## Options\n\n${optionsBody}\n`;
             return [
                 `${REFERENCE_FOLDERS.eslintPlugin}/${name}.md`,
                 buildReferencePage(`${PLUGIN_PREFIX}/${name}`, description, body),
@@ -69,7 +68,7 @@ export function buildPluginPages(): Map<string, ReferencePage> {
                         .toSorted(([a], [b]) => a.localeCompare(b))
                         .map(([name, rule]) => [
                             `[\`${PLUGIN_PREFIX}/${name}\`](/reference/${REFERENCE_FOLDERS.eslintPlugin}/${name}/)`,
-                            `Level: ${(levels.get(name) ?? []).join(', ') || 'no configuration; turn it on yourself'}. ` +
+                            `Level: ${levels.get(name) ?? PLUGIN_RULE_WITHOUT_LEVEL}. ` +
                                 escapeCell(rule.meta.docs.description.split('\n\n', 1).join('')),
                         ]),
                 ),
