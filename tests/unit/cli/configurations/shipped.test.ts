@@ -8,7 +8,6 @@ import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { RULE_NAME_FILES } from '#tests/data/configurations/manifests.ts';
 import { ruleNamesFileSchema } from '#cli/generation/tool-files/stylelint.ts';
 import { EACH_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
@@ -16,7 +15,7 @@ import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configuration
 test('each lint-rule list names the pinned package version', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
     const pins = listToolProjectPins(manifests).npm;
-    for (const path of RULE_NAME_FILES) {
+    for (const path of listAssets('configurations/').filter((asset) => asset.endsWith('-names.json'))) {
         const names = ruleNamesFileSchema.parse(JSON.parse(readAsset(path)));
         expect(pins[names.package], path).toBe(names.version);
     }

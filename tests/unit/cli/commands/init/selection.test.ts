@@ -12,12 +12,11 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { buildInitArguments } from '#tests/setup/builders.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { VUE_COMPONENT } from '#tests/data/checks/component-samples.ts';
-import { ALWAYS_SELECTED } from '#tests/data/configurations/manifests.ts';
+import { buildInitArguments, listAlwaysSelected } from '#tests/setup/builders.ts';
 import { TOOL_ONLY_PACKAGE, CONFIGURATION_CHOICES, NON_JAVASCRIPT_PROJECTS } from '#tests/data/commands/init.ts';
 
 test.each([...CONFIGURATION_CHOICES])(
@@ -38,7 +37,7 @@ test.each([...CONFIGURATION_CHOICES])(
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const session = await openSession(sandbox.path);
         const selected = session.scopes[0]!.selected.map((manifest) => manifest.configuration.name);
-        for (const configuration of ALWAYS_SELECTED) expect(selected).toContain(configuration);
+        for (const configuration of listAlwaysSelected()) expect(selected).toContain(configuration);
     },
 );
 

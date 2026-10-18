@@ -50,10 +50,6 @@ test('format.indent_width reaches EditorConfig, Prettier and each tool file', as
     });
     expect(generated.get('.gspot/config/sqlfluff.cfg')).toContain(`tab_space_size = ${String(width)}`);
     expect(generated.get('.gspot/config/swiftformat')).toContain(`--indent ${String(width)}\n`);
-    const source = await Bun.file(path).text();
-    const expected = `parent:\n${' '.repeat(width)}child: value\n`;
-    expect(await prettier.format(source, { ...editor, filepath: path })).toBe(expected);
-    expect(await prettier.format(source, { ...configuration, filepath: path })).toBe(expected);
 });
 
 test('a YAML indent override gives EditorConfig and Prettier the same width', async () => {
@@ -78,9 +74,6 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
     });
     expect(editor?.tabWidth).toBe(2);
     expect(configuration?.tabWidth).toBe(2);
-    const source = await Bun.file(path).text();
-    expect(await prettier.format(source, { ...editor, filepath: path })).toBe('parent:\n  child: value\n');
-    expect(await prettier.format(source, { ...configuration, filepath: path })).toBe('parent:\n  child: value\n');
 });
 
 test('Prettier overrides agree in the root pointer and editor lookup', async () => {

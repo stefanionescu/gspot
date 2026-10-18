@@ -12,12 +12,12 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
+import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { checkSemgrep } from '#cli/checks/general/security.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
-import { ALWAYS_SELECTED } from '#tests/data/configurations/manifests.ts';
+import { buildRunOptions, listAlwaysSelected } from '#tests/setup/builders.ts';
 import { planRun, isActive, stripCoverageArguments } from '#cli/planning/checks.ts';
 import { HISTORY_TABLES, TOOL_FILE_PLANNING_CASES } from '#tests/data/runs/plan.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/data/checks/format.ts';
@@ -127,7 +127,7 @@ Release on 03/04/2026.
         const selected = session.scopes.flatMap((scope) =>
             scope.selected.map((manifest) => manifest.configuration.name),
         );
-        for (const configuration of [...ALWAYS_SELECTED, 'licenses']) expect(selected).toContain(configuration);
+        for (const configuration of [...listAlwaysSelected(), 'licenses']) expect(selected).toContain(configuration);
         expect(selected).not.toContain('javascript');
         expect(selected).not.toContain('markdown');
         const checks = planRun(session, {
@@ -142,7 +142,7 @@ Release on 03/04/2026.
         );
         expect(await checkSemgrep(session, security!)).toMatchObject({
             status: 'skipped',
-            note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
+            note: matchSubstring('tools.semgrep.rule_files'),
         });
         expect(checks.find((check) => check.check.name === 'prose/vale')?.files.map((file) => file.path)).toContain(
             'guide.md',

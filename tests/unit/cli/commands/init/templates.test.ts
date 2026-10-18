@@ -11,9 +11,8 @@ import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { buildInitArguments } from '#tests/setup/builders.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import { ALWAYS_SELECTED } from '#tests/data/configurations/manifests.ts';
+import { buildInitArguments, listAlwaysSelected } from '#tests/setup/builders.ts';
 
 test('init --dry-run --from checks a template and writes nothing', async () => {
     await using sandbox = await testdir({
@@ -69,7 +68,7 @@ test('an empty template still lets init add the detected configurations, and a d
         'javascript',
     );
     const selected = report.plan.configurations.map(({ configuration }) => configuration);
-    for (const configuration of ALWAYS_SELECTED) expect(selected).toContain(configuration);
+    for (const configuration of listAlwaysSelected()) expect(selected).toContain(configuration);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

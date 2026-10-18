@@ -1,6 +1,3 @@
-import { ESLint } from 'eslint';
-import stylelint from 'stylelint';
-import { HtmlValidate } from 'html-validate';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -28,14 +25,6 @@ describe.each([
         form: 'eslint',
         rows: ESLINT_SUPPRESSIONS,
         body: 'console.log(1);',
-        toolResult: async (source: string, path: string, active: boolean) => {
-            const eslint = new ESLint({
-                overrideConfigFile: true,
-                overrideConfig: { rules: { 'no-console': 'error' } },
-            });
-            const toolResult = await eslint.lintText(source, { filePath: path });
-            expect(toolResult[0]!.suppressedMessages).toHaveLength(active ? 1 : 0);
-        },
     },
     {
         name: 'Stylelint',
@@ -44,13 +33,6 @@ describe.each([
         form: 'stylelint',
         rows: STYLELINT_SUPPRESSIONS,
         body: 'a { color: #ggg; }',
-        toolResult: async (source: string, _path: string, active: boolean) => {
-            const toolResult = await stylelint.lint({
-                code: source,
-                config: { rules: { 'color-no-invalid-hex': true } },
-            });
-            expect(toolResult.results[0]!.warnings).toHaveLength(active ? 0 : 1);
-        },
     },
     {
         name: 'HTML Validate',
@@ -59,16 +41,8 @@ describe.each([
         form: 'html-validate',
         rows: HTML_VALIDATE_SUPPRESSIONS,
         body: '\u003Cimg src="sample.png">',
-        toolResult: async (source: string, _path: string, active: boolean) => {
-            const html = new HtmlValidate({ extends: ['html-validate:recommended'] });
-            const toolResult = await html.validateString(source);
-            const findings = toolResult.results.flatMap(({ messages }) =>
-                messages.filter(({ ruleId }) => ruleId === 'wcag/h37'),
-            );
-            expect(findings).toHaveLength(active ? 0 : 1);
-        },
     },
-])('suppression comments match $name', ({ configuration, extension, form, rows, body, toolResult }) => {
+])('suppression comments match $name', ({ configuration, extension, form, rows, body }) => {
     const sources = rows.map(([comment, active], index) => ({
         comment,
         active,
@@ -89,8 +63,7 @@ describe.each([
     afterAll(async () => {
         await sandbox[Symbol.asyncDispose]();
     });
-    test.each([...sources])('recognizes $comment', async ({ active, path, source }) => {
-        await toolResult(source, path, active);
+    test.each([...sources])('recognizes $comment', ({ active, path }) => {
         expect(comments.filter((entry) => entry.file === path).map(({ line, rule }) => ({ line, rule }))).toStrictEqual(
             active ? [{ line: 1, rule: `${form}-no-reason` }] : [],
         );

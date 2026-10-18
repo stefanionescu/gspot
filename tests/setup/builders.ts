@@ -26,6 +26,16 @@ import type { ToolDeclaration, ManifestDeclaration } from '#cli/types/configurat
 import { EXPO_DEPENDENCIES, REACT_NATIVE_DEPENDENCIES } from '#tests/data/checks/react.ts';
 import { NAMING_TEST_LIMITS, NAMING_TEST_SETTINGS } from '#tests/data/checks/naming/settings.ts';
 
+/**
+ * List the shipped configurations that gspot selects in every repository.
+ * @returns their names.
+ */
+export function listAlwaysSelected(): string[] {
+    return [...readManifests(createReadCache(process.cwd())).values()]
+        .filter(({ configuration }) => configuration.always_selected)
+        .map(({ configuration }) => configuration.name);
+}
+
 /** The init arguments for a test run without prompts. */
 export function buildInitArguments(configurations: readonly string[], options: { json?: boolean } = {}): string[] {
     return [

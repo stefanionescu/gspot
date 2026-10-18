@@ -12,24 +12,6 @@ title = "Local"
 description = "A local configuration used by manifest loading."
 `;
 
-export const ALWAYS_SELECTED = [
-    'commits',
-    'dependencies',
-    'docs',
-    'duplication',
-    'engineering',
-    'files',
-    'format',
-    'gspot',
-    'naming',
-    'prose',
-    'repository',
-    'secrets',
-    'security',
-    'spelling',
-    'structure',
-] as const;
-
 export const SEMGREP_TOOL_FILES = `
 [[tool_file]]
 target = ".gspot/config/other.yml"
@@ -47,13 +29,6 @@ tool = "semgrep"
 per_scope = true
 when = { configuration = "security" }
 `;
-
-/** Rule-name lists whose metadata must match the pinned package versions. */
-export const RULE_NAME_FILES = [
-    'configurations/language/javascript/eslint-rule-names.json',
-    'configurations/language/javascript/eslint-runtime-names.json',
-    'configurations/language/css/stylelint-rule-names.json',
-] as const;
 
 export const REPLACE_DECLARATION = `[[tool]]
 name = "example"
