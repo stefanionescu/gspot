@@ -30,19 +30,5 @@ export type Sandbox = AsyncDisposable & {
     run: GspotCall;
 };
 
-/** An authored declaration that may select a JavaScript runtime. */
-export type RuntimeDetectionRow = {
-    name: string;
-    runtime: string;
-    package: {
-        engines?: Record<string, string>;
-        scripts?: Record<string, string>;
-        devDependencies?: Record<string, string>;
-    };
-    source: string;
-    detected: boolean;
-    toolProjectManifest?: { engines: Record<string, string> };
-};
-
 /** What changeSandbox needs to edit and restore an installed sandbox. */
 export type SandboxFiles = Pick<Sandbox, 'root' | 'environment' | 'run'>;

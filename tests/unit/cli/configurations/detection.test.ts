@@ -11,6 +11,7 @@ import { readManifests } from '#cli/configurations/manifests.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { buildManifest, buildTrackedFile } from '#tests/setup/builders.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 import { PYTHON_DEPENDENCY_CASES } from '#tests/data/repository/dependency-files.ts';
 import { SWIFT_TARGET_CASES, SWIFT_TEST_SAMPLES, PRISMA_CONTENT_CASES } from '#tests/data/configurations/detection.ts';
 
@@ -225,3 +226,83 @@ test('Testing Library is detected only in the scope that declares it', async () 
         session.scopes.flatMap(({ selected }) => selected.map(({ configuration }) => configuration.name)),
     ).not.toContain('testing-library');
 });
+
+test.each(runtimeDetectionRows())('$name decides runtime detection within its project', async (entry) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': JSON.stringify({ engines: { [entry.runtime]: '>=1' } }),
+        'api/package.json': JSON.stringify(entry.package),
+        'api/entry.js': entry.source,
+        '.gspot/package.json': JSON.stringify('toolProjectManifest' in entry ? entry.toolProjectManifest : {}),
+    });
+    const repository = await readRepository(createReadCache(sandbox.path), {
+        declarations: [],
+        scopes: [],
+        manifests: readManifests(createReadCache(process.cwd())),
+    });
+    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const manifest = buildManifest('runtime', {
+        group: 'general',
+        tables: `[configuration]\ntitle = "Runtime"\ndescription = "Detects the runtime declared by this project."\n[detect]\nruntimes = ["${entry.runtime}"]\n`.replace(
+            /^\s*\[configuration\][\s\S]*?(?=\n\[|$)/u,
+            '',
+        ),
+    });
+    const detected = detectConfigurations(
+        sandbox.path,
+        repository.files,
+        new Map([['runtime', { ...manifest, tools: [] }]]),
+        dependencyFiles,
+        'api',
+    );
+    expect(detected.map(({ configuration }) => configuration)).toStrictEqual(entry.detected ? ['runtime'] : []);
+});
+
+function runtimeDetectionRows() {
+    const rows = JAVASCRIPT_RUNTIMES.flatMap((runtime) =>
+        [
+            { name: `${runtime} engine`, package: { engines: { [runtime]: '>=1' } }, source: '', detected: true },
+            {
+                name: `${runtime} script`,
+                package: { scripts: { start: `${runtime} run entry.js` } },
+                source: '',
+                detected: true,
+            },
+            {
+                name: `${runtime} shebang`,
+                package: {},
+                source: `#!/usr/bin/env ${runtime}\nconsole.log(1);\n`,
+                detected: true,
+            },
+            {
+                name: `${runtime} quoted script text`,
+                package: { scripts: { start: `echo "${runtime} entry.js"` } },
+                source: '',
+                detected: false,
+            },
+            {
+                name: `${runtime} type dependency`,
+                package: { devDependencies: { [`@types/${runtime}`]: '1.0.0' } },
+                source: '',
+                detected: false,
+            },
+            {
+                name: `${runtime} tool-project manifest`,
+                package: {},
+                source: '',
+                toolProjectManifest: { engines: { [runtime]: '>=1' } },
+                detected: false,
+            },
+        ].map((row) => ({ ...row, runtime })),
+    );
+    return [
+        ...rows,
+        {
+            name: 'JavaScript without a declared runtime',
+            runtime: 'node',
+            package: {},
+            source: 'console.log(1);\n',
+            detected: false,
+        },
+    ];
+}
