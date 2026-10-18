@@ -233,7 +233,10 @@ function buildJsonSchema(): Record<string, unknown> {
     const converted = convertToJsonSchema(settingsSchema);
     // The tables carry no description of their own; editors show this one on hover.
     const properties = Object.entries(converted.properties as Record<string, z.core.JSONSchema.JSONSchema>).map(
-        ([name, node]) => [name, { ...node, description: node.description ?? TABLE_DESCRIPTIONS[name] }],
+        ([name, node]) => {
+            const description = node.description ?? TABLE_DESCRIPTIONS[name];
+            return [name, description === undefined ? node : { ...node, description }];
+        },
     );
     return {
         $schema: JSON_SCHEMA_DIALECT,
