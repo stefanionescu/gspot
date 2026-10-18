@@ -1,6 +1,6 @@
 ---
 title: Swift
-description: Run SwiftLint, SwiftFormat, builds, tests, and coverage for Swift packages and Xcode projects.
+description: Lint, format, build, and test Swift packages and Xcode projects.
 ---
 
 Use the [Quickstart](/start/quickstart/) with mise for a Swift package. Install the Swift toolchain first.

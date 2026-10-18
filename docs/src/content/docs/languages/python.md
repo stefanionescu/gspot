@@ -1,6 +1,6 @@
 ---
 title: Python
-description: Set up Python checks with uv, Ruff, pyright, and pytest.
+description: Lint, format, type-check, and test Python projects.
 ---
 
 Set up gspot with the [Quickstart](/start/quickstart/). In a Python repository, use uv for your project dependencies and mise to install gspot.

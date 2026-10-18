@@ -1,6 +1,6 @@
 ---
 title: Tests and coverage
-description: Run Jest, Vitest, and pytest with coverage limits.
+description: Run your tests before every push and fail when coverage drops under its floor.
 ---
 
 gspot runs your test suite as a check at the push stage, and the check fails when coverage falls below

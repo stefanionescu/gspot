@@ -10,12 +10,12 @@ import { SETUP_COMMANDS } from '../../../config/setup.ts';
 
 Git and Node.js 24.15 or newer. The tools that your checks run need these:
 
-| Tools                                                            | What you need                                                                                           |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| npm tools, such as ESLint or markdownlint                        | Node.js and the project's npm, pnpm, Yarn, or Bun package manager. With no declaration, gspot uses npm. |
-| Python tools, such as Ruff or yamllint                           | uv; gspot installs its pinned Python version when needed.                                               |
-| Program tools, such as ShellCheck, Gitleaks, and typos           | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                          |
-| Project commands, such as Jest, Vitest, Next.js, or Swift builds | Your project's runtime, dependencies, and build tools.                                                  |
+| Tools                                                    | What you need                                                                                           |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Tools from npm                                           | Node.js and the project's npm, pnpm, Yarn, or Bun package manager. With no declaration, gspot uses npm. |
+| Tools from PyPI                                          | uv; gspot installs its pinned Python version when needed.                                               |
+| Other programs                                           | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                          |
+| Your project's own commands, such as its tests and build | Your project's runtime, dependencies, and build tools.                                                  |
 
 `gspot init --dry-run` shows which tools your repository needs.
 

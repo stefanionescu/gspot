@@ -7,7 +7,8 @@ gspot sets up linters, formatters, and security scanners for your repository and
 
 - **Picks the checks.** `gspot init` reads your files and turns on the checks for the languages and frameworks it
   finds.
-- **Pins the tools.** Each check runs a known tool, such as ESLint, Ruff, or ShellCheck, at one version everywhere.
+- **Pins the tools.** Every tool runs at one version on every machine and in CI, so a check that passes for you passes
+  for everyone.
 - **Stops bad commits.** Git hooks check the staged files, and a CI job checks every push.
 - **Writes rules for your agent.** `AGENTS.md` and one rule file for each language say how to write code that
   passes.

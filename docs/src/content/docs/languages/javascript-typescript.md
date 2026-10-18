@@ -1,6 +1,6 @@
 ---
 title: JavaScript and TypeScript
-description: Configure runtimes, TypeScript, Next.js, and React Native.
+description: Choose runtimes, type checking, and framework rules for JavaScript and TypeScript.
 ---
 
 ## JavaScript runtimes

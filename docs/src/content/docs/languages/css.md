@@ -1,6 +1,6 @@
 ---
 title: CSS
-description: Configure Stylelint for CSS, Vue, Svelte, and Tailwind.
+description: Check style sheets and the style blocks inside components.
 ---
 
 Stylelint checks styles, with options from `gspot.toml`. To change the options of a lint rule, see

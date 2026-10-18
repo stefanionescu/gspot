@@ -34,7 +34,7 @@ export const SETUP_COMMANDS = [
 export const LLMS_URL = `${SITE_URL}/llms.txt`;
 export const LLMS_COMMAND = `curl -fsSL ${LLMS_URL}`;
 
-export const AGENT_PROMPT = `Set up gspot in this repository. Run ${LLMS_COMMAND} and follow its steps.`;
+export const AGENT_PROMPT = `Set up gspot in a repository. Run ${LLMS_COMMAND} and follow its steps.`;
 
 /** The summary at the top of llms.txt. */
 export const LLMS_DESCRIPTION =

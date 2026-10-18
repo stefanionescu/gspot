@@ -21,6 +21,9 @@ Use the renderer's Markdown. Keep routine pages free of custom layout HTML or CS
 that some viewers cannot show needs a text alternative. Use paragraphs, lists, and tables to match
 what readers need to compare.
 
+Say what a feature does in everyday words. Name a tool only where the reader acts on it: a finding, a setting, a
+suppression comment, or a reference table. Do not list tools, languages, or frameworks to show coverage.
+
 Use inline code for exact commands, values, fields, and identifiers.
 Bold names an interface control. Blockquotes hold attributed source text.
 
