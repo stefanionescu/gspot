@@ -8,7 +8,8 @@ import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generat
  * @returns the Commitlint rules with the allowed types and scopes of the repository.
  */
 function buildCommitlintFile(context: ToolFileContext): string {
-    const { selection, scopes } = context;
+    const { selection } = context;
+    const { scopes } = context.session;
 
     const { settings, rulesOff } = selection.view;
     const types = settings['tools.commitlint.types'] as string[];

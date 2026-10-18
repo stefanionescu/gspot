@@ -10,7 +10,8 @@ import { type SemgrepDocument, type ToolFileContext } from '#cli/types/generatio
  * @returns the Semgrep rules with paths relative to the tool file.
  */
 function buildSemgrepFile(context: ToolFileContext): string {
-    const { selection, scopes } = context;
+    const { selection } = context;
+    const { scopes } = context.session;
     const { dependencyFiles } = context.session.repository;
     const source = readAsset(`${context.manifest.folder}/${context.toolFile.source}`);
     const configuration = context.manifest.configuration.name;

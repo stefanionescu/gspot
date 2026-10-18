@@ -9,7 +9,8 @@ import { TOML_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/tool
  * @returns the disabled Squawk migration rules.
  */
 function buildSquawkFile(context: ToolFileContext): string {
-    const { selection, files } = context;
+    const { selection } = context;
+    const { files } = context.session.repository;
 
     const { settings, rulesOff } = selection.view;
     const isAll = context.level === 'all';

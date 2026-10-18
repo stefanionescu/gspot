@@ -32,7 +32,7 @@ function listExceptions(prose: ProseInputs): string[] {
  * @returns the Vale heading capitalization rule.
  */
 function buildCapitalizationStyle(context: ToolFileContext): string {
-    const prose = buildProseInputs(context.session, context.manifests);
+    const prose = buildProseInputs(context.session, context.session.neededToolManifests);
     const isTitle = context.toolFile.target.endsWith('/title-case.yml');
     return stringify({
         extends: 'capitalization',
@@ -52,7 +52,7 @@ function buildCapitalizationStyle(context: ToolFileContext): string {
  * @returns the Vale acronym rule with the allowed acronyms.
  */
 function buildAcronymsStyle(context: ToolFileContext): string {
-    const prose = buildProseInputs(context.session, context.manifests);
+    const prose = buildProseInputs(context.session, context.session.neededToolManifests);
 
     return stringify({
         extends: 'conditional',
@@ -200,7 +200,7 @@ function buildPossessivesStyle(context: ToolFileContext): string {
  * @returns the accepted product names and your own allowed words, one per line.
  */
 function buildAcceptedWordsFile(context: ToolFileContext): string {
-    const prose = buildProseInputs(context.session, context.manifests);
+    const prose = buildProseInputs(context.session, context.session.neededToolManifests);
 
     return prose.words.toSorted((left, right) => left.localeCompare(right)).join('\n') + '\n';
 }

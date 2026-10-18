@@ -87,25 +87,26 @@ function buildBodyPointer(
  * @returns the root or folder paths.
  */
 function listPointerPaths(
-    context: Pick<ToolFileInputs, 'files' | 'selection' | 'manifest' | 'scopes'>,
+    context: Pick<ToolFileInputs, 'session' | 'selection' | 'manifest'>,
     toolFile: ToolFileDeclaration,
 ): string[] {
-    const { files, selection, manifest } = context;
+    const { selection, manifest } = context;
+    const { scopes, repository } = context.session;
     const { pointer } = toolFile;
     if (pointer === undefined) return [];
     if (
         pointer.when !== undefined &&
-        !isConfigurationSelected(toolFile.per_scope ? [selection] : context.scopes, pointer.when.configuration)
+        !isConfigurationSelected(toolFile.per_scope ? [selection] : scopes, pointer.when.configuration)
     )
         return [];
     const scope = selection.scope.path;
     if (pointer.folders === undefined) return [toolFile.per_scope ? joinScope(scope, pointer.path) : pointer.path];
     const children = listNestedScopes(
-        context.scopes.map((entry) => entry.scope.path),
+        scopes.map((entry) => entry.scope.path),
         scope,
     );
     const matches = buildPathMatcher(pointer.folders);
-    const owned = listCoveredFiles(manifest.files, files, {
+    const owned = listCoveredFiles(manifest.files, repository.files, {
         selected: selection.selected,
         scope: '',
         view: selection.view,

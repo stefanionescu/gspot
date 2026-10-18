@@ -1,9 +1,8 @@
 import type { Session } from '#cli/types/planning.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
-import type { RUNNERS, HOOK_ARGUMENTS } from '#cli/config/generation/hooks.ts';
+import type { RUNNERS, CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
 import type { Level, Manifest, ToolDeclaration, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
@@ -14,9 +13,6 @@ type SemgrepRule = Record<string, unknown> & { id: string; paths?: { include: st
 /** The repository and resolved scope for building tool files. */
 type GenerationInputs = {
     session: Session;
-    manifests: Manifest[];
-    files: TrackedFile[];
-    scopes: ScopeSelection[];
     selection: ScopeSelection;
 };
 
@@ -74,7 +70,7 @@ export type TyposDictionary = {
 /** Typos extension tables. */
 export type TyposSettings = { default?: TyposDictionary; type?: Record<string, TyposDictionary> };
 
-export type HookName = keyof typeof HOOK_ARGUMENTS;
+export type HookName = (typeof CHECK_HOOKS)[number];
 
 export type NpmProjectInputs = {
     root: string;

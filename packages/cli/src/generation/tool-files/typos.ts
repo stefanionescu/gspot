@@ -81,7 +81,7 @@ function buildSpellingTypes(
     context: ToolFileContext,
     typos: TyposSettings | undefined,
 ): Record<string, TyposDictionary> {
-    const spellingScopes = context.scopes
+    const spellingScopes = context.session.scopes
         .filter(({ view }) => view.configurations.includes('spelling'))
         .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path));
     const settingsType = buildSettingsDictionary(spellingScopes);

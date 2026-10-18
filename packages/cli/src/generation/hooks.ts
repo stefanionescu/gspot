@@ -10,6 +10,7 @@ import type { HookName, StartRunner, GeneratedFile } from '#cli/types/generation
 import {
     RUNNERS,
     HOOK_STAGES,
+    CHECK_HOOKS,
     HOOK_SHEBANG,
     HOOK_ARGUMENTS,
     COMMIT_MESSAGE_PATH_LINES,
@@ -60,9 +61,7 @@ export async function selectRunner(repositoryRoot: string): Promise<StartRunner>
  */
 export function listHookNames(checks: PlannedCheck[]): HookName[] {
     const stages = new Set<string>(checks.map((planned) => planned.check.stage));
-    return (Object.keys(HOOK_STAGES) as HookName[]).filter((name) =>
-        HOOK_STAGES[name].some((stage) => stages.has(stage)),
-    );
+    return CHECK_HOOKS.filter((name) => HOOK_STAGES[name].some((stage) => stages.has(stage)));
 }
 
 /**

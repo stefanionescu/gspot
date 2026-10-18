@@ -25,9 +25,10 @@ import {
  */
 function buildJsconfig(context: ToolFileContext): string {
     const { root, reads } = context.session;
-    const { files, targetPath: target } = context;
+    const { targetPath: target } = context;
+    const { files } = context.session.repository;
     const scope = context.selection.scope.path;
-    const scopes = context.scopes.map((entry) => entry.scope);
+    const scopes = context.session.scopes.map((entry) => entry.scope);
     const importStyle = context.selection.view.options('tools.eslint').import_extension;
     const declarationPaths = buildGlobSections(
         buildIgnoreSections(context.session).filter(

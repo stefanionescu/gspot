@@ -46,9 +46,6 @@ function listScopeDeclarations(
                     session,
                     selection,
                     manifest,
-                    scopes: session.scopes,
-                    files: session.repository.files,
-                    manifests: session.neededToolManifests,
                 },
             })),
     );

@@ -132,7 +132,7 @@ function buildPrettierFile(context: ToolFileContext): string {
         settings: context.session.settingsFile.settings,
         format: context.selection.view.format,
         extra: context.selection.view.extra('prettier'),
-        plugins: [...listPrettierPlugins(context.scopes.flatMap(({ selected }) => selected)).values()],
+        plugins: [...listPrettierPlugins(context.session.scopes.flatMap(({ selected }) => selected)).values()],
     });
     return JSON.stringify(value, null, JSON_INDENT) + '\n';
 }

@@ -1,15 +1,18 @@
+/** Hooks that run the check command. */
+export const CHECK_HOOKS = ['pre-commit', 'pre-push', 'commit-msg'] as const;
+
 export const HOOK_ARGUMENTS = {
     'pre-commit': 'check --hook pre-commit',
     'pre-push': 'check --hook pre-push -- "$@"',
     'commit-msg': 'check --hook commit-msg -- "$1"',
-} as const;
+} as const satisfies Record<(typeof CHECK_HOOKS)[number], string>;
 
 /** The stages of the checks that each hook runs. */
 export const HOOK_STAGES = {
     'pre-commit': ['commit'],
     'pre-push': ['commit', 'push'],
     'commit-msg': ['message'],
-} as const;
+} as const satisfies Record<(typeof CHECK_HOOKS)[number], readonly string[]>;
 
 /** The runner and exact pin command for each package manager. */
 export const RUNNERS = {
@@ -39,9 +42,6 @@ export const RUNNERS = {
         pin: 'mise use --pin --tool-option allow_low_downloads=true npm:<package>@<version>',
     },
 } as const;
-
-/** Hooks that run the check command. */
-export const CHECK_HOOKS = ['pre-commit', 'pre-push', 'commit-msg'] as const;
 
 export const HOOK_SHEBANG = '#!/bin/sh';
 export const COMMIT_MESSAGE_PATH_LINES = [

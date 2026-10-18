@@ -82,7 +82,8 @@ function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Sco
  * @returns the workspace entry points, project selectors, and dependency exclusions.
  */
 function buildKnipFile(context: ToolFileContext): string {
-    const { selection, scopes, manifests } = context;
+    const { selection } = context;
+    const { scopes, neededToolManifests: manifests } = context.session;
     const { settingsFile, root, startRunner } = context.session;
     const { extra } = selection.view;
     const options = selection.view.options('tools.knip');

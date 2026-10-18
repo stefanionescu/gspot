@@ -179,17 +179,12 @@ async function runCheckCommand(
     options: CheckOptions,
     signal: AbortSignal,
 ): Promise<CommandResult<CheckCommandJson>> {
-    let selected = options;
     if (options.hook === 'pre-push') {
         const input = await readPushInput(signal);
-        selected = {
-            ...options,
-            paths: [],
-            push: { stdin: input, ...(options.paths[0] === undefined ? {} : { remote: options.paths[0] }) },
-        };
+        const push = { stdin: input, ...(options.paths[0] === undefined ? {} : { remote: options.paths[0] }) };
+        return await checkPush(root, { ...options, paths: [], push }, signal);
     }
-    if (selected.push !== undefined) return await checkPush(root, { ...selected, push: selected.push }, signal);
-    return await (selected.staged ? checkStaged(root, selected, signal) : checkTree(root, selected, signal));
+    return await (options.staged ? checkStaged(root, options, signal) : checkTree(root, options, signal));
 }
 
 // Run check with an abort signal that the termination signals trigger.

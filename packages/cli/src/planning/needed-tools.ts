@@ -51,6 +51,13 @@ function listPrettierPluginNames(scopes: ScopeSelection[], programs: ReadonlySet
         : [];
 }
 
+// Add the packages that each tool package requires. A Set visits the names that the loop adds, too.
+function addRequiredPackages(names: Set<string>, manifests: readonly Manifest[]): void {
+    for (const name of names)
+        for (const required of findToolProjectPackage(getToolDeclaration(manifests, name))?.requires ?? [])
+            names.add(required);
+}
+
 /**
  * List the extra tools that the command and the configuration of a check use.
  *
@@ -106,11 +113,7 @@ export function listRequiredTools(check: PlannedCheck): string[] {
             (name) => name !== undefined,
         ),
     );
-    for (const name of names)
-        for (const required of new Set(
-            findToolProjectPackage(getToolDeclaration(check.selection.selected, name))?.requires,
-        ))
-            names.add(required);
+    addRequiredPackages(names, check.selection.selected);
     return [...names];
 }
 
@@ -151,10 +154,7 @@ export function selectNeededManifests(session: Session, checks: PlannedCheck[]):
     for (const name of listPrettierPluginNames(session.scopes, needed)) needed.add(name);
     const selected = listSelectedManifests(session.scopes);
     const selectedTools = new Set(selected.flatMap((manifest) => manifest.tools.map(({ name }) => name)));
-    for (const name of needed)
-        for (const required of findToolProjectPackage(getToolDeclaration(session.manifests.values(), name))?.requires ??
-            [])
-            needed.add(required);
+    addRequiredPackages(needed, [...session.manifests.values()]);
     const extras = [...needed].flatMap((name) =>
         selectedTools.has(name)
             ? []
