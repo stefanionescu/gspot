@@ -53,7 +53,10 @@ export function buildReferenceCollection(): Loader {
                 const { body } = page;
                 const metadata = await context.parseData({
                     id,
-                    data: { ...page.data, tableOfContents: SECTION_HEADING.test(body) ? undefined : false },
+                    data: {
+                        ...page.data,
+                        tableOfContents: page.data.tableOfContents ?? (SECTION_HEADING.test(body) ? undefined : false),
+                    },
                 });
                 const filePath = `${PAGES_FOLDER}/${id}.md`;
                 entries.push({

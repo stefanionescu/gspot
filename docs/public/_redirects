@@ -44,3 +44,7 @@
 /reference/checks/swift-tests/skip-reasons/ /reference/checks/swift/skip-reasons/ 301
 /reference/commands/:command/ /reference/commands/#gspot-:command 301
 /reference/environment-variables/ /reference/commands/#environment-variables 301
+/reference/gspot-toml/tools/ /reference/gspot-toml/ 301
+/reference/gspot-toml/limits/ /reference/gspot-toml/ 301
+/reference/gspot-toml/naming/ /reference/gspot-toml/ 301
+/reference/gspot-toml/command_check/ /reference/gspot-toml/ 301

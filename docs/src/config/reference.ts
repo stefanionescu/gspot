@@ -1,7 +1,7 @@
 /** A code span, which generated reference text keeps as written. */
 const CODE_SPAN = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)/u;
-/** A tag of a definition list, with its attributes. */
-const DEFINITION_TAG = /<\/?d[dlt][^<>]*>/u;
+/** A tag that generated reference text writes on purpose: a heading with its anchor, code, or a definition list. */
+const KEPT_TAG = /<\/?(?:h[2-6]|code|d[dlt])(?:\s[^<>]*)?>/u;
 
 const GUIDES = {
     javascript: { path: '/languages/javascript-typescript/', title: 'JavaScript and TypeScript' },
@@ -70,8 +70,8 @@ export const REFERENCE_FOLDERS = {
 export const REFERENCE_COLLECTION_NAME = 'gspot-reference';
 export const REFERENCE_IDS_KEY = 'reference-ids';
 export const PAGES_FOLDER = 'src/content/docs';
-/** Matches code spans and definition list tags to keep, and markup to escape, in generated reference text. */
-export const MARKDOWN_ESCAPES = new RegExp(`${CODE_SPAN.source}|${DEFINITION_TAG.source}|[<>]`, 'gu');
+/** Matches code spans and kept tags to keep, and markup to escape, in generated reference text. */
+export const MARKDOWN_ESCAPES = new RegExp(`${CODE_SPAN.source}|${KEPT_TAG.source}|[<>]`, 'gu');
 
 /** Matches code blocks and code spans to keep, and command flags outside them to put in code. */
 export const FLAGS_OUTSIDE_CODE = /```[\s\S]*?```|`[^`]*`|(?<![\w-])--[a-z][a-z-]*/gu;
@@ -86,20 +86,11 @@ export const LISTED_VALUES_LIMIT = 12;
 export const SUPPRESSIONS_CHECK = 'gspot/suppressions';
 
 /** The tables with their own settings page: the title and description of each page. */
-export const SETTINGS_SUBPAGES = new Map([
-    [
-        'limits',
-        { title: '[limits] settings', description: 'Size and complexity limits for the repository or one language.' },
-    ],
-    ['naming', { title: '[naming] settings', description: 'Banned words, case, and length rules for names.' }],
-    ['tools', { title: '[tools] settings', description: 'Options that gspot passes to each tool.' }],
-    ['command_check', { title: '[[command_check]] records', description: 'Your own commands, run as checks.' }],
-]);
 /** The name of the keys of a map table, such as the language under limits. */
 export const MAP_KEY_NAME = '<name>';
 export const ANGLE_BRACKETS = /[<>]/gu;
-/** The heading level of a page title. */
-export const PAGE_TITLE_LEVEL = 1;
+/** The heading level of a gspot.toml table on the settings page; its keys sit one level below. */
+export const TABLE_HEADING_LEVEL = 2;
 /** How a reasoned value reads in the accepted values of a setting. */
 export const REASONED_VALUE_LABEL = 'a reasoned value `{ value = …, reason = "…" }`';
 /** The characters that a heading ID leaves out of the heading text, as Starlight writes it. */

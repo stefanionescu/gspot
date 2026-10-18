@@ -45,7 +45,7 @@ commands that set its options or ignore it.
 ## Ruff
 
 Ruff takes no lint rule options from `gspot.toml`. Its limits, such as `limits.cyclomatic_complexity` and
-`limits.function_parameters`, come from [limits](/reference/gspot-toml/limits/), and `tools.ruff.docstring_convention`
+`limits.function_parameters`, come from [limits](/reference/gspot-toml/#limits), and `tools.ruff.docstring_convention`
 sets the pydocstyle convention. To turn a Ruff lint rule off, ignore it by its code:
 `gspot ignore python/ruff --rule <code> --reason "<why>"`.
 
@@ -79,4 +79,4 @@ MD024 = { siblings_only = false }
 
 This reports repeated headings throughout a document, not only under the same parent heading.
 
-See [tool options](/reference/gspot-toml/tools/) for the accepted fields.
+See [tool options](/reference/gspot-toml/#tools) for the accepted fields.

@@ -61,4 +61,4 @@ The report shows `failed`, `missing`, and `error` rows. Add `--verbose` for the 
 command, and each ignore with its reason. `gspot check --json` prints the whole report as one JSON object.
 
 When a lint rule does not fit your code, [ignore the finding](/use/ignore/). To change a limit, see
-[limits](/reference/gspot-toml/limits/).
+[limits](/reference/gspot-toml/#limits).

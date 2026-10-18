@@ -117,4 +117,4 @@ reads what another fixer wrote. Then it runs the checks again. The fix commands 
 If the fix command exits with one of the `exit_codes`, gspot reports remaining findings.
 Other nonzero exits count as a failed run.
 
-[Command check settings](/reference/gspot-toml/command_check/) lists the accepted inputs.
+[Command check settings](/reference/gspot-toml/#command_check) lists the accepted inputs.

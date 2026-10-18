@@ -3,15 +3,14 @@ import type { JSONSchema } from 'zod/v4/core';
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
 import { formatLimitsGuide, formatNamingGuide } from './setting-guides.ts';
-import { escapeCell, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
+import { escapeCell, formatTable, formatSection, buildReferencePage } from './markdown.ts';
 
 import {
     MAP_KEY_NAME,
     ANGLE_BRACKETS,
-    PAGE_TITLE_LEVEL,
-    SETTINGS_SUBPAGES,
     HEADING_ID_DROPPED,
     SCHEMA_TYPE_LABELS,
+    TABLE_HEADING_LEVEL,
     LISTED_VALUES_LIMIT,
     LANGUAGE_PLACEHOLDER,
     CATEGORY_PLACEHOLDER,
@@ -57,10 +56,13 @@ function formatAcceptedValue(schema: JSONSchema.JSONSchema, value: JSONSchema.JS
             : node.enum.map((value) => `\`${JSON.stringify(value)}\``).join(', ');
     if (node.anyOf !== undefined) {
         const branches = node.anyOf.map((entry) => getSchemaNode(schema, entry));
-        // Values that each carry their own meaning read better as a list than as one long sentence.
+        // Values that each carry their own meaning read better as a table than as one long sentence.
         if (branches.every((branch) => branch.const !== undefined && branch.description !== undefined)) {
-            const items = branches.map((branch) => '- ' + formatAcceptedValue(schema, branch));
-            return `One of these values:\n\n${items.join('\n')}\n\n`;
+            const rows = branches.map((branch) => [
+                `\`${JSON.stringify(branch.const)}\``,
+                escapeCell(branch.description ?? ''),
+            ]);
+            return `One of these values:\n\n${formatTable(['Value', 'Meaning'], rows)}\n\n`;
         }
         return [...new Set(node.anyOf.map((entry) => formatAcceptedValue(schema, entry)))].join(' or ');
     }
@@ -139,7 +141,7 @@ function formatSetting(
         `${sentence} ${presence}` +
         (reasons.length === 0 ? '' : ` Reason needed when: ${reasons.join(', ')}.`) +
         formatLanguageDefaults(variants) +
-        (node.description === undefined ? '' : ` ${escapeCell(node.description)}`)
+        (node.description === undefined ? '' : `\n\n${node.description}`)
     );
 }
 
@@ -158,18 +160,20 @@ function formatRowId(key: string): string {
     return key.replaceAll(ANGLE_BRACKETS, '');
 }
 
-// Each key of a table or a record as one row, named without the table prefix, with the full key as its anchor.
-function formatSettingRows(
+// Each key of a table or a record under its own heading, one level below the table, with the full key as its anchor.
+function formatSettingKeys(
     data: ReturnType<typeof readReferenceData>,
     prefix: string,
     keys: ReturnType<typeof listSchemaProperties>,
+    level: number,
 ): string {
-    return formatDefinitions(
-        keys.map(({ name, node, required }) => {
+    return keys
+        .map(({ name, node, required }) => {
             const key = prefix === '' ? name : `${prefix}.${name}`;
-            return [`\`${name}\``, formatSetting(data.schema, key, node, data, required), formatRowId(key)];
-        }),
-    );
+            const heading = `<h${String(level)} id="${formatRowId(key)}"><code>${key}</code></h${String(level)}>`;
+            return `${heading}\n\n${formatSetting(data.schema, key, node, data, required)}\n`;
+        })
+        .join('\n');
 }
 
 // A table whose keys all repeat keys of the table around it sets those keys for one language or one category.
@@ -200,20 +204,25 @@ function formatVariantSection(schema: JSONSchema.JSONSchema, key: string, node: 
             ? ''
             : `\n\`${pattern}.${CATEGORY_PLACEHOLDER}\` sets the same keys for one category of names, and a key you ` +
               `leave out takes the value of \`${pattern}\`. The categories of each language:\n\n` +
-              named
-                  .map(([name, tables]) => `- \`${name}\`: ${tables.map((table) => '`' + table.name + '`').join(', ')}`)
-                  .join('\n') +
+              formatTable(
+                  ['Language', 'Categories'],
+                  named.map(([name, tables]) => [
+                      `\`${name}\``,
+                      tables.map((table) => '`' + table.name + '`').join(', '),
+                  ]),
+              ) +
               '\n')
     );
 }
 
-// A table or a record: its description and keys, then the tables and records inside it, one heading level down.
-// The page title takes the first level, so a table with its own page starts without a heading.
+// A table or a record: its description, a guide when it has one, and its keys, then the tables and records inside it,
+// one heading level down.
 function formatSettingTable(
     data: ReturnType<typeof readReferenceData>,
     key: string,
     value: JSONSchema.JSONSchema | boolean,
     level: number,
+    guide = '',
 ): string {
     const { schema } = data;
     const node = getSchemaNode(schema, value);
@@ -221,9 +230,10 @@ function formatSettingTable(
     const keys = children.filter((child) => isSettingValue(schema, child.node));
     const variants = new Set(listVariantTables(schema, node).map(({ name }) => name));
     return (
-        (level === PAGE_TITLE_LEVEL ? '' : `\n${'#'.repeat(level)} ${formatTableHeader(key, node)}\n\n`) +
+        `\n${'#'.repeat(level)} ${formatTableHeader(key, node)}\n\n` +
         (node.description === undefined ? '' : `${node.description}\n\n`) +
-        (keys.length === 0 ? '' : `${formatSettingRows(data, key, keys)}\n`) +
+        guide +
+        (keys.length === 0 ? '' : `${formatSettingKeys(data, key, keys, level + 1)}\n`) +
         children
             .filter((child) => !isSettingValue(schema, child.node) && !variants.has(child.name))
             .map((child) => formatSettingTable(data, `${key}.${child.name}`, child.node, level + 1))
@@ -248,10 +258,11 @@ function formatScopeSection(
         `\n## ${formatTableHeader('scope', node)}\n\n` +
         (node.description === undefined ? '' : `${node.description}\n\n`) +
         'See [Monorepos and scopes](/configure/monorepos/) for how a scope inherits settings.\n\n' +
-        formatSettingRows(
+        formatSettingKeys(
             data,
             'scope',
             children.filter((child) => isSettingValue(schema, child.node)),
+            TABLE_HEADING_LEVEL + 1,
         ) +
         `\n\nOnly the root takes these keys: ${rootOnly.map((name) => '`' + name + '`').join(', ')}.\n`
     );
@@ -288,61 +299,45 @@ function formatSettingAnchor(schema: JSONSchema.JSONSchema, path: string[], node
  */
 export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string {
     const { path, node } = findSettingPath(schema, key);
-    const [table = ''] = path;
-    if (!SETTINGS_SUBPAGES.has(table))
-        return `[\`${key}\`](/reference/gspot-toml/#${formatSettingAnchor(schema, path, node)})`;
-    // A table with its own page starts that page, without a heading.
-    if (path.length === 1) return `[\`${key}\`](/reference/gspot-toml/${table}/)`;
-    return `[\`${key}\`](/reference/gspot-toml/${table}/#${formatSettingAnchor(schema, path, node)})`;
+    return `[\`${key}\`](/reference/gspot-toml/#${formatSettingAnchor(schema, path, node)})`;
 }
 
 /**
- * Build one settings index and a page for each large table.
+ * Build the one settings page: the top-level keys, then every table and record, each key under its own heading.
  * @param data settings variants and JSON Schema from the CLI
- * @returns reference pages by path
+ * @returns the page, keyed by its path
  */
 export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): Map<string, ReferencePage> {
     const { schema } = data;
-    const pages = new Map<string, ReferencePage>();
     const roots = listSchemaProperties(schema, schema);
-    const subpages: string[] = [];
-    const sections: string[] = [];
-    for (const { name, node } of roots.filter((child) => !isSettingValue(schema, child.node))) {
-        if (name === 'scope') {
-            sections.push(formatScopeSection(data, node));
-            continue;
-        }
-        const header = SETTINGS_SUBPAGES.get(name);
-        if (header === undefined) {
-            sections.push(formatSettingTable(data, name, node, PAGE_TITLE_LEVEL + 1));
-            continue;
-        }
-        const guides: Record<string, () => string> = {
-            limits: () => formatLimitsGuide(data),
-            naming: () => formatNamingGuide(data),
-        };
-        const body = (guides[name]?.() ?? '') + formatSettingTable(data, name, node, PAGE_TITLE_LEVEL);
-        pages.set(`gspot-toml/${name}.md`, buildReferencePage(header.title, header.description, body));
-        subpages.push(`- [${header.title}](/reference/gspot-toml/${name}/): ${header.description}`);
-    }
-    pages.set(
-        'gspot-toml/index.md',
-        buildReferencePage(
-            'Settings',
-            'Every key, accepted value, and default of gspot.toml.',
-            'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n' +
-                `The [JSON Schema](/${data.schemaFile}) describes every key. Editors apply it on their own once SchemaStore lists gspot.\n\n` +
-                `These tables have their own page:\n\n${subpages.join('\n')}\n` +
-                formatSection(
-                    'Top-level keys',
-                    formatSettingRows(
-                        data,
-                        '',
-                        roots.filter((child) => isSettingValue(schema, child.node)),
-                    ),
-                ) +
-                sections.join(''),
-        ),
+    const guides: Readonly<Record<string, () => string>> = {
+        limits: () => formatLimitsGuide(data),
+        naming: () => formatNamingGuide(data),
+    };
+    const sections = roots
+        .filter((child) => !isSettingValue(schema, child.node))
+        .map(({ name, node }) =>
+            name === 'scope'
+                ? formatScopeSection(data, node)
+                : formatSettingTable(data, name, node, TABLE_HEADING_LEVEL, guides[name]?.() ?? ''),
+        );
+    const page = buildReferencePage(
+        'Settings',
+        'Every key, accepted value, and default of gspot.toml.',
+        'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n' +
+            `The [JSON Schema](/${data.schemaFile}) describes every key. Editors apply it on their own once SchemaStore lists gspot.\n` +
+            formatSection(
+                'Top-level keys',
+                formatSettingKeys(
+                    data,
+                    '',
+                    roots.filter((child) => isSettingValue(schema, child.node)),
+                    TABLE_HEADING_LEVEL + 1,
+                ),
+            ) +
+            sections.join(''),
     );
-    return pages;
+    // Every key has a heading, so the table of contents lists the tables only.
+    page.data.tableOfContents = { maxHeadingLevel: 2 };
+    return new Map([['gspot-toml/index.md', page]]);
 }
