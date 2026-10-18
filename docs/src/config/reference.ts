@@ -11,7 +11,7 @@ const GUIDES = {
     security: { path: '/checks/security/', title: 'Security and secrets' },
     testing: { path: '/checks/testing/', title: 'Tests and coverage' },
     dependencies: { path: '/checks/dependencies/', title: 'Dependencies and licenses' },
-    prose: { path: '/configure/prose/', title: 'Spelling and prose' },
+    prose: { path: '/checks/prose/', title: 'Spelling and prose' },
 } as const;
 
 /** Labels for the conditions that select configurations and rules. */

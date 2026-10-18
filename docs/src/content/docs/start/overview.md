@@ -1,5 +1,5 @@
 ---
-title: What gspot does
+title: Introduction
 description: See what gspot checks and how it fits your Git work.
 ---
 

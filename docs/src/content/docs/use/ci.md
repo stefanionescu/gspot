@@ -1,5 +1,5 @@
 ---
-title: CI
+title: Continuous integration
 description: Run checks in GitHub Actions, GitLab, or an existing pipeline.
 ---
 

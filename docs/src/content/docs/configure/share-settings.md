@@ -1,5 +1,5 @@
 ---
-title: Reuse templates
+title: Share settings
 description: Export portable settings and set up another repository from them.
 ---
 

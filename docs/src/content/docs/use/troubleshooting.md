@@ -27,11 +27,11 @@ To make new lockfiles, delete them and run `gspot install`.
 ## The installed version differs from the pinned version
 
 Install the version the repository pins, as [Set up a clone](/start/install/#set-up-a-clone) shows.
-To move the repository to a new version, see [Upgrade gspot](/maintain/upgrade/).
+To move the repository to a new version, see [Upgrade gspot](/start/upgrade/).
 
 ## A generated file has local edits
 
-Move any change you need into `gspot.toml` before you run `gspot apply`. Apply replaces owned generated files, including local edits. See [Generated files](/maintain/generated-files/).
+Move any change you need into `gspot.toml` before you run `gspot apply`. Apply replaces owned generated files, including local edits. See [Generated files](/reference/generated-files/).
 
 ## A check runs slowly
 

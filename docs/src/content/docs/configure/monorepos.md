@@ -1,5 +1,5 @@
 ---
-title: Monorepos and scopes
+title: Monorepos
 description: Give each scope its own configurations and settings in gspot.toml.
 ---
 

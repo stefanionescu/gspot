@@ -1,5 +1,5 @@
 ---
-title: Adopt an existing repository
+title: Migrate existing tools
 description: Review the init plan and move the settings you need.
 ---
 

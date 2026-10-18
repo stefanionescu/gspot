@@ -14,7 +14,7 @@ gspot list settings
 ```
 
 Add `--json` for complete values and inherited settings.
-The [gspot.toml reference](/reference/gspot-toml/) lists accepted values and defaults.
+The [settings reference](/reference/gspot-toml/) lists accepted values and defaults.
 
 ## Choose configurations
 

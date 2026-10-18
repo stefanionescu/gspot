@@ -1,5 +1,5 @@
 ---
-title: Choose the files gspot checks
+title: Exclude files
 description: Select source files, generated files, copied files, and test files.
 ---
 

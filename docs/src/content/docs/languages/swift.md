@@ -1,5 +1,5 @@
 ---
-title: Swift and Xcode
+title: Swift
 description: Run SwiftLint, SwiftFormat, Swift tests, and Xcode coverage.
 ---
 

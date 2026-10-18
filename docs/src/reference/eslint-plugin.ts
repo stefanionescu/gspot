@@ -60,7 +60,7 @@ export function buildPluginPages(): Map<string, ReferencePage> {
     pages.set(
         `${REFERENCE_FOLDERS.eslintPlugin}/index.md`,
         buildReferencePage(
-            'ESLint plugin rules',
+            'ESLint plugin',
             `${String(Object.keys(plugin.rules).length)} rules for standalone ESLint and gspot.`,
             'See [Use the ESLint plugin](/reference/eslint-plugin/use/) for standalone setup.\n\n' +
                 formatDefinitions(

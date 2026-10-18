@@ -1,5 +1,5 @@
 ---
-title: JSON report
+title: JSON output
 description: The fields of `gspot check --json` and the error object of every `--json` command.
 ---
 

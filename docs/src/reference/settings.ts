@@ -298,7 +298,7 @@ export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): 
     pages.set(
         'gspot-toml/index.md',
         buildReferencePage(
-            'gspot.toml reference',
+            'Settings',
             'Every key, accepted value, and default of gspot.toml.',
             'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n' +
                 `The [JSON Schema](/${data.schemaFile}) describes every key. Editors apply it on their own once SchemaStore lists gspot.\n\n` +

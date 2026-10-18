@@ -513,7 +513,7 @@ reason = "Starlight builds these source links into site routes; site/linkinator 
 
 [[ignore]]
 check = "docs/missing-paths"
-paths = ["docs/src/content/docs/configure/monorepos.md", "docs/src/content/docs/maintain/generated-files.md", "docs/src/content/docs/use/agent-rules.md"]
+paths = ["docs/src/content/docs/configure/monorepos.md", "docs/src/content/docs/reference/generated-files.md", "docs/src/content/docs/use/coding-agents.md"]
 reason = "The docs describe the .gspot/configurations layout of gspot 0.3.0; this repository runs 0.1.1 until it moves to 0.3.0."
 until = 2026-12-01
 

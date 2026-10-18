@@ -62,7 +62,7 @@ export function buildCheckIndex(
     groups: Record<string, string>,
 ): ReferencePage {
     return buildReferencePage(
-        'Checks',
+        'All checks',
         `${String(checks.length)} checks declared by shipped configurations.`,
         Object.entries(groups)
             .map(([group, title]) => {

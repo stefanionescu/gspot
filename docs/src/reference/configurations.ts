@@ -143,7 +143,7 @@ export function buildConfigurationPages(data: ReturnType<typeof readReferenceDat
         [
             'configurations/index.md',
             buildReferencePage(
-                'Configuration reference',
+                'Configurations',
                 'Choose configurations by the files and tools they check.',
                 Object.entries(data.groups)
                     .map(([group, title]) =>

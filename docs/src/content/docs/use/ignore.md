@@ -1,5 +1,5 @@
 ---
-title: Ignore a finding
+title: Ignore findings
 description: Record an ignore with a reason, then inspect or remove it.
 tableOfContents: false
 ---

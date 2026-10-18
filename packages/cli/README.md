@@ -47,7 +47,7 @@ Commit the files that `gspot init` writes. Git does not keep the installed tools
 ## Documentation
 
 - [Quickstart](https://generativespotting.com/start/quickstart/)
-- [Read and fix findings](https://generativespotting.com/use/findings/)
+- [Read and fix findings](https://generativespotting.com/use/run-checks/)
 - [Settings in gspot.toml](https://generativespotting.com/configure/gspot-toml/)
 - [Every check](https://generativespotting.com/reference/checks/) and
   [every command](https://generativespotting.com/reference/commands/)
