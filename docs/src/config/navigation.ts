@@ -1,5 +1,5 @@
-/** The sidebar: one link per page, named by the page title, plus one to each long reference index. */
-export const SIDEBAR = [
+/** The fixed sidebar groups: one link per page, named by the page title. */
+export const SIDEBAR_GROUPS = [
     {
         label: 'Getting started',
         collapsed: false,
@@ -38,41 +38,43 @@ export const SIDEBAR = [
         ],
     },
     {
-        label: 'Languages',
+        label: 'Guides',
         collapsed: false,
         items: [
             { slug: 'languages/javascript-typescript' },
             { slug: 'languages/python' },
             { slug: 'languages/swift' },
             { slug: 'languages/css' },
-        ],
-    },
-    {
-        label: 'Checks',
-        collapsed: false,
-        items: [
             { slug: 'checks/security' },
             { slug: 'checks/dependencies' },
             { slug: 'checks/testing' },
             { slug: 'checks/prose' },
         ],
     },
+];
+
+export const REFERENCE_LABEL = 'Reference';
+
+/** The Reference groups that list every generated check or configuration page, by area. */
+export const REFERENCE_LISTS = [
+    { label: 'Checks', indexLabel: 'All checks', kind: 'checks' },
+    { label: 'Configurations', indexLabel: 'All configurations', kind: 'configurations' },
+] as const;
+
+/** The Reference links before the generated lists. */
+export const REFERENCE_START = [
+    { label: 'Commands', collapsed: true, items: [{ autogenerate: { directory: 'reference/commands' } }] },
+];
+
+/** The Reference links after the generated lists. */
+export const REFERENCE_END = [
+    { slug: 'reference/gspot-toml/index' },
     {
-        label: 'Reference',
-        collapsed: false,
-        items: [
-            { label: 'Commands', collapsed: true, items: [{ autogenerate: { directory: 'reference/commands' } }] },
-            { slug: 'reference/gspot-toml/index' },
-            { slug: 'reference/configurations/index' },
-            { slug: 'reference/checks/index' },
-            {
-                label: 'ESLint plugin',
-                collapsed: true,
-                items: [{ slug: 'reference/eslint-plugin/use' }, { slug: 'reference/eslint-plugin/index' }],
-            },
-            { slug: 'reference/environment-variables' },
-            { slug: 'reference/json-output' },
-            { slug: 'reference/generated-files' },
-        ],
+        label: 'ESLint plugin',
+        collapsed: true,
+        items: [{ slug: 'reference/eslint-plugin/use' }, { slug: 'reference/eslint-plugin/index' }],
     },
+    { slug: 'reference/environment-variables' },
+    { slug: 'reference/json-output' },
+    { slug: 'reference/generated-files' },
 ];

@@ -4,8 +4,8 @@ import { defineConfig } from 'astro/config';
 import { writeAgentFiles } from './src/agents.ts';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { pruneUnusedStyles } from './src/styles.ts';
-import { SIDEBAR } from './src/config/navigation.ts';
 import { readReferenceData } from '#cli/reference.ts';
+import { buildSidebar } from './src/reference/sidebar.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 import { description } from '@gspothq/cli/package.json' with { type: 'json' };
 import { LLMS_PAGES, AGENT_STEPS, LLMS_DESCRIPTION } from './src/config/setup.ts';
@@ -129,7 +129,7 @@ export default defineConfig({
             description,
             customCss: ['./src/theme.css'],
             social: [{ icon: 'github', label: 'GitHub', href: REPOSITORY_URL }],
-            sidebar: SIDEBAR,
+            sidebar: buildSidebar(readReferenceData()),
         }),
         {
             name: 'styles',

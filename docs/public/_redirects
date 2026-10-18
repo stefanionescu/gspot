@@ -39,3 +39,6 @@
 /reference/json-report/ /reference/json-output/ 301
 /maintain/generated-files/ /reference/generated-files/ 301
 /reference/checks/dependencies/release-age/ /checks/dependencies/ 301
+/reference/configurations/swift-tests/ /reference/configurations/swift/ 301
+/reference/checks/swift-tests/coverage/ /reference/checks/swift/coverage/ 301
+/reference/checks/swift-tests/skip-reasons/ /reference/checks/swift/skip-reasons/ 301
