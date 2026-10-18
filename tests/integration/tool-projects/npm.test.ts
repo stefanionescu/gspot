@@ -14,7 +14,7 @@ import type { DryRunJson } from '#cli/types/commands/edit-settings.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { TOOL_PROJECT_BYTE_ATTRIBUTES } from '#tests/data/parsers/git.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
-import { PACKAGE_MANAGER_ROWS } from '#tests/data/tools/npm-tool-project.ts';
+import { PACKAGE_MANAGER_ROWS } from '#tests/data/install/npm-tool-project.ts';
 import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
 import { createPackageManagerSandbox } from '#tests/setup/package-manager-sandboxes.ts';
 import type { ToolProjectFiles, PackageManagerSandbox } from '#tests/types/packages.ts';

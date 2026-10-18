@@ -11,7 +11,7 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { inspectionContext, buildProcessResult } from '#tests/setup/builders.ts';
-import { SYSTEM_PLUGIN_REPORTS, PACKAGE_METADATA_FAILURES } from '#tests/data/tools/installation.ts';
+import { SYSTEM_PLUGIN_REPORTS, PACKAGE_METADATA_FAILURES } from '#tests/data/install/installation.ts';
 
 test('a library is found only in the tool project', async () => {
     await using sandbox = await testdir();

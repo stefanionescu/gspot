@@ -9,7 +9,7 @@ import { BASH_TEMPLATE_SETTINGS } from '#tests/data/settings/schema.ts';
 import { FORMAT_OVERRIDES_SETTINGS } from '#tests/data/checks/format.ts';
 import { readTemplate, exportTemplate } from '#cli/settings/templates.ts';
 import { RAW_HOST, TEMPLATE_FILE } from '#cli/config/settings/templates.ts';
-import { ESLINT_OVERRIDES_SETTINGS } from '#tests/data/generated-files/eslint/overrides.ts';
+import { ESLINT_OVERRIDES_SETTINGS } from '#tests/data/generation/eslint/overrides.ts';
 
 test.each([
     ['preserves ESLint rules and authored path', ESLINT_OVERRIDES_SETTINGS, 'project.template.toml'],

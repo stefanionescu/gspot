@@ -7,7 +7,7 @@ import { INIT_FILES } from '#tests/data/commands/init.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/edit-settings.ts';
-import { PACKAGE_MANAGER_ROWS } from '#tests/data/tools/npm-tool-project.ts';
+import { PACKAGE_MANAGER_ROWS } from '#tests/data/install/npm-tool-project.ts';
 import { buildSandboxPath, installToolProjects } from '#tests/setup/install.ts';
 import { createPackageManagerSandbox } from '#tests/setup/package-manager-sandboxes.ts';
 

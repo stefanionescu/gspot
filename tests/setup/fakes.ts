@@ -11,7 +11,7 @@ import type { spawnProcess } from '#cli/system/processes.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { NPM_TOOL_FOLDER } from '#tests/data/tools/installation.ts';
+import { NPM_TOOL_FOLDER } from '#tests/data/install/installation.ts';
 
 /**
  * Replace one child command and run the others normally.

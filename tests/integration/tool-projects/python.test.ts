@@ -14,7 +14,7 @@ import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
 import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
 import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
 import { createPythonSandbox, createIndexedPythonSandbox } from '#tests/setup/python-index.ts';
-import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/data/tools/python-tool-project.ts';
+import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/data/install/python-tool-project.ts';
 
 test.each([...PYTHON_PROJECTS])(
     'Python tool project install keeps your own and generated files with %s',

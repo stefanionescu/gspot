@@ -95,7 +95,7 @@ allowed_names = ["Data", "DetectorName", "SourceMetadata", "Verified", "fixInfo"
 reason = "These tool report properties retain the exact TruffleHog, Semgrep, markdownlint and typos JSON field names."
 
 [[naming.override]]
-paths = ["tests/unit/cli/generated-files/tool-files/v8r.test.ts"]
+paths = ["tests/unit/cli/generation/tool-files/v8r.test.ts"]
 allow_digits = true
 reason = "These files retain the official v8r and markdownlint-cli2 tool names."
 
@@ -236,7 +236,7 @@ allowed_names = ["SITE_PACKAGE_MANAGER_CASES"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["tests/data/tools/npm-tool-project.ts"]
+paths = ["tests/data/install/npm-tool-project.ts"]
 allowed_names = ["PACKAGE_MANAGER_DECLARATIONS", "PACKAGE_MANAGER_ROWS"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
@@ -266,22 +266,22 @@ allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["tests/unit/cli/generated-files/ci.test.ts"]
+paths = ["tests/unit/cli/generation/ci.test.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["tests/unit/cli/generated-files/hooks.test.ts"]
+paths = ["tests/unit/cli/generation/hooks.test.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["tests/unit/cli/generated-files/npm-tool-project.test.ts"]
+paths = ["tests/unit/cli/generation/npm-tool-project.test.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["tests/unit/cli/tools/npm/package-manager.test.ts"]
+paths = ["tests/unit/cli/repository/package-manager.test.ts"]
 allowed_names = ["package-manager.test"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 

@@ -13,7 +13,7 @@ import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
-import { SERVER_FILES } from '#tests/data/generated-files/eslint/framework.ts';
+import { SERVER_FILES } from '#tests/data/generation/eslint/framework.ts';
 import { STYLELINT_FILES, STYLELINT_SUGGESTIONS } from '#tests/data/checks/css.ts';
 import { COMMITLINT_PACKAGE, COMMITLINT_PROJECT } from '#tests/data/checks/commits.ts';
 

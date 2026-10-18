@@ -15,8 +15,8 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { DECLARATION_FILES } from '#tests/data/repository/file-classification.ts';
-import { CLEAR_DEPENDENCIES_SCRIPT } from '#tests/data/tools/npm-tool-project.ts';
 import { TEXT_FIX, TEXT_CHECK, FIX_LINTER_CASES } from '#tests/data/runs/fixes.ts';
+import { CLEAR_DEPENDENCIES_SCRIPT } from '#tests/data/install/npm-tool-project.ts';
 import { REACT_VUE_PACKAGES, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/data/repository/dependency-files.ts';
 
 test('fix preserves discovered project scopes when checking each project task', async () => {

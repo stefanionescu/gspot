@@ -10,7 +10,7 @@ import { listWorkspaceFolders } from '#cli/repository/packages.ts';
 import { LAYERED_SCOPE_SETTINGS } from '#tests/data/settings/scopes.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
-import { PYTHON_WORKSPACE_FILES } from '#tests/data/tools/python-tool-project.ts';
+import { PYTHON_WORKSPACE_FILES } from '#tests/data/install/python-tool-project.ts';
 import { joinScope, findScopes, findProjectFolder } from '#cli/repository/scopes.ts';
 
 import {

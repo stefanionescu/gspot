@@ -12,7 +12,7 @@ import { readManifests } from '#cli/configurations/manifests.ts';
 import { fakeTool, fakeNpmPackage } from '#tests/setup/fakes.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { type ToolDeclaration } from '#cli/types/configurations.ts';
-import { VERSION_OUTPUTS } from '#tests/data/tools/installation.ts';
+import { VERSION_OUTPUTS } from '#tests/data/install/installation.ts';
 import { buildProgramPin, inspectionContext } from '#tests/setup/builders.ts';
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {

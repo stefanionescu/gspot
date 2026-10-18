@@ -7,7 +7,7 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildTrackedFile, readTestRepository } from '#tests/setup/builders.ts';
-import { PYTHON_WORKSPACE_FILES } from '#tests/data/tools/python-tool-project.ts';
+import { PYTHON_WORKSPACE_FILES } from '#tests/data/install/python-tool-project.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 
 import {
