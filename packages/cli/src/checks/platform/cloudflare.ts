@@ -1,9 +1,9 @@
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import type { HeaderBlock, HeaderBlocks } from '#cli/types/checks/platform.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 
 import {
     DETACH_PREFIX,

@@ -4,9 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { type RunReport } from '#cli/types/runs/check.ts';
 import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { type RunReport } from '#cli/types/checks/run/check.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { SYNTAX_CASES, SYNTAX_FILES } from '#tests/data/checks/bash/tool-checks.ts';
 

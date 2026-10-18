@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { runGit } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { installToolProjects } from '#tests/setup/install.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { PYPROJECT } from '#tests/data/checks/python/project.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 

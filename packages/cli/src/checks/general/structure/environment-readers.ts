@@ -1,12 +1,12 @@
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { readSwiftEnvironment } from '#cli/parsers/swift.ts';
 import { readPythonEnvironment } from '#cli/parsers/python.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { ENV_NAME } from '#cli/config/checks/general/structure.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readBashEnvironment, findEnclosingFunction } from '#cli/parsers/bash.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sources.ts';
 

@@ -7,10 +7,10 @@ import { readGitOutput } from '#tests/setup/git.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
-import { copyRevision } from '#cli/checks/run/copy/revision.ts';
+import { copyRevision } from '#cli/runs/scratch-copy/revision.ts';
 import { WORKSPACE_SOURCE_FILES } from '#tests/data/runs/scratch-copies.ts';
 import { mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
-import { checkCopyInputs, copyIntoScratch, selectScratchCopyPaths } from '#cli/checks/run/copy/scratch.ts';
+import { checkCopyInputs, copyIntoScratch, selectScratchCopyPaths } from '#cli/runs/scratch-copy/scratch.ts';
 
 test('a dry-run copy holds workspace dependencies and working bin links, and edits in it reach neither source', async () => {
     await using repository = await testdir();

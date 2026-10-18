@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
+import { runFixers } from '#cli/runs/fixes.ts';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { planRun } from '#cli/planning/checks.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { mkdir, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { runFixers } from '#cli/checks/run/fixes.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { DOCS_SETTINGS } from '#tests/data/checks/docs.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
@@ -15,6 +15,7 @@ import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { BASE_CHECK } from '#tests/data/runs/command-checks.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/data/settings/scopes.ts';
+import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { PROJECT_OPTIONS, PROJECT_TRIGGERS } from '#tests/data/runs/plan.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
@@ -79,10 +80,16 @@ test.each([...PROJECT_TRIGGERS])(
         expect(active.map((check) => check.findings.map(({ message }) => message))).toStrictEqual(
             active.map(() => ['Project finding']),
         );
-        const preview = await runFixers(session, [api], { isDryRun: true });
+        const preview = await runFixers(session, [api], {
+            isDryRun: true,
+            selectImplementation: selectCheckImplementation,
+        });
         expect(preview.changed).toStrictEqual(['api/source.ts']);
         expect(await isOnDisk(join(sandbox.path, 'api/source.ts'))).toBe(false);
-        const applied = await runFixers(session, [api], { isDryRun: false });
+        const applied = await runFixers(session, [api], {
+            isDryRun: false,
+            selectImplementation: selectCheckImplementation,
+        });
         expect(applied.changed).toStrictEqual(['api/source.ts']);
         expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
     },

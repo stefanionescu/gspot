@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
+import { locateNode, buildFinding } from '#cli/runs/finding.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
-import { locateNode, buildFinding } from '#cli/checks/finding.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { COMMENT_LINE, XCTEST_PREFIX, SKIP_REASON_ARGUMENT, SWIFT_STRING_LITERAL } from '#cli/config/checks/testing.ts';
 
 function hasReason(value: Node | undefined): boolean {

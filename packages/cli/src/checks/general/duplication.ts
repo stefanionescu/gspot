@@ -1,20 +1,20 @@
 import { z } from 'zod';
 import { statSync, writeFileSync } from 'node:fs';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { parseReport } from '#cli/runs/output/json.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { parseReport } from '#cli/parsers/output/json.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
+import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
-import { formatOutputTail } from '#cli/checks/run/command/output.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { JSCPD, JSCPD_ARGUMENTS, JSCPD_TOOL_FILE, JSCPD_REPORT_FILE } from '#cli/config/checks/general/duplication.ts';
 
 const clonePlaceSchema = z.object({

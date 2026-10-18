@@ -1,9 +1,9 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/database.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { FROZEN_NONE, MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';

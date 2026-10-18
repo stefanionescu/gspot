@@ -3,7 +3,7 @@ import { appendFile } from 'node:fs/promises';
 import { test, expect, beforeAll } from 'bun:test';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 

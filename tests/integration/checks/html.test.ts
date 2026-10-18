@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { COPY_PAGE_BUILD } from '#tests/data/checks/site/build.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 

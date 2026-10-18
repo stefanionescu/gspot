@@ -1,20 +1,20 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
 import { join, posix } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
+import { parseReport } from '#cli/runs/output/json.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { parseReport } from '#cli/parsers/output/json.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
+import { runCommandGroups } from '#cli/runs/command/check.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
-import { runCommandGroups } from '#cli/checks/run/command/check.ts';
 import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
-import { formatOutputTail } from '#cli/checks/run/command/output.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { DOCKERIGNORE, DOCKERFILE_NAME } from '#cli/config/repository/inventory.ts';
-import { type Finding, type CheckInput, type CheckResult } from '#cli/types/checks/run/check.ts';
+import { type Finding, type CheckInput, type CheckResult } from '#cli/types/runs/check.ts';
 import type { ComposeFiles, ComposeService, ComposeDocuments } from '#cli/types/checks/infrastructure.ts';
 
 import {

@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { checkChanges } from '#tests/setup/sample-checks.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { ESLINT_SANDBOX, JAVASCRIPT_MODULE } from '#tests/data/checks/javascript/eslint.ts';
 

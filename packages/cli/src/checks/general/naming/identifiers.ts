@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { extractStem } from '#cli/system/paths.ts';
-import type { CheckInput } from '#cli/types/checks/run/check.ts';
+import type { CheckInput } from '#cli/types/runs/check.ts';
 import { REST_SEGMENT } from '#cli/config/checks/general/naming.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
 import { createIdentifier } from '#cli/checks/general/naming/collect.ts';

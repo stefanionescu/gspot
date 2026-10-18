@@ -1,6 +1,6 @@
 import { extractParentFolder } from '#cli/system/paths.ts';
+import type { CheckInput } from '#cli/types/runs/check.ts';
 import type { FolderEntry } from '#cli/types/checks/general.ts';
-import type { CheckInput } from '#cli/types/checks/run/check.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isInGspotFolder, listTaggedExtensions } from '#cli/repository/classify.ts';
 

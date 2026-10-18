@@ -6,7 +6,7 @@ import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { type GitHookReport } from '#tests/types/processes.ts';
-import { copyRevision } from '#cli/checks/run/copy/revision.ts';
+import { copyRevision } from '#cli/runs/scratch-copy/revision.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { readIndexEntries, listSubmodulePaths } from '#cli/repository/tracked.ts';
 import { runGit, commitAll, readGitOutput, prepareNestedRepository } from '#tests/setup/git.ts';
@@ -68,7 +68,7 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
 
 // Run the hook with the real module entry points and the inherited Git environment.
 async function runGitHook(worktree: string, index: string, folder: string, report: string) {
-    const revision = pathToFileURL(await Bun.resolve('#cli/checks/run/copy/revision.ts', import.meta.dir)).href;
+    const revision = pathToFileURL(await Bun.resolve('#cli/runs/scratch-copy/revision.ts', import.meta.dir)).href;
     const owner = pathToFileURL(await Bun.resolve('#cli/system/git.ts', import.meta.dir)).href;
     const tool = pathToFileURL(await Bun.resolve('#cli/tools/run.ts', import.meta.dir)).href;
     return runGit(worktree, ['-c', `core.hooksPath=${join(folder, 'hook')}`, 'commit', '-qm', 'hook'], {

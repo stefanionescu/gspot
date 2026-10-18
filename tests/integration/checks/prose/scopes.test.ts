@@ -4,9 +4,9 @@ import { writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { type RunReport } from '#cli/types/runs/check.ts';
 import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { type RunReport } from '#cli/types/checks/run/check.ts';
 import { PACKAGE_STYLE_CASES } from '#tests/data/checks/prose.ts';
 import { updateSandbox, shareProseSandbox } from '#tests/setup/sandbox.ts';
 

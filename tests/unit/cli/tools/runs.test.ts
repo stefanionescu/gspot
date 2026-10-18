@@ -2,9 +2,9 @@ import { test, expect } from 'bun:test';
 import { runTool } from '#cli/tools/run.ts';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 
 test("a tool's output reaches its check with LF line endings when the tool prints CRLF", async () => {
     await using sandbox = await testdir();

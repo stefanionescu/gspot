@@ -5,7 +5,7 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { copyRevision } from '#cli/checks/run/copy/revision.ts';
+import { copyRevision } from '#cli/runs/scratch-copy/revision.ts';
 import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 /** Stages dependency declarations and authored files for a revision copy. */

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/parsers/dependency-files.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/language/python.ts';
 
 /**

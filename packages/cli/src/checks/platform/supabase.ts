@@ -6,19 +6,19 @@ import { isRecord } from '#cli/system/values.ts';
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Parsed } from '#cli/types/errors.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { buildFinding } from '#cli/checks/finding.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { walkSqlTree } from '#cli/parsers/sql/postgres.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
 import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
-import { formatOutputTail, assertToolFindings } from '#cli/checks/run/command/output.ts';
+import { formatOutputTail, assertToolFindings } from '#cli/runs/command/output.ts';
 import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/checks/platform.ts';
 
 import {

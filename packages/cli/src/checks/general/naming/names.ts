@@ -1,5 +1,5 @@
-import { buildFinding } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/checks/run/check.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import type { NamingCase } from '#cli/types/settings/tables.ts';
 import { splitParts } from '#cli/checks/general/naming/settings.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';

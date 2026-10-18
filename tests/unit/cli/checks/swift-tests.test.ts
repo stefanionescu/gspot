@@ -1,9 +1,9 @@
 import { join } from 'node:path';
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as environment from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';

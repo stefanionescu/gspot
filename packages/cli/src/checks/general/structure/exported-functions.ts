@@ -1,11 +1,11 @@
 import ts from 'typescript';
 import { join, relative } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { readTsconfig, buildCompilerHost } from '#cli/parsers/tsconfig.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { EXPORTED_FUNCTION_EXTENSIONS } from '#cli/config/checks/general/structure.ts';

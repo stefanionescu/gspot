@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { GOOGLE_TERMS_FILE } from '#tests/data/checks/prose.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
 import { updateSandbox, shareProseSandbox } from '#tests/setup/sandbox.ts';

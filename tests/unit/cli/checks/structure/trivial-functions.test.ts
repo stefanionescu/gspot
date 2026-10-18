@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import type { Finding } from '#cli/types/checks/run/check.ts';
 import { EXPORTED_FUNCTION_FILES } from '#tests/data/checks/structure/exported-functions.ts';
 
 import {

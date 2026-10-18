@@ -5,7 +5,7 @@ import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, readFile } from 'node:fs/promises';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { copyRevision } from '#cli/checks/run/copy/revision.ts';
+import { copyRevision } from '#cli/runs/scratch-copy/revision.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 

@@ -1,14 +1,14 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { findQuotedEnd } from '#cli/parsers/comments.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
+import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { formatOutputTail } from '#cli/checks/run/command/output.ts';
 import type { Mount, NginxMounts, DirectiveScan } from '#cli/types/checks/infrastructure.ts';
-import { type Finding, type CheckInput, type BuiltInCheckResult } from '#cli/types/checks/run/check.ts';
+import { type Finding, type CheckInput, type BuiltInCheckResult } from '#cli/types/runs/check.ts';
 
 import {
     NGINX_CONF,

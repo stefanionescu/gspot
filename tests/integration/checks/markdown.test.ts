@@ -5,8 +5,8 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {

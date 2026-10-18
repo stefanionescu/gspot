@@ -1,18 +1,18 @@
 import { join, posix } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { formatOutputTail } from '#cli/runs/command/output.ts';
+import type { Substitutions } from '#cli/types/runs/command.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { type GeneratorOutput } from '#cli/types/configurations.ts';
-import { formatOutputTail } from '#cli/checks/run/command/output.ts';
-import type { Substitutions } from '#cli/types/checks/run/command.ts';
+import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
 import { readBytes, readCachedText } from '#cli/system/files/reads.ts';
-import { buildCommandSubstitutions } from '#cli/checks/run/command/check.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
-import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
+import { checkCopyInputs, copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import { GENERATOR_SCAN_EXCLUSIONS } from '#cli/config/checks/stale-generator-outputs.ts';
-import { expandCommand, replacePlaceholders, buildFileInvocations } from '#cli/checks/run/command/placeholders.ts';
+import { expandCommand, replacePlaceholders, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
 
 function checkMissingOutputs(input: CheckInput, targets: GeneratorOutput[], commandText: string): Finding[] {
     const entry = targets.find((target) => readCachedText(input.reads, target.path) === undefined);

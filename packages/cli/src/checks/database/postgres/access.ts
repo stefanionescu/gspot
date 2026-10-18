@@ -1,12 +1,12 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import type { Migration } from '#cli/types/checks/database.ts';
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { getNodeFields, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 

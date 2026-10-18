@@ -1,8 +1,8 @@
+import { buildFinding } from '#cli/runs/finding.ts';
 import { listCodeLines } from '#cli/parsers/bash.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import { COUNT_LIMITS } from '#cli/config/checks/language/bash.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 /**
  * Checks each shell function against the size limits: code lines and parser counts.

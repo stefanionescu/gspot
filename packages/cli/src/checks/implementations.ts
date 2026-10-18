@@ -1,12 +1,11 @@
 import { checkVale } from '#cli/checks/general/prose.ts';
-import { runBuiltInCheck } from '#cli/checks/run/built-in.ts';
+import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { checkSemgrep } from '#cli/checks/general/security.ts';
 import { checkExpoDoctor } from '#cli/checks/framework/expo.ts';
 import { checkJscpd } from '#cli/checks/general/duplication.ts';
 import { checkHtmlScripts } from '#cli/checks/language/html.ts';
 import { checkNextjsTsc } from '#cli/checks/framework/nextjs.ts';
 import { runSvelteCheck } from '#cli/checks/framework/svelte.ts';
-import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { checkDeptry } from '#cli/checks/language/python/deptry.ts';
 import { checkSiteBuild } from '#cli/checks/framework/site/build.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
@@ -49,7 +48,7 @@ import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/gener
 import { checkLargeFiles, checkIgnoredFilesTracked } from '#cli/checks/general/repository.ts';
 import { checkFileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
 import { checkEnvironmentReaders } from '#cli/checks/general/structure/environment-readers.ts';
-import { type RunnableCheck, type CheckImplementations } from '#cli/types/checks/run/check.ts';
+import { type CheckImplementation, type CheckImplementations } from '#cli/types/runs/check.ts';
 import { checkDockerCompose, checkDockerTrivyImage } from '#cli/checks/infrastructure/docker.ts';
 import { checkMarkdownFences, buildMarkdownlintArguments } from '#cli/checks/language/markdown.ts';
 import { checkCloudflareHeaders, checkCloudflareRedirects } from '#cli/checks/platform/cloudflare.ts';
@@ -189,17 +188,11 @@ export const CHECK_IMPLEMENTATIONS = {
 } satisfies CheckImplementations;
 
 /**
- * Pick the code that runs one check: the stale-output check, a built-in implementation, its own runner, or the tool
- * command.
+ * Find the check implementation of one check: the stale-output check, or the implementation under its check ID.
  * @param check the check to run.
- * @returns the run function.
+ * @returns the implementation, or undefined for a tool check that runs only its command.
  */
-export function selectCheckRun(check: CheckDeclaration): RunnableCheck['run'] {
-    if (check.generator_outputs !== undefined) return runBuiltInCheck(checkStaleGeneratorOutputs);
-    const builtIn = (CHECK_IMPLEMENTATIONS as CheckImplementations)[check.name];
-    if (builtIn?.check !== undefined) return runBuiltInCheck(builtIn.check);
-    const run = builtIn?.run ?? runCheckCommand;
-    // A tool check with its own arguments or tool files gets them on every run.
-    return (session, planned, options) =>
-        run(session, planned, { ...options, arguments: builtIn?.arguments, toolFiles: builtIn?.toolFiles });
+export function selectCheckImplementation(check: CheckDeclaration): CheckImplementation | undefined {
+    if (check.generator_outputs !== undefined) return { check: checkStaleGeneratorOutputs };
+    return (CHECK_IMPLEMENTATIONS as CheckImplementations)[check.name];
 }

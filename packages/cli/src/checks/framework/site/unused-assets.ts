@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { FILENAME_TAGS } from '#cli/config/repository/inventory.ts';
 import { REGULAR_FILE_MODES } from '#cli/config/repository/revisions.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { ASSET_FOLDER, TEXT_SUFFIXES } from '#cli/config/checks/framework/site.ts';
 
 /**

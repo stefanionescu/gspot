@@ -4,7 +4,7 @@ import type { NamingOverride } from '#cli/types/checks/general.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
 import type { TOOL_FOLDER_KINDS } from '#cli/config/system/locations.ts';
-import type { OutputSpec, OutputInput } from '#cli/types/parsers/output.ts';
+import type { OutputSpec, OutputInput } from '#cli/types/runs/output.ts';
 import type { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import type { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 

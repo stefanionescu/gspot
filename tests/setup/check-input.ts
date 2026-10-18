@@ -1,19 +1,20 @@
 // Builds check inputs for tests and keeps compiler state in a temporary folder.
 import { spyOn } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { buildCheckRun } from '#cli/runs/run.ts';
+import { checkInput } from '#cli/runs/built-in.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { type Session } from '#cli/types/planning.ts';
-import { checkInput } from '#cli/checks/run/built-in.ts';
 import * as environment from '#cli/system/environment.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
-import { selectCheckRun } from '#cli/checks/implementations.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**
@@ -104,7 +105,7 @@ async function checkFindings(
     );
     if (planned === undefined)
         throw new Error(`The sandbox does not plan ${checkId} in ${input.selection.scope.path || 'the root'}.`);
-    const result = await selectCheckRun(input.check)(
+    const result = await buildCheckRun(selectCheckImplementation(input.check))(
         { ...session, resources: options.resources ?? resources },
         { ...planned, files: input.files },
     );

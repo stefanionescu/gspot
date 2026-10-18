@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { unlink } from 'node:fs/promises';
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';

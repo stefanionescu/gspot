@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { createPythonSandbox } from '#tests/setup/python-index.ts';
 
 test('a staged Python finding is reported by Ruff from the installed environment while the working tree differs', async () => {

@@ -1,14 +1,15 @@
 import * as os from 'node:os';
 import { join } from 'node:path';
 import { openSession } from '#cli/session.ts';
+import { runFixers } from '#cli/runs/fixes.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runFixers } from '#cli/checks/run/fixes.ts';
 import { waitForExit, waitForFile } from '#tests/setup/processes.ts';
 import { SCRATCH_FAILURES } from '#tests/data/runs/scratch-copies.ts';
 import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
 import { planFixer, buildFixerSettings } from '#tests/setup/builders.ts';
+import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 
 test("a fixer's {root} environment paths point into the scratch copy during a dry run", async () => {
@@ -25,7 +26,10 @@ test("a fixer's {root} environment paths point into the scratch copy during a dr
         `await Bun.write('café settings.txt', 'scratch corrected'); await Bun.write('source.txt', await Bun.file(process.env['SANDBOX_SETTINGS']).text()); await Bun.write(${JSON.stringify(trace)}, process.cwd())`,
     );
     planned.check.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
-    const result = await runFixers(session, [planned], { isDryRun: true });
+    const result = await runFixers(session, [planned], {
+        isDryRun: true,
+        selectImplementation: selectCheckImplementation,
+    });
     expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
     expect(result.diffs).toStrictEqual([matchSubstring('+scratch corrected')]);
     const executionRoot = await readFile(trace, 'utf8');
@@ -57,7 +61,10 @@ test.each([false, true])(
         );
         planned.check.run_in_copy = true;
         planned.check.exit_codes = [3];
-        const result = await runFixers(session, [planned], { isDryRun: preview });
+        const result = await runFixers(session, [planned], {
+            isDryRun: preview,
+            selectImplementation: selectCheckImplementation,
+        });
         expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
         expect(await readFile(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
@@ -88,19 +95,26 @@ test('a fix in a scratch copy refuses to overwrite a file changed while it ran, 
     );
     planned.check.run_in_copy = true;
     expect(
-        await captureRejection(runFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!)),
+        await captureRejection(
+            runFixers(session, [planned], { isDryRun: false, selectImplementation: selectCheckImplementation }).then(
+                ({ results }) => results[0]!,
+            ),
+        ),
     ).toContain('Destination changed during the operation: z-last.txt');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('isolated correction');
     expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
     expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
     corrected.check.run_in_copy = true;
-    expect(await runFixers(session, [corrected], { isDryRun: false }).then(({ results }) => results[0]!)).toMatchObject(
-        {
-            status: 'changed',
-            changed: ['source.txt'],
-        },
-    );
+    expect(
+        await runFixers(session, [corrected], {
+            isDryRun: false,
+            selectImplementation: selectCheckImplementation,
+        }).then(({ results }) => results[0]!),
+    ).toMatchObject({
+        status: 'changed',
+        changed: ['source.txt'],
+    });
 });
 
 test('a failed fix removes its scratch folder and keeps the source bytes', async () => {
@@ -114,7 +128,10 @@ test('a failed fix removes its scratch folder and keeps the source bytes', async
     const temporary = join(sandbox.path, 'scratch');
     await mkdir(temporary);
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    const report = await runFixers(session, [planned], { isDryRun: true });
+    const report = await runFixers(session, [planned], {
+        isDryRun: true,
+        selectImplementation: selectCheckImplementation,
+    });
     expect(report.results).toMatchObject([{ status: 'failed' }]);
     expect(await readdir(temporary)).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
@@ -139,7 +156,11 @@ test.each([...SCRATCH_FAILURES])(
         const temporary = join(sandbox.path, 'scratch');
         await mkdir(temporary);
         using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-        expect(await captureRejection(runFixers(session, [planned], { isDryRun: true }))).toContain(message);
+        expect(
+            await captureRejection(
+                runFixers(session, [planned], { isDryRun: true, selectImplementation: selectCheckImplementation }),
+            ),
+        ).toContain(message);
         expect(await readdir(temporary)).toStrictEqual([]);
         // The copy row replaces the source with a folder before the run.
         if (operation === 'copy') {
@@ -167,6 +188,7 @@ test.each([false, true])(
         planned.check.run_in_copy = isolated;
         const execution = runFixers({ ...session, cancelSignal: controller.signal }, [planned], {
             isDryRun: false,
+            selectImplementation: selectCheckImplementation,
         }).then(({ results }) => results[0]!);
         try {
             expect(await waitForFile(ready)).toBe(true);
@@ -186,6 +208,7 @@ test.each([false, true])(
         }
         const corrected = await runFixers(session, [planFixer(session, "await Bun.write('source.txt', 'corrected')")], {
             isDryRun: false,
+            selectImplementation: selectCheckImplementation,
         }).then(({ results }) => results[0]!);
         expect(corrected.status).toBe('changed');
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');

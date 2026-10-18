@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 import { SQL_CASES, SQL_SANDBOX, SQL_DUCKDB_SOURCE, SQL_FUNCTION_SOURCE } from '#tests/data/checks/sql.ts';

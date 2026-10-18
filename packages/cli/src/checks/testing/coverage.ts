@@ -1,21 +1,21 @@
 import { z } from 'zod';
 import { realpathSync } from 'node:fs';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { FULL_PERCENTAGE } from '#cli/config/units.ts';
+import { parseReport } from '#cli/runs/output/json.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { type Files } from '#cli/types/system/files.ts';
-import { parseReport } from '#cli/parsers/output/json.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, resolve, relative } from 'node:path';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
+import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { type CoverageReport } from '#cli/types/checks/testing.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
 import { type SwiftBuildPlan } from '#cli/types/checks/language.ts';
-import { formatOutputTail } from '#cli/checks/run/command/output.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/language/swift/cache.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { SWIFT_PROGRAM, SCRATCH_PATH_FLAG } from '#cli/config/checks/language/swift.ts';
 
 import {

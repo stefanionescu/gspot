@@ -1,5 +1,5 @@
 import type { AlterTableCmd } from '@pgsql/types';
-import type { Finding } from '#cli/types/checks/run/check.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { type SqlFile, type SqlNodeFields, type SqlStatementView } from '#cli/types/parsers/sql.ts';
 
 /** The declaration position of a fact, so a finding points at it. */

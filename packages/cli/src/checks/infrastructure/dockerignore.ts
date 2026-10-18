@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { readComposeDocuments } from '#cli/checks/infrastructure/docker.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { DOCKERIGNORE_ENTRIES } from '#cli/config/checks/infrastructure/docker.ts';
 
 import {

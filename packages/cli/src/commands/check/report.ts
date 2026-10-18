@@ -4,7 +4,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { warn, getColors } from '#cli/system/terminal.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
-import type { Finding, RunReport, FixReport, CheckResult, CheckProgress } from '#cli/types/checks/run/check.ts';
+import type { Finding, RunReport, FixReport, CheckResult, CheckProgress } from '#cli/types/runs/check.ts';
 
 import {
     NOTE_STATUSES,

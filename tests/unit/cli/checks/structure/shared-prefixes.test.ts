@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { commitAll } from '#tests/setup/git.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildRunOptions } from '#tests/setup/builders.ts';

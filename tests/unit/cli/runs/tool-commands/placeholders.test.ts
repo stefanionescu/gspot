@@ -2,18 +2,18 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { planRun } from '#cli/planning/checks.ts';
+import { checkInput } from '#cli/runs/built-in.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { symlink, writeFile } from 'node:fs/promises';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { checkInput } from '#cli/checks/run/built-in.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { type CommandPart } from '#cli/types/runs/command.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
-import { type CommandPart } from '#cli/types/checks/run/command.ts';
 import { WORKSPACE_SCOPE_CASES } from '#tests/data/runs/command-checks.ts';
 import { listSwiftlintToolFiles } from '#cli/checks/language/swift/build.ts';
-import { prepareCommand, buildCommandEnvironment } from '#cli/checks/run/command/check.ts';
-import { expandCommand, listScratchFiles, buildFileInvocations } from '#cli/checks/run/command/placeholders.ts';
+import { prepareCommand, buildCommandEnvironment } from '#cli/runs/command/check.ts';
+import { expandCommand, listScratchFiles, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
 
 test('a whole setting preserves empty and multiword command arguments', async () => {
     await using sandbox = await testdir();

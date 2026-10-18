@@ -4,7 +4,7 @@ import { createFileTree } from 'testdirs';
 import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
-import type { Finding, RunReport } from '#cli/types/checks/run/check.ts';
+import type { Finding, RunReport } from '#cli/types/runs/check.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/data/packed-install.ts';
 import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
 import type { PackedSandbox, CommandOptions } from '#tests/types/packages.ts';

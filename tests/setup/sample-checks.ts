@@ -6,8 +6,8 @@ import type { ProcessOutput } from '#tests/types/processes.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import type { Sandbox, SandboxPlan } from '#tests/types/sandbox.ts';
 import { createSandbox, changeSandbox } from '#tests/setup/sandbox.ts';
+import type { Finding, RunReport, CheckResult } from '#cli/types/runs/check.ts';
 import { BASH_SANDBOX, CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import type { Finding, RunReport, CheckResult } from '#cli/types/checks/run/check.ts';
 
 import type {
     GspotCall,

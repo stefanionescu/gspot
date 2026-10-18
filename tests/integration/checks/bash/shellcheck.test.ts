@@ -6,11 +6,11 @@ import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { type RunReport } from '#cli/types/runs/check.ts';
 import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
-import { type RunReport } from '#cli/types/checks/run/check.ts';
-import { parseCommandFindings } from '#cli/checks/run/command/output.ts';
+import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { DIALECT_FIXES, DIALECT_SOURCES } from '#tests/data/checks/bash/tool-checks.ts';
 
 test('ShellCheck reports dialect findings by shebang and an unchecked cd, and changes no file', async () => {

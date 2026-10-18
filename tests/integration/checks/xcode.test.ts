@@ -9,7 +9,7 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
 import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { parseCommandFindings } from '#cli/checks/run/command/output.ts';
+import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { XCODE_CASES, XCODE_SANDBOX } from '#tests/data/checks/xcode.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 

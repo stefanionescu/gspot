@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/system/git.ts';
+import { buildBaseResult } from '#cli/runs/report.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { buildBaseResult } from '#cli/checks/run/report.ts';
-import { type CheckResult } from '#cli/types/checks/run/check.ts';
-import { runCheckCommand } from '#cli/checks/run/command/check.ts';
+import { type CheckResult } from '#cli/types/runs/check.ts';
+import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { getSiblingCommand, runOverPushedCommits } from '#cli/checks/general/pushed-commits.ts';
+import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/pushed-commits.ts';
 import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/general/commits.ts';
 
 /**

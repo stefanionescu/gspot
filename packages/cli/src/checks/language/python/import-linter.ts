@@ -2,16 +2,16 @@ import { z } from 'zod';
 import { parse } from '@decimalturn/toml-patch';
 import { join, posix, basename } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { buildFinding } from '#cli/checks/finding.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
+import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { hasIniSection } from '#cli/repository/existing-tools.ts';
 import { buildUvRunCommand } from '#cli/install/python/project.ts';
-import { assertToolFindings } from '#cli/checks/run/command/output.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli/config/checks/language/python.ts';
 
 function importLinterFile(input: CheckInput): string | undefined {

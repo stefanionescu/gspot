@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runCheckSample } from '#tests/setup/sample-checks.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { SITE_SANDBOX } from '#tests/data/checks/site/project.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 

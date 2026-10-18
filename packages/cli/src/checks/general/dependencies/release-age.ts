@@ -1,10 +1,10 @@
 import semver from 'semver';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { parsePackageManagerField } from '#cli/repository/package-manager.ts';
 import { HOLD_VERSIONS, PACKAGE_MANAGER_FIELD } from '#cli/config/checks/general/dependencies.ts';
 

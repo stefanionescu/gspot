@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { runSandboxStep } from '#tests/setup/install.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { RUFF_SANDBOX, VERSION_SOURCE, RUFF_VERSION_CASES } from '#tests/data/checks/python/tool-checks.ts';
 

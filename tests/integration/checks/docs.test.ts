@@ -4,10 +4,10 @@ import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { LinkFailure } from '#tests/types/tool-output.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { LINK_PAGE, LINK_TEXT_CASES, LINK_SCOPE_SETTINGS } from '#tests/data/checks/docs.ts';
 
 // Checks the exit code, and the status and finding positions of the root and child scopes.

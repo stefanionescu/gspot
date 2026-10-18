@@ -5,11 +5,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { rm, unlink, readFile } from 'node:fs/promises';
+import { type RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
 import { buildPlan } from '#cli/checks/language/swift/cache.ts';
-import { type RunReport } from '#cli/types/checks/run/check.ts';
 import { TEST_TARGET_PBXPROJ } from '#tests/data/checks/xcode.ts';
 import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 

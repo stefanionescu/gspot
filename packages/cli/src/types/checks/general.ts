@@ -4,7 +4,7 @@ import type { NamingCase } from '#cli/types/settings/tables.ts';
 import type { COVERAGE_DIMENSIONS } from '#cli/config/planning.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
-import type { CheckInput, FindingPlace } from '#cli/types/checks/run/check.ts';
+import type { CheckInput, FindingPlace } from '#cli/types/runs/check.ts';
 import type { ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/general/naming.ts';
 
 type AllowedPackage = { name: string; version: string; reason: string };

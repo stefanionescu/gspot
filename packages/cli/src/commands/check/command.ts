@@ -14,11 +14,11 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { printProgress } from '#cli/commands/check/report.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
-import { copyRevision } from '#cli/checks/run/copy/revision.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { copyRevision } from '#cli/runs/scratch-copy/revision.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
-import type { CheckResult, CheckProgress } from '#cli/types/checks/run/check.ts';
+import type { CheckResult, CheckProgress } from '#cli/types/runs/check.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type CheckFlags, type CheckOptions, type CheckCommandJson } from '#cli/types/commands/check.ts';
 

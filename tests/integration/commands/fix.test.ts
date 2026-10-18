@@ -7,8 +7,8 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { PARTIAL_FIX_CASES } from '#tests/data/runs/fixes.ts';
 import { installToolProjects } from '#tests/setup/install.ts';
+import type { FixReport, RunReport } from '#cli/types/runs/check.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
-import type { FixReport, RunReport } from '#cli/types/checks/run/check.ts';
 
 // Root ignores the read-only permission bits that provoke the write failure.
 test.skipIf(isWindows || process.getuid?.() === 0)(

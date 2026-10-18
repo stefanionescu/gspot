@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';

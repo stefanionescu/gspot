@@ -1,12 +1,12 @@
 import { posix } from 'node:path';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { parsePbxproj } from '#cli/parsers/xcode.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { PBXPROJ } from '#cli/config/parsers/xcode.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { XCODEPROJ_SUFFIX } from '#cli/config/checks/infrastructure/xcode.ts';
 
 /**

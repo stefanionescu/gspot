@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { SHELLCHECK_RC } from '#tests/data/checks/bash/tool-checks.ts';
 
 test('gspot/generated-files reports edited files and apply clears them while tool lockfiles remain missing', async () => {

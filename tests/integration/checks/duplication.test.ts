@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { installSandbox, buildSandboxPath } from '#tests/setup/install.ts';
 

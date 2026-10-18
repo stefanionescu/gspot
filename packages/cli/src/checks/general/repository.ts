@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { LFS_FILTER } from '#cli/config/repository/inventory.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 /**
  * Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.

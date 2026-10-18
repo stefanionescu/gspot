@@ -1,7 +1,7 @@
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { join, toNamespacedPath } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeNpmTool } from '#tests/setup/fakes.ts';

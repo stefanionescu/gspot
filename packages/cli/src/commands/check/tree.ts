@@ -1,7 +1,7 @@
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { resolve, relative } from 'node:path';
 import { warn } from '#cli/system/terminal.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readHookStatus } from '#cli/install/hooks.ts';
@@ -11,9 +11,10 @@ import { listHookNames } from '#cli/generation/hooks.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Session, StageFilter } from '#cli/types/planning.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import type { RunReport, RunOptions } from '#cli/types/runs/check.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { fixLines, formatRunReport } from '#cli/commands/check/report.ts';
-import type { RunReport, RunOptions } from '#cli/types/checks/run/check.ts';
+import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 
@@ -32,6 +33,7 @@ function buildRunOptions(
             stage,
             fix: options.fix,
             isDryRun: options.isDryRun,
+            selectImplementation: selectCheckImplementation,
             onResult: options.onResult,
             staged: staging.staged,
             changed: changedPaths,

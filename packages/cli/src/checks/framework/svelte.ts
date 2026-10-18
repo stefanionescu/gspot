@@ -1,16 +1,16 @@
 import { z } from 'zod';
 import { join } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { parseReport } from '#cli/runs/output/json.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { parseReport } from '#cli/parsers/output/json.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
+import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
-import { assertToolFindings } from '#cli/checks/run/command/output.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { writeScopeTsconfig } from '#cli/checks/language/typescript/compiler.ts';
 
 import {

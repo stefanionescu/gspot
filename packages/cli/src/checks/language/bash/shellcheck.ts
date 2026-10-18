@@ -1,6 +1,6 @@
+import { type CheckResult } from '#cli/types/runs/check.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { type CheckResult } from '#cli/types/checks/run/check.ts';
-import { runCommandGroups } from '#cli/checks/run/command/check.ts';
+import { runCommandGroups } from '#cli/runs/command/check.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { BATS_TAG, DEFAULT_DIALECT, SHELLCHECK_DIALECT_FLAG } from '#cli/config/repository/inventory.ts';
 

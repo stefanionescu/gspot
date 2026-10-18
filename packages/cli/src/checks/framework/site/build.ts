@@ -1,15 +1,15 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { join, relative, normalize } from 'node:path';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
+import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { type SiteBuild } from '#cli/types/checks/framework.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { formatOutputTail } from '#cli/checks/run/command/output.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
-import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
+import { checkCopyInputs, copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 
 const SITE_BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 

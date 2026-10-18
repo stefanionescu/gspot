@@ -1,8 +1,8 @@
 import { decodeHTMLAttribute } from 'entities';
 import { listElementAttributes } from '#cli/parsers/html.ts';
+import { locateNode, buildFinding } from '#cli/runs/finding.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
-import { locateNode, buildFinding } from '#cli/checks/finding.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import type { SourceTree, MarkupAttribute } from '#cli/types/parsers/tree-sitter.ts';
 
 import {

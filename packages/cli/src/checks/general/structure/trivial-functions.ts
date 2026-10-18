@@ -1,8 +1,8 @@
 import type { Node } from 'web-tree-sitter';
 import { isDocstring } from '#cli/parsers/python.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
-import { locateNode, buildFinding } from '#cli/checks/finding.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import { locateNode, buildFinding } from '#cli/runs/finding.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import type { IsSubstantial, CountedLanguage } from '#cli/types/checks/general.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sources.ts';
 import { checkExportedFunctions } from '#cli/checks/general/structure/exported-functions.ts';

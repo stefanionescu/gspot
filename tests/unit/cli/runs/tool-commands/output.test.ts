@@ -8,13 +8,13 @@ import { stringify } from '@decimalturn/toml-patch';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { TYPO_REPORT } from '#tests/data/tool-output.ts';
+import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
-import { hasToolError, formatOutputTail, parseCommandFindings } from '#cli/checks/run/command/output.ts';
+import { hasToolError, formatOutputTail, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import {
     REAL_PATH,

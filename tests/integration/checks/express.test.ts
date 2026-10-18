@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { hasToolBuild } from '#tests/setup/system.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { spawnGspot, listFindingRows } from '#tests/setup/run-gspot.ts';
 import { SEMGREP_CHECK } from '#tests/data/checks/security/semgrep-rules.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';

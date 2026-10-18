@@ -1,19 +1,19 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
+import { parseReport } from '#cli/runs/output/json.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { join, relative, isAbsolute } from 'node:path';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
-import { parseReport } from '#cli/parsers/output/json.ts';
-import { parseOutput } from '#cli/parsers/output/formats.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
+import { parseOutput } from '#cli/runs/output/formats.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { splitFileArguments } from '#cli/checks/run/command/batches.ts';
-import { selectToolFilePath } from '#cli/checks/run/command/placeholders.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
+import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { listBuiltFiles, getSuccessfulBuild, deriveBuiltFilePath } from '#cli/checks/framework/site/build.ts';
 
 import {

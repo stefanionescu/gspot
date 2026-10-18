@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { camelCase } from 'scule';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { parseJsonResult } from '#cli/parsers/json.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 import {
     NOT_WORD,

@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { hasToolBuild } from '#tests/setup/system.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { ANSIBLE_SANDBOX, ANSIBLE_PLAYBOOK, COMMAND_PLAYBOOK } from '#tests/data/checks/ansible.ts';
 

@@ -4,12 +4,13 @@ import { join, win32 } from 'node:path';
 import { isLinux } from '#tests/setup/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { parseOutput } from '#cli/runs/output/formats.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
+import { parseCommandFindings } from '#cli/runs/command/output.ts';
+import { outputSchema } from '#cli/configurations/schema/output.ts';
 import { type CheckDeclaration } from '#cli/types/configurations.ts';
-import { parseCommandFindings } from '#cli/checks/run/command/output.ts';
-import { parseOutput, outputSchema } from '#cli/parsers/output/formats.ts';
 import { BASE_CHECK, FAILED_RUN } from '#tests/data/runs/command-checks.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 

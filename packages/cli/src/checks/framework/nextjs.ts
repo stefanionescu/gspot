@@ -1,15 +1,15 @@
 import { join } from 'node:path';
+import { checkInput } from '#cli/runs/built-in.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { checkInput } from '#cli/checks/run/built-in.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { type CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import { listChecksById } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { type CheckResult } from '#cli/types/checks/run/check.ts';
 import type { ConfigurationCheck } from '#cli/types/configurations.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { checkCopyInputs, copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
+import { checkCopyInputs, copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import { runTsc, restoreCommandPaths } from '#cli/checks/language/typescript/compiler.ts';
 import { TSC_TOOL, TYPESCRIPT_TSC_CHECK } from '#cli/config/checks/language/typescript.ts';
 

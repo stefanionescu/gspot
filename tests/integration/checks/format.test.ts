@@ -4,9 +4,9 @@ import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {

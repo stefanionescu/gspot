@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { HOOK_FOLDERS } from '#cli/config/repository/hooks.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { SPEC_SUFFIX, INDEX_STEMS } from '#cli/config/checks/general/structure.ts';
 import { listTaggedExtensions, isInDependencyFolder } from '#cli/repository/classify.ts';

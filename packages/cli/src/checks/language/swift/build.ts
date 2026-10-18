@@ -1,15 +1,15 @@
 import { join, posix, relative } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { type Files } from '#cli/types/system/files.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
+import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
-import { assertToolFindings } from '#cli/checks/run/command/output.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/checks/language.ts';
 import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
 

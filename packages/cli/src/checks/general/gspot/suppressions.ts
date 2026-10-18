@@ -1,4 +1,4 @@
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { getToolName } from '#cli/configurations/tools.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
@@ -9,7 +9,7 @@ import type { SuppressionSyntax } from '#cli/types/checks/general.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
-import type { Finding, CheckInput, FindingPlace } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput, FindingPlace } from '#cli/types/runs/check.ts';
 import { REASON_ABOVE, SUPPRESSION_LIMITS, SUPPRESSION_DIRECTIVE_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 
 // A reason on the line above covers only the next line. Code or comments between them break the link.

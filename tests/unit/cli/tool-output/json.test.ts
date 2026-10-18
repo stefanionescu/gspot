@@ -1,7 +1,8 @@
 import { test, expect } from 'bun:test';
-import type { Finding } from '#cli/types/checks/run/check.ts';
-import { parseJsonFindings } from '#cli/parsers/output/json.ts';
-import { parseOutput, outputSchema } from '#cli/parsers/output/formats.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
+import { parseOutput } from '#cli/runs/output/formats.ts';
+import { parseJsonFindings } from '#cli/runs/output/json.ts';
+import { outputSchema } from '#cli/configurations/schema/output.ts';
 
 /** Parse a JSON report with the paths and help text that these cases share. */
 function parseJsonReport(check: string, output: unknown, stdout: string): Finding[] {

@@ -1,4 +1,4 @@
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
@@ -7,7 +7,7 @@ import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { type PathVisitor } from '#cli/types/settings/values.ts';
 import { NEGATED_PATTERN } from '#cli/config/checks/general/gspot.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { scopeSchema, settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 
 /**

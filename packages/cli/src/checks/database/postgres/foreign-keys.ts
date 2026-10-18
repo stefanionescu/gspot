@@ -1,9 +1,9 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 /**

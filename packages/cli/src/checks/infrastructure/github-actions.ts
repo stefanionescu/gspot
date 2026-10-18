@@ -1,11 +1,11 @@
 import { join, posix } from 'node:path';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { type CheckResult } from '#cli/types/runs/check.ts';
+import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { GIT_FOLDER } from '#cli/config/repository/tracked.ts';
-import { copyIntoScratch } from '#cli/checks/run/copy/scratch.ts';
-import { type CheckResult } from '#cli/types/checks/run/check.ts';
-import { runCheckCommand } from '#cli/checks/run/command/check.ts';
+import { copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
 import { ACTION_FILE, SELF_REPOSITORY_MARKER } from '#cli/config/checks/infrastructure/github-actions.ts';

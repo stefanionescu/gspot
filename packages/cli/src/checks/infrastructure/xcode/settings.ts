@@ -1,8 +1,8 @@
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 import {
     PLIST_KEY,

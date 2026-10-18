@@ -1,7 +1,7 @@
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 import {
     WORD,

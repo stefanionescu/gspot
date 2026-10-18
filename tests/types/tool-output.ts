@@ -1,5 +1,5 @@
 import type { Linter } from 'eslint';
-import type { Finding } from '#cli/types/checks/run/check.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 
 /** An ESLint finding with its path from the repository root. */
 export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; line: Linter.LintMessage['line'] };

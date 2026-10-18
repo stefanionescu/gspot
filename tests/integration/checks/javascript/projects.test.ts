@@ -6,9 +6,9 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 

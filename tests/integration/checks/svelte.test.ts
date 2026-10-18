@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import svelteManifest from 'svelte/package.json' with { type: 'json' };
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { SVELTE_CASES, SVELTE_CLEAN, SVELTE_SANDBOX } from '#tests/data/checks/svelte.ts';

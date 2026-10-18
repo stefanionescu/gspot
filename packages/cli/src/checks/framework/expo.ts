@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { GspotError } from '#cli/system/errors.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { runCheckTool } from '#cli/checks/run/command/tool.ts';
-import { assertToolFindings } from '#cli/checks/run/command/output.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
+import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { assertToolFindings } from '#cli/runs/command/output.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 
 import {
     FAILED_CHECK,

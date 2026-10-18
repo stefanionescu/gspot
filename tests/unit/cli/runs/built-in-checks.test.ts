@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
+import { checkInput } from '#cli/runs/built-in.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
-import { checkInput } from '#cli/checks/run/built-in.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { type Finding } from '#cli/types/checks/run/check.ts';
 import { planRun, listCoveredInputs } from '#cli/planning/checks.ts';
 import { HEADERS_FILE, SOURCE_EDITS, SCOPE_FINDINGS } from '#tests/data/runs/built-in-checks.ts';
 

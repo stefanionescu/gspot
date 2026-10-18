@@ -5,9 +5,9 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { SQL_CHECK } from '#tests/data/checks/sql.ts';
+import { type RunReport } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
-import { type RunReport } from '#cli/types/checks/run/check.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 

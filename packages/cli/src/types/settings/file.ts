@@ -5,7 +5,7 @@ import type { ParsedSwift } from '#cli/types/checks/language.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ParsedPostgres } from '#cli/types/checks/database.ts';
 import type { REEXPORT_MODES } from '#cli/config/settings/schema.ts';
-import type { OutputSpec, OutputInput } from '#cli/types/parsers/output.ts';
+import type { OutputSpec, OutputInput } from '#cli/types/runs/output.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
 import type { ParsedXcode, ParsedOpenapi } from '#cli/types/checks/infrastructure.ts';
 import type { ParsedDrizzle, ParsedTranslations } from '#cli/types/checks/library.ts';

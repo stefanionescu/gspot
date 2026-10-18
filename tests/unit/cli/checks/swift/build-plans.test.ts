@@ -1,8 +1,8 @@
 import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildRunOptions } from '#tests/setup/builders.ts';

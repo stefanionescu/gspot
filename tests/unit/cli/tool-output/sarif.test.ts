@@ -3,8 +3,9 @@ import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { sep, join, resolve } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import type { Finding } from '#cli/types/checks/run/check.ts';
-import { parseOutput, outputSchema } from '#cli/parsers/output/formats.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
+import { parseOutput } from '#cli/runs/output/formats.ts';
+import { outputSchema } from '#cli/configurations/schema/output.ts';
 
 import {
     CODEQL_REPORT,

@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { pinSandboxNpm } from '#tests/setup/sandbox.ts';
+import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
-import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { LOOSE_ZOD_SCHEMA, ZOD_PROJECT_FILES } from '#tests/data/checks/zod.ts';
 import { installSandbox, buildSandboxPath, installToolProjects } from '#tests/setup/install.ts';
 

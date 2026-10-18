@@ -1,19 +1,19 @@
 import { posix } from 'node:path';
 import { readGitText } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { readPythonEnvironment } from '#cli/parsers/python.ts';
-import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { readJavascriptEnvironment } from '#cli/parsers/typescript.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { readPushBase, readPushedCommits } from '#cli/repository/revisions/push.ts';
-import { type Finding, type CheckInput, type CheckResult } from '#cli/types/checks/run/check.ts';
-import { getSiblingCommand, buildHistoryResult, runOverPushedCommits } from '#cli/checks/general/pushed-commits.ts';
+import { type Finding, type CheckInput, type CheckResult } from '#cli/types/runs/check.ts';
+import { getSiblingCommand, buildHistoryResult, runOverPushedCommits } from '#cli/runs/pushed-commits.ts';
 
 import {
     ENV_KEY_LINE,

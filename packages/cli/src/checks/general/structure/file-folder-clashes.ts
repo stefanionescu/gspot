@@ -1,6 +1,6 @@
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { extractStem, extractParentFolder } from '#cli/system/paths.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**

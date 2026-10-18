@@ -1,9 +1,9 @@
 import { splitByCase } from 'scule';
 import { stripUndefined } from '#cli/system/values.ts';
+import type { CheckInput } from '#cli/types/runs/check.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
-import type { CheckInput } from '#cli/types/checks/run/check.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import type { ParsedNamingLanguageFields } from '#cli/types/settings/tables.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';

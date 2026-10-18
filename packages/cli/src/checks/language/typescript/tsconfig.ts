@@ -1,12 +1,12 @@
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/repository/inventory.ts';
+import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import { TSCONFIG_FILE, TSCONFIG_NAME } from '#cli/config/parsers/tsconfig.ts';
-import { type Finding, type CheckInput } from '#cli/types/checks/run/check.ts';
 import { isProjectChecked, selectRequiredTsconfigOptions } from '#cli/checks/language/typescript/compiler.ts';
 
 /**

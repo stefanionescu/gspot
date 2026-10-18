@@ -1,13 +1,13 @@
 import { visit } from 'unist-util-visit';
 import { parseAllDocuments } from 'yaml';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers/json.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import type { ParseCache, GrammarName } from '#cli/types/parsers/tree-sitter.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
 import type { FenceParser, FencedBlock, FenceSyntaxError } from '#cli/types/checks/language.ts';

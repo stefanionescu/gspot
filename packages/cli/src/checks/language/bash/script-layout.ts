@@ -1,9 +1,9 @@
+import { buildFinding } from '#cli/runs/finding.ts';
 import { listCodeLines } from '#cli/parsers/bash.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import type { ScriptFile, ScriptReport } from '#cli/types/checks/language.ts';
 import { readScripts, findEnclosingFunction } from '#cli/checks/language/bash/scripts.ts';
 

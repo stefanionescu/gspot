@@ -1,7 +1,7 @@
 import { parseCached } from '#cli/system/files/cache.ts';
-import { locateNode, buildFinding } from '#cli/checks/finding.ts';
+import { locateNode, buildFinding } from '#cli/runs/finding.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { findDocstring, PYTHON_SOURCES } from '#cli/parsers/python.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
 
 /**

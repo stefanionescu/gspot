@@ -9,7 +9,7 @@ import { type GitleaksHistory } from '#tests/types/secrets.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { type RunReport, type CheckResult } from '#cli/types/checks/run/check.ts';
+import { type RunReport, type CheckResult } from '#cli/types/runs/check.ts';
 import { API_TOKEN, AWS_KEY_ID, SECRET_FILES, FIXED_SECRET_FILES } from '#tests/data/checks/secrets.ts';
 
 async function readSecretChecks(root: string): Promise<RunReport['checks']> {

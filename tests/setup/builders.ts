@@ -3,6 +3,7 @@ import { planRun } from '#cli/planning/checks.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import type { RunOptions } from '#cli/types/runs/check.ts';
 import type { ToolSearch } from '#cli/types/tools/find.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
@@ -12,13 +13,13 @@ import type { SampleChanges } from '#tests/types/samples.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { NamingCase } from '#cli/types/settings/tables.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import type { RunOptions } from '#cli/types/checks/run/check.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { NamingSettings } from '#cli/types/checks/general.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
+import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { MOBILE_SOURCE_FILES } from '#tests/data/generated-files/eslint/framework.ts';
@@ -103,7 +104,7 @@ export function buildManifest(
  * @returns the defaults with the overrides applied.
  */
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
-    return { stage: 'all', fix: false, isDryRun: false, ...overrides };
+    return { stage: 'all', fix: false, isDryRun: false, selectImplementation: selectCheckImplementation, ...overrides };
 }
 
 /**

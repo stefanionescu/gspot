@@ -10,7 +10,7 @@ import type { FindingRow } from '#tests/types/tool-output.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import type { StdinOptions, ProcessOutput } from '#tests/types/processes.ts';
-import type { Finding, RunReport, CheckResult } from '#cli/types/checks/run/check.ts';
+import type { Finding, RunReport, CheckResult } from '#cli/types/runs/check.ts';
 
 /** The gspot source folder in this checkout. */
 export const CLI_SOURCE_PATH = join(import.meta.dir, '../../packages/cli/src');

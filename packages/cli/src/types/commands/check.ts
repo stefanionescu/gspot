@@ -1,7 +1,7 @@
 import type { StageFilter } from '#cli/types/planning.ts';
 import type { CanceledCommandJson } from '#cli/types/terminal.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
-import type { RunReport, CheckResult, CheckProgress } from '#cli/types/checks/run/check.ts';
+import type { RunReport, CheckResult, CheckProgress } from '#cli/types/runs/check.ts';
 import type { PushInput, StagedPaths, ChangedPaths, PushSelection } from '#cli/types/repository/revisions.ts';
 
 type Checked = { hash: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport };

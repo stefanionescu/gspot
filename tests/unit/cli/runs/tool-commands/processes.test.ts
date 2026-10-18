@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { planRun } from '#cli/planning/checks.ts';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
@@ -15,7 +15,7 @@ import { chmod, symlink, writeFile } from 'node:fs/promises';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/data/settings/scopes.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
-import { runCheckCommand, buildCommandEnvironment } from '#cli/checks/run/command/check.ts';
+import { runCheckCommand, buildCommandEnvironment } from '#cli/runs/command/check.ts';
 
 test('a check command accepts a configuration input linked inside the repository', async () => {
     await using sandbox = await testdir();

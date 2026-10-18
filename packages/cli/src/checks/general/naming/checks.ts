@@ -1,12 +1,12 @@
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildFinding } from '#cli/runs/finding.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { buildFileMatcher } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { findScope, isInScope } from '#cli/repository/scopes.ts';
+import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { checkIdentifier } from '#cli/checks/general/naming/names.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
-import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 import type { FileNames, NamedFile, Identifier, NamingSettings } from '#cli/types/checks/general.ts';
 

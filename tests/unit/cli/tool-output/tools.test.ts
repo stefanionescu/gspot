@@ -2,10 +2,10 @@ import { test, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { TYPO } from '#tests/data/checks/spelling.ts';
-import { parseOutput } from '#cli/parsers/output/formats.ts';
+import { parseOutput } from '#cli/runs/output/formats.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
-import { parseCommandFindings } from '#cli/checks/run/command/output.ts';
+import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
 import {

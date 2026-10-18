@@ -1,14 +1,14 @@
 import { join } from 'node:path';
+import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, expect, describe } from 'bun:test';
-import { runChecks } from '#cli/checks/run/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
+import { type CheckResult } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { type CheckResult } from '#cli/types/checks/run/check.ts';
 
 describe('results', () => {
     test('a check with malformed JSON reports an error, and the other checks keep their results', async () => {
