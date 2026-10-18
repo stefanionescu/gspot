@@ -259,8 +259,8 @@ format = "none"
     expect(result.fixes?.results).toMatchObject([
         { check: 'project/update-package', status: 'changed', changed: ['package.json'] },
     ]);
-    expect(getProjectDependencies(session.dependencyFiles, '')).toStrictEqual({ react: '19.0.0' });
-    expect(getProjectDependencies(session.dependencyFiles, 'app')).toStrictEqual({ vue: '3.5.0' });
+    expect(getProjectDependencies(session.repository.dependencyFiles, '')).toStrictEqual({ react: '19.0.0' });
+    expect(getProjectDependencies(session.repository.dependencyFiles, 'app')).toStrictEqual({ vue: '3.5.0' });
     expect(await Bun.file(join(sandbox.path, 'package.json')).text()).toBe(ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
     expect(await Bun.file(join(sandbox.path, 'app/package.json')).text()).toBe(REACT_VUE_PACKAGES['app/package.json']);
 });

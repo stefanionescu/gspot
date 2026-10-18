@@ -189,7 +189,9 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
         roles: view.roles,
         testFiles: view.test_files,
         scope: selection.scope.path,
-        scopeDependencies: Object.keys(getProjectDependencies(session.dependencyFiles, selection.scope.path)),
+        scopeDependencies: Object.keys(
+            getProjectDependencies(session.repository.dependencyFiles, selection.scope.path),
+        ),
         testRuleNames: TEST_RULE_NAMES,
         isAll: repositorySettings.level === 'all',
         sourceFiles: session.repository.files.flatMap((file) => (file.kind === 'source' ? [file.path] : [])),

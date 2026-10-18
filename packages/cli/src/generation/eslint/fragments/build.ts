@@ -101,7 +101,7 @@ function buildSelectedFragments(
                 ...selection.view,
                 scope,
                 testFiles: selection.view.test_files,
-                scopeDependencies: Object.keys(getProjectDependencies(session.dependencyFiles, scope)),
+                scopeDependencies: Object.keys(getProjectDependencies(session.repository.dependencyFiles, scope)),
                 blockWriter: module,
                 eslintFiles: {
                     ...inputs.eslintFiles,

@@ -71,7 +71,7 @@ const ruleNamesFileSchema = z.strictObject({
  */
 function buildStylelintFile(context: ToolFileContext): string {
     const { selection } = context;
-    const { dependencyFiles } = context.session;
+    const { dependencyFiles } = context.session.repository;
     const level = context.level;
 
     const { rulesOff, configurations } = selection.view;

@@ -126,7 +126,7 @@ test('a broken package.json stops the next session and a fixed one changes the s
     const current = await openSession(sandbox.path);
     expect(
         current.scopes.map((selection) =>
-            Object.keys(getProjectDependencies(current.dependencyFiles, selection.scope.path)),
+            Object.keys(getProjectDependencies(current.repository.dependencyFiles, selection.scope.path)),
         ),
     ).toStrictEqual([[], ['vue']]);
 });

@@ -111,7 +111,6 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             platform,
             narrow,
             children: listChildScopes(session, scope),
-            dependencyFiles: session.dependencyFiles,
         };
         return planScope(context, wholeSeen);
     });

@@ -37,9 +37,12 @@ test.each(['.d.ts', '.d.mts', '.d.cts'])(
         });
         const before = await openSession(sandbox.path);
         expect(
-            detectConfigurations(sandbox.path, before.repository.files, before.manifests, before.dependencyFiles).map(
-                ({ configuration }) => configuration,
-            ),
+            detectConfigurations(
+                sandbox.path,
+                before.repository.files,
+                before.manifests,
+                before.repository.dependencyFiles,
+            ).map(({ configuration }) => configuration),
         ).not.toContain('typescript');
         await Bun.write(join(sandbox.path, 'tsconfig.json'), '{"compilerOptions":{"strict":true}}\n');
         const configured = await openSession(sandbox.path);
@@ -48,7 +51,7 @@ test.each(['.d.ts', '.d.mts', '.d.cts'])(
                 sandbox.path,
                 configured.repository.files,
                 configured.manifests,
-                configured.dependencyFiles,
+                configured.repository.dependencyFiles,
             ).find(({ configuration }) => configuration === 'typescript')?.evidence,
         ).toBe('tsconfig.json');
     },

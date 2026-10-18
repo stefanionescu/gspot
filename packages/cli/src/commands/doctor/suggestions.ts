@@ -14,7 +14,8 @@ import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor
 import { type ExistingTools, type FoundToolFile } from '#cli/types/repository/inventory.ts';
 
 function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
-    const { root, repository, manifests, dependencyFiles, settingsFile } = session;
+    const { root, repository, manifests, settingsFile } = session;
+    const { dependencyFiles } = repository;
     const selections = listSelectedManifests(session.scopes);
     const selected = new Set(selections.map((manifest) => manifest.configuration.name));
     const detected = detectConfigurations(root, repository.files, manifests, dependencyFiles);
@@ -143,7 +144,7 @@ function listUnownedToolFiles(
  * @returns the suggested changes.
  */
 export function listSuggestions(session: Session): Suggestions {
-    const { dependencyFiles } = session;
+    const { dependencyFiles } = session.repository;
     const manifests = session.neededToolManifests;
     const existingTools = readExistingTools(session.root, session.repository.files, dependencyFiles, session.reads);
     const generated = generate(session);

@@ -236,7 +236,6 @@ export async function openSession(
         settingsFile: { ...settingsFile, settings },
         manifests,
         repository,
-        dependencyFiles: repository.dependencyFiles,
         scopes,
         inspections: new Map(),
         reads,

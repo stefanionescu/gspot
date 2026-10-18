@@ -66,7 +66,6 @@ async function refreshAfterFixes(session: Session): Promise<void> {
         scopes: scopes,
         manifests: session.manifests,
     });
-    session.dependencyFiles = session.repository.dependencyFiles;
     session.inspections.clear();
 }
 

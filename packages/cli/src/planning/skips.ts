@@ -120,18 +120,17 @@ export function findSettingsSkip(
  * @param inputs.session the repository.
  * @param inputs.options the parsed flags.
  * @param inputs.platform the system name.
- * @param inputs.dependencyFiles the parsed package declarations.
  *
  * @returns the first skip, or undefined when the check can run.
  */
 export function findFirstSkip(check: PlannedCheck, inputs: PlanInputs): Skip {
-    const { session, options, platform, dependencyFiles } = inputs;
+    const { session, options, platform } = inputs;
     const settings = session.settingsFile.settings;
     const hasGit = session.repository.hasGit;
     const host = { platform, arch: process.arch };
     const selected = findSettingsSkip(settings, check.selection, check.check);
     if (selected !== undefined) return selected;
-    const condition = findConditionSkip(check, hasGit, dependencyFiles);
+    const condition = findConditionSkip(check, hasGit, session.repository.dependencyFiles);
     if (condition !== undefined) return condition;
     return options.includeUnsupported === true ? undefined : findSystemSkip(check.check, check.tool, host);
 }

@@ -122,15 +122,12 @@ function listScopeRules(selection: ScopeSelection): Set<string> {
  * @param session the repository and its settings.
  * @returns each rule with its content and path.
  */
-function selectRuleFiles(
-    session: Pick<Session, 'settingsFile' | 'scopes' | 'repository' | 'dependencyFiles'>,
-): RuleFile[] {
+function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'repository'>): RuleFile[] {
     const {
         settingsFile: {
             settings: { rules, level },
         },
         repository,
-        dependencyFiles,
     } = session;
     const manifests = listSelectedManifests(session.scopes);
     const scopeRules = session.scopes.map((selection) => ({
@@ -139,7 +136,7 @@ function selectRuleFiles(
     }));
     if (!rules.enabled) return [];
     const sources = new Map(
-        listConfigurationRules(manifests, repository, dependencyFiles).map((file) => [file.path, file]),
+        listConfigurationRules(manifests, repository, repository.dependencyFiles).map((file) => [file.path, file]),
     );
     return sources
         .values()
