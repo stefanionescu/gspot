@@ -65,15 +65,15 @@ function buildSession(values: Omit<Session, 'toolFiles' | 'generatedPaths' | 'uv
 
 // Read repository settings and prepare shared state for checks and generation.
 
-function buildPackageManagerAccess(getSession: () => Session, installedRoot: string, timeoutSeconds: number) {
+function buildPackageManagerAccess(installedRoot: string, timeoutSeconds: number) {
     let identity: PackageManagerDeclaration | undefined;
     let state: PackageManager | undefined;
-    return {
+    const access = {
         setIdentity(value: PackageManagerDeclaration) {
             identity = value;
         },
         requirePackageManager: () => {
-            const packageManager = getSession().getPackageManager();
+            const packageManager = access.getPackageManager();
             if (packageManager === undefined) throw new GspotError('installation', MISSING_PACKAGE_MANAGER_MESSAGE);
             return packageManager;
         },
@@ -88,6 +88,7 @@ function buildPackageManagerAccess(getSession: () => Session, installedRoot: str
             return identity.name;
         },
     };
+    return access;
 }
 
 function findSessionUvPath(session: Session, installedRoot: string, timeoutSeconds: number): string {
@@ -219,7 +220,7 @@ export async function openSession(
     const timeoutSeconds = getToolTimeoutSeconds(
         (scopes.find((selection) => selection.scope.path === '') as ScopeSelection).view,
     );
-    const packageManager = buildPackageManagerAccess(() => session, installedRoot, timeoutSeconds);
+    const packageManager = buildPackageManagerAccess(installedRoot, timeoutSeconds);
     const session = buildSession({
         neededToolManifests: [],
         configuredChecks: [],

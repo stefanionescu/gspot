@@ -71,12 +71,8 @@ function buildFragment(manifest: Manifest, inputs: EslintContext): EslintFragmen
 }
 
 // Build the text of each ESLint fragment.
-function buildSelectedFragments(
-    session: Session,
-    fragments: Fragment[],
-    inputs: EslintContext,
-    scopes: ScopeSelection[],
-): EslintFragment[] {
+function buildSelectedFragments(session: Session, fragments: Fragment[], inputs: EslintContext): EslintFragment[] {
+    const { scopes } = inputs;
     const blockText: EslintFragment[] = [];
     for (const { manifest } of fragments) {
         for (const selection of scopes.filter((entry) => entry.selected.includes(manifest))) {
@@ -121,17 +117,13 @@ function buildSelectedFragments(
  * Collect the imports, lint blocks, and selectors that the ESLint fragments add.
  *
  * @param session the repository.
- * @param scopes every scope.
- * @param selection the scope that gets the tool file.
  * @param target the tool file to build.
- * @param inputs the typed source facts of the scope.
+ * @param inputs the typed source facts of the scope, with every scope and the one that gets the tool file.
  *
  * @returns the fragments with their imports, file globs, and selector groups.
  */
 function collectFragments(
     session: Session,
-    scopes: ScopeSelection[],
-    selection: ScopeSelection,
     target: ToolFileDeclaration,
     inputs: EslintContext,
 ): {
@@ -139,12 +131,13 @@ function collectFragments(
     fragmentImports: string;
     fragmentSelectors: ReturnType<typeof groupFragmentSelectors>;
 } {
+    const { scopes, selection } = inputs;
     const fragments = listFragmentConfigurations(scopes, selection, target).flatMap((manifest) =>
         manifest.toolFiles
             .filter((toolFile) => toolFile.fragment && toolFile.target === target.target)
             .map((toolFile) => ({ manifest, toolFile })),
     );
-    const blockText = buildSelectedFragments(session, fragments, inputs, scopes);
+    const blockText = buildSelectedFragments(session, fragments, inputs);
     const imports = blockText.flatMap((fragment) => fragment.imports);
     const bodies = blockText.map((fragment) => fragment.blocks);
     return {

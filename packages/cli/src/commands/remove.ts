@@ -63,17 +63,11 @@ async function runRemoveCommand(options: ConfigurationsOptions): Promise<Command
     const removeConfigurations = buildRemovalEdit(scopeSettings, options);
     const where = options.scope === undefined ? '' : ` from scope ${options.scope}`;
     const description = `Removed ${options.configurations.join(' and ')}${where}.`;
-    const result = await saveSettings(root, {
+    return saveSettings(root, {
         input,
         change: removeConfigurations,
         summary: description,
     });
-    return result.exitCode === 0 && !result.json.changed
-        ? {
-              ...result,
-              text: formatUnselectedConfigurations(options.configurations),
-          }
-        : result;
 }
 
 /**

@@ -30,26 +30,23 @@ function listLanguageLimits(language: string): string[] {
 
 /**
  * Name the invalid setting, and keep the message of the validator.
- * @param path the setting or field that the issue concerns.
  * @param issue the schema validation message.
- * @returns the setting path and its validation failure.
+ * @returns the setting path and its validation failure, each line after the gspot.toml name.
  */
-function formatSettingsIssue(path: string, issue: z.core.$ZodIssue): string[] {
+function formatSettingsIssue(issue: z.core.$ZodIssue): string[] {
     const branches = issue.code === 'invalid_union' ? issue.errors : [];
     const reasonedValueErrors = branches.find((errors) =>
         errors.some((child) => child.path[0] === 'value' || child.path[0] === 'reason'),
     );
     if (reasonedValueErrors !== undefined)
         return reasonedValueErrors.flatMap((child) =>
-            formatSettingsIssue(path, { ...child, path: [...issue.path, ...child.path] }),
+            formatSettingsIssue({ ...child, path: [...issue.path, ...child.path] }),
         );
     if (issue.code === 'invalid_key')
-        return issue.issues.flatMap((child) =>
-            formatSettingsIssue(path, { ...child, path: [...issue.path, ...child.path] }),
-        );
+        return issue.issues.flatMap((child) => formatSettingsIssue({ ...child, path: [...issue.path, ...child.path] }));
     const segments = issue.path.filter((part): part is KeyPath[number] => typeof part !== 'symbol');
-    if (issue.code !== 'unrecognized_keys') return formatZodIssue(issue).map((line) => `${path}: ${line}`);
-    return issue.keys.map((key) => `${path}: ${formatUnknownKey(segments, key)}`);
+    if (issue.code !== 'unrecognized_keys') return formatZodIssue(issue).map((line) => `${SETTINGS_FILE}: ${line}`);
+    return issue.keys.map((key) => `${SETTINGS_FILE}: ${formatUnknownKey(segments, key)}`);
 }
 
 // Name one key that a table does not accept. Say where it belongs, or which keys the table has.
@@ -72,8 +69,12 @@ function describeKeyPlace(segments: KeyPath): string {
     return `[[scope]] record ${String(Number(scopeIndex) + 1)}${section}`;
 }
 
+// Each error names gspot.toml, then its key path when it has one.
 function throwErrors(errors: SettingsError[]): never {
-    throw new GspotError('settings', errors.map((error) => formatSettingsError(error, SETTINGS_FILE)).join('\n'));
+    const lines = errors.map((error) =>
+        [SETTINGS_FILE, error.path.map(String).join('.'), error.message].filter((part) => part !== '').join(': '),
+    );
+    throw new GspotError('settings', lines.join('\n'));
 }
 
 // Commands and check execution validate the same settings.
@@ -137,18 +138,6 @@ function validateSettings(settings: Settings, repositoryRoot: string | undefined
         ...validateKeys(known, settings, scopes, buildKnownSettings([...manifests.values()], settings.level, reads)),
     ];
     if (errors.length > 0) throwErrors(errors);
-}
-
-/**
- * Format a settings error with its file, if any, and its key path first.
- * @param error the refused value and its key path.
- * @param file the gspot.toml path, for a line that names it.
- * @returns the text.
- */
-function formatSettingsError(error: SettingsError, file?: string): string {
-    const where = error.path.map(String).join('.');
-    const place = [file, where].filter((part) => part !== undefined && part !== '');
-    return [...place, error.message].join(': ');
 }
 
 export { validateSettings, formatSettingsIssue };

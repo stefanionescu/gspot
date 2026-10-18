@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { lstatSync } from 'node:fs';
 import { isInside } from '#cli/system/paths.ts';
+import { AGENTS_FILE } from '#cli/config/rules.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { AGENTS_FILE, CLAUDE_FILE } from '#cli/config/rules.ts';
 import { planKeyChanges } from '#cli/ownership/managed-keys.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
@@ -66,7 +66,7 @@ export function listStrayPaths(
     expected: ReadonlySet<string>,
 ): string[] {
     using disk = openFiles(session.root);
-    const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE, CLAUDE_FILE]);
+    const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
     const installations = [STATE_PATH, ...Object.values(INSTALLED_TOOL_FOLDERS)];
     const ownFolder = disk.readStats(DOT_GSPOT);
     const ownPaths: string[] = [];

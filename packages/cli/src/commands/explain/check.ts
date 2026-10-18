@@ -219,6 +219,6 @@ export function explainLintRule(tool: string, rule: string, reads: ReadCache): E
         kind: 'lint-rule',
         subject: `${ruleTool}/${identifier}`,
         text: `${lines.join('\n')}\n`,
-        data: { tool: ruleTool, rule: identifier, check: check.name, summary: null, page: page ?? null },
+        data: { tool: ruleTool, rule: identifier, check: check.name, page: page ?? null },
     };
 }

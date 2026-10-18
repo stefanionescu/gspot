@@ -25,10 +25,7 @@ function parseSettings(text: string, repositoryRoot: string | undefined, reads: 
     const written = parseTomlText(text, SETTINGS_FILE, 'settings');
     const result = settingsSchema.safeParse(written);
     if (!result.success)
-        throw new GspotError(
-            'settings',
-            result.error.issues.flatMap((issue) => formatSettingsIssue(SETTINGS_FILE, issue)).join('\n'),
-        );
+        throw new GspotError('settings', result.error.issues.flatMap((issue) => formatSettingsIssue(issue)).join('\n'));
     const settings = buildSettings(result.data, written);
     validateSettings(settings, repositoryRoot, reads);
     return settings;

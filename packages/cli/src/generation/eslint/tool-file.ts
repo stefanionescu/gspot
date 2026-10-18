@@ -25,13 +25,7 @@ function buildEslintFile(context: ToolFileContext): string {
 
     const base = buildEslintContext(context);
     const { eslint, blockWriter } = base;
-    const { fragmentParts, fragmentImports, fragmentSelectors } = collectFragments(
-        session,
-        session.scopes,
-        selection,
-        target,
-        base,
-    );
+    const { fragmentParts, fragmentImports, fragmentSelectors } = collectFragments(session, target, base);
     const config = eslint;
     const plugins = selectPlugins(base);
     const output: string[] = [
