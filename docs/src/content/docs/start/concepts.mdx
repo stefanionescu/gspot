@@ -45,14 +45,28 @@ A generated file holds output that gspot writes from your settings. See [Generat
 
 ## Levels
 
-| Level                   | What it checks                                                                                                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `recommended` (default) | Bugs, security and accessibility problems, type errors, formatting, and misuse of declared frameworks and libraries. Choose it for an existing codebase or a first run.        |
-| `all`                   | Also naming, wording, code structure, doc comments, declaration order, duplication, API style, and complexity. Choose it for a new repository or one that coding agents write. |
-
 <table>
-<thead><tr><th>Level</th><th>Shipped checks and extra tools</th></tr></thead>
-<tbody>{buildLevelRows().map(({ level, count, tools }) => <tr><td><code>{level}</code></td><td>{count} checks; extra tools: {tools}.</td></tr>)}</tbody>
+    <thead>
+        <tr>
+            <th>Level</th>
+            <th>What it checks</th>
+            <th>Shipped checks</th>
+            <th>Tools it adds</th>
+        </tr>
+    </thead>
+    <tbody>
+        {buildLevelRows().map(({ level, description, count, tools }) => (
+            <tr>
+                <td>
+                    <code>{level}</code>
+                    {level === 'recommended' && ' (default)'}
+                </td>
+                <td>{description}</td>
+                <td>{count}</td>
+                <td>{tools}</td>
+            </tr>
+        ))}
+    </tbody>
 </table>
 
 The counts cover every shipped configuration. Your repository runs only its selected and applicable checks.

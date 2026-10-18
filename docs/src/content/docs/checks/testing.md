@@ -9,7 +9,7 @@ the limits you set. Keep the test runner and its dependencies in your own projec
 At level `recommended`, the coverage checks set no minimum. At level `all`, lines, branches,
 functions, and statements need 80%. A limit you set holds at both levels. For a test runner without a configuration, write a [command check](/configure/command-checks/).
 
-## Coverage with `jest`
+## Jest
 
 Run `gspot add jest`, then run the coverage check:
 
@@ -44,7 +44,7 @@ gspot check --only vitest/coverage
 Set the minimums under `coverage`: `lines`, `branches`, `functions`, and
 `statements`. Vitest reads its own `vitest.config.ts`.
 
-## Python
+## Python with pytest
 
 Run `gspot add pytest`, and install pytest and pytest-cov in your project's `.venv`. Then run:
 
@@ -55,3 +55,7 @@ gspot check --only pytest/coverage
 `coverage.lines` sets the line coverage limit. The check runs pytest with `--strict-markers`
 and `--strict-config`. The Ruff lint rules for pytest cover your test files, and your
 app code keeps its own lint rules.
+
+## Swift
+
+The [Swift](/languages/swift/#swift-tests) page covers Swift tests and their coverage floors.

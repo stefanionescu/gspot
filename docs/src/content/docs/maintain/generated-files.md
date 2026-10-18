@@ -7,171 +7,25 @@ Change `gspot.toml`, then run `gspot apply`; gspot writes every generated file f
 
 ## What gspot writes
 
-<dl>
-
-<dt>
-
-`.gspot/config/`
-
-</dt>
-<dd>
-
-The tool files, grouped by tool. Scopes share identical files.
-
-</dd>
-
-<dt>
-
-`.gspot/rules/`
-
-</dt>
-<dd>
-
-The rules.
-
-</dd>
-
-<dt>
-
-`.gspot/package.json` and lockfile
-
-</dt>
-<dd>
-
-The npm tools gspot installs, at pinned versions.
-
-</dd>
-
-<dt>
-
-`.gspot/pyproject.toml` and lockfile
-
-</dt>
-<dd>
-
-The Python tools gspot installs, at pinned versions.
-
-</dd>
-
-<dt>
-
-`.gspot/.yarnrc.yml`
-
-</dt>
-<dd>
-
-Yarn options for the npm tools, when the repository uses Yarn 2 or newer.
-
-</dd>
-
-<dt>
-
-`.gspot/version`
-
-</dt>
-<dd>
-
-The gspot version of the repository.
-
-</dd>
-
-<dt>
-
-Pointers
-
-</dt>
-<dd>
-
-Files that lead a tool or editor to its tool file, at each scope root that needs one and inside test folders.
-
-</dd>
-
-<dt>
-
-Sections between gspot markers
-
-</dt>
-<dd>
-
-In `.gitignore`, `.gitattributes`, and `AGENTS.md`. The rest of each file stays yours.
-
-</dd>
-
-<dt>
-
-`.gspot/hooks/`
-
-</dt>
-<dd>
-
-The three Git hook scripts.
-
-</dd>
-
-<dt>
-
-`.gspot/mise.toml`
-
-</dt>
-<dd>
-
-The program tools gspot installs with mise.
-
-</dd>
-
-<dt>
-
-GitHub or GitLab workflow
-
-</dt>
-<dd>
-
-The selected CI job.
-
-</dd>
-
-<dt>
-
-`.swiftlint.yml` inside test folders
-
-</dt>
-<dd>
-
-Swift test overrides, when needed.
-
-</dd>
-
-<dt>
-
-Keys in shared files
-
-</dt>
-<dd>
-
-Install options in files such as `bunfig.toml`. The other keys stay yours.
-
-</dd>
-
-</dl>
-
-Pointers include `eslint.config.mjs`, `pyrightconfig.json`, and `ruff.toml`, depending on the selected
-configurations. Each scope that uses a tool gets its pointer, for example:
-
-```text
-services/api/pyrightconfig.json
-Tests/.swiftlint.yml
-```
-
-Some tools have no pointer. gspot passes their tool file when it runs them; give your editor the same path.
-
-## What to commit
-
-Commit `gspot.toml`, every file that [What gspot writes](#what-gspot-writes) lists, the pointers, `.editorconfig`, the CI
-workflow, and each file with a section between gspot markers.
-Editors and coding agents can then use the tool files and rules right after a clone, before `gspot install` runs.
-Git does not keep the installed tools or the hooks, so run `gspot install` in each new clone.
-
-The section between gspot markers in `.gitignore` keeps these out of Git: the installed tools in `.gspot/node_modules/` and `.gspot/.venv/`, `.gspot/vale/` when prose checks need it, and installation caches.
+| Path                                                                                                                    | What it holds                                                                                                                                 | Commit |
+| ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `gspot.toml`                                                                                                            | Your settings.                                                                                                                                | Yes    |
+| `.gspot/config/`                                                                                                        | The tool files. Scopes share a file when its text is the same; a scope that needs other text gets `.gspot/config/<tool>/<scope path>/<file>`. | Yes    |
+| `.gspot/rules/`                                                                                                         | The rules for coding agents.                                                                                                                  | Yes    |
+| `.gspot/package.json` and its lockfile                                                                                  | The npm tools.                                                                                                                                | Yes    |
+| `.gspot/pyproject.toml` and `.gspot/uv.lock`                                                                            | The Python tools.                                                                                                                             | Yes    |
+| `.gspot/mise.toml`                                                                                                      | The programs that mise installs.                                                                                                              | Yes    |
+| `.gspot/.yarnrc.yml`                                                                                                    | Yarn options, with Yarn 2 or newer.                                                                                                           | Yes    |
+| `.gspot/hooks/`                                                                                                         | The Git hook scripts.                                                                                                                         | Yes    |
+| `.gspot/version`                                                                                                        | The pinned gspot version.                                                                                                                     | Yes    |
+| Pointers, such as `eslint.config.mjs`, `ruff.toml`, `pyrightconfig.json`, and `.swiftlint.yml` in Swift test folders    | Files that lead a tool or editor to its tool file, at each scope root that needs one and inside test folders.                                 | Yes    |
+| `.editorconfig` and `.prettierignore`                                                                                   | Editor settings and the files the formatter skips.                                                                                            | Yes    |
+| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`                                                                 | The CI job.                                                                                                                                   | Yes    |
+| The gspot sections in `AGENTS.md`, `.gitignore`, and `.gitattributes`                                                   | The part between gspot markers. The rest of each file stays yours.                                                                            | Yes    |
+| Keys in your own files, such as `minimumReleaseAge` in `bunfig.toml`                                                    | Install options. The other keys stay yours.                                                                                                   | Yes    |
+| `.gspot/node_modules/`, `.gspot/.venv/`, `.gspot/vale/`, `.gspot/state/`, `.gspot/.npmrc`, `.gspot/.yarnrc-install.yml` | Installed tools, run state, and install settings. `.gitignore` keeps them out of Git.                                                         | No     |
+
+The gspot section of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Some tools have no pointer; gspot passes their tool file when it runs them, so give your editor the same path. Run `gspot install` in each new clone.
 
 ## Before you apply
 

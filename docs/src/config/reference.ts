@@ -51,6 +51,13 @@ export const CHECK_NEEDS_LABELS = {
     network: 'network access',
 } as const;
 
+/** What each level checks, and when to choose it. */
+export const LEVEL_DESCRIPTIONS = {
+    recommended:
+        'Bugs, security and accessibility problems, type errors, formatting, and misuse of declared frameworks and libraries. Choose it for an existing codebase or a first run.',
+    all: 'Also naming, wording, code structure, doc comments, declaration order, duplication, API style, and complexity. Choose it for a new repository or one that coding agents write.',
+} as const;
+
 /** The level of a plugin rule that no level turns on. */
 export const PLUGIN_RULE_WITHOUT_LEVEL = 'none; turn it on in your ESLint config';
 

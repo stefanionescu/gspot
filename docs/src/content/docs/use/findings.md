@@ -3,7 +3,10 @@ title: Fix findings
 description: Read a finding, explain it, fix it, and read the report.
 ---
 
-Each failed check prints one line, then one line for each finding: file, line and column, lint rule, and message.
+A failed check prints one line with its check ID, `failed`, and the number of findings. In a nested scope, the line
+starts with the scope path. Under it, each finding prints its file, line and column, lint rule, and message. `help:` says
+what to do, and `run again:` gives the command that runs that check alone. Without `--verbose`, the report prints the
+first 200 findings of each check.
 
 ```text
 javascript/eslint  failed  2 findings
@@ -12,9 +15,6 @@ javascript/eslint  failed  2 findings
   help: Run `gspot check --fix` for the rules that fix themselves, then read each remaining line; `gspot explain <rule>` links the rule documentation.
   run again: gspot check --only javascript/eslint --staged
 ```
-
-- `help:` says what to do. `run again:` runs that check alone.
-- In a nested scope, the check line starts with the scope path.
 
 Fix the file, then run the check again.
 

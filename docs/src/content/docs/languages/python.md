@@ -14,4 +14,4 @@ pydoclint takes its docstring style from the first source that sets one:
 
 Otherwise, pydoclint uses its default.
 
-See [Tests and coverage](/checks/testing/#python) for pytest.
+See [Tests and coverage](/checks/testing/#python-with-pytest) for pytest.

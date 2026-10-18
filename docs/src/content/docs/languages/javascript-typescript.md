@@ -3,56 +3,6 @@ title: JavaScript and TypeScript
 description: Configure runtimes, TypeScript, Next.js, and React Native.
 ---
 
-gspot translates settings into lint rule options:
-
-<dl>
-
-<dt>
-
-`architecture.roles.environment_readers`
-
-</dt>
-<dd>
-
-Paths allowed to read environment variables by `n/no-process-env`, `no-restricted-properties`, and
-`no-restricted-syntax`.
-
-</dd>
-<dt>
-
-`tools.eslint.import_extension`
-
-</dt>
-<dd>
-
-The import extension option of `n/file-extension-in-import`.
-
-</dd>
-<dt>
-
-`limits.index_exports`
-
-</dt>
-<dd>
-
-The `amountOfExportsToConsiderModuleAsBarrel` option of `barrel-files/avoid-barrel-files`.
-
-</dd>
-<dt>
-
-`structure.reexports = "index-only"`
-
-</dt>
-<dd>
-
-Index exemptions for ESLint re-export rules and `gspot/no-trivial-files`.
-
-</dd>
-
-</dl>
-
-The environment reader checks and the limits on index files that re-export other files run at level `all`. The index limits run only when you allow re-exports. See the [ESLint plugin reference](/reference/eslint-plugin/) for the lint rule options.
-
 ## JavaScript runtimes
 
 Each file gets one ESLint runtime. Ordinary modules use Node.js built-ins; `.cjs` and `.cts`
@@ -104,3 +54,14 @@ project that depends on `react-dom` also gets the React DOM configuration and it
 Native sources keep the React hooks and component lint rules.
 
 See [Lint rule options](/configure/lint-rules/) for custom React Native text components.
+
+## Settings that change lint rule options
+
+| Setting                                  | What it sets                                                                                                                  |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `architecture.roles.environment_readers` | The files that may read environment variables, for `n/no-process-env`, `no-restricted-properties`, and `no-restricted-syntax` |
+| `tools.eslint.import_extension`          | The import extension option of `n/file-extension-in-import`                                                                   |
+| `limits.index_exports`                   | `amountOfExportsToConsiderModuleAsBarrel` of `barrel-files/avoid-barrel-files`                                                |
+| `structure.reexports = "index-only"`     | Lets index files re-export; ESLint re-export rules and `gspot/no-trivial-files` skip them                                     |
+
+The environment reader checks and the limits on index files that re-export other files run at level `all`. The index limits run only when you allow re-exports. See the [ESLint plugin reference](/reference/eslint-plugin/) for the lint rule options.

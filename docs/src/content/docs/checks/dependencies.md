@@ -72,7 +72,6 @@ To require 14 days:
 
 ```shell
 gspot set dependencies.min_release_age_days 14
-gspot apply
 ```
 
 Use `gspot explain dependencies.min_release_age_days` to inspect its default and when a change needs a reason.
