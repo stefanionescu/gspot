@@ -1,6 +1,6 @@
 <div class="brand-navigation">
     <a class="site-title" href="/" aria-label="gspot home">
-        <span class="brand-mark" aria-hidden="true"></span>
+        <img class="brand-mark" src="/brand/mark.webp" alt="" width="28" height="28" />
         <span>gspot</span>
     </a>
     <a href="/start/overview/" aria-current={Astro.url.pathname === '/' ? undefined : 'location'}>
@@ -31,9 +31,9 @@ a[aria-current] {
     font-weight: 550;
 }
 .brand-mark {
+    display: block;
     width: 28px;
     height: 28px;
-    background: url('/logo.svg') center / contain no-repeat;
 }
 </style>
 

@@ -58,7 +58,7 @@ main:has(.landing) {
 
 .inline-code,
 .problems code,
-.card > p:where(:not(.tool-names)) code {
+.card > p code {
     padding: 1px 5px;
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 4px;
@@ -116,7 +116,7 @@ main:has(.landing) {
     }
 }
 
-/* What gspot checks: three equal cards. */
+/* What gspot does: six tiles, two columns from 50rem, three from 72rem. */
 .cards {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -129,10 +129,17 @@ main:has(.landing) {
 .card {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     padding: 24px;
     border: 1px solid var(--sl-color-gray-5);
     border-radius: var(--home-radius);
+}
+
+.use-icon {
+    display: block;
+    width: 28px;
+    height: 28px;
+    color: var(--sl-color-accent-high);
 }
 
 .card h3 {
@@ -150,33 +157,15 @@ main:has(.landing) {
     line-height: 1.6;
 }
 
-.card .tool-names {
-    margin-block-start: auto;
-    padding-block-start: 12px;
-    border-top: 1px solid var(--sl-color-gray-5);
-    color: var(--sl-color-gray-3);
-    font-size: 13px;
-}
-
-.card .tool-names code {
-    font-size: 12px;
+@media (width >= 50rem) {
+    .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (width >= 72rem) {
     .cards {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .card {
-        display: grid;
-        grid-row: span 3;
-        grid-template-rows: subgrid;
-        row-gap: 12px;
-    }
-
-    .card .tool-names {
-        margin-block-start: 0;
-        align-self: end;
     }
 }
 

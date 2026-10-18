@@ -4,7 +4,8 @@ export const DESCRIPTION =
     'gspot installs linters in your repository and runs them on every commit. It also writes rules for your AI agent.';
 export const REPOSITORY_URL = 'https://github.com/stefanionescu/gspot';
 export const EDIT_URL = `${REPOSITORY_URL}/edit/main/docs/`;
-export const LOGO = '/logo.svg';
+export const FAVICON = '/favicon.ico';
+export const APPLE_TOUCH_ICON = '/apple-touch-icon.png';
 export const SOCIAL_IMAGE = '/open-graph.png';
 export const SOCIAL_IMAGE_ALT = 'The gspot name and logo.';
 export const SOCIAL_IMAGE_SIZE = { width: 1200, height: 630 } as const;

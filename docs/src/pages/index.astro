@@ -1,9 +1,9 @@
 ---
 import Example from '../components/home/Example.astro';
 import InlineText from '../components/home/InlineText.astro';
-import { DESCRIPTION, REPOSITORY_URL  } from '../config/site.ts';
+import { TOOLS, USE_CASES, HOME_TITLE } from '../config/home.ts';
 import '../components/home/page.css';
-import { TOOLS, HOME_TITLE, CHECK_AREAS } from '../config/home.ts';
+import { DESCRIPTION, REPOSITORY_URL  } from '../config/site.ts';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 ---
 
@@ -56,26 +56,36 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
         </section>
         <section class="section handles" aria-labelledby="handles-title">
             <div class="intro">
-                <h2 id="handles-title">What gspot checks</h2>
+                <h2 id="handles-title">What gspot does</h2>
                 <p class="lead">
-                    <code class="inline-code">gspot init</code> reads your files and turns on the checks they need. Each
-                    check runs a tool you know, pinned to one version on every machine and in CI.
+                    Run <code class="inline-code">gspot init</code> once. It looks at your repository and turns on the
+                    checks it needs. Then quick checks run every time you commit, slower ones before you push, and CI
+                    runs them again on every push.
                 </p>
             </div>
             <ul class="cards">
-                {CHECK_AREAS.map(({ title, text, tools }) => (
+                {USE_CASES.map(({ title, text, icon }) => (
                     <li class="card">
+                        <svg
+                            class="use-icon"
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.75"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            {icon.map((path) => <path d={path} />)}
+                        </svg>
                         <h3>{title}</h3>
                         <p>
                             <InlineText text={text} />
                         </p>
-                        <p class="tool-names">
-                            <InlineText text={tools} />
-                        </p>
                     </li>
                 ))}
             </ul>
-            <p class="more"><a href="/reference/checks/">All checks →</a></p>
+            <p class="more"><a href="/reference/checks/">See every check →</a></p>
         </section>
         <footer class="home-footer">
             <div class="home-footer-content">

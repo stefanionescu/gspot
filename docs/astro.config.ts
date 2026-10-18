@@ -9,12 +9,13 @@ import { description } from '@gspothq/cli/package.json' with { type: 'json' };
 import { LLMS_PAGES, AGENT_STEPS, LLMS_DESCRIPTION } from './src/config/setup.ts';
 
 import {
-    LOGO,
+    FAVICON,
     EDIT_URL,
     SITE_URL,
     SOCIAL_IMAGE,
     FONT_PACKAGES,
     REPOSITORY_URL,
+    APPLE_TOUCH_ICON,
     SOCIAL_IMAGE_ALT,
     SOCIAL_IMAGE_SIZE,
     FIRST_PAINT_TARGET,
@@ -57,7 +58,7 @@ export default defineConfig({
         },
         starlight({
             title: 'gspot',
-            favicon: LOGO,
+            favicon: FAVICON,
             // Writes /llms.txt with the steps for coding agents, and /llms-full.txt and /llms-small.txt with the docs.
             plugins: [
                 starlightLlmsTxt({
@@ -78,6 +79,7 @@ export default defineConfig({
                 { tag: 'meta', attrs: { property: 'og:image:width', content: String(SOCIAL_IMAGE_SIZE.width) } },
                 { tag: 'meta', attrs: { property: 'og:image:height', content: String(SOCIAL_IMAGE_SIZE.height) } },
                 { tag: 'meta', attrs: { property: 'og:image:alt', content: SOCIAL_IMAGE_ALT } },
+                { tag: 'link', attrs: { rel: 'apple-touch-icon', href: APPLE_TOUCH_ICON } },
                 // Wait for the browser to parse the article before painting a new page.
                 { tag: 'link', attrs: { rel: 'expect', href: FIRST_PAINT_TARGET, blocking: 'render' } },
             ],
