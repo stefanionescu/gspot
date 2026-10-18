@@ -3,7 +3,7 @@ title: Git hooks
 description: Run checks before commits and pushes and check commit messages.
 ---
 
-The `gspot init` plan includes Git hooks. With `hooks.enabled = true`, gspot writes three hooks and `gspot install` turns them on:
+The `gspot init` plan includes Git hooks. With `hooks.enabled = true`, gspot writes each hook below that runs at least one check, and `gspot install` turns them on. At level `recommended`, no check runs on commit messages, so gspot writes no `commit-msg` hook.
 
 | Hook         | Checks                                                                                                                                                     |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -17,7 +17,7 @@ The commit hook checks the staged files. The push hook checks every commit that 
 
 `gspot install` points Git at the hooks in your copy; see [Set up a clone](/start/install/#set-up-a-clone).
 
-A repository with Husky, Lefthook, or your own hook folder keeps its hooks. gspot prints three hook lines instead; add each line to the matching hook. For npm, the lines look like this:
+A repository with Husky, Lefthook, or your own hook folder keeps its hooks. gspot prints one line for each hook instead; add each line to the matching hook. For npm, the lines look like this:
 
 ```shell
 # pre-commit

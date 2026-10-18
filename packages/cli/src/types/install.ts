@@ -3,13 +3,18 @@ import type { Session } from '#cli/types/planning.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
-import type { StartRunner, GenerationResult } from '#cli/types/generation/files.ts';
+import type { HookName, StartRunner, GenerationResult } from '#cli/types/generation/files.ts';
 
 /** The install commands, summary, and exit code. */
 export type InstallationResult = { note: string; exitCode: number; steps: readonly (readonly string[])[] };
 
 /** Settings and repository evidence for installing and inspecting clone-local Git hooks. */
-export type HookContext = { settings: Settings; repository: Pick<Repository, 'root' | 'hasGit'>; runner: StartRunner };
+export type HookContext = {
+    settings: Settings;
+    repository: Pick<Repository, 'root' | 'hasGit'>;
+    runner: StartRunner;
+    hooks: HookName[];
+};
 /** Hook readiness and a readable status. */
 export type HookStatus = { ready: boolean; text: string };
 /** The Git setting to write, or instructions for hooks already owned by the repository. */

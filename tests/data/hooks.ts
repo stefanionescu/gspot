@@ -54,6 +54,11 @@ export const START_COMMANDS = [
     ['mise', undefined, ['exec', '--', 'gspot']],
 ] as const;
 
+export const HOOK_LEVEL_CASES = [
+    { level: 'recommended', hooks: ['pre-commit', 'pre-push'] },
+    { level: 'all', hooks: ['commit-msg', 'pre-commit', 'pre-push'] },
+] as const;
+
 export const HOOK_CASES = [
     ['pre-commit', []],
     ['pre-push', ['origin', 'https://example.com/repository.git']],

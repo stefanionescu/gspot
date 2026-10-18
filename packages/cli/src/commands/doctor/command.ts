@@ -7,6 +7,7 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/apply/hooks.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
+import { listHookNames } from '#cli/generation/hooks.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { readVersionPin } from '#cli/apply/version-pin.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
@@ -96,6 +97,7 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
         settings: session.settingsFile.settings,
         repository: session.repository,
         runner: session.startRunner,
+        hooks: listHookNames(session.configuredChecks),
     });
     const isBroken = [!hooks.ready, tools.some((tool) => !isToolAvailable(tool))].includes(true);
     return {

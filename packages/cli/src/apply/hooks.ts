@@ -7,7 +7,6 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { HOOK_ARGUMENTS } from '#cli/config/generation/hooks.ts';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/hooks.ts';
 import type { ExistingTools } from '#cli/types/repository/inventory.ts';
-import type { HookName, StartRunner } from '#cli/types/generation/files.ts';
 import type { HookPlan, HookStatus, HookContext } from '#cli/types/install.ts';
 import { readGitPrefix, readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
 import { HOOK_COMMAND, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install.ts';
@@ -34,31 +33,27 @@ function readForeignHooks(root: string, own: string): ExistingTools['hooks'] {
 }
 
 // List the commands that another hook setup must run. Install and the status line share this text.
-function formatForeignHooks(hooks: ExistingTools['hooks'], runner: StartRunner): string {
-    const lines = (Object.keys(HOOK_ARGUMENTS) as HookName[]).map(
-        (name) => `  ${name}: ${runner.command} ${HOOK_ARGUMENTS[name]}`,
-    );
+function formatForeignHooks(hooks: ExistingTools['hooks'], { runner, hooks: names }: HookContext): string {
+    const lines = names.map((name) => `  ${name}: ${runner.command} ${HOOK_ARGUMENTS[name]}`);
     return `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
 }
 
 /**
  * Plan the Git setting, or the instructions for existing hooks, and change no hooks.
  *
- * @param options what the plan reads.
- * @param options.settings the gspot.toml values that turn hooks on or off.
- * @param options.repository the root, and whether Git exists.
- * @param options.runner the command that starts gspot.
+ * @param context what the plan reads: the settings, the repository, the runner, and the hooks to run.
  *
  * @returns the command and a note, or instructions for existing hooks.
  */
-function planHooks({ settings, repository, runner }: HookContext): HookPlan {
+function planHooks(context: HookContext): HookPlan {
+    const { settings, repository } = context;
     const path = `${readGitPrefix(repository.root)}${HOOKS_PATH}`;
     if (settings.hooks?.enabled !== true)
         return readGitSetting(repository.root, HOOKS_PATH_SETTING) === path
             ? { path, command: UNSET_HOOKS_PATH, note: 'disabled hooks: unset core.hooksPath' }
             : { path, note: '' };
     const foreign = readForeignHooks(repository.root, path);
-    if (foreign.length > 0) return { path, note: formatForeignHooks(foreign, runner) };
+    if (foreign.length > 0) return { path, note: formatForeignHooks(foreign, context) };
     return {
         path,
         command: [...SET_HOOKS_PATH, path],
@@ -89,17 +84,15 @@ export function installHooks(context: HookContext, steps: (readonly string[])[])
 /**
  * Check whether the hooks in the settings run in this clone.
  *
- * @param options what the check reads.
- * @param options.settings the gspot.toml values that turn hooks on or off.
- * @param options.repository the root, and whether Git exists.
- * @param options.runner the command that starts gspot.
+ * @param context what the check reads: the settings, the repository, the runner, and the hooks to run.
  *
  * @returns whether the hooks run, and the status line.
  */
-export function readHookStatus({ settings, repository, runner }: HookContext): HookStatus {
+export function readHookStatus(context: HookContext): HookStatus {
+    const { settings, repository } = context;
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
     if (!repository.hasGit) return { ready: false, text: 'not installed: no Git repository' };
-    const path = planHooks({ settings, repository, runner }).path;
+    const path = planHooks(context).path;
     if (readGitSetting(repository.root, HOOKS_PATH_SETTING) === path)
         return { ready: true, text: `${path}: installed` };
     const foreign = readForeignHooks(repository.root, path);
@@ -115,7 +108,7 @@ export function readHookStatus({ settings, repository, runner }: HookContext): H
             ready,
             text: ready
                 ? `run from ${foreign.map((hook) => hook.path).join(', ')}`
-                : `not installed; ${formatForeignHooks(foreign, runner)}`,
+                : `not installed; ${formatForeignHooks(foreign, context)}`,
         };
     }
     return { ready: false, text: 'not installed; run gspot install' };

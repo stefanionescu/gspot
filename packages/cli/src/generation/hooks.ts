@@ -1,11 +1,19 @@
 import { name as cliName } from '../../package.json';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { HOOKS_PATH } from '#cli/config/system/locations.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { readGitPrefix, isGitRepository } from '#cli/system/git.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { selectPackageManager } from '#cli/tools/npm/package-manager.ts';
 import type { HookName, StartRunner, GeneratedFile } from '#cli/types/generation/files.ts';
-import { RUNNERS, HOOK_SHEBANG, HOOK_ARGUMENTS, COMMIT_MESSAGE_PATH_LINES } from '#cli/config/generation/hooks.ts';
+
+import {
+    RUNNERS,
+    HOOK_STAGES,
+    HOOK_SHEBANG,
+    HOOK_ARGUMENTS,
+    COMMIT_MESSAGE_PATH_LINES,
+} from '#cli/config/generation/hooks.ts';
 
 // The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there
 // becomes absolute first, in the Windows spelling under Git for Windows.
@@ -43,18 +51,38 @@ export async function selectRunner(repositoryRoot: string): Promise<StartRunner>
 }
 
 /**
- * Build one hook script per stage in the hooks folder, when the settings turn hooks on.
+ * List the hooks that run at least one configured check.
+ *
+ * @param checks the configured checks.
+ *
+ * @returns the hook names, in the order Git runs them.
+ */
+export function listHookNames(checks: PlannedCheck[]): HookName[] {
+    const stages = new Set<string>(checks.map((planned) => planned.check.stage));
+    return (Object.keys(HOOK_STAGES) as HookName[]).filter((name) =>
+        HOOK_STAGES[name].some((stage) => stages.has(stage)),
+    );
+}
+
+/**
+ * Build a script for each hook, when the settings turn hooks on.
  *
  * @param repositoryRoot the folder for Git detection and hook command prefixes.
  * @param settings the parsed gspot.toml.
  * @param runner the command that starts gspot.
+ * @param names the hooks that run a configured check.
  *
  * @returns the hook scripts.
  */
-export function buildHookFiles(repositoryRoot: string, settings: Settings, runner: StartRunner): GeneratedFile[] {
+export function buildHookFiles(
+    repositoryRoot: string,
+    settings: Settings,
+    runner: StartRunner,
+    names: HookName[],
+): GeneratedFile[] {
     if (settings.hooks?.enabled !== true) return [];
     const prefix = isGitRepository(repositoryRoot) ? readGitPrefix(repositoryRoot) : '';
-    return (Object.keys(HOOK_ARGUMENTS) as HookName[]).map((name) => ({
+    return names.map((name) => ({
         path: `${HOOKS_PATH}/${name}`,
         content: buildHookScript(name, runner, prefix),
         executable: true,

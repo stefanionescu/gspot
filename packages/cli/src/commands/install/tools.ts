@@ -6,6 +6,7 @@ import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { MISE_PROGRAM } from '#cli/config/tools/find.ts';
+import { listHookNames } from '#cli/generation/hooks.ts';
 import { installValePackages } from '#cli/tools/vale.ts';
 import { TOOL_PROJECT_INPUTS } from '#cli/config/install.ts';
 import { installMiseTools } from '#cli/commands/install/mise.ts';
@@ -59,6 +60,7 @@ export async function installTools(
                     settings: session.settingsFile.settings,
                     repository: session.repository,
                     runner: session.startRunner,
+                    hooks: listHookNames(session.configuredChecks),
                 },
                 steps,
             ),

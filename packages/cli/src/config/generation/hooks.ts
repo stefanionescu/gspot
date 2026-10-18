@@ -4,6 +4,13 @@ export const HOOK_ARGUMENTS = {
     'commit-msg': 'check --hook commit-msg -- "$1"',
 } as const;
 
+/** The stages of the checks that each hook runs. */
+export const HOOK_STAGES = {
+    'pre-commit': ['commit'],
+    'pre-push': ['commit', 'push'],
+    'commit-msg': ['message'],
+} as const;
+
 /** The runner and exact pin command for each package manager. */
 export const RUNNERS = {
     npm: {

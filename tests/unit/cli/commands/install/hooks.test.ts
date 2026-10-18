@@ -7,6 +7,7 @@ import { readGitSetting } from '#cli/system/git.ts';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { listHookNames } from '#cli/generation/hooks.ts';
 import { HOOK_REPOSITORIES } from '#tests/data/hooks.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
@@ -102,28 +103,12 @@ test.each(['', 'app/'])(
         expect(await isOnDisk(hook)).toBe(false);
         expect(readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
         const removedSteps: (readonly string[])[] = [];
-        installHooks(
-            await openSession(root).then(({ settingsFile, repository, startRunner }) => ({
-                settings: settingsFile.settings,
-                repository,
-                runner: startRunner,
-            })),
-            removedSteps,
-        );
+        installHooks(await readHookContext(root), removedSteps);
         expect(removedSteps).toContainEqual(['git', 'config', '--unset', 'core.hooksPath']);
         expect(readGitSetting(root, 'core.hooksPath')).toBeUndefined();
         readGitOutput(root, ['config', 'core.hooksPath', '.githooks']);
         const steps: (readonly string[])[] = [];
-        expect(
-            installHooks(
-                await openSession(root).then(({ settingsFile, repository, startRunner }) => ({
-                    settings: settingsFile.settings,
-                    repository,
-                    runner: startRunner,
-                })),
-                steps,
-            ),
-        ).toBe('');
+        expect(installHooks(await readHookContext(root), steps)).toBe('');
         expect(steps).toStrictEqual([]);
         expect(readGitSetting(root, 'core.hooksPath')).toBe('.githooks');
     },
@@ -139,11 +124,7 @@ test('a nested gspot.toml reads other hooks from the repository Git hooks folder
     });
     readGitOutput(sandbox.path, ['init', '-q']);
     readGitOutput(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
-    const context = await openSession(root).then(({ settingsFile, repository, startRunner }) => ({
-        settings: settingsFile.settings,
-        repository,
-        runner: startRunner,
-    }));
+    const context = await readHookContext(root);
     expect(readHookStatus(context).ready).toBe(true);
     await Bun.write(hook, '#!/bin/sh\nexit 0\n');
     const absent = readHookStatus(context);
@@ -153,6 +134,6 @@ test('a nested gspot.toml reads other hooks from the repository Git hooks folder
 });
 
 async function readHookContext(root: string) {
-    const { settingsFile, repository, startRunner } = await openSession(root);
-    return { settings: settingsFile.settings, repository, runner: startRunner };
+    const { settingsFile, repository, startRunner, configuredChecks } = await openSession(root);
+    return { settings: settingsFile.settings, repository, runner: startRunner, hooks: listHookNames(configuredChecks) };
 }

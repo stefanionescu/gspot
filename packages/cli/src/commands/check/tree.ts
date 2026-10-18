@@ -6,6 +6,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readHookStatus } from '#cli/apply/hooks.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import { listHookNames } from '#cli/generation/hooks.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Session, StageFilter } from '#cli/types/planning.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
@@ -103,6 +104,7 @@ function warnAboutHooks(session: Session, revision: RevisionSource | undefined):
     const hooks = readHookStatus({
         runner: session.startRunner,
         settings: session.settingsFile.settings,
+        hooks: listHookNames(session.configuredChecks),
         repository: {
             root: revision?.reportRoot ?? session.root,
             hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,

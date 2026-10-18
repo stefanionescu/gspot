@@ -2,7 +2,6 @@ import { AGENTS_FILE } from '#cli/config/rules.ts';
 import { buildPathKey } from '#cli/system/paths.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
@@ -15,6 +14,7 @@ import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
 import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
@@ -184,7 +184,7 @@ function generate(session: Session): GenerationResult {
         ...buildPointerFieldEdits(session, generated.files, toolFiles.targets),
     );
     generated.files.push(
-        ...buildHookFiles(root, settings, session.startRunner),
+        ...buildHookFiles(root, settings, session.startRunner, listHookNames(session.configuredChecks)),
         // Only Yarn needs the version, which an undeclared package manager reads from the program.
         ...(packageManager === undefined
             ? []
