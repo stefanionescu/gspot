@@ -2,8 +2,8 @@ import { posix } from 'node:path';
 import { linkSetting } from './settings.ts';
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
-import { escapeCell, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
 import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../config/reference.ts';
+import { formatList, escapeCell, formatTable, formatSection, buildReferencePage } from './markdown.ts';
 
 type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 
@@ -19,7 +19,9 @@ function formatDetectionConditions(detect: Manifest['detect']): string[] {
         if (Array.isArray(patterns))
             return patterns.length === 0
                 ? []
-                : [`${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]}: ${formatCodeNames(patterns)}`];
+                : [
+                      `${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS].toLowerCase()} ${formatCodeNames(patterns)}`,
+                  ];
         return Object.entries(patterns).map(([path, pattern]) => `file \`${path}\` matches \`${pattern}\``);
     });
 }
@@ -32,36 +34,33 @@ function formatAbsentDependencies(detect: Manifest['detect']): string {
 
 // Rule files of a configuration, with the conditions that install each one.
 function formatRules(manifest: Manifest, paths: string[]): string {
-    return paths
-        .map((path) => {
-            const condition = manifest.rules[posix.basename(path)];
-            if (condition === undefined) return `- \`${path}\``;
-            const conditions = formatDetectionConditions(condition).join(' or ');
-            return `- \`${path}\` when the repository has ${conditions}${formatAbsentDependencies(condition)}.`;
-        })
-        .join('\n');
+    const rows = paths.map((path) => {
+        const condition = manifest.rules[posix.basename(path)];
+        if (condition === undefined) return [`\`${path}\``, 'Always'];
+        const conditions = formatDetectionConditions(condition).join(' or ');
+        return [`\`${path}\``, escapeCell(`The repository has ${conditions}${formatAbsentDependencies(condition)}.`)];
+    });
+    return formatTable(['Rule file', 'Installed when'], rows);
 }
 
 function formatLintRulesOff(manifest: Manifest): string {
-    return manifest.eslint.rules_off
-        .map((exclusion) => {
-            const rules = exclusion.rules.map((rule) => `\`${rule}\``).join(', ');
-            const files = exclusion.files?.map((path) => `\`${path}\``).join(', ') ?? 'all files in the scope';
-            return `${rules} for ${files}. ${exclusion.reason}`;
-        })
-        .map((item) => `- ${item}`)
-        .join('\n');
+    const rows = manifest.eslint.rules_off.map((exclusion) => [
+        exclusion.rules.map((rule) => `\`${rule}\``).join(', '),
+        exclusion.files?.map((path) => `\`${path}\``).join(', ') ?? 'All files in the scope',
+        escapeCell(exclusion.reason),
+    ]);
+    return formatTable(['Lint rules', 'Files', 'Why'], rows);
 }
 
 function formatConfigurationChecks(manifest: Manifest): string {
     if (manifest.checks.length === 0) return '';
-    const rows = manifest.checks.map((check): [string, string] => {
-        return [
-            `[\`${check.name}\`](/reference/${REFERENCE_FOLDERS.checks}/${check.name}/)`,
-            `Stage \`${check.stage}\`, level \`${check.level}\`. ${escapeCell(check.summary)}`,
-        ];
-    });
-    return formatDefinitions(rows);
+    const rows = manifest.checks.map((check) => [
+        `[\`${check.name}\`](/reference/${REFERENCE_FOLDERS.checks}/${check.name}/)`,
+        `\`${check.stage}\``,
+        `\`${check.level}\``,
+        escapeCell(check.summary),
+    ]);
+    return formatTable(['Check', 'Stage', 'Level', 'What it does'], rows);
 }
 
 // How a configuration gets selected: always, by its files and dependencies, or by another configuration.
@@ -69,20 +68,46 @@ function formatSelection(manifest: Manifest, data: ReturnType<typeof readReferen
     const { configuration } = manifest;
     if (configuration.always_selected)
         return configuration.when?.git === true ? 'Always selected in a Git repository.' : 'Always selected.';
-    const absent = manifest.detect.absent_dependencies;
-    const selected = [
-        ...formatDetectionConditions(manifest.detect).map((condition) => `- ${condition}`),
-        ...(absent.length === 0 ? [] : [`- Not when the repository depends on ${formatCodeNames(absent)}`]),
-    ].join('\n');
+    const conditions = formatDetectionConditions(manifest.detect);
+    const selected =
+        conditions.length === 0
+            ? ''
+            : `gspot selects it in a scope with ${conditions.join(', or ')}${formatAbsentDependencies(manifest.detect)}.`;
     const requiredBy = linkConfigurations(
         data.configurations
             .filter((owner) => owner.configuration.requires.includes(configuration.name))
             .map((owner) => owner.configuration.name),
     );
     return (
-        [selected, requiredBy === '' ? '' : `Selected when required by: ${requiredBy}.`].filter(Boolean).join('\n\n') ||
-        `Select explicitly with \`gspot add ${configuration.name}\`.`
+        [selected, requiredBy === '' ? '' : `A configuration that requires it selects it too: ${requiredBy}.`]
+            .filter(Boolean)
+            .join(' ') || `Select explicitly with \`gspot add ${configuration.name}\`.`
     );
+}
+
+// What gspot installs and writes for a configuration, and the folders it keeps out of Git.
+function listInstalledSections(manifest: Manifest): [string, string][] {
+    const tools = manifest.tools.map((tool) => [
+        tool.name,
+        (tool.version === undefined ? 'Any' : `\`${tool.version}\``) +
+            (Object.keys(tool.installers).length === 0 ? ', install it yourself' : ''),
+    ]);
+    // Two pointers can share one target, so each file appears once.
+    const targets = [
+        ...new Set(
+            manifest.toolFiles.map((toolFile) =>
+                toolFile.when === undefined
+                    ? `\`${toolFile.target}\``
+                    : `\`${toolFile.target}\` (with the [\`${toolFile.when.configuration}\`](/reference/${REFERENCE_FOLDERS.configurations}/${toolFile.when.configuration}/) configuration)`,
+            ),
+        ),
+    ];
+    const ignored = manifest.ignored_folders.map((path) => '`' + path + '`');
+    return [
+        ['Tools and versions', formatTable(['Tool', 'Version'], tools)],
+        ['Files gspot writes', targets.length === 0 ? '' : `gspot writes ${formatList(targets)}.`],
+        ['Kept out of Git', ignored.length === 0 ? '' : `${formatList(ignored)}.`],
+    ];
 }
 
 /**
@@ -93,45 +118,34 @@ function formatSelection(manifest: Manifest, data: ReturnType<typeof readReferen
  */
 function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof readReferenceData>): ReferencePage {
     const { configuration } = manifest;
-    const tools = manifest.tools.map(
-        (tool) =>
-            (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`) +
-            (Object.keys(tool.installers).length === 0 ? ' (install it yourself)' : ''),
-    );
-    const targets = manifest.toolFiles.map((toolFile) =>
-        toolFile.when === undefined
-            ? `\`${toolFile.target}\``
-            : `\`${toolFile.target}\` when the [${toolFile.when.configuration} configuration](/reference/${REFERENCE_FOLDERS.configurations}/${toolFile.when.configuration}/) is selected`,
-    );
     const selection = formatSelection(manifest, data);
-    const defaults = Object.entries(manifest.defaults).map(
-        ([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\``,
-    );
+    const defaults = Object.entries(manifest.defaults).map(([name, value]) => [
+        `\`${name}\``,
+        `\`${JSON.stringify(value)}\``,
+    ]);
+    const settings = (data.configurationSettings[manifest.configuration.name] ?? []).map((setting) => [
+        linkSetting(data.schema, setting.name),
+        escapeCell(setting.summary),
+    ]);
     const sections: [string, string][] = [
         ['Checks', formatConfigurationChecks(manifest)],
-        [
-            'Settings',
-            (data.configurationSettings[manifest.configuration.name] ?? [])
-                .map((setting) => `- ${linkSetting(data.schema, setting.name)}: ${setting.summary}`)
-                .join('\n'),
-        ],
+        ['Settings', formatTable(['Setting', 'What it sets'], settings)],
         ['Selected when', selection],
         ['Lint rules turned off', formatLintRulesOff(manifest)],
-        ['Defaults set for other configurations', defaults.map((item) => '- ' + item).join('\n')],
+        ['Defaults set for other configurations', formatTable(['Setting', 'Value'], defaults)],
         ['Rules for coding agents', formatRules(manifest, data.ruleFiles[manifest.configuration.name] ?? [])],
-        ['Tools and versions', tools.map((item) => '- ' + item).join('\n')],
-        ['Files gspot writes', targets.map((item) => '- ' + item).join('\n')],
-        ['Kept out of Git', manifest.ignored_folders.map((path) => '- `' + path + '`').join('\n')],
+        ...listInstalledSections(manifest),
     ];
     const required = linkConfigurations(configuration.requires);
-    const opening =
-        `**${configuration.title}.** ${configuration.description}` +
-        (required === '' ? '' : `\n\nRequires: ${required}.`);
     const guide = CONFIGURATION_GUIDES[configuration.name];
-    const body =
-        opening +
-        (guide === undefined ? '' : `\n\nSee the [${guide.title} guide](${guide.path}).`) +
-        sections.map(([title, content]) => formatSection(title, content)).join('');
+    const opening = [
+        configuration.description,
+        required === '' ? '' : `It requires ${required}.`,
+        guide === undefined ? '' : `The [${guide.title} guide](${guide.path}) explains the setup.`,
+    ]
+        .filter(Boolean)
+        .join(' ');
+    const body = opening + sections.map(([title, content]) => formatSection(title, content)).join('');
     return buildReferencePage(configuration.name, configuration.description, body);
 }
 
@@ -150,18 +164,15 @@ export function buildConfigurationPages(data: ReturnType<typeof readReferenceDat
                 'gspot selects configurations from the files of each scope. `gspot add <name>` and ' +
                     '`gspot remove <name>` change the selection, and `gspot list` shows it.\n' +
                     Object.entries(data.groups)
-                        .map(([group, title]) =>
-                            formatSection(
-                                title,
-                                data.configurations
-                                    .filter((manifest) => manifest.configuration.group === group)
-                                    .map(
-                                        ({ configuration }) =>
-                                            `- [\`${configuration.name}\`](/reference/configurations/${configuration.name}/): ${configuration.title}. ${configuration.description}`,
-                                    )
-                                    .join('\n'),
-                            ),
-                        )
+                        .map(([group, title]) => {
+                            const rows = data.configurations
+                                .filter((manifest) => manifest.configuration.group === group)
+                                .map(({ configuration }) => [
+                                    `[\`${configuration.name}\`](/reference/${REFERENCE_FOLDERS.configurations}/${configuration.name}/)`,
+                                    escapeCell(configuration.description),
+                                ]);
+                            return formatSection(title, formatTable(['Configuration', 'What it checks'], rows));
+                        })
                         .join(''),
             ),
         ],

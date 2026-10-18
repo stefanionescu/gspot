@@ -1,6 +1,9 @@
 import type { ReferencePage } from '../types/reference.ts';
 import { MARKDOWN_ESCAPES, FLAGS_OUTSIDE_CODE, HTML_BRACKET_ENTITIES } from '../config/reference.ts';
 
+// Lists names the way a sentence does, with a serial comma before the last one.
+const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
+
 /**
  * Build a reference page with escaped markup and no edit link.
  * @param title the visible heading
@@ -31,9 +34,10 @@ export function formatSection(title: string, body: string): string {
  * Format a Markdown table.
  * @param header the column titles
  * @param rows the cells, as one list per table line
- * @returns the table, with a separator line under the header
+ * @returns the table, with a separator line under the header, or nothing without rows
  */
 export function formatTable(header: string[], rows: string[][]): string {
+    if (rows.length === 0) return '';
     return [header, header.map(() => '---'), ...rows].map((cells) => `| ${cells.join(' | ')} |`).join('\n');
 }
 
@@ -62,4 +66,13 @@ export function formatDefinitions(rows: [name: string, meaning: string, id?: str
             .join('\n\n') +
         '\n\n</dl>'
     );
+}
+
+/**
+ * Join names the way a sentence lists them.
+ * @param names the names, already formatted
+ * @returns the names as one phrase, such as a, b, and c
+ */
+export function formatList(names: string[]): string {
+    return LIST_FORMAT.format(names);
 }

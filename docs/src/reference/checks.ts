@@ -1,6 +1,7 @@
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
-import { escapeCell, formatTable, formatSection, buildReferencePage } from './markdown.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
+import { formatList, escapeCell, formatTable, formatSection, buildReferencePage } from './markdown.ts';
 
 import {
     CHECK_RUN_LABELS,
@@ -32,16 +33,6 @@ function formatToolNames(check: CheckDeclaration): string | undefined {
     return setting === undefined ? program : `the command in \`${setting}\``;
 }
 
-// How to suppress one finding of the tool the check runs.
-function formatSuppressionLines(check: CheckDeclaration, suppressions: Map<string, Suppression>): string[] {
-    const program = findCheckProgram(check);
-    const form = program === undefined ? undefined : suppressions.get(program);
-    if (form === undefined) return [];
-    return form.forbidden === true
-        ? ['- Suppressions: refused; use `gspot ignore`\n']
-        : [`- Suppress one place: \`${form.example ?? ''}\`\n`];
-}
-
 // Every suppression form, for the check that reads them.
 function formatSuppressionForms(suppressions: Map<string, Suppression>): string {
     return formatTable(
@@ -53,25 +44,57 @@ function formatSuppressionForms(suppressions: Map<string, Suppression>): string 
     );
 }
 
-function formatCheckEnvironment(check: CheckDeclaration): string[] {
-    const runs = CHECK_RUN_LABELS[check.runs];
+// The tool the check runs, and the build, service, or system it needs, each as one sentence when it applies.
+function listCheckRequirements(check: CheckDeclaration): string[] {
     const tools = formatToolNames(check);
-    const attributes: [string, string | undefined][] = [
-        ['Runs', runs],
-        ['Tool', tools],
-        ['Fixer', check.fix === undefined ? undefined : '`gspot check --fix`'],
-        ['Operating systems', check.operating_systems?.join(', ')],
-        ['Needs', check.needs?.map((need) => CHECK_NEEDS_LABELS[need]).join(', ')],
-    ];
+    const systems = check.operating_systems?.map(
+        (name) => OPERATING_SYSTEMS.find((system) => system.name === name)?.label ?? name,
+    );
+    const needs = check.needs?.map((need) => CHECK_NEEDS_LABELS[need]);
     return [
-        ...attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`])),
-        ...(tools === undefined ? ['- Built-in check\n'] : []),
-        ...(check.when?.setting === undefined ? [] : [`- Skipped while \`${check.when.setting}\` is empty.\n`]),
+        tools === undefined ? 'gspot runs this check itself.' : `It runs ${tools}.`,
+        needs === undefined ? '' : `It needs ${formatList(needs)}.`,
+        systems === undefined ? '' : `It runs on ${formatList(systems)}.`,
     ];
 }
 
+// Where and when the check runs, in plain sentences, as Ruff opens a rule page.
+function formatCheckFacts(check: CheckDeclaration, manifest: Manifest): string {
+    const configuration = manifest.configuration.name;
+    const timing =
+        check.stage === 'manual'
+            ? `only when \`gspot check --only ${check.name}\` names it`
+            : `at the \`${check.stage}\` [stage](/start/concepts/#stage)`;
+    return [
+        `Part of the [\`${configuration}\`](/reference/${REFERENCE_FOLDERS.configurations}/${configuration}/) configuration, at the \`${check.level}\` [level](/start/concepts/#levels). It runs ${timing}, ${CHECK_RUN_LABELS[check.runs]}.`,
+        ...listCheckRequirements(check),
+        check.fix === undefined ? '' : '`gspot check --fix` fixes what it can.',
+        check.when?.setting === undefined ? '' : `It skips until you set \`${check.when.setting}\`.`,
+    ]
+        .filter(Boolean)
+        .join(' ');
+}
+
+// The comment that silences one finding of the tool, or the note that the tool takes none.
+function formatSuppressionComment(form: Suppression | undefined): string {
+    if (form === undefined) return '';
+    if (form.forbidden === true) return '\n\nA suppression comment is refused; use `gspot ignore`.';
+    return `\n\nTo silence one place, write a comment such as:\n\n\`\`\`text\n${form.example ?? ''}\n\`\`\``;
+}
+
+// How to turn the check off for some files or for one lint rule, and the comment that silences one place.
+function formatTurnOff(check: CheckDeclaration, suppressions: Map<string, Suppression>): string {
+    const commands = [
+        `gspot ignore ${check.name} --paths "<glob>" --reason "<why>"`,
+        ...(check.command === undefined ? [] : [`gspot ignore ${check.name} --rule <rule> --reason "<why>"`]),
+    ];
+    const program = findCheckProgram(check);
+    const comment = formatSuppressionComment(program === undefined ? undefined : suppressions.get(program));
+    return `Turn it off for some files${check.command === undefined ? '' : ', or one of its lint rules'}, with a reason:\n\n\`\`\`shell\n${commands.join('\n')}\n\`\`\`${comment}`;
+}
+
 /**
- * Build the reference page of one check: why it matters, what to do, and where it runs.
+ * Build the reference page of one check: where it runs, why it matters, what to do, and how to turn it off.
  * @param check the record from the manifest
  * @param manifest the parsed configuration that declares it
  * @param suppressions the suppression form of each tool
@@ -82,14 +105,12 @@ export function buildCheckPage(
     manifest: Manifest,
     suppressions: Map<string, Suppression>,
 ): ReferencePage {
-    const stage =
-        check.stage === 'manual' ? `manual; runs only with \`gspot check --only ${check.name}\`` : check.stage;
     const lines = [
-        `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Details\n\n`,
-        `- Configuration: [${manifest.configuration.name}](/reference/${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}/)\n- [Stage](/start/concepts/#stage): ${stage}\n- [Level](/start/concepts/#levels): ${check.level}\n`,
-        ...formatCheckEnvironment(check),
-        ...formatSuppressionLines(check, suppressions),
+        `${check.summary}\n\n${formatCheckFacts(check, manifest)}\n`,
+        formatSection('Why', check.why),
+        formatSection('What to do', check.help),
         formatSection('Example', check.example ?? ''),
+        formatSection('Turn it off', formatTurnOff(check, suppressions)),
         formatSection(
             'Suppression forms',
             check.name === SUPPRESSIONS_CHECK ? formatSuppressionForms(suppressions) : '',
@@ -109,7 +130,7 @@ export function buildCheckIndex(
     groups: Record<string, string>,
 ): ReferencePage {
     return buildReferencePage(
-        'All checks',
+        'Checks',
         `${String(checks.length)} checks declared by shipped configurations.`,
         'Each check ID is `<configuration>/<name>`. The [stage](/start/concepts/#stage) says when it runs, and the ' +
             '[level](/start/concepts/#levels) says which setting of `level` turns it on. ' +
@@ -122,11 +143,9 @@ export function buildCheckIndex(
                             `[\`${check.name}\`](/reference/${REFERENCE_FOLDERS.checks}/${check.name}/)`,
                             `\`${check.stage}\``,
                             `\`${check.level}\``,
+                            escapeCell(check.summary),
                         ]);
-                    return formatSection(
-                        title,
-                        rows.length === 0 ? '' : formatTable(['Check', 'Stage', 'Level'], rows),
-                    );
+                    return formatSection(title, formatTable(['Check', 'Stage', 'Level', 'What it does'], rows));
                 })
                 .join(''),
     );
