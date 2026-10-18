@@ -2,10 +2,12 @@ import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
+import { formatLimitsGuide, formatNamingGuide } from './setting-guides.ts';
 import { escapeCell, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
 
 import {
     MAP_KEY_NAME,
+    ANGLE_BRACKETS,
     PAGE_TITLE_LEVEL,
     LANGUAGE_SETTING,
     SETTINGS_SUBPAGES,
@@ -156,6 +158,11 @@ function formatTableHeader(key: string, node: JSONSchema.JSONSchema): string {
     return node.type === 'array' ? `[[${key}]]` : `[${key}]`;
 }
 
+// The anchor of a key row: the full key without the angle brackets of a map placeholder, because HTML reads them as a tag.
+function formatRowId(key: string): string {
+    return key.replaceAll(ANGLE_BRACKETS, '');
+}
+
 // Each key of a table or a record as one row, named without the table prefix, with the full key as its anchor.
 function formatSettingRows(
     data: ReturnType<typeof readReferenceData>,
@@ -165,7 +172,7 @@ function formatSettingRows(
     return formatDefinitions(
         keys.map(({ name, node, required }) => {
             const key = prefix === '' ? name : `${prefix}.${name}`;
-            return [`\`${name}\``, formatSetting(data.schema, key, node, data, required), key];
+            return [`\`${name}\``, formatSetting(data.schema, key, node, data, required), formatRowId(key)];
         }),
     );
 }
@@ -190,22 +197,6 @@ function formatSettingTable(
             .filter((child) => !isSettingValue(schema, child.node))
             .map((child) => formatSettingTable(data, `${key}.${child.name}`, child.node, level + 1))
             .join('')
-    );
-}
-
-function formatLimitsGuide(data: ReturnType<typeof readReferenceData>): string {
-    const { setting } = data.settings.find(
-        ({ setting }) => setting.name.startsWith('limits.') && setting.reason_needed === 'raising',
-    ) as ReturnType<typeof readReferenceData>['settings'][number];
-    const key = setting.name;
-    const value = Number(setting.default) + 1;
-    return (
-        `Change a limit for the repository, or use \`limits.<language>.<name>\` for one language. A value that loosens a check needs a reason.\n\n` +
-        `\`\`\`shell\ngspot set ${key} ${String(value)} --reason "The parser is one state machine."\n\`\`\`\n\n` +
-        `\`\`\`toml\nconfigurations = ["bash"]\nlevel = "all"\n\n[limits]\n${key.slice('limits.'.length)} = { value = ${String(value)}, reason = "The parser is one state machine." }\n\`\`\`\n\n` +
-        `For one language, set \`${key.replace('limits.', 'limits.bash.')}\` instead. Its recommended default is \`${JSON.stringify(setting.default)}\`.\n\n` +
-        `For a Bash function over this nesting limit, \`bash/function-size\` reports:\n\n\`\`\`text\nmain has ${String(value)} levels of nesting, over the limit of ${String(setting.default)}.\n\`\`\`\n\n` +
-        `The raised limit accepts that depth. To inspect the current value and source, run \`gspot explain ${key}\`.\n\n`
     );
 }
 
@@ -234,21 +225,6 @@ function formatScopeSection(
     );
 }
 
-function formatNamingGuide(data: ReturnType<typeof readReferenceData>): string {
-    const { setting } = data.settings.find(({ setting }) => setting.name === 'naming.max_words') as ReturnType<
-        typeof readReferenceData
-    >['settings'][number];
-    const value = Number(setting.default) + 1;
-    return (
-        'Allow an exact name only when an external contract requires it. Every shipped banned naming group applies at level `all`. The `roles` group rejects vague job labels such as `helper` and `manager`; `defensive` rejects qualifiers such as `ensure` and `maybe`; `marketing` rejects claims such as `advanced` and `enhanced`. `naming.banned_words` adds project words.\n\n' +
-        'For `export const helperCommand = 1;`, `naming/identifiers` reports:\n\n```text\njavascript variable "helperCommand": "helper" is banned (roles group).\n```\n\n' +
-        'This complete example accepts that exact variable name in one file:\n\n```toml\nconfigurations = ["javascript", "naming"]\nlevel = "all"\n\n[[naming.override]]\npaths = ["helper.js"]\ncategories = ["variables"]\nallowed_names = ["helperCommand"]\nreason = "An external API requires this exact name."\n```\n\n' +
-        'Write override records by hand, then run `gspot apply`. The override removes this `banned-word` finding; other names keep their checks.\n\n' +
-        `To change the word limit, run:\n\n\`\`\`shell\ngspot set ${setting.name} ${String(value)} --reason "The public API uses five words."\n\`\`\`\n\n` +
-        `The \`words\` finding reports identifiers over the default of ${String(setting.default)} words. The command permits ${String(value)} words.\n\n`
-    );
-}
-
 // The schema names of a dotted key; a map key, such as a language, reads as the map placeholder.
 function findSettingPath(schema: JSONSchema.JSONSchema, key: string): { path: string[]; node: JSONSchema.JSONSchema } {
     let node = schema;
@@ -268,7 +244,7 @@ function findSettingPath(schema: JSONSchema.JSONSchema, key: string): { path: st
 function formatSettingAnchor(schema: JSONSchema.JSONSchema, path: string[], node: JSONSchema.JSONSchema): string {
     const key = path.join('.');
     return isSettingValue(schema, node)
-        ? key
+        ? formatRowId(key)
         : formatTableHeader(key, node).toLowerCase().replaceAll(HEADING_ID_DROPPED, '');
 }
 

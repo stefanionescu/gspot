@@ -85,6 +85,7 @@ export const LISTED_VALUES_LIMIT = 12;
 export const SETTINGS_SUBPAGES: readonly string[] = ['limits', 'naming', 'tools', 'command_check'];
 /** The name of the keys of a map table, such as the language under limits. */
 export const MAP_KEY_NAME = '<name>';
+export const ANGLE_BRACKETS = /[<>]/gu;
 /** The heading level of a page title. */
 export const PAGE_TITLE_LEVEL = 1;
 /** How a reasoned value reads in the accepted values of a setting. */
