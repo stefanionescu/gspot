@@ -37,24 +37,6 @@ gspot check
 
 Use local paths, HTTPS URLs, or `github:owner/repository[/path][@ref]`. A GitHub source without a path reads `gspot.template.toml`. Set `GITHUB_TOKEN` for a private GitHub source.
 
-## Customize and reuse
-
-In repository A, ignore an ESLint finding and export its settings:
-
-```shell
-gspot ignore javascript/eslint --rule no-console --paths 'scripts/**' --reason 'These scripts print command output.'
-gspot export gspot.template.toml
-```
-
-Copy `gspot.template.toml` to repository B, then set up gspot:
-
-```shell
-gspot init --from gspot.template.toml --yes
-gspot install
-gspot check
-```
-
-Repository B gets the ignore and the configuration choices. Check the carried paths
-against the files of repository B, and remove what it does not need.
+Then check the carried paths against the files of the new repository. `gspot/unmatched-patterns` reports each path that matches nothing.
 
 [Export](/reference/commands/export/) and [init](/reference/commands/init/) list the accepted inputs.

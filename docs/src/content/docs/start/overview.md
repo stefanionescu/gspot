@@ -21,11 +21,4 @@ gspot sets up linters, formatters, and security scanners for your repository and
 - Lint rules turned off without a reason
 - At [level](/start/concepts/#levels) `all`: naming, structure, doc comments, duplication, and complexity
 
-## How setup works
-
-1. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the tool files, the agent rules, and
-   the Git hooks.
-2. `gspot install` installs the pinned tools and turns on the hooks.
-3. The hooks and CI run `gspot check`. Run it yourself to check every file.
-
 Continue with the [Quickstart](/start/quickstart/).

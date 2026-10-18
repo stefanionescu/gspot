@@ -43,11 +43,11 @@ Neither enables experimental or preview lint rules.
 
 ## Other ways to write a setting
 
-- `--scope api` writes the setting in the scope `api`.
 - `gspot unset <setting>` removes your value and its reason, so the default takes effect again.
 - On a list, `gspot set` adds items and `gspot unset <setting> <item...>` removes them.
   To replace a whole list, run `gspot unset <setting>`, then `gspot set <setting> <items...>`.
-- A scope's list adds to inherited lists. A command argument list replaces the inherited one as a whole.
+
+To change a setting in one folder only, see [Settings in a scope](/configure/monorepos/#settings-in-a-scope).
 
 A value that loosens a check needs a reason beside it. This covers a raised limit, lowered coverage, and an item added to an allow-list, such as `allowed_words` or `dependencies.allowed_registries`, that the shipped list lacks:
 

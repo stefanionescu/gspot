@@ -16,8 +16,6 @@ These configurations hold security checks. gspot always selects `secrets`, `depe
 At push, TruffleHog sends possible secrets to their issuing service to check whether they still work. This needs
 network access.
 
-If a tool needs installation, the check shows `missing`, and the run ends with exit code 2. `gspot explain <check>` prints what the check needs.
-
 If gspot finds a real secret, revoke or rotate it first, then remove it from the code. Deleting
 the line leaves the secret in Git history.
 

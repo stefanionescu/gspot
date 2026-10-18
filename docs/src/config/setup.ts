@@ -1,12 +1,25 @@
 // Two ways to start with gspot: the commands for each package manager, or a prompt that sends a coding agent to the
 // steps in /llms.txt. The home page and the Quickstart share these values.
 export const SETUP_COMMANDS = [
-    { label: 'npm', lines: ['npm i -D -E @gspothq/cli', 'npx gspot init', 'npx gspot install'] },
-    { label: 'pnpm', lines: ['pnpm add -D -E @gspothq/cli', 'pnpm exec gspot init', 'pnpm exec gspot install'] },
-    { label: 'Yarn', lines: ['yarn add -D -E @gspothq/cli', 'yarn exec gspot init', 'yarn exec gspot install'] },
-    { label: 'Bun', lines: ['bun add -d -E @gspothq/cli', 'bunx gspot init', 'bunx gspot install'] },
+    { label: 'npm', start: 'npx gspot', lines: ['npm i -D -E @gspothq/cli', 'npx gspot init', 'npx gspot install'] },
+    {
+        label: 'pnpm',
+        start: 'pnpm exec gspot',
+        lines: ['pnpm add -D -E @gspothq/cli', 'pnpm exec gspot init', 'pnpm exec gspot install'],
+    },
+    {
+        label: 'Yarn',
+        start: 'yarn exec gspot',
+        lines: ['yarn add -D -E @gspothq/cli', 'yarn exec gspot init', 'yarn exec gspot install'],
+    },
+    {
+        label: 'Bun',
+        start: 'bunx gspot',
+        lines: ['bun add -d -E @gspothq/cli', 'bunx gspot init', 'bunx gspot install'],
+    },
     {
         label: 'mise',
+        start: 'mise exec -- gspot',
         lines: [
             'mise use --pin node@24 --tool-option allow_low_downloads=true npm:@gspothq/cli',
             'mise exec -- gspot init',

@@ -72,8 +72,6 @@ gspot install
 gspot check services/api
 ```
 
-If a project's files go away, its checks become inactive. `gspot apply` keeps its configurations and settings in gspot.toml. The checks run again when the files come back.
-
 ## Settings below the Git root
 
 gspot uses the nearest `gspot.toml` in the current folder or a folder above it.

@@ -48,7 +48,6 @@ number-max-precision = 0
 ```
 
 This requires long hexadecimal colors at both levels. The precision option counts only at `all`, where that lint rule runs.
-Severity stays `error`. Ignore a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.
 To allow a WebKit property that your project needs, use the `ignoreProperties` option of `property-no-vendor-prefix`.
 To allow an at-rule, use the `ignoreAtRules` option of `at-rule-no-unknown`:
 
@@ -56,10 +55,6 @@ To allow an at-rule, use the `ignoreAtRules` option of `at-rule-no-unknown`:
 [tools.stylelint.rules]
 at-rule-no-unknown = [true, { ignoreAtRules = ["container"] }]
 ```
-
-Vue and Svelte styles use the parser and exemptions of their framework; plain CSS gets neither. Tailwind directives
-and `theme()` need a `tailwindcss` dependency in the nearest npm project. Value checks skip declarations with
-`theme()` or `v-bind()`, and variables inside `v-bind()` keep their case.
 
 ## markdownlint
 
@@ -71,7 +66,6 @@ MD024 = { siblings_only = false }
 ```
 
 This reports repeated headings throughout a document, not only under the same parent heading.
-Both levels check image alt text. Ignore a finding with `gspot ignore markdown/markdownlint --rule <rule> --reason "<why>"`.
 
 See [tool options](/reference/gspot-toml/tools/) for the accepted fields.
 

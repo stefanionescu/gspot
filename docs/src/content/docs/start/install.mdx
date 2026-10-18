@@ -4,6 +4,7 @@ description: Choose an installation method for your repository and prepare its c
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { SETUP_COMMANDS } from '../../../config/setup.ts';
 
 ## What you need
 
@@ -22,74 +23,42 @@ Git and Node.js 24.15 or newer. The tools that your checks run need these:
 
 Swift checks need the Swift toolchain. SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage need macOS with Xcode selected by `xcode-select`. Some container checks need a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) lists its systems and other requirements.
 
-:::note
-The Bash checks need Bash 4.4 or newer. macOS comes with Bash 3.2, so install a newer Bash.
-:::
-
 ## Choose how to install
 
-| Your repository                    | Install gspot                                                                                                                             |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Has `package.json`                 | As a dev dependency, pinned to one version. Start later commands with `npx gspot`, `pnpm exec gspot`, `yarn exec gspot`, or `bunx gspot`. |
-| Any other, such as Python or Swift | As an npm package that mise pins in your `mise.toml`. Start later commands with `mise exec -- gspot`.                                     |
+Install gspot with the package manager of your repository. A repository without `package.json`, such as a Python or
+Swift project, uses mise, which pins gspot in `mise.toml`. The guides show commands as `gspot ...`; start them as the
+last column shows.
 
-The guides show commands as `gspot ...`; add the start from this table.
+<table>
+    <thead>
+        <tr>
+            <th>Package manager</th>
+            <th>Add gspot</th>
+            <th>Start later commands with</th>
+        </tr>
+    </thead>
+    <tbody>
+        {SETUP_COMMANDS.map(({ label, start, lines }) => (
+            <tr>
+                <td>{label}</td>
+                <td>
+                    <code>{lines[0]}</code>
+                </td>
+                <td>
+                    <code>{start}</code>
+                </td>
+            </tr>
+        ))}
+    </tbody>
+</table>
+
+Then run `gspot init` and `gspot install`, as the [Quickstart](/start/quickstart/) shows. With mise, `--pin` writes exact
+Node.js and gspot versions to `mise.toml`. mise requires approval for a new npm package or one with few downloads;
+`allow_low_downloads=true` approves gspot.
 
 :::caution
 Install `@gspothq/cli` before you run `npx gspot`. npm has no package named `gspot`, so without the install, npx stops with a 404 error.
 :::
-
-## Repository with package.json
-
-<Tabs syncKey="package-manager">
-<TabItem label="npm">
-
-```shell
-npm i -D -E @gspothq/cli
-npx gspot init
-npx gspot install
-```
-
-</TabItem>
-<TabItem label="pnpm">
-
-```shell
-pnpm add -D -E @gspothq/cli
-pnpm exec gspot init
-pnpm exec gspot install
-```
-
-</TabItem>
-<TabItem label="Yarn">
-
-```shell
-yarn add -D -E @gspothq/cli
-yarn exec gspot init
-yarn exec gspot install
-```
-
-</TabItem>
-<TabItem label="Bun">
-
-```shell
-bun add -d -E @gspothq/cli
-bunx gspot init
-bunx gspot install
-```
-
-</TabItem>
-</Tabs>
-
-## Repository without package.json
-
-```shell
-mise use --pin node@24 --tool-option allow_low_downloads=true npm:@gspothq/cli
-mise exec -- gspot init
-mise exec -- gspot install
-```
-
-`--pin` writes exact Node.js and gspot versions to `mise.toml`. mise requires approval for a new npm package or
-one with few downloads; `allow_low_downloads=true` approves gspot.
 
 ## Set up a clone
 

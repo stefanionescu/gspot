@@ -5,14 +5,6 @@ description: Run SwiftLint, SwiftFormat, Swift tests, and Xcode coverage.
 
 Use the [Quickstart](/start/quickstart/) with mise for a Swift package. Install the Swift toolchain first.
 
-To create a Swift library, run `swift package init --type library` in the repository root. Then resolve its packages:
-
-```shell
-swift package resolve
-mise exec -- gspot install
-mise exec -- gspot check --only swift/swiftlint swift/swiftformat
-```
-
 SwiftLint checks source files. SwiftFormat formats them. Xcode checks need macOS and Xcode selected with `xcode-select`.
 
 ## Swift tests

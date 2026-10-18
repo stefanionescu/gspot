@@ -27,7 +27,6 @@ mise exec -- gspot install
 mise exec -- gspot check
 ```
 
-`gspot apply` writes the new version to `.gspot/version` and updates the generated files. The editor schema stays at
-[one address](https://generativespotting.com/gspot.schema.json) for every release. Review the diff and fix any findings. Then commit `gspot.toml`, the files in `.gspot/`,
+`gspot apply` writes the new version to `.gspot/version` and updates the generated files. Review the diff and fix any findings. Then commit `gspot.toml`, the files in `.gspot/`,
 and either `package.json` with its lockfile or `mise.toml`, together. Every other clone then runs `gspot install`. See
 [Set up a clone](/start/install/#set-up-a-clone).

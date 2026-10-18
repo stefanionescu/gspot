@@ -107,7 +107,6 @@ output = { format = "json", fields = { message = "message" } }
 ```
 
 Malformed output makes the run incomplete with exit code `2`.
-The [command check reference](/reference/gspot-toml/command_check/) lists every accepted field.
 
 ## Add a fix command
 

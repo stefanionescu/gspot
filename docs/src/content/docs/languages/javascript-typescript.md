@@ -3,8 +3,6 @@ title: JavaScript and TypeScript
 description: Configure runtimes, TypeScript, Next.js, and React Native.
 ---
 
-Set up gspot with the [Quickstart](/start/quickstart/) before changing language settings.
-
 gspot translates settings into lint rule options:
 
 <dl>
@@ -88,13 +86,9 @@ Node.js globals, such as `Buffer` and `__dirname`. An unknown runtime name stops
 
 JavaScript checks extend your own `jsconfig.json`, or your `tsconfig.json` when no `jsconfig.json` exists. From a `tsconfig.json`, they keep the compiler options and declarations but select only JavaScript sources. Your own JSX setting stays; without one, the generated project uses `jsx: "preserve"`. A scope with neither file uses Bundler resolution when imports without extensions name JavaScript source files. Ambient types come from the source project, including your own type roots.
 
-For compiler selection, see the [TypeScript configuration](/reference/configurations/typescript/).
-
-JavaScript and TypeScript checks use the TypeScript compiler of the project. Without one, gspot uses its pinned compiler from the tool project before any global compiler. Run `gspot install` to install the pinned compiler. An interrupted tool project install reports an error but does not block a project compiler.
+JavaScript and TypeScript checks use the TypeScript compiler of the project. Without one, gspot uses its pinned compiler from the tool project before any global compiler. Run `gspot install` to install the pinned compiler.
 
 TypeScript source files or your own `tsconfig.json` select TypeScript checks; a TypeScript tool dependency or declaration files alone do not. When a scope has no `tsconfig.json` of your own, gspot writes a standalone compiler project for its source files and declarations. That project leaves out generator output, vendored files, and child scopes. Your own `tsconfig.json` keeps its compiler options and gets the strict ones that the selected level requires.
-
-See the [JavaScript configuration](/reference/configurations/javascript/) for settings translated into ESLint plugin options.
 
 ## Next.js
 
