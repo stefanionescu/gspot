@@ -28,6 +28,11 @@ allow_digits = true
 reason = "Starlight routes the HTTP 404 page by this filename."
 
 [[naming.override]]
+paths = ["docs/src/types/agents.ts"]
+allowed_names = ["$schema"]
+reason = "The Agent Skills discovery index names its schema key $schema."
+
+[[naming.override]]
 paths = ["tests/types/tool-output.ts"]
 allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
@@ -473,7 +478,7 @@ import_extension = "ts"
 
 [tools.knip]
 ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build imports these packages through CSS or copies their grammar files by path." }
-entry = ["tests/setup/prepare-run.ts", "tests/setup/integration.ts", "packages/cli/src/checks/site/linkinator-process.ts", "packages/cli/src/checks/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/tool-files/eslint-runtime.mjs"]
+entry = ["tests/setup/prepare-run.ts", "tests/setup/integration.ts", "packages/cli/src/checks/site/linkinator-process.ts", "packages/cli/src/checks/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/tool-files/eslint-runtime.mjs", "docs/src/route-data.ts"]
 
 [tools.typos]
 extra = { value = { type = { license_names = { extend-glob = ["gspot.toml"], extend-words = { axe = "axe" } }, zod_types = { extend-glob = ["shapes.ts"], extend-words = { optin = "optin" } } } }, reason = "Typos splits the published axe-core license name; Zod names its optional input marker optin." }

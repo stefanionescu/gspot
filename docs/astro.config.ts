@@ -1,5 +1,7 @@
+import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
+import { writeAgentFiles } from './src/agents.ts';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { pruneUnusedStyles } from './src/styles.ts';
 import { SIDEBAR } from './src/config/navigation.ts';
@@ -23,8 +25,18 @@ import {
 
 export default defineConfig({
     site: SITE_URL,
+    // Fetch a page when the pointer rests on its link, so the click opens it from the cache.
+    prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
     vite: {
-        resolve: { tsconfigPaths: true },
+        resolve: {
+            tsconfigPaths: true,
+            // starlight-llms-txt exports no Markdown converter, so the Markdown copy of each page imports its file.
+            alias: {
+                'starlight-llms-txt/markdown': fileURLToPath(
+                    new URL('node_modules/starlight-llms-txt/entryToSimpleMarkdown.ts', import.meta.url),
+                ),
+            },
+        },
         // Compile imported CLI code down to ES2022.
         oxc: { target: 'es2022' },
         // Astro uses a compiled Node.js add-on for Markdown. Bun must find it in docs/node_modules,
@@ -56,8 +68,14 @@ export default defineConfig({
                 },
             },
         },
+        {
+            name: 'agent-files',
+            hooks: { 'astro:build:done': ({ dir }) => writeAgentFiles(dir) },
+        },
         starlight({
             title: 'gspot',
+            // Links each page to its Markdown copy.
+            routeMiddleware: './src/route-data.ts',
             favicon: FAVICON,
             // Writes /llms.txt with the steps for coding agents, and /llms-full.txt and /llms-small.txt with the docs.
             plugins: [

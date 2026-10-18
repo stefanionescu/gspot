@@ -23,3 +23,10 @@ as `.gspot/configurations/language/bash`, leaves out every rule in it.
 
 Run `gspot set rules.enabled false`. gspot deletes the rules and its section. If `AGENTS.md` holds nothing else,
 gspot deletes the file.
+
+## These docs for agents
+
+Each page of these docs has a Markdown copy at its address plus `index.md`. For example, the Quickstart copy
+lives at `https://generativespotting.com/start/quickstart/index.md`. A request with `Accept: text/markdown` gets the copy
+at the page address. `/llms.txt` holds the setup steps for agents, and `/.well-known/agent-skills/index.json` lists
+the same steps as an Agent Skill.

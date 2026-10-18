@@ -126,5 +126,15 @@ export const LLMS_PAGES = {
             url: `${SITE_URL}/reference/json-output/`,
             description: 'the fields of gspot check --json',
         },
+        {
+            label: 'Markdown pages',
+            url: `${SITE_URL}/start/overview/index.md`,
+            description: 'add index.md to the address of any page for its Markdown copy',
+        },
+        {
+            label: 'Agent Skill',
+            url: `${SITE_URL}/.well-known/agent-skills/index.json`,
+            description: 'the steps above as an Agent Skill',
+        },
     ],
 };
