@@ -58,7 +58,9 @@ function planOne(context: PlanInputs, entry: CheckCandidate): PlannedCheck {
         }),
     };
     const skip = findFirstSkip(planned, context);
-    return stripToolIgnoredFiles(session, skip === undefined ? planned : { ...planned, skip });
+    const result = skip === undefined ? planned : { ...planned, skip };
+    // gspot writes the tool ignore files from the configured checks, so the configuration cannot depend on them.
+    return options.forConfiguration === true ? result : stripToolIgnoredFiles(session, result);
 }
 
 function buildNarrowedPaths(options: PlanOptions): Set<string> | undefined {

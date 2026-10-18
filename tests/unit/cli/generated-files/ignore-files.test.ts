@@ -5,9 +5,12 @@ import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
+import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildIgnoreSections } from '#cli/generation/ignore-files.ts';
 import { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
 
@@ -122,4 +125,23 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     const excluded = (parse(ruff.content) as { 'extend-exclude': string[] })['extend-exclude'];
     expect(excluded.length).toBeGreaterThan(0);
     for (const pattern of excluded) expect(pattern.endsWith('/**') || pattern.endsWith('.py')).toBe(true);
+});
+
+test('a second apply writes the same files when .prettierignore covers every source file', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
+        'source/build/value.js': 'export const value = 1;\n',
+        'coverage/value.js': 'export const value = 1;\n',
+    });
+    readGitOutput(sandbox.path, ['init', '-q']);
+    const outputs: string[][] = [];
+    for (const _pass of [1, 2]) {
+        const session = await openSession(sandbox.path);
+        const output = generate(session);
+        using log = openWriter(sandbox.path);
+        writeGeneratedFiles(session, output, log);
+        outputs.push(output.files.map(({ path, content }) => `${path}\n${content}`));
+    }
+    expect(outputs[1]).toStrictEqual(outputs[0]);
+    expect(outputs[0]!.some((file) => file.startsWith('.prettierignore\n'))).toBe(true);
 });

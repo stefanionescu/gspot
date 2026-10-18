@@ -132,7 +132,7 @@ export function findFirstSkip(check: PlannedCheck, inputs: PlanInputs): Skip {
     if (selected !== undefined) return selected;
     const condition = findConditionSkip(check, hasGit, session.repository.dependencyFiles);
     if (condition !== undefined) return condition;
-    return options.includeUnsupported === true ? undefined : findSystemSkip(check.check, check.tool, host);
+    return options.forConfiguration === true ? undefined : findSystemSkip(check.check, check.tool, host);
 }
 
 /**

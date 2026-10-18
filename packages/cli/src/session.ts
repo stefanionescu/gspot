@@ -241,7 +241,7 @@ export async function openSession(
         inspections: new Map(),
         reads,
     });
-    session.configuredChecks = planRun(session, { stage: 'any', includeUnsupported: true }).filter(
+    session.configuredChecks = planRun(session, { stage: 'any', forConfiguration: true }).filter(
         (check) => isActive(check) && check.skip === undefined,
     );
     session.neededToolManifests = selectNeededManifests(session, session.configuredChecks);

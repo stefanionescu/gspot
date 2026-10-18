@@ -45,7 +45,8 @@ export type Skip = PlannedCheck['skip'];
 export type System = { platform: string; arch: string };
 
 export type PlanOptions = {
-    includeUnsupported?: boolean;
+    /** Plan the checks that the settings configure: keep checks this system cannot run, and read no ignore file that gspot writes. */
+    forConfiguration?: boolean;
     base?: string;
     commits?: string[];
     historyComplete?: boolean;
