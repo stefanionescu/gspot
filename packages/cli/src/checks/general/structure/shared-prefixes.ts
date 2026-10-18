@@ -2,12 +2,12 @@ import { posix } from 'node:path';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { HOOK_FOLDERS } from '#cli/config/repository/hooks.ts';
-import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { SPEC_SUFFIX, INDEX_STEMS } from '#cli/config/checks/general/structure.ts';
+import { listTaggedExtensions, isInDependencyFolder } from '#cli/repository/classify.ts';
 import { extractStem, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
-import { listCodeFiles, buildFolderTree, isDependencyFolder } from '#cli/checks/general/structure/folder-tree.ts';
+import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 
 // A configuration such as NestJS declares <name>.<kind>.<ext> file names, so these do not count as a shared prefix.
 function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
@@ -44,7 +44,7 @@ export function checkSharedPrefixes(input: CheckInput): Finding[] {
         const folder = extractParentFolder(file.path);
         return (
             !HOOK_FOLDERS.some((hook) => isInScope(folder, posix.join(input.selection.scope.path, hook))) &&
-            !isDependencyFolder(folder)
+            !isInDependencyFolder(folder)
         );
     });
     return files.flatMap((file) => {

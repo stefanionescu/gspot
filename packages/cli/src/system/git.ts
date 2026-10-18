@@ -85,15 +85,6 @@ function readTargetGitEnvironment(
     return { env: { ...(isSameRepository ? source.env : isolated), ...explicit } };
 }
 
-/**
- * Tell an absent work tree from broken Git metadata after a failed command.
- * @param inspection the work-tree probe result.
- * @returns true when Git reports that no repository exists.
- */
-function isOutsideGit(inspection: SpawnResult): boolean {
-    return inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
-}
-
 let sourceMetadata: { metadata: string[]; source?: GitLookup } | undefined;
 
 /**
@@ -320,4 +311,13 @@ export function isGitRepository(workingFolder: string): boolean {
     throw new Error(
         `Git work-tree discovery failed in ${workingFolder} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
     );
+}
+
+/**
+ * Tell an absent work tree from broken Git metadata after a failed command.
+ * @param inspection the work-tree probe result.
+ * @returns true when Git reports that no repository exists.
+ */
+export function isOutsideGit(inspection: SpawnResult): boolean {
+    return inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
 }

@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 import type { ShippedRule } from '#cli/types/rules.ts';
+import { formatUnknownName } from '#cli/system/text.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
@@ -10,7 +11,6 @@ import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { type NamingDefaults } from '#cli/types/checks/general.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
-import { formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { namingDefaultsSchema } from '#cli/configurations/schema/naming.ts';
 
 import {
@@ -214,17 +214,6 @@ function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string
 }
 
 /**
- * Name an unknown check, and suggest close check IDs.
- * @param name the requested check ID.
- * @param known the check IDs to suggest from.
- * @returns the error message.
- */
-function formatUnknownCheck(name: string, known: string[]): string {
-    const suggestions = selectSimilarNames(name, known);
-    return `There is no check called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''}`;
-}
-
-/**
  * Refuse a check ID that no configuration or command check declares.
  * @param name the requested check ID.
  * @param settings the command checks of gspot.toml.
@@ -232,7 +221,7 @@ function formatUnknownCheck(name: string, known: string[]): string {
  */
 function assertKnownCheck(name: string, settings: Pick<Settings, 'commandChecks'>, reads: ReadCache): void {
     const known = listCheckIds(Object.values(settings.commandChecks), reads);
-    if (!known.includes(name)) throw new GspotError('arguments', formatUnknownCheck(name, known));
+    if (!known.includes(name)) throw new GspotError('arguments', formatUnknownName('check', name, known));
 }
 
 export {
@@ -241,6 +230,6 @@ export {
     listRuleFiles,
     listChecksById,
     assertKnownCheck,
+    buildManifestError,
     readNamingDefaults,
-    formatUnknownCheck,
 };

@@ -1,9 +1,10 @@
 import { buildFinding } from '#cli/checks/finding.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
+import { isInDependencyFolder } from '#cli/repository/classify.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
-import { listCodeFiles, buildFolderTree, isDependencyFolder } from '#cli/checks/general/structure/folder-tree.ts';
+import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
  * Reports each leaf folder that holds only one code file.
@@ -18,7 +19,7 @@ export function checkLoneFiles(input: CheckInput): Finding[] {
     );
     const checked = new Set(files.map((file) => extractParentFolder(file.path)));
     return [...checked].flatMap((folder) => {
-        if (folder === '' || isDependencyFolder(folder)) return [];
+        if (folder === '' || isInDependencyFolder(folder)) return [];
         const entries = tree.get(folder) ?? [];
         if (entries.some((entry) => entry.kind === 'folder')) return [];
         const siblings = entries.filter(

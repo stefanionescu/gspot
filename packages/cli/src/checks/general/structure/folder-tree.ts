@@ -2,7 +2,6 @@ import { extractParentFolder } from '#cli/system/paths.ts';
 import type { FolderEntry } from '#cli/types/checks/general.ts';
 import type { CheckInput } from '#cli/types/checks/run/check.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { isInGspotFolder, listTaggedExtensions } from '#cli/repository/classify.ts';
 
 /**
@@ -18,15 +17,6 @@ export function listCodeFiles(input: CheckInput): TrackedFile[] {
             !isInGspotFolder(file.path) &&
             documents.every((extension) => !file.path.endsWith(extension)),
     );
-}
-
-/**
- * Checks whether a path lies inside an installed dependency folder.
- * @param folder the repository-relative path.
- * @returns whether a dependency folder holds it.
- */
-export function isDependencyFolder(folder: string): boolean {
-    return folder.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment));
 }
 
 /**

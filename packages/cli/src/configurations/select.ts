@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { formatUnknownName } from '#cli/system/text.ts';
 import { SOURCE_FILE_GROUPS } from '#cli/config/configurations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 
 import {
     type Manifest,
@@ -69,15 +69,9 @@ function isConfigurationSelected(scopes: Pick<ScopeSelection, 'selected'>[], nam
     return scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === name));
 }
 
-/**
- * Name an unknown configuration, and suggest close names.
- * @param name the requested configuration.
- * @param known the declared configuration names.
- * @returns the error message.
- */
+// Name an unknown configuration, and say where to find the available ones.
 function formatUnknownConfiguration(name: string, known: string[]): string {
-    const suggestions = selectSimilarNames(name, known);
-    return `There is no configuration called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''} Run \`gspot list configurations\` to see the available configurations.`;
+    return `${formatUnknownName('configuration', name, known)} Run \`gspot list configurations\` to see the available configurations.`;
 }
 
 /**

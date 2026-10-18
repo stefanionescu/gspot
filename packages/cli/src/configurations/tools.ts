@@ -1,11 +1,10 @@
-import { GspotError } from '#cli/system/errors.ts';
 import { NODE_TOOL } from '#cli/config/tools/npm.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import { MISE_BACKENDS, PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
+import { readManifests, buildManifestError } from '#cli/configurations/manifests.ts';
 
 import {
     type MisePin,
@@ -49,10 +48,7 @@ export function listMisePins(manifests: Manifest[], reads: ReadCache): MisePin[]
             ?.tools.find((entry) => entry.name === UV_TOOL);
         const pin = tool === undefined ? undefined : findMisePin(tool);
         if (pin === undefined)
-            throw new GspotError(
-                'manifest',
-                `The configuration manifest for \`${PYTHON_CONFIGURATION}\` is not valid:\ntool uv requires a pinned mise installer version.`,
-            );
+            throw buildManifestError(PYTHON_CONFIGURATION, ['tool uv requires a pinned mise installer version.']);
         pins.push(pin);
     }
     return pins;

@@ -321,7 +321,16 @@ function isInGspotFolder(path: string): boolean {
  * @returns whether project discovery must leave out the path.
  */
 function isInstalledToolPath(path: string): boolean {
-    return isInGspotFolder(path) || path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part));
+    return isInGspotFolder(path) || isInDependencyFolder(path);
+}
+
+/**
+ * Check whether a path lies inside an installed dependency folder, such as node_modules.
+ * @param path the repository-relative path.
+ * @returns whether a dependency folder holds it.
+ */
+function isInDependencyFolder(path: string): boolean {
+    return path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part));
 }
 
 export {
@@ -330,6 +339,7 @@ export {
     isInGspotFolder,
     hasGeneratedHeader,
     isInstalledToolPath,
+    isInDependencyFolder,
     listTaggedExtensions,
     listFileDeclarations,
 };

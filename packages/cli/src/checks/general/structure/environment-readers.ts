@@ -1,6 +1,5 @@
 import { buildFinding } from '#cli/checks/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
-import { readBashEnvironment } from '#cli/parsers/bash.ts';
 import { readSwiftEnvironment } from '#cli/parsers/swift.ts';
 import { readPythonEnvironment } from '#cli/parsers/python.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -8,6 +7,7 @@ import { ENV_NAME } from '#cli/config/checks/general/structure.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
+import { readBashEnvironment, findEnclosingFunction } from '#cli/parsers/bash.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/general/structure/convention-sources.ts';
 
 /**
@@ -28,10 +28,10 @@ export async function checkEnvironmentReaders(input: CheckInput): Promise<Findin
             .filter((source) => source.language === 'bash' && isReader(source.path))
             .flatMap((source) =>
                 (source.captures.get('assignment') ?? []).flatMap((node) => {
-                    let parent = node.parent;
-                    while (parent !== null && parent.type !== 'function_definition') parent = parent.parent;
                     const name = node.childForFieldName('name')?.text;
-                    return parent === null && name !== undefined && ENV_NAME.test(name) ? [name] : [];
+                    return findEnclosingFunction(node) === undefined && name !== undefined && ENV_NAME.test(name)
+                        ? [name]
+                        : [];
                 }),
             ),
     );

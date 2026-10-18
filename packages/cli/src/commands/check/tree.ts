@@ -6,11 +6,11 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readHookStatus } from '#cli/apply/hooks.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import { formatUnknownName } from '#cli/system/text.ts';
 import { listHookNames } from '#cli/generation/hooks.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Session, StageFilter } from '#cli/types/planning.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { formatUnknownCheck } from '#cli/configurations/manifests.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { fixLines, formatRunReport } from '#cli/commands/check/report.ts';
 import type { RunReport, RunOptions } from '#cli/types/checks/run/check.ts';
@@ -95,7 +95,7 @@ function refuseUnknownChecks(session: Session, only: string[] | undefined): void
         ...Object.values(session.settingsFile.settings.commandChecks).map((check) => check.name),
     ]);
     const unknown = only?.find((check) => !known.has(check));
-    if (unknown !== undefined) throw new GspotError('arguments', formatUnknownCheck(unknown, [...known]));
+    if (unknown !== undefined) throw new GspotError('arguments', formatUnknownName('check', unknown, [...known]));
 }
 
 // Warns when the clone receiving the report lacks the configured hooks.

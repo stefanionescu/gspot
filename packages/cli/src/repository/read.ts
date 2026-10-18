@@ -10,23 +10,16 @@ import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedBytes, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { readIndexEntries, listTrackedFiles } from '#cli/repository/tracked.ts';
-import { trimGitLine, runGitBlocking, isGitRepository } from '#cli/system/git.ts';
 import type { Scope, Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
+import { trimGitLine, isOutsideGit, runGitBlocking, isGitRepository } from '#cli/system/git.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
+import { GIT_LOCALE, WORK_TREE_ARGUMENTS, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 
-import {
-    GIT_LOCALE,
-    WORK_TREE_ARGUMENTS,
-    NOT_REPOSITORY_CODE,
-    NOT_REPOSITORY_MESSAGE,
-    GIT_TOP_LEVEL_ARGUMENTS,
-} from '#cli/config/system/git.ts';
 import {
     SET_VALUES,
     FILE_PREFIX_BYTES,
@@ -48,17 +41,6 @@ function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Re
     });
     if (result.code !== 0) throw new Error(`Git could not read the attributes: ${result.stderr.trim()}`);
     return parsePathAttributes(result.stdout);
-}
-
-/**
- * Refuse broken Git metadata while allowing a folder outside any repository.
- * @param folder where the top-level lookup failed.
- * @param top the failed Git result.
- */
-function assertOutsideGit(folder: string, top: SpawnResult): void {
-    const inspection = runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
-    if (inspection.code !== NOT_REPOSITORY_CODE || !inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
-        throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);
 }
 
 /**
@@ -161,7 +143,9 @@ export function findRoot(start: string): string {
     const folder = realpathSync(start);
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS);
     const gitRoot = top.code === 0 ? resolve(trimGitLine(top.stdout)) : undefined;
-    if (gitRoot === undefined) assertOutsideGit(folder, top);
+    // Broken Git metadata stops the search; a folder outside any repository does not.
+    if (gitRoot === undefined && !isOutsideGit(runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
+        throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);
     let current = folder;
     while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
         if (current === gitRoot) return gitRoot;

@@ -51,6 +51,18 @@ export function formatCodeList(items: readonly string[]): string {
 }
 
 /**
+ * Name an unknown check or configuration, and suggest close names.
+ * @param noun what the name stands for.
+ * @param name the requested name.
+ * @param known the declared names.
+ * @returns the sentence, with the close names it suggests.
+ */
+export function formatUnknownName(noun: 'check' | 'configuration', name: string, known: string[]): string {
+    const suggestions = selectSimilarNames(name, known);
+    return `There is no ${noun} called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''}`;
+}
+
+/**
  * Hash text or bytes with SHA-256, in lowercase hex.
  *
  * @param content the text or bytes.

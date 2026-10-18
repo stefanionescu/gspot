@@ -46,20 +46,6 @@ function findHighestParameter(node: Node): number {
 }
 
 /**
- * Find the function that contains a Bash syntax node.
- * @param node the syntax point to start from.
- * @returns the containing function, or undefined outside a function.
- */
-function findEnclosingFunction(node: Node): Node | undefined {
-    let parent = node.parent;
-    while (parent !== null) {
-        if (parent.type === 'function_definition') return parent;
-        parent = parent.parent;
-    }
-    return undefined;
-}
-
-/**
  * Read the syntax of each function, without nested function bodies.
  * @param syntaxRoot the parsed Bash root.
  * @param codeText source with comments masked at their original positions.
@@ -339,4 +325,18 @@ export function readBashEnvironment(syntaxRoot: Node, owned: ReadonlySet<string>
                 column: node.startPosition.column + 1,
             })),
     );
+}
+
+/**
+ * Find the function that contains a Bash syntax node.
+ * @param node the syntax point to start from.
+ * @returns the containing function, or undefined outside a function.
+ */
+export function findEnclosingFunction(node: Node): Node | undefined {
+    let parent = node.parent;
+    while (parent !== null) {
+        if (parent.type === 'function_definition') return parent;
+        parent = parent.parent;
+    }
+    return undefined;
 }
