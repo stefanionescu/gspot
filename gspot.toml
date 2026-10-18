@@ -14,8 +14,8 @@ setup_command = ["mise", "run", "setup"]
 enabled = true
 
 [naming]
-# Use the Names table word.
-banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit"]
+# Words this repository does not use in names.
+banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "violations", "problem", "problems", "tooling"]
 
 [[naming.override]]
 paths = ["packages/cli/src/types/settings/**"]

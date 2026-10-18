@@ -1,9 +1,10 @@
 ---
 import { Icon } from '@astrojs/starlight/components';
+import { THEME_SWITCH_LABELS } from '../../config/site.ts';
 ---
 
 <theme-toggle>
-    <button type="button" class="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
+    <button type="button" class="theme-toggle" aria-label={THEME_SWITCH_LABELS.dark} title={THEME_SWITCH_LABELS.dark}>
         <span class="moon">
             <Icon name="moon" size="1.25rem" />
         </span>

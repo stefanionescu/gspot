@@ -50,14 +50,14 @@ function buildOpenapiTables(
 /**
  * Choose the CI provider from the existing files and the origin host.
  * @param repositoryRoot the folder whose origin remote gives the host when no CI files exist.
- * @param tooling the tool and CI files that init found.
+ * @param existingTools the tool and CI files that init found.
  * @returns the provider to propose, or none when the repository needs no workflow.
  */
-function detectCiProvider(repositoryRoot: string, tooling: ExistingTools): InitAnswers['ci'] {
-    if (readLintJobs(repositoryRoot, tooling.ci).length > 0) return 'none';
+function detectCiProvider(repositoryRoot: string, existingTools: ExistingTools): InitAnswers['ci'] {
+    if (readLintJobs(repositoryRoot, existingTools.ci).length > 0) return 'none';
     let existing: InitAnswers['ci'] | undefined;
-    if (tooling.ci.includes(GITLAB_CI_FILE)) existing = 'gitlab';
-    else if (tooling.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) existing = 'github';
+    if (existingTools.ci.includes(GITLAB_CI_FILE)) existing = 'gitlab';
+    else if (existingTools.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) existing = 'github';
     const remote = existing === undefined ? (readGitSetting(repositoryRoot, ORIGIN_URL_SETTING) ?? '') : '';
     const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
     if (existing !== undefined) return existing;

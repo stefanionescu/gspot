@@ -21,7 +21,7 @@ test('Swift reports constructors, accessors, decorated methods and nested functi
         'gspot.toml': buildSettingsText(['swift'], { level: 'all', tables: SWIFT_FUNCTION_LIMITS }),
     });
     const initial = await checkFindings(sandbox.path, 'structure/trivial-functions');
-    expect(initial.map((problem) => ({ rule: problem.rule, line: problem.line }))).toStrictEqual([
+    expect(initial.map((finding) => ({ rule: finding.rule, line: finding.line }))).toStrictEqual([
         ...[2, 4, 5, 7, 8].map((line) => ({ rule: 'trivial-function', line })),
         { rule: 'trivial-file', line: 1 },
     ]);
@@ -30,7 +30,7 @@ test('Swift reports constructors, accessors, decorated methods and nested functi
         buildSettingsText(['swift'], { level: 'all', tables: '[limits.swift]\ntrivial_function_statements = 3\n' }),
     );
     const increased = await checkFindings(sandbox.path, 'structure/trivial-functions');
-    expect(increased.map((problem) => ({ rule: problem.rule, line: problem.line }))).toStrictEqual([
+    expect(increased.map((finding) => ({ rule: finding.rule, line: finding.line }))).toStrictEqual([
         ...[2, 4, 5, 7, 8, 9].map((line) => ({ rule: 'trivial-function', line })),
         { rule: 'trivial-file', line: 1 },
     ]);
@@ -47,7 +47,7 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
             }),
         });
         const result = await checkFindings(sandbox.path, 'structure/trivial-functions');
-        expect(result.map((problem) => ({ line: problem.line, rule: problem.rule }))).toStrictEqual([
+        expect(result.map((finding) => ({ line: finding.line, rule: finding.rule }))).toStrictEqual([
             ...lines.map((line) => ({ line, rule: 'trivial-function' })),
             ...(trivialFile ? [{ line: 1, rule: 'trivial-file' }] : []),
         ]);

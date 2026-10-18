@@ -91,8 +91,8 @@ test('tool discovery reads tool sections through a link inside the repository', 
     const source = '[tool.ruff]\nline-length = 100\n';
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
-    const tooling = readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path));
-    expect(tooling.toolFiles).toContainEqual({
+    const existingTools = readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path));
+    expect(existingTools.toolFiles).toContainEqual({
         tool: 'ruff',
         path: 'pyproject.toml',
         shared: true,

@@ -43,15 +43,15 @@ function listToolPins(tool: ToolDeclaration): (readonly [string, string])[] {
 
 test('configurations agree on every tool and installer pin', () => {
     const versions = new Map<string, string>();
-    const violations: string[] = [];
+    const mismatches: string[] = [];
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
     const pins = manifests.flatMap(({ tools }) => tools).flatMap((tool) => listToolPins(tool));
     for (const [name, version] of pins) {
         const previous = versions.get(name);
-        if (previous !== undefined && previous !== version) violations.push(`${name}: ${previous}, ${version}`);
+        if (previous !== undefined && previous !== version) mismatches.push(`${name}: ${previous}, ${version}`);
         versions.set(name, version);
     }
-    expect(violations).toStrictEqual([]);
+    expect(mismatches).toStrictEqual([]);
 });
 
 /** Whether the pin of a tool sits below its minimum version. */
@@ -60,7 +60,7 @@ function hasOutdatedPin(tool: ToolDeclaration): boolean {
 }
 
 test('each tool has a pin or a floor at or above it', () => {
-    const violations: string[] = [];
+    const mismatches: string[] = [];
     for (const manifest of readManifests(createReadCache(process.cwd())).values())
         for (const tool of manifest.tools) {
             const unpinned =
@@ -68,9 +68,9 @@ test('each tool has a pin or a floor at or above it', () => {
                 tool.version === undefined &&
                 Object.values(tool.installers).some((pin) => pin.version === undefined);
             if ((unpinned && tool.min_version === undefined) || hasOutdatedPin(tool))
-                violations.push(`${manifest.configuration.name}: ${tool.name}`);
+                mismatches.push(`${manifest.configuration.name}: ${tool.name}`);
         }
-    expect(violations).toStrictEqual([]);
+    expect(mismatches).toStrictEqual([]);
 });
 
 /** Find settings expanded by normal and repeated command placeholders. */
@@ -96,25 +96,25 @@ function hasEmptyDefault(setting: SettingDeclaration | undefined): boolean {
 }
 
 /** Report missing declarations and empty settings that a check expands without waiting. */
-function checkSettingViolations(
+function listSettingMismatches(
     check: CheckDeclaration,
     declarations: ReadonlyMap<string, SettingDeclaration>,
 ): string[] {
     const awaited = check.when?.setting;
-    const violations = awaited !== undefined && !declarations.has(awaited) ? [`${check.name}: ${awaited}`] : [];
+    const mismatches = awaited !== undefined && !declarations.has(awaited) ? [`${check.name}: ${awaited}`] : [];
     for (const name of commandSettings(check)) {
-        if (name !== awaited && hasEmptyDefault(declarations.get(name))) violations.push(`${check.name}: ${name}`);
+        if (name !== awaited && hasEmptyDefault(declarations.get(name))) mismatches.push(`${check.name}: ${name}`);
     }
-    return violations;
+    return mismatches;
 }
 
 test('a check waits for each setting with an empty default', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
     const declarations = buildKnownSettings(manifests, 'all', createReadCache(process.cwd())).declarations;
-    const violations = manifests.flatMap((manifest) =>
-        manifest.checks.flatMap((check) => checkSettingViolations(check, declarations)),
+    const mismatches = manifests.flatMap((manifest) =>
+        manifest.checks.flatMap((check) => listSettingMismatches(check, declarations)),
     );
-    expect(violations).toStrictEqual([]);
+    expect(mismatches).toStrictEqual([]);
 });
 
 test('every default names a declared setting', () => {
@@ -133,7 +133,7 @@ test('tool files and checks name declared tools and checks', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map(({ name }) => name)));
     const checks = new Set(manifests.flatMap((manifest) => manifest.checks.map(({ name }) => name)));
-    const violations: string[] = [];
+    const mismatches: string[] = [];
     for (const manifest of manifests) {
         const names = [
             ...manifest.toolFiles.flatMap((file) => [...file.tool, ...file.required_tools]),
@@ -143,25 +143,25 @@ test('tool files and checks name declared tools and checks', () => {
                 ...(check.other_tools ?? []),
             ]),
         ];
-        violations.push(
+        mismatches.push(
             ...names.filter((name) => !tools.has(name)).map((name) => `${manifest.configuration.name}: ${name}`),
             ...manifest.toolFiles.flatMap((file) => file.check.filter((name) => !checks.has(name))),
         );
     }
-    expect(violations).toStrictEqual([]);
+    expect(mismatches).toStrictEqual([]);
 });
 
 test('each conditional rule names a shipped rule file', () => {
-    const violations: string[] = [];
+    const mismatches: string[] = [];
     for (const manifest of readManifests(createReadCache(process.cwd())).values()) {
         const files = new Set(listAssets(`${manifest.folder}/rules/`).map((path) => posix.basename(path)));
-        violations.push(
+        mismatches.push(
             ...Object.keys(manifest.rules)
                 .filter((file) => !files.has(file))
                 .map((file) => `${manifest.configuration.name}: ${file}`),
         );
     }
-    expect(violations).toStrictEqual([]);
+    expect(mismatches).toStrictEqual([]);
 });
 
 test('a check that needs a build, Docker, or the network does not run at the commit stage', () => {

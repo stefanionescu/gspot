@@ -18,19 +18,19 @@ function recordReplacedFile(entry: FoundToolFile, replaced: ReplacedFiles): void
 /**
  * Read the tool files of the chosen tools, and sort them into the files init deletes and the files it keeps.
  * @param repositoryRoot the folder where init reads the originals before it replaces them.
- * @param tooling the tool files that init found.
+ * @param existingTools the tool files that init found.
  * @param tools what the checks at this level run.
  * @param toolFiles the shared tool file edits for this selection.
  * @returns the reads, the deletions, and the shared files that stay.
  */
 export function planReplacedFiles(
     repositoryRoot: string,
-    tooling: ExistingTools,
+    existingTools: ExistingTools,
     tools: Set<string>,
     toolFiles: FileEdit[],
 ): ReplacedFiles {
     const replaced: ReplacedFiles = { read: new Map(), deleted: [], retained: [], changed: [] };
-    const owned = tooling.toolFiles.filter(({ tool }) => tools.has(tool));
+    const owned = existingTools.toolFiles.filter(({ tool }) => tools.has(tool));
     using files = openFiles(repositoryRoot);
     for (const path of new Set(owned.filter((entry) => !entry.shared).map((entry) => entry.path))) {
         replaced.read.set(path, files.read(path));
