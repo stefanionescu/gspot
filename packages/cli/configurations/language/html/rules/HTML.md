@@ -16,7 +16,7 @@ Read this rule when you change HTML or an HTML template.
   for dates, and `figure` and `figcaption` for captioned media.
 - `target="_blank"` links carry `rel="noopener"`.
 
-## Script safety
+## Scripts
 
 - Use `defer` or `type="module"` for scripts that do not need to block parsing.
 

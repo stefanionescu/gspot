@@ -34,8 +34,7 @@ export const TOOLS_DECLARATIONS = {
     },
     'tools.ruff.docstring_convention': {
         configurations: ['python'],
-        description:
-            'The Ruff pydocstyle convention from the project settings, which pydoclint also uses when it has no style of its own.',
+        description: 'The docstring style that Ruff and pydoclint check: google, numpy, or pep257.',
     },
     'tools.semgrep.registry_packs': {
         configurations: ['security'],
@@ -47,7 +46,7 @@ export const TOOLS_DECLARATIONS = {
     },
     'tools.sqlfluff.dialect': {
         configurations: ['sql'],
-        description: 'The sqlfluff dialect; a database configuration sets it.',
+        description: 'The SQL dialect that SQLFluff parses, such as postgres. The postgres configuration sets it.',
     },
     'tools.swiftlint.always_keep_imports': {
         configurations: ['swift'],

@@ -44,10 +44,10 @@ does not stop it there:
 ```bash
 # cleanup: Removes the contents of the target directory.
 cleanup() {
-  local target="$1"
+    local target="$1"
 
-  cd -- "${target}" || return 1
-  find . -mindepth 1 -maxdepth 1 -exec rm -r -- {} +
+    cd -- "${target}" || return 1
+    find . -mindepth 1 -maxdepth 1 -exec rm -r -- {} +
 }
 ```
 
@@ -70,15 +70,15 @@ an error does not make a command fail.
 #   Target name.
 #   Status label.
 log_status() {
-  local step_name="$1"
-  local target_name="$2"
-  local status_label="$3"
-  local timestamp
+    local step_name="$1"
+    local target_name="$2"
+    local status_label="$3"
+    local timestamp
 
-  timestamp="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return 1
-  printf 'ts=%s script=%s step=%s target=%s status=%s\n' \
-    "${timestamp}" "${0##*/}" "${step_name}" "${target_name}" \
-    "${status_label}" >&2
+    timestamp="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return 1
+    printf 'ts=%s script=%s step=%s target=%s status=%s\n' \
+        "${timestamp}" "${0##*/}" "${step_name}" "${target_name}" \
+        "${status_label}" >&2
 }
 ```
 

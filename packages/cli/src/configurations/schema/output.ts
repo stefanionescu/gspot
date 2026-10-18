@@ -12,55 +12,83 @@ import {
 
 export const outputSchema = z
     .strictObject({
-        format: z.union([
-            z.literal('regex').meta({
-                description:
-                    'Read findings from lines matched by pattern and its named file, line, column, rule, and message groups.',
-            }),
-            z.literal('grouped').meta({
-                description: 'Read a file heading matched by file_pattern, followed by findings matched by pattern.',
-            }),
-            z.literal('sarif').meta({ description: 'Read SARIF results, rule metadata, source locations, and fixes.' }),
-            z.literal('knip').meta({ description: 'Read Knip JSON issue categories and source positions.' }),
-            z.literal('semgrep').meta({
-                description: 'Read Semgrep JSON results, locations, rule IDs, messages, and fixes provided by Semgrep.',
-            }),
-            z
-                .literal('trufflehog')
-                .meta({ description: 'Read TruffleHog JSON findings while withholding raw secret output.' }),
-            z.literal('typos').meta({ description: 'Read typos JSON and convert byte offsets to character columns.' }),
-            z
-                .literal('markdownlint')
-                .meta({ description: 'Read markdownlint result objects and their rule and source locations.' }),
-            z.literal('json').meta({
-                description: 'Read JSON findings using items, children, and fields to select report entries.',
-            }),
-            z
-                .literal('lines')
-                .meta({ description: 'Report each nonempty output line as a finding without a source location.' }),
-            z.literal('none').meta({ description: 'Use the exit status without parsing output into findings.' }),
-        ]) satisfies z.ZodType<OutputInput['format']>,
-        items: z.string().optional(),
-        children: z.string().optional(),
+        format: z
+            .union([
+                z.literal('regex').meta({
+                    description:
+                        'Read findings from lines matched by pattern and its named file, line, column, rule, and message groups.',
+                }),
+                z.literal('grouped').meta({
+                    description:
+                        'Read a file heading matched by file_pattern, followed by findings matched by pattern.',
+                }),
+                z
+                    .literal('sarif')
+                    .meta({ description: 'Read SARIF results, rule metadata, source locations, and fixes.' }),
+                z.literal('knip').meta({ description: 'Read Knip JSON issue categories and source positions.' }),
+                z.literal('semgrep').meta({
+                    description:
+                        'Read Semgrep JSON results, locations, rule IDs, messages, and fixes provided by Semgrep.',
+                }),
+                z
+                    .literal('trufflehog')
+                    .meta({ description: 'Read TruffleHog JSON findings while withholding raw secret output.' }),
+                z
+                    .literal('typos')
+                    .meta({ description: 'Read typos JSON and convert byte offsets to character columns.' }),
+                z
+                    .literal('markdownlint')
+                    .meta({ description: 'Read markdownlint result objects and their rule and source locations.' }),
+                z.literal('json').meta({
+                    description: 'Read JSON findings using items, children, and fields to select report entries.',
+                }),
+                z
+                    .literal('lines')
+                    .meta({ description: 'Report each nonempty output line as a finding without a source location.' }),
+                z.literal('none').meta({ description: 'Use the exit status without parsing output into findings.' }),
+            ])
+            .describe(
+                'How gspot reads the output: json, regex, grouped, lines, none, or the format of a named tool.',
+            ) satisfies z.ZodType<OutputInput['format']>,
+        items: z.string().describe('For json: the path to the list of findings.').optional(),
+        children: z.string().describe('For json: the field of each item that holds its findings.').optional(),
         line_base: (
-            z.union([z.literal(0), z.literal(1)]) satisfies z.ZodType<NonNullable<OutputInput['line_base']>>
+            z
+                .union([z.literal(0), z.literal(1)])
+                .describe('Whether the tool counts lines from 0 or 1.') satisfies z.ZodType<
+                NonNullable<OutputInput['line_base']>
+            >
         ).optional(),
         // Paths in the repository, link targets, and paths in past commits have different existence requirements.
-        file_type: z.enum(OUTPUT_FILE_TYPES).default('path'),
+        file_type: z
+            .enum(OUTPUT_FILE_TYPES)
+            .describe('What the file field holds: a path in the repository, a link target, or a path in a past commit.')
+            .default('path'),
         fields: z
             .strictObject({
-                file: z.string().optional(),
-                line: z.string().optional(),
-                column: z.string().optional(),
-                rule: z.string().optional(),
-                message: z.string().optional(),
-                fixable: z.string().optional(),
+                file: z.string().describe('For json: the field that holds the file.').optional(),
+                line: z.string().describe('For json: the field that holds the line.').optional(),
+                column: z.string().describe('For json: the field that holds the column.').optional(),
+                rule: z.string().describe('For json: the field that holds the lint rule.').optional(),
+                message: z.string().describe('For json: the field that holds the message.').optional(),
+                fixable: z
+                    .string()
+                    .describe('For json: the field that is set when the tool can fix the finding.')
+                    .optional(),
             } satisfies SchemaShape<NonNullable<OutputSpec['fields']>>)
             .optional(),
-        pattern: z.string().optional(),
-        file_pattern: z.string().optional(),
-        fixable: z.string().optional(),
-        message: z.string().optional(),
+        pattern: z
+            .string()
+            .describe(
+                'For regex: the pattern for one finding, with named groups file, line, column, rule, and message.',
+            )
+            .optional(),
+        file_pattern: z
+            .string()
+            .describe('For regex: the pattern for a line that names the file of the findings below it.')
+            .optional(),
+        fixable: z.string().describe('For regex: the pattern that marks a fixable finding.').optional(),
+        message: z.string().describe('For regex: the pattern for the message.').optional(),
     } satisfies SchemaShape<OutputInput & Pick<OutputSpec, 'file_type'>>)
     .transform((output): OutputSpec => {
         switch (output.format) {

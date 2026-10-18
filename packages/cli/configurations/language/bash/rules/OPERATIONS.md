@@ -32,14 +32,14 @@ execution, readiness checks, and cleanup.
 #   Prompt label.
 #   Expected response.
 confirm_exact() {
-  local label="$1"
-  local expected="$2"
-  local response
+    local label="$1"
+    local expected="$2"
+    local response
 
-  printf '%s Type %s to continue: ' "${label}" "${expected}" >&2
-  IFS= read -r response
+    printf '%s Type %s to continue: ' "${label}" "${expected}" >&2
+    IFS= read -r response
 
-  [[ "${response}" == "${expected}" ]]
+    [[ ${response} == "${expected}" ]]
 }
 ```
 
@@ -72,8 +72,8 @@ because an `if` whose condition fails and that has no `else` returns zero:
 
 ```bash
 if "$@"; then
-  return 0
+    return 0
 else
-  status=$?
+    status=$?
 fi
 ```

@@ -29,15 +29,15 @@ class Item(BaseModel):
     name: str
 
 
-CATALOG = (Item(name="Notebook"), Item(name="Pencil"))
-router = APIRouter(prefix="/items", tags=["items"])
+CATALOG = (Item(name='Notebook'), Item(name='Pencil'))
+router = APIRouter(prefix='/items', tags=['items'])
 
 
-@router.get("/{item_id}")
+@router.get('/{item_id}')
 def get_item(item_id: Annotated[int, Path(ge=0)]) -> Item:
     """Return one catalog item or a public not-found response."""
     if item_id >= len(CATALOG):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Item not found')
     return CATALOG[item_id]
 
 

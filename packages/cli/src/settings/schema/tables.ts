@@ -4,12 +4,13 @@ import { type SchemaShape } from '#cli/types/shapes.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { limitsSchema } from '#cli/settings/schema/limits.ts';
 import { namingSchema } from '#cli/settings/schema/naming.ts';
+import { licensesSchema } from '#cli/settings/schema/licenses.ts';
+import { type WrittenSettings } from '#cli/types/settings/file.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { commandSchema } from '#cli/configurations/schema/parts.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
 import { type TableValues, type TableSettings } from '#cli/types/settings/tables.ts';
-import { type WrittenLicenses, type WrittenSettings } from '#cli/types/settings/file.ts';
 import { ciFields, hooksSchema, rulesSchema } from '#cli/settings/schema/integrations.ts';
 
 import {
@@ -23,29 +24,13 @@ import {
     allowReasonedValue,
 } from '#cli/settings/schema/parts.ts';
 
-const allowedPackageSchema = z.strictObject({
-    name: nonemptyString.describe(SETTING_DECLARATIONS['licenses.allowed_package.name'].description),
-    version: z
-        .string()
-        .regex(/^\d[^\s@<>=~^*|,]*$/u, 'Name an exact package version.')
-        .describe(SETTING_DECLARATIONS['licenses.allowed_package.version'].description),
-    reason: z.string().describe(SETTING_DECLARATIONS['licenses.allowed_package.reason'].description),
-} satisfies SchemaShape<TableSettings<'licenses'>['allowed_package'][number]>);
-
-const licensesSchema = z.strictObject({
-    allowed: nonemptyStrings.default([]).meta(SETTING_DECLARATIONS['licenses.allowed']),
-    allowed_package: z.array(allowedPackageSchema).default([]).meta(SETTING_DECLARATIONS['licenses.allowed_package']),
-} satisfies SchemaShape<TableSettings<'licenses'>, WrittenLicenses>);
-
 const configurationTableSchemas = {
     format: formatSchema.optional(),
     limits: limitsSchema.optional(),
     naming: namingSchema.optional(),
     structure: z
         .strictObject({
-            reexports: allowReasonedValue(z.enum(REEXPORT_MODES))
-                .default('none')
-                .meta(SETTING_DECLARATIONS['structure.reexports']),
+            reexports: allowReasonedValue(z.enum(REEXPORT_MODES), 'none', SETTING_DECLARATIONS['structure.reexports']),
             environment_readers: z
                 .array(relativePath)
                 .default([])
@@ -65,10 +50,10 @@ const configurationTableSchemas = {
         .optional(),
     coverage: z
         .strictObject({
-            lines: allowReasonedValue(percentage).default(0).meta(SETTING_DECLARATIONS['coverage.lines']),
-            branches: allowReasonedValue(percentage).default(0).meta(SETTING_DECLARATIONS['coverage.branches']),
-            functions: allowReasonedValue(percentage).default(0).meta(SETTING_DECLARATIONS['coverage.functions']),
-            statements: allowReasonedValue(percentage).default(0).meta(SETTING_DECLARATIONS['coverage.statements']),
+            lines: allowReasonedValue(percentage, 0, SETTING_DECLARATIONS['coverage.lines']),
+            branches: allowReasonedValue(percentage, 0, SETTING_DECLARATIONS['coverage.branches']),
+            functions: allowReasonedValue(percentage, 0, SETTING_DECLARATIONS['coverage.functions']),
+            statements: allowReasonedValue(percentage, 0, SETTING_DECLARATIONS['coverage.statements']),
             swift_target: z
                 .array(
                     z.strictObject({
@@ -86,21 +71,23 @@ const configurationTableSchemas = {
         .optional(),
     dependencies: z
         .strictObject({
-            min_release_age_days: allowReasonedValue(wholeNumber)
-                .default(SETTING_DEFAULTS.min_release_age_days)
-                .meta(SETTING_DECLARATIONS['dependencies.min_release_age_days']),
-            allowed_registries: allowReasonedValue(nonemptyStrings)
-                .default(['registry.npmjs.org', 'registry.yarnpkg.com'])
-                .meta(SETTING_DECLARATIONS['dependencies.allowed_registries']),
+            min_release_age_days: allowReasonedValue(
+                wholeNumber,
+                SETTING_DEFAULTS.min_release_age_days,
+                SETTING_DECLARATIONS['dependencies.min_release_age_days'],
+            ),
+            allowed_registries: allowReasonedValue(
+                nonemptyStrings,
+                ['registry.npmjs.org', 'registry.yarnpkg.com'],
+                SETTING_DECLARATIONS['dependencies.allowed_registries'],
+            ),
             bun_scanner: nonemptyString.optional().meta(SETTING_DECLARATIONS['dependencies.bun_scanner']),
         } satisfies SchemaShape<TableSettings<'dependencies'>, NonNullable<WrittenSettings['dependencies']>>)
         .optional(),
     docs: z
         .strictObject({
             banned_headings: z.array(z.string()).default([]).meta(SETTING_DECLARATIONS['docs.banned_headings']),
-            allowed_urls: allowReasonedValue(z.array(z.string()))
-                .default([])
-                .meta(SETTING_DECLARATIONS['docs.allowed_urls']),
+            allowed_urls: allowReasonedValue(z.array(z.string()), [], SETTING_DECLARATIONS['docs.allowed_urls']),
         } satisfies SchemaShape<TableSettings<'docs'>, NonNullable<WrittenSettings['docs']>>)
         .optional(),
     drizzle: z
@@ -173,9 +160,11 @@ const configurationTableSchemas = {
                 .default(['npm', 'run', 'build'])
                 .meta(SETTING_DECLARATIONS['site.build_command']),
             build_folder: destinationPath.default('dist').meta(SETTING_DECLARATIONS['site.build_folder']),
-            allowed_unlisted_pages: allowReasonedValue(z.array(relativePath.meta({ pathRole: 'build' })))
-                .default(['404.html'])
-                .meta(SETTING_DECLARATIONS['site.allowed_unlisted_pages']),
+            allowed_unlisted_pages: allowReasonedValue(
+                z.array(relativePath.meta({ pathRole: 'build' })),
+                ['404.html'],
+                SETTING_DECLARATIONS['site.allowed_unlisted_pages'],
+            ),
             size_limit: z
                 .array(
                     z.strictObject({
@@ -221,32 +210,44 @@ const configurationTableSchemas = {
         .optional(),
     repository: z
         .strictObject({
-            max_file_kilobytes: allowReasonedValue(wholeNumber)
-                .default(SETTING_DEFAULTS.max_file_kilobytes)
-                .meta(SETTING_DECLARATIONS['repository.max_file_kilobytes']),
+            max_file_kilobytes: allowReasonedValue(
+                wholeNumber,
+                SETTING_DEFAULTS.max_file_kilobytes,
+                SETTING_DECLARATIONS['repository.max_file_kilobytes'],
+            ),
         } satisfies SchemaShape<TableSettings<'repository'>, NonNullable<WrittenSettings['repository']>>)
         .optional(),
     prose: z
         .strictObject({
-            max_sentence_words: allowReasonedValue(wholeNumber)
-                .default(SETTING_DEFAULTS.max_sentence_words)
-                .meta(SETTING_DECLARATIONS['prose.max_sentence_words']),
-            max_list_item_words: allowReasonedValue(wholeNumber)
-                .default(SETTING_DEFAULTS.max_list_item_words)
-                .meta(SETTING_DECLARATIONS['prose.max_list_item_words']),
-            max_paragraph_sentences: allowReasonedValue(wholeNumber)
-                .default(SETTING_DEFAULTS.max_paragraph_sentences)
-                .meta(SETTING_DECLARATIONS['prose.max_paragraph_sentences']),
+            max_sentence_words: allowReasonedValue(
+                wholeNumber,
+                SETTING_DEFAULTS.max_sentence_words,
+                SETTING_DECLARATIONS['prose.max_sentence_words'],
+            ),
+            max_list_item_words: allowReasonedValue(
+                wholeNumber,
+                SETTING_DEFAULTS.max_list_item_words,
+                SETTING_DECLARATIONS['prose.max_list_item_words'],
+            ),
+            max_paragraph_sentences: allowReasonedValue(
+                wholeNumber,
+                SETTING_DEFAULTS.max_paragraph_sentences,
+                SETTING_DECLARATIONS['prose.max_paragraph_sentences'],
+            ),
         } satisfies SchemaShape<TableSettings<'prose'>, NonNullable<WrittenSettings['prose']>>)
         .optional(),
     duplication: z
         .strictObject({
-            min_lines: allowReasonedValue(z.number().int().positive())
-                .default(SETTING_DEFAULTS.min_lines)
-                .meta(SETTING_DECLARATIONS['duplication.min_lines']),
-            min_tokens: allowReasonedValue(z.number().int().positive())
-                .default(SETTING_DEFAULTS.min_tokens)
-                .meta(SETTING_DECLARATIONS['duplication.min_tokens']),
+            min_lines: allowReasonedValue(
+                z.number().int().positive(),
+                SETTING_DEFAULTS.min_lines,
+                SETTING_DECLARATIONS['duplication.min_lines'],
+            ),
+            min_tokens: allowReasonedValue(
+                z.number().int().positive(),
+                SETTING_DEFAULTS.min_tokens,
+                SETTING_DECLARATIONS['duplication.min_tokens'],
+            ),
         } satisfies SchemaShape<TableSettings<'duplication'>, NonNullable<WrittenSettings['duplication']>>)
         .optional(),
     xcode: z

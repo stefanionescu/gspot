@@ -28,9 +28,9 @@ import {
     ESLINT_OPTION_STRING,
     DOCSTRING_CONVENTIONS,
     YAMLLINT_OPTIONS_HELP,
+    EXTRA_OPTIONS_METADATA,
     IMPORT_EXTENSION_STYLES,
     COMMITLINT_OPTIONS_HELP,
-    EXTRA_OPTIONS_DESCRIPTION,
     MARKDOWNLINT_OPTIONS_HELP,
 } from '#cli/config/settings/schema.ts';
 
@@ -38,13 +38,13 @@ const ESLINT_RUNTIMES = z
     .object({ rules: z.array(z.string()) } satisfies SchemaShape<{ rules: string[] }>)
     .parse(JSON.parse(readAsset(`${JAVASCRIPT_CONFIGURATION_FOLDER}/${ESLINT_RUNTIME_NAMES_FILE}`))).rules;
 
-const extraTable = z.record(z.string(), z.unknown()).describe(EXTRA_OPTIONS_DESCRIPTION) satisfies z.ZodType<ToolTable>;
+const extraTable = z
+    .record(z.string(), z.unknown())
+    .describe(EXTRA_OPTIONS_METADATA.description) satisfies z.ZodType<ToolTable>;
 
 // Only tools whose writers read the options accept an extra table.
 const toolOptionsSchema = z.strictObject({
-    extra: buildReasonedValueSchema(extraTable)
-        .optional()
-        .meta({ description: EXTRA_OPTIONS_DESCRIPTION, reason_needed: 'adding' }),
+    extra: buildReasonedValueSchema(extraTable, EXTRA_OPTIONS_METADATA).optional().meta(EXTRA_OPTIONS_METADATA),
 } satisfies SchemaShape<Pick<TableSettings<'tools.prettier'>, 'extra'>, NonNullable<WrittenTools['prettier']>>);
 
 const firstEslintOption = z.union([
@@ -273,9 +273,9 @@ const toolsSchema = z.strictObject({
                         .min(1)
                         .regex(KNIP_PACKAGE_NAME, 'Use an exact package name, without a regular expression.'),
                 ),
-            )
-                .default([])
-                .meta(SETTING_DECLARATIONS['tools.knip.ignore_dependencies']),
+                [],
+                SETTING_DECLARATIONS['tools.knip.ignore_dependencies'],
+            ),
         } satisfies SchemaShape<
             Omit<TableSettings<'tools.knip'>, 'extra'>,
             Omit<NonNullable<WrittenTools['knip']>, 'extra'>
@@ -283,9 +283,7 @@ const toolsSchema = z.strictObject({
         .optional(),
     purgecss: z
         .strictObject({
-            safelist: allowReasonedValue(nonemptyStrings)
-                .default([])
-                .meta(SETTING_DECLARATIONS['tools.purgecss.safelist']),
+            safelist: allowReasonedValue(nonemptyStrings, [], SETTING_DECLARATIONS['tools.purgecss.safelist']),
         } satisfies SchemaShape<TableSettings<'tools.purgecss'>, NonNullable<WrittenTools['purgecss']>>)
         .optional(),
     v8r: z

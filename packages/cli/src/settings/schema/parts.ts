@@ -5,6 +5,7 @@ import { CASE_NAMES } from '#cli/config/checks/general/naming.ts';
 import type { ScopeSettings } from '#cli/types/settings/values.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
+import type { ReasonedSettingMetadata } from '#cli/types/settings/metadata.ts';
 import type { SettingValue, WrittenFormat, ReasonedValue } from '#cli/types/settings/file.ts';
 import type { NamingCase, NamingFields, TableSettings, ParsedNamingFields } from '#cli/types/settings/tables.ts';
 
@@ -15,10 +16,9 @@ import {
     PRINT_WIDTH_MAX,
     PRINT_WIDTH_MIN,
     TRAILING_COMMAS,
+    REASON_DESCRIPTIONS,
     FORMAT_INDENT_STYLES,
 } from '#cli/config/settings/schema.ts';
-
-const reasonedValues = new WeakMap<z.ZodType, z.ZodType>();
 
 const nonemptyString = z.string().min(1);
 const nonemptyStrings = z.array(nonemptyString);
@@ -73,15 +73,17 @@ const relativePaths = z.array(relativePath);
 const nonemptyPaths = relativePaths.min(1);
 
 const namingCategorySchema = z.strictObject({
-    max_characters: allowReasonedValue(z.number().int().positive())
-        .default(SETTING_DEFAULTS.max_characters)
-        .meta(SETTING_DECLARATIONS['naming.max_characters']),
-    max_words: allowReasonedValue(z.number().int().positive())
-        .default(SETTING_DEFAULTS.max_words)
-        .meta(SETTING_DECLARATIONS['naming.max_words']),
-    cases: allowReasonedValue(z.array(z.enum(CASE_NAMES)))
-        .default([])
-        .meta(SETTING_DECLARATIONS['naming.cases']),
+    max_characters: allowReasonedValue(
+        z.number().int().positive(),
+        SETTING_DEFAULTS.max_characters,
+        SETTING_DECLARATIONS['naming.max_characters'],
+    ),
+    max_words: allowReasonedValue(
+        z.number().int().positive(),
+        SETTING_DEFAULTS.max_words,
+        SETTING_DECLARATIONS['naming.max_words'],
+    ),
+    cases: allowReasonedValue(z.array(z.enum(CASE_NAMES)), [], SETTING_DECLARATIONS['naming.cases']),
 } satisfies SchemaShape<ParsedNamingFields, NamingFields<SettingValue<number>, SettingValue<NamingCase[]>>>);
 
 namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
@@ -144,32 +146,35 @@ const formatSchema = formatFields.extend({
 /**
  * Accept a setting value, or a reasoned value with the same value schema.
  * @param schema the value validator.
- * @returns the value schema and its reasoned value.
+ * @param defaultValue the value of an absent key.
+ * @param metadata the description of the setting and the change that needs a reason.
+ * @returns the setting schema with its default and metadata.
  */
 function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
-): z.ZodType<Output, Input | ReasonedValue<Input>> {
-    const existing = reasonedValues.get(schema);
-    if (existing !== undefined) return existing as z.ZodType<Output, Input | ReasonedValue<Input>>;
-    const value = z.union([schema, buildReasonedValueSchema(schema)]);
-    const metadata = schema.meta();
-    if (metadata !== undefined) value.register(z.globalRegistry, metadata);
-    reasonedValues.set(schema, value);
-    return value;
+    defaultValue: z.util.NoUndefined<Output>,
+    metadata: ReasonedSettingMetadata & Record<string, unknown>,
+): z.ZodDefault<z.ZodUnion<readonly [z.ZodType<Output, Input>, z.ZodType<Output, ReasonedValue<Input>>]>> {
+    return z
+        .union([schema, buildReasonedValueSchema(schema, metadata)])
+        .default(defaultValue)
+        .meta(metadata);
 }
 
 /**
  * Read one value with its required reason.
- * @param schema the validator and description of the value.
+ * @param schema the validator of the value.
+ * @param metadata the description of the setting and the change that needs a reason.
  * @returns the value read from its strict reasoned value.
  */
 function buildReasonedValueSchema<Output, Input>(
     schema: z.ZodType<Output, Input>,
+    metadata: ReasonedSettingMetadata,
 ): z.ZodType<Output, ReasonedValue<Input>> {
     return z
         .strictObject({
-            value: schema.describe('The setting value.'),
-            reason: z.string().describe('Why this value is needed.'),
+            value: schema.describe(metadata.description),
+            reason: z.string().describe(REASON_DESCRIPTIONS[metadata.reason_needed]),
         } satisfies SchemaShape<ReasonedValue<Output>, ReasonedValue<Input>>)
         .transform((entry) => entry.value) satisfies z.ZodType<Output, ReasonedValue<Input>>;
 }

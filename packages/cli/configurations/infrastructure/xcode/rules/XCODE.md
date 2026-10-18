@@ -7,8 +7,8 @@ Read this rule when you change Xcode project settings, schemes, or build phases.
 - `SWIFT_STRICT_CONCURRENCY = complete`. Set adopted upcoming-feature flags in
   the project, not per file.
 - Share schemes needed by collaborators and CI. Keep personal scheme state out of the repository.
-- Set deployment targets deliberately for each supported product. Verify compatibility
-  between apps, extensions, frameworks, and package dependencies.
+- Set each deployment target in the project, to the oldest system version the product supports. An extension,
+  framework, or package dependency never requires a newer system than the app that ships it.
 
 ## Files
 

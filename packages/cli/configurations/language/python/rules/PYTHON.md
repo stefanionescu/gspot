@@ -4,8 +4,6 @@ Read this rule when you change Python code.
 
 ## Python scope
 
-Prefer readable Python to clever tricks: explicit data flow, clear names, small functions,
-and the formatter's layout.
 Importing a module does no I/O, starts no work, and parses no arguments. Prefer the project's rules to generic style guides, and match the
 surrounding module where a guide allows several options.
 
@@ -31,7 +29,6 @@ stay out of commits.
 The module that reads the configuration takes the environment as a mapping, so a test passes its own:
 
 ```python
-
 def get_config(environ: Mapping[str, str]) -> AppConfig:
     """Parse an item limit, using 100 when the setting is absent.
 
@@ -45,9 +42,9 @@ def get_config(environ: Mapping[str, str]) -> AppConfig:
         ValueError: The supplied limit is not an integer greater than zero.
 
     """
-    max_items = int(environ.get("MAX_ITEMS", "100"))
+    max_items = int(environ.get('MAX_ITEMS', '100'))
     if max_items < 1:
-        message = "MAX_ITEMS must be greater than zero"
+        message = 'MAX_ITEMS must be greater than zero'
         raise ValueError(message)
     return AppConfig(max_items=max_items)
 ```

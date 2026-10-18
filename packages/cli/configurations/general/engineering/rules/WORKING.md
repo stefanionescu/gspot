@@ -62,8 +62,8 @@ Extract shared code only when two or more callers need the same behavior now.
   to pass a size or complexity limit. Split it by the steps it performs.
 - An abstraction that gains flags, modes, or caller-specific branches needs a different design. Do not combine
   loosely related behaviors in a function behind a parameter that picks one.
-- A function takes at most four parameters, and no positional boolean. Pass other values as named fields: an
-  options object, keyword-only parameters, or argument labels.
+- A function takes no positional boolean. Pass more than a few values as named fields: an options object,
+  keyword-only parameters, or argument labels. `limits.function_parameters` sets the ceiling.
 - To remove a wrong abstraction, inline it into each caller, delete the unused branches there, and extract only
   the common behavior that remains.
 - Pass data, not a callback, unless it replaces several flags across real callers.

@@ -99,18 +99,17 @@ Each act has one verb. Use the table verb for each act, never a synonym:
 | `read`                        | Take data from outside memory: a file, Git, the environment, a child process, or the network.               |
 | `write`                       | Put data into a file or another store outside memory.                                                       |
 | `find`                        | Search for one item. The result can be absent.                                                              |
-| `list`                        | Return every item of a kind, such as the files, the scopes, or the checks.                                  |
+| `list`                        | Return every item of a kind, such as the orders of a customer.                                              |
 | `select`                      | Choose among known options.                                                                                 |
 | `detect`                      | Infer a fact from the files of the project.                                                                 |
 | `build`, `make`               | Construct a value from other values, such as a message, a plan, or the text of a file.                      |
-| `create`                      | Make a new independent value or resource, such as an unsaved domain value, a folder, or a sandbox.          |
+| `create`                      | Make a new independent value or resource, such as an unsaved domain value or a folder.                      |
 | `parse`, `decode`             | Raw text to structured data; encoded bytes or payloads to typed values.                                     |
 | `encode`, `serialize`         | Typed values to bytes; values to the text of a file format.                                                 |
 | `format`                      | A value to text that people read: terminal lines, Markdown, or a message.                                   |
-| `check`                       | Inspect files or values for a check, and return its findings.                                               |
 | `validate`                    | Return what makes one value invalid.                                                                        |
 | `assert`                      | Stop with an error on an invalid value.                                                                     |
-| `run`                         | Start a named program, command, or step, such as `runEslint` or `runInstallCommand`. Never a bare `run`.    |
+| `run`                         | Start a named program, command, or step, such as `runMigrations`. Never a bare `run`.                       |
 | `spawn`                       | Start a child process.                                                                                      |
 | `set`                         | Assign or replace current state with the supplied value.                                                    |
 | `add`, `remove`               | In-memory collection membership only.                                                                       |
@@ -118,8 +117,7 @@ Each act has one verb. Use the table verb for each act, never a synonym:
 | `prepare`, `refresh`, `reset` | Set up local state before a workflow; replace presentation state from a source; return to an initial state. |
 | `is`, `has`, `can`            | Predicates only: `is` for state, `has` for presence, and `can` for capability.                              |
 
-Use `plan`, `install`, `apply`, and `generate` only for the program step of the same name, such as an `install`
-command. When no table verb fits, pick another plain one that names the act. Plain verbs include `count`, `compare`,
+When no table verb fits, pick another plain one that names the act. Plain verbs include `count`, `compare`,
 `merge`, `split`, `sort`, `filter`, `group`, `match`, `replace`, `normalize`, `convert`, `extract`, `strip`, `copy`,
 `move`, `stop`, and `wait`. Never use `load`, `fetch`, or `resolve` for retrieval; pick `get`, `read`, or `find`.
 

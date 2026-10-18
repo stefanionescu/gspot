@@ -23,10 +23,10 @@ def parse_batch_limit(raw: str) -> int:
     try:
         value = int(raw)
     except ValueError as error:
-        message = "Batch limit must be a decimal integer."
+        message = 'Batch limit must be a decimal integer.'
         raise ValueError(message) from error
     if not 1 <= value <= MAX_BATCH_SIZE:
-        message = f"Batch limit must be between 1 and {MAX_BATCH_SIZE}."
+        message = f'Batch limit must be between 1 and {MAX_BATCH_SIZE}.'
         raise ValueError(message)
     return value
 ```
@@ -109,13 +109,13 @@ from pathlib import Path
 def main() -> int:
     """Read the first argument as a path and print its normalized records."""
     path = Path(sys.argv[1])
-    with path.open(encoding="utf-8") as source:
+    with path.open(encoding='utf-8') as source:
         records = [record for line in source if (record := line.strip())]
-    _ = sys.stdout.write("\n".join(records))
+    _ = sys.stdout.write('\n'.join(records))
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     raise SystemExit(main())
 ```
 

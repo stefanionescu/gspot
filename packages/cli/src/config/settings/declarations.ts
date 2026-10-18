@@ -124,7 +124,7 @@ export const SETTING_DECLARATIONS = {
     },
     'dependencies.bun_scanner': {
         configurations: ['dependencies'],
-        description: 'The security scanner package that Bun runs on install; without one, Bun needs no scanner.',
+        description: 'The npm package that Bun runs as its install security scanner. Without it, Bun runs no scanner.',
     },
     'docs.banned_headings': {
         configurations: ['docs'],
@@ -169,11 +169,12 @@ export const SETTING_DECLARATIONS = {
     'secrets.environment_functions': {
         configurations: ['secrets'],
         description:
-            'The project functions that read environment keys, besides the built-in ones, such as config.$env and read_env.',
+            'Functions of this project that read environment variables, such as read_env. The env-examples check reads the keys they take.',
     },
     'site.build_command': {
         configurations: ['site'],
-        description: 'The build script run by the repository package manager, unless your own command replaces it.',
+        description:
+            'The command that builds the site. Without it, gspot runs the build script of the package manager.',
     },
     'site.build_folder': {
         configurations: ['site'],
@@ -212,7 +213,7 @@ export const SETTING_DECLARATIONS = {
     },
     'translations.messages_folder': {
         configurations: ['translations'],
-        description: 'The folder of `<locale>`.json message files, relative to the repository root.',
+        description: 'The folder of the `<locale>.json` message files, relative to the repository root.',
     },
     'format.indent_style': {
         configurations: ['format'],
@@ -252,7 +253,7 @@ export const SETTING_DECLARATIONS = {
     },
     configurations: {
         description:
-            'Configurations you chose yourself, on top of the detected ones; `gspot add` writes this list, and `gspot set` refuses it.',
+            'The configurations this repository uses besides the always-selected ones. `gspot init` writes the detected ones here; `gspot add` and `gspot remove` change the list.',
     },
     removed_configurations: {
         description:

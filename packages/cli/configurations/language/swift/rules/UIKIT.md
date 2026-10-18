@@ -21,9 +21,6 @@ Follow declared import boundaries. Put reusable delegate or data-source behavior
 type when multiple screens need it or the controller mixes unrelated responsibilities.
 A view controller can own a small list's data source and delegate directly.
 
-Use the types that build navigation and dependencies. Do not introduce a coordinator,
-router, view model, or composition type only to satisfy a prescribed layout.
-
 ## View-controller lifecycle
 
 Install and constrain owned views through the controller's lifecycle. Balance containment

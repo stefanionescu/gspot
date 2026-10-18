@@ -154,12 +154,12 @@ const rootSettingSchemas = {
     }),
     allowed_words: allowReasonedValue(
         z.array(z.string().regex(ALLOWED_WORD, 'Use a plain word, without a regular expression pattern.')),
-    )
-        .default([])
-        .meta({
+        [],
+        {
             reason_needed: 'adding',
             description: 'Words accepted beyond the shipped spelling list; adding needs a reason.',
-        }),
+        },
+    ),
     tool_timeout_seconds: z
         .number()
         .int()
@@ -172,7 +172,7 @@ const rootSettingSchemas = {
         .array(relativePath)
         .default(() => [...DEFAULT_TEST_PATTERNS])
         .meta({
-            description: 'Test files where applicable linters relax rules intended for production source.',
+            description: 'Test files. Linters apply their test rules to these files.',
         }),
 };
 

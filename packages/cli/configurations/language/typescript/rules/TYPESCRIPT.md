@@ -4,15 +4,9 @@ Read this rule when you change TypeScript code.
 
 TypeScript checks static types. JavaScript and runtime rules cover modules and execution.
 
-## Philosophy
-
-TypeScript makes types explicit at compile time. Plain values, small functions, discriminated
-unions, and clear modules read better than elaborate type transformations.
-
 ## Files and modules
 
-Error output and process exits stay at executable boundaries. Before you assume a lint rule
-applies to a path, check the effective configuration.
+Error output and process exits stay at executable boundaries.
 
 Do not edit compiler output with string replacement. Change the source or the compiler options, then ship the
 output.

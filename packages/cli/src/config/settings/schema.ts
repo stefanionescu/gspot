@@ -148,7 +148,18 @@ export const NAMING_LANGUAGE_CATEGORIES = {
     html: ['files', 'folders'],
 } as const;
 
-export const EXTRA_OPTIONS_DESCRIPTION = 'Extra options passed to the tool as written.';
+/** The schema metadata of the extra options table of a tool. */
+export const EXTRA_OPTIONS_METADATA = {
+    description: 'Extra options passed to the tool as written.',
+    reason_needed: 'adding',
+} as const;
+
+/** The description of the reason of a reasoned value, by the change that needs a reason. */
+export const REASON_DESCRIPTIONS = {
+    raising: 'Why this code needs more than the default; required when you raise the value.',
+    lowering: 'Why this code needs less than the default; required when you lower the value.',
+    adding: 'Why these entries belong; required when you add an entry.',
+} as const;
 
 export const INTERNAL_SCHEMA_METADATA = [
     'configurations',

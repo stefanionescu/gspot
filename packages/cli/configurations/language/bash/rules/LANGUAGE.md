@@ -10,17 +10,17 @@ execution error.
 ```bash
 # report_unreadable_files: Reports each unreadable input and fails if any input is unreadable.
 report_unreadable_files() {
-  local path
-  local status=0
+    local path
+    local status=0
 
-  for path in "$@"; do
-    if [[ -r ${path} ]]; then
-      continue
-    fi
-    printf 'error: input is unreadable: %s\n' "${path}" >&2
-    status=1
-  done
-  return "${status}"
+    for path in "$@"; do
+        if [[ -r ${path} ]]; then
+            continue
+        fi
+        printf 'error: input is unreadable: %s\n' "${path}" >&2
+        status=1
+    done
+    return "${status}"
 }
 ```
 
@@ -72,7 +72,7 @@ archive_args=(-czf "${archive_path}" -C "${source_directory}" .)
 tar "${archive_args[@]}"
 
 while IFS= LC_ALL=C read -r -d '' file; do
-  files+=("${file}")
+    files+=("${file}")
 done < <(find . -type f -name '*.sql' -print0)
 ```
 
@@ -86,8 +86,8 @@ unquoted with `=~`. `-z` and `-n` test for emptiness. Numeric comparisons live i
 
 ```bash
 readonly version_re='^[0-9]+\.[0-9]+\.[0-9]+$'
-if [[ "${version}" =~ ${version_re} ]]; then
-  printf 'valid version\n'
+if [[ ${version} =~ ${version_re} ]]; then
+    printf 'valid version\n'
 fi
 ```
 
@@ -100,13 +100,13 @@ once when several fields describe one instant. Compute a redirection path before
 when its expression mutates a variable.
 
 ```bash
-if [[ ! "${port}" =~ ^[0-9]{1,5}$ ]]; then
-  printf 'error: port must be numeric\n' >&2
-  return 1
+if [[ ! ${port} =~ ^[0-9]{1,5}$ ]]; then
+    printf 'error: port must be numeric\n' >&2
+    return 1
 fi
-if (( 10#${port} < 1 || 10#${port} > 65535 )); then
-  printf 'error: port is out of range\n' >&2
-  return 1
+if ((10#${port} < 1 || 10#${port} > 65535)); then
+    printf 'error: port is out of range\n' >&2
+    return 1
 fi
 ```
 
@@ -127,7 +127,7 @@ trap 'rm -f -- "${file_list}"' EXIT
 find "${root_dir}" -type f -print0 >"${file_list}" || exit 1
 
 while IFS= LC_ALL=C read -r -d '' file; do
-  printf 'file: %q\n' "${file}"
+    printf 'file: %q\n' "${file}"
 done <"${file_list}"
 ```
 
@@ -140,8 +140,8 @@ application code with a real parser, never with `IFS=, read`.
 ```bash
 # join_path_parts: Joins the arguments with slashes.
 join_path_parts() {
-  local IFS='/'
-  printf '%s\n' "$*"
+    local IFS='/'
+    printf '%s\n' "$*"
 }
 ```
 
@@ -157,13 +157,13 @@ subshell:
 
 ```bash
 for file in ./*.sql; do
-  [[ -e ${file} ]] || continue
-  printf '%s\n' "${file}"
+    [[ -e ${file} ]] || continue
+    printf '%s\n' "${file}"
 done
 
 if ! cd -- "${target_dir}"; then
-  printf 'error: cannot enter target dir: %s\n' "${target_dir}" >&2
-  return 1
+    printf 'error: cannot enter target dir: %s\n' "${target_dir}" >&2
+    return 1
 fi
 ```
 
@@ -176,7 +176,10 @@ sentinel:
 
 ```bash
 commit_sha="$(git rev-parse HEAD)" || exit 1
-content_with_sentinel="$(some_command || exit; printf x)" || return 1
+content_with_sentinel="$(
+    some_command || exit
+    printf x
+)" || return 1
 content="${content_with_sentinel%x}"
 ```
 
@@ -189,16 +192,16 @@ directly or capture its status in a named variable.
 
 ```bash
 tar -cf - ./* | (cd -- "${target_dir}" && tar -xf -)
-statuses=( "${PIPESTATUS[@]}" )
-if (( statuses[0] != 0 || statuses[1] != 0 )); then
-  printf 'error: tar copy failed\n' >&2
-  return 1
+statuses=("${PIPESTATUS[@]}")
+if ((statuses[0] != 0 || statuses[1] != 0)); then
+    printf 'error: tar copy failed\n' >&2
+    return 1
 fi
 
 edited_file="$(mktemp "${file}.XXXXXX")" || return 1
 sed 's/foo/bar/g' "${file}" >"${edited_file}" || {
-  rm -f -- "${edited_file}"
-  return 1
+    rm -f -- "${edited_file}"
+    return 1
 }
 mv -- "${edited_file}" "${file}"
 ```

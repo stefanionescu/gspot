@@ -18,12 +18,12 @@ commands for string and arithmetic work, and pass files directly rather than thr
 # Arguments:
 #   Command name.
 require_command() {
-  local command_name="$1"
+    local command_name="$1"
 
-  if ! command -v "${command_name}" >/dev/null 2>&1; then
-    printf 'error: required command not found: %s\n' "${command_name}" >&2
-    return 1
-  fi
+    if ! command -v "${command_name}" >/dev/null 2>&1; then
+        printf 'error: required command not found: %s\n' "${command_name}" >&2
+        return 1
+    fi
 }
 ```
 
@@ -45,25 +45,25 @@ generate_config | sudo tee /etc/service/config >/dev/null
 # Arguments:
 #   Small, already bounded host list to check.
 run_remote_checks() {
-  local host
-  local pid
-  local status=0
+    local host
+    local pid
+    local status=0
 
-  trap 'cleanup_children' EXIT
-  trap 'cleanup_children; exit 130' INT
-  trap 'cleanup_children; exit 143' TERM
+    trap 'cleanup_children' EXIT
+    trap 'cleanup_children; exit 130' INT
+    trap 'cleanup_children; exit 143' TERM
 
-  for host in "$@"; do
-    check_host "${host}" >"${work_dir}/${host}.log" 2>&1 &
-    child_pids+=( "$!" )
-  done
+    for host in "$@"; do
+        check_host "${host}" >"${work_dir}/${host}.log" 2>&1 &
+        child_pids+=("$!")
+    done
 
-  for pid in "${child_pids[@]}"; do
-    wait "${pid}" || status=1
-  done
+    for pid in "${child_pids[@]}"; do
+        wait "${pid}" || status=1
+    done
 
-  trap - EXIT INT TERM
-  return "${status}"
+    trap - EXIT INT TERM
+    return "${status}"
 }
 ```
 
@@ -80,11 +80,11 @@ script rewrites through a temporary file unless its documentation restricts it t
 ```bash
 # get_service_url: Prints a required nonempty service URL from JSON configuration.
 get_service_url() {
-  local config_file="${1:?Configuration file is required}"
-  local service_url
+    local config_file="${1:?Configuration file is required}"
+    local service_url
 
-  service_url="$(jq -er '.service.url | select(type == "string" and length > 0)' "${config_file}")" || return 1
-  printf '%s\n' "${service_url}"
+    service_url="$(jq -er '.service.url | select(type == "string" and length > 0)' "${config_file}")" || return 1
+    printf '%s\n' "${service_url}"
 }
 ```
 
@@ -98,15 +98,15 @@ independently obtained checksum or signature, and only then run it.
 ```bash
 installer="${work_dir}/install.sh"
 curl --fail --show-error --silent --location \
-  --connect-timeout 10 \
-  --max-time 60 \
-  --output "${installer}" \
-  "${installer_url}" || exit 1
+    --connect-timeout 10 \
+    --max-time 60 \
+    --output "${installer}" \
+    "${installer_url}" || exit 1
 printf '%s  %s\n' "${expected_sha256}" "${installer}" | shasum -a 256 -c - || exit 1
 bash "${installer}" --version "${tool_version}"
 
 ssh -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
-  -- "${host}" systemctl is-active --quiet "${service_name}"
+    -- "${host}" systemctl is-active --quiet "${service_name}"
 ```
 
 ## Secrets and environment
@@ -118,16 +118,16 @@ Keep `set -x` away from secrets. An indirect expansion `${!name}` takes only a v
 # Arguments:
 #   Environment variable name.
 require_env() {
-  local name="$1"
+    local name="$1"
 
-  if [[ ! "${name}" =~ ^[A-Z_][A-Z0-9_]*$ ]]; then
-    printf 'error: invalid env var name\n' >&2
-    return 1
-  fi
-  if [[ -z "${!name:-}" ]]; then
-    printf 'error: %s is required\n' "${name}" >&2
-    return 1
-  fi
+    if [[ ! ${name} =~ ^[A-Z_][A-Z0-9_]*$ ]]; then
+        printf 'error: invalid env var name\n' >&2
+        return 1
+    fi
+    if [[ -z ${!name:-} ]]; then
+        printf 'error: %s is required\n' "${name}" >&2
+        return 1
+    fi
 }
 ```
 
@@ -156,12 +156,12 @@ mv -- "${downloaded_file}" "${config_file}" || exit 1
 trap - EXIT
 
 if ! mkdir "${lock_dir}"; then
-  printf 'error: lock is already held: %s\n' "${lock_dir}" >&2
-  return 1
+    printf 'error: lock is already held: %s\n' "${lock_dir}" >&2
+    return 1
 fi
 printf '%s\n' "$$" >"${lock_dir}/pid" || {
-  rmdir "${lock_dir}"
-  return 1
+    rmdir "${lock_dir}"
+    return 1
 }
 trap 'rm -f -- "${lock_dir}/pid"; rmdir -- "${lock_dir}"' EXIT
 ```
@@ -173,14 +173,14 @@ Validate its cleanup path against the approved root folder:
 ```bash
 # remove_build_dir: Removes the build child of the approved root folder.
 remove_build_dir() {
-  local owner_root build_dir
+    local owner_root build_dir
 
-  [[ -n "$1" ]] || return 1
-  owner_root="$(cd -- "$1" && pwd -P)" || return 1
-  [[ "${owner_root}" != / ]] || return 1
-  build_dir="${owner_root}/build"
-  [[ -d "${build_dir}" && ! -L "${build_dir}" ]] || return 1
-  rm -rf -- "${build_dir}"
+    [[ -n $1 ]] || return 1
+    owner_root="$(cd -- "$1" && pwd -P)" || return 1
+    [[ ${owner_root} != / ]] || return 1
+    build_dir="${owner_root}/build"
+    [[ -d ${build_dir} && ! -L ${build_dir} ]] || return 1
+    rm -rf -- "${build_dir}"
 }
 ```
 

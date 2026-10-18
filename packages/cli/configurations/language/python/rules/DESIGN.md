@@ -43,7 +43,7 @@ def trim_history_messages(messages: Sequence[str], max_messages: int) -> list[st
     return list(messages[-max_messages:])
 
 
-__all__ = ["trim_history_messages"]
+__all__ = ['trim_history_messages']
 ```
 
 A nested function closes over a local value to make the outer code clearer, and keeps its
@@ -93,6 +93,7 @@ through its factories, validators, and converters. Do not add `attrs` in place o
 
 from dataclasses import field, dataclass
 
+
 @dataclass
 class Batch:
     """Prompt text owned by one processing batch.
@@ -105,7 +106,7 @@ class Batch:
     prompts: list[str] = field(default_factory=list)
 
 
-__all__ = ["Batch"]
+__all__ = ['Batch']
 ```
 
 ### Dataclass conventions

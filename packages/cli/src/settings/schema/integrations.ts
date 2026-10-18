@@ -12,7 +12,8 @@ const rulesSchema = z.strictObject({
         description: 'Write the rules and the AGENTS.md block.',
     }),
     exclude: z.array(z.string()).default([]).meta({
-        description: 'Rule files and folders left out of the installed selection.',
+        description:
+            'Rule files or folders under .gspot/configurations/ to leave out, such as .gspot/configurations/general/engineering/rules/PLANNING.md.',
     }),
 } satisfies SchemaShape<ParsedRules, NonNullable<WrittenSettings['rules']>>);
 
