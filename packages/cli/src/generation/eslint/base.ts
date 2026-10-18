@@ -42,7 +42,7 @@ function buildBlocksBeforeFragments(
     plugins: EslintPlugins,
 ): Parameters<BlockWriter['block']>[] {
     const { eslintFiles, isAll } = base;
-    const config = base.eslint;
+    const parts = base.eslint;
     const rules = buildLevelRules(view, isAll ? BASE_SELECTORS : []);
     const pluginMap = Object.entries(plugins)
         .map(([name, [importName]]) => `${JSON.stringify(name)}: ${importName}`)
@@ -55,33 +55,33 @@ function buildBlocksBeforeFragments(
         ),
     );
     const projectBlocks: Parameters<BlockWriter['block']>[] = [
-        ...config.importStyleBlocks,
-        ...config.scopeBlocks,
-        ...config.boundaryBlocks,
+        ...parts.importStyleBlocks,
+        ...parts.scopeBlocks,
+        ...parts.boundaryBlocks,
     ].map(({ settings, ...data }) => {
         if (settings === undefined) return [data, ''];
         const runtime =
             settings['boundaries/files'] === undefined
                 ? `settings: ${JSON.stringify(settings)}`
-                : `settings: { ...${JSON.stringify(settings)}, 'import/resolver': { typescript: { project: ${JSON.stringify(config.projects)}.map((project) => join(root, project)) } } }`;
+                : `settings: { ...${JSON.stringify(settings)}, 'import/resolver': { typescript: { project: ${JSON.stringify(parts.projects)}.map((project) => join(root, project)) } } }`;
         return [data, runtime];
     });
     return [
         ...buildBasePresetBlocks(base.eslintPresets.get('javascript') as EslintPresets, CODE_PRESETS, eslintFiles.code),
         [
-            { files: eslintFiles.code, rules: { ...rules.code, ...pluginOptions, ...config.allLevelRules } },
-            `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }${config.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
+            { files: eslintFiles.code, rules: { ...rules.code, ...pluginOptions, ...parts.allLevelRules } },
+            `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }${parts.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
             { expression: `gspot.configs.${isAll ? 'all' : 'recommended'}.rules`, rules: {} },
         ],
         [{ files: eslintFiles.javascript, rules: JAVASCRIPT_RULES }],
         ...projectBlocks,
-        ...(config.restrictedImports.length === 0
+        ...(parts.restrictedImports.length === 0
             ? []
             : ([
                   [
                       {
                           files: eslintFiles.code,
-                          rules: { 'no-restricted-imports': ['error', { paths: config.restrictedImports }] },
+                          rules: { 'no-restricted-imports': ['error', { paths: parts.restrictedImports }] },
                       },
                   ],
               ] satisfies Parameters<BlockWriter['block']>[])),
@@ -103,10 +103,10 @@ function buildBlocksAfterFragments(
     fragmentSelectors: SelectorGroup[],
 ): Parameters<BlockWriter['block']>[] {
     const { eslintFiles, isAll } = base;
-    const config = base.eslint;
+    const parts = base.eslint;
     const selectors = isAll ? BASE_SELECTORS : [];
     const rules = buildLevelRules(view, selectors);
-    const runtimes: Parameters<BlockWriter['block']>[] = config.runtimes.map(({ runtime }, index) => {
+    const runtimes: Parameters<BlockWriter['block']>[] = parts.runtimes.map(({ runtime }, index) => {
         const isNode = ['node', 'nodeBuiltin', 'commonjs'].includes(runtime);
         let names = runtime;
         if (runtime === 'node') names = 'nodeBuiltin';
@@ -115,7 +115,7 @@ function buildBlocksAfterFragments(
             {
                 files: eslintFiles.code.map((pattern) => [
                     pattern,
-                    { runtime: { declarations: config.runtimes, index } },
+                    { runtime: { declarations: parts.runtimes, index } },
                 ]),
                 rules: {
                     ...(isNode ? rules.node : {}),
@@ -142,7 +142,7 @@ function buildBlocksAfterFragments(
                 },
             ],
         ),
-        [{ files: eslintFiles.code, ignores: [...config.testFiles, ...config.scriptFiles], rules: rules.console }],
+        [{ files: eslintFiles.code, ignores: [...parts.testFiles, ...parts.scriptFiles], rules: rules.console }],
         [{ files: eslintFiles.scripts, rules: SCRIPT_RULES }],
         [{ files: eslintFiles.tests, rules: TEST_RULES }],
         ...buildBasePresetBlocks(base.eslintPresets.get('javascript') as EslintPresets, FILE_PRESETS, eslintFiles.code),
@@ -153,7 +153,7 @@ function buildBlocksAfterFragments(
             },
         ],
         ...rootPackage,
-        [{ files: eslintFiles.javascript, rules: { ...rules.javascript, ...config.javascriptAllLevelRules } }],
+        [{ files: eslintFiles.javascript, rules: { ...rules.javascript, ...parts.javascriptAllLevelRules } }],
     ];
 }
 
@@ -166,14 +166,14 @@ function buildBlocksAfterFragments(
  */
 function selectPlugins(base: EslintContext): EslintPlugins {
     const { isAll, repositorySettings } = base;
-    const config = base.eslint;
+    const parts = base.eslint;
     return {
         ...ESLINT_PLUGIN_IMPORTS,
         ...(isAll ? { perfectionist: ['perfectionist', 'eslint-plugin-perfectionist'] } : {}),
         ...(isAll && repositorySettings.structure.reexports === 'index-only'
             ? { 'barrel-files': ['barrelFiles', 'eslint-plugin-barrel-files'] }
             : {}),
-        ...(config.boundaryBlocks.length > 0 ? { boundaries: ['boundaries', 'eslint-plugin-boundaries'] } : {}),
+        ...(parts.boundaryBlocks.length > 0 ? { boundaries: ['boundaries', 'eslint-plugin-boundaries'] } : {}),
     };
 }
 

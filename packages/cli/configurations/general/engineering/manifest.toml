@@ -3,7 +3,7 @@ allowed_words = ["Bun", "Node", "npm", "pnpm", "mise", "CI", "macOS", "Linux", "
 [configuration]
 always_selected = true
 description = "Rules for working and writing code. The `[rules]` setting turns them on or off."
-title = "Engineering guidance"
+title = "Engineering"
 
 [rules]
 "ACCESSIBILITY.md" = { filenames = ["*.html", "*.tsx", "*.jsx", "*.vue", "*.svelte", "*.astro", "*.swift"] }

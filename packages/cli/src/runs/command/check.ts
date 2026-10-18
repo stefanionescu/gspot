@@ -6,12 +6,12 @@ import { RAN_STATUSES } from '#cli/config/runs/run.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
-import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import { buildInvocations } from '#cli/runs/command/batches.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
 import { stripCoverageArguments } from '#cli/planning/checks.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { listCompanionTools } from '#cli/planning/needed-tools.ts';
 import { copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
@@ -130,7 +130,7 @@ async function runInScratch(run: CommandRun, scratchCopyFolder: string | undefin
     }
     prepared.env = buildCompanionEnvironment(
         session,
-        checkCompanions(planned.selection, planned.check, command),
+        listCompanionTools(planned.selection, planned.check, command),
         prepared.env,
     );
     const result = await runCommands(planned, { session: scratchSession, tool, prepared, base });
@@ -148,7 +148,7 @@ function findUnavailableCompanion(
     command: string[],
     cwd: string,
 ): ExecutionFailure | undefined {
-    for (const name of checkCompanions(planned.selection, planned.check, command)) {
+    for (const name of listCompanionTools(planned.selection, planned.check, command)) {
         const required = getToolDeclaration(session.manifests.values(), name);
         const availability = findTool(session, cwd, required);
         if ('status' in availability) return availability;

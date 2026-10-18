@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { namingSettingsFor } from '#tests/setup/builders.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { checkIdentifier } from '#cli/checks/naming/names.ts';
 import { type Identifier } from '#cli/types/checks/general.ts';
+import { buildScopeNamingSettings } from '#tests/setup/builders.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
 import {
@@ -21,7 +21,7 @@ test('category limits inherit root and scope language settings while explicit ca
         tables: SWIFT_NAMING_LIMITS,
     });
     for (const { scope, characters, functions, words } of SCOPE_LIMITS) {
-        const effective = namingSettingsFor(text, scope);
+        const effective = buildScopeNamingSettings(text, scope);
         expect(effective.limitsFor('swift', 'functions')).toMatchObject({
             maxChars: functions,
             maxWords: words,
@@ -38,7 +38,7 @@ test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the ne
         'naming/identifiers',
     )!.check;
 
-    const effective = namingSettingsFor(buildSettingsText(['naming'], { rules: true }));
+    const effective = buildScopeNamingSettings(buildSettingsText(['naming'], { rules: true }));
     const category = language === 'swift' || language === 'sql' ? 'functions' : 'variables';
     const { maxChars: characters, maxWords: words } = effective.limitsFor(language, category);
     const context = { check, settings: effective, isTestFile: false };
@@ -74,7 +74,7 @@ test.each([...LINTER_CHECKED_CATEGORIES])(
             'naming/identifiers',
         )!.check;
 
-        const effective = namingSettingsFor(
+        const effective = buildScopeNamingSettings(
             buildSettingsText(['naming'], {
                 rules: true,
                 level: 'all',
@@ -109,7 +109,7 @@ test("a framework's naming rules come after the shipped ones and before the repo
         rules: true,
         tables: '[naming]\nbanned_words = ["handle", "use"]\n[[naming.override]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nignored_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n',
     });
-    const effective = namingSettingsFor(text);
+    const effective = buildScopeNamingSettings(text);
     const declaration: Identifier = {
         file: 'src/routes/auth.ts',
         line: 1,

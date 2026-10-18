@@ -71,7 +71,7 @@ export type RunOptions = RunReportOptions & {
 
 export type RunResult = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };
 
-export type IgnoreUse = { entry: IgnoreRecord; matched: number };
+export type IgnoreUse = { record: IgnoreRecord; matched: number };
 
 export type BuiltInCheckResult = { findings: Finding[]; files: string[] };
 

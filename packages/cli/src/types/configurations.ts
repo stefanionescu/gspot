@@ -247,8 +247,8 @@ export type ToolDeclaration = {
     when?: Optional<Pick<ConditionFields, 'setting' | 'level'>>[];
     replace?: string[];
     replace_key?: (
-        | { file: string; table?: string | undefined; key?: string | undefined; redirect?: false | undefined }
-        | { file: 'package.json'; key: string; redirect: true; table?: string | undefined }
+        | { file: string; table?: string | undefined; key?: string | undefined; pointer?: false | undefined }
+        | { file: 'package.json'; key: string; pointer: true; table?: string | undefined }
     )[];
 };
 

@@ -36,7 +36,7 @@ export function checkLargeFiles(input: CheckInput): Finding[] {
  * @param input the Git index and each scope.
  * @returns the findings.
  */
-export function checkIgnoredFilesTracked(input: CheckInput): Finding[] {
+export function checkLocalFiles(input: CheckInput): Finding[] {
     const scopes = input.selections.map(({ scope }) => scope);
     const matchers = input.selections.map(({ scope, selected, view }) => {
         const matches = buildPathMatcher(

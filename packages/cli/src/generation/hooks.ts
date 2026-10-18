@@ -42,10 +42,10 @@ function buildHookScript(name: HookName, runner: StartRunner, prefix: string): s
  * @returns the runner of the package manager, or mise when gspot has no root npm dependency.
  */
 export async function selectRunner(repositoryRoot: string): Promise<StartRunner> {
-    const manifest = readPackageJson(repositoryRoot, 'package.json');
+    const packageJson = readPackageJson(repositoryRoot, 'package.json');
     const hasDependency =
-        manifest?.dependencies?.[packageManifest.name] !== undefined ||
-        manifest?.devDependencies?.[packageManifest.name] !== undefined;
+        packageJson?.dependencies?.[packageManifest.name] !== undefined ||
+        packageJson?.devDependencies?.[packageManifest.name] !== undefined;
     const packageManager = hasDependency ? await selectPackageManager(repositoryRoot, []) : undefined;
     const name = packageManager === undefined ? 'mise' : packageManager.name;
     const runner = RUNNERS[name];

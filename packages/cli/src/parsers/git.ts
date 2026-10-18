@@ -62,7 +62,7 @@ async function readBlobLine(stream: GitStream): Promise<string> {
     throw new GspotError('git', INVALID_GIT_STREAM_MESSAGE);
 }
 
-async function readBytes(stream: GitStream, size: number): Promise<Buffer> {
+async function readStreamBytes(stream: GitStream, size: number): Promise<Buffer> {
     const bytes = Buffer.alloc(size);
     let filled = 0;
     while (filled < size) {
@@ -194,8 +194,8 @@ export async function* parseGitBlobs(
         cursor: 0,
     };
     for (const hash of requestedIds) {
-        const bytes = await readBytes(stream, parseBlobSize(await readBlobLine(stream), hash));
-        await readBytes(stream, 1);
+        const bytes = await readStreamBytes(stream, parseBlobSize(await readBlobLine(stream), hash));
+        await readStreamBytes(stream, 1);
         yield [hash, bytes];
     }
     for (let next = await stream.chunks.next(); next.done !== true; next = await stream.chunks.next()) {

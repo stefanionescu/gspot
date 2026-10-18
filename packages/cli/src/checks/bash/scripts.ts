@@ -52,7 +52,7 @@ export function readScripts(input: CheckInput): Promise<ScriptFile[]> {
  * @param line the number, counted from one.
  * @returns the function, or undefined at the top level.
  */
-export function findEnclosingFunction(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
+export function findFunctionAtLine(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
     return functions
         .filter((entry) => entry.start <= line && line <= entry.end)
         .toSorted((left, right) => left.end - left.start - (right.end - right.start))[0];

@@ -62,11 +62,11 @@ export function buildRunReport(input: ReportInput): RunReport {
         checks,
         ignores: uses
             .values()
-            .map(({ entry, matched }) => ({
-                check: entry.check,
-                ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-                ...(entry.paths === undefined ? {} : { paths: entry.paths }),
-                reason: entry.reason,
+            .map(({ record, matched }) => ({
+                check: record.check,
+                ...(record.rule === undefined ? {} : { rule: record.rule }),
+                ...(record.paths === undefined ? {} : { paths: record.paths }),
+                reason: record.reason,
                 matched,
             }))
             .toArray(),

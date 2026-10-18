@@ -4,9 +4,9 @@ import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { checkSvelte } from '#cli/checks/svelte.ts';
 import { fakeNpmTool } from '#tests/setup/fakes.ts';
 import * as processes from '#cli/system/processes.ts';
-import { runSvelteCheck } from '#cli/checks/svelte.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
@@ -77,7 +77,7 @@ test('svelte-check errors and warnings become findings at one-based positions wi
         buildProcessResult({ code: 1, stdout: SVELTE_CHECK_OUTPUT }),
     );
     const input = buildCheckInput(session, 'svelte/svelte-check');
-    expect(await runSvelteCheck(input)).toStrictEqual([
+    expect(await checkSvelte(input)).toStrictEqual([
         {
             check: 'svelte/svelte-check',
             file: 'src/Count.svelte',
@@ -97,7 +97,7 @@ test('svelte-check errors and warnings become findings at one-based positions wi
             fixable: false,
         },
     ]);
-    const nested = await runSvelteCheck(buildCheckInput(session, 'svelte/svelte-check', { scope: 'apps/web' }));
+    const nested = await checkSvelte(buildCheckInput(session, 'svelte/svelte-check', { scope: 'apps/web' }));
     expect(nested[0]?.file).toBe('apps/web/src/Count.svelte');
 });
 
@@ -112,7 +112,7 @@ test('a Windows file name becomes a forward-slash path', async () => {
             stdout: SVELTE_CHECK_OUTPUT.replace('src/Count.svelte', String.raw`src\\Count.svelte`),
         }),
     );
-    const findings = await runSvelteCheck(input);
+    const findings = await checkSvelte(input);
     expect(findings[0]?.file).toBe('src/Count.svelte');
 });
 
@@ -123,7 +123,7 @@ test('a svelte-check failure line is an error, not a clean result', async () => 
     using _run = spyOn(processes, 'spawnProcess').mockResolvedValue(
         buildProcessResult({ code: 1, stdout: '1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"' }),
     );
-    expect(await captureRejection(runSvelteCheck(input))).toBe(
+    expect(await captureRejection(checkSvelte(input))).toBe(
         'The svelte-check run failed: Failed to locate tsconfig or jsconfig',
     );
 });

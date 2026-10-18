@@ -66,7 +66,7 @@ function addRequiredPackages(names: Set<string>, manifests: readonly Manifest[])
  *
  * @returns each extra tool once.
  */
-export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, command?: string[]): string[] {
+export function listCompanionTools(scope: ScopeSelection, check: CheckDeclaration, command?: string[]): string[] {
     const manifest = scope.selected.find((owner) => owner.checks.includes(check));
     const gated = stripCoverageArguments(
         { selection: scope, check, ...(manifest === undefined ? {} : { manifest }) },
@@ -114,7 +114,7 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, 
  */
 export function listRequiredTools(check: PlannedCheck): string[] {
     const names = new Set(
-        [check.tool?.name, ...checkCompanions(check.selection, check.check), check.check.fix?.[0]].filter(
+        [check.tool?.name, ...listCompanionTools(check.selection, check.check), check.check.fix?.[0]].filter(
             (name) => name !== undefined,
         ),
     );

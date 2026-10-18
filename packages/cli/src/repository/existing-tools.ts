@@ -205,8 +205,8 @@ function hasToolSection(text: string, path: string, selector: Pick<FoundToolFile
  * @returns each hook setup and its location.
  */
 export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
-    const manifest = readPackageJson(repositoryRoot, PACKAGE_JSON);
-    const packageHooks = manifest !== undefined && Object.hasOwn(manifest, SIMPLE_GIT_HOOKS_KEY);
+    const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
+    const packageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
     const hooksPath = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
     const location = hooksPath === '' ? undefined : readHooksFolder(repositoryRoot);
     const hookNames = [

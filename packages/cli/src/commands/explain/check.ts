@@ -10,7 +10,7 @@ import type { CommandCheck } from '#cli/types/settings/values.ts';
 import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { getToolName, getToolDeclaration } from '#cli/configurations/tools.ts';
-import type { Found, CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
+import type { CheckFacts, Explanation, ExplainedCheck } from '#cli/types/commands/explain.ts';
 import { listRuleFiles, readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import type { Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
@@ -38,9 +38,9 @@ function getRulePage(
 }
 
 // List the settings that change the check, and the rules and crash pattern of its configuration.
-function getFacts(
+function buildCheckFacts(
     check: CheckDeclaration,
-    configuration: Found['configuration'],
+    configuration: ExplainedCheck['configuration'],
     manifests: Map<string, Manifest>,
     installedRules: ReadonlySet<string>,
 ): CheckFacts {
@@ -79,7 +79,7 @@ function getFacts(
 function formatRepositoryUse(
     session: Session | undefined,
     declared: CommandCheck | undefined,
-    configuration: Found['configuration'],
+    configuration: ExplainedCheck['configuration'],
 ): string[] {
     const lines: string[] = [];
     if (declared !== undefined)
@@ -98,7 +98,7 @@ function formatRepositoryUse(
 
 function describeCheck(
     session: Session | undefined,
-    found: Found,
+    found: ExplainedCheck,
     declared: CommandCheck | undefined,
     facts: CheckFacts,
 ): string {
@@ -141,12 +141,12 @@ export function explainCheck(
 ): Explanation | undefined {
     const manifests = readManifests(reads);
     const declared = session?.settingsFile.settings.commandChecks[checkName];
-    const found: Found | undefined =
+    const found: ExplainedCheck | undefined =
         listChecksById(manifests.values()).get(checkName) ??
         (declared === undefined ? undefined : { check: declared, configuration: undefined });
     if (found === undefined) return undefined;
     const { check, configuration } = found;
-    const facts = getFacts(
+    const facts = buildCheckFacts(
         check,
         configuration,
         manifests,

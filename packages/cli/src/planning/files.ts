@@ -1,3 +1,4 @@
+import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
@@ -5,7 +6,6 @@ import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { classifyFile, isInGspotFolder } from '#cli/repository/classify.ts';
 import { isInScope, joinScope, isOutsideChildren } from '#cli/repository/scopes.ts';
 import { type Manifest, type CheckDeclaration } from '#cli/types/configurations.ts';
-import { listCoveredFiles as listRepositoryCoveredFiles } from '#cli/repository/coverage.ts';
 import type { Session, PlanInputs, PlannedCheck, CheckCandidate } from '#cli/types/planning.ts';
 
 // List every tracked file under the scope.
@@ -27,7 +27,7 @@ function listProjectCheckFiles(context: PlanInputs, entry: CheckCandidate, scope
     const matches =
         owners === undefined
             ? applicationInputs
-            : listRepositoryCoveredFiles(owners, applicationInputs, {
+            : listCoveredFiles(owners, applicationInputs, {
                   selected: scope.selected,
                   scope: scopePath,
                   view: scope.view,
@@ -37,13 +37,13 @@ function listProjectCheckFiles(context: PlanInputs, entry: CheckCandidate, scope
 }
 
 // Per-file checks select their owners. Project checks keep all inputs after a declared trigger matches.
-function listCoveredFiles(context: PlanInputs, entry: CheckCandidate, scopePath: string): TrackedFile[] {
+function listCheckFiles(context: PlanInputs, entry: CheckCandidate, scopePath: string): TrackedFile[] {
     const { session, selection: scope } = context;
     const { check, manifest } = entry;
     if (check.runs !== 'files') return listProjectCheckFiles(context, entry, scopePath);
     if (!manifest)
         return session.repository.files.filter((file) => buildPathMatcher(check.files?.paths ?? [])(file.path));
-    return listRepositoryCoveredFiles(check.files ?? manifest.files, session.repository.files, {
+    return listCoveredFiles(check.files ?? manifest.files, session.repository.files, {
         selected: scope.selected,
         scope: scopePath,
         view: scope.view,
@@ -99,7 +99,7 @@ function listDeletedTriggers(context: PlanInputs, entry: CheckCandidate, scopePa
         return classifyFile(session.root, raw, prefix, { declarations: [], attributes: session.repository.attributes });
     });
     return stripIgnoredFiles(
-        listRepositoryCoveredFiles(owners, missing, { selected: scope.selected, scope: scopePath, view: scope.view }),
+        listCoveredFiles(owners, missing, { selected: scope.selected, scope: scopePath, view: scope.view }),
         check,
         scope,
     ).files.map((file) => file.path);
@@ -160,7 +160,7 @@ export function selectCheckFiles(
     const keepsChildScopes = check.runs !== 'files' || isRootOnlyCheck(manifest, check);
     let files =
         triggerPaths.length === 0
-            ? listCoveredFiles(context, entry, scopePath)
+            ? listCheckFiles(context, entry, scopePath)
             : listScopeFiles(context, scopePath, check.runs);
     if (!keepsChildScopes) files = files.filter((file) => isOutsideChildren(file.path, children));
     if (check.runs === 'files' && triggerPaths.length === 0)

@@ -23,7 +23,7 @@ version = "16.23.1"
 [[tool.replace_key]]
 file = "package.json"
 key = "stylelint"
-redirect = true
+pointer = true
 
 [[tool]]
 kind = "library"

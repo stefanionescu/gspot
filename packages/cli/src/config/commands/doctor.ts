@@ -7,7 +7,7 @@ export const SUGGESTION_SECTIONS = [
     { key: 'suggested', title: 'suggested, not selected' },
     { key: 'undetected', title: 'selected, but no matching files found' },
     { key: 'unowned', title: 'tool files gspot does not own' },
-    { key: 'written', title: 'existing lint jobs' },
+    { key: 'lintJobs', title: 'existing lint jobs' },
 ] as const;
 
 export const HEADER_BYTES = 600;

@@ -22,7 +22,7 @@ import { MISE_PROGRAM, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/conf
  *
  * @returns the next install step.
  */
-function installHint(tool: ToolDeclaration): string {
+function buildInstallHint(tool: ToolDeclaration): string {
     const installation = findToolProjectPackage(tool);
     if (installation !== undefined || tool.system !== true) {
         if (installation !== undefined || which.sync(MISE_PROGRAM, { nothrow: true }) !== null)
@@ -189,7 +189,7 @@ function inspectExecutable(
  * @returns the install note, with the next step.
  */
 export function formatUnavailableNote(tool: ToolDeclaration, inspection: ToolInspection): string {
-    const hint = inspection.hint ?? installHint(tool);
+    const hint = inspection.hint ?? buildInstallHint(tool);
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
     return inspection.state === 'outdated'
         ? `${tool.name} ${inspection.found ?? '?'} is below ${inspection.floor ?? '?'}. ${hint}`
@@ -215,7 +215,7 @@ export function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolIns
         root: installedRoot,
         cwd: isInside(relative(root, cwd)) ? join(installedRoot, relative(root, cwd)) : cwd,
         tool,
-        hint: installHint(tool),
+        hint: buildInstallHint(tool),
         timeoutSeconds: context.timeoutSeconds,
     };
     const want = tool.system === true ? undefined : tool.version;

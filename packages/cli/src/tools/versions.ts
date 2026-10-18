@@ -19,9 +19,13 @@ import { readHostPackage, readToolProjectPackage } from '#cli/repository/package
 // Find the version that the first package.json above a folder declares for the named package, searching upward.
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
-        const manifest = join(folder, PACKAGE_JSON);
-        if (files !== undefined && !isInGspotFolder(convertToPosixPath(relative(root, manifest)))) return undefined;
-        const parsed = files === undefined ? readHostPackage(manifest) : readToolProjectPackage(files, root, manifest);
+        const packageJsonPath = join(folder, PACKAGE_JSON);
+        if (files !== undefined && !isInGspotFolder(convertToPosixPath(relative(root, packageJsonPath))))
+            return undefined;
+        const parsed =
+            files === undefined
+                ? readHostPackage(packageJsonPath)
+                : readToolProjectPackage(files, root, packageJsonPath);
         if (parsed?.name === name) return parsed.version;
     }
     return undefined;

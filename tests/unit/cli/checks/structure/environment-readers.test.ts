@@ -29,8 +29,8 @@ test('Swift environment reads outside the env files are reported; comments and s
     );
     const result = await checkFindings(sandbox.path, 'structure/environment-readers');
     expect(result.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-        { file: 'Sources/Screen.swift', line: 1, rule: 'read-outside-owner' },
-        { file: 'Sources/Screen.swift', line: 4, rule: 'read-outside-owner' },
+        { file: 'Sources/Screen.swift', line: 1, rule: 'read-outside-reader' },
+        { file: 'Sources/Screen.swift', line: 4, rule: 'read-outside-reader' },
     ]);
     await Bun.write(
         `${sandbox.path}/gspot.toml`,
@@ -55,7 +55,7 @@ test('Python reads through os aliases are reported; shadowed and unrelated names
     const checks = initial.report.checks;
     expect(
         checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
-    ).toStrictEqual([3, 4, 5, 6].map((line) => ({ file: 'main.py', line, rule: 'read-outside-owner' })));
+    ).toStrictEqual([3, 4, 5, 6].map((line) => ({ file: 'main.py', line, rule: 'read-outside-reader' })));
     expect(initial.code).toBe(1);
     await Bun.write(
         `${sandbox.path}/main.py`,

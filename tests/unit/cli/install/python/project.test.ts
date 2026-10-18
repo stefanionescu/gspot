@@ -77,7 +77,7 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     const lockfileError: unknown = await preparePythonLockfile(buildInstallContext(session, log), {
         path: '.gspot/pyproject.toml',
         content: PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VERSION),
-        kind: 'tool_file',
+        kind: 'tool_project',
     }).catch((error: unknown) => error);
     expect(lockfileError).toMatchObject({ name: 'GspotError', code: 'installation' });
     expect(lockfileError instanceof Error ? lockfileError.message : '').toBe(

@@ -75,7 +75,7 @@ function parseSvelteCheckFindings(input: CheckInput, stdout: string): Finding[] 
  * @param input the scope to check.
  * @returns one finding for each error and warning.
  */
-export async function runSvelteCheck(input: CheckInput): Promise<Finding[]> {
+export async function checkSvelte(input: CheckInput): Promise<Finding[]> {
     using runtime = createScratchFolder();
     const target = join(runtime.path, TSCONFIG_SCRATCH_FOLDER, input.selection.scope.path, TSCONFIG_FILE);
     const tsconfigPath = writeScopeTsconfig(

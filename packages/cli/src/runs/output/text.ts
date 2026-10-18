@@ -23,7 +23,7 @@ function splitTrailingRule(finding: Finding): void {
     finding.message = text.slice(0, trailing.index).trim();
 }
 
-function buildFinding(
+function readMatchedFinding(
     check: string,
     parser: RegexParser,
     line: string,
@@ -59,7 +59,7 @@ export function parseRegexFindings(input: ReportInput): Finding[] {
     for (const line of text.split(/\r?\n/u)) {
         const groups = pattern.exec(line)?.groups;
         if (groups) {
-            const finding = buildFinding(check, parser, line, groups);
+            const finding = readMatchedFinding(check, parser, line, groups);
             findings.set(JSON.stringify(finding), finding);
         }
     }

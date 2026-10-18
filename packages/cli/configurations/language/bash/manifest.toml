@@ -3,7 +3,7 @@ allowed_words = ["Bash", "ShellCheck", "tree-sitter"]
 [configuration]
 description = "Shell scripts, hooks, and task files: ShellCheck, shfmt, a syntax check, and the structure rules for shell."
 suggests = []
-title = "Bash, zsh, and Bats scripts"
+title = "Shell scripts"
 
 [detect]
 extensions = [".sh", ".bash", ".zsh", ".bats"]

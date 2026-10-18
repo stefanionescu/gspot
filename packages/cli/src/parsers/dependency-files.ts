@@ -108,11 +108,11 @@ const readers: Record<string, DependencyFileParser> = {
     [PIPFILE]: parsePipfile,
 };
 
-function detectPackageRuntimes(path: string, manifest: PackageJson): Record<string, string> {
+function detectPackageRuntimes(path: string, packageJson: PackageJson): Record<string, string> {
     const runtimes: Record<string, string> = {};
     for (const runtime of JAVASCRIPT_RUNTIMES)
-        if (manifest.engines?.[runtime] !== undefined) runtimes[runtime] = `${runtime} in ${path} engines`;
-    for (const [name, command] of manifest.scripts === undefined ? [] : Object.entries(manifest.scripts)) {
+        if (packageJson.engines?.[runtime] !== undefined) runtimes[runtime] = `${runtime} in ${path} engines`;
+    for (const [name, command] of packageJson.scripts === undefined ? [] : Object.entries(packageJson.scripts)) {
         const runtime = RUNTIME_COMMAND.exec(command)?.[1];
         if (runtime !== undefined) runtimes[runtime] = `${path} script ${name}`;
     }

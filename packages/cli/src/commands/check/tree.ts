@@ -13,8 +13,8 @@ import type { Session, StageFilter } from '#cli/types/planning.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { RunReport, RunOptions } from '#cli/types/runs/check.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
-import { fixLines, formatRunReport } from '#cli/commands/check/report.ts';
 import { selectCheckImplementation } from '#cli/checks/implementations.ts';
+import { formatFixes, formatRunReport } from '#cli/commands/check/report.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 
@@ -138,7 +138,7 @@ async function readStagedSet(
 }
 
 // Collect the run filters: the changed paths, the staged paths, and the stage.
-async function runFilters(
+async function readRunFilters(
     session: Session,
     options: CheckOptions,
     signal: AbortSignal,
@@ -168,7 +168,7 @@ export async function checkTree(
     const session = await openSession(treeFolder, undefined, { installedRoot: revision?.installedRoot ?? treeFolder });
     refuseUnknownChecks(session, options.only);
     warnAboutHooks(session, revision);
-    const { changed, staging, stage, paths } = await runFilters(session, options, signal, revision);
+    const { changed, staging, stage, paths } = await readRunFilters(session, options, signal, revision);
     const result = await runChecks(
         session,
         buildRunOptions(options, { changed, staging, stage, paths }, signal, revision),
@@ -178,7 +178,7 @@ export async function checkTree(
         ...stripUndefined({ hook: options.hook }),
     });
     const text = result.fixes
-        ? `${fixLines(result.fixes, { isDryRun: options.isDryRun, verbose: options.verbose }).join('\n')}\n${reportText}`
+        ? `${formatFixes(result.fixes, { isDryRun: options.isDryRun, verbose: options.verbose }).join('\n')}\n${reportText}`
         : reportText;
     return {
         text: options.isDryRun ? `${text}Dry run: nothing was written.\n` : text,

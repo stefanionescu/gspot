@@ -98,8 +98,8 @@ function readPackageScripts(input: CheckInput, file: string): string[] | undefin
     const text = readCachedText(input.reads, file);
     if (text === undefined) return undefined;
     try {
-        const manifest = parseJsonFile(file, text, packageJsonSchema);
-        return manifest.scripts === undefined ? [] : Object.keys(manifest.scripts);
+        const packageJson = parseJsonFile(file, text, packageJsonSchema);
+        return packageJson.scripts === undefined ? [] : Object.keys(packageJson.scripts);
     } catch (error) {
         throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
     }

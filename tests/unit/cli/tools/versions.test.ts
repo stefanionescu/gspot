@@ -13,12 +13,12 @@ import { fakeTool, fakeNpmPackage } from '#tests/setup/fakes.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { type ToolDeclaration } from '#cli/types/configurations.ts';
 import { VERSION_OUTPUTS } from '#tests/data/install/installation.ts';
-import { buildProgramPin, inspectionContext } from '#tests/setup/builders.ts';
+import { buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {
     await using sandbox = await testdir();
     await fakeNpmPackage(sandbox.path, '.gspot/node_modules', 'teller', '5.0.1', "console.log('4.4.2');\n");
-    const inspection = inspectTool(inspectionContext(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
+    const inspection = inspectTool(buildInspectionContext(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
     expect(inspection.found).toBe('5.0.1');
     expect(inspection.state).toBe('ok');
 });
@@ -29,7 +29,7 @@ test('a shim that no configuration gives a version is missing, not broken', asyn
         'node_modules/.bin/shimmed': "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
     });
     await chmod(join(sandbox.path, 'node_modules/.bin/shimmed'), EXECUTABLE_FILE);
-    const inspection = inspectTool(inspectionContext(sandbox.path), buildProgramPin('shimmed', '3.8.1'));
+    const inspection = inspectTool(buildInspectionContext(sandbox.path), buildProgramPin('shimmed', '3.8.1'));
     expect(inspection.state).toBe('missing');
     expect(inspection.want).toBe('3.8.1');
 });
@@ -38,7 +38,7 @@ test.each(VERSION_OUTPUTS)('version output %s gives the state %s', async (script
     await using sandbox = await testdir();
     using _which = useExecutable(process.execPath);
     const tool = { ...buildProgramPin('version-teller', '3.8.1'), version_command: ['-e', script] };
-    const inspection = inspectTool(inspectionContext(sandbox.path), tool);
+    const inspection = inspectTool(buildInspectionContext(sandbox.path), tool);
     expect(inspection.state).toBe(state);
     expect(inspection.found).toBe(found);
     expect(inspection.note).toBe(note);
@@ -53,7 +53,7 @@ test('an npm package version does not hide a failed program', async () => {
         '5.0.1',
         "console.log('5.0.1'); process.exitCode = 7;\n",
     );
-    const inspection = inspectTool(inspectionContext(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
+    const inspection = inspectTool(buildInspectionContext(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
     expect(inspection.state).toBe('error');
     expect(inspection.note).toContain('exited 7');
 });
@@ -66,7 +66,7 @@ test('a manifest can declare the exit code of its version command without accept
         version_command: ['-e', 'console.log("version-help 3.8.1"); process.exitCode = 2;'],
         version_exit_code: 2,
     };
-    const context = inspectionContext(sandbox.path);
+    const context = buildInspectionContext(sandbox.path);
     const inspection = inspectTool(context, tool);
     expect(inspection.state).toBe('ok');
     expect(inspection.found).toBe('3.8.1');
@@ -108,7 +108,7 @@ test.each([
         version_command: ['-e', `console.log("GNU bash, version ${version}(1)-release")`],
         version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
     };
-    const inspection = inspectTool(inspectionContext(sandbox.path), tool);
+    const inspection = inspectTool(buildInspectionContext(sandbox.path), tool);
     expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
 });
 
@@ -129,7 +129,7 @@ test.each(['gitleaks', 'next'])('the %s pin is outdated below its floor and acce
     for (const version of [computeVersionBelow(floor), floor]) {
         const printed = name === 'next' ? `Next.js v${version}` : version;
         const tool = { ...pin, version_command: ['-e', `console.log(${JSON.stringify(printed)});`] };
-        expect(inspectTool(inspectionContext(sandbox.path), tool)).toMatchObject({
+        expect(inspectTool(buildInspectionContext(sandbox.path), tool)).toMatchObject({
             state: version === floor ? available : 'outdated',
             found: version,
             floor,
@@ -150,7 +150,7 @@ test.each([
     tool.min_version = '0.9.0';
     tool.env = { WRAPPER_VERSION: version };
     tool.installers['npm'] = { name: 'wrapper', version: '0.7.0' };
-    const inspection = inspectTool(inspectionContext(sandbox.path), tool);
+    const inspection = inspectTool(buildInspectionContext(sandbox.path), tool);
     expect(inspection.found).toBe(version);
     expect(inspection.state).toBe(state);
 });

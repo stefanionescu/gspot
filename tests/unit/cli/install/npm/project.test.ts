@@ -35,7 +35,7 @@ function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' |
 
 /** Wrap package.json text as the generated tool project file. */
 function buildNpmToolFile(content: string): GeneratedFile {
-    return { path: '.gspot/package.json', content, kind: 'tool_file' };
+    return { path: '.gspot/package.json', content, kind: 'tool_project' };
 }
 
 test.each([...TOOL_REQUIREMENTS])(

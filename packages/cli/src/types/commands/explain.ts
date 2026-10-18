@@ -38,7 +38,7 @@ export type ConfigurationExplanation = {
     alwaysSelected: boolean;
 };
 
-export type Found = ConfigurationCheck | { check: CommandCheck; configuration: undefined };
+export type ExplainedCheck = ConfigurationCheck | { check: CommandCheck; configuration: undefined };
 
 export type CheckFacts = {
     source: string;

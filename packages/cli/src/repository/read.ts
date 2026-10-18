@@ -60,8 +60,8 @@ export async function readRepository(
     const hasGit = isGitRepository(root);
     const index = hasGit ? await readIndexEntries(root) : [];
     const entries = await listTrackedFiles(root, index, { hasGit: hasGit });
-    using directory = openFiles(root);
-    const files: TrackedFile[] = [];
+    using files = openFiles(root);
+    const tracked: TrackedFile[] = [];
     const attributes = hasGit
         ? readAttributes(
               root,
@@ -75,14 +75,14 @@ export async function readRepository(
             const tags = await detectSwiftTags(file.path, readCachedBytes(reads, file.path).toString('utf8'));
             file.tags.push(...tags);
         }
-        files.push(file);
+        tracked.push(file);
     }
-    const dependencyFiles = await readDependencyFiles(reads, files);
-    const discovered = findScopes(files, dependencyFiles, manifests.values());
+    const dependencyFiles = await readDependencyFiles(reads, tracked);
+    const discovered = findScopes(tracked, dependencyFiles, manifests.values());
     const written: Scope[] = [
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes
-            .filter((entry) => directory.readStats(entry.path)?.isDirectory() === true)
+            .filter((entry) => files.readStats(entry.path)?.isDirectory() === true)
             .map(
                 (entry): Scope => ({
                     path: entry.path,
@@ -96,7 +96,7 @@ export async function readRepository(
         attributes,
         index,
         hasGit,
-        files,
+        files: tracked,
         dependencyFiles,
         scopes: [...new Map([...discovered, ...written].map((scope) => [scope.path, scope])).values()].toSorted(
             (left, right) => left.path.localeCompare(right.path),

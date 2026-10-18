@@ -6,7 +6,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { checkCompanions, listRequiredTools } from '#cli/planning/needed-tools.ts';
+import { listRequiredTools, listCompanionTools } from '#cli/planning/needed-tools.ts';
 import { COVERAGE_LIMITS, NODE_REQUIREMENTS, ARCHITECTURE_REQUIREMENTS } from '#tests/data/runs/plan.ts';
 
 test.each([...NODE_REQUIREMENTS])(
@@ -50,7 +50,7 @@ test.each(ARCHITECTURE_REQUIREMENTS.flatMap((entry) => LEVELS.map((level) => ({ 
         expect(names.includes('eslint-plugin-boundaries')).toBe(boundary[level]);
         const checks = planRun(session, { stage: 'all', only: ['javascript/eslint'] });
         for (const check of checks) {
-            expect(checkCompanions(check.selection, check.check).includes('eslint-plugin-boundaries')).toBe(
+            expect(listCompanionTools(check.selection, check.check).includes('eslint-plugin-boundaries')).toBe(
                 boundary[level],
             );
             expect(listRequiredTools(check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
@@ -76,7 +76,7 @@ describe.each([...COVERAGE_LIMITS])(
         test.each(['', 'app'])('scope %s needs the provider and lists it as a companion', (scope) => {
             const check = checks.find((planned) => planned.selection.scope.path === scope)!;
             expect(listRequiredTools(check).includes(provider)).toBe(lines !== 0);
-            expect(checkCompanions(check.selection, check.check, check.check.command)).toContain(provider);
+            expect(listCompanionTools(check.selection, check.check, check.check.command)).toContain(provider);
         });
     },
 );

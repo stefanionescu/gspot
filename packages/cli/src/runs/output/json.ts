@@ -27,7 +27,7 @@ function setPosition(finding: Finding, base: number, line: string | undefined, c
     if (column !== undefined && Number(column) >= base) finding.column = Number(column) - base + 1;
 }
 
-function buildFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
+function readJsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
     const { check, help, output } = shape;
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
         throw new Error('The JSON report contains an invalid finding object.');
@@ -82,7 +82,7 @@ export function parseJsonFindings(input: ReportInput): Finding[] {
         const shape = { check, help, output };
         const keys = output.children === undefined ? [] : output.children.split('.');
         return listAt(parsed, output.items).flatMap((item) =>
-            listChains([item], keys).map((chain) => buildFinding(shape, chain)),
+            listChains([item], keys).map((chain) => readJsonFinding(shape, chain)),
         );
     }) satisfies z.ZodType<Finding[]>;
     return parseReport('JSON', stdout.slice(start), schema);

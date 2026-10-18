@@ -89,7 +89,7 @@ function buildFileRow(
     session: Session,
     toolFile: FoundToolFile,
     tools: Set<string>,
-    configuration: Manifest,
+    manifest: Manifest,
 ): SuggestionRow {
     if (tools.has(toolFile.tool))
         return {
@@ -99,11 +99,11 @@ function buildFileRow(
                 ? `move any ${toolFile.table ?? toolFile.key ?? toolFile.tool} setting you still need into gspot.toml, then delete the section`
                 : 'move any setting you still need into gspot.toml, then delete the file',
         };
-    if (configuration.configuration.group === 'general') return buildInactiveFileRow(session, toolFile, configuration);
+    if (manifest.configuration.group === 'general') return buildInactiveFileRow(session, toolFile, manifest);
     return {
         path: toolFile.path,
-        note: `the ${configuration.configuration.name} configuration configures ${toolFile.tool}`,
-        command: `gspot add ${configuration.configuration.name}`,
+        note: `the ${manifest.configuration.name} configuration configures ${toolFile.tool}`,
+        command: `gspot add ${manifest.configuration.name}`,
     };
 }
 
@@ -153,7 +153,7 @@ export function listSuggestions(session: Session): Suggestions {
     return {
         ...listConfigurationSuggestions(session),
         unowned: listUnownedToolFiles(session, existingTools, tools, generated),
-        written: [
+        lintJobs: [
             ...readLintJobs(
                 session.root,
                 existingTools.ci.filter((path) => !workflows.has(path)),

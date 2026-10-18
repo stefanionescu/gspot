@@ -106,7 +106,7 @@ function buildSettingsSections(view: ScopeView, check: string): IgnoreSection[] 
  * @param options.purpose the explanation at the start of the ignore file.
  * @returns the ignore file text.
  */
-function ignoreFileText(options: { sections: IgnoreSection[]; purpose: string }): string {
+function formatIgnoreFile(options: { sections: IgnoreSection[]; purpose: string }): string {
     const { sections, purpose } = options;
     const seen = new Set<string>();
     const lines = sections.flatMap(({ title, patterns }) => {
@@ -162,7 +162,7 @@ function buildGlobSections(sections: IgnoreSection[]): string[] {
  * @returns the ignore file text.
  */
 function buildPrettierignore(context: ToolFileContext): string {
-    return ignoreFileText({
+    return formatIgnoreFile({
         sections: [
             ...buildIgnoreSections(context.session),
             ...buildSettingsSections(context.selection.view, 'format/prettier'),

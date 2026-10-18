@@ -114,7 +114,7 @@ export const IMPORT_EXTENSIONS = [
     '.node',
 ] as const;
 
-/** Restrict environment reads to their declared architecture role. */
+/** Restrict environment reads to the environment readers. */
 export const ENVIRONMENT_RULES = {
     'n/no-process-env': ['error', { allowedVariables: ['NODE_ENV'] }],
     'no-restricted-properties': ['error', { object: 'Bun', property: 'env' }, { object: 'Deno', property: 'env' }],
@@ -123,7 +123,8 @@ export const ENVIRONMENT_RULES = {
 export const ENVIRONMENT_SELECTOR = {
     selector:
         'MemberExpression[object.type="MetaProperty"][object.meta.name="import"][object.property.name="meta"][property.name="env"]',
-    message: 'Read the environment in its architecture owner and pass the value to other modules.',
+    message:
+        'Read environment variables only in the files that structure.environment_readers lists, and pass the value in.',
 } as const;
 
 /** Plugins used by the shared JavaScript rule tables. */

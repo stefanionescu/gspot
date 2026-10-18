@@ -3,7 +3,7 @@ allowed_words = ["JSON", "TOML", "YAML"]
 [configuration]
 always_selected = true
 description = "Checks JSON, YAML, TOML, XML, and related formats, and writes a tool file for each checker."
-title = "JSON, YAML, TOML, and XML files"
+title = "Data files"
 
 [files]
 extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".xml"]

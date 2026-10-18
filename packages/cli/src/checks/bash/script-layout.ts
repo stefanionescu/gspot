@@ -3,8 +3,8 @@ import { listCodeLines } from '#cli/parsers/bash.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import { readScripts, findFunctionAtLine } from '#cli/checks/bash/scripts.ts';
 import type { ScriptFile, ScriptReport } from '#cli/types/checks/language.ts';
-import { readScripts, findEnclosingFunction } from '#cli/checks/bash/scripts.ts';
 
 import {
     EXIT_CALL,
@@ -57,7 +57,7 @@ function checkLibraryLine(
         report(line.number, 'library-main', 'A sourced library does not call main.');
         return;
     }
-    if (findEnclosingFunction(file.functions, line.number) !== undefined) return;
+    if (findFunctionAtLine(file.functions, line.number) !== undefined) return;
     if (EXIT_CALL.test(line.text)) {
         report(line.number, 'library-exit', 'A sourced library does not exit.');
         return;

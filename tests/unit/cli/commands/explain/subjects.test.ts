@@ -65,7 +65,7 @@ test('a configuration name stays a name, and a tracked or ./ path explains the f
     expect(JSON.parse(configuration.stdout)).toMatchObject({
         kind: 'configuration',
         subject: 'bash',
-        title: 'Bash, zsh, and Bats scripts',
+        title: 'Shell scripts',
     });
     const file = await runGspot(sandbox.path, ['explain', './bash', '--json']);
     expect(file.code, file.stdout + file.stderr).toBe(0);

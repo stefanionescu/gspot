@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
 import { toolsSchema } from '#cli/settings/schema/tools.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
-import { OVERRIDING_KINDS } from '#cli/config/settings/values.ts';
+import { OVERRIDING_GROUPS } from '#cli/config/settings/values.ts';
 import { importRulesSchema } from '#cli/settings/schema/imports.ts';
 import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
@@ -22,7 +22,7 @@ function getSchemaPathRole(input: z.core.JSONSchema.JSONSchema): unknown {
 function isScalarConflict(previous: SettingDefault, manifest: Manifest, declaration: SettingDeclaration): boolean {
     if (previous.configuration === manifest.configuration.name) return false;
     if (isDeepStrictEqual(previous.value, declaration.default)) return false;
-    return !OVERRIDING_KINDS.has(manifest.configuration.group);
+    return !OVERRIDING_GROUPS.has(manifest.configuration.group);
 }
 
 function addDefault(known: KnownSettings, manifest: Manifest, declaration: SettingDeclaration): void {

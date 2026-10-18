@@ -203,7 +203,7 @@ async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
 
 // Delete a replaced file only when its bytes still match the plan.
 function deleteReplacedFiles(
-    log: Writer,
+    writer: Writer,
     removed: InitPrepared['deleted'],
     read: ReadonlyMap<string, FileContents | undefined>,
 ): string[] {
@@ -215,7 +215,7 @@ function deleteReplacedFiles(
         if (expected === undefined) kept.push(entry.path);
         else plans.push({ path: entry.path, before: expected, status: 'changed' });
     }
-    writePlans(log, plans);
+    writePlans(writer, plans);
     return kept;
 }
 
@@ -226,13 +226,13 @@ function deleteReplacedFiles(
  * @returns the lines to print.
  */
 function writeInitFiles(repositoryRoot: string, prepared: InitPrepared): string[] {
-    using log = openWriter(repositoryRoot);
+    using writer = openWriter(repositoryRoot);
     const { session, generated } = prepared;
-    writeSettings(log, prepared.settingsText, prepared.read.get(SETTINGS_FILE));
+    writeSettings(writer, prepared.settingsText, prepared.read.get(SETTINGS_FILE));
     const destinations = listExpectedPaths(session, generated);
-    const applied = writeGeneratedFiles(session, generated, log, { reviewedOriginals: prepared.read });
+    const applied = writeGeneratedFiles(session, generated, writer, { reviewedOriginals: prepared.read });
     const kept = deleteReplacedFiles(
-        log,
+        writer,
         prepared.deleted.filter((entry) => !destinations.has(entry.path)),
         prepared.read,
     );

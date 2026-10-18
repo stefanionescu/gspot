@@ -81,9 +81,9 @@ export function listToolOnlyPackages(dependencyFiles: DependencyFile[], manifest
  */
 export function listProjectDependencyNames(dependencyFiles: DependencyFile[], scope: string): string[] {
     const owner = dependencyFiles
-        .filter((manifest) => {
-            if (manifest.kind !== PACKAGE_JSON) return false;
-            const folder = manifest.path === PACKAGE_JSON ? '' : posix.dirname(manifest.path);
+        .filter((dependencyFile) => {
+            if (dependencyFile.kind !== PACKAGE_JSON) return false;
+            const folder = dependencyFile.path === PACKAGE_JSON ? '' : posix.dirname(dependencyFile.path);
             return folder === '' || scope === folder || scope.startsWith(`${folder}/`);
         })
         .toSorted((first, second) => second.path.length - first.path.length)[0];

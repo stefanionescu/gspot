@@ -133,15 +133,15 @@ const toolSchema = z
         replace_key: z
             .array(
                 z
-                    .discriminatedUnion('redirect', [
-                        replacementSchema.extend({ redirect: z.literal(false).optional() } satisfies SchemaShape<{
-                            redirect?: false | undefined;
+                    .discriminatedUnion('pointer', [
+                        replacementSchema.extend({ pointer: z.literal(false).optional() } satisfies SchemaShape<{
+                            pointer?: false | undefined;
                         }>),
                         replacementSchema.extend({
                             file: z.literal('package.json'),
                             key: z.string().min(1),
-                            redirect: z.literal(true),
-                        } satisfies SchemaShape<{ file: 'package.json'; key: string; redirect: true }>),
+                            pointer: z.literal(true),
+                        } satisfies SchemaShape<{ file: 'package.json'; key: string; pointer: true }>),
                     ])
                     .refine(
                         (row) => (row.key === undefined) !== (row.table === undefined),

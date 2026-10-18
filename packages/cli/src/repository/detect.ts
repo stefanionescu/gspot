@@ -56,21 +56,21 @@ function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFil
     };
 }
 
-function findExtensionEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
-    const extensions = detect.extensions.filter((extension) => tree.extensionCounts.has(extension));
+function findExtensionEvidence(detect: Manifest['detect'], contents: ScopeContents): DetectionEvidence | undefined {
+    const extensions = detect.extensions.filter((extension) => contents.extensionCounts.has(extension));
     if (extensions.length === 0) return undefined;
-    const count = extensions.reduce((sum, extension) => sum + (tree.extensionCounts.get(extension) ?? 0), 0);
+    const count = extensions.reduce((sum, extension) => sum + (contents.extensionCounts.get(extension) ?? 0), 0);
     return { evidence: `${String(count)} ${extensions.join(', ')} file${count === 1 ? '' : 's'}`, count };
 }
 
 function findContentEvidence(
     root: string,
     detect: Manifest['detect'],
-    tree: ScopeContents,
+    contents: ScopeContents,
 ): DetectionEvidence | undefined {
     for (const [path, pattern] of Object.entries(detect.content)) {
-        const target = joinScope(tree.scope, path);
-        const file = tree.candidates.find((candidate) => candidate.path === target);
+        const target = joinScope(contents.scope, path);
+        const file = contents.candidates.find((candidate) => candidate.path === target);
         if (file === undefined) continue;
         const text = readText(root, file.path);
         if (text !== undefined && new RegExp(pattern, 'u').test(text)) return { evidence: file.path };
@@ -81,15 +81,15 @@ function findContentEvidence(
 function findConfigurationEvidence(
     root: string,
     manifest: Manifest,
-    tree: ScopeContents,
+    contents: ScopeContents,
 ): ConfigurationEvidence | undefined {
     const { configuration } = manifest;
     const evidence =
         EVIDENCE_FINDERS.values()
-            .map((source) => source(manifest.detect, tree))
-            .find((found) => found !== undefined) ?? findContentEvidence(root, manifest.detect, tree);
+            .map((source) => source(manifest.detect, contents))
+            .find((found) => found !== undefined) ?? findContentEvidence(root, manifest.detect, contents);
     if (evidence !== undefined) return { configuration: configuration.name, group: configuration.group, ...evidence };
-    return configuration.always_selected && tree.scope === ''
+    return configuration.always_selected && contents.scope === ''
         ? { configuration: configuration.name, group: configuration.group, evidence: 'every repository' }
         : undefined;
 }
@@ -105,52 +105,52 @@ const EVIDENCE_FINDERS = [
     findPathEvidence,
 ];
 
-function findFilenameEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
+function findFilenameEvidence(detect: Manifest['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     const matches = buildFilenameMatcher(detect.filenames);
-    const file = tree.candidates.find((candidate) => matches(candidate.path));
+    const file = contents.candidates.find((candidate) => matches(candidate.path));
     return file === undefined ? undefined : { evidence: file.path };
 }
 
 // A project file names the project it marks, so use the file as evidence and its folder as a scope.
-function findProjectEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
+function findProjectEvidence(detect: Manifest['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     for (const pattern of detect.project_files) {
-        const found = tree.candidates.find((file) => findProjectFolder(file.path, pattern) !== undefined);
+        const found = contents.candidates.find((file) => findProjectFolder(file.path, pattern) !== undefined);
         if (found !== undefined) return { evidence: found.path };
     }
     return undefined;
 }
 
-function findDependencyEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
+function findDependencyEvidence(detect: Manifest['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     for (const pattern of detect.dependencies) {
         const matches = buildPathMatcher([pattern]);
-        const dependency = [...tree.dependencies].find(([name]) => matches(name));
+        const dependency = [...contents.dependencies].find(([name]) => matches(name));
         if (dependency !== undefined) return { evidence: `${dependency[0]} in ${dependency[1]}` };
     }
     return undefined;
 }
 
-function findShebangEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
-    const shebang = detect.shebangs.find((name) => tree.shebangs.has(name));
+function findShebangEvidence(detect: Manifest['detect'], contents: ScopeContents): DetectionEvidence | undefined {
+    const shebang = detect.shebangs.find((name) => contents.shebangs.has(name));
     return shebang === undefined ? undefined : { evidence: `${shebang} shebang` };
 }
 
-function findRuntimeEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
+function findRuntimeEvidence(detect: Manifest['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     for (const name of detect.runtimes) {
-        const evidence = tree.runtimes.get(name);
+        const evidence = contents.runtimes.get(name);
         if (evidence !== undefined) return { evidence };
     }
     return undefined;
 }
 
-function findPathEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
+function findPathEvidence(detect: Manifest['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     if (detect.paths.length === 0) return undefined;
     const matcher = buildPathMatcher(detect.paths);
-    const file = tree.candidates.find((candidate) => matcher(candidate.path));
+    const file = contents.candidates.find((candidate) => matcher(candidate.path));
     return file === undefined ? undefined : { evidence: file.path };
 }
 
-function findTagEvidence(detect: Manifest['detect'], tree: ScopeContents): DetectionEvidence | undefined {
-    const file = tree.candidates.find((candidate) => detect.tags.some((tag) => candidate.tags.includes(tag)));
+function findTagEvidence(detect: Manifest['detect'], contents: ScopeContents): DetectionEvidence | undefined {
+    const file = contents.candidates.find((candidate) => detect.tags.some((tag) => candidate.tags.includes(tag)));
     return file === undefined ? undefined : { evidence: file.path };
 }
 
@@ -171,14 +171,14 @@ export function detectConfigurations(
     scope = '',
 ): ConfigurationEvidence[] {
     const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, manifests.values());
-    const tree = buildScopeContents(
+    const contents = buildScopeContents(
         files.filter((file) => !toolOnlyPackages.has(file.path)),
-        dependencyFiles.filter((manifest) => !toolOnlyPackages.has(manifest.path)),
+        dependencyFiles.filter((dependencyFile) => !toolOnlyPackages.has(dependencyFile.path)),
         scope,
     );
     return manifests
         .values()
-        .map((manifest) => findConfigurationEvidence(repositoryRoot, manifest, tree))
+        .map((manifest) => findConfigurationEvidence(repositoryRoot, manifest, contents))
         .filter((evidence) => evidence !== undefined)
         .toArray();
 }
@@ -195,12 +195,12 @@ export function detectConditions(
     files: TrackedFile[],
     dependencyFiles: DependencyFile[],
 ): Set<Manifest['detect']> {
-    const tree = buildScopeContents(files, dependencyFiles, '');
+    const contents = buildScopeContents(files, dependencyFiles, '');
     return new Set(
         conditions.filter(
             (condition) =>
-                !condition.absent_dependencies.some((name) => tree.dependencies.has(name)) &&
-                EVIDENCE_FINDERS.some((source) => source(condition, tree) !== undefined),
+                !condition.absent_dependencies.some((name) => contents.dependencies.has(name)) &&
+                EVIDENCE_FINDERS.some((source) => source(condition, contents) !== undefined),
         ),
     );
 }

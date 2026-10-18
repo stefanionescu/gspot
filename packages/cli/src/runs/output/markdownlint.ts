@@ -7,22 +7,6 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { MARKDOWNLINT_SEVERITIES } from '#cli/config/runs/output.ts';
 import { type ReportInput, type MarkdownlintResult } from '#cli/types/runs/output.ts';
 
-// Turn one markdownlint entry into a finding.
-function buildFinding(check: string, help: string, entry: MarkdownlintResult, file: string): Finding {
-    return {
-        check,
-        file,
-        line: entry.lineNumber,
-        ...(entry.errorRange === null ? {} : { column: entry.errorRange[0] }),
-        rule: entry.ruleNames[0],
-        message: [entry.ruleDescription, entry.errorDetail, entry.errorContext]
-            .filter((part) => part !== null)
-            .join(': '),
-        help,
-        fixable: entry.fixInfo !== null,
-    };
-}
-
 const markdownlintReportSchema = z.array(
     z.object({
         fileName: z.string().min(1),
@@ -45,8 +29,16 @@ const markdownlintReportSchema = z.array(
 export function parseMarkdownlintFindings(input: ReportInput): Finding[] {
     const { check, stdout, help, cwd } = input;
     const entries = parseReport('Markdownlint', stdout, markdownlintReportSchema);
-    return entries.map((entry) => {
-        const file = resolve(cwd, entry.fileName);
-        return buildFinding(check, help, entry, file);
-    });
+    return entries.map((entry) => ({
+        check,
+        file: resolve(cwd, entry.fileName),
+        line: entry.lineNumber,
+        ...(entry.errorRange === null ? {} : { column: entry.errorRange[0] }),
+        rule: entry.ruleNames[0],
+        message: [entry.ruleDescription, entry.errorDetail, entry.errorContext]
+            .filter((part) => part !== null)
+            .join(': '),
+        help,
+        fixable: entry.fixInfo !== null,
+    }));
 }

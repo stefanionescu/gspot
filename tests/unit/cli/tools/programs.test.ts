@@ -19,7 +19,7 @@ import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { chmod, unlink, symlink, readFile } from 'node:fs/promises';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
-import { buildProgramPin, inspectionContext } from '#tests/setup/builders.ts';
+import { buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
 
 test("inspectTool finds the project compiler, and the original repository's compiler from a scratch copy", async () => {
     await using sandbox = await testdir();
@@ -34,12 +34,12 @@ test("inspectTool finds the project compiler, and the original repository's comp
     const compiler = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'tsc');
     const projectPath = join(work, 'node_modules/typescript/package.json');
     const project = packageJsonSchema.parse(parseJsonFile(projectPath, await readFile(projectPath, 'utf8')));
-    expect(inspectTool(inspectionContext(work), compiler)).toMatchObject({
+    expect(inspectTool(buildInspectionContext(work), compiler)).toMatchObject({
         state: 'system',
         found: project.version,
         path: join(work, 'node_modules/.bin', isWindows ? 'tsc.exe' : 'tsc'),
     });
-    expect(inspectTool(inspectionContext(snapshot, { installedRoot: work }), compiler)).toMatchObject({
+    expect(inspectTool(buildInspectionContext(snapshot, { installedRoot: work }), compiler)).toMatchObject({
         state: 'system',
         found: project.version,
         path: join(work, 'node_modules/.bin', isWindows ? 'tsc.exe' : 'tsc'),
@@ -56,7 +56,7 @@ test('version reads and runs use the companion programs of the chosen tool folde
     await fakeTool(sandbox.path, 'unrelated/companion', "console.log('9.0.0');\n");
     const env = { PATH: join(sandbox.path, 'unrelated') };
     const tool = { ...buildProgramPin('teller', '3.8.1'), env };
-    const read = inspectTool(inspectionContext(sandbox.path), tool);
+    const read = inspectTool(buildInspectionContext(sandbox.path), tool);
     expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
     const executed = await runTool([read.path!], {
         timeoutSeconds: SETTING_DEFAULTS.tool_timeout_seconds,
@@ -76,7 +76,7 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
     using _environment = overrideEnvironment({ MISE_DATA_DIR: join(sandbox.path, 'mise') });
     using _which = useExecutable(active);
     const inspection = inspectTool(
-        inspectionContext(sandbox.path),
+        buildInspectionContext(sandbox.path),
         getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'tsc'),
     );
     expect(inspection.state).toBe('system');
@@ -127,13 +127,13 @@ test('a tool project program linked outside the repository is refused before it 
     await chmod(join(folder.path, 'outside/teller'), EXECUTABLE_FILE);
     await chmod(join(root, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
     await symlink('../../../../outside/teller', binary);
-    expect(() => inspectTool(inspectionContext(root), buildProgramPin('teller', '1.2.3'))).toThrow(
+    expect(() => inspectTool(buildInspectionContext(root), buildProgramPin('teller', '1.2.3'))).toThrow(
         'Source link leaves the repository',
     );
     expect(await isOnDisk(join(folder.path, 'outside/executed'))).toBe(false);
     await unlink(binary);
     await symlink('../teller/run.sh', binary);
-    expect(inspectTool(inspectionContext(root), buildProgramPin('teller', '1.2.3')).state).toBe('ok');
+    expect(inspectTool(buildInspectionContext(root), buildProgramPin('teller', '1.2.3')).state).toBe('ok');
 });
 
 test('a missing npm tool does not fall back to the program in the repository node_modules', async () => {
@@ -146,12 +146,12 @@ test('a missing npm tool does not fall back to the program in the repository nod
         "await Bun.write('fallback-ran', ''); console.log('5.0.1');\n",
     );
     const tool = buildProgramPin('teller', '5.0.1', 'teller');
-    const missing = inspectTool(inspectionContext(sandbox.path), tool);
+    const missing = inspectTool(buildInspectionContext(sandbox.path), tool);
     expect(missing.state).toBe('missing');
     expect(missing.path).toBeUndefined();
     expect(await isOnDisk(join(sandbox.path, 'fallback-ran'))).toBe(false);
     await fakeNpmPackage(sandbox.path, '.gspot/node_modules', 'teller', '5.0.1', "console.log('5.0.1');\n");
-    expect(inspectTool(inspectionContext(sandbox.path), tool)).toMatchObject({
+    expect(inspectTool(buildInspectionContext(sandbox.path), tool)).toMatchObject({
         state: 'ok',
         found: '5.0.1',
     });
@@ -167,12 +167,12 @@ test('a Python tool uses the tool project environment, not the repository .venv'
     await chmod(join(sandbox.path, buildVenvExecutablePath('.venv', 'teller')), EXECUTABLE_FILE);
     const tool = buildProgramPin('teller', '1.2.3');
     tool.installers['pypi'] = { name: 'teller', version: '1.2.3' };
-    expect(inspectTool(inspectionContext(sandbox.path), tool).state).toBe('missing');
+    expect(inspectTool(buildInspectionContext(sandbox.path), tool).state).toBe('missing');
     await createFileTree(sandbox.path, {
         [buildVenvExecutablePath('.gspot/.venv', 'teller')]: `#!${process.execPath}\nconsole.log('1.2.3');\n`,
     });
     await chmod(join(sandbox.path, buildVenvExecutablePath('.gspot/.venv', 'teller')), EXECUTABLE_FILE);
-    expect(inspectTool(inspectionContext(sandbox.path), tool)).toMatchObject({
+    expect(inspectTool(buildInspectionContext(sandbox.path), tool)).toMatchObject({
         state: 'ok',
         found: '1.2.3',
     });

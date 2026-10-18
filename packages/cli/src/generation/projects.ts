@@ -41,7 +41,7 @@ export function buildMiseProject(manifests: Manifest[], reads: ReadCache): Gener
     return {
         path: MISE_TOOL_PROJECT_FILE,
         content: stringify({ tools }, { ...TOML_FORMAT, inlineTableStart: 1 }),
-        kind: 'tool_file',
+        kind: 'tool_project',
     };
 }
 
@@ -83,14 +83,14 @@ export function buildNpmProject({ root, scopes, manifests, isYarnBerry }: NpmPro
                 null,
                 JSON_INDENT,
             )}\n`,
-            kind: 'tool_file',
+            kind: 'tool_project',
         },
     ];
     if (isYarnBerry)
         files.push({
             path: YARN_SETTINGS,
             content: YARN_TOOL_PROJECT_SETTINGS,
-            kind: 'tool_file',
+            kind: 'tool_project',
         });
     return files;
 }
@@ -113,7 +113,7 @@ export function buildPythonProject(manifests: Manifest[], days: number): Generat
                 stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOML_FORMAT) +
                 `\n${UV_PROJECT_TABLE}\n` +
                 stringify({ package: false, 'exclude-newer': formatHold('uv-duration', days) }, TOML_FORMAT),
-            kind: 'tool_file',
+            kind: 'tool_project',
         },
     ];
 }

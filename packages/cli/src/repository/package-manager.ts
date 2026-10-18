@@ -45,8 +45,8 @@ function parsePackageManagerField(value: string): PackageManagerDeclaration {
 // Read the package manager from repository declarations and lockfiles.
 async function detectPackageManager(root: string, candidates: string[]): Promise<PackageManagerDeclaration> {
     for (const path of candidates) {
-        const manifest = readPackageJson(root, path);
-        const declared = manifest === undefined ? undefined : readPackageManagerDeclaration(manifest);
+        const packageJson = readPackageJson(root, path);
+        const declared = packageJson === undefined ? undefined : readPackageManagerDeclaration(packageJson);
         if (declared !== undefined) return declared;
         const detected = await detectNypmPackageManager(join(root, dirname(path)), NYPM_DETECTION_OPTIONS);
         if (detected !== undefined)
@@ -77,12 +77,12 @@ function isYarnBerry(packageManager: PackageManager): boolean {
 
 /**
  * Read the package manager declaration, before its version gets validated.
- * @param manifest the validated package.json.
+ * @param packageJson the validated package.json.
  * @returns packageManager first, then the first devEngines declaration, or no declaration.
  */
-function readPackageManagerDeclaration(manifest: PackageJson): PackageManagerDeclaration | undefined {
-    if (manifest.packageManager !== undefined) return parsePackageManagerField(manifest.packageManager);
-    const engines = manifest.devEngines?.packageManager;
+function readPackageManagerDeclaration(packageJson: PackageJson): PackageManagerDeclaration | undefined {
+    if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
+    const engines = packageJson.devEngines?.packageManager;
     const entry = Array.isArray(engines) ? engines[0] : engines;
     return entry?.name === undefined ? undefined : packageManagerDeclarationSchema.parse(entry);
 }

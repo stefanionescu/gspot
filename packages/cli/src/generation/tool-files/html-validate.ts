@@ -9,7 +9,7 @@ import {
 } from '#cli/config/generation/html.ts';
 
 // Write the HTML Validate rules for the level, without the ones that the ignores of the check turn off.
-function writeHtmlValidateFile(context: ToolFileContext, check: string, overrides: Record<string, unknown>): string {
+function buildHtmlValidateFile(context: ToolFileContext, check: string, overrides: Record<string, unknown>): string {
     const rules: Record<string, unknown> = { ...HTML_RULES, ...overrides };
     for (const rule of [...(context.level === 'all' ? [] : HTML_ALL_RULES), ...context.selection.view.rulesOff(check)])
         rules[rule] = 'off';
@@ -22,7 +22,7 @@ function writeHtmlValidateFile(context: ToolFileContext, check: string, override
  * @returns the rules of html/html-validate.
  */
 function buildSourceHtmlFile(context: ToolFileContext): string {
-    return writeHtmlValidateFile(context, 'html/html-validate', {});
+    return buildHtmlValidateFile(context, 'html/html-validate', {});
 }
 
 /**
@@ -31,7 +31,7 @@ function buildSourceHtmlFile(context: ToolFileContext): string {
  * @returns the rules of site/html-validate.
  */
 function buildBuiltHtmlFile(context: ToolFileContext): string {
-    return writeHtmlValidateFile(context, 'site/html-validate', HTML_BUILT_OVERRIDES);
+    return buildHtmlValidateFile(context, 'site/html-validate', HTML_BUILT_OVERRIDES);
 }
 
 export { buildBuiltHtmlFile, buildSourceHtmlFile };

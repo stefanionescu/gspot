@@ -215,7 +215,7 @@ export async function checkSupabaseDenoLint(input: CheckInput): Promise<Finding[
  * @param input the scope files to check.
  * @returns the findings.
  */
-export async function checkSupabaseDenoTypes(input: CheckInput): Promise<Finding[]> {
+export async function checkSupabaseDeno(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const entry of listFunctionEntries(input)) {
         const folder = posix.dirname(entry);

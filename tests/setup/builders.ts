@@ -145,7 +145,7 @@ stage = "commit"
 `;
 }
 /** The tool search state for tests that inspect installed tools. */
-export function inspectionContext(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
+export function buildInspectionContext(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return { root, timeoutSeconds: SETTING_DEFAULTS.tool_timeout_seconds, inspections: new Map(), ...fields };
 }
 
@@ -171,7 +171,7 @@ export function buildNamingSettings(): NamingSettings {
 }
 
 /** Read the naming settings that apply in one scope of this settings text. */
-export function namingSettingsFor(text: string, scope = ''): NamingSettings {
+export function buildScopeNamingSettings(text: string, scope = ''): NamingSettings {
     const reads = createReadCache(process.cwd());
     const settings = parseSettings(text, undefined, reads);
     const selected = selectForScope(settings, scope, readManifests(reads));

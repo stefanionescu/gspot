@@ -61,14 +61,14 @@ function buildToolProjectRows(everySelected: Manifest[], reads: ReadCache): Init
 function buildPinnedDependencyRows({ root, existingTools }: InitPlanInputs, requirements: Manifest[]): InitFileRow[] {
     const pinned = new Set(Object.keys(listToolProjectPins(requirements).npm));
     return existingTools.toolOnlyPackages.flatMap((path) => {
-        const manifest = readPackageJson(root, path) as PackageJson;
+        const packageJson = readPackageJson(root, path) as PackageJson;
         const names = [
             ...new Set(
                 Object.keys({
-                    ...manifest.dependencies,
-                    ...manifest.devDependencies,
-                    ...manifest.peerDependencies,
-                    ...manifest.optionalDependencies,
+                    ...packageJson.dependencies,
+                    ...packageJson.devDependencies,
+                    ...packageJson.peerDependencies,
+                    ...packageJson.optionalDependencies,
                 }),
             ),
         ]

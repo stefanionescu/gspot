@@ -49,16 +49,16 @@ function readSettingsFile(repositoryRoot: string): SettingsFileContents {
 
 /**
  * Write gspot.toml only while the file on disk still matches the one that the edit read.
- * @param log the file writer for settings.
+ * @param writer the file writer for settings.
  * @param text the new gspot.toml contents.
  * @param original the captured file bytes and mode.
  */
-function writeSettings(log: Writer, text: string, original: FileContents | undefined): void {
+function writeSettings(writer: Writer, text: string, original: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: original?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, original)) return;
-    writePlans(log, [
+    writePlans(writer, [
         {
-            ...planReplacement(log, {
+            ...planReplacement(writer, {
                 path: SETTINGS_FILE,
                 next,
                 canReplace: true,

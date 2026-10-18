@@ -1,9 +1,9 @@
 import { checkVale } from '#cli/checks/prose.ts';
+import { checkSvelte } from '#cli/checks/svelte.ts';
 import { checkExpoDoctor } from '#cli/checks/expo.ts';
 import { checkHtmlScripts } from '#cli/checks/html.ts';
 import { checkNextjsTsc } from '#cli/checks/nextjs.ts';
 import { checkSemgrep } from '#cli/checks/security.ts';
-import { runSvelteCheck } from '#cli/checks/svelte.ts';
 import { checkJscpd } from '#cli/checks/duplication.ts';
 import { checkNginxSyntax } from '#cli/checks/nginx.ts';
 import { checkAnsibleLint } from '#cli/checks/ansible.ts';
@@ -17,7 +17,6 @@ import { checkActionlint } from '#cli/checks/github-actions.ts';
 import { checkShellcheck } from '#cli/checks/bash/shellcheck.ts';
 import { checkPydoclint } from '#cli/checks/python/pydoclint.ts';
 import { checkDockerCompose } from '#cli/checks/docker/compose.ts';
-import { importLinter } from '#cli/checks/python/import-linter.ts';
 import { checkLoneFiles } from '#cli/checks/structure/lone-files.ts';
 import { checkLongFiles } from '#cli/checks/structure/long-files.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
@@ -25,8 +24,9 @@ import { checkSuppressions } from '#cli/checks/gspot/suppressions.ts';
 import { checkLockfiles } from '#cli/checks/dependencies/lockfiles.ts';
 import { checkDockerignore } from '#cli/checks/docker/dockerignore.ts';
 import { checkTranslationMessages } from '#cli/checks/translations.ts';
+import { checkFilesWithoutTarget } from '#cli/checks/xcode/project.ts';
 import { checkBashDocComments } from '#cli/checks/bash/doc-comments.ts';
-import { checkXcodeUntargetedFiles } from '#cli/checks/xcode/project.ts';
+import { checkImportLinter } from '#cli/checks/python/import-linter.ts';
 import { checkBashFunctionSize } from '#cli/checks/bash/function-size.ts';
 import { checkBashScriptLayout } from '#cli/checks/bash/script-layout.ts';
 import { checkReleaseAge } from '#cli/checks/dependencies/release-age.ts';
@@ -35,6 +35,7 @@ import { checkSiteUnusedAssets } from '#cli/checks/site/unused-assets.ts';
 import { checkGeneratedFiles } from '#cli/checks/gspot/generated-files.ts';
 import { checkBashInlineScripts } from '#cli/checks/bash/inline-scripts.ts';
 import { checkPythonPipInstalls } from '#cli/checks/python/pip-installs.ts';
+import { checkLargeFiles, checkLocalFiles } from '#cli/checks/repository.ts';
 import { checkTsc, checkJavascriptTsc } from '#cli/checks/typescript/tsc.ts';
 import { checkTypescriptTsconfig } from '#cli/checks/typescript/tsconfig.ts';
 import { checkForeignKeyIndexes } from '#cli/checks/postgres/foreign-keys.ts';
@@ -46,7 +47,6 @@ import { checkSwiftSkipReasons } from '#cli/checks/swift-tests/skip-reasons.ts';
 import { checkUnmatchedPatterns } from '#cli/checks/gspot/unmatched-patterns.ts';
 import { checkTrivialFunctions } from '#cli/checks/structure/trivial-functions.ts';
 import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/docs.ts';
-import { checkLargeFiles, checkIgnoredFilesTracked } from '#cli/checks/repository.ts';
 import { checkFileFolderClashes } from '#cli/checks/structure/file-folder-clashes.ts';
 import { checkEnvironmentReaders } from '#cli/checks/structure/environment-readers.ts';
 import { checkStaleGeneratorOutputs } from '#cli/checks/gspot/stale-generator-outputs.ts';
@@ -72,9 +72,9 @@ import {
     listSwiftlintToolFiles,
 } from '#cli/checks/swift/build.ts';
 import {
+    checkSupabaseDeno,
     checkServiceRoleKey,
     checkSupabaseDenoLint,
-    checkSupabaseDenoTypes,
     checkSupabaseStoragePolicies,
 } from '#cli/checks/supabase.ts';
 import {
@@ -89,7 +89,7 @@ import {
 const CHECK_IMPLEMENTATIONS = {
     'gspot/unmatched-patterns': { check: checkUnmatchedPatterns },
     'expo/expo-doctor': { check: checkExpoDoctor },
-    'svelte/svelte-check': { check: runSvelteCheck },
+    'svelte/svelte-check': { check: checkSvelte },
     'translations/messages': { check: checkTranslationMessages },
     'ansible/ansible-lint': { check: checkAnsibleLint },
     'nginx/config-test': { check: checkNginxSyntax },
@@ -104,7 +104,7 @@ const CHECK_IMPLEMENTATIONS = {
     'markdown/fences': { check: checkMarkdownFences },
     'duplication/jscpd': { check: checkJscpd },
     'secrets/env-examples': { check: checkSecretsEnvExamples },
-    'repository/local-files': { check: checkIgnoredFilesTracked },
+    'repository/local-files': { check: checkLocalFiles },
     'dependencies/release-age': { check: checkReleaseAge },
     'licenses/allowed': { check: checkAllowedLicenses },
     'dependencies/lockfiles': { check: checkLockfiles },
@@ -119,7 +119,7 @@ const CHECK_IMPLEMENTATIONS = {
     'site/unused-assets': { check: checkSiteUnusedAssets },
     'html/scripts': { check: checkHtmlScripts },
     'python/placeholder-docstrings': { check: checkPythonPlaceholderDocstrings },
-    'python/import-linter': { check: importLinter },
+    'python/import-linter': { check: checkImportLinter },
     'python/pip-installs': { check: checkPythonPipInstalls },
     'swift-tests/skip-reasons': { check: checkSwiftSkipReasons },
     'swift-tests/coverage': { check: checkSwiftTestsCoverage },
@@ -128,13 +128,13 @@ const CHECK_IMPLEMENTATIONS = {
     'xcode/xcstrings': { check: checkXcstrings },
     'xcode/assets': { check: checkXcodeAssets },
     'xcode/unused-assets': { check: checkXcodeUnusedAssets },
-    'xcode/files-without-target': { check: checkXcodeUntargetedFiles },
+    'xcode/files-without-target': { check: checkFilesWithoutTarget },
     'swift/build': { check: checkSwiftBuild },
     'swift/swiftlint-analyze': { check: checkSwiftlintAnalyze },
     'swift/periphery': { check: checkSwiftPeriphery },
     'supabase/storage-policies': { check: checkSupabaseStoragePolicies },
     'supabase/deno-lint': { check: checkSupabaseDenoLint },
-    'supabase/deno-check': { check: checkSupabaseDenoTypes },
+    'supabase/deno-check': { check: checkSupabaseDeno },
     'supabase/service-role-key': { check: checkServiceRoleKey },
     'postgres/row-level-security': { check: checkRowLevelSecurity },
     'postgres/grants': { check: checkPostgresGrants },

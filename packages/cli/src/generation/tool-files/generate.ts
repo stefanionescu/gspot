@@ -107,7 +107,7 @@ function getSelectedTarget(selected: ToolFileSelection, state: ToolFileGeneratio
     return state.targets.get(selected.owner.selection.scope.path)?.get(selected.toolFile.target);
 }
 
-function writePointers(
+function addPointerFiles(
     selected: ToolFileSelection,
     declarations: ToolFileSelection[],
     state: ToolFileGenerationState,
@@ -145,7 +145,7 @@ function buildToolFiles(session: Session): ToolFileGeneration {
     const declarations = listToolFileDeclarations(session);
     const state: ToolFileGenerationState = { targets: new Map(), files: new Map() };
     buildWholeFiles(session, declarations, state);
-    for (const entry of declarations) writePointers(entry, declarations, state);
+    for (const entry of declarations) addPointerFiles(entry, declarations, state);
     return { files: [...state.files.values()], targets: state.targets };
 }
 

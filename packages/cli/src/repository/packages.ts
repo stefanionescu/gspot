@@ -21,13 +21,13 @@ import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/
 import { type PackageJson, type InstalledDependency } from '#cli/types/parsers/dependency-files.ts';
 
 function listWorkspacePackages(root: string): Package[] {
-    const manifest = readPackageJson(root, PACKAGE_JSON);
+    const packageJson = readPackageJson(root, PACKAGE_JSON);
     for (const tool of [PnpmTool, LernaTool, RushTool]) {
         if (!tool.isMonorepoRootSync(root)) continue;
         return tool.getPackagesSync(root).packages;
     }
-    if (manifest === undefined) return [];
-    const { workspaces: declaration = [] } = manifest;
+    if (packageJson === undefined) return [];
+    const { workspaces: declaration = [] } = packageJson;
     const workspaces = Array.isArray(declaration) ? declaration : declaration.packages;
     if (workspaces.length === 0) return [];
     return YarnTool.getPackagesSync(root).packages;
@@ -60,14 +60,14 @@ function listWorkspaceDependencyFiles(source: string, scope: string, files: Trac
     const packages = new Map(ordered.map((path) => [path, readPackageJson(source, posix.join(path, PACKAGE_JSON))]));
     const pending = [projectRoot];
     for (const folder of pending) {
-        const manifest = packages.get(folder);
-        if (manifest === undefined)
+        const packageJson = packages.get(folder);
+        if (packageJson === undefined)
             throw new Error(`The workspace package.json is missing: ${posix.join(folder, PACKAGE_JSON)}`);
         const names = Object.keys({
-            ...manifest.dependencies,
-            ...manifest.devDependencies,
-            ...manifest.peerDependencies,
-            ...manifest.optionalDependencies,
+            ...packageJson.dependencies,
+            ...packageJson.devDependencies,
+            ...packageJson.peerDependencies,
+            ...packageJson.optionalDependencies,
         });
         const typescriptProject = readTsconfigProject(source, folder, [], reads);
         const sources =
@@ -174,16 +174,16 @@ export function readToolProjectPackage(files: Files, repositoryRoot: string, pat
 /**
  * Read the path and version of an installed package, hoisted or not, as its dependency file resolves it.
  * @param repositoryRoot the base folder for resolving the dependency file.
- * @param manifest the repository-relative package.json used as the module-resolution base.
+ * @param packageJsonPath the repository-relative package.json used as the module-resolution base.
  * @param name the package to resolve through the dependency file.
  * @returns the resolved package.json and its version, or undefined when the dependency does not exist.
  */
 export function findInstalledDependency(
     repositoryRoot: string,
-    manifest: string,
+    packageJsonPath: string,
     name: string,
 ): InstalledDependency | undefined {
-    const require = createRequire(join(repositoryRoot, manifest));
+    const require = createRequire(join(repositoryRoot, packageJsonPath));
     let path: string;
     try {
         path = require.resolve(`${name}/package.json`);

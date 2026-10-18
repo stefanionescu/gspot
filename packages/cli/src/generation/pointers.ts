@@ -130,7 +130,7 @@ function listPointerFieldTargets({
     scopePaths,
 }: PointerFieldInputs) {
     return (tool.replace_key ?? [])
-        .filter((replacement) => replacement.redirect === true)
+        .filter((replacement) => replacement.pointer === true)
         .flatMap((replacement) =>
             manifest.toolFiles
                 .map((file) => ({ file, target: buildScopeTarget(selection.scope.path, file, targets) }))
@@ -186,7 +186,7 @@ function buildPointerFieldEdits(
     const declarations = tools.flatMap((selected) =>
         listPointerFieldTargets({ ...selected, paths, targets, scopePaths }),
     );
-    const redirects = new Map(
+    const pointerFields = new Map(
         declarations.map((row) => [JSON.stringify([row.file, row.key, row.scope, row.target]), row]),
     );
     const packages = new Set([
@@ -195,13 +195,13 @@ function buildPointerFieldEdits(
             .filter((file) => file.kind === 'source' && posix.basename(file.path) === 'package.json')
             .map(({ path }) => path),
     ]);
-    if (redirects.size === 0) return [];
+    if (pointerFields.size === 0) return [];
     using files = openFiles(root);
     return [...packages].flatMap((path) => {
         const source = files.read(path);
         if (source === undefined) return [];
         const document = parseJsonFile(path, source.bytes.toString('utf8'));
-        return [...redirects.values()]
+        return [...pointerFields.values()]
             .filter(
                 (row) =>
                     Object.hasOwn(document, row.key) &&

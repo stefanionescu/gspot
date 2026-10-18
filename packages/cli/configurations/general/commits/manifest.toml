@@ -17,7 +17,7 @@ version = "21.2.2"
 [[tool.replace_key]]
 file = "package.json"
 key = "commitlint"
-redirect = true
+pointer = true
 
 [[tool_file]]
 target = "commitlint.json"

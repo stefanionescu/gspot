@@ -20,14 +20,14 @@ import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/command
  */
 async function saveSettings(repositoryRoot: string, options: SaveSettingsOptions): Promise<SaveSettingsResult> {
     const { input, change, summary } = options;
-    using log = openWriter(repositoryRoot);
+    using writer = openWriter(repositoryRoot);
     const result = updateSettings(repositoryRoot, input, change);
     const session = await openSession(repositoryRoot, { settings: result.settings, text: result.text });
     const generated = generate(session);
-    writeSettings(log, result.text, input.original);
+    writeSettings(writer, result.text, input.original);
     let report: ApplyReport;
     try {
-        report = writeGeneratedFiles(session, generated, log);
+        report = writeGeneratedFiles(session, generated, writer);
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         throw new GspotError(

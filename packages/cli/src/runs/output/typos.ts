@@ -51,7 +51,7 @@ function computeTypoPosition(
 }
 
 // Turn one typos entry into a finding: a filename typo when it has no line, otherwise a positioned one.
-function buildFinding(
+function readTypoFinding(
     check: string,
     help: string,
     entry: ReportedTypo,
@@ -97,7 +97,7 @@ export function parseTyposFindings(input: ReportInput): Finding[] {
     const linesByPath = new Map<string, Buffer[]>();
     return entries.map((entry) => {
         const path = resolve(cwd, entry.path);
-        return buildFinding(
+        return readTypoFinding(
             check,
             help,
             entry,

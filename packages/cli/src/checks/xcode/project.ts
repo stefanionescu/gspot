@@ -24,7 +24,7 @@ function getProjectFolder(projectFile: string): string {
  * @param input the scope files to read.
  * @returns the findings.
  */
-export function checkXcodeUntargetedFiles(input: CheckInput): Finding[] {
+export function checkFilesWithoutTarget(input: CheckInput): Finding[] {
     const projects = listSourcePaths(input.files, [PBXPROJ]).map((path) => ({
         path,
         ...parsePbxproj(readCachedBytes(input.reads, path).toString('utf8'), getProjectFolder(path)),

@@ -26,13 +26,12 @@ function buildEslintFile(context: ToolFileContext): string {
     const base = buildEslintContext(context);
     const { eslint, blockWriter } = base;
     const { fragmentParts, fragmentImports, fragmentSelectors } = collectFragments(session, target, base);
-    const config = eslint;
     const plugins = selectPlugins(base);
     const output: string[] = [
         serializeImports(plugins, fragmentImports),
-        serializeRuntimeSelectors(config.runtimes),
+        serializeRuntimeSelectors(eslint.runtimes),
         'export default [\n    // Shared ignore sections.\n',
-        indentEslintBlock(serializeBlock({ ignores: config.ignoredPaths }, '', undefined)),
+        indentEslintBlock(serializeBlock({ ignores: eslint.ignoredPaths }, '', undefined)),
         ',\n',
         serializeBlocks(blockWriter, buildBlocksBeforeFragments(base, selection.view, plugins)),
         '\n',
@@ -41,10 +40,10 @@ function buildEslintFile(context: ToolFileContext): string {
         serializeBlocks(blockWriter, buildBlocksAfterFragments(base, selection.view, fragmentSelectors)),
     ];
 
-    if (config.extra !== undefined) {
+    if (eslint.extra !== undefined) {
         output.push(
             '\n    // Your own ESLint options.\n',
-            indentEslintBlock(JSON.stringify(config.extra.entries, null, JSON_INDENT)),
+            indentEslintBlock(JSON.stringify(eslint.extra.entries, null, JSON_INDENT)),
             ',\n',
         );
     }

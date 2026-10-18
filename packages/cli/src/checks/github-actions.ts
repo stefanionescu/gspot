@@ -84,17 +84,17 @@ export async function checkActionlint(session: Session, planned: PlannedCheck): 
         if (prepared !== source) replacements.set(file.path, prepared);
     }
     if (replacements.size === 0) return runCheckCommand(session, planned);
-    using workspace = await copyIntoScratch({
+    using scratch = await copyIntoScratch({
         root: session.root,
         paths: session.repository.files.filter((file) => file.path.startsWith('.github/')).map((file) => file.path),
         dependencies: [],
     });
     // Actionlint discovers local reusable workflows only inside a Git project.
-    mkdirSync(join(workspace.path, GIT_FOLDER));
+    mkdirSync(join(scratch.path, GIT_FOLDER));
     for (const [path, source] of replacements) {
-        const target = join(workspace.path, path);
+        const target = join(scratch.path, path);
         chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
-    return await runCheckCommand(session, planned, { scratchRoot: workspace.path });
+    return await runCheckCommand(session, planned, { scratchRoot: scratch.path });
 }

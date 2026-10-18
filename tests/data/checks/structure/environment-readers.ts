@@ -20,7 +20,7 @@ main "$@"
 `,
         },
         settings: '[structure]\nenvironment_readers = ["scripts/environment.sh"]\n',
-        expected: { file: 'scripts/reader.sh', rule: 'read-outside-owner', line: 10 },
+        expected: { file: 'scripts/reader.sh', rule: 'read-outside-reader', line: 10 },
         corrected: {
             files: {
                 'scripts/environment.sh': '#!/usr/bin/env bash\nreadonly DEPLOY_TARGET="${1:-}"\n',

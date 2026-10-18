@@ -195,7 +195,7 @@ export function printProgress(progress: CheckProgress | undefined): void {
  * @param options.verbose whether to show passing checks and full tool output.
  * @returns the lines that describe the fixes.
  */
-export function fixLines(fixes: FixReport, options: { isDryRun: boolean; verbose: boolean }): string[] {
+export function formatFixes(fixes: FixReport, options: { isDryRun: boolean; verbose: boolean }): string[] {
     const { isDryRun, verbose } = options;
     printFailedFixers(fixes, verbose);
     const count = fixes.changed.length;

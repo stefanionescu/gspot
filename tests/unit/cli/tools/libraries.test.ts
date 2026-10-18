@@ -10,7 +10,7 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { inspectionContext, buildProcessResult } from '#tests/setup/builders.ts';
+import { buildProcessResult, buildInspectionContext } from '#tests/setup/builders.ts';
 import { SYSTEM_PLUGIN_REPORTS, PACKAGE_METADATA_FAILURES } from '#tests/data/install/installation.ts';
 
 test('a library is found only in the tool project', async () => {
@@ -20,7 +20,7 @@ test('a library is found only in the tool project', async () => {
         'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
     });
     expect(
-        inspectTool(inspectionContext(sandbox.path), {
+        inspectTool(buildInspectionContext(sandbox.path), {
             name: 'globals',
             kind: 'library' as const,
             version: '17.12.0',
@@ -28,7 +28,7 @@ test('a library is found only in the tool project', async () => {
         }).state,
     ).toBe('ok');
     expect(
-        inspectTool(inspectionContext(sandbox.path), {
+        inspectTool(buildInspectionContext(sandbox.path), {
             name: 'eslint-plugin-n',
             kind: 'library' as const,
             version: '18.3.0',
@@ -42,7 +42,7 @@ test('a library that is absent is missing, and one off its pin is reported', asy
     await createFileTree(sandbox.path, {
         '.gspot/node_modules/typescript/package.json': '{"name":"typescript","version":"6.0.0"}',
     });
-    const absent = inspectTool(inspectionContext(sandbox.path), {
+    const absent = inspectTool(buildInspectionContext(sandbox.path), {
         name: 'eslint-plugin-regexp',
         kind: 'library' as const,
         version: '3.3.0',
@@ -50,7 +50,7 @@ test('a library that is absent is missing, and one off its pin is reported', asy
     });
     expect(absent.state).toBe('missing');
     expect(absent.want).toBe('3.3.0');
-    const laterVersion = inspectTool(inspectionContext(sandbox.path), {
+    const laterVersion = inspectTool(buildInspectionContext(sandbox.path), {
         name: 'typescript',
         kind: 'library' as const,
         version: '5.9.3',
@@ -67,10 +67,10 @@ test('a system library is read from the chosen project, not from the tool projec
         'app/package.json': '{}',
     });
     const tool = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), '@vitest/coverage-v8');
-    const context = inspectionContext(sandbox.path, { cwd: join(sandbox.path, 'app') });
+    const context = buildInspectionContext(sandbox.path, { cwd: join(sandbox.path, 'app') });
     expect(inspectTool(context, tool)).toMatchObject({ name: tool.name, state: 'missing' });
     await using project = await testdir();
-    const selected = inspectionContext(project.path, { cwd: join(project.path, 'app') });
+    const selected = buildInspectionContext(project.path, { cwd: join(project.path, 'app') });
     await createFileTree(project.path, {
         'app/node_modules/@vitest/coverage-v8/package.json': '{"name":"@vitest/coverage-v8","version":"4.1.11"}',
     });
@@ -80,9 +80,9 @@ test('a system library is read from the chosen project, not from the tool projec
         found: '4.1.11',
         path: join(project.path, 'app/node_modules/@vitest/coverage-v8/package.json'),
     });
-    expect(inspectTool(inspectionContext(sandbox.path), tool).state).toBe('missing');
+    expect(inspectTool(buildInspectionContext(sandbox.path), tool).state).toBe('missing');
     await createFileTree(project.path, { 'app/node_modules/@vitest/coverage-v8/package.json': '{invalid' });
-    expect(() => inspectTool(inspectionContext(project.path, { cwd: join(project.path, 'app') }), tool)).toThrow(
+    expect(() => inspectTool(buildInspectionContext(project.path, { cwd: join(project.path, 'app') }), tool)).toThrow(
         'package.json is not valid JSON. Fix the file.',
     );
 });
@@ -97,7 +97,7 @@ test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $nam
     using versionRun = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(
         buildProcessResult({ code: report.code, stdout: report.stdout, missing: report.missing }),
     );
-    const inspected = inspectTool(inspectionContext(sandbox.path, { cwd: join(sandbox.path, 'app') }), tool);
+    const inspected = inspectTool(buildInspectionContext(sandbox.path, { cwd: join(sandbox.path, 'app') }), tool);
     expect(inspected.state).toBe(report.state);
     expect(versionRun).toHaveBeenCalledWith(
         ['/native/pytest', '--version', '--version'],
@@ -116,7 +116,7 @@ test('a library linked inside the tool project is accepted and one linked outsid
     await createFileTree(outside.path, { 'package.json': '{"name":"globals","version":"17.12.0"}' });
     const link = join(sandbox.path, '.gspot/node_modules/globals');
     await symlink('.store/globals', link);
-    const context = inspectionContext(sandbox.path);
+    const context = buildInspectionContext(sandbox.path);
     const tool = {
         name: 'globals',
         kind: 'library' as const,
@@ -168,7 +168,7 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         const path = join(sandbox.path, '.gspot/node_modules/teller/package.json');
         const original = JSON.stringify(manifest);
         await createFileTree(sandbox.path, { '.gspot/node_modules/teller/package.json': original });
-        const context = inspectionContext(sandbox.path);
+        const context = buildInspectionContext(sandbox.path);
         const tool = {
             name: 'teller',
             kind: 'library' as const,

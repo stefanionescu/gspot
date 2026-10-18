@@ -8,7 +8,7 @@ export type Suggestions = {
     suggested: ConfigurationSuggestion[];
     undetected: ConfigurationSuggestion[];
     unowned: SuggestionRow[];
-    written: SuggestionRow[];
+    lintJobs: SuggestionRow[];
 };
 
 export type DoctorReport = {

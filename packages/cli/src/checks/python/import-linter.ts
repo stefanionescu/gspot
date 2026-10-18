@@ -43,7 +43,7 @@ const importLinterSchema = z.object({
  * @param input the scope to check.
  * @returns each broken contract with its dependency chain.
  */
-export async function importLinter(input: CheckInput): Promise<Finding[]> {
+export async function checkImportLinter(input: CheckInput): Promise<Finding[]> {
     const configuration = importLinterFile(input);
     if (configuration === undefined) throw new GspotError('skip', 'This scope has no import-linter configuration.');
     const result = await runCheckTool(

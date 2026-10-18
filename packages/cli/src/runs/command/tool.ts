@@ -5,9 +5,9 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import type { CheckInput } from '#cli/types/runs/check.ts';
 import type { ToolSearch } from '#cli/types/tools/find.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
-import { checkCompanions } from '#cli/planning/needed-tools.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
+import { listCompanionTools } from '#cli/planning/needed-tools.ts';
 import { findExecutionFailure } from '#cli/runs/command/output.ts';
 import { runTool, getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
@@ -115,7 +115,7 @@ export async function runCheckTool(
         commandArguments,
         {
             ...options,
-            env: buildCompanionEnvironment(input, checkCompanions(input.selection, input.check), env),
+            env: buildCompanionEnvironment(input, listCompanionTools(input.selection, input.check), env),
             cancelSignal: input.cancelSignal,
         },
         input.selection.view,

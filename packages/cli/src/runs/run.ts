@@ -30,14 +30,14 @@ import {
 
 /**
  * Checks whether an ignore record covers a finding.
- * @param entry the `[[ignore]]` record.
+ * @param record the `[[ignore]]` record.
  * @param finding what a check reported.
  * @returns whether the ignore covers this finding.
  */
-function isEntryMatch(entry: IgnoreRecord, finding: Finding): boolean {
-    if (entry.check !== finding.check) return false;
-    if (entry.rule !== undefined && entry.rule !== finding.rule) return false;
-    return entry.paths === undefined || entry.paths.length === 0 || buildPathMatcher(entry.paths)(finding.file);
+function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
+    if (record.check !== finding.check) return false;
+    if (record.rule !== undefined && record.rule !== finding.rule) return false;
+    return record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file);
 }
 
 function planChecks(session: Session, options: RunOptions): RunnableCheck[] {
@@ -97,7 +97,7 @@ async function runOne(runState: RunState, executable: RunnableCheck): Promise<Ch
 
 function dropIgnoredFindings(result: CheckResult, uses: Map<IgnoreRecord, IgnoreUse>): void {
     result.findings = result.findings.filter((finding) => {
-        const use = uses.values().find(({ entry }) => isEntryMatch(entry, finding));
+        const use = uses.values().find(({ record }) => isIgnoreMatch(record, finding));
         if (use === undefined) return true;
         use.matched += 1;
         return false;
@@ -173,7 +173,7 @@ async function runChecks(opened: Session, options: RunOptions): Promise<RunResul
         session,
         options,
         staged: options.staged ? new Set(options.staged) : undefined,
-        uses: new Map(ignore.map((entry) => [entry, { entry, matched: 0 }])),
+        uses: new Map(ignore.map((record) => [record, { record, matched: 0 }])),
     };
     const active = executables.filter(({ check }) => isActive(check) || check.skip?.cause === 'ignore');
     const ran = await runActiveChecks(runState, active);

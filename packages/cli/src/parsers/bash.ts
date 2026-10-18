@@ -26,7 +26,7 @@ import {
 function findHighestParameter(node: Node): number {
     const expansions = node.descendantsOfType([...EXPANSION_NODES]);
     const positions = expansions.flatMap((expansion) => {
-        if (findEnclosingFunction(expansion)?.id !== node.id) return [];
+        if (findFunctionNode(expansion)?.id !== node.id) return [];
         const parameter = expansion.namedChildren[0]?.text;
         if (parameter === undefined) return [];
         if (ALL_POSITIONAL_PARAMETERS.has(parameter)) return [Number.POSITIVE_INFINITY];
@@ -37,7 +37,7 @@ function findHighestParameter(node: Node): number {
             .descendantsOfType('command')
             .some(
                 (command) =>
-                    findEnclosingFunction(command)?.id === node.id &&
+                    findFunctionNode(command)?.id === node.id &&
                     command.childForFieldName('name')?.text === SHIFT_COMMAND,
             )
     )
@@ -58,7 +58,7 @@ function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['f
         if (name === undefined || body === null) return [];
         const controls = node
             .descendantsOfType([...BASH_BRANCH_NODES, ...BASH_COMPOUND_NODES])
-            .filter((child) => findEnclosingFunction(child)?.id === node.id);
+            .filter((child) => findFunctionNode(child)?.id === node.id);
         const compoundNodes = controls.filter((child) => BASH_COMPOUND_NODES.includes(child.type));
 
         const nesting = Math.max(
@@ -91,7 +91,7 @@ function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['f
                     .descendantsOfType('variable_assignment')
                     .filter(
                         (write) =>
-                            findEnclosingFunction(write)?.id === node.id &&
+                            findFunctionNode(write)?.id === node.id &&
                             !ignored.some(
                                 (part) => part.startIndex <= write.startIndex && part.endIndex >= write.endIndex,
                             ),
@@ -139,7 +139,7 @@ function listLocalNames(root: Node): Set<string> {
         );
     return new Set(
         declarations.flatMap((declaration) => {
-            const owner = findEnclosingFunction(declaration)?.id;
+            const owner = findFunctionNode(declaration)?.id;
             if (owner === undefined) return [];
             return declaration.namedChildren.flatMap((child) => {
                 let name: string | undefined;
@@ -160,7 +160,7 @@ function collectTemporaryTargets(root: Node): TemporaryTargets {
     for (const assignment of assignments) {
         const name = assignment.childForFieldName('name')?.text;
         if (name === undefined) continue;
-        const key = JSON.stringify([findEnclosingFunction(assignment)?.id, name]);
+        const key = JSON.stringify([findFunctionNode(assignment)?.id, name]);
         counts.set(key, (counts.get(key) ?? 0) + 1);
         names.set(name, (names.get(name) ?? 0) + 1);
     }
@@ -168,7 +168,7 @@ function collectTemporaryTargets(root: Node): TemporaryTargets {
     const paths = assignments.flatMap((assignment) => {
         const name = assignment.childForFieldName('name')?.text;
         if (name === undefined || !isTemporaryValue(assignment)) return [];
-        const key = JSON.stringify([findEnclosingFunction(assignment)?.id, name]);
+        const key = JSON.stringify([findFunctionNode(assignment)?.id, name]);
         const path: TemporaryPath = { name, line: assignment.startPosition.row + 1, cleanupLines: [] };
         const isUnique = locals.has(key) ? counts.get(key) === 1 : names.get(name) === 1;
         if (isUnique) targets.set(key, path);
@@ -247,7 +247,7 @@ async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCac
                 .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND);
             recordRemovals(removals, {
                 lineOffset: body.startPosition.row + 1,
-                owner: findEnclosingFunction(trap)?.id,
+                owner: findFunctionNode(trap)?.id,
                 registry: {
                     ...registry,
                     targets: new Map([...registry.targets].filter(([, path]) => !assigned.has(path.name))),
@@ -312,13 +312,13 @@ export function listCodeLines(lines: string[]): NumberedLine[] {
 /**
  * Read expansions of the environment names that the environment readers declare.
  * @param syntaxRoot the parsed Bash source.
- * @param owned the variables declared by environment readers.
+ * @param readerVariables the variables declared by environment readers.
  * @returns the environment reads and their source positions.
  */
-export function readBashEnvironment(syntaxRoot: Node, owned: ReadonlySet<string>): EnvironmentRead[] {
+export function readBashEnvironment(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
     return syntaxRoot.descendantsOfType(['simple_expansion', 'expansion']).flatMap((expansion) =>
         expansion.namedChildren
-            .filter((node) => node.type === 'variable_name' && owned.has(node.text))
+            .filter((node) => node.type === 'variable_name' && readerVariables.has(node.text))
             .map((node) => ({
                 key: node.text,
                 line: node.startPosition.row + 1,
@@ -332,7 +332,7 @@ export function readBashEnvironment(syntaxRoot: Node, owned: ReadonlySet<string>
  * @param node the syntax point to start from.
  * @returns the containing function, or undefined outside a function.
  */
-export function findEnclosingFunction(node: Node): Node | undefined {
+export function findFunctionNode(node: Node): Node | undefined {
     let parent = node.parent;
     while (parent !== null) {
         if (parent.type === 'function_definition') return parent;
