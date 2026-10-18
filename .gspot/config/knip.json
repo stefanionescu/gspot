@@ -119,7 +119,7 @@
                 "tests/setup/integration.ts",
                 "packages/cli/src/checks/site/linkinator-process.ts",
                 "packages/cli/src/checks/site/purgecss-process.ts",
-                "packages/cli/configurations/language/javascript/eslint-runtime.mjs",
+                "packages/cli/configurations/language/javascript/tool-files/eslint-runtime.mjs",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",
@@ -165,7 +165,7 @@
             "entry": [
                 "src/checks/site/linkinator-process.ts",
                 "src/checks/site/purgecss-process.ts",
-                "configurations/language/javascript/eslint-runtime.mjs",
+                "configurations/language/javascript/tool-files/eslint-runtime.mjs",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",

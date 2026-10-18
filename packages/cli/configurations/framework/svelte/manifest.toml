@@ -57,10 +57,6 @@ fragment = true
 required_tools = ["eslint-plugin-svelte", "svelte-eslint-parser"]
 all_level_rules = ["svelte/no-useless-mustaches", "svelte/prefer-const", "svelte/no-dom-manipulating", "svelte/require-event-dispatcher-types"]
 
-[eslint.presets.recommended]
-package = "eslint-plugin-svelte"
-source = "configs.recommended"
-
 [[check]]
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
 help = "Fix each warning and error svelte-check prints; both fail the check."

@@ -32,7 +32,6 @@ export type SelectionWalk = {
 export type ParsedManifest = {
     defaults: Record<string, JsonValue>;
     eslint: {
-        presets: Record<string, { package: string; source: string }>;
         all_level_rules: EslintAllRules;
         /** A syntax selector, for every source file or for the files that a setting lists. */
         selectors: { selector: string; message: string; files_setting?: string | undefined }[];

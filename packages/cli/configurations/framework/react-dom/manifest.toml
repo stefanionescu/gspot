@@ -13,10 +13,6 @@ npm = "eslint-plugin-jsx-a11y"
 rule_prefix = "jsx-a11y"
 version = "6.10.2"
 
-[eslint.presets.accessibility]
-package = "eslint-plugin-jsx-a11y"
-source = "flatConfigs.recommended"
-
 [eslint]
 fragment = true
 required_tools = ["eslint-plugin-jsx-a11y"]

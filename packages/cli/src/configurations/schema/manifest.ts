@@ -223,14 +223,6 @@ export const manifestSchema = z
         defaults: z.record(z.string().min(1), z.json()).default({}),
         eslint: z
             .strictObject({
-                presets: z
-                    .record(
-                        z.string().min(1),
-                        eslintPresetSchema.pick({ package: true, source: true }) satisfies z.ZodType<
-                            Pick<EslintPresets[string], 'package' | 'source'>
-                        >,
-                    )
-                    .default({}),
                 all_level_rules: eslintAllRulesSchema.prefault([]),
                 selectors: z.array(selectorSchema).default([]),
                 rules_off: z

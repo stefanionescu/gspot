@@ -6,7 +6,6 @@ import { buildJscpdFile } from '#cli/generation/tool-files/jscpd.ts';
 import { buildTyposFile } from '#cli/generation/tool-files/typos.ts';
 import { buildEslintFile } from '#cli/generation/eslint/tool-file.ts';
 import { buildPrettierignore } from '#cli/generation/ignore-files.ts';
-import { ESLINT_RUNTIME_FILE } from '#cli/config/generation/eslint.ts';
 import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
 import { buildSquawkFile } from '#cli/generation/tool-files/squawk.ts';
 import { buildSemgrepFile } from '#cli/generation/tool-files/semgrep.ts';
@@ -58,7 +57,6 @@ import {
 } from '#cli/generation/tool-files/vale.ts';
 
 const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
-    [`javascript/${ESLINT_RUNTIME_FILE}`]: (context) => readAsset(`${context.manifest.folder}/${ESLINT_RUNTIME_FILE}`),
     'ansible/ansible-lint.yml': buildAnsibleLintFile,
     'prose/styles/gspot/acronyms.yml': buildAcronymsStyle,
     'nginx/gixy.cfg': buildGixyFile,

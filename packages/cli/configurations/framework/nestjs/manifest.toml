@@ -26,14 +26,6 @@ fragment = true
 required_tools = ["@darraghor/eslint-plugin-nestjs-typed"]
 all_level_rules = ["@darraghor/nestjs-typed/api-operation-summary-description-capitalized"]
 
-[eslint.presets.recommended]
-package = "@darraghor/eslint-plugin-nestjs-typed"
-source = "configs.flatRecommended"
-
-[eslint.presets.noSwagger]
-package = "@darraghor/eslint-plugin-nestjs-typed"
-source = "configs.flatNoSwagger"
-
 [[eslint.rules_off]]
 files = ["**/*.module.ts"]
 reason = "A Nest module is an empty decorated class that registers providers and controllers, which is the shape Nest asks for."

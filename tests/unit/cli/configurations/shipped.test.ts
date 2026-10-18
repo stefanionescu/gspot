@@ -8,6 +8,7 @@ import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { readRuleNamesFile } from '#cli/generation/rule-names.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
+import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { EACH_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
@@ -19,16 +20,12 @@ test('each lint-rule list names the pinned package version', () => {
         const names = readRuleNamesFile(path);
         expect(pins[names.package], path).toBe(names.version);
     }
-    for (const manifest of manifests.filter((manifest) => Object.keys(manifest.eslint.presets).length > 0)) {
-        const presets = readPresets(manifest);
-        expect(Object.keys(presets), manifest.configuration.name).toStrictEqual(Object.keys(manifest.eslint.presets));
-        for (const [name, declaration] of Object.entries(manifest.eslint.presets))
-            expect(presets[name], `${manifest.configuration.name}/${name}`).toMatchObject({
-                package: declaration.package,
-                source: declaration.source,
-                version: pins[declaration.package],
-            });
-    }
+    const presetFiles = new Set(
+        listAssets('configurations/').filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`)),
+    );
+    for (const manifest of manifests.filter(({ folder }) => presetFiles.has(`${folder}/${ESLINT_PRESETS_FILE}`)))
+        for (const [name, preset] of Object.entries(readPresets(manifest)))
+            expect(pins[preset.package], `${manifest.configuration.name}/${name}`).toBe(preset.version);
 });
 
 /** List every version pin of a tool by installer and package name. */

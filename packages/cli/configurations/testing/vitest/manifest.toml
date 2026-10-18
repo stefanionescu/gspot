@@ -40,10 +40,6 @@ fragment = true
 required_tools = ["@vitest/eslint-plugin"]
 all_level_rules = ["vitest/no-import-node-test", "vitest/prefer-strict-equal", "vitest/valid-title"]
 
-[eslint.presets.recommended]
-package = "@vitest/eslint-plugin"
-source = "configs.recommended"
-
 [[check]]
 command = ["vitest", "run", "--coverage", "--coverage.reporter=text-summary", "--coverage.thresholds.lines={setting:coverage.lines}", "--coverage.thresholds.branches={setting:coverage.branches}", "--coverage.thresholds.functions={setting:coverage.functions}", "--coverage.thresholds.statements={setting:coverage.statements}"]
 cwd = "scope"

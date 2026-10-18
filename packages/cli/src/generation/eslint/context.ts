@@ -74,11 +74,7 @@ function readEslintPresets(session: ToolFileContext['session']): Map<string, Esl
     const assets = getCachedValue(session.reads, presetAssets);
     return new Map(
         [...session.manifests.values()]
-            .filter(
-                (manifest) =>
-                    Object.keys(manifest.eslint.presets).length > 0 ||
-                    assets.has(`${manifest.folder}/${ESLINT_PRESETS_FILE}`),
-            )
+            .filter((manifest) => assets.has(`${manifest.folder}/${ESLINT_PRESETS_FILE}`))
             .map((manifest) => [
                 manifest.configuration.name,
                 getCachedMapValue(session.reads, presetInputs, manifest, () => readPresets(manifest)),

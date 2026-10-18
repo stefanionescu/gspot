@@ -55,14 +55,6 @@ fragment = true
 required_tools = ["eslint-plugin-astro", "eslint-plugin-jsx-a11y"]
 all_level_rules = ["astro/no-unused-css-selector", "astro/prefer-class-list-directive", "astro/prefer-object-class-list", "astro/prefer-split-class-list"]
 
-[eslint.presets.recommended]
-package = "eslint-plugin-astro"
-source = "configs.flat/recommended"
-
-[eslint.presets.accessibility]
-package = "eslint-plugin-astro"
-source = "configs.flat/jsx-a11y-recommended"
-
 [[eslint.rules_off]]
 files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
 reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
