@@ -6,6 +6,4 @@ export const SECONDS_PER_DAY = 86_400;
 
 export const MINUTES_PER_DAY = 1440;
 
-export const DAYS_PER_WEEK = 7;
-
 export const MILLISECONDS_PER_SECOND = 1000;

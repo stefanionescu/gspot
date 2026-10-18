@@ -143,4 +143,4 @@ function readPackageManagerVersion(
     return packageManagerSchema.parse({ name, version: result.stdout.trim() });
 }
 
-export { isYarnBerry, selectPackageManager, parsePackageManagerField, readPackageManagerVersion };
+export { isYarnBerry, selectPackageManager, readPackageManagerVersion };

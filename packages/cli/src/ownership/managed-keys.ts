@@ -76,4 +76,4 @@ function hasManagedKeys(output: FileEdit, current: FileContents): boolean {
     );
 }
 
-export { planKeyChanges, hasManagedKeys, openKeysDocument };
+export { planKeyChanges, hasManagedKeys };
