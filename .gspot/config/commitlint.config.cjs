@@ -69,11 +69,10 @@ module.exports = {
             2,
             "always",
             [
+                "docs",
                 "cli",
                 "eslint-plugin",
-                "docs",
-                "root",
-                "deps"
+                "tests"
             ]
         ]
     }

@@ -1,4 +1,4 @@
-# Documentation site
+# Documentation Site
 
 The documentation site uses Astro Starlight.
 
@@ -12,9 +12,6 @@ settings, and ESLint plugin reference pages from the implementation. `src/config
 
 The release deploys the site to the `gspot-docs` Worker at `generativespotting.com`, with the Wrangler login of the
 person who releases.
-
-A user who pins `npm:@gspothq/cli` to an exact version with mise gets a new release at once. mise delays a
-request for `latest` by its `minimum_release_age`: 24 hours, unless the repository sets another value.
 
 ## Asset licenses
 

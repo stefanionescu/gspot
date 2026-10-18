@@ -428,7 +428,7 @@ may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-
 scanner = "@socketsecurity/bun-security-scanner"
 
 [docs]
-allowed_urls = { value = ["^https://generativespotting\\.com/(?:configure/gspot-toml/|gspot\\.schema\\.json|start/concepts/#levels|start/install/|start/quickstart/|use/agent-rules/|use/ci/|use/findings/|use/hooks/)$", "^https://www\\.npmjs\\.com/package/@gspothq/cli$"], reason = "The built site contains these new routes; remove their exclusions after deployment. The npm package page returns HTTP 403 to automated requests." }
+allowed_urls = { value = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$"], reason = "The npm package page returns HTTP 403 to automated requests." }
 
 [licenses]
 allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
@@ -462,9 +462,6 @@ reason = "A lint plugin that runs at development time and is linked dynamically;
 name = "lightningcss"
 version = "1.33.0"
 reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
-
-[tools.commitlint]
-scopes = ["cli", "eslint-plugin", "docs", "root", "deps"]
 
 [tools.eslint]
 import_extension = "ts"
@@ -524,12 +521,6 @@ check = "javascript/eslint"
 rule = "@typescript-eslint/no-magic-numbers"
 paths = ["tests/data/**"]
 reason = "These declarations hold fixed test data; giving each literal another constant would duplicate the same data."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "package-json/no-redundant-files"
-paths = ["packages/cli/package.json"]
-reason = "The CLI package keeps its exact published file list explicit, including the executable named by bin."
 
 [[ignore]]
 check = "javascript/eslint"
@@ -609,21 +600,9 @@ reason = "The sample for the session-identifier rule is a URL with a session id.
 
 [[ignore]]
 check = "prose/vale"
-rule = "gspot.title-case"
-paths = ["docs/README.md"]
-reason = "DOC-037 requires the exact title Documentation site for this README; preserve its sentence case."
-
-[[ignore]]
-check = "prose/vale"
 rule = "Harper.NumericRangeEnDash"
 paths = ["docs/README.md"]
 reason = "CC0-1.0 is the official license identifier for the supplied Simple Icons assets, not a numeric range."
-
-[[ignore]]
-check = "prose/vale"
-rule = "write-good.E-Prime"
-paths = ["docs/README.md"]
-reason = "DOC-037 requires the exact sentence The sidebar is src/config/navigation.ts in this README."
 
 [[ignore]]
 check = "site/html-validate"
@@ -651,7 +630,7 @@ reason = "Starlight and Expressive Code write this markup."
 
 [[ignore]]
 check = "site/svgo"
-paths = ["docs/public/tools/jest.svg", "docs/public/tools/knip.svg", "docs/public/tools/pytest.svg", "docs/public/tools/trivy.svg", "docs/public/tools/typescript.svg", "docs/public/tools/vitest.svg", "docs/assets/readme/badges/npm.svg", "docs/assets/readme/badges/license.svg"]
+paths = ["docs/public/tools/knip.svg", "docs/public/tools/trivy.svg"]
 reason = "These exact supplied official assets retain their approved bytes; the owner removed the SVG byte-saving check in CHK050 and decision 25."
 
 [[ignore]]

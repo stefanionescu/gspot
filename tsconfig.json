@@ -20,7 +20,6 @@
         "paths": {
             "#cli/*": ["./packages/cli/src/*"],
             "#tests/*": ["./tests/*"],
-            "#docs/*": ["./docs/*"],
             "#cli-package": ["./packages/cli/package.json"],
             "#eslint-plugin/*": ["./packages/eslint-plugin/src/*"],
             "#eslint-plugin-package": ["./packages/eslint-plugin/package.json"],

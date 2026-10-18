@@ -20,14 +20,6 @@ gspot sets up linters, formatters, and security scanners for your repository and
 - Lint rules turned off without a reason
 - With `gspot set level all`: naming, structure, doc comments, duplication, and complexity
 
-A blocked commit lists each finding with its file, line, and rule:
-
-```text
-javascript/eslint  failed  2 findings
-  src/checkout.ts:4:8  @typescript-eslint/require-await  Async function 'pay' has no 'await' expression.
-  src/checkout.ts:8:13  no-empty  Empty block statement.
-```
-
 ## Install
 
 You need Git and Node.js 24.15 or newer. With mise, gspot also installs program tools such as Gitleaks and

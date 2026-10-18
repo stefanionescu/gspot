@@ -1,8 +1,5 @@
 # ![gspot](docs/assets/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/assets/readme/banner/dark.svg#gh-dark-mode-only)
 
-[![npm package](docs/assets/readme/badges/npm.svg)](https://www.npmjs.com/package/@gspothq/cli)
-[![License: Apache-2.0](docs/assets/readme/badges/license.svg)](LICENSE.md)
-
 gspot sets up linters, formatters, and security scanners for your repository and runs them before every commit.
 
 ## What it does
@@ -22,14 +19,6 @@ gspot sets up linters, formatters, and security scanners for your repository and
 - Formatting, broken links, and spelling
 - Lint rules turned off without a reason
 - With `gspot set level all`: naming, structure, doc comments, duplication, and complexity
-
-A blocked commit lists each finding with its file, line, and rule:
-
-```text
-javascript/eslint  failed  2 findings
-  src/checkout.ts:4:8  @typescript-eslint/require-await  Async function 'pay' has no 'await' expression.
-  src/checkout.ts:8:13  no-empty  Empty block statement.
-```
 
 ## Install
 
