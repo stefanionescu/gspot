@@ -15,14 +15,15 @@ import {
 } from './config/agents.ts';
 
 /**
- * Build the address of the Markdown copy of a docs page. Starlight serves the entry `a/index` at `/a/`.
+ * Build the address of the Markdown copy of a docs page. Starlight serves the entry `a/index` at `/a/`, and the home
+ * page has the ID `index`, or an empty ID when a page of its own wraps it in StarlightPage.
  * @param id - the collection ID
  * @returns the address, or undefined for a page without a copy
  */
 export function findMarkdownCopy(id: string): string | undefined {
     if (PAGES_WITHOUT_MARKDOWN.includes(id)) return undefined;
     const path = id.endsWith('/index') ? id.slice(0, -'/index'.length) : id;
-    return path === 'index' ? `/${MARKDOWN_COPY_FILE}` : `/${path}/${MARKDOWN_COPY_FILE}`;
+    return path === 'index' || path === '' ? `/${MARKDOWN_COPY_FILE}` : `/${path}/${MARKDOWN_COPY_FILE}`;
 }
 
 /**
