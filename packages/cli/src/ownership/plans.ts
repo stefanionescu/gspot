@@ -154,16 +154,6 @@ export function planManagedKeys(writer: Writer, path: string, changes: FileEdit[
 }
 
 /**
- * Remove a file only when it holds the reviewed contents.
- * @param path the destination.
- * @param expected the reviewed file contents.
- * @returns the removal plan.
- */
-export function planDeletion(path: string, expected: FileContents): WritePlan {
-    return { path, before: expected, status: 'changed' };
-}
-
-/**
  * Remove an owned file or its managed block, and keep the authored text.
  * @param writer the locked repository handle.
  * @param path the stale generated file.

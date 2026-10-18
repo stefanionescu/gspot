@@ -1,5 +1,4 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { quoteArgument } from '#cli/system/text.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { mergeIgnore } from '#cli/settings/write/text.ts';
 import { type Command } from '@commander-js/extra-typings';
@@ -21,13 +20,6 @@ function assertKnownCheck(checkName: string, settings: Settings, reads: ReadCach
     throw new GspotError('arguments', formatUnknownCheck(checkName, known));
 }
 
-function buildReasonHint(options: IgnoreOptions): string {
-    const rule = options.rule === undefined ? '' : ` --rule ${quoteArgument(options.rule)}`;
-    const paths =
-        options.paths === undefined ? '' : ` --paths ${options.paths.map((path) => quoteArgument(path)).join(' ')}`;
-    return `gspot ignore ${quoteArgument(options.check)}${rule}${paths} --reason "..."`;
-}
-
 /**
  * Write an ignore with its reason.
  * @param options the parsed flags.
@@ -36,7 +28,7 @@ function buildReasonHint(options: IgnoreOptions): string {
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const { root, input, settings, reads } = startSettingsEdit(options.cwd);
     assertKnownCheck(options.check, settings, reads);
-    const message = validateReason(`gspot ignore ${options.check}`, options.reason, buildReasonHint(options));
+    const message = validateReason(`gspot ignore ${options.check}`, options.reason);
     if (message !== undefined) throw new GspotError('settings', message);
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
     let saved: TomlTable = {};

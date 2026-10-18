@@ -31,7 +31,7 @@ function updateSettings(repositoryRoot: string, input: SettingsEdit, mutate: Mut
     parseSettings(stringify(table), repositoryRoot, reads);
     const next = isDeepStrictEqual(structuredClone(table), values) ? text : formatSettingsText(text, table);
     const settings = parseSettings(next, repositoryRoot, reads);
-    return { text: next, settings, changed: next !== text, original: input.original };
+    return { text: next, settings, changed: next !== text };
 }
 
 /**

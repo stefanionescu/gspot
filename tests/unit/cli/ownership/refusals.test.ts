@@ -6,7 +6,7 @@ import { OWNERSHIP_REFUSAL } from '#tests/data/ownership.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { planBlock, planDeletion, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
+import { planBlock, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
 
 test('a planned key edit writes nothing and refuses a later edit', async () => {
     await using folder = await testdir();
@@ -126,7 +126,7 @@ test.each(
         await change(path);
         const edited = log.files.read('authored.json');
         expect(() => {
-            writePlans(log, [planDeletion('authored.json', read)]);
+            writePlans(log, [{ path: 'authored.json', before: read, status: 'changed' }]);
         }).toThrow('authored.json changed before removal. Run the command again.');
         expect(() => {
             writePlans(log, [
@@ -145,7 +145,7 @@ test.each(
     {
         using log = openWriter(folder.path);
         const refreshed = log.files.read('authored.json')!;
-        writePlans(log, [planDeletion('authored.json', refreshed)]);
+        writePlans(log, [{ path: 'authored.json', before: refreshed, status: 'changed' }]);
         expect(log.files.read('authored.json')).toBeUndefined();
     }
 });

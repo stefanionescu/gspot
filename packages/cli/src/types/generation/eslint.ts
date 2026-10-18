@@ -183,7 +183,6 @@ export type EslintContext = {
     testFiles: string[];
     scope: string;
     scopeDependencies: string[];
-    testRuleNames: readonly string[];
     isAll: boolean;
     repositorySettings: Settings;
     /** Source file paths; a fragment gets only the files of its scope. */

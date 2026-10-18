@@ -7,7 +7,7 @@ export type SettingsFileContents = { text: string; original: FileContents };
 
 export type SettingsEdit = { text: string; table: TomlTable; values: TomlTable; original: FileContents };
 
-export type EditedSettings = { text: string; settings: Settings; changed: boolean; original: FileContents };
+export type EditedSettings = { text: string; settings: Settings; changed: boolean };
 
 export type Mutation = (written: TomlTable) => void;
 

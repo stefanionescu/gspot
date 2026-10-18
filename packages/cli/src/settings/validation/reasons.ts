@@ -23,12 +23,10 @@ function isLimitLoosening(direction: 'raising' | 'lowering', value: unknown, shi
  * Describe a missing or invalid reason for commands and saved settings.
  * @param where the setting or command that needs a reason.
  * @param reason the written text, if any.
- * @param command the CLI line that can fix it.
  * @returns the error, or undefined when the reason meets the requirements.
  */
-function validateReason(where: string, reason: string | undefined, command?: string): string | undefined {
-    if (reason === undefined)
-        return `${where} needs a reason. Add \`reason = "..."\` to this record.${command === undefined ? '' : ' Or run: ' + command}`;
+function validateReason(where: string, reason: string | undefined): string | undefined {
+    if (reason === undefined) return `${where} needs a reason. Add \`reason = "..."\` to this record.`;
     if (isReasonAccepted(reason)) return undefined;
     const refused = reason.trim() === '' ? 'an empty reason' : `"${reason}"`;
     return `${where} needs a reason that says something: ${refused} is refused. Write one sentence saying why.`;

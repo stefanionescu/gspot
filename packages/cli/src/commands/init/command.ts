@@ -5,9 +5,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { type Writer } from '#cli/types/ownership.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { planDeletion } from '#cli/ownership/plans.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { listExpectedPaths } from '#cli/apply/stale.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
@@ -21,6 +19,7 @@ import { readFormatTables } from '#cli/commands/init/format.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { planReplacedFiles } from '#cli/commands/init/replace.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
@@ -209,22 +208,14 @@ function deleteReplacedFiles(
     read: ReadonlyMap<string, FileContents | undefined>,
 ): string[] {
     const kept: string[] = [];
-    const plans = [];
+    const plans: WritePlan[] = [];
     for (const entry of removed) {
         const expected = read.get(entry.path);
-        if (expected === undefined) {
-            kept.push(entry.path);
-            continue;
-        }
-        const plan = planDeletion(entry.path, expected);
-        plans.push(plan);
-        const status = plan.status;
-        if (status === 'preserved') kept.push(entry.path);
+        // The writer deletes the file only when its bytes still match the reviewed contents.
+        if (expected === undefined) kept.push(entry.path);
+        else plans.push({ path: entry.path, before: expected, status: 'changed' });
     }
-    writePlans(
-        log,
-        plans.filter((plan) => plan.status !== 'preserved'),
-    );
+    writePlans(log, plans);
     return kept;
 }
 

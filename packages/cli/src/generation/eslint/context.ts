@@ -33,7 +33,6 @@ import {
 } from '#cli/generation/eslint/lint-rules.ts';
 import {
     CODE_LANGUAGES,
-    TEST_RULE_NAMES,
     NODE_SHEBANG_TAG,
     BARREL_FILES_RULE,
     EXPORTS_LAST_RULE,
@@ -192,7 +191,6 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
         scopeDependencies: Object.keys(
             getProjectDependencies(session.repository.dependencyFiles, selection.scope.path),
         ),
-        testRuleNames: TEST_RULE_NAMES,
         isAll: repositorySettings.level === 'all',
         sourceFiles: session.repository.files.flatMap((file) => (file.kind === 'source' ? [file.path] : [])),
     };

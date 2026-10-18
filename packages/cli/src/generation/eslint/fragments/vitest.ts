@@ -1,3 +1,4 @@
+import { TEST_RULE_NAMES } from '#cli/config/generation/eslint.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
 
@@ -7,9 +8,9 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildVitestFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'eslintFiles' | 'testRuleNames'>,
+    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'eslintFiles'>,
 ): EslintFragment {
-    const { eslintPresets, blockWriter, eslintFiles, testRuleNames } = context;
+    const { eslintPresets, blockWriter, eslintFiles } = context;
 
     const imports: string[] = ["import vitest from '@vitest/eslint-plugin';"];
 
@@ -21,7 +22,7 @@ function buildVitestFragment(
                 files: eslintFiles.tests,
                 rules: {
                     ...preset.blocks[0].rules,
-                    ...Object.fromEntries(testRuleNames.map((name) => [`vitest/${name}`, 'error'])),
+                    ...Object.fromEntries(TEST_RULE_NAMES.map((name) => [`vitest/${name}`, 'error'])),
                     'vitest/no-focused-tests': ['error', { fixable: false }],
                 },
             },
