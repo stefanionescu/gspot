@@ -34,6 +34,14 @@ kitz = []
         message: '[[scope]] record 1: `kitz` is not a gspot.toml setting.',
         correction: ['kitz', 'configurations'] as const,
     },
+    {
+        name: 'a renamed key names the key that is close to it',
+        text: `[dependencies]
+scanner = "@socketsecurity/bun-security-scanner"
+`,
+        message: '[dependencies]: `scanner` is not a gspot.toml setting. Did you mean `bun_scanner`?',
+        correction: ['scanner', 'bun_scanner'] as const,
+    },
 ] as const;
 
 export const REFUSED_RULE_OPTIONS = [

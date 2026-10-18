@@ -10,7 +10,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { readVersionPin } from '#cli/install/version-pin.ts';
+import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { formatUpToDate, formatApplyReport } from '#cli/apply/save-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/edit-settings.ts';

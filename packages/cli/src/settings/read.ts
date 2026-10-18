@@ -5,6 +5,9 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { limitsSchema } from '#cli/settings/schema/limits.ts';
 import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { readVersionPin } from '#cli/repository/version-pin.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
+import { RELEASE_NOTES_URL } from '#cli/config/settings/file.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
 import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts';
@@ -31,15 +34,26 @@ function parseSettings(text: string, repositoryRoot: string | undefined, reads: 
 }
 
 /**
- * Read gspot.toml from a repository root.
+ * Read gspot.toml from a repository root. When the repository last ran another gspot version, a refusal ends with the
+ * release notes of this version.
  * @param repositoryRoot the folder that contains gspot.toml.
  * @param reads the run cache.
  * @returns the settings and the file text.
  */
 function readSettings(repositoryRoot: string, reads: ReadCache): SettingsFile {
     const { text } = readSettingsFile(repositoryRoot);
-    const settings = parseSettings(text, repositoryRoot, reads);
-    return { settings, text };
+    try {
+        return { settings: parseSettings(text, repositoryRoot, reads), text };
+    } catch (error) {
+        const pinned = readVersionPin(repositoryRoot);
+        const { version } = packageManifest;
+        if (!(error instanceof GspotError) || error.code !== 'settings' || pinned === undefined || pinned === version)
+            throw error;
+        throw new GspotError(
+            'settings',
+            `${error.message}\nThis repository last ran gspot ${pinned}. The ${version} release notes name the settings and checks that changed: ${RELEASE_NOTES_URL}v${version}`,
+        );
+    }
 }
 
 function normalizeScopeTables(

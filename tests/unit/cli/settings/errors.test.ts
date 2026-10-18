@@ -5,12 +5,13 @@ import { openSession } from '#cli/session.ts';
 import { FIRST_READ } from '#cli/config/rules.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { parseSettings } from '#cli/settings/read.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { readSettings, parseSettings } from '#cli/settings/read.ts';
 import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText, validateSettingsText } from '#tests/setup/settings.ts';
 import { KEY_PATH_CASES, REVIEWED_REASON, UNKNOWN_KEY_CASES } from '#tests/data/settings/errors.ts';
@@ -71,6 +72,18 @@ test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {
             createReadCache(process.cwd()),
         ),
     ).not.toThrow();
+});
+
+test('a refusal names the release notes when the repository last ran another gspot version', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': '[hooks]\npsh = "all"\n', '.gspot/version': '0.0.1\n' });
+    const notes = `This repository last ran gspot 0.0.1. The ${packageManifest.version} release notes`;
+    expect(() => readSettings(sandbox.path, createReadCache(sandbox.path))).toThrow(notes);
+    await Bun.write(join(sandbox.path, '.gspot/version'), `${packageManifest.version}\n`);
+    const current = await captureRejection(
+        Promise.try(() => readSettings(sandbox.path, createReadCache(sandbox.path))),
+    );
+    expect(current).toContain('`psh` is not a gspot.toml setting.');
+    expect(current).not.toContain('release notes');
 });
 
 test('a tool option named reason is passed on and is not a gspot reason', () => {

@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
@@ -9,14 +9,16 @@ import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { type SettingsError } from '#cli/types/settings/file.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { formatCodeList, formatUnknownName } from '#cli/system/text.ts';
+import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
 import { listCheckIds, readManifests } from '#cli/configurations/manifests.ts';
+import { scopeSchema, settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declarations.ts';
 import { type Settings, type KnownSettings } from '#cli/types/settings/values.ts';
 import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
+import { formatCodeList, formatUnknownName, selectSimilarNames } from '#cli/system/text.ts';
 import { validateScopePaths, validateExtraOptions, validateDisabledRules } from '#cli/settings/validation/values.ts';
 
 // The limit fields that some code reads for one language.
@@ -49,6 +51,23 @@ function formatSettingsIssue(issue: z.core.$ZodIssue): string[] {
     return issue.keys.map((key) => `${SETTINGS_FILE}: ${formatUnknownKey(segments, key)}`);
 }
 
+// Step from a table or record list to the schema of one key or record.
+function selectChildSchema(schema: z.ZodType | undefined, part: KeyPath[number]): z.ZodType | undefined {
+    const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
+    if (table instanceof z.ZodArray && typeof part === 'number') return table.element as z.ZodType;
+    return table instanceof z.ZodObject ? (table.shape[String(part)] as z.ZodType | undefined) : undefined;
+}
+
+// Suggest the keys of the same table that look like an unknown key. The path starts at the root, or at a scope.
+function suggestTableKeys(segments: KeyPath, key: string): string {
+    const [record, , ...scopeFields] = segments;
+    let schema: z.ZodType | undefined = record === 'scope' ? scopeSchema : settingsSchema;
+    for (const part of record === 'scope' ? scopeFields : segments) schema = selectChildSchema(schema, part);
+    const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
+    const near = table instanceof z.ZodObject ? selectSimilarNames(key, Object.keys(table.shape)) : [];
+    return near.length > 0 ? ` Did you mean ${formatCodeList(near)}?` : '';
+}
+
 // Name one key that a table does not accept. Say where it belongs, or which keys the table has.
 function formatUnknownKey(segments: KeyPath, key: string): string {
     const [record, , ...scopeFields] = segments;
@@ -59,7 +78,7 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
     const recordName = [...scopeFields, key].map(String).join('.');
     if (record === 'scope' && Object.hasOwn(fields, recordName))
         return `Write [[${recordName}]] at the root.${fields[recordName]?.includes('paths') === true ? ' Its paths say where it applies.' : ''}`;
-    return `${describeKeyPlace(segments)}: \`${key}\` is not a gspot.toml setting. See ${SETTINGS_REFERENCE_URL} for every key.`;
+    return `${describeKeyPlace(segments)}: \`${key}\` is not a gspot.toml setting.${suggestTableKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every key.`;
 }
 
 function describeKeyPlace(segments: KeyPath): string {

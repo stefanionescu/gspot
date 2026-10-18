@@ -5,10 +5,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { assertVersionPin } from '#cli/install/version-pin.ts';
+import { readVersionPin } from '#cli/repository/version-pin.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { runGspot, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
-import { readVersionPin, assertVersionPin } from '#cli/install/version-pin.ts';
 
 test('a failed version pin write leaves the old version', async () => {
     await using repository = await testdir();
