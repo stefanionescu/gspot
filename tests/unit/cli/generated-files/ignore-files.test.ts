@@ -75,8 +75,8 @@ test.each([...PATH_IGNORE_CASES])(
 );
 
 test.each([...LANGUAGE_IGNORES])(
-    "$name: Prettier ignores only the selected languages' folders, with the markdownlint pointer where JavaScript is selected",
-    async ({ settings, ignored, absent, markdownPointer }) => {
+    "$name: Prettier ignores only the selected languages' folders, and a markdownlint pointer at the root",
+    async ({ settings, ignored, absent }) => {
         await using sandbox = await testdir({
             'gspot.toml': `level = "all"\n${settings}`,
             'source.js': 'const value = 1;\n',
@@ -102,8 +102,7 @@ test.each([...LANGUAGE_IGNORES])(
         }
         for (const path of absent) expect(internal.split('\n')).not.toContain(path);
         expect(files.has('prettier.config.mjs')).toBe(true);
-        expect(files.has('.markdownlint-cli2.mjs')).toBe(markdownPointer === '.markdownlint-cli2.mjs');
-        if (markdownPointer !== '') expect(files.has(markdownPointer)).toBe(true);
+        expect(files.has('.markdownlint.jsonc')).toBe(true);
         expect(files.has('.prettierignore')).toBe(true);
         expect(files.has('.gspot/configurations/general/format/.prettierignore')).toBe(false);
     },

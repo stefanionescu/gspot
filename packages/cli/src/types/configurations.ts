@@ -94,6 +94,8 @@ export type ParsedManifest = {
                   body?: string | undefined;
                   /** A line for the header of the pointer, after the tool file path. */
                   note?: string | undefined;
+                  /** A scope that shares the tool file of the root uses the root pointer, because the tool reads the nearest one. */
+                  inherit?: boolean | undefined;
               }
             | undefined;
         per_scope: boolean;

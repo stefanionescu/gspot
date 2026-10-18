@@ -11,7 +11,7 @@ import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildPointerFiles } from '#cli/generation/pointers.ts';
 import type { WholeToolFile } from '#cli/types/generation/files.ts';
-import { MODULE_VALUE, MODULE_TARGETS } from '#tests/data/generated-files/tool-files.ts';
+import { MODULE_VALUE, MODULE_TARGETS, MARKDOWNLINT_SCOPE_TABLES } from '#tests/data/generated-files/tool-files.ts';
 
 test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
     'XCTest folder pointers keep their SwiftLint overrides in scope "%s"',
@@ -69,7 +69,7 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
     },
 );
 
-test.each(['javascript', 'markdown'])(
+test.each(['javascript'])(
     `%s pointers import modules from folders with URI characters and Unicode`,
     async (configuration) => {
         await using sandbox = await testdir();
@@ -114,3 +114,19 @@ test.each(['javascript', 'markdown'])(
         expect(JSON.parse(toolResult.stdout)).toStrictEqual(components.map(() => MODULE_VALUE));
     },
 );
+
+test('a scope gets its own markdownlint pointer only when its rules differ from the root', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['markdown'], { tables: MARKDOWNLINT_SCOPE_TABLES }),
+        'README.md': '# Root\n',
+        'same/README.md': '# Same\n',
+        'other/README.md': '# Other\n',
+    });
+
+    const paths = generate(await openSession(sandbox.path)).files.map(({ path }) => path);
+
+    expect(paths).toContain('.markdownlint.jsonc');
+    expect(paths).not.toContain('same/.markdownlint.jsonc');
+    expect(paths).toContain('other/.markdownlint.jsonc');
+});

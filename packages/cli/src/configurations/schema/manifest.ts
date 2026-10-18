@@ -66,6 +66,7 @@ const pointerSchema = z.strictObject({
     folders: z.array(z.string().min(1)).min(1).optional(),
     body: z.string().optional(),
     note: z.string().min(1).optional(),
+    inherit: z.boolean().optional(),
 } satisfies SchemaShape<NonNullable<ToolFileDeclaration['pointer']>>);
 
 // A tool-file consumer accepts one declared name or a nonempty list of names.

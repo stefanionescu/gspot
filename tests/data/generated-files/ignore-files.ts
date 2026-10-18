@@ -30,21 +30,18 @@ export const LANGUAGE_IGNORES = [
         settings: 'configurations = ["format", "markdown", "python"]\n',
         ignored: ['.venv/'],
         absent: ['.build/', 'Package.resolved'],
-        markdownPointer: '',
     },
     {
         name: 'Swift without JavaScript',
         settings: 'configurations = ["format", "markdown", "swift"]\n',
         ignored: ['.build/', 'DerivedData/', 'Pods/'],
         absent: ['node_modules/', 'package-lock.json', '.venv/', 'uv.lock'],
-        markdownPointer: '',
     },
     {
         name: 'JavaScript',
         settings: 'configurations = ["format", "markdown", "javascript"]\n',
         ignored: ['node_modules/'],
         absent: ['.build/', 'Package.resolved', '.venv/', 'uv.lock'],
-        markdownPointer: '.markdownlint-cli2.mjs',
     },
     {
         name: 'a JavaScript child of Python',
@@ -55,7 +52,6 @@ configurations = ["javascript"]
 `,
         ignored: ['.venv/', 'node_modules/'],
         absent: ['.build/', 'Package.resolved'],
-        markdownPointer: 'web/.markdownlint-cli2.mjs',
     },
 ] as const;
 

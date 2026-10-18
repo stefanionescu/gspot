@@ -126,12 +126,7 @@ test("Knip ignores gspot's pointer files and reports other configuration-like fi
     const generated = generate(session).files;
     const pointers = generated.filter(({ kind }) => kind === 'pointer');
     const configuration = generated.find(({ path }) => path === '.gspot/configurations/language/javascript/knip.json')!;
-    for (const path of ['eslint.config.mjs', '.markdownlint-cli2.mjs'])
-        expect(
-            pointers.some((pointer) => pointer.path === path),
-            path,
-        ).toBe(true);
-    expect(pointers.some(({ path }) => path === 'child/.markdownlint-cli2.mjs')).toBe(true);
+    expect(pointers.some((pointer) => pointer.path === 'eslint.config.mjs')).toBe(true);
     const markdown = session.manifests
         .get('markdown')!
         .toolFiles.find(({ tool }) => tool.includes('markdownlint-cli2'))!;

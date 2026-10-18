@@ -114,6 +114,7 @@ function writePointers(
 ): void {
     const { toolFile, owner } = selected;
     const target = getSelectedTarget(selected, state) ?? toolFile.target;
+    if (isRootPointerShared(selected, declarations, target)) return;
     const pointerOnlyPaths = collectPointerOnlyPaths(declarations, selected);
     for (const pointer of buildPointerFiles(owner, toolFile, target)) {
         if (
@@ -123,6 +124,16 @@ function writePointers(
         )
             state.files.set(pointer.path, pointer);
     }
+}
+
+// A scope that uses the same tool file as the root needs no pointer of its own when the pointer inherits.
+function isRootPointerShared(selected: ToolFileSelection, declarations: ToolFileSelection[], target: string): boolean {
+    const { toolFile, owner } = selected;
+    if (toolFile.pointer?.inherit !== true || owner.selection.scope.path === '' || target !== toolFile.target)
+        return false;
+    return declarations.some(
+        (entry) => entry.toolFile.target === toolFile.target && entry.owner.selection.scope.path === '',
+    );
 }
 
 /**

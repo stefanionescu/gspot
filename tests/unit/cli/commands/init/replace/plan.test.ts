@@ -65,7 +65,11 @@ test('the init plan deletes the replaced tool files and lists the lint folder', 
         '--json',
     ]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    for (const path of Object.keys(REPLACED_TOOL_FILES)) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
+    for (const path of Object.keys(REPLACED_TOOL_FILES).filter((path) => path !== '.markdownlint.jsonc'))
+        expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
+    expect(await readFile(join(sandbox.path, '.markdownlint.jsonc'), 'utf8')).toContain(
+        '{ "extends": "./.gspot/configurations/language/markdown/markdownlint.jsonc" }',
+    );
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     for (const carried of ['udid', 'SC2086', 'MD013']) expect(settings).not.toContain(carried);
     expect(await readFile(join(sandbox.path, 'eslint.config.mjs'), 'utf8')).toContain(

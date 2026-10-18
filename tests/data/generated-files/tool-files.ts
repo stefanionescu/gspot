@@ -105,3 +105,13 @@ export const IGNORED_CHECK_FILES = [
         dropped: ['.gspot/configurations/general/format/prettier.json', '.prettierignore'],
     },
 ] as const;
+
+/** Two Markdown scopes: one with the rules of the root, one with its own code block style. */
+export const MARKDOWNLINT_SCOPE_TABLES = `[[scope]]
+path = "same"
+
+[[scope]]
+path = "other"
+[scope.tools.markdownlint.rules]
+MD046 = { style = "indented" }
+`;

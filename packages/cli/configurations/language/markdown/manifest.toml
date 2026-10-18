@@ -21,12 +21,12 @@ version_pattern = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
 
 [[tool_file]]
 per_scope = true
+pointer = { path = ".markdownlint.jsonc", body = "{ \"extends\": {target_json} }\n", inherit = true }
 target = "markdownlint.jsonc"
 tool = "markdownlint-cli2"
 
 [[tool_file]]
 per_scope = true
-pointer = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};", when = { configuration = "javascript" } }
 target = "markdownlint-cli2.mjs"
 tool = "markdownlint-cli2"
 
