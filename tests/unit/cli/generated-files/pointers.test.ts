@@ -79,7 +79,7 @@ test.each(['javascript', 'markdown'])(
         const session = await openSession(sandbox.path);
         const manifest = session.manifests.get(configuration)!;
         const toolFile = manifest.toolFiles
-            .filter((file): file is WholeToolFile => !file.fragment && file.source !== undefined)
+            .filter((file): file is WholeToolFile => file.source !== undefined)
             .find((file) => file.pointer?.body?.includes('{target_module}') === true)!;
         // Windows file names cannot contain a question mark.
         const components = MODULE_TARGETS.filter((component) => !isWindows || !component.includes('?'));

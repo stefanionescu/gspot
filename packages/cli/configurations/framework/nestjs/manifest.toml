@@ -22,6 +22,8 @@ rule_prefix = "@darraghor/nestjs-typed"
 version = "7.5.5"
 
 [eslint]
+fragment = true
+required_tools = ["@darraghor/eslint-plugin-nestjs-typed"]
 all_level_rules = ["@darraghor/nestjs-typed/api-operation-summary-description-capitalized"]
 
 [eslint.presets.recommended]
@@ -44,9 +46,3 @@ selector = "CallExpression[callee.name='forwardRef']"
 [[eslint.selectors]]
 message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }."
 selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))"
-
-[[tool_file]]
-fragment = true
-required_tools = ["@darraghor/eslint-plugin-nestjs-typed"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

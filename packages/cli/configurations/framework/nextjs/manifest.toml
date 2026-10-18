@@ -40,6 +40,8 @@ rule_prefix = "@next/next"
 version = "16.3.8"
 
 [eslint]
+fragment = true
+required_tools = ["@next/eslint-plugin-next"]
 all_level_rules = ["@next/next/next-script-for-ga", "@next/next/no-html-link-for-pages", "@next/next/no-img-element", "@next/next/no-page-custom-font"]
 
 [eslint.presets.recommended]
@@ -54,12 +56,6 @@ source = "configs.next"
 files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
 reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
 rules = ["gspot/no-trivial-files"]
-
-[[tool_file]]
-fragment = true
-required_tools = ["@next/eslint-plugin-next"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 
 [[tool_file]]
 per_scope = true

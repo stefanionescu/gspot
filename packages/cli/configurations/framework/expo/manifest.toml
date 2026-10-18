@@ -22,13 +22,9 @@ npm = "expo-doctor"
 version = "1.20.4"
 
 [eslint]
-all_level_rules = ["expo/prefer-box-shadow"]
-
-[[tool_file]]
 fragment = true
 required_tools = ["eslint-plugin-expo"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
+all_level_rules = ["expo/prefer-box-shadow"]
 
 [[check]]
 example = "A `react-native` version that differs from the one the Expo SDK requires fails a Doctor check. Run `npx expo install --check` to install the matching version."

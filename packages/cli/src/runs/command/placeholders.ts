@@ -117,9 +117,7 @@ export function readToolFileDeclaration(
     planned: SubstitutionCheck,
     name: string,
 ): ToolFileDeclaration {
-    const target = listToolFiles(session, planned).find(
-        (toolFile) => !toolFile.fragment && extractToolFileName(toolFile.target) === name,
-    );
+    const target = listToolFiles(session, planned).find((toolFile) => extractToolFileName(toolFile.target) === name);
     if (!target)
         throw new Error(`Check ${planned.check.name} names {tool_file:${name}} and no configuration writes it.`);
     return target;
@@ -182,9 +180,9 @@ export function listScratchFiles(
     command: string[],
 ): string[] {
     const scope = planned.selection.scope.path;
-    const owned = (planned.manifest?.toolFiles ?? [])
-        .filter((toolFile) => !toolFile.fragment)
-        .map((toolFile) => buildScopeTarget(scope, toolFile, session.toolFiles().targets));
+    const owned = (planned.manifest?.toolFiles ?? []).map((toolFile) =>
+        buildScopeTarget(scope, toolFile, session.toolFiles().targets),
+    );
     return [
         ...new Set([
             ...planned.files.map(({ path }) => path),

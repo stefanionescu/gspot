@@ -136,9 +136,7 @@ function listPointerFieldTargets({
                 .map((file) => ({ file, target: buildScopeTarget(selection.scope.path, file, targets) }))
                 .filter(
                     ({ file, target }) =>
-                        !file.fragment &&
-                        file.tool.includes(tool.name) &&
-                        (!file.per_scope || consumed || !paths.has(target)),
+                        file.tool.includes(tool.name) && (!file.per_scope || consumed || !paths.has(target)),
                 )
                 .map(({ file, target }) => {
                     let scope = '';

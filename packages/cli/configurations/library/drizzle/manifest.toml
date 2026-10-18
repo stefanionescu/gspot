@@ -30,11 +30,9 @@ version_command = ["--version"]
 message = "Raw SQL skips the types of the schema. Use the query builder, or accept this finding with a rule-specific ignore."
 selector = "TaggedTemplateExpression[tag.name='sql']"
 
-[[tool_file]]
+[eslint]
 fragment = true
 required_tools = ["eslint-plugin-drizzle"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
 
 [[check]]
 command = ["drizzle-kit", "generate"]

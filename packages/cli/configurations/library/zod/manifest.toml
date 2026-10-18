@@ -16,10 +16,6 @@ rule_prefix = "zod"
 version = "4.12.0"
 
 [eslint]
-all_level_rules = ["zod/no-any-schema", "zod/no-native-enum", "zod/prefer-meta-last", "zod/prefer-strict-object"]
-
-[[tool_file]]
 fragment = true
 required_tools = ["eslint-plugin-zod"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
+all_level_rules = ["zod/no-any-schema", "zod/no-native-enum", "zod/prefer-meta-last", "zod/prefer-strict-object"]

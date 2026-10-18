@@ -25,6 +25,8 @@ rule_prefix = "react-native"
 version = "5.0.0"
 
 [eslint]
+fragment = true
+required_tools = ["@react-native/eslint-plugin", "eslint-plugin-react-native"]
 all_level_rules = ["react-native/no-color-literals", "react-native/no-inline-styles", "react-native/split-platform-components"]
 
 [[eslint.selectors]]
@@ -38,9 +40,3 @@ selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionCon
 [[eslint.selectors]]
 message = "AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform."
 selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]"
-
-[[tool_file]]
-fragment = true
-required_tools = ["@react-native/eslint-plugin", "eslint-plugin-react-native"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

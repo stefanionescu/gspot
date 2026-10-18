@@ -140,7 +140,7 @@ test('manifests > a companion tool file needs a tool or check that reads it', ()
     expect(() =>
         buildManifest('consumer', {
             group: 'infrastructure',
-            tables: '[[tool_file]]\ntarget = ".gspot/config/example.json"\nfragment = true\nrequired_tools = ["example"]\n',
+            tables: '[[tool_file]]\ntarget = ".gspot/config/example.json"\nrequired_tools = ["example"]\n',
         }),
     ).toThrow('Companion tools require a consuming tool or check.');
 });

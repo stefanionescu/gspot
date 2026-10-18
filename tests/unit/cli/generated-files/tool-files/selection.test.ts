@@ -81,7 +81,7 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
 });
 test.each([...LEVELS])("every configuration's tool files parse at level %s", async (level) => {
     const configurations = [...readManifests(createReadCache(process.cwd())).values()]
-        .filter((manifest) => manifest.toolFiles.some((config) => !config.fragment))
+        .filter((manifest) => manifest.toolFiles.length > 0)
         .map((manifest) => manifest.configuration.name);
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -106,7 +106,6 @@ test.each([...LEVELS])("every configuration's tool files parse at level %s", asy
     for (const { scope, selected: manifests } of session.scopes) {
         const targets = manifests
             .flatMap((manifest) => manifest.toolFiles)
-            .filter((file) => !file.fragment)
             .filter((file) => file.level !== 'all' || level === 'all')
             .filter((file) => file.tool.length === 0 || file.tool.some((name) => tools.has(name)))
             .filter((file) => file.check.length === 0 || file.check.some((name) => checkNames.has(name)))

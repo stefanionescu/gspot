@@ -167,7 +167,7 @@ export function listSwiftlintToolFiles(input: CheckInput): string[] {
         ...input.manifests
             .values()
             .flatMap((manifest) => manifest.toolFiles)
-            .filter((toolFile) => !toolFile.fragment && toolFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
+            .filter((toolFile) => toolFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
             .map((toolFile) => buildScopeTarget(input.selection.scope.path, toolFile, input.toolFiles().targets)),
     ];
     for (const file of input.files) {

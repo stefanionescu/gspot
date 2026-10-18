@@ -84,28 +84,21 @@ const toolFileSchema = z
         // Extra tools that a check needs only when it uses this configuration.
         required_tools: z.array(z.string().min(1)).default([]),
         pointer: pointerSchema.optional(),
-        fragment: z.boolean().default(false),
         per_scope: z.boolean().default(false),
         when: conditionSchema.pick({ configuration: true }).optional(),
         rule_dependencies: z.record(z.string().min(1), z.array(z.string().min(1)).min(1)).optional(),
         rule_paths_setting: z.string().min(1).optional(),
-    } satisfies SchemaShape<Omit<ToolFileDeclaration, 'source' | 'fragment'> & { fragment: boolean }, ToolFileInput>)
+    } satisfies SchemaShape<Omit<ToolFileDeclaration, 'source'>, ToolFileInput>)
     .refine(
         (toolFile) => toolFile.required_tools.length === 0 || toolFile.tool.length > 0 || toolFile.check.length > 0,
         'Companion tools require a consuming tool or check.',
     )
     // Copied files use the same relative path beneath tool-files and the generated configuration folder.
     .transform((toolFile) => {
-        if (toolFile.fragment) return { ...toolFile, fragment: true as const };
         if (toolFile.pointer?.folders !== undefined)
-            return {
-                ...toolFile,
-                fragment: false as const,
-                pointer: { ...toolFile.pointer, folders: toolFile.pointer.folders },
-            };
+            return { ...toolFile, pointer: { ...toolFile.pointer, folders: toolFile.pointer.folders } };
         return {
             ...toolFile,
-            fragment: false as const,
             source: posix.join(
                 SHIPPED_TOOL_FILES_FOLDER,
                 toolFile.target.startsWith(TOOL_FILE_PREFIX)
@@ -251,6 +244,8 @@ export const manifestSchema = z
                         } satisfies SchemaShape<ParsedManifest['eslint']['rules_off'][number]>),
                     )
                     .default([]),
+                fragment: z.boolean().default(false),
+                required_tools: z.array(z.string().min(1)).default([]),
             } satisfies SchemaShape<ParsedManifest['eslint'], NonNullable<ManifestInput['eslint']>>)
             .prefault({}),
         shared_prefixes: z

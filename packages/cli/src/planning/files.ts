@@ -135,7 +135,6 @@ export function isRootOnlyCheck(manifest: Manifest | undefined, check: CheckDecl
     return !manifest.toolFiles.some(
         (config) =>
             config.per_scope &&
-            !config.fragment &&
             (config.check.includes(check.name) ||
                 command.some((part) => part.includes(`{tool_file:${extractToolFileName(config.target)}}`))),
     );

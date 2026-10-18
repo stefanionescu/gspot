@@ -12,7 +12,5 @@ dependencies = ["zustand"]
 message = "Pass a selector to the store hook, so the component renders when its slice changes and at no other time."
 selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0]"
 
-[[tool_file]]
+[eslint]
 fragment = true
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

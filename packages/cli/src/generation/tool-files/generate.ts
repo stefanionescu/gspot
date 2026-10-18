@@ -85,8 +85,7 @@ function recordToolOutput(
 // Whole-file outputs establish destinations before pointer fragments resolve against them.
 function buildWholeFiles(session: Session, declarations: ToolFileSelection[], state: ToolFileGenerationState): void {
     const whole = declarations.filter(
-        (entry): entry is ToolFileSelection & { toolFile: WholeToolFile } =>
-            !entry.toolFile.fragment && entry.toolFile.source !== undefined,
+        (entry): entry is ToolFileSelection & { toolFile: WholeToolFile } => entry.toolFile.source !== undefined,
     );
     for (const [declared, entries] of Map.groupBy(whole, ({ toolFile }) => toolFile.target)) {
         const groups = groupToolOutputs(session, entries, state);
@@ -119,7 +118,6 @@ function writePointers(
     state: ToolFileGenerationState,
 ): void {
     const { toolFile, owner } = selected;
-    if (toolFile.fragment) return;
     const target = getSelectedTarget(selected, state) ?? toolFile.target;
     const pointerOnlyPaths = collectPointerOnlyPaths(declarations, selected);
     for (const pointer of buildPointerFiles(owner, toolFile, target)) {

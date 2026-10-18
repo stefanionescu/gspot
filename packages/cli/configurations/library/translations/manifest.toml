@@ -17,13 +17,9 @@ rule_prefix = "i18next"
 version = "6.1.5"
 
 [eslint]
-all_level_rules = ["i18next/no-literal-string"]
-
-[[tool_file]]
 fragment = true
 required_tools = ["eslint-plugin-i18next"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
+all_level_rules = ["i18next/no-literal-string"]
 
 [[check]]
 example = "When the base locale defines `welcome` and another lacks it, the check reports the missing key. Add the translation with the same placeholders."

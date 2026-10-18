@@ -17,8 +17,6 @@ version = "6.10.2"
 package = "eslint-plugin-jsx-a11y"
 source = "flatConfigs.recommended"
 
-[[tool_file]]
+[eslint]
 fragment = true
 required_tools = ["eslint-plugin-jsx-a11y"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

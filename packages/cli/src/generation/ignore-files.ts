@@ -23,7 +23,6 @@ import {
 // Collect the generated files and pointers outside .gspot that this run writes, so that scanners leave them alone.
 function collectToolExclusions(session: Session): string[] {
     const paths = listToolFileDeclarations(session).flatMap(({ toolFile, owner }) => {
-        if (toolFile.fragment) return [];
         const whole =
             toolFile.source === undefined || isInGspotFolder(toolFile.target)
                 ? []

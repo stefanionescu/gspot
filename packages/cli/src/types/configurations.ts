@@ -36,6 +36,10 @@ export type ParsedManifest = {
         all_level_rules: EslintAllRules;
         selectors: { selector: string; message: string; role?: string | undefined }[];
         rules_off: { rules: string[]; reason: string; files?: string[] | undefined }[];
+        /** Whether the configuration adds a block to the ESLint tool file of javascript. */
+        fragment: boolean;
+        /** The packages ESLint loads for that block. */
+        required_tools: string[];
     };
     shared_prefixes: { prefixes: string[]; kinds: string[] };
     ignored_folders: string[];
@@ -94,10 +98,8 @@ export type ParsedManifest = {
         /** The setting that names the folder each rule of a Semgrep pack covers, in every scope with this configuration. */
         rule_paths_setting?: string | undefined;
     } & (
-        | { fragment: true }
-        | { fragment: false; source: string }
+        | { source: string }
         | {
-              fragment: false;
               source?: undefined;
               pointer: {
                   path: string;

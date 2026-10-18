@@ -53,6 +53,8 @@ rule_prefix = "react-refresh"
 version = "0.5.7"
 
 [eslint]
+fragment = true
+required_tools = ["eslint-plugin-react-hooks", "eslint-plugin-react", "eslint-plugin-react-refresh"]
 all_level_rules = ["react/self-closing-comp", "react/display-name", "react/no-array-index-key", "react/prop-types"]
 
 [eslint.presets.recommended]
@@ -75,9 +77,3 @@ source = "configs.recommended"
 files = ["**/*.tsx", "**/*.jsx"]
 reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
 rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
-
-[[tool_file]]
-fragment = true
-required_tools = ["eslint-plugin-react-hooks", "eslint-plugin-react", "eslint-plugin-react-refresh"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

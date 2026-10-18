@@ -22,13 +22,9 @@ rule_prefix = "jest"
 version = "29.16.6"
 
 [eslint]
-all_level_rules = ["jest/prefer-strict-equal"]
-
-[[tool_file]]
 fragment = true
 required_tools = ["eslint-plugin-jest"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
+all_level_rules = ["jest/prefer-strict-equal"]
 
 [[check]]
 command = ["jest", "--ci", "--rootDir={root}/{scope}", "--coverage", "--coverageReporters=text-summary", "--coverageThreshold={\"global\":{\"lines\":{setting:coverage.lines},\"branches\":{setting:coverage.branches},\"functions\":{setting:coverage.functions},\"statements\":{setting:coverage.statements}}}"]

@@ -19,8 +19,6 @@ version = "5.91.2"
 package = "@tanstack/eslint-plugin-query"
 source = "configs.flat/recommended"
 
-[[tool_file]]
+[eslint]
 fragment = true
 required_tools = ["@tanstack/eslint-plugin-query"]
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"

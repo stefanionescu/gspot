@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 import { findScope } from '#cli/repository/scopes.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
+import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { stripCoverageArguments } from '#cli/planning/checks.ts';
 import { PIP_LICENSES_COMMAND } from '#cli/config/tools/python.ts';
@@ -86,11 +87,17 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, 
         .filter((config) => config.check.length === 0 || config.check.includes(check.name))
         .filter((config) => config.when === undefined || scope.view.configurations.includes(config.when.configuration))
         .flatMap((config) => config.required_tools);
+    // ESLint loads the packages of every configuration that adds a block to its tool file.
+    const plugins = tools.has(ESLINT_TOOL)
+        ? scope.selected
+              .filter((manifest) => manifest.eslint.fragment)
+              .flatMap((manifest) => manifest.eslint.required_tools)
+        : [];
     const syntax =
         check.tool === STYLELINT_TOOL
             ? selectStylelintComponents(scope.view.configurations).map((dialect) => dialect.customSyntax)
             : [];
-    return [...new Set([...(check.other_tools ?? []), ...companions, ...syntax])].filter((name) => {
+    return [...new Set([...(check.other_tools ?? []), ...companions, ...plugins, ...syntax])].filter((name) => {
         const pin = getToolDeclaration(scope.selected, name);
         if (!isToolSelected(scope, pin.when)) return false;
         if (!withoutCoverage) return true;

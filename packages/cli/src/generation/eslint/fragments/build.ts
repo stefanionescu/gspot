@@ -1,7 +1,6 @@
 // Collect what the fragments add to a generated file: text, imports, file globs, and selectors.
 import type { Session } from '#cli/types/planning.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
-import type { Fragment } from '#cli/types/generation/fragments.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
@@ -71,10 +70,10 @@ function buildFragment(manifest: Manifest, inputs: EslintContext): EslintFragmen
 }
 
 // Build the text of each ESLint fragment.
-function buildSelectedFragments(session: Session, fragments: Fragment[], inputs: EslintContext): EslintFragment[] {
+function buildSelectedFragments(session: Session, fragments: Manifest[], inputs: EslintContext): EslintFragment[] {
     const { scopes } = inputs;
     const blockText: EslintFragment[] = [];
-    for (const { manifest } of fragments) {
+    for (const manifest of fragments) {
         for (const selection of scopes.filter((entry) => entry.selected.includes(manifest))) {
             const scope = selection.scope.path;
             const children = listNestedScopes(
@@ -132,10 +131,8 @@ function collectFragments(
     fragmentSelectors: ReturnType<typeof groupFragmentSelectors>;
 } {
     const { scopes, selection } = inputs;
-    const fragments = listFragmentConfigurations(scopes, selection, target).flatMap((manifest) =>
-        manifest.toolFiles
-            .filter((toolFile) => toolFile.fragment && toolFile.target === target.target)
-            .map((toolFile) => ({ manifest, toolFile })),
+    const fragments = listFragmentConfigurations(scopes, selection, target).filter(
+        (manifest) => manifest.eslint.fragment,
     );
     const blockText = buildSelectedFragments(session, fragments, inputs);
     const imports = blockText.flatMap((fragment) => fragment.imports);
