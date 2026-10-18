@@ -19,6 +19,9 @@ and how the modules work together. Then think through your approach:
 - Which failures can occur? What happens with bad input, missing data, concurrent access, or network errors?
 - Does this change affect other parts of the system? Trace the call chain.
 
+Fix the cause of a failure. Do not hide it with a special case. Special cases include a longer time limit for one
+test, a budget for one suite or system, an environment switch, and an option for one caller.
+
 When you rename or move a file, update every reference: imports, documentation, configuration, and scripts.
 
 Before you add a module, folder, or helper, identify the code that implements

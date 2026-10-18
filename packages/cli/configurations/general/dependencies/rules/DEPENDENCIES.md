@@ -26,6 +26,7 @@ Read this rule before you add, upgrade, or remove a dependency.
 
 - Delete an override when it matches no package in the lockfile, or when every caller already accepts the fixed
   version.
+- An override that forces a new major version needs a test of each package that depends on it.
 - Keep third-party license notices in a tracked file, not in a string in code.
 - Ask the user before you add a dependency whose license falls outside the allowed list.
 - For a known advisory that has no fix, follow the suppression rules: ask the user, then run

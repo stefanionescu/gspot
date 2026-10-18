@@ -13,6 +13,7 @@ one.
 - Commit only when the user asks.
 - One change per commit. Put a rename and a behavior change in two commits.
 - The body says what changed and why.
+- Leave out counts of tests, files, or bytes.
 - Footers reference issues with `Refs: #123` or `Closes: #123`, and breaking changes with `BREAKING CHANGE:...`.
 - Never bypass hooks with `--no-verify`.
 - Never add `[skip ci]`, `[ci skip]`, `[no ci]`, or another marker that stops CI.

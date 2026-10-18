@@ -65,7 +65,8 @@ and other resources in `finally` or the cleanup mechanism of the API.
 <!-- level: all -->
 
 - Each workspace package builds itself. Its build file lives in it and imports only its own files.
-- Code outside a package uses its public entry points and its `package.json`, never its source files. Tests may read source files.
+- Code outside a package uses its public entry points and its `package.json`, never its source files. Tests and
+  documentation generators of the same repository may read source files.
 - Declare each dependency in the workspace package that imports it, not in the root `package.json`.
 - Pass a value between packages through a declared setting or a public API, never a
   file that a build writes.

@@ -3,8 +3,8 @@
 Read this rule when you write or change a Zod schema.
 
 Check the installed release and its consumers before choosing an API. Put a runtime schema with
-the feature that owns the contract. Infer input and output types from it rather than keeping a
-second handwritten contract.
+the feature that owns the contract. Infer types from the schema, or check a handwritten type against it with
+`satisfies z.ZodType<T>`. Never keep a second contract that the compiler does not compare.
 
 ## Validate boundaries
 
