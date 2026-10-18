@@ -132,7 +132,6 @@ function buildInitSettings(
     formats: Map<string, TomlTable>,
 ): string {
     const document = buildHeadTables(draft, repository, manifests, formats);
-    if (draft.commitScopes !== undefined) setKey(document, 'tools.commitlint.scopes', draft.commitScopes);
     if (draft.hooks) setKey(document, 'hooks.enabled', true);
     else Reflect.deleteProperty(document, 'hooks');
     if (draft.ci === 'none') {
@@ -158,12 +157,6 @@ function buildInitSettings(
  */
 function buildSettingsDraft(selection: InitSelection, answers: InitAnswers): SettingsDraft {
     const scopes = selection.scopes.filter((scope) => scope.path !== '');
-    const commitScopes =
-        scopes.length > 0 && selection.selectedIds.has('commits')
-            ? (detectDefaults({ scopes: scopes.map((scope) => posix.basename(scope.path)) }).get(
-                  'tools.commitlint.scopes',
-              ) as string[])
-            : undefined;
     return {
         configurations: selection.rootIds,
         scopes: scopes.map((scope) => ({
@@ -171,7 +164,6 @@ function buildSettingsDraft(selection: InitSelection, answers: InitAnswers): Set
             configurations: selection.scopeConfigurations.get(scope.path) ?? [],
         })),
         ...answers,
-        ...(commitScopes === undefined ? {} : { commitScopes }),
     };
 }
 

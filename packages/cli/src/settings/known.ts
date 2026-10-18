@@ -11,8 +11,8 @@ import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
 import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import type { KnownSettings, SettingDefault } from '#cli/types/settings/values.ts';
+import { BUILD_SCRIPT, XCODE_DESTINATIONS } from '#cli/config/settings/defaults.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
-import { BUILD_SCRIPT, COMMIT_SCOPES, XCODE_DESTINATIONS } from '#cli/config/settings/defaults.ts';
 
 // Read setting declarations and resolve their shipped and detected defaults.
 
@@ -157,7 +157,6 @@ function buildKnownSettings(selected: Manifest[], level: Level, reads: ReadCache
  * @param inputs what detection found.
  * @param inputs.packageManager the detected npm, pnpm, Yarn, or Bun.
  * @param inputs.sdkRoot the detected Xcode SDK.
- * @param inputs.scopes the workspace names.
  * @param inputs.openapi the filenames and places to search.
  * @param inputs.openapi.filenames the names that mark an OpenAPI document.
  * @param inputs.openapi.paths the repository-relative places to search.
@@ -166,7 +165,6 @@ function buildKnownSettings(selected: Manifest[], level: Level, reads: ReadCache
 function detectDefaults(inputs: {
     packageManager?: string;
     sdkRoot?: string;
-    scopes?: string[];
     openapi?: { filenames: string[]; paths: string[] };
 }): Map<string, unknown> {
     const matches = inputs.openapi === undefined ? undefined : buildFilenameMatcher(inputs.openapi.filenames);
@@ -178,12 +176,6 @@ function detectDefaults(inputs: {
             inputs.packageManager === undefined ? undefined : [inputs.packageManager, ...BUILD_SCRIPT],
         ],
         ['swift.xcode_destination', XCODE_DESTINATIONS.get(inputs.sdkRoot)],
-        [
-            'tools.commitlint.scopes',
-            inputs.scopes === undefined || inputs.scopes.length === 0
-                ? undefined
-                : [...inputs.scopes, ...COMMIT_SCOPES],
-        ],
     ]);
 }
 

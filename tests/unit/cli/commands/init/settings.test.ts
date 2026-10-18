@@ -47,7 +47,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
     expect(await Bun.file(`${sandbox.path}/gspot.toml`).exists()).toBe(false);
 });
 
-test('template settings stay beside the commit scopes init adds', async () => {
+test('init keeps the commit settings of a template', async () => {
     await using sandbox = await testdir({
         'api/package.json': '{"name":"api","private":true}',
         'api/source.py': 'VALUE = 1\n',
@@ -62,8 +62,7 @@ test('template settings stay beside the commit scopes init adds', async () => {
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
     const settings = parseSettings(output.settings, undefined, createReadCache(process.cwd()));
     expect(settings.tools['commitlint']?.['types']).toStrictEqual(['project']);
-    expect(settings.tools['commitlint']?.['scopes']).toContain('api');
-    expect(settings.tools['commitlint']?.['scopes']).not.toContain('team');
+    expect(settings.tools['commitlint']?.['scopes']).toStrictEqual(['team']);
     expect(parse(output.settings)).toMatchObject({
         architecture: { roles: { environment_readers: ['tests/env.sh'] } },
     });

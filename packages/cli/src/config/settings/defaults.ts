@@ -9,8 +9,6 @@ export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
     ['xrsimulator', 'generic/platform=visionOS Simulator'],
 ]);
 
-export const COMMIT_SCOPES = ['root', 'hooks', 'deps'] as const;
-
 export const BUILD_SCRIPT = ['run', 'build'] as const;
 
 export const SETTING_DEFAULTS = {

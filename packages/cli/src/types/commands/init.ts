@@ -44,7 +44,6 @@ type SettingsDraft = InitAnswers & {
     template?: Template;
     configurations: string[];
     scopes: Scope[];
-    commitScopes?: string[];
 };
 
 /** The defaults or template values init uses. */
