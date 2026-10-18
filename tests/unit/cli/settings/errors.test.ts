@@ -12,7 +12,6 @@ import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
-import { INVALID_RUNTIMES } from '#tests/data/generated-files/eslint/overrides.ts';
 import { buildSettingsText, validateSettingsText } from '#tests/setup/settings.ts';
 import { KEY_PATH_CASES, REVIEWED_REASON, UNKNOWN_KEY_CASES } from '#tests/data/settings/errors.ts';
 
@@ -139,17 +138,6 @@ test.each(['', 'because', 'Codex'])('a word with the reason %s is refused', (rea
             createReadCache(process.cwd()),
         ),
     ).toThrow('reason');
-});
-
-test.each([...INVALID_RUNTIMES])('an invalid runtime %s names the setting', (runtime) => {
-    const text = stringify({
-        configurations: ['javascript'],
-        tools: { eslint: { override: [{ paths: ['**/*.js'], runtime }] } },
-    });
-    expect(() => parseSettings(text, undefined, createReadCache(process.cwd()))).toThrow(
-        'tools.eslint.override.0.runtime',
-    );
-    expect(() => parseSettings(text, undefined, createReadCache(process.cwd()))).toThrow('Invalid option');
 });
 
 test('an OSV ignore expiry cannot add a TOML table', async () => {

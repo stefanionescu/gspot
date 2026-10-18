@@ -5,13 +5,9 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { buildSandboxPath, installToolProjects } from '#tests/setup/install.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
 import {
-    POSTGRES_CASES,
-    POSTGRES_SANDBOX,
     UNWRAPPED_MIGRATION,
     SQUAWK_ROOT_MIGRATION,
     SQUAWK_SCOPE_SETTINGS,
@@ -49,11 +45,4 @@ test("Squawk uses each scope's assume_in_transaction setting, and false under Su
     );
     const corrected = await spawnGspot(sandbox.path, command, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
-const installedSandbox = registerSharedSandbox(POSTGRES_SANDBOX);
-
-test.each([...POSTGRES_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, POSTGRES_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });

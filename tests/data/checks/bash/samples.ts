@@ -27,12 +27,6 @@ export const BASH_SANDBOX = {
     },
 } as const;
 
-export const SHELLCHECK_SANDBOX = {
-    install: false,
-    configurations: ['bash'],
-    files: { 'scripts/build.sh': CLEAN_BASH_SCRIPT },
-} as const;
-
 export const BASH_MAIN = `# main: runs the script.
 main() {
     echo "hello $1"

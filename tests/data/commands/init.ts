@@ -47,13 +47,6 @@ const findings = result.results.flatMap(({ warnings, parseErrors, invalidOptionW
 process.stdout.write(JSON.stringify(findings));
 `;
 
-/** Knip configuration filenames for replacement checks. */
-const KNIP_FILES = [
-    { file: '.knip.jsonc', source: '{"entry":["main.js"],"project":["*.js"]}' },
-    { file: 'knip.ts', source: 'export default { entry: ["main.js"], project: ["*.js"] };\n' },
-    { file: 'knip.js', source: 'export default { entry: ["main.js"], project: ["*.js"] };\n' },
-] as const;
-
 /** Authored lint jobs that stop init from adding CI by itself, but not when a provider flag asks for it. */
 const LINT_JOBS = [
     { name: 'a GitLab lint job', path: '.gitlab-ci.yml', content: 'quality:\n  script: npm run lint\n' },
@@ -268,7 +261,6 @@ const CONFIGURATION_CHOICES = [
 export {
     LINT_JOBS,
     INIT_FILES,
-    KNIP_FILES,
     GIT_PLAN_CASES,
     SDK_DESTINATIONS,
     FORMAT_FILE_CASES,

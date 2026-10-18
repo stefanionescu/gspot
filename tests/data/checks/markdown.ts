@@ -34,14 +34,6 @@ Long prose stays with the formatter. Long prose stays with the formatter. Long p
 /** Options of an inactive rule do not turn it on; scope options replace only the values of their own rule. */
 export const MARKDOWNLINT_SETTINGS = `[format]\nindent_width = 6\n[tools.markdownlint.rules]\nMD044 = { names = ["Root label"], code_blocks = false }\nMD041 = {}\nMD013 = { line_length = 10 }\nMD033 = {}\nMD060 = { style = "aligned" }\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.markdownlint.rules]\nMD044 = { names = ["Nested label"] }\n`;
 
-/** A table whose columns match none of the markdownlint table styles. */
-export const TABLE_COLUMN_SAMPLE = `# Table
-
-| Name | Value |
-| --- | --- |
-| A  | B |
-`;
-
 export const MARKDOWN_FENCE_CASES = [
     {
         name: 'TSX and JSONC alongside invalid JSON',

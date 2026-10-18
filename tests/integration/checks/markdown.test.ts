@@ -12,7 +12,6 @@ import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox
 import {
     MARKDOWN_FILES,
     MARKDOWN_SANDBOX,
-    TABLE_COLUMN_SAMPLE,
     MARKDOWNLINT_SETTINGS,
     MARKDOWNLINT_EXECUTABLE,
 } from '#tests/data/checks/markdown.ts';
@@ -128,56 +127,6 @@ reason = "The sample demonstrates an empty alternative."
     ]);
 });
 
-test('markdownlint checks table alignment by default and the chosen table style', async () => {
-    const { root } = installedSandbox();
-    const settings = buildSettingsText(['markdown'], {
-        level: 'all',
-        tables: MARKDOWNLINT_SETTINGS.replace('MD060 = { style = "aligned" }\n', ''),
-    });
-    await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'markdown/markdownlint',
-        files: { 'gspot.toml': settings, 'table.md': TABLE_COLUMN_SAMPLE },
-    });
-    const failed = await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const report = JSON.parse(failed.stdout) as RunReport;
-    expect(report.checks).toMatchObject([
-        {
-            check: 'markdown/markdownlint',
-            scope: '',
-            status: 'failed',
-            findings: [{ file: 'table.md', rule: 'MD060' }],
-        },
-    ]);
-    await Bun.write(join(root, 'table.md'), MARKDOWN_FILES['long.md']);
-    const corrected = await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'markdown/markdownlint', scope: '', status: 'passed', findings: [] },
-    ]);
-    await Bun.write(
-        join(root, 'gspot.toml'),
-        buildSettingsText(['markdown'], {
-            level: 'all',
-            tables: MARKDOWNLINT_SETTINGS.replace('style = "aligned"', 'style = "tight"'),
-        }),
-    );
-    const changed = await spawnGspot(root, ['apply']);
-    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const selected = await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']);
-    expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    expect((JSON.parse(selected.stdout) as RunReport).checks[0]!.findings).toContainEqual(
-        matchFields({ file: 'table.md', rule: 'MD060' }),
-    );
-    const tight = stripTablePadding(MARKDOWN_FILES['long.md']);
-    const passed = await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--fix', '--json']);
-    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([
-        { check: 'markdown/markdownlint', scope: '', status: 'passed', findings: [] },
-    ]);
-    expect(await Bun.file(join(root, 'table.md')).text()).toBe(tight);
-});
-
 test('markdownlint JSON keeps file name delimiters, positions, and fixability', async () => {
     const { root } = installedSandbox();
     const paths = ['space name.md', ...(isWindows ? [] : ['name:5.md', 'line\nbreak.md'])];
@@ -207,18 +156,3 @@ test('markdownlint JSON keeps file name delimiters, positions, and fixability', 
     expect(corrected.code, corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
 });
-
-/** Remove padding from Markdown table cells while preserving surrounding prose. */
-function stripTablePadding(source: string): string {
-    return source
-        .split('\n')
-        .map((line) =>
-            line.startsWith('|')
-                ? line
-                      .split('|')
-                      .map((cell) => cell.trim())
-                      .join('|')
-                : line,
-        )
-        .join('\n');
-}

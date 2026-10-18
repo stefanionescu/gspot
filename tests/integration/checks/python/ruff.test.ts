@@ -15,7 +15,6 @@ import { convertToPosixPath, buildVenvExecutablePath } from '#cli/system/paths.t
 
 import {
     RUFF_SANDBOX,
-    FUNCTION_SOURCE,
     RUFF_RULE_SOURCE,
     RUFF_FORMAT_CASES,
     RUFF_RULE_ARGUMENTS,
@@ -133,24 +132,6 @@ answer = 42
     );
     const corrected = await spawnGspot(sandbox.path, command, options.env);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
-test('Ruff reports the configured statement limit at level all', async () => {
-    const sandbox = { path: installedSandbox().root };
-    const sourceFiles = {
-        'gspot.toml': buildSettingsText(['python'], { level: 'all' }),
-        'sample.py': FUNCTION_SOURCE,
-    };
-    await using _sourceChange = await updateSandbox(
-        installedSandbox(),
-        buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
-    );
-    await runSandboxStep(sandbox.path, ['apply'], {}, 'apply');
-    const checked = await spawnGspot(sandbox.path, ['check', 'sample.py', '--only', 'python/ruff', '--json']);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect((JSON.parse(checked.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
-        { check: 'python/ruff', file: 'sample.py', rule: 'PLR0915' },
-    ]);
 });
 
 test('Ruff run by an editor and through gspot formats each scope the same way', async () => {

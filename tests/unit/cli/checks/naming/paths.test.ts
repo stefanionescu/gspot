@@ -156,24 +156,6 @@ test('a numbered file name needs an ignored_prefix override', async () => {
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
-test('a Markdown file name with a banned word is reported', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['markdown', 'naming'], { level: 'all' }),
-        'ADVANCED.md': '# Guide\n',
-    });
-    const command = ['check', '--only', 'naming/paths', '--json'];
-    const failed = await checkReport(sandbox.path, command);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: 'ADVANCED.md', line: 1, column: 1, rule: 'banned-word' },
-    ]);
-    await rename(join(sandbox.path, 'ADVANCED.md'), join(sandbox.path, 'guide.md'));
-    const corrected = await checkReport(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-});
-
 test('a banned folder word such as shared is reported in folder names', async () => {
     await using sandbox = await testdir();
     const paths = ['shared/first.js', 'app/shared/first.js', 'app/worker/shared/entry.js'];

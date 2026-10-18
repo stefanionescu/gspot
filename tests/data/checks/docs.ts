@@ -112,30 +112,3 @@ Copyright (c) 2026 Alex Garcia
 `;
 
 export const DOCS_SETTINGS = `configurations = ["docs"]\n[[scope]]\npath = "api"\n\nconfigurations = ["docs"]\n[[ignore]]\ncheck = "docs/lychee"\npaths = ["api/ignored/**"]\nreason = "These pages are evaluated only after the documentation build."\n`;
-
-export const DOCS_CASES = [
-    {
-        check: 'docs/lychee',
-        files: {
-            'docs/linked.md': `# A page
-
-Read [the other page](missing-page.md) first.
-`,
-        },
-        expected: { file: 'docs/linked.md', rule: 'ERROR', line: 3, column: 6 },
-        corrected: {
-            files: {
-                'docs/linked.md': `# A page
-
-Read [the other page](second.md) first.
-`,
-            },
-        },
-    },
-] as const;
-
-export const DOCS_SANDBOX = {
-    install: false,
-    configurations: ['docs'],
-    files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
-} as const;

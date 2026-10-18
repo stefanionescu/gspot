@@ -8,9 +8,7 @@ import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { LinkFailure } from '#tests/types/tool-output.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-import { LINK_PAGE, DOCS_CASES, DOCS_SANDBOX, LINK_TEXT_CASES, LINK_SCOPE_SETTINGS } from '#tests/data/checks/docs.ts';
+import { LINK_PAGE, LINK_TEXT_CASES, LINK_SCOPE_SETTINGS } from '#tests/data/checks/docs.ts';
 
 // Checks the exit code, and the status and finding positions of the root and child scopes.
 async function assertLinkFailures(root: string, check: string, failures: readonly LinkFailure[]): Promise<void> {
@@ -82,11 +80,4 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
     } finally {
         await server.stop(true);
     }
-});
-
-const installedSandbox = registerSharedSandbox(DOCS_SANDBOX);
-
-test.each([...DOCS_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, DOCS_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });

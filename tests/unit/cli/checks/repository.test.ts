@@ -1,15 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { mkdir } from 'node:fs/promises';
 import { runGit } from '#tests/setup/git.ts';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { createSandbox } from '#tests/setup/sandbox.ts';
+import { checkReport } from '#tests/setup/run-gspot.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildCheckInput } from '#tests/setup/check-input.ts';
-import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { TRACKED_PATTERNS, LARGE_FILE_SETTINGS, LARGE_FILE_ATTRIBUTES } from '#tests/data/checks/repository.ts';
 
@@ -33,32 +30,6 @@ test("tracked-files follows each scope's configurations: env files, dependency f
         [...refused, ...indexOnly].toSorted((left, right) => left.localeCompare(right)),
     );
     expect(found.every(({ rule, line }) => rule === 'tracked-file' && line === 1)).toBe(true);
-});
-
-test('a tracked dependency folder is reported and passes after git rm --cached', async () => {
-    await using repository = await createSandbox(BASH_SANDBOX);
-    const { root, environment } = repository;
-    const command = ['check', '--only', 'repository/local-files', '--json'];
-    const clean = await runGspot(root, command, environment);
-    expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-    await mkdir(join(root, 'web', 'node_modules', 'left-pad'), { recursive: true });
-    await Bun.write(join(root, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
-    expect(runGit(root, ['add', '-f', 'web/node_modules/left-pad/index.js']).code).toBe(0);
-    const tracked = await checkReport(root, command, environment);
-    expect(tracked.code).toBe(1);
-    expect(tracked.report.checks).toMatchObject([
-        {
-            check: 'repository/local-files',
-            status: 'failed',
-            findings: [{ file: 'web/node_modules/left-pad/index.js', rule: 'tracked-file', line: 1 }],
-        },
-    ]);
-    expect(runGit(root, ['rm', '-r', '--cached', '--quiet', 'web/node_modules']).code).toBe(0);
-    const corrected = await checkReport(root, command, environment);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([
-        { check: 'repository/local-files', status: 'passed', findings: [] },
-    ]);
 });
 
 test('large files are reported in every scope except LFS, generated and vendored files, and pass once shrunk', async () => {

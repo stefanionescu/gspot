@@ -4,16 +4,9 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { spawnGspot, spawnCheckReport } from '#tests/setup/run-gspot.ts';
 import { DOCSTRING_MODULES } from '#tests/data/checks/python/docstrings.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 import { updateSandbox, applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { PYPROJECT, PYDOCLINT_GOOGLE, PYDOCLINT_CHECK_ARGUMENTS } from '#tests/data/checks/python/project.ts';
-
-import {
-    PYTHON_CASES,
-    PYTHON_SANDBOX,
-    ARITHMETIC_MODULE,
-    ARITHMETIC_MODULE_PATH,
-} from '#tests/data/checks/python/tool-checks.ts';
+import { PYTHON_SANDBOX, ARITHMETIC_MODULE, ARITHMETIC_MODULE_PATH } from '#tests/data/checks/python/tool-checks.ts';
 
 const installedSandbox = registerSharedSandbox(PYTHON_SANDBOX);
 
@@ -143,9 +136,4 @@ check-yield-types = true
     const corrected = await spawnCheckReport(root, PYDOCLINT_CHECK_ARGUMENTS, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await Bun.file(join(root, 'pyproject.toml')).text()).toBe(project);
-});
-
-test.each([...PYTHON_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, PYTHON_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });

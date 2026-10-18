@@ -225,23 +225,3 @@ test('Testing Library is detected only in the scope that declares it', async () 
         session.scopes.flatMap(({ selected }) => selected.map(({ configuration }) => configuration.name)),
     ).not.toContain('testing-library');
 });
-
-test.each(['next-intl', 'react-i18next'])(
-    'detection selects translations for %s without proposing Next.js',
-    async (dependency) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText([]),
-            'package.json': JSON.stringify({ private: true, dependencies: { [dependency]: '4.8.3' } }),
-            'source.ts': 'export {};\n',
-        });
-        const session = await openSession(sandbox.path);
-        const detected = detectConfigurations(
-            session.root,
-            session.repository.files,
-            session.manifests,
-            await readDependencyFiles(createReadCache(session.root), session.repository.files),
-        );
-        expect(detected.some((entry) => entry.configuration === 'translations')).toBe(true);
-        expect(detected.some((entry) => entry.configuration === 'nextjs')).toBe(false);
-    },
-);

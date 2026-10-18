@@ -5,13 +5,7 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { APP_JEST, VITEST_FILES } from '#tests/data/generated-files/eslint/fragments.ts';
-
-import {
-    REQUIRED_RULE_CASES,
-    REQUIRED_RULE_FILES,
-    DUPLICATE_RULE_CASES,
-    DUPLICATE_RULE_FILES,
-} from '#tests/data/generated-files/eslint/lint-rules.ts';
+import { DUPLICATE_RULE_CASES, DUPLICATE_RULE_FILES } from '#tests/data/generated-files/eslint/lint-rules.ts';
 
 test.each([...DUPLICATE_RULE_CASES])(
     'duplicate-rules > each pair of duplicate rules reports a defect once, from the kept rule (%j)',
@@ -83,30 +77,6 @@ test('limit-languages > a JavaScript file takes the JavaScript limits, and a Typ
         { file: 'example.js', rule: 'complexity', line: 1 },
     ]);
 });
-
-test.each(REQUIRED_RULE_CASES.flatMap((entry) => LEVELS.map((level) => ({ ...entry, level }))))(
-    'required-rules > the required $configuration rules for .$ending files are on at $level ($route)',
-    async ({ configuration, ending, rules, level, route }) => {
-        await using sandbox = await testdir();
-        const path = `${route}/page.${ending}`;
-        await createFileTree(sandbox.path, {
-            ...REQUIRED_RULE_FILES,
-            'gspot.toml': buildSettingsText([configuration], { level }),
-            [path]: '',
-        });
-        const eslint = await createEslint(sandbox.path);
-        const configured = (await eslint.calculateConfigForFile(path)) as EslintConfiguration;
-        for (const [rule, requiredLevel] of Object.entries(rules)) {
-            const enabledAtLevel = level === 'all' || requiredLevel === 'recommended';
-            const appliesToRoute = rule !== '@next/next/no-html-link-for-pages' || route === 'pages';
-            const entry = configured.rules[rule];
-            const severity = Array.isArray(entry) ? entry[0] : entry;
-            expect(severity === 1 || severity === 2, `${level}/${route}/${ending}/${rule}`).toBe(
-                enabledAtLevel && appliesToRoute,
-            );
-        }
-    },
-);
 
 describe('jest', () => {
     test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {

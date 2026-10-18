@@ -4,18 +4,6 @@ import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/data/checks/python/project.t
 /** One correctness finding and one convention finding, to tell the levels apart. */
 const RUFF_RULE_SOURCE = 'answer = missing_name\nprint(answer)\n';
 
-/** This function exceeds thirty statements while staying below sixty code lines. */
-const FUNCTION_INCREMENT_COUNT = 40;
-
-const FUNCTION_SOURCE = `"""An arithmetic example."""
-
-
-def increase(value: int) -> int:
-    """Increase a value through forty increments."""
-${Array.from({ length: FUNCTION_INCREMENT_COUNT }, () => '    value += 1').join('\n')}
-    return value
-`;
-
 /** An editor that runs Ruff must find the tool file of each scope. */
 const RUFF_FORMAT_CASES = [
     { file: 'sample.py', config: '.gspot/config/ruff.toml', formatted: "VALUE = 'example'\r\n" },
@@ -33,7 +21,6 @@ const RUFF_VERSION_CASES = [
 const VERSION_SOURCE = `"""Annotation examples."""
 
 from typing import List, Optional
-
 
 def retain(values: Optional[List[int]]) -> Optional[List[int]]:
     """Keep the supplied values."""
@@ -58,7 +45,6 @@ const ARITHMETIC_MODULE_PATH = 'example/math.py';
 
 const ARITHMETIC_DOUBLE_HEADER = `"""Arithmetic examples used by these tests."""
 
-
 def double(value: int) -> int:
     """Double a number.
 
@@ -72,7 +58,6 @@ const ARITHMETIC_MODULE = `${ARITHMETIC_DOUBLE_HEADER}        value: The number.
 
     """
     return value * 2
-
 
 def triple(value: int) -> int:
     """Triple a number.
@@ -102,49 +87,9 @@ const PYTHON_SANDBOX = {
     },
 } as const;
 
-const ARITHMETIC_DOUBLE_RETURNS = `
-    Returns:
-        int: Twice the number.
-
-    """
-`;
-
-const PYTHON_CASES = [
-    {
-        check: 'python/ruff',
-        files: {
-            [ARITHMETIC_MODULE_PATH]: `${ARITHMETIC_MODULE}
-
-def run(code: str) -> object:
-    """Run code.
-
-    Args:
-        code (str): The code.
-
-    Returns:
-        object: What it gave.
-
-    """
-    return eval(code)
-`,
-        },
-        expected: { file: ARITHMETIC_MODULE_PATH, rule: 'S307', line: 40 },
-    },
-    {
-        check: 'python/ruff-format',
-        files: {
-            [ARITHMETIC_MODULE_PATH]: `${ARITHMETIC_DOUBLE_HEADER}        value (int): The number.
-${ARITHMETIC_DOUBLE_RETURNS}    return value*2
-`,
-        },
-        expected: { file: ARITHMETIC_MODULE_PATH },
-    },
-] as const;
-
 const ARITHMETIC_TESTS = `"""Tests of the arithmetic."""
 
 from example.math import double, triple
-
 
 def test_multiplication() -> None:
     """Both functions multiply."""
@@ -159,11 +104,9 @@ const RUFF_SANDBOX = {
 } as const;
 
 export {
-    PYTHON_CASES,
     RUFF_SANDBOX,
     PYTHON_SANDBOX,
     VERSION_SOURCE,
-    FUNCTION_SOURCE,
     ARITHMETIC_TESTS,
     RUFF_RULE_SOURCE,
     ARITHMETIC_MODULE,

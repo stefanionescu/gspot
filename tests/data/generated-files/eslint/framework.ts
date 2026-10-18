@@ -62,13 +62,6 @@ const RAW_HTML_CASES = [
     },
 ] as const;
 
-/** Text components and raw text in a view, for the React Native raw-text rule. */
-const TEXT_COMPONENTS = {
-    'src/Label.jsx': 'export const Label = () => <ThemedText>label</ThemedText>;\n',
-    'src/Raw.jsx': 'export const Raw = () => <View>label</View>;\n',
-    'src/Native.jsx': 'export const Native = () => <Text>label</Text>;\n',
-} as const;
-
 /** React Native and Expo scopes that share no framework configuration. */
 const MOBILE_SETTINGS = `configurations = [ "javascript" ]
 
@@ -90,12 +83,4 @@ const MOBILE_SOURCE_FILES = {
     'expo-app/source.js': 'const { EXPO_PUBLIC_URL } = process.env;\n',
 } as const;
 
-export {
-    I18N_SOURCE,
-    SERVER_FILES,
-    RAW_HTML_CASES,
-    SELECTOR_FILES,
-    COMPONENT_FILES,
-    TEXT_COMPONENTS,
-    MOBILE_SOURCE_FILES,
-};
+export { I18N_SOURCE, SERVER_FILES, RAW_HTML_CASES, SELECTOR_FILES, COMPONENT_FILES, MOBILE_SOURCE_FILES };

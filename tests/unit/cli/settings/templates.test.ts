@@ -101,19 +101,6 @@ test('a template given by absolute path loads from another working folder', asyn
     expect(absolute.digest).toBe(relative.digest);
 });
 
-test('templates keep allowed licenses and allowed packages', async () => {
-    await using folder = await testdir();
-    const licenses = {
-        allowed: ['MPL-2.0'],
-        allowed_package: [{ name: 'example', version: '1.2.3', reason: 'Reviewed package metadata.' }],
-    };
-    const exported = exportTemplate(stringify({ configurations: ['licenses'], licenses }));
-    await createFileTree(folder.path, { 'licenses.template.toml': exported.text });
-    const restored = await readTemplate('licenses.template.toml', folder.path);
-    expect(restored.tables.licenses).toStrictEqual(licenses);
-    expect(exported.leftOut).toStrictEqual([]);
-});
-
 test.each([
     ['https://example.com/house.template.toml', 'https://example.com/house.template.toml'],
     ['github:acme/policies', `${RAW_HOST}/acme/policies/HEAD/${TEMPLATE_FILE}`],

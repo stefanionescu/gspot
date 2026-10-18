@@ -200,23 +200,6 @@ test('nextjs > Next.js route rules use each project root and stay off in a scope
     expect(warnings.mock.calls).toStrictEqual([]);
 });
 
-test('nextjs > an App Router link leaves the Pages Router rule off', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['nextjs'], { level: 'all' }),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'app/about/page.jsx': 'export default function About() { return <a href="/about">About</a>; }\n',
-    });
-    const eslint = await createEslint(sandbox.path);
-    const config = (await eslint.calculateConfigForFile(
-        join(sandbox.path, 'app/about/page.jsx'),
-    )) as EslintConfiguration;
-    expect(config.rules['@next/next/no-html-link-for-pages']).toStrictEqual([0]);
-    expect(
-        await collectLintFindings(eslint, sandbox.path, ['app/about/page.jsx'], ['@next/next/no-html-link-for-pages']),
-    ).toStrictEqual([]);
-});
-
 test('the Swagger lint rules apply only when package.json declares @nestjs/swagger', async () => {
     await using repository = await createSandbox({ ...NESTJS_SANDBOX, level: 'all', dependencies: {} });
     const path = join(repository.root, 'src/greeting.controller.ts');

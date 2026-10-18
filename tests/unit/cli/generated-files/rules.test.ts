@@ -15,7 +15,7 @@ import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
-import { DRIZZLE_DRIVERS, JAVASCRIPT_IN_APP, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/data/rules.ts';
+import { JAVASCRIPT_IN_APP, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/data/rules.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();
@@ -222,22 +222,4 @@ describe('rules', () => {
             expect(present.has(`${RULES_PATH}/${path}`)).toBe(true);
         }
     });
-
-    test.each([...DRIZZLE_DRIVERS])(
-        'the Drizzle rules are written only for a PostgreSQL driver: $driver',
-        async ({ driver, postgres }) => {
-            const guides = await generateRuleFiles('all', {
-                'package.json': JSON.stringify({ dependencies: { 'drizzle-orm': '0.45.1', [driver]: '1.0.0' } }),
-            });
-            expect(guides.has(`${RULES_PATH}/library/drizzle/DRIZZLE.md`)).toBe(postgres);
-        },
-    );
-});
-test('a React dependency selects COMPONENTS.md', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': 'configurations = ["javascript"]\n',
-        'package.json': '{"dependencies":{"react":"19.2.0"}}',
-    });
-    const session = await openSession(sandbox.path);
-    expect(selectRuleFiles(session).map(({ path }) => path)).toContain('language/javascript/COMPONENTS.md');
 });

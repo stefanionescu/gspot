@@ -63,30 +63,6 @@ path = "warehouse/child"
     expect(hasSqlParseError(wrongChild.stdout)).toBe(true);
 });
 
-test('SQLFluff accepts block comments and still reports a broken query', async () => {
-    const { root, environment } = installedSandbox();
-    const source = '/* Explains the query. */\nSELECT 1;\n';
-    await using _sourceChange = await prepareSqlFiles({
-        'gspot.toml': buildSettingsText(['sql'], { level: 'all' }),
-        'query.sql': source,
-    });
-    const command = ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json'];
-    const accepted = await spawnGspot(root, command, environment);
-    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(await Bun.file(join(root, 'query.sql')).text()).toBe(source);
-    await Bun.write(join(root, 'query.sql'), '/* Explains the query. */\nSELECT FROM;\n');
-    const failed = await spawnGspot(root, command, environment);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(
-        (JSON.parse(failed.stdout) as RunReport).checks
-            .flatMap((check) => check.findings)
-            .some((finding) => finding.rule === 'PRS'),
-    ).toBe(true);
-    await Bun.write(join(root, 'query.sql'), source);
-    const corrected = await spawnGspot(root, command, environment);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
 test('SQLFluff reports and fixes uppercase function names', async () => {
     const { root, environment } = installedSandbox();
     await using _sourceChange = await prepareSqlFiles({

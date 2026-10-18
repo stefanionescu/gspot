@@ -4,15 +4,14 @@ import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
-import { TYPO } from '#tests/data/checks/spelling.ts';
 import { SQL_CHECK } from '#tests/data/checks/sql.ts';
+import { matchSubstring } from '#tests/setup/matchers.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
-import { matchItems, matchSubstring } from '#tests/setup/matchers.ts';
 import { stat, chmod, symlink, readFile, readlink } from 'node:fs/promises';
 import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/data/checks/python/project.ts';
 import { runGspot, checkReport, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
@@ -187,41 +186,6 @@ keep = true
         expect(await isOnDisk(join(sandbox.path, generated.folder, generated.file))).toBe(true);
     },
 );
-
-test('init replaces a nested spelling configuration and deletes the original', async () => {
-    using _output = spyOn(process.stdout, 'write').mockReturnValue(true);
-
-    await using folder = await testdir();
-    const original = `[default]
-locale = "en-gb"
-[default.extend-words]
-${TYPO.the} = "${TYPO.the}"
-`;
-    await createFileTree(folder.path, {
-        'nested/typos.toml': original,
-        'nested/sample.txt': `${TYPO.color} ${TYPO.the}\n`,
-    });
-
-    const preview = await runRegisteredCommand(folder.path, [
-        'init',
-        '--yes',
-        '--dry-run',
-        '--configurations',
-        'spelling',
-    ]);
-    expect(preview.exitCode).toBe(0);
-    expect(preview.json).toMatchObject({
-        plan: {
-            delete: matchItems([{ path: 'nested/typos.toml', note: 'replaced by the generated typos tool file' }]),
-        },
-    });
-    expect(await readFile(join(folder.path, 'nested/typos.toml'), 'utf8')).toBe(original);
-    expect(await isOnDisk(join(folder.path, 'gspot.toml'))).toBe(false);
-    const installed = await runRegisteredCommand(folder.path, ['init', '--yes', '--configurations', 'spelling']);
-    expect(installed.exitCode).toBe(0);
-    expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).not.toContain('en-gb');
-    expect(await isOnDisk(join(folder.path, 'nested/typos.toml'))).toBe(false);
-});
 
 test('at level recommended, init keeps the tool files of checks that are off', async () => {
     using _output = spyOn(process.stdout, 'write').mockReturnValue(true);

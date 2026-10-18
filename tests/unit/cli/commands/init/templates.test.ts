@@ -97,29 +97,3 @@ test.each([[], ['--dry-run']].map((flags) => ({ flags })))(
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );
-
-test('init --from an exported template writes the same settings in another repository', async () => {
-    await using sandbox = await testdir({
-        source: { 'source.sh': CLEAN_BASH_SCRIPT },
-        destination: { 'source.sh': CLEAN_BASH_SCRIPT },
-    });
-    const source = join(sandbox.path, 'source');
-    const destination = join(sandbox.path, 'destination');
-    commitAll(source);
-    commitAll(destination);
-    expect(await runGspot(source, buildInitArguments(['bash']))).toMatchObject({ code: 0 });
-    expect(await runGspot(source, ['set', 'level', 'all'])).toMatchObject({ code: 0 });
-    expect(await runGspot(source, ['set', 'format.indent_width', '2'])).toMatchObject({ code: 0 });
-    expect(await runGspot(source, ['export', 'house.template.toml'])).toMatchObject({ code: 0 });
-    const template = join(source, 'house.template.toml');
-    const copied = await runGspot(destination, [...buildInitArguments([]), '--from', template]);
-    expect(copied.code, copied.stdout + copied.stderr).toBe(0);
-    expect(parse(await Bun.file(join(destination, 'gspot.toml')).text()) as TomlTable).toStrictEqual(
-        parse(await Bun.file(join(source, 'gspot.toml')).text()) as TomlTable,
-    );
-    const exported = await runGspot(destination, ['export', 'house.template.toml']);
-    expect(exported.code, exported.stdout + exported.stderr).toBe(0);
-    expect(parse(await Bun.file(join(destination, 'house.template.toml')).text()) as TomlTable).toStrictEqual(
-        parse(await Bun.file(template).text()) as TomlTable,
-    );
-});

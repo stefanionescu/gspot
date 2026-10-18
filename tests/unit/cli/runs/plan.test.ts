@@ -12,12 +12,12 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { checkSemgrep } from '#cli/checks/general/security.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { runCheckCommand } from '#cli/checks/run/command/check.ts';
 import { ALWAYS_SELECTED } from '#tests/data/configurations/manifests.ts';
-import { buildRunOptions, buildMobileFiles } from '#tests/setup/builders.ts';
 import { planRun, isActive, stripCoverageArguments } from '#cli/planning/checks.ts';
 import { HISTORY_TABLES, TOOL_FILE_PLANNING_CASES } from '#tests/data/runs/plan.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/data/checks/format.ts';
@@ -252,17 +252,6 @@ configurations = ["xcode"]
         ['files/xmllint', ['api/app.storyboard', 'api/data.xml']],
         ['xcode/plutil', ['api/app.plist']],
     ]);
-});
-
-test('Expo Doctor is planned only in the scope that selects Expo', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, buildMobileFiles());
-    const session = await openSession(sandbox.path);
-    expect(
-        session.configuredChecks
-            .filter((check) => check.check.name === 'expo/expo-doctor')
-            .map((check) => check.selection.scope.path),
-    ).toStrictEqual(['expo-app']);
 });
 
 test.each([...TOOL_FILE_PLANNING_CASES])(

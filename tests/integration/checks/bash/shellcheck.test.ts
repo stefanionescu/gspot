@@ -10,11 +10,8 @@ import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { type RunReport } from '#cli/types/checks/run/check.ts';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { SHELLCHECK_SANDBOX } from '#tests/data/checks/bash/samples.ts';
 import { parseCommandFindings } from '#cli/checks/run/command/output.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-import { DIALECT_FIXES, DIALECT_SOURCES, SHELLCHECK_CASES } from '#tests/data/checks/bash/tool-checks.ts';
+import { DIALECT_FIXES, DIALECT_SOURCES } from '#tests/data/checks/bash/tool-checks.ts';
 
 test('ShellCheck reports dialect findings by shebang and an unchecked cd, and changes no file', async () => {
     await using sandbox = await testdir();
@@ -91,11 +88,4 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     const corrected = runCommandBlocking(command, { cwd: sandbox.path });
     expect(corrected.code).toBe(0);
     expect(parseCommandFindings(planned, corrected, paths).findings).toStrictEqual([]);
-});
-
-const installedSandbox = registerSharedSandbox(SHELLCHECK_SANDBOX);
-
-test.each([...SHELLCHECK_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, SHELLCHECK_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });

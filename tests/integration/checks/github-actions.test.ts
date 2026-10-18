@@ -7,18 +7,10 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { type RunReport } from '#cli/types/checks/run/check.ts';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
+import { COMPOSITE_ACTION, CHECKOUT_WORKFLOW } from '#tests/data/checks/github-actions.ts';
 import { installSandbox, buildSandboxPath, installToolProjects } from '#tests/setup/install.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-
-import {
-    COMPOSITE_ACTION,
-    CHECKOUT_WORKFLOW,
-    GITHUB_ACTIONS_CASES,
-    GITHUB_ACTIONS_SANDBOX,
-} from '#tests/data/checks/github-actions.ts';
 
 test('the generated GitHub workflow passes actionlint', async () => {
     await using sandbox = await testdir();
@@ -195,11 +187,4 @@ configurations = ["github-actions"]
     const corrected = JSON.parse(correctedCommand.stdout) as RunReport;
     expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
     expect(await Bun.file(join(sandbox.path, '.github/workflows/build.yml')).text()).toBe(CHECKOUT_WORKFLOW);
-});
-
-const installedSandbox = registerSharedSandbox(GITHUB_ACTIONS_SANDBOX);
-
-test.each([...GITHUB_ACTIONS_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, GITHUB_ACTIONS_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });

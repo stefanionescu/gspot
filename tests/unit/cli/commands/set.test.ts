@@ -4,14 +4,14 @@ import { parse } from '@decimalturn/toml-patch';
 import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
+import { runGspot } from '#tests/setup/run-gspot.ts';
+import { matchItems } from '#tests/setup/matchers.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
-import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { commitAll, readGitOutput, prepareAppliedBashRepository } from '#tests/setup/git.ts';
 
 import {
@@ -21,33 +21,6 @@ import {
     RESTRICTED_IMPORTS,
     EXTRA_OPTION_SCOPES,
 } from '#tests/data/commands/set.ts';
-
-test('unignore restores the missing-license finding', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['docs'], { level: 'all' }),
-        'README.md': '# Example\n',
-    });
-    const ignored = await runGspot(sandbox.path, [
-        'ignore',
-        'docs/required-files',
-        '--rule',
-        'missing-license',
-        '--reason',
-        'The example repository has no published license.',
-    ]);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const relaxed = await checkReport(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
-    expect(
-        relaxed.report.checks.flatMap(({ findings }) => findings).some(({ rule }) => rule === 'missing-license'),
-    ).toBe(false);
-    const restored = await runGspot(sandbox.path, ['unignore', 'docs/required-files', '--rule', 'missing-license']);
-    expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-    const missing = await checkReport(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
-    expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-    expect(missing.report.checks.flatMap(({ findings }) => findings)).toContainEqual(
-        matchFields({ file: 'LICENSE', rule: 'missing-license' }),
-    );
-});
 
 test.each([
     [

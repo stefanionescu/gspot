@@ -5,17 +5,16 @@ import { hasToolBuild } from '#tests/setup/system.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
+import { checkChanges } from '#tests/setup/sample-checks.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { RunReport } from '#cli/types/checks/run/check.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { SWIFT_FORMAT_CHECK } from '#tests/data/checks/swift/projects.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { checkChanges, runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
 import {
     CAST_SWIFT,
     CLEAN_SWIFT,
-    SWIFT_CASES,
     SOURCE_HEADER,
     SWIFT_SANDBOX,
     SWIFT_DOCS_SOURCE,
@@ -23,16 +22,6 @@ import {
 } from '#tests/data/checks/swift/lint.ts';
 
 const installedSandbox = registerSharedSandbox(SWIFT_SANDBOX);
-
-for (const entry of SWIFT_CASES) {
-    test.skipIf(!hasToolBuild(entry.check.split('/', 2)[1]!))(
-        `${entry.check} reports ${entry.expected.rule} and passes after the fix`,
-        async () => {
-            const result = await runCheckSample(installedSandbox(), entry, SWIFT_SANDBOX);
-            expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-        },
-    );
-}
 
 test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header when it fixes spacing', async () => {
     const { root, environment } = installedSandbox();

@@ -1,44 +1,5 @@
 const CALLED_WORKFLOW = '.github/workflows/called.yml';
 
-// Shared workflow text for github-actions checks.
-const WORKFLOW_HEAD = `name: test
-on: [push]
-permissions:
-    contents: read
-jobs:
-    build:
-        runs-on: ubuntu-24.04
-        steps:
-`;
-
-const GITHUB_ACTIONS_SANDBOX = {
-    configurations: ['github-actions'],
-    files: { '.github/workflows/build.yml': `${WORKFLOW_HEAD}            - run: echo built\n` },
-} as const;
-
-const GITHUB_ACTIONS_CASES = [
-    {
-        check: 'github-actions/actionlint',
-        files: {
-            '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo "\${{ nothing.here }}"\n`,
-        },
-        expected: { file: '.github/workflows/broken.yml', rule: 'expression', line: 9, column: 30 },
-        corrected: {
-            files: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
-        },
-    },
-    {
-        check: 'github-actions/zizmor',
-        files: {
-            '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
-        },
-        expected: { file: '.github/workflows/unpinned.yml', rule: 'template-injection', line: 10 },
-        corrected: {
-            files: { '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
-        },
-    },
-] as const;
-
 const COMPOSITE_ACTION = `name: Greet
 inputs:
     message:
@@ -89,12 +50,4 @@ const ACTIONLINT_EXITS = [
     { code: 3, status: 'error', findings: [], note: 'exit 3' },
 ] as const;
 
-export {
-    CALLED_WORKFLOW,
-    ACTIONLINT_EXITS,
-    COMPOSITE_ACTION,
-    CHECKOUT_WORKFLOW,
-    GITHUB_ACTIONS_CASES,
-    GITHUB_ACTIONS_SANDBOX,
-    CALLED_WORKFLOW_REFERENCES,
-};
+export { CALLED_WORKFLOW, ACTIONLINT_EXITS, COMPOSITE_ACTION, CHECKOUT_WORKFLOW, CALLED_WORKFLOW_REFERENCES };

@@ -78,6 +78,3 @@ eqeqeq = [ "always" ]
 [[scope]]
 path = "apps/web/admin"
 `;
-
-/** Authored runtime values rejected by the settings reader. */
-export const INVALID_RUNTIMES = ['desktop', 'node }; globalThis.injected = true; //', 'node"\n/* café */'] as const;

@@ -28,7 +28,6 @@ describe('drizzle', () => {
         expect(await collectLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
     });
 });
-describe('tanstack-query', () => {});
 describe('translations', () => {
     test.each([...LEVELS])('literal UI text is reported outside the test files of each scope at %s', async (level) => {
         await using sandbox = await testdir();
@@ -53,7 +52,6 @@ describe('translations', () => {
         }
     });
 });
-describe('zod', () => {});
 describe('zustand', () => {
     test.each([...LEVELS])(
         '%s keeps your import restrictions in store files and the Zustand restriction elsewhere',

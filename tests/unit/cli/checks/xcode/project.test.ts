@@ -62,8 +62,7 @@ describe('settings', () => {
         '%s checks the deepest scope only',
         async (check, path, broken, corrected, rule) => {
             await using sandbox = await testdir();
-            const rootContent =
-                check === 'xcode/entitlements' ? corrected.replace('nested-capability', 'root-capability') : corrected;
+            const rootContent = corrected.replace('nested-capability', 'root-capability');
             const settings = buildSettingsText(['xcode'], {
                 tables: '[xcode]\nallowed_entitlements = ["root-capability"]\n[[scope]]\npath = "app"\n[scope.xcode]\nallowed_entitlements = ["nested-capability"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
                 level: 'all',

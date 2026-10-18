@@ -19,28 +19,6 @@ public func greeting(for name: String) -> String {
 }
 `;
 
-export const SWIFT_CASES = [
-    // SwiftLint has no Windows build.
-    {
-        check: 'swift/swiftformat',
-        files: {
-            'Sources/App/Greeting.swift': String.raw`import Foundation
-
-/// Builds the greeting for a person.
-public  func greeting(for name: String) -> String {
-    let person = name.trimmingCharacters(in: .whitespacesAndNewlines)
-    if person.isEmpty {
-        return "hello"
-    }
-    return "hello \(person)"
-}
-`,
-        },
-        corrected: { files: { 'Sources/App/Greeting.swift': CLEAN_SWIFT } },
-        expected: { file: 'Sources/App/Greeting.swift', rule: 'consecutiveSpaces', line: 4 },
-    },
-] as const;
-
 /** A Swift sandbox that holds one function every check accepts. */
 export const SWIFT_SANDBOX = {
     install: false,

@@ -15,47 +15,6 @@ CREATE TABLE client_data (id int);
 ALTER TABLE client_data ENABLE ROW LEVEL SECURITY;
 `;
 
-const MIGRATIONS_FOLDER = 'supabase/migrations';
-
-const POSTGRES_SANDBOX = {
-    configurations: ['postgres'],
-    files: {
-        [`${MIGRATIONS_FOLDER}/20240101000000_create_teams.sql`]: `-- The teams of the application.
-BEGIN;
-SET LOCAL lock_timeout = '5s';
-SET LOCAL statement_timeout = '30s';
-CREATE TABLE IF NOT EXISTS public.teams (
-    id UUID PRIMARY KEY,
-    title TEXT NOT NULL
-);
-ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
-CREATE POLICY members_read ON public.teams FOR SELECT USING (true);
-COMMIT;
-`,
-    },
-} as const;
-
-const POSTGRES_CASES = [
-    {
-        check: 'postgres/squawk',
-        files: {
-            [`${MIGRATIONS_FOLDER}/20240201000000_add_size.sql`]:
-                'ALTER TABLE public.teams ADD COLUMN size BIGINT NOT NULL;\n',
-        },
-        expected: { file: `${MIGRATIONS_FOLDER}/20240201000000_add_size.sql`, rule: 'adding-required-field', line: 1 },
-        corrected: {
-            files: {
-                [`${MIGRATIONS_FOLDER}/20240201000000_add_size.sql`]: `BEGIN;
-SET LOCAL lock_timeout = '5s';
-SET LOCAL statement_timeout = '30s';
-ALTER TABLE public.teams ADD COLUMN size BIGINT;
-COMMIT;
-`,
-            },
-        },
-    },
-] as const;
-
 const UNWRAPPED_MIGRATION = `SET lock_timeout = '5s';
 SET statement_timeout = '30s';
 ALTER TABLE public.teams ADD COLUMN size BIGINT;
@@ -128,10 +87,8 @@ export {
     GRANT_FILES,
     FROZEN_GRANTS,
     MIGRATION_FILE,
-    POSTGRES_CASES,
     TEAMS_MIGRATION,
     KEYED_TABLES_SQL,
-    POSTGRES_SANDBOX,
     RECREATED_TABLE_SQL,
     UNWRAPPED_MIGRATION,
     SQUAWK_ROOT_MIGRATION,

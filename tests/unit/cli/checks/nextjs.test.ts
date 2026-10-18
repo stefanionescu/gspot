@@ -1,5 +1,6 @@
 import { join, basename } from 'node:path';
 import { openSession } from '#cli/session.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { planRun } from '#cli/planning/checks.ts';
@@ -7,7 +8,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
 import { type Session } from '#cli/types/planning.ts';
-import { test, spyOn, expect, describe } from 'bun:test';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -83,8 +83,12 @@ function mockNextjsCommands(
     };
 }
 
-describe.each(['', 'app'])('%s', (scope) => {
-    test(`Next.js output preservation in ${scope || 'root'}: nextjs/tsc reports its finding, passes after the fix, and preserves source output`, async () => {
+test.each([
+    { name: 'root', scope: '' },
+    { name: 'app', scope: 'app' },
+])(
+    'Next.js output preservation in $name: nextjs/tsc reports its finding, passes after the fix, and preserves source output',
+    async ({ scope }) => {
         await using folder = await testdir();
         const session = await prepareNextjsBuild(folder.path, scope);
 
@@ -127,8 +131,8 @@ describe.each(['', 'app'])('%s', (scope) => {
             '// Retained route types\n',
         );
         expect(await readFile(join(folder.path, 'unrelated/private.txt'), 'utf8')).toBe('Preserve unrelated scope\n');
-    });
-});
+    },
+);
 
 test("a failed type generation removes the scratch copy and keeps the developer's edit", async () => {
     using resources = new DisposableStack();

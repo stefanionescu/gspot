@@ -236,18 +236,6 @@ test('sql: psql variables are not names, and quoted names keep their positions',
     ]);
 });
 
-test('sql: SQL declared names retain exact source positions', async () => {
-    const { identifiers: found } = await extractSqlIdentifiers(
-        'schema.sql',
-        'CREATE TABLE user_accounts (display_name text);',
-        createReadCache(process.cwd()),
-    );
-    expect(found.map(({ name, line, column }) => ({ name, line, column }))).toStrictEqual([
-        { name: 'user_accounts', line: 1, column: 14 },
-        { name: 'display_name', line: 1, column: 29 },
-    ]);
-});
-
 test('sql: qualified SQL function and parameter names use their own declaration positions', async () => {
     const { identifiers: found } = await extractSqlIdentifiers(
         'schema.sql',

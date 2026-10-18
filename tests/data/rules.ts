@@ -6,11 +6,6 @@ export const RUNTIME_RULE_CASES = [
     { runtime: 'node', dependency: 'expo', hasNode: false },
 ] as const;
 
-export const DRIZZLE_DRIVERS = [
-    { driver: 'pg', postgres: true },
-    { driver: 'mysql2', postgres: false },
-] as const;
-
 export const RULE_CONFIGURATIONS = ['typescript', 'css', 'vitest', 'swift', 'bash', 'drizzle', 'openapi'] as const;
 
 /** A scope in app/ with the javascript configuration. */

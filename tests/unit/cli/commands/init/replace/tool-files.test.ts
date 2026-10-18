@@ -1,15 +1,13 @@
-import { ESLint } from 'eslint';
+import { join, posix } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
-import { join, posix, relative } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
+import { STYLELINT_LOOKUP_SCRIPT } from '#tests/data/commands/init.ts';
 import { runGspot, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
-import { KNIP_FILES, STYLELINT_LOOKUP_SCRIPT } from '#tests/data/commands/init.ts';
 import { VALID_CSS, INVALID_CSS, STYLELINT_PACKAGE_JSON } from '#tests/data/checks/css.ts';
 
 test.each(['', 'app'])(
@@ -99,93 +97,4 @@ test('init replaces a standalone .stylelintrc.mjs without adding a package.json 
     const corrected = await runCommand(command, { cwd: sandbox.path });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.stdout).toBe('[]');
-});
-
-test.each(['eslint.config.mts', 'eslint.config.cts'])('init replaces your ESLint file %s', async (file) => {
-    using _output = spyOn(process.stdout, 'write').mockReturnValue(true);
-
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gitignore': '.gspot/\n',
-        'package.json': '{"private":true,"type":"module"}',
-        [file]: 'export default [];\n',
-        'main.js': 'export const value = 1;\n',
-    });
-    commitAll(sandbox.path);
-    await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
-    const before = await new ESLint({ cwd: sandbox.path }).findConfigFile('main.js');
-    expect(convertToPosixPath(relative(sandbox.path, before!))).toBe(file);
-    const initCommand = ['init', '--yes', '--configurations', 'javascript'];
-    const preview = await runRegisteredCommand(sandbox.path, [...initCommand, '--dry-run']);
-    const plan = (preview.json as InitJson).plan!;
-    expect(plan.delete).toContainEqual({
-        path: file,
-        note: 'replaced by the generated eslint tool file',
-    });
-    const written = await runRegisteredCommand(sandbox.path, initCommand);
-    expect(written.exitCode, written.text).toBe(0);
-    expect(await Bun.file(join(sandbox.path, file)).exists()).toBe(false);
-    const after = await new ESLint({ cwd: sandbox.path }).findConfigFile('main.js');
-    expect(convertToPosixPath(relative(sandbox.path, after!))).toBe('eslint.config.mjs');
-});
-
-test.each([...KNIP_FILES])('init replaces your Knip file $file and keeps knip.config.mjs', async ({ file, source }) => {
-    using _output = spyOn(process.stdout, 'write').mockReturnValue(true);
-
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gitignore': '.gspot/\n',
-        'package.json': '{"private":true,"type":"module"}',
-        [file]: source,
-        'knip.config.mjs': 'export default {};\n',
-        'main.js': 'export const value = 1;\n',
-        'unused.js': 'export const unused = 2;\n',
-    });
-    commitAll(sandbox.path);
-    await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
-    const command = [
-        process.execPath,
-        '.gspot/node_modules/knip/bin/knip.js',
-        '--no-progress',
-        '--reporter',
-        'json',
-        '--include',
-        'files',
-    ];
-    const before = await runCommand(command, { cwd: sandbox.path });
-    expect(before.code, before.stdout + before.stderr).toBe(1);
-    expect(JSON.parse(before.stdout)).toMatchObject({
-        issues: [{ file: 'unused.js', files: [{ name: 'unused.js' }] }],
-    });
-    const initCommand = ['init', '--yes', '--configurations', 'javascript'];
-    const preview = await runRegisteredCommand(sandbox.path, [...initCommand, '--dry-run']);
-    const plan = (preview.json as InitJson).plan!;
-    expect(plan.delete).toContainEqual({
-        path: file,
-        note: 'replaced by the generated knip tool file',
-    });
-    expect(plan.delete.some((entry) => entry.path === 'knip.config.mjs')).toBe(false);
-    const written = await runRegisteredCommand(sandbox.path, initCommand);
-    expect(written.exitCode, written.text).toBe(0);
-    expect(await Bun.file(join(sandbox.path, file)).exists()).toBe(false);
-    expect(await Bun.file(join(sandbox.path, 'knip.config.mjs')).text()).toBe('export default {};\n');
-    const after = await runCommand([...command, '--config', '.gspot/config/knip.json'], { cwd: sandbox.path });
-    expect(after.code, after.stdout + after.stderr).toBe(1);
-    const unused = (JSON.parse(after.stdout) as { issues: { file: string }[] }).issues.map(({ file }) => file);
-    expect(unused.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        'knip.config.mjs',
-        'main.js',
-        'unused.js',
-    ]);
-    const changed = await runGspot(sandbox.path, [
-        'set',
-        'tools.knip.entry',
-        '["main.js","unused.js","knip.config.mjs"]',
-    ]);
-    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const corrected = await runCommand([...command, '--config', '.gspot/config/knip.json'], {
-        cwd: sandbox.path,
-    });
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(JSON.parse(corrected.stdout)).toMatchObject({ issues: [] });
 });

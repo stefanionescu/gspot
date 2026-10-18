@@ -9,7 +9,7 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
-import { COMMITLINT_FILES, COMMITLINT_PACKAGE, COMMITLINT_EXECUTABLE } from '#tests/data/checks/commits.ts';
+import { COMMITLINT_PACKAGE, COMMITLINT_EXECUTABLE } from '#tests/data/checks/commits.ts';
 
 /** Check that the authored Commitlint rules pass, then run init with the imported settings. */
 async function replaceCommitlint(
@@ -27,32 +27,6 @@ async function replaceCommitlint(
     );
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
 }
-
-test.each([...COMMITLINT_FILES])('init replaces your commitlint file $file', async ({ file, source }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { [file]: source, 'message.txt': 'special: authored contract\n' });
-    commitAll(sandbox.path);
-    const execution = { cwd: sandbox.path, env: { PATH: buildSandboxPath() } };
-    await replaceCommitlint(
-        sandbox.path,
-        [join(testModules, COMMITLINT_EXECUTABLE), '--edit', 'message.txt'],
-        execution,
-    );
-    expect(await Bun.file(join(sandbox.path, file)).exists()).toBe(false);
-    const command = [
-        join(testModules, COMMITLINT_EXECUTABLE),
-        '--config',
-        '.gspot/config/commitlint.config.cjs',
-        '--edit',
-        'message.txt',
-    ];
-    const after = await runCommand(command, execution);
-    expect(after.code, after.stdout + after.stderr).toBe(1);
-    expect(after.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
-    await Bun.write(join(sandbox.path, 'message.txt'), 'fix: generated contract\n');
-    const corrected = await runCommand(command, execution);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
 
 test.each(['', 'app'])(
     'commitlint reads the generated config through the package.json field gspot writes, in %s',

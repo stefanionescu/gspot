@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { test, expect, describe } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { isGitRepository } from '#cli/system/git.ts';
@@ -165,7 +165,7 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
 });
 
 // Windows file names cannot hold a newline.
-describe.each(['nested', 'source\nfiles'])('%s', (folder) => {
+for (const folder of ['nested', 'source\nfiles'])
     test.skipIf(isWindows && folder.includes('\n'))(
         `non-Git discovery in ${JSON.stringify(folder)} applies nested ignores, pruning and link boundaries without sharing them with siblings`,
         async () => {
@@ -206,7 +206,6 @@ describe.each(['nested', 'source\nfiles'])('%s', (folder) => {
             expect(linked.map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
         },
     );
-});
 
 test('the index keeps deleted tracked paths and encoded names and leaves out untracked files', async () => {
     const path = 'folder % café/file.env';

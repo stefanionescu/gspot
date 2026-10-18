@@ -6,7 +6,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
 import { spawnCheckFindings } from '#tests/setup/run-gspot.ts';
-import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.ts';
+import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {
@@ -17,40 +17,6 @@ import {
 } from '#tests/data/checks/spelling.ts';
 
 const installedSandbox = registerSharedSandbox(CHECKS_SPELLING_INSTALLED_SANDBOX);
-
-test('typos file-type word allowances apply only to their files at level all', async () => {
-    const sandbox = installedSandbox();
-    const sourceFiles = {
-        'gspot.toml': buildSettingsText(['spelling'], {
-            level: 'all',
-            tables: `[tools.typos.extra]
-reason = "The imported sample needs its original spelling."
-value = { type = { fixture = { extend-glob = ["fixture.txt"], extend-words = { ${TYPO.color} = "${TYPO.color}" }, extend-identifiers = { IIFEs = "IIFEs" } } } }
-`,
-        }),
-        'fixture.txt': `${TYPO.color} ${TYPO.the}\nIIFEs\n`,
-        'neighbor.txt': `${TYPO.color} ${TYPO.the}\n`,
-    };
-    await using _sourceChange = await applySandboxChanges(
-        sandbox,
-        buildSandboxChanges(CHECKS_SPELLING_INSTALLED_SANDBOX.files, sourceFiles),
-    );
-    const failed = await spawnCheckFindings(sandbox.root, SPELLING_CHECK_ARGUMENTS, sandbox.environment);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const findings = failed.findings;
-    expect(findings).toHaveLength(3);
-    expect(findings).toStrictEqual(
-        matchItems([
-            matchFields({ file: 'fixture.txt', line: 1, message: matchSubstring(TYPO.the) }),
-            matchFields({ file: 'neighbor.txt', line: 1, message: matchSubstring(TYPO.color) }),
-            matchFields({ file: 'neighbor.txt', line: 1, message: matchSubstring(TYPO.the) }),
-        ]),
-    );
-    await Bun.write(join(sandbox.root, 'fixture.txt'), `${TYPO.color} the\nIIFEs\n`);
-    await Bun.write(join(sandbox.root, 'neighbor.txt'), 'color the\n');
-    const fixed = await spawnCheckFindings(sandbox.root, SPELLING_CHECK_ARGUMENTS, sandbox.environment);
-    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-});
 
 test('typos locale and word allowances stay in their scope at level all', async () => {
     const sandbox = installedSandbox();

@@ -71,13 +71,3 @@ export const VERSION_OUTPUTS = [
     ],
     ['console.error("3.8.1");', 'ok', '3.8.1', undefined],
 ] as const;
-
-/** The registry APIs that report when a pinned tool version came out. */
-export const PUBLISH_TIME_APIS = {
-    npm: 'https://registry.npmjs.org/',
-    pypi: 'https://pypi.org/pypi/',
-    github: 'https://api.github.com/repos/',
-} as const;
-
-/** One day in milliseconds. */
-export const DAY_MILLISECONDS = 86_400_000;

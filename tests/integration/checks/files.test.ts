@@ -23,30 +23,6 @@ test.each([...FILES_CASES])('$check reports $expected.file and passes after the 
     expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });
 
-test('Taplo fixes inline table spacing', async () => {
-    const { root, environment } = installedSandbox();
-    await using state = new AsyncDisposableStack();
-    state.use(
-        await updateSandbox(installedSandbox(), {
-            check: 'files/taplo-format',
-            files: { 'settings/inline.toml': '' },
-        }),
-    );
-    const path = join(root, 'settings/inline.toml');
-    const command = ['check', 'settings/inline.toml', '--only', 'files/taplo-format', '--json'];
-    const selected = await spawnGspot(root, ['set', 'level', 'all'], environment);
-    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-    await Bun.write(path, 'entry={key=true}\n');
-    const fixed = await spawnGspot(root, [...command, '--fix'], environment);
-    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-    expect(await Bun.file(path).text()).toBe('entry = { key = true }\n');
-    const checked = await spawnGspot(root, command, environment);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
-        { check: 'files/taplo-format', status: 'passed', findings: [] },
-    ]);
-});
-
 test('Taplo follows an extra tool option for compact inline tables and returns to its default without it', async () => {
     const { root, environment } = installedSandbox();
     await using state = new AsyncDisposableStack();

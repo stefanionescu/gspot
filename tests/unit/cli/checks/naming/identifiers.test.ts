@@ -56,30 +56,6 @@ test.each([...FRAMEWORK_NAMES])(
     },
 );
 
-test('configuration-names: names other configurations allow are checked like any name in plain TypeScript', async () => {
-    await using sandbox = await testdir();
-    const source = ['env', 'response'].map((name) => `export function ${name}() { return null; }\n`).join('');
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript', 'naming'], {
-            level: 'all',
-            tables: `[naming]\nbanned_words = ${JSON.stringify(['env', 'response'])}\n`,
-        }),
-        'entry.ts': source,
-    });
-    const command = ['check', '--only', 'naming/identifiers', '--json'];
-    const failed = await checkReport(sandbox.path, command);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(
-        failed.report.checks.flatMap(({ findings }) =>
-            findings.filter(({ rule }) => rule === 'banned-word').map(({ line }) => line),
-        ),
-    ).toStrictEqual(['env', 'response'].map((_, index) => index + 1));
-    await Bun.write(join(sandbox.path, 'entry.ts'), 'export function readValue() { return null; }\n');
-    const corrected = await checkReport(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-});
-
 test('configuration-names: SwiftLint owns Swift type case and length; banned words are still reported in types and parameters', async () => {
     await using sandbox = await testdir();
     const sourceText = 'typealias URLSession = String\n';

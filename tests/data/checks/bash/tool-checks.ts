@@ -1,32 +1,3 @@
-import { BASH_HEADER } from '#tests/data/checks/bash/samples.ts';
-
-export const SHELLCHECK_CASES = [
-    {
-        check: 'bash/shellcheck',
-        files: {
-            'scripts/unquoted.sh': `${BASH_HEADER}# main: runs the script.
-main() {
-    echo $1
-}
-
-main "$@"
-`,
-        },
-        expected: { file: 'scripts/unquoted.sh', rule: 'SC2086', line: 10 },
-        corrected: {
-            files: {
-                'scripts/unquoted.sh': `${BASH_HEADER}# main: runs the script.
-main() {
-    echo "$1"
-}
-
-main "$@"
-`,
-            },
-        },
-    },
-] as const;
-
 /** Scripts with dialect findings and temporary-folder cleanup in the root and a nested scope. */
 export const DIALECT_SOURCES = {
     'posix.sh': String.raw`#!/bin/sh

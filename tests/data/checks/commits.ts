@@ -30,22 +30,6 @@ export const COMMIT_MESSAGES = [
     { message: 'fix(Core): xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', rule: 'header-max-length' },
 ] as const;
 
-/** Commitlint module filenames for replacement checks. */
-export const COMMITLINT_FILES = [
-    { file: '.commitlintrc.mjs', source: 'export default { rules: { "type-enum": [2, "always", ["special"]] } };\n' },
-    { file: '.commitlintrc.ts', source: 'export default { rules: { "type-enum": [2, "always", ["special"]] } };\n' },
-    { file: '.commitlintrc.cts', source: 'module.exports = { rules: { "type-enum": [2, "always", ["special"]] } };\n' },
-    { file: '.commitlintrc.mts', source: 'export default { rules: { "type-enum": [2, "always", ["special"]] } };\n' },
-    {
-        file: 'commitlint.config.cts',
-        source: 'module.exports = { rules: { "type-enum": [2, "always", ["special"]] } };\n',
-    },
-    {
-        file: 'commitlint.config.mts',
-        source: 'export default { rules: { "type-enum": [2, "always", ["special"]] } };\n',
-    },
-] as const;
-
 export const COMMITS_FILES = {
     'scripts/a.sh': CLEAN_BASH_SCRIPT,
     'README.md': '# Test\n',
