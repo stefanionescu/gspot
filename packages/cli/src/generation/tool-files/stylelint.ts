@@ -1,7 +1,7 @@
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
-import { readRuleNamesFile } from '#cli/generation/rule-names.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { selectStylelintComponents } from '#cli/planning/needed-tools.ts';
+import { readLintRuleNames } from '#cli/configurations/lint-rule-names.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 
 import {
@@ -69,7 +69,7 @@ function buildStylelintFile(context: ToolFileContext): string {
     const options = selection.view.options('tools.stylelint');
     const isAll = level === 'all';
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, selection.scope.path);
-    const stylelintRuleNames = readRuleNamesFile(STYLELINT_RULE_NAMES_FILE).rules;
+    const stylelintRuleNames = readLintRuleNames(STYLELINT_RULE_NAMES_FILE).rules;
 
     const off = rulesOff('css/stylelint');
     const activeRules = new Set(

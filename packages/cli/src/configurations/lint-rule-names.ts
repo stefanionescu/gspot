@@ -2,20 +2,20 @@
 import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { RuleNamesFile } from '#cli/types/generation/files.ts';
+import type { LintRuleNames } from '#cli/types/configurations.ts';
 
-const ruleNamesFileSchema = z.strictObject({
+const lintRuleNamesSchema = z.strictObject({
     package: z.string().min(1),
     version: z.string().min(1),
     source: z.string().min(1),
     rules: z.array(z.string().min(1)),
-} satisfies SchemaShape<RuleNamesFile>) satisfies z.ZodType<RuleNamesFile>;
+} satisfies SchemaShape<LintRuleNames>) satisfies z.ZodType<LintRuleNames>;
 
 /**
  * Read one shipped list of lint rule names.
  * @param path the asset path of the list.
  * @returns the package and version the list comes from, and its rule names.
  */
-export function readRuleNamesFile(path: string): RuleNamesFile {
-    return ruleNamesFileSchema.parse(JSON.parse(readAsset(path)));
+export function readLintRuleNames(path: string): LintRuleNames {
+    return lintRuleNamesSchema.parse(JSON.parse(readAsset(path)));
 }

@@ -331,3 +331,6 @@ export type ToolInput = Omit<ToolFields, 'kind' | 'prettier' | 'when'> & {
         | undefined;
     when?: NonNullable<ToolFields['when']>[number] | ToolFields['when'];
 };
+
+/** A shipped list of the lint rule names of one tool, with the package version it comes from. */
+export type LintRuleNames = { package: string; version: string; source: string; rules: string[] };

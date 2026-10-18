@@ -123,5 +123,3 @@ export type StylelintComponent = {
     ignorePseudoClasses: readonly string[];
     functions?: readonly string[];
 };
-
-export type RuleNamesFile = { package: string; version: string; source: string; rules: string[] };

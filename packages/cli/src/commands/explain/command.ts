@@ -12,12 +12,12 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { readRuleNamesFile } from '#cli/generation/rule-names.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { REASON_NEEDED_TEXTS } from '#cli/config/commands/explain.ts';
 import { checkStageSchema } from '#cli/configurations/schema/parts.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
+import { readLintRuleNames } from '#cli/configurations/lint-rule-names.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import { JAVASCRIPT_CONFIGURATION_FOLDER } from '#cli/config/configurations.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
@@ -198,7 +198,7 @@ function explainNamed(session: Session | undefined, subject: string, reads: Read
     const named = explainSetting(session, subject) ?? explainConfiguration(subject, reads, session);
     if (named !== undefined) return named;
     const ruleNamesPath = `${JAVASCRIPT_CONFIGURATION_FOLDER}/${ESLINT_RULE_NAMES_FILE}`;
-    if (!readRuleNamesFile(ruleNamesPath).rules.includes(subject)) return undefined;
+    if (!readLintRuleNames(ruleNamesPath).rules.includes(subject)) return undefined;
     return explainLintRule(ESLINT_TOOL, subject, reads);
 }
 

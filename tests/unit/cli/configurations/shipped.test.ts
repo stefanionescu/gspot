@@ -6,10 +6,10 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { classifyToolVersion } from '#cli/tools/versions.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { readRuleNamesFile } from '#cli/generation/rule-names.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
+import { readLintRuleNames } from '#cli/configurations/lint-rule-names.ts';
 import { EACH_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
@@ -17,7 +17,7 @@ test('each lint-rule list names the pinned package version', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
     const pins = listToolProjectPins(manifests).npm;
     for (const path of listAssets('configurations/').filter((asset) => asset.endsWith('-names.json'))) {
-        const names = readRuleNamesFile(path);
+        const names = readLintRuleNames(path);
         expect(pins[names.package], path).toBe(names.version);
     }
     const presetFiles = new Set(
