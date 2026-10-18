@@ -1,63 +1,16 @@
 {
-    "commands": {
-        "install": "npm i -D -E @gspothq/cli",
-        "init": "npx gspot init",
-        "install_tools": "npx gspot install",
-        "check": "npx gspot check"
-    },
-    "project": [
-        {
-            "path": "package.json",
-            "language": "json",
-            "content": "{\n    \"name\": \"shop\",\n    \"description\": \"Checkout for the shop.\",\n    \"private\": true,\n    \"type\": \"module\",\n    \"exports\": {\n        \"./*\": \"./src/*.ts\"\n    },\n    \"engines\": {\n        \"node\": \">=24\"\n    },\n    \"packageManager\": \"npm@11.19.0\"\n}\n"
-        },
-        {
-            "path": "tsconfig.json",
-            "language": "json",
-            "content": "{\n    \"compilerOptions\": {\n        \"strict\": true,\n        \"noUncheckedIndexedAccess\": true,\n        \"exactOptionalPropertyTypes\": true,\n        \"noImplicitOverride\": true,\n        \"noFallthroughCasesInSwitch\": true,\n        \"module\": \"nodenext\",\n        \"target\": \"es2022\",\n        \"noEmit\": true,\n        \"noImplicitReturns\": true,\n        \"noPropertyAccessFromIndexSignature\": true\n    },\n    \"include\": [\"src\"]\n}\n"
-        },
-        {
-            "path": "README.md",
-            "language": "markdown",
-            "content": "# Shop\n\nCheckout for the shop.\n"
-        },
-        {
-            "path": "LICENSE",
-            "language": "text",
-            "content": "Copyright 2026 The Shop authors. All rights reserved.\n"
-        },
-        {
-            "path": ".gitignore",
-            "language": "text",
-            "content": "node_modules/\n"
-        },
-        {
-            "path": "src/cart.ts",
-            "language": "typescript",
-            "content": "export type Cart = { total: number };\n"
-        },
-        {
-            "path": "src/payments.ts",
-            "language": "typescript",
-            "content": "/**\n * Charge an amount to the customer's card.\n * @param amount the amount in cents\n * @returns after the payment provider accepts the charge\n */\nexport async function charge(amount: number): Promise<void> {\n    const response = await fetch('https://payments.example.com/charges', {\n        method: 'POST',\n        body: JSON.stringify({ amount }),\n    });\n    if (!response.ok) throw new Error(`The charge failed with status ${String(response.status)}.`);\n}\n"
-        }
-    ],
     "agent": {
-        "message": "feat: Add checkout",
         "files": [
             {
                 "path": "src/checkout.ts",
-                "language": "typescript",
                 "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    try {\n        // eslint-disable-next-line\n        charge(cart.total);\n    } catch {}\n}\n"
             }
         ]
     },
     "fix": {
-        "deleted": [],
         "files": [
             {
                 "path": "src/checkout.ts",
-                "language": "typescript",
                 "content": "import type { Cart } from './cart.js';\nimport { charge } from './payments.js';\n\nexport async function pay(cart: Cart) {\n    await charge(cart.total);\n}\n"
             }
         ]

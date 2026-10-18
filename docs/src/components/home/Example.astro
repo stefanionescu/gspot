@@ -2,7 +2,6 @@
 import assert from 'node:assert/strict';
 import InlineText from './InlineText.astro';
 import example from '../../config/example.json';
-import { version } from '@gspothq/cli/package.json';
 import { Icon } from '@astrojs/starlight/components';
 
 import {
@@ -181,8 +180,7 @@ const rejectedSummary = [...example.rejected.matchAll(REPORT_SUMMARY)].map((matc
             </code>
         </div>
         <p class="panel-note">
-            <code class="inline-code">pay</code> now waits for the charge, and a failed payment reaches the caller. With
-            no suppression left, ESLint checks every line again.
+            <code class="inline-code">pay</code> now waits for the charge, and a failed payment reaches the caller.
         </p>
     </figure>
     <figure class="panel passed">
@@ -215,4 +213,3 @@ const rejectedSummary = [...example.rejected.matchAll(REPORT_SUMMARY)].map((matc
         </div>
     </figure>
 </div>
-<p class="footnote">Recorded with gspot {version}. The first report leaves out passed checks, times, and help lines.</p>

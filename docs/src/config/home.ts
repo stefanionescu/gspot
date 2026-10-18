@@ -1,8 +1,6 @@
 export const HOME_TITLE = 'Lint the code your AI agent writes';
 export const HOME_DESCRIPTION =
     'gspot installs linters and agent rules for your repository, then runs them on every commit.';
-export const HOME_AGENT_INSTRUCTIONS =
-    'To set up gspot in a repository, read https://generativespotting.com/llms.txt and follow its steps for coding agents. Show the user the plan of `gspot init --dry-run` before you run `gspot init --yes`.';
 export const TOOLS = [
     { name: 'ESLint', icon: '/tools/eslint.svg' },
     { name: 'Prettier', icon: '/tools/prettier.svg' },
@@ -10,10 +8,6 @@ export const TOOLS = [
     { name: 'Stylelint', icon: '/tools/stylelint.svg' },
     { name: 'ShellCheck', icon: '/tools/shellcheck-line.png' },
     { name: 'Semgrep', icon: '/tools/semgrep.svg' },
-    { name: 'TypeScript', icon: '/tools/typescript.svg' },
-    { name: 'Vitest', icon: '/tools/vitest.svg' },
-    { name: 'Jest', icon: '/tools/jest.svg' },
-    { name: 'pytest', icon: '/tools/pytest.svg' },
     { name: 'Knip', icon: '/tools/knip.svg' },
     { name: 'Trivy', icon: '/tools/trivy.svg' },
 ] as const;

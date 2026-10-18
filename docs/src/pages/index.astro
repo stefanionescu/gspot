@@ -4,7 +4,7 @@ import Example from '../components/home/Example.astro';
 import InlineText from '../components/home/InlineText.astro';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import '../components/home/page.css';
-import { TOOLS, HOME_TITLE, CHECK_AREAS, HOME_DESCRIPTION, HOME_AGENT_INSTRUCTIONS } from '../config/home.ts';
+import { TOOLS, HOME_TITLE, CHECK_AREAS, HOME_DESCRIPTION } from '../config/home.ts';
 ---
 
 <StarlightPage
@@ -27,7 +27,6 @@ import { TOOLS, HOME_TITLE, CHECK_AREAS, HOME_DESCRIPTION, HOME_AGENT_INSTRUCTIO
                     title: 'Instructions for coding agents',
                 },
             },
-            { tag: 'script', attrs: { type: 'text/llms.txt' }, content: HOME_AGENT_INSTRUCTIONS },
         ],
     }}
 >
@@ -77,10 +76,7 @@ import { TOOLS, HOME_TITLE, CHECK_AREAS, HOME_DESCRIPTION, HOME_AGENT_INSTRUCTIO
                     </li>
                 ))}
             </ul>
-            <p class="more">
-                Also Gitleaks, typos, Vale, SwiftLint, Hadolint, Lychee, and more.{' '}
-                <a href="/reference/checks/">All checks →</a>
-            </p>
+            <p class="more"><a href="/reference/checks/">All checks →</a></p>
         </section>
         <footer class="home-footer">
             <div class="home-footer-content">
