@@ -2,6 +2,7 @@
 import { statSync } from 'node:fs';
 import { onExit } from 'signal-exit';
 import { execa, execaSync } from 'execa';
+import { GspotError } from '#cli/system/errors.ts';
 import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
@@ -117,9 +118,11 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
 // The group has no process left to signal. macOS refuses the signal as not permitted, instead of reporting no such
 // process, when every member has exited but still waits for system cleanup.
 function isGroupGone(error: Error, child: ChildProcess): boolean {
+    const hasExited = child.exitCode !== null || child.signalCode !== null;
+    // taskkill exits nonzero for each tree member that ended while it ran; once the root has exited, the tree has too.
+    if (error instanceof GspotError) return process.platform === 'win32' && hasExited;
     if (!('code' in error)) return false;
     if (error.code === 'ESRCH') return true;
-    const hasExited = child.exitCode !== null || child.signalCode !== null;
     return error.code === 'EPERM' && process.platform === 'darwin' && hasExited;
 }
 
@@ -134,7 +137,7 @@ function stopProcessTree(child: ChildProcess, state: ProcessTermination): void {
             });
             const code = result.exitCode ?? FAILED_CODE;
             if (![0, TASKKILL_GONE_CODE].includes(code))
-                throw new Error(`Cannot terminate the tool process tree: ${result.stderr}`);
+                throw new GspotError('tool', `Cannot terminate the tool process tree: ${result.stderr}`);
         } else process.kill(-child.pid, 'SIGKILL');
     } catch (error) {
         if (!isGroupGone(error as Error, child)) state.failure = error as Error;
