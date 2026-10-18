@@ -6,7 +6,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { extractUrlPasswords } from '#cli/tools/credentials.ts';
+import { extractUrlPasswords } from '#cli/install/credentials.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
 

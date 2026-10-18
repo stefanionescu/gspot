@@ -5,7 +5,7 @@ import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import type { Finding, CheckInput } from '#cli/types/checks/run/check.ts';
-import { parsePackageManagerField } from '#cli/tools/npm/package-manager.ts';
+import { parsePackageManagerField } from '#cli/repository/package-manager.ts';
 import { HOLD_VERSIONS, PACKAGE_MANAGER_FIELD } from '#cli/config/checks/general/dependencies.ts';
 
 /**

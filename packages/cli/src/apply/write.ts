@@ -3,7 +3,7 @@ import type { ApplyReport } from '#cli/types/apply.ts';
 import { listExpectedPaths } from '#cli/apply/stale.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
-import { listStaleLockfiles } from '#cli/tools/project-lockfiles.ts';
+import { listStaleLockfiles } from '#cli/install/project-lockfiles.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
 import { writePlans, buildPreservedFilesError } from '#cli/ownership/writer.ts';

@@ -5,7 +5,7 @@ import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { findLockfile } from '#cli/repository/classify.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
-import { listPackageFiles } from '#cli/tools/npm/packages.ts';
+import { listPackageFiles } from '#cli/repository/packages.ts';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';

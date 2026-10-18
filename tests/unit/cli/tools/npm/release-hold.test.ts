@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { LOCKFILE_ARGUMENTS } from '#cli/config/tools/npm.ts';
 import { OWN_PACKAGES } from '#tests/data/checks/dependencies.ts';
-import { addToolReleaseHold } from '#cli/tools/npm/release-hold.ts';
+import { addToolReleaseHold } from '#cli/install/npm/release-hold.ts';
 
 test('an npm tool lockfile gets the hold as flags and writes no file', async () => {
     await using folder = await testdir();

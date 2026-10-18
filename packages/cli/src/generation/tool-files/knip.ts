@@ -3,8 +3,8 @@
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
-import { listWorkspaceFolders } from '#cli/tools/npm/packages.ts';
 import { listIgnoredGlobs } from '#cli/generation/ignore-files.ts';
+import { listWorkspaceFolders } from '#cli/repository/packages.ts';
 import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';

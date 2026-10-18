@@ -12,7 +12,7 @@ import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { locateCandidates, locateRepositoryCandidates } from '#cli/tools/locate.ts';
 import { DOT_GSPOT, GSPOT_NODE_MODULES_PATH } from '#cli/config/system/locations.ts';
 import type { Inspected, ToolSearch, ToolInspection } from '#cli/types/tools/find.ts';
-import { readToolProjectPackage, findInstalledDependency } from '#cli/tools/npm/packages.ts';
+import { readToolProjectPackage, findInstalledDependency } from '#cli/repository/packages.ts';
 import { MISE_PROGRAM, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/find.ts';
 
 /**

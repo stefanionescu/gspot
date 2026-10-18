@@ -60,15 +60,15 @@ test('apply starts no npm, and install reports a failed npm version lookup in te
         'gspot.toml': buildSettingsText(['bash']),
         'entry.sh': 'echo example\n',
     });
-    const before = await readTree(folder.path);
     const run = processes.spawnProcessBlocking;
     using boundary = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
         if (command[0] !== 'npm' || command[1] !== '--version') return run(command, options);
         return { code: 7, missing: false, duration: 0, stdout: '', stderr: 'version lookup failed' };
     });
-    const preview = await runGspot(folder.path, ['apply', '--dry-run']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    const applied = await runGspot(folder.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(boundary).not.toHaveBeenCalledWith(['npm', '--version'], expect.anything());
+    const before = await readTree(folder.path);
     const human = await runGspot(folder.path, ['install']);
     expect(human.code, human.stdout + human.stderr).toBe(2);
     expect(human.stdout).toBe('');

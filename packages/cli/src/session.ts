@@ -27,7 +27,7 @@ import { buildScopeView, findRootSelection } from '#cli/settings/scope-view.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { classifyFile, listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Settings, SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
-import { selectPackageManager, readPackageManagerVersion } from '#cli/tools/npm/package-manager.ts';
+import { selectPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
 import { type PackageManager, type PackageManagerDeclaration } from '#cli/types/parsers/dependency-files.ts';
 
 function buildSession(values: Omit<Session, 'toolFiles' | 'generatedPaths' | 'uvPath' | 'miseBinPaths'>): Session {

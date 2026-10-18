@@ -6,7 +6,7 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { HTTP_URL } from '#cli/config/tools/credentials.ts';
-import { extractUrlPasswords } from '#cli/tools/credentials.ts';
+import { extractUrlPasswords } from '#cli/install/credentials.ts';
 import { join, isAbsolute, resolve as absolutePath } from 'node:path';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { URL_SCHEME, INDEX_SETTINGS, UV_SETTINGS_FILE } from '#cli/config/tools/python.ts';

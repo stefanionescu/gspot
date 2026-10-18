@@ -12,7 +12,7 @@ import { listExecutableNames } from '#cli/system/paths.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
+import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
 import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, FIXED_VALE_INSTALL_SCRIPT } from '#tests/data/checks/prose.ts';
 

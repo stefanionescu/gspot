@@ -116,7 +116,7 @@ allowed_names = ["buildV8rFile"]
 reason = "v8r is the name of the tool."
 
 [[naming.override]]
-paths = ["packages/cli/src/tools/npm/lockfiles.ts"]
+paths = ["packages/cli/src/install/npm/lockfiles.ts"]
 allowed_names = ["resolved"]
 reason = "The npm lockfile format names each package download URL resolved."
 
@@ -161,7 +161,7 @@ allowed_names = ["PACKAGE_MANAGERS", "PACKAGE_MANAGER_HASH_SUFFIX"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["packages/cli/src/tools/npm/release-hold.ts"]
+paths = ["packages/cli/src/install/npm/release-hold.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
@@ -186,27 +186,27 @@ allowed_names = ["buildPackageManagerAccess", "getPackageManagerIdentity", "pack
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["packages/cli/src/tools/npm/lockfiles.ts"]
+paths = ["packages/cli/src/install/npm/lockfiles.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["packages/cli/src/tools/npm/package-manager.ts"]
+paths = ["packages/cli/src/repository/package-manager.ts"]
 allowed_names = ["detectPackageManager", "package-manager", "packageManager", "packageManagerDeclarationSchema", "packageManagerSchema", "parsePackageManagerField", "readPackageManagerDeclaration", "readPackageManagerVersion", "selectPackageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["packages/cli/src/tools/npm/project.ts"]
+paths = ["packages/cli/src/install/npm/project.ts"]
 allowed_names = ["assertPackageManagerVersion", "packageManager", "runPackageManager", "selectPackageManagerArguments", "verifyPackageManagerVersion"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["packages/cli/src/tools/npm/tool-project.ts"]
+paths = ["packages/cli/src/install/npm/tool-project.ts"]
 allowed_names = ["packageManager", "packageManagerName"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["packages/cli/src/tools/python/project.ts"]
+paths = ["packages/cli/src/install/python/project.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
@@ -350,74 +350,79 @@ paths = ["packages/cli/src/repository/**"]
 may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations"]
 
 [[architecture.module]]
+name = "ownership"
+paths = ["packages/cli/src/ownership/**"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository"]
+
+[[architecture.module]]
 name = "settings"
 paths = ["packages/cli/src/settings/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "apply"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership"]
 
 [[architecture.module]]
 name = "planning"
 paths = ["packages/cli/src/planning/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings"]
 
 [[architecture.module]]
 name = "generation"
 paths = ["packages/cli/src/generation/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "tools", "ownership"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning"]
 
 [[architecture.module]]
 name = "tools"
 paths = ["packages/cli/src/tools/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation"]
-
-[[architecture.module]]
-name = "ownership"
-paths = ["packages/cli/src/ownership/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation"]
 
 [[architecture.module]]
 name = "session"
 paths = ["packages/cli/src/session.ts"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools"]
+
+[[architecture.module]]
+name = "install"
+paths = ["packages/cli/src/install/**"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session"]
 
 [[architecture.module]]
 name = "apply"
 paths = ["packages/cli/src/apply/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "session"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install"]
 
 [[architecture.module]]
 name = "checks"
 paths = ["packages/cli/src/checks/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "session", "apply"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply"]
 
 [[architecture.module]]
 name = "commands"
 paths = ["packages/cli/src/commands/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "session", "apply", "checks"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "checks"]
 
 [[architecture.module]]
 name = "main"
 paths = ["packages/cli/src/main.ts"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "session", "apply", "checks", "commands"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "checks", "commands"]
 
 [[architecture.module]]
 name = "plugin"
 paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "session", "apply", "checks", "commands", "main"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "checks", "commands", "main"]
 
 [[architecture.module]]
 name = "reference"
 paths = ["packages/cli/src/reference.ts"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "session", "apply", "checks", "commands", "main", "plugin"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "checks", "commands", "main", "plugin"]
 
 [[architecture.module]]
 name = "docs"
 paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "session", "apply", "checks", "commands", "main", "plugin", "reference"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "checks", "commands", "main", "plugin", "reference"]
 
 [[architecture.module]]
 name = "tests"
 paths = ["tests/{unit,integration,e2e,setup}/**"]
-may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "settings", "planning", "generation", "tools", "ownership", "session", "apply", "checks", "commands", "main", "plugin", "reference", "docs"]
+may_import = ["cli-config", "cli-types", "plugin-config", "plugin-types", "docs-config", "docs-types", "tests-data", "tests-types", "system", "parsers", "configurations", "repository", "ownership", "settings", "planning", "generation", "tools", "session", "install", "apply", "checks", "commands", "main", "plugin", "reference", "docs"]
 
 [dependencies]
 scanner = "@socketsecurity/bun-security-scanner"

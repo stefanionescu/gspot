@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { rm, writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { writePythonSettings } from '#cli/tools/python/settings.ts';
+import { writePythonSettings } from '#cli/install/python/settings.ts';
 import { UV_TOML, PYPROJECT_UV_INDEX } from '#tests/data/tools/python-tool-project.ts';
 
 test('uv.toml wins and local index paths are read relative to the repository', async () => {

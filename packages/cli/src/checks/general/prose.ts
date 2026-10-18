@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { GspotError } from '#cli/system/errors.ts';
-import { hasValePackages } from '#cli/tools/vale.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
+import { hasValePackages } from '#cli/install/vale.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { parseReport } from '#cli/parsers/output/json.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';

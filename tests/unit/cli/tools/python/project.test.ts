@@ -9,7 +9,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInstallContext } from '#tests/setup/install.ts';
 import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
-import { installPythonTools, preparePythonLockfile } from '#cli/tools/python/project.ts';
+import { installPythonTools, preparePythonLockfile } from '#cli/install/python/project.ts';
 import { UV_TOML, PYTHON_TOOL_PROJECT, PYTHON_TOOL_LOCKFILE } from '#tests/data/tools/python-tool-project.ts';
 
 /** The Python tool project files with the Python version filled in. */

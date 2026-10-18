@@ -5,7 +5,7 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
+import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 

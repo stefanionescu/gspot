@@ -8,8 +8,8 @@ import { DIFF_CONTEXT_LINES } from '#cli/config/apply.ts';
 import { readBlock } from '#cli/system/managed-blocks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
-import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
-import { listStaleLockfiles } from '#cli/tools/project-lockfiles.ts';
+import { parseToolProject } from '#cli/install/npm/tool-project.ts';
+import { listStaleLockfiles } from '#cli/install/project-lockfiles.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { UV_LOCKFILE, NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 

@@ -1,18 +1,16 @@
 import which from 'which';
-import { installHooks } from '#cli/apply/hooks.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { listStaleFiles } from '#cli/apply/stale.ts';
+import { installHooks } from '#cli/install/hooks.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { installMiseTools } from '#cli/install/mise.ts';
 import { MISE_PROGRAM } from '#cli/config/tools/find.ts';
 import { listHookNames } from '#cli/generation/hooks.ts';
-import { installValePackages } from '#cli/tools/vale.ts';
-import { TOOL_PROJECT_INPUTS } from '#cli/config/install.ts';
-import { installMiseTools } from '#cli/commands/install/mise.ts';
+import { installValePackages } from '#cli/install/vale.ts';
+import { installToolProjects } from '#cli/install/projects.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { installToolProjects } from '#cli/commands/install/projects.ts';
-import { verifyPackageManagerVersion } from '#cli/tools/npm/project.ts';
+import { verifyPackageManagerVersion } from '#cli/install/npm/project.ts';
 import type { InstallContext, InstallationResult } from '#cli/types/install.ts';
 
 /**
@@ -46,8 +44,6 @@ export async function installTools(
     };
     try {
         await verifyPackageManagerVersion(context);
-        if (listStaleFiles(session, generated).some((file) => TOOL_PROJECT_INPUTS.has(file.path)))
-            throw new GspotError('installation', 'Run gspot apply first');
         const programNote = await installMiseTools(context);
         notes.push(...(await installToolProjects(context)));
         if (manifests.some((manifest) => manifest.tools.some((tool) => tool.name === 'vale'))) {

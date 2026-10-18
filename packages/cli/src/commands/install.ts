@@ -1,10 +1,13 @@
 import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { listStaleFiles } from '#cli/apply/stale.ts';
+import { installTools } from '#cli/install/tools.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { installTools } from '#cli/commands/install/tools.ts';
+import { TOOL_PROJECT_INPUTS } from '#cli/config/install.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import type { InstallCommandJson } from '#cli/types/install.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
@@ -19,6 +22,9 @@ async function runInstallCommand(cwd: string, cancelSignal?: AbortSignal): Promi
     const root = findRoot(cwd);
     const session = await openSession(root);
     const generated = generate(session);
+    // The tools install from the tool projects on disk, so those must match the settings first.
+    if (listStaleFiles(session, generated).some((file) => TOOL_PROJECT_INPUTS.has(file.path)))
+        throw new GspotError('installation', 'Run gspot apply first');
     using writer = openWriter(root);
     const { note, steps } = await installTools(session, writer, generated, cancelSignal);
     return {

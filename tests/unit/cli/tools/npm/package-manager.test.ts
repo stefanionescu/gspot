@@ -10,7 +10,7 @@ import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
-import { selectPackageManager, readPackageManagerVersion } from '#cli/tools/npm/package-manager.ts';
+import { selectPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
 
 import {
     AUTHORED_VERSION_CASES,
@@ -57,14 +57,9 @@ test.each([...AUTHORED_VERSION_CASES])(
     '$source version data cannot skip the program version check before $operation',
     async ({ files }) => {
         await using repository = await testdir();
-        await createFileTree(repository.path, { ...files, source: 'kept\n' });
-        const project = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
-        const original = project;
-        const lockfile = JSON.stringify({
-            workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
-        });
-        await createFileTree(repository.path, { '.gspot/package.json': original, '.gspot/bun.lock': lockfile });
-        await createFileTree(repository.path, { 'gspot.toml': buildSettingsText([]) });
+        await createFileTree(repository.path, { ...files, source: 'kept\n', 'gspot.toml': buildSettingsText([]) });
+        await runRegisteredCommand(repository.path, ['apply']);
+        const original = await readFile(join(repository.path, '.gspot/package.json'), 'utf8');
         const identity = await selectPackageManager(repository.path, []);
         const installer = readPackageManagerVersion(repository.path, identity, SETTING_DEFAULTS.tool_timeout_seconds);
         expect(installer).toStrictEqual({ name: 'bun', version: '0.0.0' });
@@ -91,7 +86,7 @@ test.each([...AUTHORED_VERSION_CASES])(
             expect(await readFile(join(repository.path, path), 'utf8')).toBe(content);
         expect(await readFile(join(repository.path, 'source'), 'utf8')).toBe('kept\n');
         expect(await readFile(join(repository.path, '.gspot/package.json'), 'utf8')).toBe(original);
-        expect(await readFile(join(repository.path, '.gspot/bun.lock'), 'utf8')).toBe(lockfile);
+        expect(await isOnDisk(join(repository.path, '.gspot/bun.lock'))).toBe(false);
         expect(await isOnDisk(join(repository.path, '.gspot/node_modules'))).toBe(false);
     },
 );

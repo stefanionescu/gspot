@@ -1,6 +1,6 @@
 import { buildBaseResult } from '#cli/checks/run/report.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { listWorkspaceDependencyFiles } from '#cli/tools/npm/packages.ts';
+import { listWorkspaceDependencyFiles } from '#cli/repository/packages.ts';
 
 import type {
     Finding,

@@ -12,7 +12,7 @@ import { HOOK_REPOSITORIES } from '#tests/data/hooks.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
-import { installHooks, readHookStatus } from '#cli/apply/hooks.ts';
+import { installHooks, readHookStatus } from '#cli/install/hooks.ts';
 import { matchItems, matchSubstring } from '#tests/setup/matchers.ts';
 
 test.each([...HOOK_REPOSITORIES])(

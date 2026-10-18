@@ -9,8 +9,8 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { YARN_SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { addEnvironmentReference } from '#cli/tools/npm/registry.ts';
 import { GSPOT_PACKAGES } from '#cli/config/generation/file-edits.ts';
+import { addEnvironmentReference } from '#cli/install/npm/registry.ts';
 import { formatHold, readRootHoldDays } from '#cli/generation/release-holds.ts';
 
 import {

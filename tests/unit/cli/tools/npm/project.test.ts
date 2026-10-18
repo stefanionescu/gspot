@@ -9,13 +9,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInstallContext } from '#tests/setup/install.ts';
-import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
+import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import { readRegistryEnvironment } from '#cli/tools/npm/registry.ts';
+import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
-import { installNpmTools, prepareNpmLockfile } from '#cli/tools/npm/project.ts';
+import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
 import { INSTALL_FAILURES, TOOL_REQUIREMENTS } from '#tests/data/tools/npm-tool-project.ts';
 
 /**

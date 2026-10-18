@@ -5,7 +5,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { formatHold } from '#cli/generation/release-holds.ts';
 import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
-import { findInstalledDependency } from '#cli/tools/npm/packages.ts';
+import { findInstalledDependency } from '#cli/repository/packages.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/generation/eslint.ts';
 import type { ReadCache, FileContents } from '#cli/types/system/files.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';

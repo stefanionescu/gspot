@@ -3,13 +3,17 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import { prepareNpmLockfile } from '#cli/tools/npm/project.ts';
-import { isLockfileCurrent } from '#cli/tools/npm/lockfiles.ts';
-import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
+import { prepareNpmLockfile } from '#cli/install/npm/project.ts';
+import { isLockfileCurrent } from '#cli/install/npm/lockfiles.ts';
+import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { StaleLockfile, PythonToolProject } from '#cli/types/tools/project.ts';
-import { preparePythonLockfile, pythonToolProjectSchema, isPythonLockfileCurrent } from '#cli/tools/python/project.ts';
 
+import {
+    preparePythonLockfile,
+    pythonToolProjectSchema,
+    isPythonLockfileCurrent,
+} from '#cli/install/python/project.ts';
 import {
     UV_LOCKFILE,
     YARN_SETTINGS,

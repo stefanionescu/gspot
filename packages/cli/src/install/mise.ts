@@ -8,7 +8,7 @@ import { readMiseBinPaths } from '#cli/tools/locate.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import { redactInstallOutput } from '#cli/tools/credentials.ts';
+import { redactInstallOutput } from '#cli/install/credentials.ts';
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';

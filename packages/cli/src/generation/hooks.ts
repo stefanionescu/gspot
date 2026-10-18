@@ -4,7 +4,7 @@ import type { Settings } from '#cli/types/settings/values.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { readGitPrefix, isGitRepository } from '#cli/system/git.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
-import { selectPackageManager } from '#cli/tools/npm/package-manager.ts';
+import { selectPackageManager } from '#cli/repository/package-manager.ts';
 import type { HookName, StartRunner, GeneratedFile } from '#cli/types/generation/files.ts';
 
 import {

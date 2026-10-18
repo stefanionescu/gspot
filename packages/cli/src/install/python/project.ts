@@ -21,8 +21,8 @@ import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { normalizePythonPackage } from '#cli/parsers/dependency-files.ts';
-import { parsePythonSettings, writePythonSettings } from '#cli/tools/python/settings.ts';
-import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
+import { parsePythonSettings, writePythonSettings } from '#cli/install/python/settings.ts';
+import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 import { DOT_GSPOT, UV_LOCKFILE, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 
 import type {

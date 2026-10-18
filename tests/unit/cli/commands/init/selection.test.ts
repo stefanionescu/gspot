@@ -12,7 +12,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
+import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { VUE_COMPONENT } from '#tests/data/checks/component-samples.ts';

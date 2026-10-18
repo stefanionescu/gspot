@@ -2,12 +2,12 @@ import which from 'which';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
-import { installNpmTools } from '#cli/tools/npm/project.ts';
 import type { InstallContext } from '#cli/types/install.ts';
+import { installNpmTools } from '#cli/install/npm/project.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import { installPythonTools } from '#cli/tools/python/project.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
-import { prepareLockfiles } from '#cli/tools/project-lockfiles.ts';
+import { installPythonTools } from '#cli/install/python/project.ts';
+import { prepareLockfiles } from '#cli/install/project-lockfiles.ts';
 import { PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 
 /**

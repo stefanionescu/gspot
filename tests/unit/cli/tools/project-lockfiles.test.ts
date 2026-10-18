@@ -1,9 +1,9 @@
 import { parse } from '@decimalturn/toml-patch';
 import { test, expect, describe } from 'bun:test';
-import { isLockfileCurrent } from '#cli/tools/npm/lockfiles.ts';
+import { isLockfileCurrent } from '#cli/install/npm/lockfiles.ts';
 import { type PythonToolProject } from '#cli/types/tools/project.ts';
-import { isPythonLockfileCurrent } from '#cli/tools/python/project.ts';
 import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
+import { isPythonLockfileCurrent } from '#cli/install/python/project.ts';
 import { ROOT_DEPENDENCIES } from '#tests/data/tools/npm-tool-project.ts';
 
 import {

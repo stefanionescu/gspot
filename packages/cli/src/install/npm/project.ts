@@ -5,24 +5,24 @@ import { join } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
-import { writeYarnSettings } from '#cli/tools/npm/yarn.ts';
 import type { InstallContext } from '#cli/types/install.ts';
+import { writeYarnSettings } from '#cli/install/npm/yarn.ts';
 import { rmSync, readFileSync, writeFileSync } from 'node:fs';
-import { isYarnBerry } from '#cli/tools/npm/package-manager.ts';
+import { isYarnBerry } from '#cli/repository/package-manager.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/credentials.ts';
 import { buildLockfileResult } from '#cli/generation/projects.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
 import { readRootHoldDays } from '#cli/generation/release-holds.ts';
-import { addToolReleaseHold } from '#cli/tools/npm/release-hold.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import { addToolReleaseHold } from '#cli/install/npm/release-hold.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
-import { isLockfileCurrent, stripRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
-import { parseToolProject, selectLockfileName } from '#cli/tools/npm/tool-project.ts';
-import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
-import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/tools/npm/registry.ts';
+import { isLockfileCurrent, stripRegistryUrls } from '#cli/install/npm/lockfiles.ts';
+import { parseToolProject, selectLockfileName } from '#cli/install/npm/tool-project.ts';
+import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
+import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/install/npm/registry.ts';
 
 import {
     DOT_GSPOT,

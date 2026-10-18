@@ -14,7 +14,7 @@ import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { TOOL_ENV, NO_VERSION, VERSION_FLAG } from '#cli/config/tools/run.ts';
 import type { ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts';
-import { readHostPackage, readToolProjectPackage } from '#cli/tools/npm/packages.ts';
+import { readHostPackage, readToolProjectPackage } from '#cli/repository/packages.ts';
 
 // Find the version that the first package.json above a folder declares for the named package, searching upward.
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {

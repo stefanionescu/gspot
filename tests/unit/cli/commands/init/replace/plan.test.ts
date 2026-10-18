@@ -11,7 +11,7 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
-import { parseToolProject } from '#cli/tools/npm/tool-project.ts';
+import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import { stat, chmod, symlink, readFile, readlink } from 'node:fs/promises';
 import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/data/checks/python/project.ts';
 import { runGspot, checkReport, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
