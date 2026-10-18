@@ -114,11 +114,14 @@ async function waitForExit(pid: number): Promise<void> {
     throw new Error(`Owned child ${String(pid)} remained alive after supervision ended.`);
 }
 
-/** Wait until a child writes its ready file, or the test runs out of time. */
+/**
+ * Wait until a child writes its ready file, or the test runs out of time.
+ * A child creates the file before it writes the content, so the file counts as ready once it holds bytes.
+ */
 async function waitForFile(path: string): Promise<boolean> {
     const deadline = performance.now() + computeTimeLeft();
-    while (!(await Bun.file(path).exists()) && performance.now() < deadline) await Bun.sleep(READY_POLL_MILLISECONDS);
-    return await Bun.file(path).exists();
+    while (Bun.file(path).size === 0 && performance.now() < deadline) await Bun.sleep(READY_POLL_MILLISECONDS);
+    return Bun.file(path).size > 0;
 }
 
 /** Drains a child's output and guarantees termination when a test leaves its scope. */
