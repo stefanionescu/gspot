@@ -8,13 +8,7 @@ import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
 import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-
-import {
-    TRIVY_EXIT,
-    TRIVY_TOOL_FILE,
-    TRIVY_IMAGE_COMMAND,
-    TRIVY_SCHEMA_VERSION,
-} from '#cli/config/checks/infrastructure/docker.ts';
+import { TRIVY_EXIT, TRIVY_TOOL_FILE, TRIVY_IMAGE_COMMAND, TRIVY_SCHEMA_VERSION } from '#cli/config/checks/docker.ts';
 
 // The tool's exit status and parsed findings must agree before a scan can count as clean.
 async function scanImage(input: CheckInput, image: string, path: string): Promise<Finding[]> {

@@ -5,7 +5,7 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/parsers/dependency-files.ts';
-import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/language/python.ts';
+import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/python.ts';
 
 /**
  * Reports hand-kept requirements files and unmanaged pip installs, so pyproject.toml owns every dependency.

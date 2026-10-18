@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { buildSchema } from '#cli/checks/postgres/schema.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { type Migration } from '#cli/types/checks/database.ts';
+import { type Migration } from '#cli/types/checks/postgres.ts';
 
 import {
     KEYED_TABLES_SQL,

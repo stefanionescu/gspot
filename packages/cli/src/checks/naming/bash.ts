@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 import { addIdentifier } from '#cli/checks/naming/collect.ts';
-import type { Identifier, ExtractSink } from '#cli/types/checks/general.ts';
+import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
 
 function addFunctions(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType('function_definition')) {

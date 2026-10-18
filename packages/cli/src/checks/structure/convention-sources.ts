@@ -5,8 +5,8 @@ import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { CountedLanguage, ConventionSource } from '#cli/types/checks/general.ts';
-import { CONVENTION_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/checks/general/structure.ts';
+import type { CountedLanguage, ConventionSource } from '#cli/types/checks/structure.ts';
+import { CONVENTION_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/checks/structure.ts';
 
 function detectLanguage(file: TrackedFile): CountedLanguage | undefined {
     for (const [extension, language] of Object.entries(LANGUAGE_BY_EXTENSION))

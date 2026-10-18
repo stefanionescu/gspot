@@ -4,7 +4,7 @@ import { findLockfile } from '#cli/repository/classify.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-import { LOCKFILE_URL, NPM_DOWNLOAD } from '#cli/config/checks/general/dependencies.ts';
+import { LOCKFILE_URL, NPM_DOWNLOAD } from '#cli/config/checks/dependencies.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;

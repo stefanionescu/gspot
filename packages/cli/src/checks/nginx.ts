@@ -7,7 +7,7 @@ import { parseNginxDirectives } from '#cli/parsers/nginx.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import type { Mount, NginxMounts } from '#cli/types/checks/infrastructure.ts';
+import type { Mount, NginxMounts } from '#cli/types/checks/nginx.ts';
 import { type Finding, type CheckInput, type BuiltInCheckResult } from '#cli/types/runs/check.ts';
 
 import {
@@ -30,7 +30,7 @@ import {
     NGINX_CERTIFICATE_FILE,
     CERTIFICATE_DIRECTIVES,
     OPENSSL_CERTIFICATE_FLAG,
-} from '#cli/config/checks/infrastructure/nginx.ts';
+} from '#cli/config/checks/nginx.ts';
 
 // nginx resolves include paths from the folder of the main configuration file.
 function listIncludedFiles(input: CheckInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {

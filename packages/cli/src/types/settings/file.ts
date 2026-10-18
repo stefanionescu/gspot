@@ -1,29 +1,13 @@
 import type { STAGES } from '#cli/config/configurations.ts';
 import type { Defined, Optional } from '#cli/types/shapes.ts';
-import type { ParsedSite } from '#cli/types/checks/framework.ts';
+import { type NamedCategory } from '#cli/types/checks/naming.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { ParsedPostgres } from '#cli/types/checks/database.ts';
 import type { REEXPORT_MODES } from '#cli/config/settings/schema.ts';
 import type { OutputSpec, OutputInput } from '#cli/types/runs/output.ts';
-import type { ParsedSwift, ParsedJavascript } from '#cli/types/checks/language.ts';
 import type { ImportRule, WrittenImportRule } from '#cli/types/settings/imports.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
-import type { ParsedXcode, ParsedOpenapi } from '#cli/types/checks/infrastructure.ts';
-import type { ParsedSupabase, ParsedCloudflare } from '#cli/types/checks/platform.ts';
-import type { ParsedTrpc, ParsedDrizzle, ParsedZustand, ParsedTranslations } from '#cli/types/checks/library.ts';
+import type { ConfigurationTables } from '#cli/types/settings/configuration-tables.ts';
 
-import {
-    type ParsedDocs,
-    type ParsedProse,
-    type NamedCategory,
-    type ParsedSecrets,
-    type ParsedCoverage,
-    type ParsedLicenses,
-    type ParsedSpelling,
-    type ParsedRepository,
-    type ParsedDuplication,
-    type ParsedDependencies,
-} from '#cli/types/checks/general.ts';
 import type {
     ParsedCi,
     ParsedRoot,
@@ -55,21 +39,27 @@ type CommandCheckFields = {
 
 type TomlDate = { toISOString: () => string };
 
-type WrittenCoverage = Optional<Omit<ParsedCoverage, 'lines' | 'branches' | 'functions' | 'statements'>> & {
+type WrittenCoverage = Optional<
+    Omit<ConfigurationTables['coverage'], 'lines' | 'branches' | 'functions' | 'statements'>
+> & {
     lines?: SettingValue<number> | undefined;
     branches?: SettingValue<number> | undefined;
     functions?: SettingValue<number> | undefined;
     statements?: SettingValue<number> | undefined;
 };
 
-type WrittenDependencies = Optional<Omit<ParsedDependencies, 'min_release_age_days' | 'allowed_registries'>> & {
+type WrittenDependencies = Optional<
+    Omit<ConfigurationTables['dependencies'], 'min_release_age_days' | 'allowed_registries'>
+> & {
     min_release_age_days?: SettingValue<number> | undefined;
     allowed_registries?: SettingValue<string[]> | undefined;
 };
 
-type WrittenDocs = Optional<Omit<ParsedDocs, 'allowed_urls'>> & { allowed_urls?: SettingValue<string[]> | undefined };
+type WrittenDocs = Optional<Omit<ConfigurationTables['docs'], 'allowed_urls'>> & {
+    allowed_urls?: SettingValue<string[]> | undefined;
+};
 
-type WrittenSite = Optional<Omit<ParsedSite, 'allowed_unlisted_pages'>> & {
+type WrittenSite = Optional<Omit<ConfigurationTables['site'], 'allowed_unlisted_pages'>> & {
     allowed_unlisted_pages?: SettingValue<string[]> | undefined;
 };
 
@@ -82,7 +72,7 @@ export type ReasonedValue<Value> = { value: Value; reason: string };
 
 export type SettingValue<Value> = Value | ReasonedValue<Value>;
 
-export type WrittenLicenses = Optional<ParsedLicenses>;
+export type WrittenLicenses = Optional<ConfigurationTables['licenses']>;
 
 export type WrittenLimits = LimitFields<SettingValue<number>> & {
     [Language in LimitLanguage]?: LanguageLimitFields<Language, SettingValue<number>> | undefined;
@@ -152,19 +142,19 @@ export type WrittenSettings = Optional<
     >
 > & {
     licenses?: WrittenLicenses | undefined;
-    cloudflare?: Optional<ParsedCloudflare> | undefined;
-    drizzle?: Optional<ParsedDrizzle> | undefined;
-    javascript?: Optional<ParsedJavascript> | undefined;
-    trpc?: Optional<ParsedTrpc> | undefined;
-    zustand?: Optional<ParsedZustand> | undefined;
-    openapi?: Optional<ParsedOpenapi> | undefined;
-    postgres?: Optional<ParsedPostgres> | undefined;
-    secrets?: Optional<ParsedSecrets> | undefined;
-    spelling?: Optional<ParsedSpelling> | undefined;
-    supabase?: Optional<ParsedSupabase> | undefined;
-    translations?: Optional<ParsedTranslations> | undefined;
-    xcode?: Optional<ParsedXcode> | undefined;
-    swift?: Optional<ParsedSwift> | undefined;
+    cloudflare?: Optional<ConfigurationTables['cloudflare']> | undefined;
+    drizzle?: Optional<ConfigurationTables['drizzle']> | undefined;
+    javascript?: Optional<ConfigurationTables['javascript']> | undefined;
+    trpc?: Optional<ConfigurationTables['trpc']> | undefined;
+    zustand?: Optional<ConfigurationTables['zustand']> | undefined;
+    openapi?: Optional<ConfigurationTables['openapi']> | undefined;
+    postgres?: Optional<ConfigurationTables['postgres']> | undefined;
+    secrets?: Optional<ConfigurationTables['secrets']> | undefined;
+    spelling?: Optional<ConfigurationTables['spelling']> | undefined;
+    supabase?: Optional<ConfigurationTables['supabase']> | undefined;
+    translations?: Optional<ConfigurationTables['translations']> | undefined;
+    xcode?: Optional<ConfigurationTables['xcode']> | undefined;
+    swift?: Optional<ConfigurationTables['swift']> | undefined;
     duplication?:
         | { min_lines?: SettingValue<number> | undefined; min_tokens?: SettingValue<number> | undefined }
         | undefined;
@@ -201,28 +191,28 @@ export type ParsedSettings = ParsedRoot & {
               configurations: string[];
               removed_configurations: string[];
               test_files?: string[] | undefined;
-              cloudflare?: ParsedCloudflare | undefined;
-              coverage?: Omit<ParsedCoverage, 'swift_target'> | undefined;
-              dependencies?: ParsedDependencies | undefined;
-              docs?: Omit<ParsedDocs, 'banned_headings'> | undefined;
-              drizzle?: ParsedDrizzle | undefined;
-              javascript?: ParsedJavascript | undefined;
-              trpc?: ParsedTrpc | undefined;
-              zustand?: ParsedZustand | undefined;
+              cloudflare?: ConfigurationTables['cloudflare'] | undefined;
+              coverage?: Omit<ConfigurationTables['coverage'], 'swift_target'> | undefined;
+              dependencies?: ConfigurationTables['dependencies'] | undefined;
+              docs?: Omit<ConfigurationTables['docs'], 'banned_headings'> | undefined;
+              drizzle?: ConfigurationTables['drizzle'] | undefined;
+              javascript?: ConfigurationTables['javascript'] | undefined;
+              trpc?: ConfigurationTables['trpc'] | undefined;
+              zustand?: ConfigurationTables['zustand'] | undefined;
               structure?: Pick<ParsedStructure, 'environment_readers'> | undefined;
-              licenses?: Omit<ParsedLicenses, 'allowed_package'> | undefined;
-              openapi?: ParsedOpenapi | undefined;
-              postgres?: ParsedPostgres | undefined;
-              duplication?: ParsedDuplication | undefined;
-              prose?: ParsedProse | undefined;
-              repository?: ParsedRepository | undefined;
-              secrets?: ParsedSecrets | undefined;
-              site?: Omit<ParsedSite, 'size_limit'> | undefined;
-              spelling?: ParsedSpelling | undefined;
-              supabase?: ParsedSupabase | undefined;
-              translations?: ParsedTranslations | undefined;
-              xcode?: ParsedXcode | undefined;
-              swift?: ParsedSwift | undefined;
+              licenses?: Omit<ConfigurationTables['licenses'], 'allowed_package'> | undefined;
+              openapi?: ConfigurationTables['openapi'] | undefined;
+              postgres?: ConfigurationTables['postgres'] | undefined;
+              duplication?: ConfigurationTables['duplication'] | undefined;
+              prose?: ConfigurationTables['prose'] | undefined;
+              repository?: ConfigurationTables['repository'] | undefined;
+              secrets?: ConfigurationTables['secrets'] | undefined;
+              site?: Omit<ConfigurationTables['site'], 'size_limit'> | undefined;
+              spelling?: ConfigurationTables['spelling'] | undefined;
+              supabase?: ConfigurationTables['supabase'] | undefined;
+              translations?: ConfigurationTables['translations'] | undefined;
+              xcode?: ConfigurationTables['xcode'] | undefined;
+              swift?: ConfigurationTables['swift'] | undefined;
               limits?: ParsedLimits | undefined;
               naming?: Omit<ParsedNaming, 'override'> | undefined;
               tools?:
@@ -233,27 +223,27 @@ export type ParsedSettings = ParsedRoot & {
               format?: Omit<ParsedFormat, 'override'> | undefined;
           }[]
         | undefined;
-    cloudflare?: ParsedCloudflare | undefined;
-    coverage?: ParsedCoverage | undefined;
-    dependencies?: ParsedDependencies | undefined;
-    docs?: ParsedDocs | undefined;
-    drizzle?: ParsedDrizzle | undefined;
-    javascript?: ParsedJavascript | undefined;
-    trpc?: ParsedTrpc | undefined;
-    zustand?: ParsedZustand | undefined;
-    licenses?: ParsedLicenses | undefined;
-    openapi?: ParsedOpenapi | undefined;
-    postgres?: ParsedPostgres | undefined;
-    duplication?: ParsedDuplication | undefined;
-    prose?: ParsedProse | undefined;
-    repository?: ParsedRepository | undefined;
-    secrets?: ParsedSecrets | undefined;
-    site?: ParsedSite | undefined;
-    spelling?: ParsedSpelling | undefined;
-    supabase?: ParsedSupabase | undefined;
-    translations?: ParsedTranslations | undefined;
-    xcode?: ParsedXcode | undefined;
-    swift?: ParsedSwift | undefined;
+    cloudflare?: ConfigurationTables['cloudflare'] | undefined;
+    coverage?: ConfigurationTables['coverage'] | undefined;
+    dependencies?: ConfigurationTables['dependencies'] | undefined;
+    docs?: ConfigurationTables['docs'] | undefined;
+    drizzle?: ConfigurationTables['drizzle'] | undefined;
+    javascript?: ConfigurationTables['javascript'] | undefined;
+    trpc?: ConfigurationTables['trpc'] | undefined;
+    zustand?: ConfigurationTables['zustand'] | undefined;
+    licenses?: ConfigurationTables['licenses'] | undefined;
+    openapi?: ConfigurationTables['openapi'] | undefined;
+    postgres?: ConfigurationTables['postgres'] | undefined;
+    duplication?: ConfigurationTables['duplication'] | undefined;
+    prose?: ConfigurationTables['prose'] | undefined;
+    repository?: ConfigurationTables['repository'] | undefined;
+    secrets?: ConfigurationTables['secrets'] | undefined;
+    site?: ConfigurationTables['site'] | undefined;
+    spelling?: ConfigurationTables['spelling'] | undefined;
+    supabase?: ConfigurationTables['supabase'] | undefined;
+    translations?: ConfigurationTables['translations'] | undefined;
+    xcode?: ConfigurationTables['xcode'] | undefined;
+    swift?: ConfigurationTables['swift'] | undefined;
     limits?: ParsedLimits | undefined;
     naming?: ParsedNaming | undefined;
     import_rule: ImportRule[];

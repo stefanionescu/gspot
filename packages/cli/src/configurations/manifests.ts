@@ -7,8 +7,8 @@ import { parse as parseToml } from '@decimalturn/toml-patch';
 import { readAsset, listAssets } from '#cli/system/assets.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
+import { type NamingDefaults } from '#cli/types/checks/naming.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
-import { type NamingDefaults } from '#cli/types/checks/general.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
 import { namingDefaultsSchema } from '#cli/configurations/schema/naming.ts';
 

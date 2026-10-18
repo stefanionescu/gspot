@@ -10,8 +10,8 @@ import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
+import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/checks/swift.ts';
 import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
-import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/checks/language.ts';
 
 import {
     RULE_SUFFIX,
@@ -29,7 +29,7 @@ import {
     SWIFTLINT_CONFIG_FLAG,
     MACOS_PRIVATE_REPLACEMENT,
     SWIFTLINT_ANALYZE_COMMAND,
-} from '#cli/config/checks/language/swift.ts';
+} from '#cli/config/checks/swift.ts';
 
 const SWIFT_BUILD_MEMO = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
 

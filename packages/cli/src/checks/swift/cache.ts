@@ -11,7 +11,7 @@ import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { MODE_BITS, PRIVATE_FOLDER } from '#cli/config/system/modes.ts';
-import type { SwiftBuildPlan, SwiftBuildPurpose, PreparedSwiftBuild } from '#cli/types/checks/language.ts';
+import type { SwiftBuildPlan, SwiftBuildPurpose, PreparedSwiftBuild } from '#cli/types/checks/swift.ts';
 
 import {
     BUILD_LOG,
@@ -34,7 +34,7 @@ import {
     XCODE_WORKSPACE_SUFFIX,
     PACKAGE_SCRATCH_FOLDER,
     XCODE_DESTINATION_FLAG,
-} from '#cli/config/checks/language/swift.ts';
+} from '#cli/config/checks/swift.ts';
 
 // Maps each source to the file contents it needs under source/ in the build folder.
 function readBuildSources(root: string, paths: string[]): Map<string, FileContents> {

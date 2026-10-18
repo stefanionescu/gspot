@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 import { addIdentifier } from '#cli/checks/naming/collect.ts';
-import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/general.ts';
+import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/naming.ts';
 
 import {
     PYTHON_CONSTANT,
@@ -8,7 +8,7 @@ import {
     PYTHON_EXCEPTION_BASE,
     PYTHON_PARAMETER_NODES,
     PYTHON_IMPLICIT_PARAMETERS,
-} from '#cli/config/checks/general/naming.ts';
+} from '#cli/config/checks/naming.ts';
 
 // The block that holds a definition: the body of a class, the body of a function, or the module.
 function getHolderType(node: Node): string {

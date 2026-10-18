@@ -1,7 +1,7 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-import { SAFETY_PATTERNS, ALL_LEVEL_SAFETY_PATTERNS } from '#cli/config/checks/language/bash.ts';
+import { SAFETY_PATTERNS, ALL_LEVEL_SAFETY_PATTERNS } from '#cli/config/checks/bash.ts';
 
 /**
  * Reports each unsafe process kill or removal, and at level `all`, each discarded failure.

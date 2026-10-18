@@ -1,4 +1,4 @@
-import type { LINKINATOR_STATES } from '#cli/config/checks/framework/site.ts';
+import type { LINKINATOR_STATES } from '#cli/config/checks/site.ts';
 
 /** The result of one isolated static-site build. */
 export type SiteBuild = {
@@ -34,11 +34,4 @@ export type LinkinatorConstructor = new () => {
             }[];
         } & { passed: boolean }
     >;
-};
-
-export type ParsedSite = {
-    build_command: string[];
-    build_folder: string;
-    allowed_unlisted_pages: string[];
-    size_limit: { paths: string[]; kilobytes: number }[];
 };

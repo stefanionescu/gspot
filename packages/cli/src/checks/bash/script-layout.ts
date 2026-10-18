@@ -3,8 +3,8 @@ import { listCodeLines } from '#cli/parsers/bash.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import type { ScriptFile, ScriptReport } from '#cli/types/checks/bash.ts';
 import { readScripts, findFunctionAtLine } from '#cli/checks/bash/scripts.ts';
-import type { ScriptFile, ScriptReport } from '#cli/types/checks/language.ts';
 
 import {
     EXIT_CALL,
@@ -19,7 +19,7 @@ import {
     DECLARATION_WORDS,
     BASH_OPTION_COMMANDS,
     TOP_LEVEL_ASSIGNMENT,
-} from '#cli/config/checks/language/bash.ts';
+} from '#cli/config/checks/bash.ts';
 
 function checkStrictMode(code: NumberedLine[], report: ScriptReport): void {
     const first = code.findIndex((line) => !BASH_OPTION_COMMANDS.some((command) => line.text.startsWith(command)));

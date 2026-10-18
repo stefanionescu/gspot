@@ -1,7 +1,7 @@
 // Records the names that a source file declares, with the label that findings show.
 import type { Node } from 'web-tree-sitter';
-import { CATEGORY_LABELS } from '#cli/config/checks/general/naming.ts';
-import type { Identifier, ExtractSink, NamedCategory, IdentifierDeclaration } from '#cli/types/checks/general.ts';
+import { CATEGORY_LABELS } from '#cli/config/checks/naming.ts';
+import type { Identifier, ExtractSink, NamedCategory, IdentifierDeclaration } from '#cli/types/checks/naming.ts';
 
 /**
  * Builds an identifier with its file and the label that findings show.

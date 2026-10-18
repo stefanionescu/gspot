@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { LocalDate } from '@decimalturn/toml-patch';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { CASE_NAMES } from '#cli/config/checks/general/naming.ts';
+import { CASE_NAMES } from '#cli/config/checks/naming.ts';
 import type { ScopeSettings } from '#cli/types/settings/values.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';

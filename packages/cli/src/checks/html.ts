@@ -12,7 +12,7 @@ import {
     INERT_SCRIPT_TYPES,
     ACTIVE_DOCUMENT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
-} from '#cli/config/checks/language/html.ts';
+} from '#cli/config/checks/html.ts';
 
 // Script and active-document contexts can execute data URLs. Image and text resources remain inert.
 function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: string): boolean {

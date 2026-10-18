@@ -4,7 +4,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { checkInput, buildBuiltInResult } from '#cli/runs/built-in.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { GENERATED_FILE_HELP, GENERATED_FILE_MESSAGES } from '#cli/config/checks/general/gspot.ts';
+import { GENERATED_FILE_HELP, GENERATED_FILE_MESSAGES } from '#cli/config/checks/gspot.ts';
 
 /**
  * Reports each generated file on disk that does not match what the settings generate.

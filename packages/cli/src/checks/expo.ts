@@ -14,7 +14,7 @@ import {
     EXPO_PACKAGE_JSON,
     BLOCK_END_PREFIXES,
     EXPO_DOCTOR_COMMAND,
-} from '#cli/config/checks/framework/expo.ts';
+} from '#cli/config/checks/expo.ts';
 
 function hasInstalledExpo(scopeRoot: string): boolean {
     try {

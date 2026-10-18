@@ -7,7 +7,7 @@ import { isInstalledToolPath } from '#cli/repository/classify.ts';
 import { expandCommand } from '#cli/runs/command/placeholders.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import { LINT_LINE, ANSIBLE_CFG, ANSIBLE_CONFIG_SUFFIX } from '#cli/config/checks/infrastructure/ansible.ts';
+import { LINT_LINE, ANSIBLE_CFG, ANSIBLE_CONFIG_SUFFIX } from '#cli/config/checks/ansible.ts';
 
 async function lintProject(input: CheckInput, folder: string): Promise<Finding[]> {
     const files = input.files.filter(

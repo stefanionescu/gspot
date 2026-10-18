@@ -1,7 +1,7 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { listCodeLines } from '#cli/parsers/bash.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
-import { COUNT_LIMITS } from '#cli/config/checks/language/bash.ts';
+import { COUNT_LIMITS } from '#cli/config/checks/bash.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 /**

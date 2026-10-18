@@ -6,18 +6,18 @@ import { parseReport } from '#cli/runs/output/json.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { VALE_ERROR_LINE } from '#cli/config/checks/prose.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { type SpawnResult } from '#cli/types/system/processes.ts';
-import { VALE_ERROR_LINE } from '#cli/config/checks/general/prose.ts';
 import { VALE_TOOL_FILE_PATH } from '#cli/config/system/locations.ts';
 import { VALE_TOOL, VALE_ARGUMENTS } from '#cli/config/tools/vale.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { PROSE_GRAMMARS, SCRIPT_GRAMMAR } from '#cli/config/generation/vale.ts';
-import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/types/checks/general.ts';
+import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/types/checks/prose.ts';
 
 /**
  * Parses the Vale JSON output into alerts.

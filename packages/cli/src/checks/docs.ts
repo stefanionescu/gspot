@@ -16,7 +16,7 @@ import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
-import type { PathIndex, TaskNames } from '#cli/types/checks/general.ts';
+import type { PathIndex, TaskNames } from '#cli/types/checks/docs.ts';
 import { findScope, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { listExecutableNames, includeParentFolders } from '#cli/system/paths.ts';
@@ -37,7 +37,7 @@ import {
     TOKEN_SEPARATORS,
     TRAILING_PUNCTUATION,
     OPTIONAL_GENERATED_PATHS,
-} from '#cli/config/checks/general/docs.ts';
+} from '#cli/config/checks/docs.ts';
 
 function listGeneratorPaths(input: CheckInput): string[] {
     const paths: string[] = [];

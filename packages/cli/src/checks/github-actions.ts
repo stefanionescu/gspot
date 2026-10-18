@@ -7,8 +7,8 @@ import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { GIT_FOLDER } from '#cli/config/repository/tracked.ts';
 import { copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
+import { ACTION_FILE, SELF_REPOSITORY_MARKER } from '#cli/config/checks/github-actions.ts';
 import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
-import { ACTION_FILE, SELF_REPOSITORY_MARKER } from '#cli/config/checks/infrastructure/github-actions.ts';
 
 function listStepReferences(steps: unknown): unknown[] {
     if (!isSeq(steps)) return [];

@@ -8,7 +8,7 @@ import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/pushed-commits.ts';
-import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/general/commits.ts';
+import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/commits.ts';
 
 /**
  * Checks every pushed commit message, including empty commits that change no files.

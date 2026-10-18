@@ -1,15 +1,10 @@
 import type { LEVELS } from '#cli/config/configurations.ts';
-import type { ParsedSite } from '#cli/types/checks/framework.ts';
-import type { ParsedPostgres } from '#cli/types/checks/database.ts';
+import type { CASE_NAMES } from '#cli/config/checks/naming.ts';
 import type { ParsedTools } from '#cli/types/settings/tool-tables.ts';
-import type { CASE_NAMES } from '#cli/config/checks/general/naming.ts';
 import type { ParsedNamingOverride } from '#cli/types/settings/file.ts';
 import type { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
-import type { ParsedSwift, ParsedJavascript } from '#cli/types/checks/language.ts';
-import type { ParsedXcode, ParsedOpenapi } from '#cli/types/checks/infrastructure.ts';
-import type { ParsedSupabase, ParsedCloudflare } from '#cli/types/checks/platform.ts';
 import type { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declarations.ts';
-import type { ParsedTrpc, ParsedDrizzle, ParsedZustand, ParsedTranslations } from '#cli/types/checks/library.ts';
+import type { ConfigurationTables } from '#cli/types/settings/configuration-tables.ts';
 
 import type {
     CI_PROVIDERS,
@@ -22,17 +17,6 @@ import type {
     NAMING_TABLE_CATEGORIES,
     NAMING_LANGUAGE_CATEGORIES,
 } from '#cli/config/settings/schema.ts';
-import {
-    type ParsedDocs,
-    type ParsedProse,
-    type ParsedSecrets,
-    type ParsedCoverage,
-    type ParsedLicenses,
-    type ParsedSpelling,
-    type ParsedRepository,
-    type ParsedDuplication,
-    type ParsedDependencies,
-} from '#cli/types/checks/general.ts';
 
 type SettingDeclaration = {
     name: string;
@@ -49,31 +33,31 @@ type SettingDeclaration = {
 };
 
 type TableValues = {
-    cloudflare?: ParsedCloudflare | undefined;
-    coverage?: ParsedCoverage | undefined;
-    dependencies?: ParsedDependencies | undefined;
-    docs?: ParsedDocs | undefined;
-    drizzle?: ParsedDrizzle | undefined;
+    cloudflare?: ConfigurationTables['cloudflare'] | undefined;
+    coverage?: ConfigurationTables['coverage'] | undefined;
+    dependencies?: ConfigurationTables['dependencies'] | undefined;
+    docs?: ConfigurationTables['docs'] | undefined;
+    drizzle?: ConfigurationTables['drizzle'] | undefined;
     format: ParsedFormat;
-    javascript?: ParsedJavascript | undefined;
-    trpc?: ParsedTrpc | undefined;
-    zustand?: ParsedZustand | undefined;
-    licenses?: ParsedLicenses | undefined;
+    javascript?: ConfigurationTables['javascript'] | undefined;
+    trpc?: ConfigurationTables['trpc'] | undefined;
+    zustand?: ConfigurationTables['zustand'] | undefined;
+    licenses?: ConfigurationTables['licenses'] | undefined;
     limits?: ParsedLimits | undefined;
     naming?: ParsedNaming | undefined;
-    openapi?: ParsedOpenapi | undefined;
-    postgres?: ParsedPostgres | undefined;
-    repository?: ParsedRepository | undefined;
-    prose?: ParsedProse | undefined;
-    duplication?: ParsedDuplication | undefined;
-    swift?: ParsedSwift | undefined;
-    secrets?: ParsedSecrets | undefined;
-    site?: ParsedSite | undefined;
-    spelling?: ParsedSpelling | undefined;
+    openapi?: ConfigurationTables['openapi'] | undefined;
+    postgres?: ConfigurationTables['postgres'] | undefined;
+    repository?: ConfigurationTables['repository'] | undefined;
+    prose?: ConfigurationTables['prose'] | undefined;
+    duplication?: ConfigurationTables['duplication'] | undefined;
+    swift?: ConfigurationTables['swift'] | undefined;
+    secrets?: ConfigurationTables['secrets'] | undefined;
+    site?: ConfigurationTables['site'] | undefined;
+    spelling?: ConfigurationTables['spelling'] | undefined;
     structure?: ParsedStructure | undefined;
-    supabase?: ParsedSupabase | undefined;
-    translations?: ParsedTranslations | undefined;
-    xcode?: ParsedXcode | undefined;
+    supabase?: ConfigurationTables['supabase'] | undefined;
+    translations?: ConfigurationTables['translations'] | undefined;
+    xcode?: ConfigurationTables['xcode'] | undefined;
     'tools.commitlint'?: NonNullable<ParsedTools['commitlint']> | undefined;
     'tools.editorconfig-checker'?: NonNullable<ParsedTools['editorconfig-checker']> | undefined;
     'tools.eslint'?: NonNullable<ParsedTools['eslint']> | undefined;

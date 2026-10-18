@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
-import { MIGRATION_DOWN } from '#cli/config/checks/database.ts';
+import { MIGRATION_DOWN } from '#cli/config/checks/postgres.ts';
 import { readMigrations } from '#cli/checks/postgres/migrations.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';

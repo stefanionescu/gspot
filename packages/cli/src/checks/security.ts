@@ -3,7 +3,7 @@ import { buildBaseResult } from '#cli/runs/report.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { SEMGREP_TOOL } from '#cli/config/checks/general/security.ts';
+import { SEMGREP_TOOL } from '#cli/config/checks/security.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 
 /**

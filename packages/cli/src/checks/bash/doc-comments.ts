@@ -10,7 +10,7 @@ import {
     BASH_DOC_SECTIONS,
     LEADING_UNDERSCORES,
     SHELLCHECK_TOOL_COMMENT,
-} from '#cli/config/checks/language/bash.ts';
+} from '#cli/config/checks/bash.ts';
 
 function collectCommentBlock(lines: string[], start: number): string[] {
     const block: string[] = [];

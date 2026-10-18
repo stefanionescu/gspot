@@ -32,7 +32,7 @@ import {
     PURGECSS_PROCESS,
     LINKINATOR_STATES,
     LINKINATOR_PROCESS,
-} from '#cli/config/checks/framework/site.ts';
+} from '#cli/config/checks/site.ts';
 
 function readSitemapUrls(folder: string, files: ReadonlySet<string>): string[] {
     const visited = new Set<string>();

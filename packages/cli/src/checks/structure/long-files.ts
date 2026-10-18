@@ -1,8 +1,8 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { parseGrammarComments } from '#cli/parsers/comments.ts';
+import { COMMENT_MARKERS } from '#cli/config/checks/structure.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-import { COMMENT_MARKERS } from '#cli/config/checks/general/structure.ts';
 
 /**
  * Reports source files over the code-line limit of their language.

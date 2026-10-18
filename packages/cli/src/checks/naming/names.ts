@@ -11,7 +11,7 @@ import type {
     CategoryLimits,
     NamingSettings,
     CompiledOverride,
-} from '#cli/types/checks/general.ts';
+} from '#cli/types/checks/naming.ts';
 import {
     DIGIT,
     DIGIT_RUNS,
@@ -31,7 +31,7 @@ import {
     SWIFTLINT_PARENTS,
     WORD_FORM_SUFFIXES,
     WORD_FORM_CONSONANT,
-} from '#cli/config/checks/general/naming.ts';
+} from '#cli/config/checks/naming.ts';
 
 function isSnakeMigration(name: string): boolean {
     const stamp = name.slice(0, MIGRATION_DIGITS);

@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { checkIdentifier } from '#cli/checks/naming/names.ts';
-import { type Identifier } from '#cli/types/checks/general.ts';
+import { type Identifier } from '#cli/types/checks/naming.ts';
 import { buildScopeNamingSettings } from '#tests/setup/builders.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 

@@ -1,6 +1,6 @@
 import type { AlterTableCmd } from '@pgsql/types';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { type SqlFile, type SqlNodeFields, type SqlStatementView } from '#cli/types/parsers/sql.ts';
+import type { SqlFile, SqlNodeFields, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
 /** The declaration position of a fact, so a finding points at it. */
 type Declared = { path: string; offset: number; text: string };
@@ -46,12 +46,6 @@ export type SchemaState = Pick<Schema, 'tables' | 'secured'> & {
 };
 
 export type Location = { migration: Migration; statement: SqlStatementView; table: string };
-
-export type ParsedPostgres = {
-    client_schemas: string[];
-    frozen_through: string;
-    migrations_folder?: string | undefined;
-};
 
 /** Parsed migrations and located source syntax failures for the invoking check. */
 export type MigrationRead = { migrations: Migration[]; findings: Finding[] };

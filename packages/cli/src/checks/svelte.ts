@@ -11,7 +11,7 @@ import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { writeScopeTsconfig } from '#cli/checks/typescript/compiler.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import { TSCONFIG_SCRATCH_FOLDER } from '#cli/config/checks/language/typescript.ts';
+import { TSCONFIG_SCRATCH_FOLDER } from '#cli/config/checks/typescript.ts';
 
 import {
     FAILURE_LINE,
@@ -19,7 +19,7 @@ import {
     SVELTE_SEVERITIES,
     SVELTE_CHECK_COMMAND,
     SVELTE_TSCONFIG_FLAG,
-} from '#cli/config/checks/framework/svelte.ts';
+} from '#cli/config/checks/svelte.ts';
 
 const findingSchema = z.object({
     type: z.enum(SVELTE_SEVERITIES),

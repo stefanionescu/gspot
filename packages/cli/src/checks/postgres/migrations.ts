@@ -7,8 +7,8 @@ import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
-import { type Migration, type MigrationRead } from '#cli/types/checks/database.ts';
-import { MIGRATION_DOWN, DOWN_MIGRATION_SUFFIX } from '#cli/config/checks/database.ts';
+import { type Migration, type MigrationRead } from '#cli/types/checks/postgres.ts';
+import { MIGRATION_DOWN, DOWN_MIGRATION_SUFFIX } from '#cli/config/checks/postgres.ts';
 
 const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
 

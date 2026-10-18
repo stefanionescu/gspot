@@ -3,8 +3,8 @@ import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { text } from 'node:stream/consumers';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { LinkinatorConstructor } from '#cli/types/checks/framework.ts';
-import { LINKINATOR, LOCAL_HOSTS } from '#cli/config/checks/framework/site.ts';
+import { LINKINATOR, LOCAL_HOSTS } from '#cli/config/checks/site.ts';
+import type { LinkinatorConstructor } from '#cli/types/checks/site.ts';
 
 /** The request that the parent process sends on stdin. */
 const linkinatorRequestSchema = z.strictObject({

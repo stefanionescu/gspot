@@ -1,7 +1,7 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
+import { RUNTIME_EMBEDS } from '#cli/config/checks/bash.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-import { RUNTIME_EMBEDS } from '#cli/config/checks/language/bash.ts';
 
 /**
  * Reports each line that embeds another runtime.

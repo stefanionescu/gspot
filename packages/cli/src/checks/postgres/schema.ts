@@ -1,6 +1,6 @@
 import type { RangeVar, Constraint } from '@pgsql/types';
 import type { SqlStatementReaders } from '#cli/types/parsers/sql.ts';
-import { PUBLIC_SCHEMA, SCHEMA_PART_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database.ts';
+import { PUBLIC_SCHEMA, SCHEMA_PART_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/postgres.ts';
 import { getNodeFields, listNameParts, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
 import type {
@@ -10,7 +10,7 @@ import type {
     SchemaState,
     StatementReader,
     SchemaAlterations,
-} from '#cli/types/checks/database.ts';
+} from '#cli/types/checks/postgres.ts';
 
 function buildRelationName(relation: RangeVar | undefined): string {
     const schema = relation?.schemaname ?? '';

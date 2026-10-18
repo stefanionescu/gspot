@@ -5,6 +5,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { findTool } from '#cli/runs/command/tool.ts';
 import { buildCheckRun } from '#cli/runs/check-run.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { DOCKER_TOOL } from '#cli/config/checks/docker.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -13,7 +14,6 @@ import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { DOCKER_TOOL } from '#cli/config/checks/infrastructure/docker.ts';
 import { buildRunReport, buildBaseResult, formatReproduceCommand } from '#cli/runs/report.ts';
 import { RAN_STATUSES, FAILED_STATUSES, DOCKER_MISSING_MESSAGE } from '#cli/config/runs/run.ts';
 

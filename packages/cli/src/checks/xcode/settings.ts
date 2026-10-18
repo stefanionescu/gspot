@@ -3,13 +3,7 @@ import { computePosition } from '#cli/system/text.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-
-import {
-    PLIST_KEY,
-    PLIST_SUFFIX,
-    ARBITRARY_LOADS,
-    ENTITLEMENTS_SUFFIX,
-} from '#cli/config/checks/infrastructure/xcode.ts';
+import { PLIST_KEY, PLIST_SUFFIX, ARBITRARY_LOADS, ENTITLEMENTS_SUFFIX } from '#cli/config/checks/xcode.ts';
 
 /**
  * Reports each entitlement outside xcode.allowed_entitlements, which planning requires.

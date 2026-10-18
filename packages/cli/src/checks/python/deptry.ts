@@ -11,7 +11,7 @@ import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { buildUvRunCommand } from '#cli/install/python/project.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { DEPTRY_COMMAND, DEPTRY_EXCLUDE_FLAG } from '#cli/config/checks/language/python.ts';
+import { DEPTRY_COMMAND, DEPTRY_EXCLUDE_FLAG } from '#cli/config/checks/python.ts';
 
 const deptrySchema = z.object({
     tool: z

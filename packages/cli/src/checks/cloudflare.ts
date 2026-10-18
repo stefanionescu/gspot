@@ -3,7 +3,7 @@ import type { NumberedLine } from '#cli/types/text.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import type { HeaderBlock, HeaderBlocks } from '#cli/types/checks/platform.ts';
+import type { HeaderBlock, HeaderBlocks } from '#cli/types/checks/cloudflare.ts';
 
 import {
     DETACH_PREFIX,
@@ -14,7 +14,7 @@ import {
     HTTP_HEADER_LINE,
     REQUIRED_HEADERS,
     REDIRECT_STATUS_CODES,
-} from '#cli/config/checks/platform/cloudflare.ts';
+} from '#cli/config/checks/cloudflare.ts';
 
 function splitContentLines(text: string): NumberedLine[] {
     return text

@@ -2,7 +2,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { buildSchema } from '#cli/checks/postgres/schema.ts';
-import type { Migration } from '#cli/types/checks/database.ts';
+import type { Migration } from '#cli/types/checks/postgres.ts';
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
 import { readMigrations } from '#cli/checks/postgres/migrations.ts';

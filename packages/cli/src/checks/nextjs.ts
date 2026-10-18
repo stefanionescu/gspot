@@ -10,8 +10,8 @@ import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { ConfigurationCheck } from '#cli/types/configurations.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { runTsc, restoreCommandPaths } from '#cli/checks/typescript/compiler.ts';
+import { TSC_TOOL, TYPESCRIPT_TSC_CHECK } from '#cli/config/checks/typescript.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
-import { TSC_TOOL, TYPESCRIPT_TSC_CHECK } from '#cli/config/checks/language/typescript.ts';
 
 import {
     CAUSE_MARKS,
@@ -19,7 +19,7 @@ import {
     MARKED_LINES,
     CI_ENVIRONMENT,
     NEXT_TYPEGEN_COMMAND,
-} from '#cli/config/checks/framework/nextjs.ts';
+} from '#cli/config/checks/nextjs.ts';
 
 // Next.js puts the cause and its detail above the longer stack trace.
 function summarizeFailure(text: string): string {

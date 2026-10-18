@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import semver from 'semver';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { NAMED_CATEGORIES } from '#cli/config/checks/naming.ts';
 import { FILE_KINDS } from '#cli/config/repository/inventory.ts';
-import type { PathContainer } from '#cli/types/checks/general.ts';
+import type { PathContainer } from '#cli/types/checks/naming.ts';
 import { DEFAULT_OUTPUT_FORMAT } from '#cli/config/runs/output.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
 import { outputSchema } from '#cli/configurations/schema/output.ts';
-import { NAMED_CATEGORIES } from '#cli/config/checks/general/naming.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 import { LEVELS, STAGES, VERSION_FLOOR, MAX_EXIT_CODE } from '#cli/config/configurations.ts';

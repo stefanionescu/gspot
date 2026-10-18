@@ -7,8 +7,8 @@ import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { readTsconfig, buildCompilerHost } from '#cli/parsers/tsconfig.ts';
+import { EXPORTED_FUNCTION_EXTENSIONS } from '#cli/config/checks/structure.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
-import { EXPORTED_FUNCTION_EXTENSIONS } from '#cli/config/checks/general/structure.ts';
 
 // The compiler project of a scope: its tsconfig.json, or its jsconfig.json when it has none.
 function readScopeProject(input: CheckInput, scope: string) {

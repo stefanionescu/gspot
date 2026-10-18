@@ -1,6 +1,6 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
-import { MAIN_FUNCTION } from '#cli/config/checks/language/bash.ts';
+import { MAIN_FUNCTION } from '#cli/config/checks/bash.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 /**

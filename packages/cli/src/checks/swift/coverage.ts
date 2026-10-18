@@ -14,7 +14,7 @@ import type { TableSettings } from '#cli/types/settings/tables.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/swift/cache.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import { type SwiftBuildPlan, type CoverageReport } from '#cli/types/checks/language.ts';
+import { type SwiftBuildPlan, type CoverageReport } from '#cli/types/checks/swift.ts';
 
 import {
     SWIFT_PROGRAM,
@@ -27,7 +27,7 @@ import {
     XCODE_COVERAGE_FLAGS,
     SWIFT_CODECOV_COMMAND,
     SWIFT_DESCRIBE_COMMAND,
-} from '#cli/config/checks/language/swift.ts';
+} from '#cli/config/checks/swift.ts';
 
 async function measurePackageCoverage(
     input: CheckInput,

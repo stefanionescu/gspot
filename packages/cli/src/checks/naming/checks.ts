@@ -8,7 +8,7 @@ import { findScope, isInScope } from '#cli/repository/scopes.ts';
 import { readNamingSettings } from '#cli/checks/naming/settings.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
-import type { FileNames, NamedFile, Identifier, NamingSettings } from '#cli/types/checks/general.ts';
+import type { FileNames, NamedFile, Identifier, NamingSettings } from '#cli/types/checks/naming.ts';
 import { parseIdentifiers, buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/naming/identifiers.ts';
 
 function listNamedFiles(input: CheckInput): NamedFile[] {

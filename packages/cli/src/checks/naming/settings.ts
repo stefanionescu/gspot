@@ -7,7 +7,7 @@ import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import type { ParsedNamingLanguageFields } from '#cli/types/settings/tables.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
-import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY, CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
+import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY, CATEGORY_PARENTS } from '#cli/config/checks/naming.ts';
 
 import type {
     BannedWord,
@@ -16,7 +16,7 @@ import type {
     NamingSettings,
     CompiledOverride,
     NamingDefaultsLanguage,
-} from '#cli/types/checks/general.ts';
+} from '#cli/types/checks/naming.ts';
 
 function collectNames(names: string[] | undefined): Set<string> | undefined {
     return names === undefined || names.length === 0 ? undefined : new Set(names);

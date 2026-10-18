@@ -4,8 +4,8 @@ import { parseCached } from '#cli/system/files/cache.ts';
 import { locateNode, buildFinding } from '#cli/runs/finding.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/structure/convention-sources.ts';
-import type { IsSubstantial, CountedLanguage } from '#cli/types/checks/general.ts';
 import { checkExportedFunctions } from '#cli/checks/structure/exported-functions.ts';
+import type { IsSubstantial, CountedLanguage } from '#cli/types/checks/structure.ts';
 
 import {
     BARE_NAME_NODES,
@@ -19,7 +19,7 @@ import {
     SWIFT_FUNCTION_LABELS,
     SWIFT_ACCESSOR_OWNERS,
     COUNTED_FUNCTION_NODES,
-} from '#cli/config/checks/general/structure.ts';
+} from '#cli/config/checks/structure.ts';
 
 // Executable bodies exclude Python docstrings and Swift declarations without bodies.
 function extractFunctionBody(node: Node, language: CountedLanguage): Node[] {

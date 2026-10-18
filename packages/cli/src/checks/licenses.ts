@@ -19,7 +19,7 @@ import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { configurationTableSchemas } from '#cli/settings/schema/tables.ts';
 import { PYTHON_IDENTITY_NAME } from '#cli/config/parsers/dependency-files.ts';
 import { getWrittenSetting, listSettingsTables } from '#cli/settings/inherit.ts';
-import { type LicensedPackage, type ProjectLicenses } from '#cli/types/checks/general.ts';
+import { type LicensedPackage, type ProjectLicenses } from '#cli/types/checks/licenses.ts';
 import { packageJsonSchema, normalizePythonPackage } from '#cli/parsers/dependency-files.ts';
 import { PIP_LICENSES_COMMAND, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 
@@ -28,7 +28,7 @@ import {
     LICENSE_CHECKER,
     UNKNOWN_LICENSE,
     LICENSE_CHECKER_ARGUMENTS,
-} from '#cli/config/checks/general/licenses.ts';
+} from '#cli/config/checks/licenses.ts';
 
 // An expression passes when every part of an `AND`, or one part of an `OR`, has an allowed license.
 function isAllowed(license: string, allow: Set<string>): boolean {

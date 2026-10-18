@@ -12,7 +12,7 @@ import { hasIniSection } from '#cli/repository/existing-tools.ts';
 import { buildUvRunCommand } from '#cli/install/python/project.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli/config/checks/language/python.ts';
+import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli/config/checks/python.ts';
 
 function importLinterFile(input: CheckInput): string | undefined {
     for (const file of IMPORT_LINTER_FILES) {

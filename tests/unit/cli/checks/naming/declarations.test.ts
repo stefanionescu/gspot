@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { type Identifier } from '#cli/types/checks/general.ts';
+import { type Identifier } from '#cli/types/checks/naming.ts';
 import { extractSqlIdentifiers } from '#cli/checks/naming/sql.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import { SQL_DECLARATIONS, QUALIFIED_FUNCTION_DECLARATION } from '#tests/data/checks/sql.ts';

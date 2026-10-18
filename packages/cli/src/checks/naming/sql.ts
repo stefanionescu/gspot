@@ -3,7 +3,7 @@ import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { createIdentifier } from '#cli/checks/naming/collect.ts';
 import type { SqlFile, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
-import { type SqlNamed, type Identifier, type IdentifierRead } from '#cli/types/checks/general.ts';
+import { type SqlNamed, type Identifier, type IdentifierRead } from '#cli/types/checks/naming.ts';
 import { parseSqlFile, listNameParts, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
 import {

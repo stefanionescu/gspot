@@ -11,7 +11,7 @@ import { selectConfigurations } from '#cli/configurations/select.ts';
 import { BANNED_WORDS } from '#tests/data/checks/naming/settings.ts';
 import { splitParts, readNamingSettings } from '#cli/checks/naming/settings.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
-import { type Identifier, type NamingInputs } from '#cli/types/checks/general.ts';
+import { type Identifier, type NamingInputs } from '#cli/types/checks/naming.ts';
 
 test('a number word such as base64 counts as one word; repeated, extra, banned and digit words are still reported', () => {
     const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(

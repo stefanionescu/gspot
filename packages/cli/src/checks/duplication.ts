@@ -15,7 +15,7 @@ import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
-import { JSCPD, JSCPD_ARGUMENTS, JSCPD_TOOL_FILE, JSCPD_REPORT_FILE } from '#cli/config/checks/general/duplication.ts';
+import { JSCPD, JSCPD_ARGUMENTS, JSCPD_TOOL_FILE, JSCPD_REPORT_FILE } from '#cli/config/checks/duplication.ts';
 
 const clonePlaceSchema = z.object({
     name: z.string().min(1),

@@ -4,8 +4,8 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import { parseJsonResult } from '#cli/parsers/json.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { MESSAGE_FILE_SUFFIX } from '#cli/config/checks/library.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import { MESSAGE_FILE_SUFFIX } from '#cli/config/checks/translations.ts';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {

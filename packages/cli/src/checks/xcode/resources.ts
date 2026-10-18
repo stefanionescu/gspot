@@ -19,7 +19,7 @@ import {
     ASSET_KIND_SUFFIX,
     ASSET_REFERENCE_ENDINGS,
     DEFAULT_SOURCE_LANGUAGE,
-} from '#cli/config/checks/infrastructure/xcode.ts';
+} from '#cli/config/checks/xcode.ts';
 
 function getAssetSetName(path: string): string {
     const folder = path.slice(0, path.lastIndexOf('/'));

@@ -1,13 +1,13 @@
 import type { Node } from 'web-tree-sitter';
 import { addIdentifier } from '#cli/checks/naming/collect.ts';
-import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/general.ts';
+import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/naming.ts';
 
 import {
     SWIFT_NAME_QUOTE,
     SWIFT_TYPE_NODES,
     SWIFT_CALLABLE_NODES,
     SWIFT_MEMBER_PARENTS,
-} from '#cli/config/checks/general/naming.ts';
+} from '#cli/config/checks/naming.ts';
 
 function addTypes(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType([...SWIFT_TYPE_NODES])) {

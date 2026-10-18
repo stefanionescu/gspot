@@ -19,7 +19,7 @@ import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/runs/command/output.ts';
-import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/checks/platform.ts';
+import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/checks/supabase.ts';
 
 import {
     DENO_LOCATION,
@@ -34,7 +34,7 @@ import {
     DENO_CHECK_COMMAND,
     ADMIN_KEY_EXTENSIONS,
     SUPABASE_CONFIG_TOML,
-} from '#cli/config/checks/platform/supabase.ts';
+} from '#cli/config/checks/supabase.ts';
 
 function buildDenoJsonArguments(root: string, folder: string): string[] {
     const path = DENO_CONFIG_FILES.map((name) => join(root, folder, name)).find(

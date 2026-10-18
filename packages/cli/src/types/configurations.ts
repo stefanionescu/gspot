@@ -1,6 +1,6 @@
 import type { JsonValue } from '#cli/types/parsers/json.ts';
 import type { Defined, Optional } from '#cli/types/shapes.ts';
-import type { NamingOverride } from '#cli/types/checks/general.ts';
+import type { NamingOverride } from '#cli/types/checks/naming.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
 import type { TOOL_FOLDER_KINDS } from '#cli/config/system/locations.ts';

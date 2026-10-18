@@ -9,7 +9,7 @@ import { readText, readCachedBytes } from '#cli/system/files/reads.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/python.ts';
-import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/checks/language.ts';
+import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/checks/python.ts';
 
 import {
     NUMPY_DOCSTRING,
@@ -19,7 +19,7 @@ import {
     PYDOCLINT_STYLE_FLAG,
     PYDOCLINT_TYPE_OPTIONS,
     PYDOCLINT_DEFAULT_STYLE,
-} from '#cli/config/checks/language/python.ts';
+} from '#cli/config/checks/python.ts';
 
 async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
     const module = await parsePythonModule(path, readCachedBytes(session.reads, path).toString('utf8'), session);

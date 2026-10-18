@@ -1,10 +1,10 @@
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { ToolInspection } from '#cli/types/tools/find.ts';
-import type { ParsedLicenses } from '#cli/types/checks/general.ts';
 import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
 import type { StartRunner, ToolFileGeneration } from '#cli/types/generation/files.ts';
+import type { ConfigurationTables } from '#cli/types/settings/configuration-tables.ts';
 import type { Stage, Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 /** Settings, repository inventory, and configurations shared by planning and generation. */
@@ -102,6 +102,6 @@ export type StageFilter = Stage | 'all';
 export type LicenseProject = {
     dependencyFile: string;
     selection: ScopeSelection;
-    configuration: ParsedLicenses;
+    configuration: ConfigurationTables['licenses'];
     skip: SettingsSkip | undefined;
 };

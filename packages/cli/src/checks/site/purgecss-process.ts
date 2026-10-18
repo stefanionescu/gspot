@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { text } from 'node:stream/consumers';
+import { PURGECSS } from '#cli/config/checks/site.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { PURGECSS } from '#cli/config/checks/framework/site.ts';
-import type { PurgecssConstructor } from '#cli/types/checks/framework.ts';
+import type { PurgecssConstructor } from '#cli/types/checks/site.ts';
 
 /** The request that the parent process sends on stdin. */
 const purgecssRequestSchema = z.strictObject({

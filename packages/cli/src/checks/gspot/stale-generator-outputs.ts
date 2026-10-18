@@ -9,8 +9,8 @@ import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { type GeneratorOutput } from '#cli/types/configurations.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
 import { readBytes, readCachedText } from '#cli/system/files/reads.ts';
+import { GENERATOR_SCAN_EXCLUSIONS } from '#cli/config/checks/gspot.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import { GENERATOR_SCAN_EXCLUSIONS } from '#cli/config/checks/general/gspot.ts';
 import { checkCopyInputs, copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import { expandCommand, replacePlaceholders, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
 

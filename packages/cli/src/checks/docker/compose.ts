@@ -10,7 +10,7 @@ import { DOCKERFILE_NAME } from '#cli/config/repository/inventory.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckInput, type CheckResult } from '#cli/types/runs/check.ts';
-import type { ComposeFiles, ComposeService, ComposeDocuments } from '#cli/types/checks/infrastructure.ts';
+import type { ComposeFiles, ComposeService, ComposeDocuments } from '#cli/types/checks/docker.ts';
 
 import {
     DOCKERIGNORE,
@@ -18,7 +18,7 @@ import {
     COMPOSE_OVERRIDE,
     COMPOSE_SUFFIXES,
     COMPOSE_FILE_FLAG,
-} from '#cli/config/checks/infrastructure/docker.ts';
+} from '#cli/config/checks/docker.ts';
 
 // Group each base Compose file before its overrides so they read and validate in order.
 function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {

@@ -24,7 +24,7 @@ import {
     GITLEAKS_STAGED_FLAG,
     GITLEAKS_STAGED_CHECK,
     TRUFFLEHOG_GIT_COMMAND,
-} from '#cli/config/checks/general/secrets.ts';
+} from '#cli/config/checks/secrets.ts';
 
 async function readEnvironmentReferences(
     input: CheckInput,

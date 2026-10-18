@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { pathContainerSchema } from '#cli/configurations/schema/parts.ts';
-import type { NamedCategory, NamingDefaults, NamingOverride } from '#cli/types/checks/general.ts';
-import { CASE_NAMES, ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/general/naming.ts';
+import { CASE_NAMES, ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/naming.ts';
+import type { NamedCategory, NamingDefaults, NamingOverride } from '#cli/types/checks/naming.ts';
 
 const identifierCategory = z.enum(NAMED_CATEGORIES) satisfies z.ZodType<NamedCategory>;
 

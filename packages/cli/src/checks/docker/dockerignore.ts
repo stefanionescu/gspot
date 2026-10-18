@@ -6,13 +6,7 @@ import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { DOCKERFILE_NAME, DOCKERFILE_EXTENSION } from '#cli/config/repository/inventory.ts';
-
-import {
-    DOCKERIGNORE,
-    EDGE_SLASHES,
-    DOCKERIGNORE_ENTRIES,
-    IGNORE_PATTERN_FORMS,
-} from '#cli/config/checks/infrastructure/docker.ts';
+import { DOCKERIGNORE, EDGE_SLASHES, DOCKERIGNORE_ENTRIES, IGNORE_PATTERN_FORMS } from '#cli/config/checks/docker.ts';
 
 /**
  * Reports each Dockerfile with no ignore file, or with one that misses a required pattern.

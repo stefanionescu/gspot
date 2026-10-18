@@ -16,7 +16,7 @@ import { type TsconfigInput } from '#cli/types/generation/typescript.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
-import type { TypeScriptReferenceCopy } from '#cli/types/checks/language.ts';
+import type { TypeScriptReferenceCopy } from '#cli/types/checks/typescript.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 
@@ -44,7 +44,7 @@ import {
     TYPESCRIPT_TSCONFIG_CHECK,
     TSC_CONFIGURATION_REQUIRED,
     TSC_REFERENCE_OUTPUT_FOLDER,
-} from '#cli/config/checks/language/typescript.ts';
+} from '#cli/config/checks/typescript.ts';
 
 const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
 

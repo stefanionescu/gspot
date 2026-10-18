@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 import { addIdentifier } from '#cli/checks/naming/collect.ts';
-import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/general.ts';
+import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/naming.ts';
 
 import {
     TYPESCRIPT_NAME_NODES,
@@ -9,7 +9,7 @@ import {
     TYPESCRIPT_CALLABLE_NODES,
     TYPESCRIPT_PATTERN_FIELDS,
     TYPESCRIPT_PARAMETER_NODES,
-} from '#cli/config/checks/general/naming.ts';
+} from '#cli/config/checks/naming.ts';
 
 function addPattern(sink: ExtractSink, node: Node | null, category: NamedCategory): void {
     if (node === null) return;

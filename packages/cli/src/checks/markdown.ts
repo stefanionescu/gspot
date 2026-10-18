@@ -10,7 +10,7 @@ import { readCachedBytes } from '#cli/system/files/reads.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import type { ParseCache, GrammarName } from '#cli/types/parsers/tree-sitter.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
-import type { FenceParser, FencedBlock, FenceSyntaxError } from '#cli/types/checks/language.ts';
+import type { FenceParser, FencedBlock, FenceSyntaxError } from '#cli/types/checks/markdown.ts';
 
 import {
     ELLIPSIS_LINE,
@@ -23,7 +23,7 @@ import {
     JSON_FENCE_OPTIONS,
     CAMEL_CASE_BOUNDARY,
     MARKDOWNLINT_PATH_PREFIX,
-} from '#cli/config/checks/language/markdown.ts';
+} from '#cli/config/checks/markdown.ts';
 
 function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError | undefined {
     const errors: ParseError[] = [];
