@@ -1,4 +1,4 @@
-export const SWIFT_EXTRACTOR_SOURCE = String.raw`import Foundation
+const SWIFT_EXTRACTOR_SOURCE = String.raw`import Foundation
 
 protocol Greeter { func greet(name: String) -> String }
 enum Mood { case happy, sad; case veryAngry(level: Int) }
@@ -14,7 +14,7 @@ func top_level(_ value: Int, with label: String) {}
 let globalConstant = 1
 `;
 
-export const PYTHON_EXTRACTOR_SOURCE = `"""Orders."""
+const PYTHON_EXTRACTOR_SOURCE = `"""Orders."""
 
 MAX_ITEMS = 3
 default_name = "x"
@@ -42,7 +42,7 @@ def make_order(name, /, size: int) -> None:
     """Make one."""
 `;
 
-export const TYPESCRIPT_EXTRACTOR_SOURCE = `
+const TYPESCRIPT_EXTRACTOR_SOURCE = `
 export function parseHttpUrl(rawInput: string, { retries = 3, ...rest }: Options, [first, second]: string[]): void {}
 const enhancedHandler = (event) => {};
 let { data: payload } = source;
@@ -59,7 +59,7 @@ const table = { keyOne: 1 };
 `;
 
 /** Declared names, grouped by the naming categories of each language. */
-export const EXPECTED_TYPESCRIPT_NAMES = {
+const EXPECTED_TYPESCRIPT_NAMES = {
     functions: ['parseHttpUrl'],
     parameters: ['rawInput', 'retries', 'rest', 'first', 'second', 'event', 'baseUrl', 'body'],
     variables: ['enhancedHandler', 'payload', 'table'],
@@ -70,7 +70,7 @@ export const EXPECTED_TYPESCRIPT_NAMES = {
     enum_cases: ['Fast', 'Slow'],
 } as const;
 
-export const EXPECTED_PYTHON_NAMES = {
+const EXPECTED_PYTHON_NAMES = {
     constants: ['MAX_ITEMS'],
     variables: ['default_name', 'local_total'],
     type_aliases: ['OrderId'],
@@ -82,7 +82,7 @@ export const EXPECTED_PYTHON_NAMES = {
     parameters: ['owner', 'verbatim', 'flags', 'item_name', 'count', 'name', 'size'],
 } as const;
 
-export const EXPECTED_SWIFT_NAMES = {
+const EXPECTED_SWIFT_NAMES = {
     types: ['Greeter', 'Mood', 'UserTemplate', 'Handler'],
     methods: ['greet', 'greet'],
     functions: ['top_level'],
@@ -92,6 +92,8 @@ export const EXPECTED_SWIFT_NAMES = {
     constants: ['globalConstant'],
     enum_cases: ['happy', 'sad', 'veryAngry'],
 } as const;
+
+const NEXT_PAGE_SOURCE = 'export default function Page() { return null; }\n';
 
 export const DECLARATION_ORDER_CASES = [
     {
@@ -194,3 +196,78 @@ export const NUMBERED_FILES = {
     '.mise/tasks/01-build.sh': 'echo example\n',
     'scripts/steps/01-build.sh': 'echo example\n',
 } as const;
+
+/** One sample per parser, the names it declares by category, and names it must leave out. */
+export const DECLARATION_SAMPLES = [
+    {
+        language: 'typescript',
+        path: 'src/a.ts',
+        source: TYPESCRIPT_EXTRACTOR_SOURCE,
+        expected: EXPECTED_TYPESCRIPT_NAMES,
+        absent: ['keyOne'],
+    },
+    {
+        language: 'python',
+        path: 'shop/orders.py',
+        source: PYTHON_EXTRACTOR_SOURCE,
+        expected: EXPECTED_PYTHON_NAMES,
+        absent: ['self'],
+    },
+    {
+        language: 'swift',
+        path: 'Sources/User.swift',
+        source: SWIFT_EXTRACTOR_SOURCE,
+        expected: EXPECTED_SWIFT_NAMES,
+        absent: [],
+    },
+] as const;
+
+/** File names that naming/paths reports, the names it allows beside them, and the rename that fixes each. */
+export const FILE_NAME_CASES = [
+    {
+        name: '__init__.ts is reported; Python __init__.py and __main__.py are allowed',
+        configurations: ['python', 'typescript', 'naming'],
+        files: {
+            'python/__init__.py': '"""Package entry."""\n',
+            'python/__main__.py': '"""Program entry."""\n',
+            'javascript/__init__.ts': 'export const entry = 1;\n',
+        },
+        invalid: 'javascript/__init__.ts',
+        renamed: 'javascript/entry.ts',
+    },
+    {
+        name: 'a SQL migration file name keeps its timestamp and must be snake case',
+        configurations: ['sql', 'naming'],
+        files: {
+            'migrations/20260101120000_CreateUsers.sql': 'CREATE TABLE users (id integer);\n',
+            'queries/select_users.sql': 'SELECT id FROM users;\n',
+        },
+        invalid: 'migrations/20260101120000_CreateUsers.sql',
+        renamed: 'migrations/20260101120000_create_users.sql',
+    },
+    {
+        name: 'Next.js special pages such as _app and 404 are allowed; a snake_case page is reported',
+        configurations: ['nextjs', 'naming'],
+        files: {
+            'pages/_app.tsx': NEXT_PAGE_SOURCE,
+            'pages/_document.tsx': NEXT_PAGE_SOURCE,
+            'pages/_error.tsx': NEXT_PAGE_SOURCE,
+            'pages/404.tsx': NEXT_PAGE_SOURCE,
+            'pages/500.tsx': NEXT_PAGE_SOURCE,
+            'pages/about_page.ts': 'export const title = "About";\n',
+        },
+        invalid: 'pages/about_page.ts',
+        renamed: 'pages/about-page.ts',
+    },
+    {
+        name: 'files in dot folders still get file-name checks',
+        configurations: ['typescript', 'naming'],
+        files: {
+            '.archive/bad_name.ts': 'export const entry = 1;\n',
+            '.claude/entry.ts': 'export const entry = 1;\n',
+            '.vscode/entry.ts': 'export const entry = 1;\n',
+        },
+        invalid: '.archive/bad_name.ts',
+        renamed: '.archive/bad-name.ts',
+    },
+] as const;

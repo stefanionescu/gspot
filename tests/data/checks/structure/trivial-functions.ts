@@ -1,4 +1,6 @@
+import { CLEAN_SWIFT } from '#tests/data/checks/swift/lint.ts';
 import { BASH_HEADER } from '#tests/data/checks/bash/samples.ts';
+import { PROPERTY_READERS } from '#tests/data/checks/structure/environment-readers.ts';
 
 export const BASH_TRIVIAL_FUNCTION_CASES = [
     {
@@ -62,7 +64,7 @@ func pairLabel() -> String {
     return text + "!"
 }
 `,
-        line: 15,
+        lines: [15],
         trivialFile: false,
     },
     {
@@ -74,15 +76,23 @@ func isNew(_ name: String) -> Bool {
     !["a", "b"].contains(name)
 }
 `,
-        line: 4,
+        lines: [4],
         trivialFile: true,
     },
+    {
+        name: 'implicit getters, property readers, and subscript accessors',
+        source: PROPERTY_READERS,
+        lines: [2, 4, 5, 8, 9],
+        trivialFile: false,
+    },
+    { name: 'substantial function bodies', source: CLEAN_SWIFT, lines: [], trivialFile: false },
 ] as const;
 
 export const TRIVIAL_FILES = [
     {
         name: 'a Python forwarding wrapper',
         language: 'python',
+        file: 'example.py',
         source: `from other import alias
 def wrapper():
     return alias()
@@ -92,6 +102,7 @@ def wrapper():
     {
         name: 'a Python implementation with three statements',
         language: 'python',
+        file: 'example.py',
         source: `def owner():
     one()
     two()
@@ -102,26 +113,68 @@ def wrapper():
     {
         name: 'a Swift forwarding wrapper',
         language: 'swift',
+        file: 'example.swift',
         source: 'struct Wrapper { func value() { return original() } }',
         expected: true,
     },
     {
         name: 'a Swift implementation with three statements',
         language: 'swift',
+        file: 'example.swift',
         source: 'struct Owner { func value() { one(); two(); three() } }',
         expected: false,
     },
     {
         name: 'a Bash forwarding wrapper',
         language: 'bash',
+        file: 'example.sh',
         source: 'source ./other.sh\nwrapper() { original; }',
         expected: true,
     },
     {
         name: 'a Bash implementation with three statements',
         language: 'bash',
+        file: 'example.sh',
         source: 'owner() { one; two; three; }',
         expected: false,
+    },
+    {
+        name: 'an empty Python package file',
+        language: 'python',
+        file: '__init__.py',
+        source: '',
+        expected: false,
+    },
+    {
+        name: 'a Python package marker comment',
+        language: 'python',
+        file: '__init__.py',
+        source: '# Package marker\n',
+        expected: false,
+    },
+    {
+        name: 'a Python package with a marker comment and a docstring',
+        language: 'python',
+        file: '__init__.py',
+        source: '# Package marker\n"""Package documentation."""\n',
+        expected: false,
+    },
+    {
+        name: 'a Python package docstring before an import',
+        language: 'python',
+        file: '__init__.py',
+        source: '"""Package documentation."""\nfrom other import alias\n',
+        expected: true,
+    },
+    {
+        name: 'a Python package docstring before a forwarding wrapper',
+        language: 'python',
+        file: '__init__.py',
+        source: `"""Package documentation."""
+def wrapper():
+    return original()
+`,
+        expected: true,
     },
 ] as const;
 
@@ -152,18 +205,4 @@ export const STATEMENT_COUNT_CASES = [
     ],
     ['swift', 'func example() { /* comment */ work(); work() }'],
     ['bash', 'example() { # comment\necho value; echo value\n}'],
-] as const;
-
-export const PACKAGE_DOCSTRING_CASES = [
-    ['', false],
-    ['# Package marker\n', false],
-    ['# Package marker\n"""Package documentation."""\n', false],
-    ['"""Package documentation."""\nfrom other import alias\n', true],
-    [
-        `"""Package documentation."""
-def wrapper():
-    return original()
-`,
-        true,
-    ],
 ] as const;

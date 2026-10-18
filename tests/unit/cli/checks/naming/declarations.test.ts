@@ -6,48 +6,39 @@ import { extractSqlIdentifiers } from '#cli/checks/general/naming/sql.ts';
 import { SQL_DECLARATIONS, QUALIFIED_FUNCTION_DECLARATION } from '#tests/data/checks/sql.ts';
 
 import {
+    NAME_POSITION_CASES,
+    DECLARATION_SAMPLES,
+    DECLARATION_ORDER_CASES,
+} from '#tests/data/checks/naming/sources.ts';
+import {
     parseIdentifiers,
     buildFileIdentifier,
     buildFolderIdentifiers,
 } from '#cli/checks/general/naming/identifiers.ts';
-import {
-    NAME_POSITION_CASES,
-    EXPECTED_SWIFT_NAMES,
-    EXPECTED_PYTHON_NAMES,
-    SWIFT_EXTRACTOR_SOURCE,
-    DECLARATION_ORDER_CASES,
-    PYTHON_EXTRACTOR_SOURCE,
-    EXPECTED_TYPESCRIPT_NAMES,
-    TYPESCRIPT_EXTRACTOR_SOURCE,
-} from '#tests/data/checks/naming/sources.ts';
 
 // Several language cases compare the same category of extracted declarations.
 function listCategoryNames(found: Identifier[], category: string): string[] {
     return found.filter((entry) => entry.category === category).map((entry) => entry.name);
 }
 
-test('identifiers: TypeScript declarations are collected by category; object literal keys are not', async () => {
-    using resources = new DisposableStack();
-    const context = { reads: createReadCache(process.cwd()), resources };
+test.each([...DECLARATION_SAMPLES])(
+    'identifiers: $language declarations are collected by category',
+    async ({ language, path, source, expected, absent }) => {
+        using resources = new DisposableStack();
+        const context = { reads: createReadCache(process.cwd()), resources };
 
-    const { identifiers: found } = await parseIdentifiers(
-        'src/a.ts',
-        TYPESCRIPT_EXTRACTOR_SOURCE,
-        'typescript',
-        context,
-    );
-    expect(
-        Object.fromEntries(
-            Object.keys(EXPECTED_TYPESCRIPT_NAMES).map((category) => [category, listCategoryNames(found, category)]),
-        ),
-    ).toStrictEqual(
-        Object.fromEntries(
-            Object.entries(EXPECTED_TYPESCRIPT_NAMES).map(([category, names]) => [category, [...names]]),
-        ),
-    );
-    expect(found.map((entry) => entry.name)).not.toContain('keyOne');
-    expect(found.find((entry) => entry.name === 'send')?.line).toBe(9);
-});
+        const { identifiers: found } = await parseIdentifiers(path, source, language, context);
+        const byCategory: Readonly<Record<string, readonly string[]>> = expected;
+        expect(
+            Object.fromEntries(
+                Object.keys(byCategory).map((category) => [category, listCategoryNames(found, category)]),
+            ),
+        ).toStrictEqual(
+            Object.fromEntries(Object.entries(byCategory).map(([category, names]) => [category, [...names]])),
+        );
+        for (const name of absent) expect(found.map((entry) => entry.name)).not.toContain(name);
+    },
+);
 
 test('identifiers: a name bound from another module through require or await import is skipped, and nothing else', async () => {
     using resources = new DisposableStack();
@@ -79,39 +70,6 @@ test('identifiers: Bash functions and variables are collected', async () => {
         'functions:build_all',
         'variables:TARGET',
     ]);
-});
-
-test('identifiers: Python declarations are collected by category, dunder names included, self left out', async () => {
-    using resources = new DisposableStack();
-    const context = { reads: createReadCache(process.cwd()), resources };
-
-    const { identifiers: found } = await parseIdentifiers('shop/orders.py', PYTHON_EXTRACTOR_SOURCE, 'python', context);
-    expect(
-        Object.fromEntries(
-            Object.keys(EXPECTED_PYTHON_NAMES).map((category) => [category, listCategoryNames(found, category)]),
-        ),
-    ).toStrictEqual(
-        Object.fromEntries(Object.entries(EXPECTED_PYTHON_NAMES).map(([category, names]) => [category, [...names]])),
-    );
-});
-
-test('identifiers: Swift declarations are collected by category', async () => {
-    using resources = new DisposableStack();
-    const context = { reads: createReadCache(process.cwd()), resources };
-
-    const { identifiers: found } = await parseIdentifiers(
-        'Sources/User.swift',
-        SWIFT_EXTRACTOR_SOURCE,
-        'swift',
-        context,
-    );
-    expect(
-        Object.fromEntries(
-            Object.keys(EXPECTED_SWIFT_NAMES).map((category) => [category, listCategoryNames(found, category)]),
-        ),
-    ).toStrictEqual(
-        Object.fromEntries(Object.entries(EXPECTED_SWIFT_NAMES).map(([category, names]) => [category, [...names]])),
-    );
 });
 
 test.each([...DECLARATION_ORDER_CASES])(

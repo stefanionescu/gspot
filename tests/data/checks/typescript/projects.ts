@@ -179,3 +179,20 @@ export {
     STANDALONE_TYPESCRIPT_FINDINGS,
     STANDALONE_TYPESCRIPT_SETTINGS,
 };
+
+/** A tsconfig.json that TypeScript cannot read, the error that names the file, and the file to fix. */
+export const TSCONFIG_READ_ERRORS = [
+    {
+        name: 'malformed JSON',
+        tsconfig: '{',
+        error: /^Cannot read TypeScript configuration .*tsconfig\.json/u,
+        fixed: 'tsconfig.json',
+    },
+    {
+        name: 'a missing inherited configuration',
+        tsconfig: '{"extends":"./missing.json","compilerOptions":{"strict":true}}',
+        // TypeScript prints the inherited path with forward slashes on every system.
+        error: /Cannot read file '.*\/missing\.json'/u,
+        fixed: 'missing.json',
+    },
+] as const;

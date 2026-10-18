@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { rename, writeFile } from 'node:fs/promises';
+import { checkReport } from '#tests/setup/run-gspot.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { NUMBERED_PREFIX_OVERRIDE } from '#tests/data/checks/naming/settings.ts';
-import { NUMBERED_FILES, MIGRATION_FILES } from '#tests/data/checks/naming/sources.ts';
+import { NUMBERED_FILES, FILE_NAME_CASES, MIGRATION_FILES } from '#tests/data/checks/naming/sources.ts';
 
 test('[slug] path brackets are allowed in every scope and banned file names are reported', async () => {
     await using sandbox = await testdir();
@@ -27,21 +27,18 @@ test('[slug] path brackets are allowed in every scope and banned file names are 
     expect(findings.filter(({ file }) => file.startsWith('app/'))).toStrictEqual([]);
 });
 
-test('__init__.ts is reported; Python __init__.py and __main__.py are allowed', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['python', 'typescript', 'naming'], { level: 'all' }),
-        'python/__init__.py': '"""Package entry."""\n',
-        'python/__main__.py': '"""Program entry."""\n',
-        'javascript/__init__.ts': 'export const entry = 1;\n',
+test.each([...FILE_NAME_CASES])('naming/paths: $name', async ({ configurations, files, invalid, renamed }) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText([...configurations], { level: 'all' }),
+        ...files,
     });
     const command = ['check', '--only', 'naming/paths', '--json'];
     const failed = await checkReport(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: 'javascript/__init__.ts', line: 1, column: 1, rule: 'case' },
+        { file: invalid, line: 1, column: 1, rule: 'case' },
     ]);
-    await rename(join(sandbox.path, 'javascript/__init__.ts'), join(sandbox.path, 'javascript/entry.ts'));
+    await rename(join(sandbox.path, invalid), join(sandbox.path, renamed));
     const corrected = await checkReport(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
@@ -72,68 +69,6 @@ test.each(['', 'app'])(
         ]);
     },
 );
-
-test('a SQL migration file name keeps its timestamp and must be snake case', async () => {
-    await using sandbox = await testdir();
-    const invalid = 'migrations/20260101120000_CreateUsers.sql';
-    const valid = 'migrations/20260101120000_create_users.sql';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['sql', 'naming'], { level: 'all' }),
-        [invalid]: 'CREATE TABLE users (id integer);\n',
-        'queries/select_users.sql': 'SELECT id FROM users;\n',
-    });
-    const command = ['check', '--only', 'naming/paths', '--json'];
-    const refused = await checkReport(sandbox.path, command);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(1);
-    const report = refused.report;
-    expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
-        { file: invalid, line: 1, column: 1, rule: 'case' },
-    ]);
-    await rename(join(sandbox.path, invalid), join(sandbox.path, valid));
-    const accepted = await checkReport(sandbox.path, command);
-    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(accepted.report.checks).toMatchObject([{ check: 'naming/paths', status: 'passed', findings: [] }]);
-});
-
-test('Next.js special pages such as _app and 404 are allowed; a snake_case page is reported', async () => {
-    await using sandbox = await testdir();
-    const source = 'export default function Page() { return null; }\n';
-    const pages = ['_app', '_document', '_error', '404', '500'].map((name) => `pages/${name}.tsx`);
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['nextjs', 'naming'], { level: 'all' }),
-        ...Object.fromEntries(pages.map((path) => [path, source])),
-        'pages/about_page.ts': 'export const title = "About";\n',
-    });
-    const command = ['check', '--only', 'naming/paths', '--json'];
-    const failed = await checkReport(sandbox.path, command);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks.flatMap((check) => check.findings)).toMatchObject([
-        { file: 'pages/about_page.ts', rule: 'case' },
-    ]);
-    await rename(join(sandbox.path, 'pages/about_page.ts'), join(sandbox.path, 'pages/about-page.ts'));
-    const corrected = await runGspot(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
-test('files in dot folders still get file-name checks', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript', 'naming'], { level: 'all' }),
-        '.archive/bad_name.ts': 'export const entry = 1;\n',
-        '.claude/entry.ts': 'export const entry = 1;\n',
-        '.vscode/entry.ts': 'export const entry = 1;\n',
-    });
-    const command = ['check', '--only', 'naming/paths', '--json'];
-    const failed = await checkReport(sandbox.path, command);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: '.archive/bad_name.ts', line: 1, column: 1, rule: 'case' },
-    ]);
-    await rename(join(sandbox.path, '.archive/bad_name.ts'), join(sandbox.path, '.archive/bad-name.ts'));
-    const corrected = await checkReport(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-});
 
 test('a numbered file name needs an ignored_prefix override', async () => {
     await using sandbox = await testdir();

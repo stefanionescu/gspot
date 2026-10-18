@@ -4,8 +4,6 @@ import { matchSubstring } from '#tests/setup/matchers.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { Finding } from '#cli/types/checks/run/check.ts';
-import { CLEAN_SWIFT } from '#tests/data/checks/swift/lint.ts';
-import { PROPERTY_READERS } from '#tests/data/checks/structure/environment-readers.ts';
 import { EXPORTED_FUNCTION_FILES } from '#tests/data/checks/structure/exported-functions.ts';
 
 import {
@@ -14,7 +12,6 @@ import {
     STATEMENT_COUNT_CASES,
     SWIFT_FUNCTION_LIMITS,
     TRIVIAL_FUNCTION_CASES,
-    PACKAGE_DOCSTRING_CASES,
 } from '#tests/data/checks/structure/trivial-functions.ts';
 
 test('Swift reports constructors, accessors, decorated methods and nested functions, and leaves closures alone', async () => {
@@ -39,21 +36,9 @@ test('Swift reports constructors, accessors, decorated methods and nested functi
     ]);
 });
 
-test('Swift includes implicit getters, property readers and subscript accessors', async () => {
-    const text = PROPERTY_READERS;
-    await using sandbox = await testdir({
-        'example.swift': text,
-        'gspot.toml': buildSettingsText(['swift'], { level: 'all', tables: SWIFT_FUNCTION_LIMITS }),
-    });
-    const result = await checkFindings(sandbox.path, 'structure/trivial-functions');
-    expect(result.map((problem) => ({ rule: problem.rule, line: problem.line }))).toStrictEqual(
-        [2, 4, 5, 8, 9].map((line) => ({ rule: 'trivial-function', line })),
-    );
-});
-
 test.each([...TRIVIAL_FUNCTION_CASES])(
-    'Swift $name reports the trivial function at line $line',
-    async ({ source, line, trivialFile }) => {
+    'Swift $name reports the trivial functions at lines $lines',
+    async ({ source, lines, trivialFile }) => {
         await using sandbox = await testdir({
             'Source.swift': source,
             'gspot.toml': buildSettingsText(['swift'], {
@@ -63,19 +48,11 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
         });
         const result = await checkFindings(sandbox.path, 'structure/trivial-functions');
         expect(result.map((problem) => ({ line: problem.line, rule: problem.rule }))).toStrictEqual([
-            { line, rule: 'trivial-function' },
+            ...lines.map((line) => ({ line, rule: 'trivial-function' })),
             ...(trivialFile ? [{ line: 1, rule: 'trivial-file' }] : []),
         ]);
     },
 );
-
-test('Swift source with substantial function bodies passes', async () => {
-    await using sandbox = await testdir({
-        'Source.swift': CLEAN_SWIFT,
-        'gspot.toml': buildSettingsText(['swift'], { level: 'all', tables: SWIFT_FUNCTION_LIMITS }),
-    });
-    expect(await checkFindings(sandbox.path, 'structure/trivial-functions')).toStrictEqual([]);
-});
 
 test('Python counts nested control flow, reports decorated methods and leaves lambdas alone', async () => {
     const text =
@@ -112,17 +89,8 @@ test.each([...STATEMENT_COUNT_CASES])(
     },
 );
 
-test.each([...PACKAGE_DOCSTRING_CASES])(
-    'a Python package docstring does not hide code: %s',
-    async (source, expected) => {
-        const findings = await checkTrivialFile('python', '__init__.py', source);
-        expect(findings.some(({ rule }) => rule === 'trivial-file')).toBe(expected);
-    },
-);
-
-test.each([...TRIVIAL_FILES])('$name is trivial: $expected', async ({ language, source, expected }) => {
-    const extension = ({ python: 'py', bash: 'sh', swift: 'swift' } as const)[language];
-    const findings = await checkTrivialFile(language, `example.${extension}`, source);
+test.each([...TRIVIAL_FILES])('$name is trivial: $expected', async ({ language, file, source, expected }) => {
+    const findings = await checkTrivialFile(language, file, source);
     expect(findings.some(({ rule }) => rule === 'trivial-file')).toBe(expected);
 });
 

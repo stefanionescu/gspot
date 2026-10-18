@@ -41,29 +41,19 @@ test('unused-assets reads staged files, not an unstaged README or an untracked f
     expect(await readFile(join(root, 'README.md'), 'utf8')).toBe('![Unused](docs/assets/unused.svg)\n');
 });
 
-test('a site without Git keeps its local references and reports an unused asset', async () => {
+test.each([
+    ['index.html', '<img src="assets/logo.svg">'],
+    ['Logo.tsx', '<img src="assets/logo.svg" />'],
+])('a site without Git keeps the asset that %s names and reports an unused asset', async (file, text) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSettingsText(['site'], { level: 'all' }),
-        'index.html': '\u003Cimg src="assets/logo.svg">',
+        [file]: text,
         'assets/logo.svg': '<svg/>',
         'assets/unused.svg': '<svg/>',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'site/unused-assets');
     expect(input.index).toStrictEqual([]);
     expect(CHECK_IMPLEMENTATIONS['site/unused-assets'].check(input)).toMatchObject([
-        { file: 'assets/unused.svg', rule: 'dead-asset' },
-    ]);
-});
-
-test('a .tsx component names its asset', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['site'], { level: 'all' }),
-        'Logo.tsx': '\u003Cimg src="assets/logo.svg" />',
-        'assets/logo.svg': '<svg/>',
-        'assets/unused.svg': '<svg/>',
-    });
-
-    expect(await checkFindings(sandbox.path, 'site/unused-assets')).toMatchObject([
         { file: 'assets/unused.svg', rule: 'dead-asset' },
     ]);
 });

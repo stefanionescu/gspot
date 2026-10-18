@@ -1,3 +1,33 @@
+/** A web scope and a worker scope that each fix one external name. */
+const ALLOWED_NAME_LAYOUT = {
+    configurations: ['naming', 'bash'],
+    naming: {
+        override: [
+            { allowed_names: ['remoteRecord'], reason: 'The external JavaScript interface fixes this name.' },
+            {
+                paths: ['web/**'],
+                allowed_names: ['remoteRecord'],
+                reason: 'The external JavaScript interface fixes this name.',
+            },
+            {
+                paths: ['worker/**'],
+                allowed_names: ['remote_record'],
+                reason: 'The external Python interface fixes this name.',
+            },
+        ],
+    },
+    scope: [
+        { path: 'web', configurations: ['javascript'] },
+        { path: 'worker', configurations: ['python'] },
+    ],
+} as const;
+
+const ALLOWED_NAME_FILES = {
+    'entry.sh': 'echo ready\n',
+    'web/source.js': 'export const remoteRecord = 1;\n',
+    'worker/source.py': 'remote_record = 1\n',
+} as const;
+
 export const UNUSED_NAME_CASES = [
     {
         name: 'allowances name code or files',
@@ -49,6 +79,33 @@ export const UNUSED_NAME_CASES = [
         },
         unusedNames: ['siblingName'],
     },
+    {
+        name: 'each scope keeps the allowance that its own source uses',
+        files: ALLOWED_NAME_FILES,
+        settings: ALLOWED_NAME_LAYOUT,
+        unusedNames: [],
+    },
+    {
+        name: 'an allowance for the name of another language is unused',
+        files: ALLOWED_NAME_FILES,
+        settings: {
+            ...ALLOWED_NAME_LAYOUT,
+            naming: {
+                override: [
+                    ALLOWED_NAME_LAYOUT.naming.override[0],
+                    ALLOWED_NAME_LAYOUT.naming.override[1],
+                    { ...ALLOWED_NAME_LAYOUT.naming.override[2], allowed_names: ['remoteRecord'] },
+                ],
+            },
+        },
+        unusedNames: ['remoteRecord'],
+    },
+    {
+        name: 'a renamed source leaves both of its allowances unused',
+        files: { ...ALLOWED_NAME_FILES, 'web/source.js': 'export const localRecord = 1;\n' },
+        settings: ALLOWED_NAME_LAYOUT,
+        unusedNames: ['remoteRecord', 'remoteRecord'],
+    },
 ] as const;
 
 export const NAME_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'] as const;
@@ -87,27 +144,6 @@ export const FRAMEWORK_NAMES = [
     },
 ] as const;
 
-export const ALLOWED_NAME_SETTINGS = `level = "all"
-configurations = ["naming", "bash"]
-[[naming.override]]
-allowed_names = ["remoteRecord"]
-reason = "The external JavaScript interface fixes this name."
-[[naming.override]]
-paths = ["web/**"]
-allowed_names = ["remoteRecord"]
-reason = "The external JavaScript interface fixes this name."
-[[naming.override]]
-paths = ["worker/**"]
-allowed_names = ["remote_record"]
-reason = "The external Python interface fixes this name."
-[[scope]]
-path = "web"
-configurations = ["javascript"]
-[[scope]]
-path = "worker"
-configurations = ["python"]
-`;
-
 export const TEST_PATH_SETTINGS = `level = "all"
 configurations = ["javascript", "swift", "naming"]
 test_files = ["qa/**"]
@@ -126,8 +162,6 @@ export const NUMBERED_PREFIX_OVERRIDE =
 ignored_prefix = '^\d{2}-'
 reason = "The project orders its tasks by this prefix."
 `;
-
-export const MISMATCHED_SETTINGS = ALLOWED_NAME_SETTINGS.replace('["remote_record"]', '["remoteRecord"]');
 
 export const SWIFT_NAMING_LIMITS =
     `[naming.swift]

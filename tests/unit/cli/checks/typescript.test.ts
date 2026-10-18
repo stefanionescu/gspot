@@ -5,13 +5,18 @@ import { openSession } from '#cli/session.ts';
 import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
 import { checkJavascriptTsc } from '#cli/checks/language/typescript/tsc.ts';
 import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
-import { ROOT_PORT_SOURCE, CHILD_PORT_SOURCE, STRICT_TSCONFIG_TEXT } from '#tests/data/checks/typescript/projects.ts';
+
+import {
+    ROOT_PORT_SOURCE,
+    CHILD_PORT_SOURCE,
+    STRICT_TSCONFIG_TEXT,
+    TSCONFIG_READ_ERRORS,
+} from '#tests/data/checks/typescript/projects.ts';
 
 test('tsc: a scope whose project lists no JavaScript file passes with nothing to compile', async () => {
     await using sandbox = await testdir();
@@ -43,31 +48,20 @@ test('tsc: a scope whose project lists no JavaScript file passes with nothing to
     });
 });
 
-test('tsconfig: malformed TypeScript configuration reports its path instead of missing options', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildSettingsText(['typescript']), 'tsconfig.json': '{' });
-    const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
-    expect(() => CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input)).toThrow(
-        `Cannot read TypeScript configuration ${join(sandbox.path, 'tsconfig.json')}`,
-    );
-    await writeFile(join(sandbox.path, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
-    expect(await checkFindings(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
-});
-
-test('tsconfig: a missing inherited configuration cannot be replaced by empty compiler options', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript']),
-        'tsconfig.json': '{"extends":"./missing.json","compilerOptions":{"strict":true}}',
-    });
-    const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
-    // TypeScript prints the inherited path with forward slashes on every system.
-    expect(() => CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input)).toThrow(
-        `Cannot read file '${convertToPosixPath(join(sandbox.path, 'missing.json'))}'`,
-    );
-    await writeFile(join(sandbox.path, 'missing.json'), STRICT_TSCONFIG_TEXT);
-    expect(await checkFindings(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
-});
+test.each([...TSCONFIG_READ_ERRORS])(
+    'tsconfig: $name is a read error that names the file, not missing options',
+    async ({ tsconfig, error, fixed }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildSettingsText(['typescript']),
+            'tsconfig.json': tsconfig,
+        });
+        const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
+        expect(() => CHECK_IMPLEMENTATIONS['typescript/tsconfig'].check(input)).toThrow(error);
+        await writeFile(join(sandbox.path, fixed), STRICT_TSCONFIG_TEXT);
+        expect(await checkFindings(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
+    },
+);
 
 test('tsconfig: a scope needs no tsconfig of its own but still checks one that is added', async () => {
     await using sandbox = await testdir();
