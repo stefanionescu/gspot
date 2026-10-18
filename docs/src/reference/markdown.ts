@@ -48,13 +48,18 @@ export function escapeCell(text: string): string {
 
 /**
  * Format name and meaning pairs as a definition list that fits a narrow screen.
- * @param rows each name and its meaning
+ * @param rows each name, its meaning, and the anchor of the name if it has one
  * @returns the HTML list, with Markdown inside each item
  */
-export function formatDefinitions(rows: [string, string][]): string {
+export function formatDefinitions(rows: [name: string, meaning: string, id?: string][]): string {
     return (
         '<dl>\n\n' +
-        rows.map(([name, meaning]) => `<dt>\n\n${name}\n\n</dt>\n<dd>\n\n${meaning}\n\n</dd>`).join('\n\n') +
+        rows
+            .map(([name, meaning, id]) => {
+                const term = id === undefined ? '<dt>' : `<dt id="${id}">`;
+                return `${term}\n\n${name}\n\n</dt>\n<dd>\n\n${meaning}\n\n</dd>`;
+            })
+            .join('\n\n') +
         '\n\n</dl>'
     );
 }

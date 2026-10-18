@@ -27,3 +27,4 @@
 /guides/troubleshooting/ /maintain/troubleshooting/ 301
 /guides/client-environment/ /reference/eslint-plugin/use/ 301
 /reference/exit-codes/ /reference/commands/#exit-codes 301
+/reference/gspot-toml/scope/ /reference/gspot-toml/#scope 301

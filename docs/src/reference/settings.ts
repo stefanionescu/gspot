@@ -3,7 +3,17 @@ import type { JSONSchema } from 'zod/v4/core';
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
 import { escapeCell, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
-import { LANGUAGE_SETTING, SETTINGS_SUBPAGES, SCHEMA_TYPE_LABELS, LISTED_VALUES_LIMIT } from '../config/reference.ts';
+
+import {
+    MAP_KEY_NAME,
+    PAGE_TITLE_LEVEL,
+    LANGUAGE_SETTING,
+    SETTINGS_SUBPAGES,
+    HEADING_ID_DROPPED,
+    SCHEMA_TYPE_LABELS,
+    LISTED_VALUES_LIMIT,
+    REASONED_VALUE_LABEL,
+} from '../config/reference.ts';
 
 function getSchemaNode(schema: JSONSchema.JSONSchema, value: JSONSchema.JSONSchema | boolean): JSONSchema.JSONSchema {
     if (typeof value === 'boolean') return value ? {} : { not: {} };
@@ -18,8 +28,21 @@ function getSchemaNode(schema: JSONSchema.JSONSchema, value: JSONSchema.JSONSche
     return node;
 }
 
+// A reasoned value holds exactly a value and the reason for it.
+function isReasonedValue(node: JSONSchema.JSONSchema): boolean {
+    return (
+        node.type === 'object' &&
+        node.properties !== undefined &&
+        isDeepStrictEqual(
+            Object.keys(node.properties).toSorted((first, second) => first.localeCompare(second)),
+            ['reason', 'value'],
+        )
+    );
+}
+
 function formatAcceptedValue(schema: JSONSchema.JSONSchema, value: JSONSchema.JSONSchema | boolean): string {
     const node = getSchemaNode(schema, value);
+    if (isReasonedValue(node)) return REASONED_VALUE_LABEL;
     if (node.const !== undefined)
         return [`\`${JSON.stringify(node.const)}\``, node.description]
             .filter((entry) => entry !== undefined)
@@ -64,7 +87,7 @@ function listSchemaProperties(
               }));
     const map =
         typeof shape.additionalProperties === 'object' ? getSchemaNode(schema, shape.additionalProperties) : undefined;
-    return map?.properties === undefined ? fixed : [...fixed, { name: '<name>', node: map, required: false }];
+    return map?.properties === undefined ? fixed : [...fixed, { name: MAP_KEY_NAME, node: map, required: false }];
 }
 
 // The declared variants of a setting; a language key without its own declaration takes the language default.
@@ -99,12 +122,12 @@ function formatDefaults(variants: ReturnType<typeof readReferenceData>['settings
 
 function formatSetting(
     schema: JSONSchema.JSONSchema,
-    name: string,
+    key: string,
     value: JSONSchema.JSONSchema | boolean,
     data: ReturnType<typeof readReferenceData>,
-    required = false,
-): [string, string] {
-    const variants = listSettingVariants(name, data);
+    required: boolean,
+): string {
+    const variants = listSettingVariants(key, data);
     const node = getSchemaNode(schema, value);
     const reasons = [
         ...new Set(
@@ -112,34 +135,62 @@ function formatSetting(
         ),
     ];
     const accepted = formatAcceptedValue(schema, value);
-    const sentence = /[.\n]$/u.test(accepted) ? accepted : accepted + '.';
+    const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (/[.\n]$/u.test(accepted) ? '' : '.');
     // A record field without a declared default takes the default of its schema.
     const schemaDefault = node.default === undefined ? 'unset' : `\`${JSON.stringify(node.default)}\``;
     const presence = required ? 'Required.' : `Default: ${formatDefaults(variants) || schemaDefault}.`;
-    return [
-        `\`${name}\``,
+    return (
         `${sentence} ${presence}` +
-            (reasons.length === 0 ? '' : ` Reason needed when: ${reasons.join(', ')}.`) +
-            (node.description === undefined ? '' : ` ${escapeCell(node.description)}`),
-    ];
+        (reasons.length === 0 ? '' : ` Reason needed when: ${reasons.join(', ')}.`) +
+        (node.description === undefined ? '' : ` ${escapeCell(node.description)}`)
+    );
 }
 
-function formatSettingKeys(
-    schema: JSONSchema.JSONSchema,
-    prefix: string,
-    value: JSONSchema.JSONSchema | boolean,
+// A key holds a value; a table or a record holds keys.
+function isSettingValue(schema: JSONSchema.JSONSchema, node: JSONSchema.JSONSchema): boolean {
+    return isReasonedValue(node) || listSchemaProperties(schema, node).length === 0;
+}
+
+// The header of a table or a record, as the reader writes it in gspot.toml.
+function formatTableHeader(key: string, node: JSONSchema.JSONSchema): string {
+    return node.type === 'array' ? `[[${key}]]` : `[${key}]`;
+}
+
+// Each key of a table or a record as one row, named without the table prefix, with the full key as its anchor.
+function formatSettingRows(
     data: ReturnType<typeof readReferenceData>,
+    prefix: string,
+    keys: ReturnType<typeof listSchemaProperties>,
 ): string {
-    const rows: [string, string][] = [];
-    function collect(name: string, node: JSONSchema.JSONSchema | boolean, required: boolean): void {
-        const children = listSchemaProperties(schema, node);
-        if (children.length === 0) rows.push(formatSetting(schema, name, node, data, required));
-        else
-            for (const child of children)
-                collect(name === '' ? child.name : `${name}.${child.name}`, child.node, child.required);
-    }
-    collect(prefix, value, false);
-    return formatDefinitions(rows);
+    return formatDefinitions(
+        keys.map(({ name, node, required }) => {
+            const key = prefix === '' ? name : `${prefix}.${name}`;
+            return [`\`${name}\``, formatSetting(data.schema, key, node, data, required), key];
+        }),
+    );
+}
+
+// A table or a record: its description and keys, then the tables and records inside it, one heading level down.
+// The page title takes the first level, so a table with its own page starts without a heading.
+function formatSettingTable(
+    data: ReturnType<typeof readReferenceData>,
+    key: string,
+    value: JSONSchema.JSONSchema | boolean,
+    level: number,
+): string {
+    const { schema } = data;
+    const node = getSchemaNode(schema, value);
+    const children = listSchemaProperties(schema, node);
+    const keys = children.filter((child) => isSettingValue(schema, child.node));
+    return (
+        (level === PAGE_TITLE_LEVEL ? '' : `\n${'#'.repeat(level)} ${formatTableHeader(key, node)}\n\n`) +
+        (node.description === undefined ? '' : `${node.description}\n\n`) +
+        (keys.length === 0 ? '' : `${formatSettingRows(data, key, keys)}\n`) +
+        children
+            .filter((child) => !isSettingValue(schema, child.node))
+            .map((child) => formatSettingTable(data, `${key}.${child.name}`, child.node, level + 1))
+            .join('')
+    );
 }
 
 function formatLimitsGuide(data: ReturnType<typeof readReferenceData>): string {
@@ -158,23 +209,28 @@ function formatLimitsGuide(data: ReturnType<typeof readReferenceData>): string {
     );
 }
 
-function formatScopeGuide(node: JSONSchema.JSONSchema | boolean, data: ReturnType<typeof readReferenceData>): string {
-    const properties = listSchemaProperties(data.schema, node);
+// A scope takes its own keys and every root table, apart from the keys that only the root takes.
+function formatScopeSection(
+    data: ReturnType<typeof readReferenceData>,
+    value: JSONSchema.JSONSchema | boolean,
+): string {
+    const { schema } = data;
+    const node = getSchemaNode(schema, value);
+    const children = listSchemaProperties(schema, node);
+    const accepted = new Set(children.map(({ name }) => name));
+    const rootOnly = listSchemaProperties(schema, schema)
+        .map(({ name }) => name)
+        .filter((name) => name !== 'scope' && !accepted.has(name));
     return (
-        'A scope selects settings for a folder. See [Monorepos and scopes](/configure/monorepos/) for inheritance.\n\n' +
-        formatDefinitions(
-            properties
-                .filter((property) => property.name === 'path')
-                .map((property) => formatSetting(data.schema, 'scope.path', property.node, data, property.required)),
+        `\n## ${formatTableHeader('scope', node)}\n\n` +
+        (node.description === undefined ? '' : `${node.description}\n\n`) +
+        'See [Monorepos and scopes](/configure/monorepos/) for how a scope inherits settings.\n\n' +
+        formatSettingRows(
+            data,
+            'scope',
+            children.filter((child) => isSettingValue(schema, child.node)),
         ) +
-        '\n\nAccepted root sections:\n\n' +
-        properties
-            .filter((property) => property.name !== 'path')
-            .map(
-                ({ name: key }) =>
-                    `- [\`${key}\`](/reference/gspot-toml/${SETTINGS_SUBPAGES.includes(key) ? key + '/' : '#' + key})`,
-            )
-            .join('\n')
+        `\n\nOnly the root takes these keys: ${rootOnly.map((name) => '`' + name + '`').join(', ')}.\n`
     );
 }
 
@@ -193,28 +249,75 @@ function formatNamingGuide(data: ReturnType<typeof readReferenceData>): string {
     );
 }
 
+// The schema names of a dotted key; a map key, such as a language, reads as the map placeholder.
+function findSettingPath(schema: JSONSchema.JSONSchema, key: string): { path: string[]; node: JSONSchema.JSONSchema } {
+    let node = schema;
+    const path: string[] = [];
+    for (const segment of key.split('.')) {
+        const children = listSchemaProperties(schema, node);
+        const child =
+            children.find(({ name }) => name === segment) ?? children.find(({ name }) => name === MAP_KEY_NAME);
+        if (child === undefined) throw new Error(`The gspot.toml schema has no setting ${key}.`);
+        path.push(child.name);
+        node = child.node;
+    }
+    return { path, node };
+}
+
+// A key anchors its row; a table or a record anchors its heading, by the ID that Starlight gives the heading.
+function formatSettingAnchor(schema: JSONSchema.JSONSchema, path: string[], node: JSONSchema.JSONSchema): string {
+    const key = path.join('.');
+    return isSettingValue(schema, node)
+        ? key
+        : formatTableHeader(key, node).toLowerCase().replaceAll(HEADING_ID_DROPPED, '');
+}
+
 /**
- * Build one settings index and a page for each large section.
+ * Link a setting to its row, or a table or record to its heading, on the gspot.toml pages.
+ * @param schema the JSON Schema of gspot.toml
+ * @param key the dotted key, such as format.indent_style or architecture.module
+ * @returns the Markdown link
+ */
+export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string {
+    const { path, node } = findSettingPath(schema, key);
+    const [table = ''] = path;
+    if (!SETTINGS_SUBPAGES.includes(table))
+        return `[\`${key}\`](/reference/gspot-toml/#${formatSettingAnchor(schema, path, node)})`;
+    // A table with its own page starts that page, without a heading.
+    if (path.length === 1) return `[\`${key}\`](/reference/gspot-toml/${table}/)`;
+    return `[\`${key}\`](/reference/gspot-toml/${table}/#${formatSettingAnchor(schema, path, node)})`;
+}
+
+/**
+ * Build one settings index and a page for each large table.
  * @param data settings variants and JSON Schema from the CLI
  * @returns reference pages by path
  */
 export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): Map<string, ReferencePage> {
+    const { schema } = data;
     const pages = new Map<string, ReferencePage>();
+    const roots = listSchemaProperties(schema, schema);
+    const subpages: string[] = [];
     const sections: string[] = [];
-    for (const { name, node } of listSchemaProperties(data.schema, data.schema)) {
+    for (const { name, node } of roots.filter((child) => !isSettingValue(schema, child.node))) {
+        if (name === 'scope') {
+            sections.push(formatScopeSection(data, node));
+            continue;
+        }
         if (!SETTINGS_SUBPAGES.includes(name)) {
-            sections.push(formatSection(name, formatSettingKeys(data.schema, name, node, data)));
+            sections.push(formatSettingTable(data, name, node, PAGE_TITLE_LEVEL + 1));
             continue;
         }
         const guides: Record<string, () => string> = {
             limits: () => formatLimitsGuide(data),
             naming: () => formatNamingGuide(data),
-            scope: () => formatScopeGuide(node, data),
         };
-        const opening = guides[name]?.() ?? '';
-        const body = opening + (name === 'scope' ? '' : formatSettingKeys(data.schema, name, node, data));
-        pages.set(`gspot-toml/${name}.md`, buildReferencePage(name, `The ${name} settings of gspot.toml.`, body));
-        sections.push(`- [\`${name}\`](/reference/gspot-toml/${name}/)`);
+        const table = getSchemaNode(schema, node);
+        const header = formatTableHeader(name, table);
+        const description = table.description ?? `The ${name} settings of gspot.toml.`;
+        const body = (guides[name]?.() ?? '') + formatSettingTable(data, name, node, PAGE_TITLE_LEVEL);
+        pages.set(`gspot-toml/${name}.md`, buildReferencePage(header, description, body));
+        subpages.push(`- [\`${header}\`](/reference/gspot-toml/${name}/): ${description}`);
     }
     pages.set(
         'gspot-toml/index.md',
@@ -223,7 +326,16 @@ export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): 
             'Every key, accepted value, and default of gspot.toml.',
             'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n' +
                 `The [JSON Schema](/${data.schemaFile}) describes every key. Editors apply it on their own once SchemaStore lists gspot.\n\n` +
-                sections.join('\n\n'),
+                `These tables have their own page:\n\n${subpages.join('\n')}\n` +
+                formatSection(
+                    'Top-level keys',
+                    formatSettingRows(
+                        data,
+                        '',
+                        roots.filter((child) => isSettingValue(schema, child.node)),
+                    ),
+                ) +
+                sections.join(''),
         ),
     );
     return pages;

@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { linkSetting } from './settings.ts';
 import type { ReferencePage } from '../types/reference.ts';
 import type { readReferenceData } from '#cli/reference.ts';
 import { escapeCell, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
@@ -7,6 +8,9 @@ import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../co
 type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 
 const formatCodeNames = (names: string[]): string => names.map((name) => '`' + name + '`').join(', ');
+
+const linkConfigurations = (names: string[]): string =>
+    names.map((name) => `[\`${name}\`](/reference/${REFERENCE_FOLDERS.configurations}/${name}/)`).join(', ');
 
 // The conditions that select: every kind with patterns, apart from the dependencies that rule a selection out.
 function formatDetectionConditions(detect: Manifest['detect']): string[] {
@@ -70,10 +74,11 @@ function formatSelection(manifest: Manifest, data: ReturnType<typeof readReferen
         ...formatDetectionConditions(manifest.detect).map((condition) => `- ${condition}`),
         ...(absent.length === 0 ? [] : [`- Not when the repository depends on ${formatCodeNames(absent)}`]),
     ].join('\n');
-    const requiredBy = data.configurations
-        .filter((owner) => owner.configuration.requires.includes(configuration.name))
-        .map((owner) => `\`${owner.configuration.name}\``)
-        .join(', ');
+    const requiredBy = linkConfigurations(
+        data.configurations
+            .filter((owner) => owner.configuration.requires.includes(configuration.name))
+            .map((owner) => owner.configuration.name),
+    );
     return (
         [selected, requiredBy === '' ? '' : `Selected when required by: ${requiredBy}.`].filter(Boolean).join('\n\n') ||
         `Select explicitly with \`gspot add ${configuration.name}\`.`
@@ -103,27 +108,27 @@ function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof read
         ([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\``,
     );
     const sections: [string, string][] = [
-        ['Selected when', selection],
-        ['Tools and versions', tools.map((item) => '- ' + item).join('\n')],
-        ['Files gspot writes', targets.map((item) => '- ' + item).join('\n')],
-        ['Kept out of Git', manifest.ignored_folders.map((path) => '- `' + path + '`').join('\n')],
         ['Checks', formatConfigurationChecks(manifest)],
         [
             'Settings',
             (data.configurationSettings[manifest.configuration.name] ?? [])
-                .map((setting) => `- \`${setting.name}\`: ${setting.summary}`)
+                .map((setting) => `- ${linkSetting(data.schema, setting.name)}: ${setting.summary}`)
                 .join('\n'),
         ],
-        ['Defaults set for other configurations', defaults.map((item) => '- ' + item).join('\n')],
+        ['Selected when', selection],
         ['Lint rules turned off', formatLintRulesOff(manifest)],
-        ['Rules', formatRules(manifest, data.ruleFiles[manifest.configuration.name] ?? [])],
+        ['Defaults set for other configurations', defaults.map((item) => '- ' + item).join('\n')],
+        ['Rules for coding agents', formatRules(manifest, data.ruleFiles[manifest.configuration.name] ?? [])],
+        ['Tools and versions', tools.map((item) => '- ' + item).join('\n')],
+        ['Files gspot writes', targets.map((item) => '- ' + item).join('\n')],
+        ['Kept out of Git', manifest.ignored_folders.map((path) => '- `' + path + '`').join('\n')],
     ];
-    const required = configuration.requires.map((id) => '`' + id + '`').join(', ');
+    const required = linkConfigurations(configuration.requires);
     const opening = configuration.description + (required === '' ? '' : `\n\nRequires: ${required}.`);
     const guide = CONFIGURATION_GUIDES[configuration.name];
     const body =
         opening +
-        (guide === undefined ? '' : `\n\nSee the [language guide](/languages/${guide}/).`) +
+        (guide === undefined ? '' : `\n\nSee the [${guide.title} guide](${guide.path}).`) +
         sections.map(([title, content]) => formatSection(title, content)).join('');
     return buildReferencePage(configuration.title, configuration.description, body);
 }

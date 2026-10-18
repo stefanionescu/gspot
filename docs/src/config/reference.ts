@@ -1,3 +1,19 @@
+/** A code span, which generated reference text keeps as written. */
+const CODE_SPAN = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)/u;
+/** A tag of a definition list, with its attributes. */
+const DEFINITION_TAG = /<\/?d[dlt][^<>]*>/u;
+
+const GUIDES = {
+    javascript: { path: '/languages/javascript-typescript/', title: 'JavaScript and TypeScript' },
+    python: { path: '/languages/python/', title: 'Python' },
+    css: { path: '/languages/css/', title: 'CSS' },
+    swift: { path: '/languages/swift/', title: 'Swift and Xcode' },
+    security: { path: '/checks/security/', title: 'Security and secrets' },
+    testing: { path: '/checks/testing/', title: 'Tests and coverage' },
+    dependencies: { path: '/checks/dependencies/', title: 'Dependencies and licenses' },
+    prose: { path: '/configure/prose/', title: 'Spelling and prose' },
+} as const;
+
 /** Labels for the conditions that select configurations and rules. */
 export const DETECTION_LABELS = {
     extensions: 'File extensions',
@@ -15,7 +31,7 @@ export const SCHEMA_TYPE_LABELS = {
     string: 'Text',
     integer: 'Whole number',
     number: 'Number',
-    boolean: 'true or false',
+    boolean: '`true` or `false`',
     array: 'List',
     object: 'Table',
 } as const;
@@ -44,8 +60,8 @@ export const REFERENCE_FOLDERS = {
 export const REFERENCE_COLLECTION_NAME = 'gspot-reference';
 export const REFERENCE_IDS_KEY = 'reference-ids';
 export const PAGES_FOLDER = 'src/content/docs';
-/** Matches code spans to keep and markup to escape in generated reference text. */
-export const MARKDOWN_ESCAPES = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)|<\/?d[dlt]>|[<>]/gu;
+/** Matches code spans and definition list tags to keep, and markup to escape, in generated reference text. */
+export const MARKDOWN_ESCAPES = new RegExp(`${CODE_SPAN.source}|${DEFINITION_TAG.source}|[<>]`, 'gu');
 
 /** Matches code blocks and code spans to keep, and command flags outside them to put in code. */
 export const FLAGS_OUTSIDE_CODE = /```[\s\S]*?```|`[^`]*`|(?<![\w-])--[a-z][a-z-]*/gu;
@@ -56,16 +72,37 @@ export const SECTION_HEADING = /^## /mu;
 export const SETTING_PLACEHOLDER = /^\{setting:(?<setting>[^}]+)\}$/u;
 /** A list of allowed values longer than this prints as a count; editors read the full list from the schema. */
 export const LISTED_VALUES_LIMIT = 12;
-export const SETTINGS_SUBPAGES: readonly string[] = ['scope', 'limits', 'naming', 'tools', 'command_check'];
+export const SETTINGS_SUBPAGES: readonly string[] = ['limits', 'naming', 'tools', 'command_check'];
+/** The name of the keys of a map table, such as the language under limits. */
+export const MAP_KEY_NAME = '<name>';
+/** The heading level of a page title. */
+export const PAGE_TITLE_LEVEL = 1;
+/** How a reasoned value reads in the accepted values of a setting. */
+export const REASONED_VALUE_LABEL = 'a reasoned value `{ value = …, reason = "…" }`';
+/** The characters that a heading ID leaves out of the heading text, as Starlight writes it. */
+export const HEADING_ID_DROPPED = /[^\p{L}\p{N} _-]/gu;
 export const LANGUAGE_SETTING = /^(?<table>limits|naming)\.(?<language>[^.]+)\.(?<key>.+)$/u;
 
-export const CONFIGURATION_GUIDES: Record<string, string> = {
-    javascript: 'javascript-typescript',
-    typescript: 'javascript-typescript',
-    nextjs: 'javascript-typescript',
-    'react-native': 'javascript-typescript',
-    python: 'python',
-    css: 'css',
+/** The guide page of each configuration that has one. */
+export const CONFIGURATION_GUIDES: Readonly<Record<string, { path: string; title: string }>> = {
+    javascript: GUIDES.javascript,
+    typescript: GUIDES.javascript,
+    nextjs: GUIDES.javascript,
+    'react-native': GUIDES.javascript,
+    python: GUIDES.python,
+    css: GUIDES.css,
+    swift: GUIDES.swift,
+    xcode: GUIDES.swift,
+    'swift-tests': GUIDES.swift,
+    security: GUIDES.security,
+    secrets: GUIDES.security,
+    jest: GUIDES.testing,
+    vitest: GUIDES.testing,
+    pytest: GUIDES.testing,
+    dependencies: GUIDES.dependencies,
+    licenses: GUIDES.dependencies,
+    prose: GUIDES.prose,
+    spelling: GUIDES.prose,
 };
 
 export const EXIT_CODE_LINE = /^ {2}(\d+(?:(?:, | or )\d+)?) {2,}/gmu;
