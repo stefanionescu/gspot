@@ -23,18 +23,19 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
+            - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+              with:
+                  version: '2026.10.7'
+                  install_args: bun node
             # The C: drive of a Windows runner writes files many times slower than D:, which holds the runner's temporary
-            # folder. Keep the test sandboxes and the npm cache on D:.
+            # folder. Keep the test sandboxes and the npm cache on D:. This step follows mise-action, which renames
+            # files from its temporary folder into C: and fails across drives.
             - if: runner.os == 'Windows'
               shell: pwsh
               run: |
                   "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
                   "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
                   "npm_config_cache=$env:RUNNER_TEMP\npm-cache" >> $env:GITHUB_ENV
-            - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
-              with:
-                  version: '2026.10.7'
-                  install_args: bun node
             - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
               with:
                   path: |
