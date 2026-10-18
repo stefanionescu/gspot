@@ -29,7 +29,6 @@ export type PrettierPluginOptions = { plugins?: string[] };
 export type PrettierInput = {
     settings: Settings;
     format: FormatSettings;
-    targetPath: string;
     extra: Record<string, unknown> | undefined;
     plugins: PrettierPlugin[];
 };

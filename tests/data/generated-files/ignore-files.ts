@@ -30,7 +30,6 @@ export const LANGUAGE_IGNORES = [
         settings: 'configurations = ["format", "markdown", "python"]\n',
         ignored: ['.venv/'],
         absent: ['.build/', 'Package.resolved'],
-        pointer: false,
         markdownPointer: '',
     },
     {
@@ -38,7 +37,6 @@ export const LANGUAGE_IGNORES = [
         settings: 'configurations = ["format", "markdown", "swift"]\n',
         ignored: ['.build/', 'DerivedData/', 'Pods/'],
         absent: ['node_modules/', 'package-lock.json', '.venv/', 'uv.lock'],
-        pointer: false,
         markdownPointer: '',
     },
     {
@@ -46,7 +44,6 @@ export const LANGUAGE_IGNORES = [
         settings: 'configurations = ["format", "markdown", "javascript"]\n',
         ignored: ['node_modules/'],
         absent: ['.build/', 'Package.resolved', '.venv/', 'uv.lock'],
-        pointer: true,
         markdownPointer: '.markdownlint-cli2.mjs',
     },
     {
@@ -58,7 +55,6 @@ configurations = ["javascript"]
 `,
         ignored: ['.venv/', 'node_modules/'],
         absent: ['.build/', 'Package.resolved'],
-        pointer: true,
         markdownPointer: 'web/.markdownlint-cli2.mjs',
     },
 ] as const;

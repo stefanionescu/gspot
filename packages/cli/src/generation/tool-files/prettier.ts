@@ -1,5 +1,3 @@
-import { dirname, relative } from 'node:path';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
@@ -27,31 +25,13 @@ function normalizeSelectors(value: string | string[] | undefined): string[] {
     return typeof value === 'string' ? [value] : value;
 }
 
-// A negation keeps its mark in front of the moved selector.
-function movePattern(pattern: string, moveFromRoot: (selector: string) => string): string {
-    return pattern.startsWith('!') ? `!${moveFromRoot(pattern.slice(1))}` : moveFromRoot(pattern);
-}
-
-// Basename selectors stay relative to every folder; path selectors move from the root to the generated file.
-function moveOverrides(
-    entries: ExtraOverride<Record<string, unknown>>[],
-    moveFromRoot: (pattern: string) => string,
-): FormatOverride[] {
-    return entries.flatMap((entry) => {
-        const files = normalizeSelectors(entry.files);
-        const excluded = normalizeSelectors(entry.excludeFiles);
-        return [false, true].flatMap((hasSlash) => {
-            const patterns = files.filter((pattern) => pattern.includes('/') === hasSlash);
-            if (patterns.length === 0) return [];
-            return [
-                {
-                    files: hasSlash ? patterns.map((pattern) => movePattern(pattern, moveFromRoot)) : patterns,
-                    excludeFiles: hasSlash ? excluded.map((pattern) => movePattern(pattern, moveFromRoot)) : excluded,
-                    options: entry.options,
-                },
-            ];
-        });
-    });
+// Read each override as Prettier takes it: lists of selectors relative to the root.
+function normalizeOverrides(entries: ExtraOverride<Record<string, unknown>>[]): FormatOverride[] {
+    return entries.map((entry) => ({
+        files: normalizeSelectors(entry.files),
+        excludeFiles: normalizeSelectors(entry.excludeFiles),
+        options: entry.options,
+    }));
 }
 
 /**
@@ -81,29 +61,21 @@ function listScopeFormats(settings: Settings): ScopeFormat[] {
     return [...base, ...overrides];
 }
 
-// Format overrides for each project and path, relative to the generated file.
-function formatSettingOverrides(settings: Settings, moveFromRoot: (pattern: string) => string): FormatOverride[] {
+// Format overrides for each project and path, relative to the root.
+function formatSettingOverrides(settings: Settings): FormatOverride[] {
     return listScopeFormats(settings).map(({ scope, paths, format }) => {
         const expanded = includeFolderContents(paths);
-        const files = expanded.filter((path) => !path.startsWith('!')).map((path) => moveFromRoot(path));
-        const excludeFiles = expanded.filter((path) => path.startsWith('!')).map((path) => moveFromRoot(path.slice(1)));
-        if (scope !== '') excludeFiles.push(`!${moveFromRoot(escapeGlob(scope))}/**`);
+        const files = expanded.filter((path) => !path.startsWith('!'));
+        const excludeFiles = expanded.filter((path) => path.startsWith('!')).map((path) => path.slice(1));
+        if (scope !== '') excludeFiles.push(`!${escapeGlob(scope)}/**`);
         return { files, excludeFiles, options: convertFormatSettings(format) };
     });
 }
 
-// Prettier loads your plugins, then shipped plugins by paths relative to its tool file.
-function buildPluginsOption(
-    plugins: PrettierPlugin[],
-    targetPath: string,
-    extras: Record<string, unknown>,
-): PrettierPluginOptions {
+// Prettier loads your plugins, then shipped plugins by paths relative to the root pointer.
+function buildPluginsOption(plugins: PrettierPlugin[], extras: Record<string, unknown>): PrettierPluginOptions {
     if (plugins.length === 0) return {};
-    const base = convertToPosixPath(relative(dirname(targetPath), GSPOT_NODE_MODULES_PATH));
-    const shipped = plugins.map(
-        (plugin) =>
-            `${base.startsWith('./') || base.startsWith('../') ? base : './' + base}/${plugin.name}/${plugin.entry}`,
-    );
+    const shipped = plugins.map((plugin) => `./${GSPOT_NODE_MODULES_PATH}/${plugin.name}/${plugin.entry}`);
     return { plugins: [...((extras['plugins'] as string[] | undefined) ?? []), ...shipped] };
 }
 
@@ -127,33 +99,31 @@ function convertFormatSettings(format: Partial<FormatSettings>): Record<string, 
 }
 
 /**
- * Generate the Prettier options relative to the path of the tool file.
+ * Generate the Prettier options. Paths start at the root, where the pointer that loads them sits.
  *
  * @param input what the Prettier file holds.
  *
  * @returns the settings to write as JSON.
  */
 function buildPrettierOptions(input: PrettierInput): Record<string, unknown> {
-    const { settings, format, targetPath, extra, plugins } = input;
-    const prefix = convertToPosixPath(relative(dirname(targetPath), '.'));
-    const moveFromRoot = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
+    const { settings, format, extra, plugins } = input;
     const { overrides: extraOverrides = [], ...extras } = extra === undefined ? {} : extra;
     const overrides = [
         ...plugins.flatMap((plugin) => plugin.overrides),
-        ...formatSettingOverrides(settings, moveFromRoot),
-        ...moveOverrides(extraOverrides as ExtraOverride<Record<string, unknown>>[], moveFromRoot),
+        ...formatSettingOverrides(settings),
+        ...normalizeOverrides(extraOverrides as ExtraOverride<Record<string, unknown>>[]),
     ];
     return {
         ...convertFormatSettings(format),
         ...PRETTIER_FIXED_OPTIONS,
         ...extras,
-        ...buildPluginsOption(plugins, targetPath, extras),
+        ...buildPluginsOption(plugins, extras),
         ...(overrides.length === 0 ? {} : { overrides }),
     };
 }
 
 /**
- * Build the Prettier tool file relative to its destination.
+ * Build the Prettier tool file that the root pointer loads.
  * @param context the tool file to build.
  * @returns the formatter options, plugins, and scope overrides.
  */
@@ -163,7 +133,6 @@ function buildPrettierFile(context: ToolFileContext): string {
         format: context.selection.view.format,
         extra: context.selection.view.extra('prettier'),
         plugins: [...listPrettierPlugins(context.scopes.flatMap(({ selected }) => selected)).values()],
-        targetPath: context.targetPath,
     });
     return JSON.stringify(value, null, JSON_INDENT) + '\n';
 }

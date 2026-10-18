@@ -72,23 +72,18 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
     const path = join(folder.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     const configuration = await prettier.resolveConfig(path, {
-        config: join(folder.path, '.gspot/config/prettier.json'),
-        useCache: false,
-    });
-    expect(editor?.tabWidth).toBe(2);
-    expect(configuration?.tabWidth).toBe(2);
-    const root = await prettier.resolveConfig(path, {
         config: join(folder.path, 'prettier.config.mjs'),
         editorconfig: false,
         useCache: false,
     });
-    expect(root?.tabWidth).toBe(2);
+    expect(editor?.tabWidth).toBe(2);
+    expect(configuration?.tabWidth).toBe(2);
     const source = await Bun.file(path).text();
     expect(await prettier.format(source, { ...editor, filepath: path })).toBe('parent:\n  child: value\n');
     expect(await prettier.format(source, { ...configuration, filepath: path })).toBe('parent:\n  child: value\n');
 });
 
-test('Prettier overrides agree in the tool file, the root pointer and editor lookup', async () => {
+test('Prettier overrides agree in the root pointer and editor lookup', async () => {
     await using folder = await testdir();
     const root = folder.path;
     await createFileTree(root, {
@@ -100,14 +95,12 @@ test('Prettier overrides agree in the tool file, the root pointer and editor loo
     const session = await openSession(root);
     writeGeneratedFiles(session, generate(session), log);
     for (const { file, ...expected } of PRETTIER_OPTIONS_BY_FILE) {
-        for (const config of ['.gspot/config/prettier.json', 'prettier.config.mjs']) {
-            const computed = await prettier.resolveConfig(join(root, file), {
-                config: join(root, config),
-                editorconfig: true,
-                useCache: false,
-            });
-            expect(computed, `${file} via ${config}`).toMatchObject(expected);
-        }
+        const computed = await prettier.resolveConfig(join(root, file), {
+            config: join(root, 'prettier.config.mjs'),
+            editorconfig: true,
+            useCache: false,
+        });
+        expect(computed, file).toMatchObject(expected);
         expect(await prettier.resolveConfig(join(root, file), { editorconfig: true, useCache: false })).toMatchObject(
             expected,
         );
@@ -115,13 +108,13 @@ test('Prettier overrides agree in the tool file, the root pointer and editor loo
     await writeFile(join(root, 'tests/future.js'), 'const greeting="hello";');
     expect(
         await prettier.resolveConfig(join(root, 'tests/future.js'), {
-            config: join(root, '.gspot/config/prettier.json'),
+            config: join(root, 'prettier.config.mjs'),
             useCache: false,
         }),
     ).toMatchObject({ singleQuote: true, semi: true });
 });
 
-test('Prettier loads the selected plugin through the tool file and root pointer', async () => {
+test('Prettier loads the selected plugin through the root pointer', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSettingsText(['svelte']),
         'source.svelte': '<h1>Example</h1>\n',
@@ -131,7 +124,7 @@ test('Prettier loads the selected plugin through the tool file and root pointer'
     const toolFile = JSON.parse(
         generated.files.find(({ path }) => path === '.gspot/config/prettier.json')!.content,
     ) as Options;
-    expect(toolFile.plugins).toStrictEqual(['../node_modules/prettier-plugin-svelte/plugin.js']);
+    expect(toolFile.plugins).toStrictEqual(['./.gspot/node_modules/prettier-plugin-svelte/plugin.js']);
     const pointer = await prettier.resolveConfig(join(sandbox.path, 'source.svelte'), {
         config: join(sandbox.path, 'prettier.config.mjs'),
         useCache: false,
@@ -153,7 +146,7 @@ test('Prettier plugin overrides precede your overrides, and no plugin adds no ke
     ) as Options;
     expect(pluginPolicy['overrides']).toMatchObject([
         { files: '*.svelte', options: { embeddedLanguageFormatting: 'auto' } },
-        { files: ['../../docs/**'], options: { printWidth: 80 } },
+        { files: ['docs/**'], options: { printWidth: 80 } },
     ]);
     const without = JSON.parse(
         await generateFile(stringify({ ...settings, configurations: ['format'] }), '.gspot/config/prettier.json', {
@@ -161,7 +154,7 @@ test('Prettier plugin overrides precede your overrides, and no plugin adds no ke
         }),
     ) as Options;
     expect(without).not.toHaveProperty('plugins');
-    expect(without['overrides']).toMatchObject([{ files: ['../../docs/**'] }]);
+    expect(without['overrides']).toMatchObject([{ files: ['docs/**'] }]);
 });
 
 test('extra editorconfig-checker options reach .editorconfig', async () => {
