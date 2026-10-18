@@ -80,7 +80,7 @@ test.each([...AUTHORED_VERSION_CASES])(
         expect(failure).toMatchObject({
             name: 'GspotError',
             code: 'installation',
-            message: matchSubstring('The tool project requires bun@0.x. Install that package manager version first.'),
+            message: matchSubstring(`The tool project requires bun@0.x, and found ${version?.stdout.trim() ?? ''}.`),
         });
         for (const [path, content] of Object.entries(files))
             expect(await readFile(join(repository.path, path), 'utf8')).toBe(content);

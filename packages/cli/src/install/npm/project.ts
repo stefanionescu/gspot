@@ -169,11 +169,16 @@ async function runPackageManager(
  */
 function assertPackageManagerVersion(packageManager: PackageManager, version: SpawnResult): void {
     const requirement = `${String(semver.major(packageManager.version))}.x`;
-    if (version.code !== 0 || !semver.satisfies(version.stdout.trim(), requirement, { includePrerelease: true }))
-        throw new GspotError(
-            'tool',
-            `The tool project requires ${packageManager.name}@${requirement}. Install that package manager version first.`,
-        );
+    const found = version.stdout.trim();
+    if (version.code === 0 && semver.satisfies(found, requirement, { includePrerelease: true })) return;
+    const result =
+        version.code === 0
+            ? `found ${found}`
+            : `\`${packageManager.name} ${VERSION_FLAG}\` exited with ${String(version.code)}: ${version.stderr.trim()}`;
+    throw new GspotError(
+        'tool',
+        `The tool project requires ${packageManager.name}@${requirement}, and ${result}. Install that package manager version first.`,
+    );
 }
 
 /**
