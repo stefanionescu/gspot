@@ -1,6 +1,6 @@
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { listIgnoredGlobs } from '#cli/generation/ignore-files.ts';
 import { JSCPD_IGNORED } from '#cli/config/generation/tool-files.ts';
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 
 /**

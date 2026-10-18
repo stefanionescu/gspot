@@ -1,8 +1,9 @@
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCommandGroups } from '#cli/runs/command/check.ts';
+import { DEFAULT_DIALECT } from '#cli/config/repository/inventory.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { BATS_TAG, DEFAULT_DIALECT, SHELLCHECK_DIALECT_FLAG } from '#cli/config/repository/inventory.ts';
+import { BATS_TAG, SHELLCHECK_DIALECT_FLAG } from '#cli/config/checks/language/bash.ts';
 
 /**
  * Runs ShellCheck, and passes a dialect only for scripts without a shebang.

@@ -14,3 +14,5 @@ export const AUTO_LF_ATTRIBUTES = ['text=auto', 'eol=lf'] as const;
 export const TOOL_FILE_REFERENCE = /(?:['"]\.\/|\bnew\s+URL\(\s*['"])(?<path>[^'"]+)['"]/gu;
 
 export const SEMGREP_RULE_PACK_FOLDER = `${TOOL_FILES_FOLDER}/semgrep/`;
+
+export const JSON_INDENT = 4;

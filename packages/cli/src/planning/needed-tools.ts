@@ -9,22 +9,20 @@ import { listSelectedManifests } from '#cli/configurations/select.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
+import type { StylelintComponent } from '#cli/types/generation/files.ts';
 import { isSettingEmpty, findSettingsSkip } from '#cli/planning/skips.ts';
-import type { StylelintComponent } from '#cli/types/generation/eslint.ts';
 import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import type { Session, PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
 import { getToolDeclaration, findToolProjectPackage } from '#cli/configurations/tools.ts';
+import { FLAG_VALUE, COVERAGE_FLAGS, LICENSES_CONFIGURATION } from '#cli/config/planning.ts';
 import type { Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 import {
-    FLAG_VALUE,
-    COVERAGE_FLAGS,
     STYLELINT_TOOL,
     VUE_STYLELINT_OVERRIDE,
-    LICENSES_CONFIGURATION,
     SVELTE_STYLELINT_OVERRIDE,
-} from '#cli/config/planning.ts';
+} from '#cli/config/generation/tool-files.ts';
 
 function isToolSelected(scope: ScopeSelection, conditions: ToolDeclaration['when']): boolean {
     return (

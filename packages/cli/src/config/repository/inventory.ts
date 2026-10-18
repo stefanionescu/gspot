@@ -233,14 +233,4 @@ export const DOCKERFILE_EXTENSION = '.dockerfile';
 export const DOTENV_PREFIX = '.env';
 export const BINARY_TAG = 'binary';
 
-export const DOCKERIGNORE = '.dockerignore';
-export const EDGE_SLASHES = /^\/|\/$/gu;
-export const IGNORE_PATTERN_FORMS = [
-    ['', ''],
-    ['**/', ''],
-    ['', '*'],
-    ['**/', '*'],
-] as const;
 export const TYPESCRIPT_TAG = 'typescript';
-export const SHELLCHECK_DIALECT_FLAG = '--shell=';
-export const BATS_TAG = 'bats';

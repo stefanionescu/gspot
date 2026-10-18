@@ -1,9 +1,5 @@
-import { z } from 'zod';
-import { readAsset } from '#cli/system/assets.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import { VUE_STYLELINT_OVERRIDE } from '#cli/config/planning.ts';
-import type { RuleNamesFile } from '#cli/types/generation/eslint.ts';
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
+import { readRuleNamesFile } from '#cli/generation/rule-names.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { selectStylelintComponents } from '#cli/planning/needed-tools.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
@@ -11,6 +7,7 @@ import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts'
 import {
     TAILWIND_AT_RULES,
     STYLELINT_BASE_RULES,
+    VUE_STYLELINT_OVERRIDE,
     STYLELINT_ALL_LEVEL_RULES,
     STYLELINT_RULE_NAMES_FILE,
 } from '#cli/config/generation/tool-files.ts';
@@ -58,12 +55,6 @@ function buildComponentOverrides(
     });
 }
 
-const ruleNamesFileSchema = z.strictObject({
-    package: z.string().min(1),
-    version: z.string().min(1),
-    source: z.string().min(1),
-    rules: z.array(z.string().min(1)),
-} satisfies SchemaShape<RuleNamesFile>) satisfies z.ZodType<RuleNamesFile>;
 /**
  * Build the Stylelint file from the settings.
  * @param context the tool file to build.
@@ -78,7 +69,7 @@ function buildStylelintFile(context: ToolFileContext): string {
     const options = selection.view.options('tools.stylelint');
     const isAll = level === 'all';
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, selection.scope.path);
-    const stylelintRuleNames = ruleNamesFileSchema.parse(JSON.parse(readAsset(STYLELINT_RULE_NAMES_FILE))).rules;
+    const stylelintRuleNames = readRuleNamesFile(STYLELINT_RULE_NAMES_FILE).rules;
 
     const off = rulesOff('css/stylelint');
     const activeRules = new Set(
@@ -116,4 +107,4 @@ function buildStylelintFile(context: ToolFileContext): string {
     return `${JSON.stringify(document, null, JSON_INDENT)}\n`;
 }
 
-export { buildStylelintFile, ruleNamesFileSchema };
+export { buildStylelintFile };

@@ -18,9 +18,6 @@ export const CONVENTION_QUERIES = {
 (navigation_expression) @read`,
 } as const;
 
-/** These Python os members read the process environment. */
-export const OS_ENVIRONMENT_MEMBERS = { environ: 'environ', getenv: 'getenv' } as const;
-
 export const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
 
 /** Comment styles for the languages whose code lines gspot counts. */
@@ -87,14 +84,7 @@ export const SWIFT_ACCESSOR_NODES = new Set([
     'didset_clause',
 ]);
 
-export const PYTHON_IMPORT_NODES = new Set(['import_statement', 'import_from_statement', 'future_import_statement']);
-
-export const SWIFT_ENV_READ = 'ProcessInfo.processInfo.environment';
-
 export const LANGUAGE_BY_EXTENSION = { '.py': 'python', '.swift': 'swift' } as const;
-export const PYTHON_SCOPE_NODES: ReadonlySet<string> = new Set(['function_definition', 'class_definition', 'lambda']);
-export const OS_MODULE = 'os';
-export const ENV_NAME = /^[A-Z_][A-Z0-9_]*$/u;
 export const SPEC_SUFFIX = /\.spec$/u;
 
 export const BASH_COMMAND_NODES: ReadonlySet<string> = new Set(['command', 'declaration_command']);

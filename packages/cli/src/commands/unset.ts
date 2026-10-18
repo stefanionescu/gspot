@@ -1,13 +1,13 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { getWrittenValue } from '#cli/settings/inherit.ts';
+import { saveSettings } from '#cli/apply/save-settings.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { UnsetOptions } from '#cli/types/commands/edit-settings.ts';
 import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
-import { deleteKey, findScopeTable, removeFromList } from '#cli/settings/edit.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { saveSettings, startSettingsEdit, findSettingDeclaration } from '#cli/apply/save-settings.ts';
+import { startSettingsEdit, findSettingDeclaration } from '#cli/commands/edit-settings.ts';
+import { deleteKey, findScopeTable, removeFromList, getWrittenValue } from '#cli/settings/edit.ts';
 
 /**
  * Register the unset command.

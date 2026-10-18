@@ -31,3 +31,14 @@ export const TRIVY_IMAGE_COMMAND = [
     String(TRIVY_EXIT),
     '--config',
 ] as const;
+
+export const DOCKERIGNORE = '.dockerignore';
+
+export const EDGE_SLASHES = /^\/|\/$/gu;
+
+export const IGNORE_PATTERN_FORMS = [
+    ['', ''],
+    ['**/', ''],
+    ['', '*'],
+    ['**/', '*'],
+] as const;

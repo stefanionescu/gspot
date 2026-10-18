@@ -2,7 +2,7 @@
 import ts from 'typescript';
 import { isDeepStrictEqual } from 'node:util';
 import type { Level } from '#cli/types/configurations.ts';
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { ESLINT_INDENT, ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint.ts';
 
 import type {

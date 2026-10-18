@@ -2,14 +2,15 @@ import { GspotError } from '#cli/system/errors.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { mergeIgnore } from '#cli/settings/write/text.ts';
 import { type Command } from '@commander-js/extra-typings';
+import { saveSettings } from '#cli/apply/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type TomlTable } from '#cli/types/settings/file.ts';
 import { stringify, LocalDate } from '@decimalturn/toml-patch';
+import { startSettingsEdit } from '#cli/commands/edit-settings.ts';
 import { calendarDateSchema } from '#cli/settings/schema/parts.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type IgnoreOptions } from '#cli/types/commands/edit-settings.ts';
-import { saveSettings, startSettingsEdit } from '#cli/apply/save-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 /**

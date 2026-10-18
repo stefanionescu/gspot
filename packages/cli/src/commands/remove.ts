@@ -2,13 +2,14 @@ import { GspotError } from '#cli/system/errors.ts';
 import { findScopeTable } from '#cli/settings/edit.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
+import { saveSettings } from '#cli/apply/save-settings.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import type { Mutation } from '#cli/types/settings/edits.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
+import { startConfigurationEdit } from '#cli/commands/edit-settings.ts';
 import { type ConfigurationsOptions } from '#cli/types/commands/edit-settings.ts';
-import { saveSettings, startConfigurationEdit } from '#cli/apply/save-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 function formatUnselectedConfigurations(configurations: string[]): string {

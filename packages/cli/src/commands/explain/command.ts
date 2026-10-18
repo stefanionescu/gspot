@@ -1,5 +1,4 @@
 import { openSession } from '#cli/session.ts';
-import { readAsset } from '#cli/system/assets.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
@@ -13,12 +12,12 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { readRuleNamesFile } from '#cli/generation/rule-names.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { REASON_NEEDED_TEXTS } from '#cli/config/commands/explain.ts';
 import { checkStageSchema } from '#cli/configurations/schema/parts.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { ruleNamesFileSchema } from '#cli/generation/tool-files/stylelint.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import { JAVASCRIPT_CONFIGURATION_FOLDER } from '#cli/config/configurations.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
@@ -199,8 +198,7 @@ function explainNamed(session: Session | undefined, subject: string, reads: Read
     const named = explainSetting(session, subject) ?? explainConfiguration(subject, reads, session);
     if (named !== undefined) return named;
     const ruleNamesPath = `${JAVASCRIPT_CONFIGURATION_FOLDER}/${ESLINT_RULE_NAMES_FILE}`;
-    const names = ruleNamesFileSchema.parse(JSON.parse(readAsset(ruleNamesPath)));
-    if (!names.rules.includes(subject)) return undefined;
+    if (!readRuleNamesFile(ruleNamesPath).rules.includes(subject)) return undefined;
     return explainLintRule(ESLINT_TOOL, subject, reads);
 }
 

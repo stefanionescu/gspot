@@ -147,13 +147,6 @@ export type ValeAlert = { file: string; line: number; column: number; check: str
 /** Parsed trees and their captures used by the convention checks. */
 export type ConventionSource = { path: string; language: CountedLanguage; tree: Tree; captures: Map<string, Node[]> };
 
-/** The imported environment object or function that a name refers to. */
-export type EnvironmentKind = 'os' | 'environ' | 'getenv' | undefined;
-
-export type EnvironmentScope = Map<string, EnvironmentKind>;
-
-export type EnvironmentNames = Map<number, EnvironmentScope>;
-
 export type SuppressionSyntax = {
     covers: (file: TrackedFile) => boolean;
     tool: string;

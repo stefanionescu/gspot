@@ -1,6 +1,6 @@
 // Build the ESLint tool file from the settings and the scope.
 
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { buildEslintContext } from '#cli/generation/eslint/context.ts';
 import { buildSelectedBlocks } from '#cli/generation/eslint/lint-rules.ts';

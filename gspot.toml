@@ -121,7 +121,7 @@ allowed_names = ["resolved"]
 reason = "The npm lockfile format names each package download URL resolved."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/generation/eslint.ts"]
+paths = ["packages/cli/src/types/generation/files.ts"]
 allowed_names = ["customSyntax"]
 reason = "Stylelint names its parser option customSyntax."
 

@@ -1,7 +1,7 @@
 import { stringify as stringifyYaml } from 'yaml';
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { PERIPHERY_RETAIN } from '#cli/config/generation/swift.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {

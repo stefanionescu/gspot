@@ -301,36 +301,14 @@ function getSettingTable(key: string): string {
     return table as string;
 }
 
-/**
- * Read a written setting value from its reasoned value or its plain value.
- * @param written the authored setting.
- * @returns the value that a settings edit changes.
- */
-function getWrittenValue(written: unknown): unknown {
-    if (isRecord(written) && Object.hasOwn(written, 'value')) return written['value'];
-    return written;
-}
-
-/**
- * Replace a written value, and keep the reason of its reasoned value.
- * @param written the original setting.
- * @param value the new setting.
- * @returns the replacement in the same written form.
- */
-function replaceWrittenValue(written: unknown, value: unknown): unknown {
-    if (isRecord(written) && Object.hasOwn(written, 'value')) return { ...written, value };
-    return value;
-}
 export {
     mergeValue,
     listSettings,
     getSettingValue,
-    getWrittenValue,
     findDeclaration,
     getSettingTable,
     getWrittenSetting,
     listSettingsTables,
     findSettingDefault,
-    replaceWrittenValue,
     listApplicableTables,
 };

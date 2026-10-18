@@ -15,19 +15,5 @@ export const COVERAGE_FLAGS = new Set([
 
 export const FLAG_VALUE = /=.*/su;
 export const LICENSES_CONFIGURATION = 'licenses';
-export const STYLELINT_TOOL = 'stylelint';
 
 export const TOOL_IGNORE_ARGUMENT = '--ignore-path';
-
-export const SVELTE_STYLELINT_OVERRIDE = {
-    files: ['**/*.svelte'],
-    customSyntax: 'postcss-html',
-    ignorePseudoClasses: ['global'],
-} as const;
-
-export const VUE_STYLELINT_OVERRIDE = {
-    files: ['**/*.vue'],
-    customSyntax: 'postcss-html',
-    ignorePseudoClasses: ['deep', 'global', 'slotted'],
-    functions: ['v-bind'],
-} as const;

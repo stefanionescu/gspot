@@ -6,13 +6,14 @@ import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCommandGroups } from '#cli/runs/command/check.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
+import { DOCKERFILE_NAME } from '#cli/config/repository/inventory.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckInput, type CheckResult } from '#cli/types/runs/check.ts';
-import { DOCKERIGNORE, DOCKERFILE_NAME } from '#cli/config/repository/inventory.ts';
 import type { ComposeFiles, ComposeService, ComposeDocuments } from '#cli/types/checks/infrastructure.ts';
 
 import {
+    DOCKERIGNORE,
     COMPOSE_CHECK,
     COMPOSE_OVERRIDE,
     COMPOSE_SUFFIXES,

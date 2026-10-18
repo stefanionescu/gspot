@@ -115,3 +115,13 @@ export type ToolFileGenerationState = { targets: Map<string, Map<string, string>
 
 /** The check and program names that make a tool-file declaration applicable. */
 export type NeededToolFiles = { tools: Set<string>; checks: Set<string> };
+
+/** A component file dialect, its parser, and syntax allowances. */
+export type StylelintComponent = {
+    files: readonly string[];
+    customSyntax: string;
+    ignorePseudoClasses: readonly string[];
+    functions?: readonly string[];
+};
+
+export type RuleNamesFile = { package: string; version: string; source: string; rules: string[] };

@@ -1,8 +1,12 @@
 // Reads TypeScript imports and source declarations.
 import ts from 'typescript';
-import { ENV_NAME } from '#cli/config/checks/general/structure.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
-import { JAVASCRIPT_ENVIRONMENT_FIELDS, JAVASCRIPT_ENVIRONMENT_GETTERS } from '#cli/config/parsers/environment.ts';
+
+import {
+    ENV_NAME,
+    JAVASCRIPT_ENVIRONMENT_FIELDS,
+    JAVASCRIPT_ENVIRONMENT_GETTERS,
+} from '#cli/config/parsers/environment.ts';
 
 /**
  * Walk the parsed TypeScript syntax once, visiting declarations and expressions without comment or string contents.

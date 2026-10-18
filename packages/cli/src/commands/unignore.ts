@@ -1,10 +1,11 @@
 import { formatCount } from '#cli/system/text.ts';
 import { type Command } from '@commander-js/extra-typings';
+import { saveSettings } from '#cli/apply/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
+import { startSettingsEdit } from '#cli/commands/edit-settings.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
-import { saveSettings, startSettingsEdit } from '#cli/apply/save-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/edit-settings.ts';
 

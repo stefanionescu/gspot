@@ -2,18 +2,22 @@
 import { type Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import type { ParseCache, SourceInput } from '#cli/types/parsers/tree-sitter.ts';
 import { PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/python.ts';
 import type { PythonFiles, PythonModule, PythonFunction } from '#cli/types/parsers/python.ts';
-import type { EnvironmentKind, EnvironmentNames, EnvironmentScope } from '#cli/types/checks/general.ts';
 
+import type {
+    EnvironmentRead,
+    EnvironmentKind,
+    EnvironmentNames,
+    EnvironmentScope,
+} from '#cli/types/parsers/environment.ts';
 import {
     OS_MODULE,
     PYTHON_SCOPE_NODES,
     PYTHON_IMPORT_NODES,
     OS_ENVIRONMENT_MEMBERS,
-} from '#cli/config/checks/general/structure.ts';
+} from '#cli/config/parsers/environment.ts';
 
 /**
  * List every function of a module, nested ones too.

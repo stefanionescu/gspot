@@ -252,3 +252,18 @@ export const ALWAYS_SKIPPED_TAGS = ['experimental'] as const;
 export { COMMITLINT_ERROR_SEVERITY };
 
 export const TYPOS_EXCLUDED_ARRAY = /^extend-exclude = .+$/mu;
+
+export const STYLELINT_TOOL = 'stylelint';
+
+export const SVELTE_STYLELINT_OVERRIDE = {
+    files: ['**/*.svelte'],
+    customSyntax: 'postcss-html',
+    ignorePseudoClasses: ['global'],
+} as const;
+
+export const VUE_STYLELINT_OVERRIDE = {
+    files: ['**/*.vue'],
+    customSyntax: 'postcss-html',
+    ignorePseudoClasses: ['deep', 'global', 'slotted'],
+    functions: ['v-bind'],
+} as const;

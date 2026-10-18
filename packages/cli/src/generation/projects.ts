@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { type Manifest } from '#cli/types/configurations.ts';
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { formatHold } from '#cli/generation/release-holds.ts';
 import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
 import { findInstalledDependency } from '#cli/repository/packages.ts';
@@ -11,13 +12,8 @@ import type { ReadCache, FileContents } from '#cli/types/system/files.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { type GeneratedFile, type NpmProjectInputs } from '#cli/types/generation/files.ts';
 import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN, PYTHON_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
+import { NEXT_PACKAGE, UV_PROJECT_TABLE, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/generation/tool-projects.ts';
 
-import {
-    JSON_INDENT,
-    NEXT_PACKAGE,
-    UV_PROJECT_TABLE,
-    YARN_TOOL_PROJECT_SETTINGS,
-} from '#cli/config/generation/tool-projects.ts';
 import {
     YARN_SETTINGS,
     NPM_TOOL_PROJECT_FILE,

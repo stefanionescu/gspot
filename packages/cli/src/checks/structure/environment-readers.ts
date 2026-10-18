@@ -1,9 +1,9 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { readSwiftEnvironment } from '#cli/parsers/swift.ts';
+import { ENV_NAME } from '#cli/config/parsers/environment.ts';
 import { readPythonEnvironment } from '#cli/parsers/python.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { ENV_NAME } from '#cli/config/checks/general/structure.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import { ENVIRONMENT_READERS_ROLE } from '#cli/config/settings/values.ts';

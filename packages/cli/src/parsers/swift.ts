@@ -2,9 +2,9 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { SWIFT_ENV_READ } from '#cli/config/parsers/environment.ts';
 import { SWIFT_TEST_TAG } from '#cli/config/repository/inventory.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
-import { SWIFT_ENV_READ } from '#cli/config/checks/general/structure.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 
 import {

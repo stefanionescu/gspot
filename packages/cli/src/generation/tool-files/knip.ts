@@ -1,11 +1,11 @@
 // Find the entry files of a folder: the ones in the settings, then the ones that the configurations of the nearest scope know.
 
 import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { listIgnoredGlobs } from '#cli/generation/ignore-files.ts';
 import { listWorkspaceFolders } from '#cli/repository/packages.ts';
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';

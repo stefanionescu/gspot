@@ -1,9 +1,9 @@
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { listPrettierPlugins } from '#cli/planning/needed-tools.ts';
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { GSPOT_NODE_MODULES_PATH } from '#cli/config/system/locations.ts';
 import { PRETTIER_FIXED_OPTIONS } from '#cli/config/generation/formatting.ts';

@@ -144,8 +144,6 @@ export type FragmentPresets = EslintPresets & {
     noSwagger: FragmentPreset;
 };
 
-export type RuleNamesFile = { package: string; version: string; source: string; rules: string[] };
-
 export type EslintPresets = Record<
     string,
     {
@@ -202,14 +200,6 @@ export type EslintLevelRules = {
 
 /** Imported plugin bindings paired with their package specifiers. */
 export type EslintPlugins = Record<string, readonly [string, string]>;
-
-/** A component file dialect, its parser, and syntax allowances. */
-export type StylelintComponent = {
-    files: readonly string[];
-    customSyntax: string;
-    ignorePseudoClasses: readonly string[];
-    functions?: readonly string[];
-};
 
 /** The imports and blocks that one ESLint fragment produces. */
 export type EslintFragment = { imports: string[]; blocks: string };

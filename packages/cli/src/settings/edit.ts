@@ -8,7 +8,6 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
-import { getWrittenValue, replaceWrittenValue } from '#cli/settings/inherit.ts';
 import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
 import type { Mutation, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 
@@ -166,4 +165,35 @@ function readSettingsEdit(repositoryRoot: string): SettingsEdit {
     return { text, table, values: structuredClone(table), original };
 }
 
-export { setKey, deleteKey, addToList, updateSettings, findScopeTable, removeFromList, readSettingsEdit };
+/**
+ * Read a written setting value from its reasoned value or its plain value.
+ * @param written the authored setting.
+ * @returns the value that a settings edit changes.
+ */
+function getWrittenValue(written: unknown): unknown {
+    if (isRecord(written) && Object.hasOwn(written, 'value')) return written['value'];
+    return written;
+}
+
+/**
+ * Replace a written value, and keep the reason of its reasoned value.
+ * @param written the original setting.
+ * @param value the new setting.
+ * @returns the replacement in the same written form.
+ */
+function replaceWrittenValue(written: unknown, value: unknown): unknown {
+    if (isRecord(written) && Object.hasOwn(written, 'value')) return { ...written, value };
+    return value;
+}
+
+export {
+    setKey,
+    deleteKey,
+    addToList,
+    updateSettings,
+    findScopeTable,
+    removeFromList,
+    getWrittenValue,
+    readSettingsEdit,
+    replaceWrittenValue,
+};

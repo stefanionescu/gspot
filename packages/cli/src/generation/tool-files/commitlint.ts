@@ -1,4 +1,4 @@
-import { JSON_INDENT } from '#cli/config/generation/tool-projects.ts';
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/tool-files.ts';
 

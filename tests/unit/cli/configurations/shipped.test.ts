@@ -1,14 +1,14 @@
 import { posix } from 'node:path';
 import { test, expect } from 'bun:test';
+import { listAssets } from '#cli/system/assets.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { classifyToolVersion } from '#cli/tools/versions.ts';
-import { readAsset, listAssets } from '#cli/system/assets.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { readRuleNamesFile } from '#cli/generation/rule-names.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { ruleNamesFileSchema } from '#cli/generation/tool-files/stylelint.ts';
 import { EACH_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
@@ -16,7 +16,7 @@ test('each lint-rule list names the pinned package version', () => {
     const manifests = [...readManifests(createReadCache(process.cwd())).values()];
     const pins = listToolProjectPins(manifests).npm;
     for (const path of listAssets('configurations/').filter((asset) => asset.endsWith('-names.json'))) {
-        const names = ruleNamesFileSchema.parse(JSON.parse(readAsset(path)));
+        const names = readRuleNamesFile(path);
         expect(pins[names.package], path).toBe(names.version);
     }
     for (const manifest of manifests.filter((manifest) => Object.keys(manifest.eslint.presets).length > 0)) {
