@@ -2,6 +2,88 @@
 
 The newest version comes first. The release task copies the section of the version it publishes into the GitHub release.
 
+## 0.3.0
+
+`@gspothq/cli` 0.3.0 moves the files gspot writes into one folder per configuration, replaces the `[architecture]`
+table with `[[import_rule]]` records, removes four checks and the `coverage` configuration, and rewrites the shipped
+rules and the documentation. `@gspothq/eslint-plugin` stays at 0.2.0. Version 0.2.3 was never published; its fixes
+are part of this release.
+
+### Upgrade from 0.2
+
+1. Install 0.3.0 with your package manager, such as `npm i -D -E @gspothq/cli@0.3.0`, or with
+   `mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@0.3.0`.
+2. Change `gspot.toml` for the breaking changes below: the `[architecture]` table, the `coverage` configuration,
+   ignores of removed checks, `rules.exclude` paths, and limits or naming keys that gspot now refuses. gspot names each
+   refused key.
+3. Run `gspot apply`. It writes `.gspot/configurations/` and deletes the old files under `.gspot/config/` and
+   `.gspot/rules/`.
+4. Run `gspot install` and `gspot check`. Commit `gspot.toml`, `.gspot/`, and the other generated files that changed,
+   together with `package.json` and its lockfile or `mise.toml`.
+
+From 0.2.0 or 0.2.1, read the [0.2.2 notes](https://github.com/stefanionescu/gspot/releases/tag/v0.2.2) first.
+
+### Files gspot writes
+
+- Tool files and rules move from `.gspot/config/` and `.gspot/rules/` to `.gspot/configurations/<group>/<configuration>/`.
+  Each tool file takes the name of its tool, such as `language/javascript/eslint.mjs`, the rules of a configuration sit
+  in its `rules/` folder, and a scope that needs other text gets `scopes/<scope>/` there. Update `rules.exclude`, editor
+  settings, and scripts that name the old paths.
+- `prettier.config.mjs` holds one line that points at the generated Prettier file, in every repository.
+- A root `.markdownlint.jsonc` replaces the `.markdownlint-cli2.mjs` pointer, so repositories without JavaScript get one
+  too.
+- gspot no longer writes `.semgrepignore`, the Vale styles that the level does not run, a `commit-msg` hook when no
+  check runs in it, or the `Level:` line of the `AGENTS.md` section. `gspot init` no longer writes
+  `tools.commitlint.scopes`.
+- The `AGENTS.md` section lists the settings commands under one Commands heading, with `add` and `remove`.
+
+### Settings
+
+- `[architecture]` goes. Each `[[architecture.module]]` record becomes an `[[import_rule]]` record: `name` and `paths`
+  keep their names, and `may_import` becomes `can_also_import`. The roles move to the configuration that reads them:
+  `architecture.roles.environment_readers` becomes `structure.environment_readers`, `scripts` becomes
+  `javascript.script_files`, `stores` becomes `zustand.store_files`, and `routers` becomes `trpc.router_files`. The new
+  `trpc.server_files` names the files that other code may import as types only.
+- The `coverage` configuration goes. Remove it from `configurations`. The `coverage` settings keep their names and
+  belong to the `jest`, `vitest`, `pytest`, and `swift-tests` configurations.
+- A language table under `limits` accepts only the limits that a check of that language reads; `limits.css` and
+  `limits.html` go. A language table under `naming` accepts only the name categories that its parser reports.
+- The value and the reason of each reasoned value have their own descriptions in the JSON Schema.
+
+### Checks
+
+- `bash/forwarders` and `xcode/xcconfig` go. Delete their ignores.
+- `cloudflare/security-headers` merges into `cloudflare/headers`, which reports a missing header with the lint rule
+  `missing-header`. Move its ignores.
+- `dependencies/package-json` goes. At level `all`, `javascript/eslint` reports a missing `packageManager` with the
+  lint rule `package-json/require-packageManager`.
+- `structure/environment-readers` reports `read-outside-reader` in place of `read-outside-owner`.
+- A comment that turns off every rule, such as a bare `eslint-disable`, gets the lint rule `eslint-all`, `ruff-all`, or
+  `swiftlint-all` from `gspot/suppressions`.
+- The `gspot doctor` JSON calls its list of existing lint jobs `lintJobs` in place of `written`.
+
+### Fixes
+
+- `gspot set` and `gspot unset` reach the settings of detected configurations, and say so when `gspot.toml` stays the
+  same.
+- `gspot explain` shows the defaults of a scope, and tells you to write record lists by hand.
+- The JavaScript limits apply to JavaScript files; before, only `function_parameters` reached them.
+- A migration that does not parse gives one finding, not nine.
+- The heredoc rule no longer reports a heredoc that writes a data file.
+- The Vale alt-text style reads markup files only.
+- `gspot --help` lists the registered commands, and the command help marks code.
+- The published JSON Schema describes every key and table.
+- On Windows, stopping a process tree that `taskkill` reports late no longer fails.
+- When the package manager version differs from the tool project, the error names the version it found.
+- `jsdoc/match-name` reports only the `root0` placeholder, and the `AGENTS.md` section names the folders of a scoped
+  rule without parentheses.
+
+### Documentation
+
+The site groups its pages into six sections: Getting started, Usage, Configuration, Languages, Checks, and Reference.
+Old addresses redirect. New pages cover editors, environment variables, and the JSON output, and each check page shows
+how to suppress one finding.
+
 ## 0.2.2
 
 `@gspothq/cli` 0.2.2 fixes the upgrade path and the npm release hold. `@gspothq/eslint-plugin` stays at 0.2.0.
