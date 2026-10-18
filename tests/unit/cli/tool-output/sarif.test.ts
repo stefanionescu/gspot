@@ -11,7 +11,7 @@ import {
     CYCLIC_REPORT,
     ENCODED_REPORT,
     FAILED_INVOCATIONS,
-    POSITIONLESS_REGIONS,
+    POSITIONLESS_RESULTS,
 } from '#tests/data/tool-output.ts';
 
 /** Parse a Static Analysis Results Interchange Format (SARIF) report with the same check and paths for each case. */
@@ -22,6 +22,11 @@ function parseSarifReport(report: unknown, root: string): Finding[] {
         '',
         { root, cwd: root },
     );
+}
+
+// A report with one result at the given artifact location.
+function buildLocationReport(artifactLocation: Record<string, unknown>) {
+    return { version: '2.1.0', runs: [{ results: [{ locations: [{ physicalLocation: { artifactLocation } }] }] }] };
 }
 
 test('sarifFindings maps every result to its file and line', () => {
@@ -86,30 +91,22 @@ test.each([
 });
 
 test.each([
-    { uri: '../outside.ts' },
-    { uri: pathToFileURL(resolve(resolve('selected-source'), '../outside.ts')).href },
-    { uri: 'https://example.com/file.ts' },
-    { uri: 'file.ts', uriBaseId: 'missing' },
-    { index: 1 },
-])('unresolved or external report locations are refused: %j', (artifact) => {
-    const sourceRoot = resolve('selected-source');
-
-    const report = {
-        version: '2.1.0',
-        runs: [{ results: [{ locations: [{ physicalLocation: { artifactLocation: artifact } }] }] }],
-    };
-    expect(() => parseSarifReport(report, sourceRoot)).toThrow('SARIF reported');
+    { name: 'a path outside the root', report: buildLocationReport({ uri: '../outside.ts' }) },
+    {
+        name: 'a file URL outside the root',
+        report: buildLocationReport({ uri: pathToFileURL(resolve(resolve('selected-source'), '../outside.ts')).href }),
+    },
+    { name: 'a web address', report: buildLocationReport({ uri: 'https://example.com/file.ts' }) },
+    { name: 'an unknown URI base', report: buildLocationReport({ uri: 'file.ts', uriBaseId: 'missing' }) },
+    { name: 'a missing artifact', report: buildLocationReport({ index: 1 }) },
+    { name: 'a cyclic URI base', report: CYCLIC_REPORT },
+])('a report location that gspot cannot resolve is refused: $name', ({ report }) => {
+    expect(() => parseSarifReport(report, resolve('selected-source'))).toThrow('SARIF reported');
 });
 
-test('cyclic URI bases are refused before a finding resolves', () => {
-    const sourceRoot = resolve('selected-source');
-
-    expect(() => parseSarifReport(CYCLIC_REPORT, sourceRoot)).toThrow('SARIF reported a cyclic source location.');
-});
-
-test.each([...POSITIONLESS_REGIONS])(
-    'a result with $name has a file only and reads no missing source',
-    ({ region }) => {
+test.each([...POSITIONLESS_RESULTS])(
+    'a result with $name keeps no line or column and reads no missing source',
+    ({ file, locations }) => {
         const sourceRoot = resolve('selected-source');
 
         const report = {
@@ -120,12 +117,12 @@ test.each([...POSITIONLESS_REGIONS])(
                     columnKind: 'unicodeCodePoints',
                     newlineSequences: ['\r\n'],
                     artifacts: [{ location: { uri: 'missing.py' }, encoding: 'unsupported-encoding' }],
-                    results: [{ locations: [{ physicalLocation: { artifactLocation: { index: 0 }, region } }] }],
+                    results: [{ locations }],
                 },
             ],
         };
         const [finding] = parseSarifReport(report, sourceRoot);
-        expect(finding).toMatchObject({ file: 'missing.py', fixable: false });
+        expect(finding).toMatchObject({ file, fixable: false });
         expect(finding).not.toHaveProperty('line');
         expect(finding).not.toHaveProperty('column');
     },

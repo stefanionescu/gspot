@@ -10,7 +10,7 @@ import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { link, stat, mkdir, rmdir, symlink, readFile } from 'node:fs/promises';
-import { OUTSIDE_LINKS, MODE_REPLACEMENTS, PORTABLE_PATH_ESCAPES } from '#tests/data/system.ts';
+import { OUTSIDE_LINKS, PORTABLE_PATHS, MODE_REPLACEMENTS } from '#tests/data/system.ts';
 
 test('a lock removed after a failed create can be taken', async () => {
     await using sandbox = await testdir();
@@ -152,16 +152,12 @@ test.each(['../outside', '/outside', 'folder/../outside', 'nul\0suffix'])(
     },
 );
 
-test.each([...PORTABLE_PATH_ESCAPES])('portable paths refuse the escape %j', (path) => {
-    expect(() => {
+test.each([...PORTABLE_PATHS])('portable paths refuse $path: $refused', ({ path, refused }) => {
+    const write = () => {
         assertWritablePath(path);
-    }).toThrow('is not a safe repository-relative path');
-});
-
-test('portable paths keep ordinary Unicode names', () => {
-    expect(() => {
-        assertWritablePath('documents/équipe 50%.md');
-    }).not.toThrow();
+    };
+    if (refused) expect(write).toThrow('is not a safe repository-relative path');
+    else expect(write).not.toThrow();
 });
 
 test('rmdir refuses linked and outside parents and keeps folders that are not empty', async () => {

@@ -34,17 +34,6 @@ test('a shim that no configuration gives a version is missing, not broken', asyn
     expect(inspection.want).toBe('3.8.1');
 });
 
-test('color codes around a version are no part of it', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",
-    });
-    await chmod(join(sandbox.path, 'node_modules/.bin/painter'), EXECUTABLE_FILE);
-    const inspection = inspectTool(inspectionContext(sandbox.path), buildProgramPin('painter', '26.8.0'));
-    expect(inspection.found).toBe('26.8.0');
-    expect(inspection.state).toBe('ok');
-});
-
 test.each(VERSION_OUTPUTS)('version output %s gives the state %s', async (script, state, found, note) => {
     await using sandbox = await testdir();
     using _which = useExecutable(process.execPath);

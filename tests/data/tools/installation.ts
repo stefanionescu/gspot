@@ -70,4 +70,6 @@ export const VERSION_OUTPUTS = [
         'version-teller did not report a valid version: unrecognized output',
     ],
     ['console.error("3.8.1");', 'ok', '3.8.1', undefined],
+    // The version keeps no color codes from around it.
+    [String.raw`console.log("version-teller \u001b[1;36m3.8.1\u001b[0m using more");`, 'ok', '3.8.1', undefined],
 ] as const;

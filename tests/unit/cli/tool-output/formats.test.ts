@@ -94,15 +94,26 @@ test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (s
     expect(findings[0]).toMatchObject({ file: 'settings/café.toml', fixable: true });
 });
 
-test('a Taplo syntax error names its file by a Windows path with a drive letter', () => {
-    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
-        'files/taplo-format',
-    )!.check;
-    const stdout = 'error: invalid TOML\n  ┌─ C:/work/settings.toml:2:3\n  │\n';
-    expect(parseOutput(check, stdout, '', { root: 'C:/work', cwd: 'C:/work' })).toMatchObject([
-        { file: 'settings.toml', line: 2, column: 3 },
-    ]);
-});
+test.each([
+    {
+        root: 'C:/work',
+        stdout: 'error: invalid TOML\n  ┌─ C:/work/settings.toml:2:3\n  │\n',
+        stderr: '',
+        line: 2,
+        column: 3,
+    },
+    { root: '/repository', stdout: '', stderr: '  ┌─ settings.toml:2:1\n', line: 2, column: 1 },
+])(
+    'a Taplo syntax error in $root names its file and position and is not fixable',
+    ({ root, stdout, stderr, line, column }) => {
+        const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
+            'files/taplo-format',
+        )!.check;
+        expect(parseOutput(check, stdout, stderr, { root, cwd: root })).toMatchObject([
+            { check: 'files/taplo-format', file: 'settings.toml', line, column, fixable: false },
+        ]);
+    },
+);
 
 test('grouped output drops line endings and makes absolute paths relative', async () => {
     await using sandbox = await testdir();
@@ -154,16 +165,6 @@ test.skipIf(isLinux)('an absolute path that names the root in another case is st
     const output = `${join(sandbox.path.toUpperCase(), 'example', 'math.py')}:\n  1: Incorrect spacing\n`;
     expect(parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
         { file: 'example/math.py', line: 1 },
-    ]);
-});
-
-test('a Taplo parse finding is not fixable', () => {
-    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
-        'files/taplo-format',
-    )!.check;
-    const findings = parseOutput(check, '', '  ┌─ settings.toml:2:1\n', { root: '/repository', cwd: '/repository' });
-    expect(findings).toMatchObject([
-        { check: 'files/taplo-format', file: 'settings.toml', line: 2, column: 1, fixable: false },
     ]);
 });
 

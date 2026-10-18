@@ -35,11 +35,6 @@ export const LINE_FINDINGS = [
     },
 ] as const;
 
-export const SARIF_LOCATION_CASES = [
-    ['repository', undefined],
-    ['file', { artifactLocation: { uri: 'source.txt' }, region: { charOffset: 100 } }],
-] as const;
-
 export const INVALID_KNIP_REPORTS = [
     '{}',
     '{"issues":{}}',
@@ -224,10 +219,19 @@ export const FAILED_INVOCATIONS = [
     { executionSuccessful: true, toolExecutionNotifications: [{ level: 'error' }] },
 ] as const;
 
-export const POSITIONLESS_REGIONS = [
-    { name: 'no region', region: undefined },
-    { name: 'negative offset', region: { charOffset: -1 } },
-    { name: 'large offset', region: { charOffset: 1000 } },
+export const POSITIONLESS_RESULTS = [
+    { name: 'no region', file: 'missing.py', locations: [{ physicalLocation: { artifactLocation: { index: 0 } } }] },
+    {
+        name: 'a negative offset',
+        file: 'missing.py',
+        locations: [{ physicalLocation: { artifactLocation: { index: 0 }, region: { charOffset: -1 } } }],
+    },
+    {
+        name: 'an offset past the end',
+        file: 'missing.py',
+        locations: [{ physicalLocation: { artifactLocation: { index: 0 }, region: { charOffset: 1000 } } }],
+    },
+    { name: 'no location, so it concerns the repository', file: '', locations: undefined },
 ] as const;
 
 /** A rule match and a partial parse error in the JSON format of the pinned Semgrep. */
