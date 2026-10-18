@@ -1,9 +1,9 @@
 ---
 title: Dependencies and licenses
-description: Check vulnerable packages, dependency licenses, registry hosts, and release age.
+description: Check vulnerable packages, dependency licenses, and registry hosts.
 ---
 
-Check dependencies for known vulnerabilities and review the licenses, registry hosts, and release ages your repository accepts.
+Check dependencies for known vulnerabilities and review the licenses and registry hosts your repository accepts.
 
 ## Licenses
 
@@ -47,28 +47,11 @@ Lockfile downloads use `registry.npmjs.org` and `registry.yarnpkg.com` by defaul
 Add another reviewed host with `gspot set dependencies.allowed_registries <HOST> --reason "<WHY>"`.
 Downloads must still use HTTPS. A host allowed in a scope counts for that folder and the folders inside it.
 
-## Release age
+## Release age of the gspot tools
 
-A new release waits `dependencies.min_release_age_days` days, 7 by default, before an install can pick it up. gspot
-writes this hold into the file of each installer that a folder uses:
-
-| Installer           | File                  | Key and unit                     |
-| ------------------- | --------------------- | -------------------------------- |
-| Bun 1.3 or newer    | `bunfig.toml`         | `minimumReleaseAge`, seconds     |
-| npm 11.17 or newer  | `.npmrc`              | `min-release-age`, days          |
-| pnpm 10.16 or newer | `pnpm-workspace.yaml` | `minimumReleaseAge`, minutes     |
-| Yarn 4.10 or newer  | `.yarnrc.yml`         | `npmMinimalAgeGate`, minutes     |
-| uv 0.9.17 or newer  | `pyproject.toml`      | `[tool.uv] exclude-newer`        |
-| mise                | `mise.toml`           | `[settings] minimum_release_age` |
-
-- A longer hold that a file already has stays.
-- `@gspothq/cli` and `@gspothq/eslint-plugin` go on each exclude list, so a gspot upgrade installs the day it comes
-  out. Your own excludes stay.
-- gspot installs its own tools in `.gspot/` with the same hold.
-- mise holds back version requests such as `latest`. A version you pin exactly installs at once.
-- Yarn 1 has no hold. `dependencies/release-age` reports a `packageManager` version too old to hold releases back.
-
-To require 14 days:
+gspot installs its own tools in `.gspot/` and holds back each release for `dependencies.min_release_age_days` days, 7
+by default. It leaves the install settings of your project alone: to hold back your own dependencies, set the release
+age option of your package manager. To make gspot wait 14 days:
 
 ```shell
 gspot set dependencies.min_release_age_days 14

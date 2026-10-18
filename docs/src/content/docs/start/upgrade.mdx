@@ -31,7 +31,11 @@ mise exec -- gspot check
 
 </Tabs>
 
-`gspot apply` writes the new version to `.gspot/version` and updates the generated files. Review the diff and fix any findings. Then commit the generated files that changed, in `.gspot/` and outside it,
+`gspot apply` writes the new version to `.gspot/version` and updates the generated files. If it refuses a key of
+`gspot.toml` that the new version renamed or removed, the message names the close keys and links the release notes,
+which list each change. Edit `gspot.toml`, then run `gspot apply` again.
+
+When `gspot apply` succeeds, review the diff and fix any findings. Then commit the generated files that changed, in `.gspot/` and outside it,
 and either `package.json` with its lockfile or `mise.toml`, together. Commit `gspot.toml` too if you changed it to fix
 findings. Every other clone then runs `gspot install`. See
 [Set up a clone](/start/install/#set-up-a-clone).

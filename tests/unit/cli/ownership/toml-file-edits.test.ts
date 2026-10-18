@@ -9,7 +9,7 @@ import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { planRemoval, planManagedKeys } from '#cli/ownership/plans.ts';
-import { OWN_PACKAGES, TWO_WEEKS_SECONDS } from '#tests/data/checks/dependencies.ts';
+import { TWO_WEEKS_SECONDS } from '#tests/data/checks/dependencies.ts';
 
 describe('toml-file-edits', () => {
     test('managed TOML tasks refuse a malformed file and an edited key, and create new tables', async () => {
@@ -77,7 +77,7 @@ describe('toml-file-edits', () => {
 });
 
 describe('toml-file-edits', () => {
-    test('Bun release-age keys keep a stricter age and your other fields when management stops', async () => {
+    test('the Bun scanner key keeps your own bunfig.toml fields when management stops', async () => {
         await using repository = await testdir();
         const original = '# Authored installation choices\n[install]\nexact = true\nminimumReleaseAge = 1209600\n';
         await createFileTree(repository.path, {
@@ -96,7 +96,6 @@ describe('toml-file-edits', () => {
             install: {
                 exact: true,
                 minimumReleaseAge: TWO_WEEKS_SECONDS,
-                minimumReleaseAgeExcludes: [...OWN_PACKAGES],
                 security: { scanner: '@socketsecurity/bun-security-scanner' },
             },
         });

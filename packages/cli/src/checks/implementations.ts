@@ -10,6 +10,7 @@ import { checkAnsibleLint } from '#cli/checks/ansible.ts';
 import { checkDeptry } from '#cli/checks/python/deptry.ts';
 import { checkSiteBuild } from '#cli/checks/site/build.ts';
 import { checkBashSafety } from '#cli/checks/bash/safety.ts';
+import { checkLockfiles } from '#cli/checks/dependencies.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { checkCommitlintPushed } from '#cli/checks/commits.ts';
 import { checkAllowedLicenses } from '#cli/checks/licenses.ts';
@@ -21,7 +22,6 @@ import { checkLoneFiles } from '#cli/checks/structure/lone-files.ts';
 import { checkLongFiles } from '#cli/checks/structure/long-files.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { checkSuppressions } from '#cli/checks/gspot/suppressions.ts';
-import { checkLockfiles } from '#cli/checks/dependencies/lockfiles.ts';
 import { checkDockerignore } from '#cli/checks/docker/dockerignore.ts';
 import { checkTranslationMessages } from '#cli/checks/translations.ts';
 import { checkFilesWithoutTarget } from '#cli/checks/xcode/project.ts';
@@ -29,7 +29,6 @@ import { checkBashDocComments } from '#cli/checks/bash/doc-comments.ts';
 import { checkImportLinter } from '#cli/checks/python/import-linter.ts';
 import { checkBashFunctionSize } from '#cli/checks/bash/function-size.ts';
 import { checkBashScriptLayout } from '#cli/checks/bash/script-layout.ts';
-import { checkReleaseAge } from '#cli/checks/dependencies/release-age.ts';
 import { checkDockerTrivyImage } from '#cli/checks/docker/trivy-image.ts';
 import { checkSiteUnusedAssets } from '#cli/checks/site/unused-assets.ts';
 import { checkGeneratedFiles } from '#cli/checks/gspot/generated-files.ts';
@@ -105,7 +104,6 @@ const CHECK_IMPLEMENTATIONS = {
     'duplication/jscpd': { check: checkJscpd },
     'secrets/env-examples': { check: checkSecretsEnvExamples },
     'repository/local-files': { check: checkLocalFiles },
-    'dependencies/release-age': { check: checkReleaseAge },
     'licenses/allowed': { check: checkAllowedLicenses },
     'dependencies/lockfiles': { check: checkLockfiles },
     'cloudflare/headers': { check: checkCloudflareHeaders },

@@ -2,18 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { createSandbox } from '#tests/setup/sandbox.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { TWO_SCOPES, SETTING_REASON } from '#tests/data/commands/set.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-
-import {
-    HOST_LOCKFILE,
-    HOLD_VERSION_CASES,
-    LOCKFILE_HOST_CASES,
-    DEPENDENCIES_SANDBOX,
-} from '#tests/data/checks/dependencies.ts';
+import { HOST_LOCKFILE, LOCKFILE_HOST_CASES, DEPENDENCIES_SANDBOX } from '#tests/data/checks/dependencies.ts';
 
 test('Git download hosts need a reviewed allow-list entry, and HTTPS stays required', async () => {
     await using sandbox = await testdir();
@@ -123,19 +116,4 @@ test.each([...LOCKFILE_HOST_CASES])('$check reports $expected.rule and passes af
     await using sandbox = await createSandbox(DEPENDENCIES_SANDBOX);
     const result = await runCheckSample(sandbox, entry, DEPENDENCIES_SANDBOX);
     expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-});
-
-test.each([...HOLD_VERSION_CASES])('dependencies/release-age with $packageManager', async (entry) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([]),
-        'package.json': `{\n    "private": true,\n    "packageManager": "${entry.packageManager}"\n}\n`,
-    });
-    const result = await checkReport(sandbox.path, ['check', '--only', 'dependencies/release-age', '--json']);
-    const findings = result.report.checks.flatMap((check) => check.findings);
-    if (entry.message === undefined) expect(findings).toStrictEqual([]);
-    else
-        expect(findings).toMatchObject([
-            { file: 'package.json', line: 3, rule: 'release-age', message: matchSubstring(entry.message) },
-        ]);
 });

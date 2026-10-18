@@ -278,7 +278,7 @@ export {
     REPLACED_PYPROJECT_TABLES,
 };
 
-/** Files that change between the init plan and the write: an edited package.json field and a new shared file. */
+/** A file that changes between the init plan and the write: an edited package.json field. */
 export const SHARED_FILE_RACES = [
     {
         name: 'one of its managed fields changed after the plan',
@@ -287,13 +287,5 @@ export const SHARED_FILE_RACES = [
         path: 'package.json',
         note: 'managed stylelint fields; other content stays',
         edited: STYLELINT_PACKAGE_JSON.replace('native-project', 'edited-project'),
-    },
-    {
-        name: 'it was created after the plan',
-        files: { 'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}' },
-        configuration: 'dependencies',
-        path: 'bunfig.toml',
-        note: 'managed install.minimumReleaseAge, install.minimumReleaseAgeExcludes fields; other content stays',
-        edited: '[install]\nexact = true\n',
     },
 ] as const;

@@ -66,17 +66,6 @@ tool = "syncpack"
 why = "Two versions of a dependency in one workspace behave differently, so a bug shows in only one package."
 
 [[check]]
-example = "npm 10.9.2 in packageManager reports a finding, because it ignores min-release-age. Declare npm 11.17.0 or newer."
-files = { filenames = ["package.json"] }
-help = "Upgrade the package manager that the root package.json names to the version the finding gives."
-level = "recommended"
-name = "release-age"
-runs = "once"
-stage = "commit"
-summary = "Checks that the package manager in the root package.json holds back releases newer than dependencies.min_release_age_days."
-why = "gspot writes a release hold for each package manager. An older version ignores it and installs a new release the day it appears."
-
-[[check]]
 example = "A lockfile URL outside `dependencies.allowed_registries` reports its host. Install the package again from an allowed registry, or add that host to the list."
 files = { filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"], kinds = ["source", "generated"] }
 help = "Install the package from the registry again, or add the host to dependencies.allowed_registries."

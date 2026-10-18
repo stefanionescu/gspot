@@ -114,7 +114,7 @@ export const SETTING_DECLARATIONS = {
     },
     'dependencies.min_release_age_days': {
         configurations: ['dependencies'],
-        description: 'How many days a new release waits before any installer that gspot sets up may install it.',
+        description: 'How many days a new release waits before gspot installs it as one of its tools in .gspot.',
         reason_needed: 'lowering',
     },
     'dependencies.allowed_registries': {

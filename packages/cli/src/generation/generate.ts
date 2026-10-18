@@ -12,14 +12,15 @@ import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { isYarnBerry } from '#cli/repository/package-manager.ts';
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
+import { readRootHoldDays } from '#cli/generation/release-holds.ts';
 import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
+import { buildBunScannerEdits } from '#cli/generation/bun-scanner.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
-import { readRootHoldDays, buildReleaseHoldEdits } from '#cli/generation/release-holds.ts';
 import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/projects.ts';
 import { DOT_GSPOT, STATE_PATH, VERSION_PIN_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
@@ -180,7 +181,7 @@ function generate(session: Session): GenerationResult {
     const toolFiles = session.toolFiles();
     generated.files.push(...toolFiles.files);
     generated.fileEdits.push(
-        ...buildReleaseHoldEdits(root, scopes),
+        ...buildBunScannerEdits(root, scopes),
         ...buildPointerFieldEdits(session, generated.files, toolFiles.targets),
     );
     generated.files.push(
