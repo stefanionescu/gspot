@@ -1,7 +1,7 @@
 allowed_words = ["Docker", "Trivy"]
 
 [configuration]
-description = "Dockerfiles and Compose files: hadolint, Compose parsing, a `.dockerignore` beside each Dockerfile, and Trivy scans."
+description = "Dockerfiles and Compose files: Dockerfile best practices, valid Compose files, a `.dockerignore` beside each Dockerfile, and image vulnerability scans."
 title = "Docker"
 
 [detect]

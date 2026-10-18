@@ -1,5 +1,5 @@
 [configuration]
-description = "Expo applications: rules for public environment variables and DOM exports, and the project and SDK checks of Expo Doctor. The React Native configuration adds the component and style rules."
+description = "Expo apps: rules for public environment variables and DOM exports, and Expo's own project and SDK checks. The React Native configuration adds the component and style rules."
 requires = ["react-native"]
 title = "Expo"
 

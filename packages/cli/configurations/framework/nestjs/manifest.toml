@@ -1,5 +1,5 @@
 [configuration]
-description = "A NestJS service: the compiler options that decorators need, plugin rules for providers, routes, and DTOs, and no circular modules."
+description = "NestJS services: the compiler options that decorators need, correct providers, routes, and DTOs, and no circular modules."
 requires = ["typescript"]
 suggests = []
 title = "NestJS"

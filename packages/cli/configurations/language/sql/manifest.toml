@@ -1,7 +1,7 @@
 allowed_words = ["SQL"]
 
 [configuration]
-description = "SQLFluff checks layout and style in the project dialect. At level all, the configuration also checks line comments and file length."
+description = "SQL files: layout and style in your dialect, and at level all, comments and file length."
 suggests = []
 title = "SQL"
 

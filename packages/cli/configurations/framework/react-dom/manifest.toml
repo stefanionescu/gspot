@@ -1,5 +1,5 @@
 [configuration]
-description = "React applications rendered into the DOM: JSX accessibility rules for labels, alternative text, keyboard access, and valid ARIA attributes. Native-only applications get React without these browser rules."
+description = "React apps in the browser: labels, alternative text, keyboard access, and valid ARIA attributes."
 requires = ["react"]
 title = "React DOM"
 

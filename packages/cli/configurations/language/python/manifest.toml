@@ -2,7 +2,7 @@ allowed_words = ["Python", "Ruff"]
 ignored_folders = [".venv", "venv"]
 
 [configuration]
-description = "Python sources: Ruff for lint and layout, basedpyright for types, import contracts, docstrings that match signatures, unused dependencies, and dead code."
+description = "Python sources: lint, layout, strict types, import contracts, docstrings that match their signatures, and no unused code or dependencies."
 suggests = []
 title = "Python"
 
@@ -393,7 +393,7 @@ name = "ruff"
 output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
 stage = "commit"
 summary = "Lints every Python file with the Ruff rules for the level, security rules included."
-why = "Ruff runs the rules of a dozen older tools fast enough for every commit."
+why = "Undefined names, unused code, and insecure calls fail at run time or open a security hole, and a reader misses them."
 
 [[check]]
 command = [

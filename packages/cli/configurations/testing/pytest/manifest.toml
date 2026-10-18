@@ -1,5 +1,5 @@
 [configuration]
-description = "pytest suites: Ruff style rules for tests, test-name prefixes, and a coverage floor at push."
+description = "pytest suites: test style rules, test-name prefixes, and a coverage floor before every push."
 requires = ["python"]
 title = "pytest"
 

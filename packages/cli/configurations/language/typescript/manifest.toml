@@ -1,7 +1,7 @@
 allowed_words = ["TypeScript"]
 
 [configuration]
-description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
+description = "TypeScript files: the strict compiler and the shipped lint and structure rules."
 requires = ["javascript"]
 suggests = []
 title = "TypeScript"

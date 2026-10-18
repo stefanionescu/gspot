@@ -1,7 +1,7 @@
 allowed_words = ["Markdown", "lychee"]
 
 [configuration]
-description = "Markdown files: markdownlint, Prettier, and fenced code blocks that must parse."
+description = "Markdown files: one style and layout, and code blocks that parse."
 title = "Markdown"
 
 [files]

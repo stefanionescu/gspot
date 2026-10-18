@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Checks documentation for broken links and anchors, banned headings, stale paths, and a well-formed README in every scope."
+description = "Documentation links that reach their files, anchors, and sites, and documented paths and commands that exist. Level `all` requires a README in every scope and a LICENSE at the root."
 title = "Docs"
 
 [files]
@@ -56,7 +56,7 @@ why = "A stale path in the docs sends the reader to a deleted file."
 
 [[check]]
 example = "A scope without `README.md` reports the missing file. Add one that explains what the scope does and how to start."
-help = "Write the README; the docs rule files say what goes in it."
+help = "Add a README.md that says what the scope does and how to use it, and a LICENSE file at the root."
 level = "all"
 name = "required-files"
 stage = "commit"

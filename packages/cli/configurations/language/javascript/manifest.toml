@@ -2,7 +2,7 @@ allowed_words = ["JavaScript", "ESLint"]
 ignored_folders = ["node_modules", "bower_components"]
 
 [configuration]
-description = "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
+description = "JavaScript files: the shipped lint rules, type checks through JSDoc, and no unused code."
 suggests = []
 title = "JavaScript"
 

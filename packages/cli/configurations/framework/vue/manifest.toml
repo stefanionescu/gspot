@@ -1,5 +1,5 @@
 [configuration]
-description = "ESLint checks Vue templates, scripts, and accessibility. Rules for attribute spelling, component names, declarations, ordering, and default props apply at level all. HTML injection rules apply at both levels."
+description = "Vue components: template, script, and accessibility rules, HTML injection checks at both levels, and naming and ordering rules at level all."
 requires = ["javascript"]
 suggests = ["typescript", "css"]
 title = "Vue"

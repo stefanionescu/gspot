@@ -1,5 +1,5 @@
 [configuration]
-description = "A site built to a folder and served as files: its build, links, weight, and sitemap."
+description = "Sites built to a folder: the build, broken links, page weight, and the sitemap."
 requires = ["html"]
 suggests = ["css", "javascript"]
 title = "Static Site"

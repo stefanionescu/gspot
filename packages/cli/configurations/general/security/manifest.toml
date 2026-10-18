@@ -2,7 +2,7 @@ allowed_words = ["Semgrep"]
 
 [configuration]
 always_selected = true
-description = "Runs Semgrep security rules over every file a language configuration claims."
+description = "Unsafe code patterns in every file that a language configuration covers."
 title = "Security"
 
 [files]

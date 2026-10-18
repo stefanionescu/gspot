@@ -1,5 +1,5 @@
 [configuration]
-description = "ESLint checks Svelte markup and scripts. DOM manipulation and event-dispatcher typing rules apply at level all; HTML injection rules apply at both levels."
+description = "Svelte components: markup and script rules, HTML injection checks at both levels, and DOM and typing rules at level all."
 requires = ["javascript"]
 suggests = ["typescript", "css"]
 title = "Svelte"

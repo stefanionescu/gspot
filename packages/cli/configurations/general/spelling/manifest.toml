@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Runs typos over every text file, with the allowed words and a reason for each."
+description = "Spelling in every text file, with a reason for each allowed word."
 title = "Spelling"
 
 [files]

@@ -2,7 +2,7 @@ allowed_words = ["Next.js"]
 generated = ["next-env.d.ts"]
 
 [configuration]
-description = "A Next.js app: ESLint rules for the framework and hooks, and server code marked server-only. The configuration leaves every build check on."
+description = "Next.js apps: the framework and hooks rules, and server code that never reaches the client. A Semgrep rule refuses ignoreBuildErrors and ignoreDuringBuilds in next.config."
 requires = ["typescript", "react", "react-dom"]
 suggests = ["css"]
 title = "Next.js"

@@ -62,7 +62,7 @@ level = "all"
 name = "unused-assets"
 runs = "scope"
 stage = "commit"
-summary = "Finds asset sets that no source or Xcode build setting names, at level all."
+summary = "Finds asset sets that no source or Xcode build setting names."
 why = "An asset nobody names ships in the app for nothing."
 
 [[check]]

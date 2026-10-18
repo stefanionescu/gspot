@@ -1,5 +1,5 @@
 [configuration]
-description = "A committed OpenAPI document: Spectral lints it, and its generator command leaves it unchanged."
+description = "A committed OpenAPI document that passes its lint rules and matches what its generator writes."
 title = "OpenAPI"
 
 [detect]

@@ -1,7 +1,7 @@
 allowed_words = ["PostgreSQL", "Postgres"]
 
 [configuration]
-description = "Postgres migrations: squawk for changes that lock or break, ordered versions, and no edits after a run. Schema checks require row security, explicit grants, and an index under every foreign key."
+description = "Postgres migrations that do not lock tables or break running code, run in order, and never change after they ran, and schemas with row security, explicit grants, and an index under every foreign key."
 requires = ["sql"]
 title = "Postgres"
 

@@ -1,5 +1,5 @@
 [configuration]
-description = "Ansible playbooks, roles, and collections checked by ansible-lint."
+description = "Ansible playbooks, roles, and collections: the lint rules of the Ansible project."
 title = "Ansible"
 
 [files]

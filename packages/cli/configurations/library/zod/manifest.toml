@@ -1,7 +1,7 @@
 allowed_words = ["Zod"]
 
 [configuration]
-description = "Zod: ESLint rules reject unsafe schema APIs and name the replacement for each deprecated one."
+description = "Zod schemas: no unsafe APIs, and the replacement for each deprecated one."
 requires = ["javascript"]
 title = "Zod"
 

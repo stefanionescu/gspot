@@ -1,7 +1,7 @@
 allowed_words = ["Vitest"]
 
 [configuration]
-description = "Vitest files: ESLint test rules, and coverage floors at push."
+description = "Vitest suites: test lint rules and coverage floors before every push."
 requires = ["javascript"]
 title = "Vitest"
 

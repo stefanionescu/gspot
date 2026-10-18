@@ -2,7 +2,7 @@ allowed_words = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
 ignored_folders = [".build", "DerivedData", "Pods"]
 
 [configuration]
-description = "Swift sources: SwiftLint, including its analyzer, with stable rules for each level, SwiftFormat, a build, and Periphery for dead code."
+description = "Swift sources: lint and analyzer rules for each level, one format, a clean build, and no unused code."
 suggests = []
 title = "Swift"
 
@@ -144,7 +144,7 @@ runs = "scope"
 stage = "manual"
 summary = "Runs the SwiftLint analyzer rules over the compiler log of the build: unused imports and captured variables."
 tool = "swiftlint"
-why = "These rules need compiler output, which a lint of single files lacks."
+why = "An unused import slows the build and hides the real dependencies, and a captured variable can keep an object alive or read a stale value."
 
 [[check]]
 example = "A declaration that nothing references reports unused code. Delete it, and rebuild."

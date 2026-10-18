@@ -2,7 +2,7 @@ allowed_words = ["Prettier"]
 
 [configuration]
 always_selected = true
-description = "A single `[format]` block for every formatter, so Prettier, shfmt, Ruff, and markdownlint use the same indentation."
+description = "Prettier and editorconfig-checker on every file. One `[format]` block sets the indentation, line length, quotes, and line endings for every formatter."
 title = "Format"
 
 [files]

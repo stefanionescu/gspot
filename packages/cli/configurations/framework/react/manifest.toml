@@ -1,7 +1,7 @@
 allowed_words = ["React"]
 
 [configuration]
-description = "React components: the recommended React and hooks rules as errors, and component files that keep their state on a reload."
+description = "React components: the recommended React and hooks rules as errors, and react-refresh rules, so Fast Refresh keeps component state."
 requires = ["javascript"]
 suggests = ["typescript", "css", "react-dom"]
 title = "React"

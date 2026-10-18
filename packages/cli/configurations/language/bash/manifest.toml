@@ -1,7 +1,7 @@
 allowed_words = ["Bash", "ShellCheck", "tree-sitter"]
 
 [configuration]
-description = "Shell scripts, hooks, and task files: ShellCheck, shfmt, a syntax check, and the structure rules for shell."
+description = "Shell scripts, hooks, and task files: lint, formatting, syntax, and the structure rules for shell."
 suggests = []
 title = "Shell scripts"
 
@@ -131,7 +131,7 @@ name = "unused-functions"
 runs = "scope"
 stage = "commit"
 summary = "Finds shell functions no script in the scope calls."
-why = "ShellCheck works on one file at a time, while this check follows calls across the whole scope."
+why = "A function that nothing calls still costs reading and upkeep, and it hides which code runs."
 
 [[check]]
 example = "`_deaf one two` reports dead parameters when `_deaf` never reads its arguments. Drop them from the call, or use them in the function."

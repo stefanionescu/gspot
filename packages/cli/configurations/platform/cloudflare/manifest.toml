@@ -2,7 +2,7 @@ allowed_words = ["Cloudflare"]
 generated = ["worker-configuration.d.ts"]
 
 [configuration]
-description = "Cloudflare Pages and Workers: valid headers and redirects files, current binding types, and Semgrep rules for worker code."
+description = "Cloudflare Pages and Workers: valid headers and redirects files, current binding types, and security rules for worker code."
 requires = ["javascript"]
 suggests = []
 title = "Cloudflare"

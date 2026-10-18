@@ -2,7 +2,7 @@ allowed_words = ["JSON", "TOML", "YAML"]
 
 [configuration]
 always_selected = true
-description = "Checks JSON, YAML, TOML, XML, and related formats, and writes a tool file for each checker."
+description = "Data and settings files parse, match their schema, and use one layout."
 title = "Data files"
 
 [files]
@@ -110,4 +110,4 @@ name = "xmllint"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }
 stage = "commit"
 summary = "Parses every XML file with xmllint."
-why = "A parser rejects malformed XML at the worst moment."
+why = "A malformed XML file fails only when a program reads it, often in a build or at run time."

@@ -2,7 +2,7 @@ allowed_words = ["Vale", "DOM", "DTO", "RPC"]
 
 [configuration]
 always_selected = true
-description = "Runs Vale with the gspot style and upstream packages over comments and documentation files."
+description = "Comments and documentation: clear dates, link text, and alternative text. Level `all` adds the complete gspot style and the upstream Vale packages."
 title = "Prose"
 
 [files]
@@ -210,4 +210,4 @@ name = "vale"
 stage = "commit"
 summary = "Checks ambiguous dates, link text, and alternative text with the shipped Vale styles at level `recommended`. Level `all` adds the complete style and upstream packages."
 tool = "vale"
-why = "Hedging, marketing, or wandering prose reaches everyone who opens the code, and no other check catches it."
+why = "An ambiguous date, a link that reads \"here\", or an image without alternative text fails some readers, and no other check catches it."

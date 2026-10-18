@@ -1,7 +1,7 @@
 allowed_words = ["CSS"]
 
 [configuration]
-description = "CSS files and style blocks in Vue and Svelte components: Stylelint with the standard rules, Prettier for layout, and module classes both defined and used. SCSS gets formatting only."
+description = "Style sheets and the style blocks of components: the standard rules, one layout, and module classes that are defined and used. SCSS gets formatting only."
 title = "CSS"
 
 [detect]

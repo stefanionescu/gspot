@@ -1,7 +1,7 @@
 allowed_words = ["HTML"]
 
 [configuration]
-description = "HTML files: html-validate for structure and accessibility, and no inline script or handler."
+description = "HTML files: valid structure, accessibility, and no inline scripts or event handlers."
 title = "HTML"
 
 [files]

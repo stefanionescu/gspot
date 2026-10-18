@@ -1,7 +1,7 @@
 allowed_words = ["tRPC"]
 
 [configuration]
-description = "tRPC routers: every procedure validates its input, and other code imports the files of `trpc.server_files` as types only."
+description = "tRPC routers: every procedure validates its input, and client code imports the server files named in `trpc.server_files` as types only."
 requires = ["javascript"]
 title = "tRPC"
 

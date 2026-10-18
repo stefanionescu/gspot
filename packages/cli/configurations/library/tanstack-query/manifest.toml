@@ -1,7 +1,7 @@
 allowed_words = ["TanStack"]
 
 [configuration]
-description = "TanStack Query: ESLint rules for dependency lists, stable clients, and the order of options."
+description = "TanStack Query: complete dependency lists, stable clients, and options in a fixed order."
 requires = ["javascript"]
 title = "TanStack Query"
 

@@ -1,5 +1,5 @@
 [configuration]
-description = "Astro components: ESLint applies the recommended and accessibility rules of eslint-plugin-astro as errors to frontmatter, markup, and scripts. `astro check` reports type errors in each component."
+description = "Astro components: the recommended and accessibility rules for frontmatter, markup, and scripts, and a type check of each component."
 requires = ["javascript"]
 suggests = ["typescript", "css"]
 title = "Astro"
