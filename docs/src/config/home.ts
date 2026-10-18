@@ -4,7 +4,7 @@ export const TOOLS = [
     { name: 'Prettier', icon: '/tools/prettier.svg' },
     { name: 'Ruff', icon: '/tools/ruff.svg' },
     { name: 'Stylelint', icon: '/tools/stylelint.svg' },
-    { name: 'ShellCheck', icon: '/tools/shellcheck-line.png' },
+    { name: 'ShellCheck', icon: '/tools/shellcheck.png' },
     { name: 'Semgrep', icon: '/tools/semgrep.svg' },
     { name: 'Knip', icon: '/tools/knip.svg' },
     { name: 'Trivy', icon: '/tools/trivy.svg' },

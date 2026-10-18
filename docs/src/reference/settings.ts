@@ -257,7 +257,7 @@ function formatSettingAnchor(schema: JSONSchema.JSONSchema, path: string[], node
 export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string {
     const { path, node } = findSettingPath(schema, key);
     const [table = ''] = path;
-    if (!SETTINGS_SUBPAGES.includes(table))
+    if (!SETTINGS_SUBPAGES.has(table))
         return `[\`${key}\`](/reference/gspot-toml/#${formatSettingAnchor(schema, path, node)})`;
     // A table with its own page starts that page, without a heading.
     if (path.length === 1) return `[\`${key}\`](/reference/gspot-toml/${table}/)`;
@@ -280,7 +280,8 @@ export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): 
             sections.push(formatScopeSection(data, node));
             continue;
         }
-        if (!SETTINGS_SUBPAGES.includes(name)) {
+        const header = SETTINGS_SUBPAGES.get(name);
+        if (header === undefined) {
             sections.push(formatSettingTable(data, name, node, PAGE_TITLE_LEVEL + 1));
             continue;
         }
@@ -288,12 +289,9 @@ export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): 
             limits: () => formatLimitsGuide(data),
             naming: () => formatNamingGuide(data),
         };
-        const table = getSchemaNode(schema, node);
-        const header = formatTableHeader(name, table);
-        const description = table.description ?? `The ${name} settings of gspot.toml.`;
         const body = (guides[name]?.() ?? '') + formatSettingTable(data, name, node, PAGE_TITLE_LEVEL);
-        pages.set(`gspot-toml/${name}.md`, buildReferencePage(header, description, body));
-        subpages.push(`- [\`${header}\`](/reference/gspot-toml/${name}/): ${description}`);
+        pages.set(`gspot-toml/${name}.md`, buildReferencePage(header.title, header.description, body));
+        subpages.push(`- [${header.title}](/reference/gspot-toml/${name}/): ${header.description}`);
     }
     pages.set(
         'gspot-toml/index.md',

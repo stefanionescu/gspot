@@ -7,7 +7,7 @@ const GUIDES = {
     javascript: { path: '/languages/javascript-typescript/', title: 'JavaScript and TypeScript' },
     python: { path: '/languages/python/', title: 'Python' },
     css: { path: '/languages/css/', title: 'CSS' },
-    swift: { path: '/languages/swift/', title: 'Swift and Xcode' },
+    swift: { path: '/languages/swift/', title: 'Swift' },
     security: { path: '/checks/security/', title: 'Security and secrets' },
     testing: { path: '/checks/testing/', title: 'Tests and coverage' },
     dependencies: { path: '/checks/dependencies/', title: 'Dependencies and licenses' },
@@ -82,7 +82,16 @@ export const SECTION_HEADING = /^## /mu;
 export const SETTING_PLACEHOLDER = /^\{setting:(?<setting>[^}]+)\}$/u;
 /** A list of allowed values longer than this prints as a count; editors read the full list from the schema. */
 export const LISTED_VALUES_LIMIT = 12;
-export const SETTINGS_SUBPAGES: readonly string[] = ['limits', 'naming', 'tools', 'command_check'];
+/** The tables with their own settings page: the title and description of each page. */
+export const SETTINGS_SUBPAGES = new Map([
+    [
+        'limits',
+        { title: '[limits] settings', description: 'Size and complexity limits for the repository or one language.' },
+    ],
+    ['naming', { title: '[naming] settings', description: 'Banned words, case, and length rules for names.' }],
+    ['tools', { title: '[tools] settings', description: 'Options that gspot passes to each tool.' }],
+    ['command_check', { title: '[[command_check]] records', description: 'Your own commands, run as checks.' }],
+]);
 /** The name of the keys of a map table, such as the language under limits. */
 export const MAP_KEY_NAME = '<name>';
 export const ANGLE_BRACKETS = /[<>]/gu;

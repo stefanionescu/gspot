@@ -1,11 +1,11 @@
 ---
 title: Swift
-description: Run SwiftLint, SwiftFormat, Swift tests, and Xcode coverage.
+description: Run SwiftLint, SwiftFormat, builds, tests, and coverage for Swift packages and Xcode projects.
 ---
 
 Use the [Quickstart](/start/quickstart/) with mise for a Swift package. Install the Swift toolchain first.
 
-SwiftLint checks source files. SwiftFormat formats them. Xcode checks need macOS and Xcode selected with `xcode-select`.
+SwiftLint checks source files. SwiftFormat formats them.
 
 ## Swift tests
 
@@ -27,5 +27,7 @@ Replace `Orders` with the target named in the coverage report. Add `reason` when
 Then run `gspot apply` and `gspot check --only swift-tests/coverage`. Write these records by hand;
 `gspot set` writes no record lists.
 
-Xcode coverage also needs the `xcode` configuration, plus `swift.xcode_project` and `swift.xcode_scheme` in `gspot.toml`.
-`gspot init` writes the ones it finds.
+## Xcode projects
+
+Xcode checks need macOS and Xcode selected with `xcode-select`. Xcode coverage also needs the `xcode` configuration,
+plus `swift.xcode_project` and `swift.xcode_scheme` in `gspot.toml`. `gspot init` writes the ones it finds.

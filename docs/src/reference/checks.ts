@@ -7,13 +7,14 @@ type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 type CheckDeclaration = Manifest['checks'][number];
 
 /**
- * Name the tools a check runs, or gspot for a built-in check.
+ * Name the tools a check runs; a built-in check runs none.
  * @param check the declaration
- * @returns the display name
+ * @returns the display name, or nothing for a built-in check
  */
-function formatToolNames(check: CheckDeclaration): string {
+function formatToolNames(check: CheckDeclaration): string | undefined {
     if (typeof check.tool === 'object') return Object.values(check.tool).join(', ');
-    const program = check.tool ?? check.command?.[0] ?? 'gspot';
+    const program = check.tool ?? check.command?.[0];
+    if (program === undefined) return undefined;
     // A command taken from a setting names the setting, not the placeholder.
     const setting = SETTING_PLACEHOLDER.exec(program)?.groups?.['setting'];
     return setting === undefined ? program : `the command in \`${setting}\``;
@@ -21,14 +22,16 @@ function formatToolNames(check: CheckDeclaration): string {
 
 function formatCheckEnvironment(check: CheckDeclaration): string[] {
     const runs = CHECK_RUN_LABELS[check.runs];
+    const tools = formatToolNames(check);
     const attributes: [string, string | undefined][] = [
         ['Runs', runs],
-        ['Tool', formatToolNames(check)],
+        ['Tool', tools],
         ['Operating systems', check.operating_systems?.join(', ')],
         ['Needs', check.needs?.map((need) => CHECK_NEEDS_LABELS[need]).join(', ')],
     ];
     return [
         ...attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`])),
+        ...(tools === undefined ? ['- Built-in check\n'] : []),
         ...(check.when?.setting === undefined ? [] : [`- Skipped while \`${check.when.setting}\` is empty.\n`]),
     ];
 }

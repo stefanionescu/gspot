@@ -124,13 +124,15 @@ function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof read
         ['Kept out of Git', manifest.ignored_folders.map((path) => '- `' + path + '`').join('\n')],
     ];
     const required = linkConfigurations(configuration.requires);
-    const opening = configuration.description + (required === '' ? '' : `\n\nRequires: ${required}.`);
+    const opening =
+        `**${configuration.title}.** ${configuration.description}` +
+        (required === '' ? '' : `\n\nRequires: ${required}.`);
     const guide = CONFIGURATION_GUIDES[configuration.name];
     const body =
         opening +
         (guide === undefined ? '' : `\n\nSee the [${guide.title} guide](${guide.path}).`) +
         sections.map(([title, content]) => formatSection(title, content)).join('');
-    return buildReferencePage(configuration.title, configuration.description, body);
+    return buildReferencePage(configuration.name, configuration.description, body);
 }
 
 /**
@@ -153,7 +155,7 @@ export function buildConfigurationPages(data: ReturnType<typeof readReferenceDat
                                 .filter((manifest) => manifest.configuration.group === group)
                                 .map(
                                     ({ configuration }) =>
-                                        `- [${configuration.title}](/reference/configurations/${configuration.name}/): ${configuration.description}`,
+                                        `- [\`${configuration.name}\`](/reference/configurations/${configuration.name}/): ${configuration.title}. ${configuration.description}`,
                                 )
                                 .join('\n'),
                         ),

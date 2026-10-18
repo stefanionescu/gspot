@@ -1,14 +1,14 @@
 ---
 title: Exclude files
-description: Select source files, generated files, copied files, and test files.
+description: Keep generator output, vendored files, and other files out of the checks.
 ---
 
 gspot reads the files Git tracks, plus untracked files that `.gitignore` does not hide.
 Use `.gitignore` for files outside the project.
 
-## Mark generated and copied files
+## Mark generator output and vendored files
 
-In `.gitattributes`, mark files that a tool writes as `linguist-generated`, and files copied from another project as `linguist-vendored`:
+In `.gitattributes`, mark generator output as `linguist-generated`. Mark vendored files, which you copied from another project, as `linguist-vendored`:
 
 ```text
 src/generated/** linguist-generated

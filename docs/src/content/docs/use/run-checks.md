@@ -27,7 +27,7 @@ Fix the file, then run the check again.
 | `gspot explain limits.file_lines`      | The value of a setting, its default, and where the value comes from.                                    |
 | `gspot explain ./<file>`               | The checks that read a file and the ignores that match it.                                              |
 
-## Run some checks or files
+## Choose what to check
 
 | Command                                               | Checks                                                              |
 | ----------------------------------------------------- | ------------------------------------------------------------------- |
@@ -47,7 +47,7 @@ A check that reads the whole project, such as `typescript/tsc`, still reports fi
 tree, unstaged, so review them before you commit. `gspot check --fix --dry-run` shows the changes without writing
 them. To add a fixer for your own command, see [command checks](/configure/command-checks/#add-a-fix-command).
 
-## The report
+## Statuses and exit codes
 
 | Status    | Meaning                                           | Exit code |
 | --------- | ------------------------------------------------- | --------- |

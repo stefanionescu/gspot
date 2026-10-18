@@ -59,7 +59,7 @@ export function buildCommandPages({
     const index = buildReferencePage(
         'Commands',
         'Every gspot command and what it does.',
-        `Run gspot from any folder in the repository; it finds the nearest \`gspot.toml\`. Use your repository's [start command](/start/install/). Commands that change settings write generated files too.\n\n` +
+        `Run gspot from any folder in the repository; it finds the nearest \`gspot.toml\`. Start each command the way your repository runs gspot, such as \`npx gspot\` or \`mise exec -- gspot\`. See [Install](/start/install/#choose-how-to-install). Commands that change settings write generated files too.\n\n` +
             formatTable(
                 ['Command', 'What it does'],
                 commands.map((command) => [
