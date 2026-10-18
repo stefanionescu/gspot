@@ -45,7 +45,7 @@ reason = "The sample keeps word splitting."
     await createFileTree(folder.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
     const applied = await runGspot(folder.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const config = join(folder.path, '.gspot/config/shellcheckrc');
+    const config = join(folder.path, '.gspot/configurations/language/bash/shellcheckrc');
     const edited = `${await readFile(config, 'utf8')}# Preserve this authored edit.\n`;
     await chmod(config, 0o644);
     await writeFile(config, edited);

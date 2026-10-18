@@ -140,7 +140,7 @@ test('manifests > a companion tool file needs a tool or check that reads it', ()
     expect(() =>
         buildManifest('consumer', {
             group: 'infrastructure',
-            tables: '[[tool_file]]\ntarget = ".gspot/config/example.json"\nrequired_tools = ["example"]\n',
+            tables: '[[tool_file]]\ntarget = "example.json"\nrequired_tools = ["example"]\n',
         }),
     ).toThrow('Companion tools require a consuming tool or check.');
 });
@@ -161,9 +161,9 @@ test('manifests > the only tool of a configuration reads each of its tool files 
     const manifest = readManifests(createReadCache(process.cwd())).get('example')!;
 
     expect(manifest.toolFiles.map(({ target, tool, check }) => [target, tool, check])).toStrictEqual([
-        ['.gspot/config/semgrep/first.yml', ['semgrep'], []],
-        ['.gspot/config/semgrep/second.yml', [], ['example/scan']],
-        ['.gspot/config/semgrep/not-a-pack.txt', ['semgrep'], []],
+        ['.gspot/configurations/language/example/semgrep/first.yml', ['semgrep'], []],
+        ['.gspot/configurations/language/example/semgrep/second.yml', [], ['example/scan']],
+        ['.gspot/configurations/language/example/semgrep/not-a-pack.txt', ['semgrep'], []],
     ]);
 });
 
@@ -181,10 +181,10 @@ test('manifests > tool-files assets are discovered and their metadata selects th
     );
     const manifest = readManifests(createReadCache(process.cwd())).get('example')!;
     expect(manifest.toolFiles.map(({ source, target }) => [source, target])).toStrictEqual([
-        ['tool-files/other.yml', '.gspot/config/other.yml'],
-        ['tool-files/semgrep/first.yml', '.gspot/config/semgrep/first.yml'],
-        ['tool-files/semgrep/second.yml', '.gspot/config/semgrep/second.yml'],
-        ['tool-files/semgrep/not-a-pack.txt', '.gspot/config/semgrep/not-a-pack.txt'],
+        ['tool-files/other.yml', '.gspot/configurations/language/example/other.yml'],
+        ['tool-files/semgrep/first.yml', '.gspot/configurations/language/example/semgrep/first.yml'],
+        ['tool-files/semgrep/second.yml', '.gspot/configurations/language/example/semgrep/second.yml'],
+        ['tool-files/semgrep/not-a-pack.txt', '.gspot/configurations/language/example/semgrep/not-a-pack.txt'],
     ]);
     expect(manifest.toolFiles.slice(1, 3)).toMatchObject([
         { tool: ['semgrep'], per_scope: true, when: { configuration: 'security' } },

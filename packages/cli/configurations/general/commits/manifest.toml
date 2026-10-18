@@ -20,7 +20,7 @@ key = "commitlint"
 redirect = true
 
 [[tool_file]]
-target = ".gspot/config/commitlint.config.cjs"
+target = "commitlint.json"
 tool = "commitlint"
 
 [[check]]

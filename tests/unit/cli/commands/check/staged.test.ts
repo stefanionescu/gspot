@@ -126,23 +126,27 @@ configurations = ["python"]
     writeGeneratedFiles(session, generate(session), log);
     readGitOutput(sandbox.path, ['init', '-q']);
     readGitOutput(sandbox.path, ['add', '-A']);
-    const original = await readFile(join(sandbox.path, '.gspot/config/basedpyrightconfig.json'));
+    const original = await readFile(join(sandbox.path, '.gspot/configurations/language/python/basedpyright.json'));
     const commandArguments = ['check', '--staged', '--only', 'gspot/generated-files', '--json'];
     const checked = await checkReport(sandbox.path, commandArguments);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(
         checked.report.checks
             .flatMap((check) => check.findings)
-            .filter((finding) => finding.file.endsWith('/basedpyrightconfig.json')),
+            .filter((finding) => finding.file.endsWith('/basedpyright.json')),
     ).toStrictEqual([]);
-    expect(await readFile(join(sandbox.path, '.gspot/config/basedpyrightconfig.json'))).toEqual(original);
+    expect(await readFile(join(sandbox.path, '.gspot/configurations/language/python/basedpyright.json'))).toEqual(
+        original,
+    );
     await writeFile(join(sandbox.path, 'child/pyproject.toml'), project + '# Unstaged project change.\n');
     const refused = await runGspot(sandbox.path, commandArguments);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
         'do not match the revision manifests and lockfiles',
     );
-    expect(await readFile(join(sandbox.path, '.gspot/config/basedpyrightconfig.json'))).toEqual(original);
+    expect(await readFile(join(sandbox.path, '.gspot/configurations/language/python/basedpyright.json'))).toEqual(
+        original,
+    );
 });
 
 /** Create two index entries that differ only by letter case. */

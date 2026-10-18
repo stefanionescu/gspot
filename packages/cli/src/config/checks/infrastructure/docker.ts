@@ -13,7 +13,8 @@ export const DOCKER_TOOL = 'docker';
 
 export const COMPOSE_CHECK = 'docker/compose';
 
-export const TRIVY_YML = 'trivy.yml';
+/** The tool file name that the image scan passes to Trivy. */
+export const TRIVY_TOOL_FILE = 'trivy';
 
 export const COMPOSE_FILE_FLAG = '-f';
 

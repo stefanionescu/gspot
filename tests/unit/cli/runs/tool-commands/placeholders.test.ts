@@ -87,13 +87,13 @@ test('tool file inputs of a nested scope stop at the scope folder and follow a l
     const plans = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] });
     const planned = plans.find((plan) => plan.selection.scope.path === 'app')!;
     expect(listSwiftlintToolFiles(checkInput(session, planned))).toStrictEqual([
-        '.gspot/config/swiftlint.yml',
+        '.gspot/configurations/language/swift/swiftlint.yml',
         'app/.swiftlint.yml',
         'app/Sources/.swiftlint.yml',
     ]);
     await symlink('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
     expect(listSwiftlintToolFiles(checkInput(session, planned))).toStrictEqual([
-        '.gspot/config/swiftlint.yml',
+        '.gspot/configurations/language/swift/swiftlint.yml',
         'app/.swiftlint.yml',
         'app/Sources/.swiftlint.yml',
         'app/Sources/Feature/.swiftlint.yml',
@@ -144,8 +144,8 @@ test('a Markdown command run in a scratch copy keeps the tool files its manifest
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'commit', only: ['markdown/markdownlint'] })[0]!;
     const paths = listScratchFiles(session, planned, planned.check.command!);
-    expect(paths).toContain('.gspot/config/markdownlint-cli2.mjs');
-    expect(paths).toContain('.gspot/config/markdownlint.jsonc');
+    expect(paths).toContain('.gspot/configurations/language/markdown/markdownlint-cli2.mjs');
+    expect(paths).toContain('.gspot/configurations/language/markdown/markdownlint.jsonc');
     expect(paths).toContain('README.md');
     expect(() => listScratchFiles(session, planned, ['markdownlint-cli2', '{tool_file:absent}'])).toThrow(
         'Check markdown/markdownlint names {tool_file:absent} and no configuration writes it.',

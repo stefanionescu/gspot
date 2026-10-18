@@ -87,7 +87,7 @@ export const SYNTAX_FILES = {
 `,
 } as const;
 
-export const SHELLCHECK_RC = '.gspot/config/shellcheckrc';
+export const SHELLCHECK_RC = '.gspot/configurations/language/bash/shellcheckrc';
 
 export const NESTED_CONDITION = 'if [[ -n "$1" ]]; then';
 

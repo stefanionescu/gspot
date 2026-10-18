@@ -27,7 +27,7 @@ version_command = ["--version"]
 [[tool_file]]
 level = "all"
 per_scope = true
-target = ".gspot/config/semgrep/cloudflare.yml"
+target = "semgrep.yml"
 tool = "semgrep"
 when = { configuration = "security" }
 

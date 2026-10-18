@@ -21,7 +21,7 @@ test('typos.toml keeps quoted words and paths and adds no settings', async () =>
     });
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
+    const target = output.files.find((file) => file.path === '.gspot/configurations/general/spelling/typos.toml');
     expect(target).toBeDefined();
     const parsed = parse(target!.content) as Record<string, unknown>;
     expect(Object.keys(parsed).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
@@ -61,7 +61,7 @@ spelling.locale = "en-us"
     const session = await openSession(sandbox.path);
     const output = generate(session);
     const declaration = session.scopes[0]!.selected.flatMap(({ toolFiles }) => toolFiles).find(
-        ({ target }) => target === '.gspot/config/typos.toml',
+        ({ target }) => target === '.gspot/configurations/general/spelling/typos.toml',
     )!;
     for (const [scope, locale] of [
         ['', 'en-us'],

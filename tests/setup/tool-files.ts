@@ -52,7 +52,7 @@ async function createEslint(sandboxRoot: string, options?: ESLint.Options): Prom
     const session = await openSession(sandboxRoot);
     const selection = session.scopes.find((selection) =>
         selection.selected.some((manifest) =>
-            manifest.toolFiles.some((file) => extractToolFileName(file.target) === 'eslint'),
+            manifest.toolFiles.some((file) => extractToolFileName(file.file) === 'eslint'),
         ),
     ) as ScopeSelection;
     const scope = selection.scope.path;
@@ -94,7 +94,7 @@ function toolFileFor(session: Session, tool: string, scope = ''): string {
     const declaration = session.scopes
         .find((selection) => selection.scope.path === scope)
         ?.selected.flatMap((manifest) => manifest.toolFiles)
-        .find((file) => extractToolFileName(file.target) === tool);
+        .find((file) => extractToolFileName(file.file) === tool);
     if (declaration === undefined) throw new Error(`The sandbox generates no ${tool} file for ${scope || 'the root'}.`);
     return buildScopeTarget(scope, declaration, session.toolFiles().targets);
 }

@@ -19,7 +19,7 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     const path = 'sample.md';
     await createFileTree(folder.path, {
         'gspot.toml': buildSettingsText(['prose', 'markdown'], { tables: 'tool_timeout_seconds = 1\n' }),
-        '.gspot/config/vale.ini': 'Packages =\n',
+        '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
         [path]: '# Example text\n',
     });
     using resources = new DisposableStack();
@@ -33,8 +33,8 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     expect(run.mock.calls).toHaveLength(1);
     const [command, options] = run.mock.calls[0]!;
     expect(options.timeoutSeconds).toBe(1);
-    expect(options.cwd).toBe(join(folder.path, '.gspot/config'));
-    expect(command).toContain(join(folder.path, '.gspot/config/vale.ini'));
+    expect(options.cwd).toBe(join(folder.path, '.gspot/configurations/general/prose'));
+    expect(command).toContain(join(folder.path, '.gspot/configurations/general/prose/vale.ini'));
     expect(command).toContain(join(folder.path, path));
     expect(options.stdin).toBeUndefined();
     expect(result.report.exitCode).toBe(1);
@@ -48,7 +48,7 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
     await using folder = await testdir();
     await createFileTree(folder.path, {
         'gspot.toml': buildSettingsText(['prose', 'typescript']),
-        '.gspot/config/vale.ini': 'Packages =\n',
+        '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
         'first.mts': '// First explanation.\n',
         'second.cts': '// Second explanation.\n',
     });
@@ -82,7 +82,7 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
 test('Vale reads known file types by path, and .mts files and scripts without an extension through stdin', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSettingsText(['prose', 'typescript', 'bash']),
-        '.gspot/config/vale.ini': 'Packages =\n',
+        '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
         'a.tsx': '// Component explanation.\n',
         'a.mts': '// Module explanation.\n',
         'hooks/pre-commit': '#!/bin/sh\n# Hook explanation.\n',
@@ -188,7 +188,7 @@ async function prepareValeSession(resources: AsyncDisposableStack): Promise<Sess
     const sandbox = resources.use(
         await testdir({
             'gspot.toml': buildSettingsText(['prose', 'markdown']),
-            '.gspot/config/vale.ini': 'Packages =\n',
+            '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
             'example.md': '# Documentation\n',
         }),
     );

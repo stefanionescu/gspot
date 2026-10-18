@@ -372,13 +372,13 @@ all = [
 [[tool_file]]
 per_scope = true
 pointer = { path = "ruff.toml", body = 'extend = "{target}"' }
-target = ".gspot/config/ruff.toml"
+target = "ruff.toml"
 tool = "ruff"
 
 [[tool_file]]
 per_scope = true
 pointer = { path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}" }
-target = ".gspot/config/basedpyrightconfig.json"
+target = "basedpyright.json"
 tool = "basedpyright"
 
 [[check]]

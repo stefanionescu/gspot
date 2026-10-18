@@ -2,12 +2,12 @@ import { FIRST_READ } from '#cli/config/rules.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { RULES_PATH } from '#cli/config/system/locations.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
 import { listRuleFiles, listChecksById } from '#cli/configurations/manifests.ts';
 import { type Manifest, type ToolDeclaration } from '#cli/types/configurations.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
@@ -136,17 +136,18 @@ function validateRuleExcludes(exclude: string[], manifests: Map<string, Manifest
     if (exclude.length === 0) return [];
     const paths = [...manifests.values()].flatMap((manifest) => listRuleFiles(manifest).map((file) => file.path));
     return exclude.flatMap((entry, index) => {
-        if (FIRST_READ.some((file) => isInScope(`${RULES_PATH}/${file}`, trimTrailingSlashes(entry))))
+        if (FIRST_READ.some((file) => isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${file}`, trimTrailingSlashes(entry))))
             return [
                 {
                     index,
                     message: `[rules] exclude names ${formatCodeList([entry])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
                 },
             ];
-        if (paths.some((path) => isInScope(`${RULES_PATH}/${path}`, trimTrailingSlashes(entry)))) return [];
+        if (paths.some((path) => isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${path}`, trimTrailingSlashes(entry))))
+            return [];
         const near = selectSimilarNames(
             entry,
-            paths.map((path) => `${RULES_PATH}/${path}`),
+            paths.map((path) => `${GSPOT_CONFIGURATIONS_PATH}/${path}`),
         );
         const hint = near.length > 0 ? ` Did you mean ${formatCodeList(near)}?` : '';
         return [{ index, message: `[rules] exclude names ${formatCodeList([entry])}, which matches no rule.${hint}` }];

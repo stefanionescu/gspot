@@ -35,7 +35,7 @@ test.each([
 ])('Squawk skips migrations through version %s without rounding', async (through, expected) => {
     const text = await generateFile(
         buildSettingsText(['postgres'], { tables: `[postgres]\nfrozen_through = "${through}"\n` }),
-        '.gspot/config/squawk.toml',
+        '.gspot/configurations/database/postgres/squawk.toml',
         {
             'migrations/2_initial.sql': 'SELECT 1;\n',
             'migrations/10_next.sql': 'SELECT 1;\n',

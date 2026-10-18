@@ -228,7 +228,7 @@ source = ""
 
 [[tool_file]]
 required_tools = ["@eslint/js", "@gspothq/eslint-plugin", "eslint-plugin-sonarjs", "eslint-plugin-unicorn", "eslint-plugin-security", "eslint-plugin-barrel-files", "eslint-plugin-perfectionist", "eslint-plugin-n", "eslint-plugin-jsdoc", "eslint-plugin-regexp", "eslint-plugin-import-x", "eslint-import-resolver-typescript", "eslint-plugin-boundaries", "eslint-plugin-package-json", "eslint-config-prettier", "globals", "picomatch"]
-target = ".gspot/config/eslint.config.mjs"
+target = "eslint.mjs"
 tool = "eslint"
 
 [tool_file.pointer]
@@ -239,22 +239,22 @@ path = "eslint.config.mjs"
 [[tool_file]]
 check = "javascript/tsc"
 per_scope = true
-target = ".gspot/config/jsconfig.json"
+target = "jsconfig.json"
 tool = "tsc"
 
 [[tool_file]]
-target = ".gspot/config/knip.json"
+target = "knip.json"
 tool = "knip"
 
 [[tool_file]]
 per_scope = true
 rule_dependencies = { "gspot.javascript.jwt-" = ["jsonwebtoken"] }
-target = ".gspot/config/semgrep/javascript.yml"
+target = "semgrep.yml"
 tool = "semgrep"
 when = { configuration = "security" }
 
 [[tool_file]]
-target = ".gspot/config/eslint-runtime.mjs"
+target = "eslint-runtime.mjs"
 tool = "eslint"
 
 [[check]]

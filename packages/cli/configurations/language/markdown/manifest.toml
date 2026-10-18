@@ -21,13 +21,13 @@ version_pattern = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/markdownlint.jsonc"
+target = "markdownlint.jsonc"
 tool = "markdownlint-cli2"
 
 [[tool_file]]
 per_scope = true
 pointer = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};", when = { configuration = "javascript" } }
-target = ".gspot/config/markdownlint-cli2.mjs"
+target = "markdownlint-cli2.mjs"
 tool = "markdownlint-cli2"
 
 [[check]]

@@ -42,7 +42,7 @@ test.skipIf(!hasToolBuild('semgrep'))('the Express rules stay within inherited s
     await Bun.write(join(sandbox.path, 'sibling/ignored.js'), 'JSON.parse(input);\n');
     const corrected = await spawnGspot(sandbox.path, SEMGREP_CHECK);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const invalidRule = join(sandbox.path, '.gspot/config/semgrep/express.yml');
+    const invalidRule = join(sandbox.path, '.gspot/configurations/framework/express/semgrep.yml');
     await Bun.write(invalidRule, 'rules: [');
     const invalid = await spawnGspot(sandbox.path, SEMGREP_CHECK);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);

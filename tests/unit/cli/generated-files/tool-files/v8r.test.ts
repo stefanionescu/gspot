@@ -28,7 +28,7 @@ test.each([true, false])('the v8r catalog lists your custom schemas: %s', async 
         'custom.json': '{}\n',
     });
     const output = generate(await openSession(sandbox.path));
-    const text = output.files.find((file) => file.path === '.gspot/config/v8r.yml')!.content;
+    const text = output.files.find((file) => file.path === '.gspot/configurations/general/files/v8r.yml')!.content;
     const parsed: unknown = parse(text);
     if (hasSchemas)
         expect(parsed).toMatchObject({

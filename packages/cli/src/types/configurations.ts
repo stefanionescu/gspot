@@ -77,7 +77,12 @@ export type ParsedManifest = {
     toolFiles: ({
         source?: string | undefined;
         level?: Level | undefined;
+        /** Where gspot writes the file, from the repository root, or from the scope for a root file. */
         target: string;
+        /** The path that the manifest names: inside the folder of the configuration, or in the scope for a root file. */
+        file: string;
+        /** Whether the file sits in the scope folder instead of the folder of its configuration. */
+        root: boolean;
         tool: string[];
         check: string[];
         required_tools: string[];
@@ -278,7 +283,7 @@ export type CheckDeclarationInput = Omit<
 };
 /** Tool-file consumers and omitted defaults before consumers resolve their source. */
 export type ToolFileInput = Pick<ToolFileDeclaration, 'target'> &
-    Optional<Omit<ToolFileDeclaration, 'target' | 'tool' | 'check' | 'source'>> & {
+    Optional<Omit<ToolFileDeclaration, 'target' | 'tool' | 'check' | 'source' | 'file'>> & {
         tool?: string | string[] | undefined;
         check?: string | string[] | undefined;
     };

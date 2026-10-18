@@ -81,7 +81,7 @@ test('init keeps the old tool file when the generated one cannot be written', as
     await createFileTree(sandbox.path, { 'typos.toml': authored });
     const rename = fs.renameSync;
     using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(sandbox.path, '.gspot/config/typos.toml'))
+        if (String(target) === join(sandbox.path, '.gspot/configurations/general/spelling/typos.toml'))
             throw new Error('Generated write denied');
         rename(source, target);
     });
@@ -89,7 +89,7 @@ test('init keeps the old tool file when the generated one cannot be written', as
         await captureRejection(runRegisteredCommand(sandbox.path, ['init', '--yes', '--configurations', 'spelling'])),
     ).toContain('Generated write denied');
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/config/typos.toml'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/spelling/typos.toml'))).toBe(false);
 });
 
 test.each([...SHARED_FILE_RACES])(
@@ -163,5 +163,5 @@ ignore = E501
     const written = await runRegisteredCommand(sandbox.path, ['init', '--configurations', 'sql']);
     expect(written.exitCode, written.text).toBe(0);
     expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/sql/sqlfluff.cfg'))).toBe(true);
 });

@@ -23,7 +23,7 @@ test('init deletes a replaced file and apply regenerates owned files without cha
     const settingsPath = join(folder.path, 'gspot.toml');
     const settings = await readFile(settingsPath, 'utf8');
     await writeFile(join(folder.path, 'added.py'), 'print("example")\n');
-    const generated = join(folder.path, '.gspot/config/shellcheckrc');
+    const generated = join(folder.path, '.gspot/configurations/language/bash/shellcheckrc');
     const edited = `${await readFile(generated, 'utf8')}# Authored after installation.\n`;
     await chmod(generated, 0o644);
     await writeFile(generated, edited);
@@ -49,7 +49,7 @@ Unclosed instructions.
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stdout + refused.stderr).toContain('incomplete or repeated');
     expect(await readFile(join(folder.path, 'AGENTS.md'), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(folder.path, '.gspot/config/shellcheckrc'))).toBe(false);
+    expect(await isOnDisk(join(folder.path, '.gspot/configurations/language/bash/shellcheckrc'))).toBe(false);
 });
 // A lock left after a crash or held by a live process: apply stops and names the lock to delete.
 test.each([

@@ -49,16 +49,16 @@ name = "xmllint"
 system = true
 
 [[tool_file]]
-target = ".gspot/config/taplo.toml"
+target = "taplo.toml"
 tool = "taplo"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/yamllint.yml"
+target = "yamllint.yml"
 tool = "yamllint"
 
 [[tool_file]]
-target = ".gspot/config/v8r.yml"
+target = "v8r.yml"
 tool = "v8r"
 
 [[check]]

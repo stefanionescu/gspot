@@ -65,8 +65,10 @@ export const total = accepted;
         });
         expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
         const generated = {
-            path: '.gspot/config/jsconfig.json',
-            content: await Bun.file(join(sandbox.path, '.gspot/config/jsconfig.json')).text(),
+            path: '.gspot/configurations/language/javascript/jsconfig.json',
+            content: await Bun.file(
+                join(sandbox.path, '.gspot/configurations/language/javascript/jsconfig.json'),
+            ).text(),
         };
         await chmod(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/tsc', '--json'];
@@ -96,7 +98,7 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
     const { config, corrected } = await prepareJsconfigScopes(sandbox.path);
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
     const outputs = await Promise.all(
-        [...new Bun.Glob('.gspot/config/**/jsconfig.json').scanSync({ cwd: sandbox.path, dot: true })].map(
+        [...new Bun.Glob('.gspot/configurations/**/jsconfig.json').scanSync({ cwd: sandbox.path, dot: true })].map(
             async (path) => ({
                 path: convertToPosixPath(path),
                 content: await Bun.file(join(sandbox.path, path)).text(),

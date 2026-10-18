@@ -80,9 +80,9 @@ scope-case = ["always", "lower-case"]
     for (const level of ['recommended', 'all', 'recommended']) {
         const switched = await spawnGspot(sandbox.path, ['set', 'level', level]);
         expect(switched.code, switched.stdout + switched.stderr).toBe(0);
-        expect(await Bun.file(join(sandbox.path, '.gspot/config/commitlint.config.cjs')).exists()).toBe(
-            level === 'all',
-        );
+        expect(
+            await Bun.file(join(sandbox.path, '.gspot/configurations/general/commits/commitlint.json')).exists(),
+        ).toBe(level === 'all');
         const checked = await spawnGspot(sandbox.path, command);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = JSON.parse(checked.stdout) as RunReport;

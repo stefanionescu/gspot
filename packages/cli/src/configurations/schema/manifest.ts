@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { RULE_FILE_PATTERN } from '#cli/config/rules.ts';
-import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import type { EslintPresets } from '#cli/types/generation/eslint.ts';
 import { toolDeclarationSchema } from '#cli/configurations/schema/tool.ts';
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
 import { namingOverrideSchema } from '#cli/configurations/schema/naming.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 
@@ -78,6 +78,8 @@ const toolFileSchema = z
     .strictObject({
         level: levelSchema.optional(),
         target: z.string(),
+        // A root file sits in the scope folder; every other tool file sits in the folder of its configuration.
+        root: z.boolean().default(false),
         // Generate the file when a check in its scope runs any named tool.
         tool: consumerNamesSchema,
         check: consumerNamesSchema,
@@ -88,7 +90,7 @@ const toolFileSchema = z
         when: conditionSchema.pick({ configuration: true }).optional(),
         rule_dependencies: z.record(z.string().min(1), z.array(z.string().min(1)).min(1)).optional(),
         rule_paths_setting: z.string().min(1).optional(),
-    } satisfies SchemaShape<Omit<ToolFileDeclaration, 'source'>, ToolFileInput>)
+    } satisfies SchemaShape<Omit<ToolFileDeclaration, 'source' | 'file'>, ToolFileInput>)
     .refine(
         (toolFile) => toolFile.required_tools.length === 0 || toolFile.tool.length > 0 || toolFile.check.length > 0,
         'Companion tools require a consuming tool or check.',
@@ -96,16 +98,12 @@ const toolFileSchema = z
     // Copied files use the same relative path beneath tool-files and the generated configuration folder.
     .transform((toolFile) => {
         if (toolFile.pointer?.folders !== undefined)
-            return { ...toolFile, pointer: { ...toolFile.pointer, folders: toolFile.pointer.folders } };
-        return {
-            ...toolFile,
-            source: posix.join(
-                SHIPPED_TOOL_FILES_FOLDER,
-                toolFile.target.startsWith(TOOL_FILE_PREFIX)
-                    ? toolFile.target.slice(TOOL_FILE_PREFIX.length)
-                    : posix.basename(toolFile.target),
-            ),
-        };
+            return {
+                ...toolFile,
+                file: toolFile.target,
+                pointer: { ...toolFile.pointer, folders: toolFile.pointer.folders },
+            };
+        return { ...toolFile, file: toolFile.target, source: posix.join(SHIPPED_TOOL_FILES_FOLDER, toolFile.target) };
     }) satisfies z.ZodType<ToolFileDeclaration, ToolFileInput>;
 
 const sentence = z.string().min(1);
@@ -323,6 +321,16 @@ export const manifestSchema = z
         // An absent detection table inherits only the matcher fields of the validated file declaration.
         detect: detect ?? detectionSchema.strip().parse(rest.files),
         tools: tool,
-        toolFiles,
+        toolFiles: toolFiles.map((toolFile) => ({
+            ...toolFile,
+            target: toolFile.root
+                ? toolFile.file
+                : posix.join(
+                      GSPOT_CONFIGURATIONS_PATH,
+                      rest.configuration.group,
+                      rest.configuration.name,
+                      toolFile.file,
+                  ),
+        })),
         checks: check,
     })) satisfies z.ZodType<ParsedManifest, ManifestInput>;

@@ -164,7 +164,7 @@ test.each([...EXTRA_OPTION_SCOPES])(
         });
         if (scope === '') {
             const generated = parse(
-                await readFile(join(sandbox.path, '.gspot/config/taplo.toml'), 'utf8'),
+                await readFile(join(sandbox.path, '.gspot/configurations/general/files/taplo.toml'), 'utf8'),
             ) as TomlTable;
             expect(generated['formatting']).toMatchObject(TAPLO_OPTIONS);
         }

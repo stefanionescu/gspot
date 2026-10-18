@@ -1,4 +1,4 @@
-import { DOT_GSPOT, TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
+import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 
 export const LF_ATTRIBUTES = 'text eol=lf';
 
@@ -13,6 +13,10 @@ export const ATTRIBUTE_QUOTED_CHARACTERS = /[\s"]/u;
 export const AUTO_LF_ATTRIBUTES = ['text=auto', 'eol=lf'] as const;
 export const TOOL_FILE_REFERENCE = /(?:['"]\.\/|\bnew\s+URL\(\s*['"])(?<path>[^'"]+)['"]/gu;
 
-export const SEMGREP_RULE_PACK_FOLDER = `${TOOL_FILES_FOLDER}/semgrep/`;
+/** The file name of the Semgrep rule pack of a configuration. */
+export const SEMGREP_RULE_PACK_FILE = 'semgrep.yml';
+
+/** The folder of a configuration that holds the tool files of scopes with their own text. */
+export const TOOL_FILE_SCOPES_FOLDER = 'scopes';
 
 export const JSON_INDENT = 4;

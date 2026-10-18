@@ -46,7 +46,9 @@ test.each(['', 'app'])(
         const command = [join(testModules, COMMITLINT_EXECUTABLE), '--edit', join(sandbox.path, messageFile)];
         await replaceCommitlint(sandbox.path, command, execution);
         const target =
-            scope === '' ? './.gspot/config/commitlint.config.cjs' : '../.gspot/config/commitlint.config.cjs';
+            scope === ''
+                ? './.gspot/configurations/general/commits/commitlint.json'
+                : '../.gspot/configurations/general/commits/commitlint.json';
         expect(await Bun.file(join(sandbox.path, packageFile)).text()).toBe(
             COMMITLINT_PACKAGE.replace(
                 '{"rules":{"type-enum":[2,"always",["special"]]}}',
@@ -68,7 +70,7 @@ test.each(['', 'app'])(
                     ),
                 ),
             );
-            const generatedConfig = join(sandbox.path, '.gspot/config/commitlint.config.cjs');
+            const generatedConfig = join(sandbox.path, '.gspot/configurations/general/commits/commitlint.json');
             expect(await Bun.file(generatedConfig).exists()).toBe(level === 'all');
             if (level === 'all') {
                 const native = await runCommand([...command, '--config', generatedConfig], execution);
@@ -78,7 +80,7 @@ test.each(['', 'app'])(
         }
         await Bun.write(join(sandbox.path, messageFile), 'fix: generated contract\n');
         const corrected = await runCommand(
-            [...command, '--config', join(sandbox.path, '.gspot/config/commitlint.config.cjs')],
+            [...command, '--config', join(sandbox.path, '.gspot/configurations/general/commits/commitlint.json')],
             execution,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

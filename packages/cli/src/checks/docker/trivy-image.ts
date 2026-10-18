@@ -5,13 +5,13 @@ import { parseReport } from '#cli/runs/output/json.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
-import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
+import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 
 import {
-    TRIVY_YML,
     TRIVY_EXIT,
+    TRIVY_TOOL_FILE,
     TRIVY_IMAGE_COMMAND,
     TRIVY_SCHEMA_VERSION,
 } from '#cli/config/checks/infrastructure/docker.ts';
@@ -20,7 +20,7 @@ import {
 async function scanImage(input: CheckInput, image: string, path: string): Promise<Finding[]> {
     const result = await runCheckTool(
         input,
-        [...TRIVY_IMAGE_COMMAND, join(input.root, TOOL_FILES_FOLDER, input.selection.scope.path, TRIVY_YML), image],
+        [...TRIVY_IMAGE_COMMAND, join(input.root, selectToolFilePath(input, input, TRIVY_TOOL_FILE)), image],
         { cwd: input.root },
     );
     if (result.code !== 0 && result.code !== TRIVY_EXIT) {

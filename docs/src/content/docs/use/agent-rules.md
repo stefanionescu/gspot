@@ -9,7 +9,8 @@ only guide agents; the checks still block failing code.
 ## Rules for agents
 
 When `rules.enabled = true`, gspot writes the rules that fit your languages, frameworks, and level
-under `.gspot/rules/`. A section between gspot markers in `AGENTS.md` lists them.
+in the `rules/` folder of each configuration under `.gspot/configurations/`. A section between gspot markers in
+`AGENTS.md` lists them.
 
 gspot writes the rules into `AGENTS.md` only, and keeps your own text outside its section. Point a coding agent that
 reads another file to `AGENTS.md`.

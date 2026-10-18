@@ -91,7 +91,7 @@ test('a template keeps its comments and gspot.toml records which template it cop
     await using sandbox = await testdir({
         'team.template.toml': `# Rule owner
 [rules]
-exclude = [".gspot/rules/general/engineering/code/ACCESSIBILITY.md"]
+exclude = [".gspot/configurations/general/engineering/rules/ACCESSIBILITY.md"]
 `,
     });
     const result = await runGspot(sandbox.path, ['init', '--from', 'team.template.toml', '--dry-run', '--json']);
@@ -102,7 +102,7 @@ exclude = [".gspot/rules/general/engineering/code/ACCESSIBILITY.md"]
     );
     expect(output.settings).toContain('# Rule owner\n[rules]');
     expect(parse(output.settings)).toMatchObject({
-        rules: { exclude: ['.gspot/rules/general/engineering/code/ACCESSIBILITY.md'] },
+        rules: { exclude: ['.gspot/configurations/general/engineering/rules/ACCESSIBILITY.md'] },
     });
     expect(parseSettings(output.settings, undefined, createReadCache(process.cwd())).rules.enabled).toBe(true);
 });

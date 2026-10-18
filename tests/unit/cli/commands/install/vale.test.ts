@@ -22,7 +22,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSettingsText(['prose'], { level: 'all', tables: limit }),
-            '.gspot/config/vale.ini': VALE_PACKAGES_INI,
+            '.gspot/configurations/general/prose/vale.ini': VALE_PACKAGES_INI,
             '.gspot/vale/Google/terms.yml': 'previous bytes\n',
             'guide.md': 'Authored text.\n',
         });
@@ -57,7 +57,7 @@ test.each([...LEVELS])(
     async (level) => {
         await using sandbox = await testdir();
         expect(hasValePackages(sandbox.path, level)).toBe(false);
-        await createFileTree(sandbox.path, { '.gspot/config/vale.ini': VALE_PACKAGES_INI });
+        await createFileTree(sandbox.path, { '.gspot/configurations/general/prose/vale.ini': VALE_PACKAGES_INI });
         expect(hasValePackages(sandbox.path, level)).toBe(level === 'recommended');
         for (const folder of VALE_PACKAGE_FOLDERS)
             await createFileTree(sandbox.path, { [`.gspot/vale/${folder}/.keep`]: '' });
@@ -69,7 +69,7 @@ test.each([...VALE_PACKAGE_FOLDERS])(
     'level all needs the shipped %s folder whatever the Packages line says',
     async (missing) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { '.gspot/config/vale.ini': 'Packages = \n' });
+        await createFileTree(sandbox.path, { '.gspot/configurations/general/prose/vale.ini': 'Packages = \n' });
         for (const folder of VALE_PACKAGE_FOLDERS.filter((folder) => folder !== missing))
             await createFileTree(sandbox.path, { [`.gspot/vale/${folder}/.keep`]: '' });
         expect(hasValePackages(sandbox.path, 'all')).toBe(false);

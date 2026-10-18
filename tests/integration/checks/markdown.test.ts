@@ -140,7 +140,7 @@ test('markdownlint JSON keeps file name delimiters, positions, and fixability', 
         },
     });
     const environment = installedSandbox().environment;
-    const configuration = '.gspot/config/markdownlint-cli2.mjs';
+    const configuration = '.gspot/configurations/language/markdown/markdownlint-cli2.mjs';
     expect(await Bun.file(join(root, configuration)).exists()).toBe(true);
     const command = ['check', ...paths, '--only', 'markdown/markdownlint', '--json'];
     const failed = await spawnGspot(root, command, environment);

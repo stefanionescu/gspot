@@ -12,7 +12,7 @@ test.each([...LEVELS])('%s turns on MD041 and MD025 only at level all and keeps 
 names = ["Widget"]
 `,
         }),
-        '.gspot/config/markdownlint.jsonc',
+        '.gspot/configurations/language/markdown/markdownlint.jsonc',
         { 'source.md': '# Widget\n' },
     );
     const config = parse(content) as Record<string, unknown>;

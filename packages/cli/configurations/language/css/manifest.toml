@@ -40,7 +40,7 @@ version = "2.0.0"
 [[tool_file]]
 per_scope = true
 pointer = { path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n" }
-target = ".gspot/config/stylelint.json"
+target = "stylelint.json"
 tool = "stylelint"
 
 [[check]]

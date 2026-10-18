@@ -29,11 +29,11 @@ replace = [".syncpackrc", ".syncpackrc.json", ".syncpackrc.yaml", ".syncpackrc.y
 version = "15.3.3"
 
 [[tool_file]]
-target = ".gspot/config/osv-scanner.toml"
+target = "osv-scanner.toml"
 tool = "osv-scanner"
 
 [[tool_file]]
-target = ".gspot/config/syncpack.json"
+target = "syncpack.json"
 tool = "syncpack"
 
 [[check]]
@@ -55,7 +55,7 @@ why = "An advisory identifies a vulnerability in a dependency version."
 command = ["syncpack", "lint", "--config", "{tool_file:syncpack}"]
 example = "Two package.json files that pin different versions of one dependency report a mismatch. Set both to the same version, and update the lockfile."
 files = { filenames = ["package.json"] }
-help = "Run `syncpack fix --config .gspot/config/syncpack.json`, or align the versions by hand."
+help = "Run `syncpack fix --config .gspot/configurations/general/dependencies/syncpack.json`, or align the versions by hand."
 level = "all"
 name = "syncpack"
 output = { format = "lines" }

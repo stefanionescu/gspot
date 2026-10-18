@@ -135,7 +135,7 @@ configurations = []
     ).toStrictEqual([['api/nested', ['api/nested/removed.ts']]]);
     expect(planned.find((check) => check.selection.scope.path === 'api')?.files).toStrictEqual([]);
 });
-test.each(['gspot.toml', '.gspot/config/lychee.toml'])(
+test.each(['gspot.toml', '.gspot/configurations/general/docs/lychee.toml'])(
     'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
     async (path) => {
         await using sandbox = await testdir();

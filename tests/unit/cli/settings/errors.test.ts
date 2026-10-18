@@ -18,7 +18,7 @@ import { KEY_PATH_CASES, REVIEWED_REASON, UNKNOWN_KEY_CASES } from '#tests/data/
 test('a file path and a category folder are accepted', () => {
     expect(() =>
         parseSettings(
-            '[rules]\nexclude = [".gspot/rules/general/engineering/code/ACCESSIBILITY.md", ".gspot/rules/library"]\n',
+            '[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESSIBILITY.md", ".gspot/configurations/library"]\n',
             undefined,
             createReadCache(process.cwd()),
         ),
@@ -28,7 +28,7 @@ test('a file path and a category folder are accepted', () => {
 test('an entry that matches no rule file names the near match', () => {
     expect(() =>
         parseSettings(
-            '[rules]\nexclude = [".gspot/rules/general/engineering/code/ACCESIBILITY.md"]\n',
+            '[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESIBILITY.md"]\n',
             undefined,
             createReadCache(process.cwd()),
         ),
@@ -37,7 +37,11 @@ test('an entry that matches no rule file names the near match', () => {
 
 test.each([...FIRST_READ.slice(0, 1), 'general/prose'])('a first-read entry %s cannot be left out', (entry) => {
     expect(() =>
-        parseSettings(`[rules]\nexclude = [".gspot/rules/${entry}"]\n`, undefined, createReadCache(process.cwd())),
+        parseSettings(
+            `[rules]\nexclude = [".gspot/configurations/${entry}"]\n`,
+            undefined,
+            createReadCache(process.cwd()),
+        ),
     ).toThrow('every agent opens first');
 });
 

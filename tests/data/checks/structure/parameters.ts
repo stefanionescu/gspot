@@ -3,7 +3,15 @@ export const PARAMETER_LIMIT_TOOLS = [
     {
         language: 'python',
         file: 'example.py',
-        command: ['ruff', 'check', '--config', '.gspot/config/ruff.toml', '--output-format', 'json', 'example.py'],
+        command: [
+            'ruff',
+            'check',
+            '--config',
+            '.gspot/configurations/language/python/ruff.toml',
+            '--output-format',
+            'json',
+            'example.py',
+        ],
         source: `"""Parameter-limit samples."""
 
 
@@ -33,7 +41,7 @@ def _eight(
             'swiftlint',
             'lint',
             '--config',
-            '.gspot/config/swiftlint.yml',
+            '.gspot/configurations/language/swift/swiftlint.yml',
             '--reporter',
             'json',
             '--quiet',

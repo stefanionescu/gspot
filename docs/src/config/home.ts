@@ -23,7 +23,7 @@ export const CHECK_AREAS = [
     {
         title: 'Agent rules',
         text: '`AGENTS.md` and one rule file per language and topic, so your agent writes code that passes the checks.',
-        tools: '`AGENTS.md` · `.gspot/rules/`',
+        tools: '`AGENTS.md` · `.gspot/configurations/`',
     },
 ] as const;
 export const CODE_TOKENS =

@@ -26,7 +26,9 @@ configurations = ${JSON.stringify(command === 'add' ? [] : ['bash'])}
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/config/shellcheckrc'))).toBe(command === 'remove');
+    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/bash/shellcheckrc'))).toBe(
+        command === 'remove',
+    );
     const run = processes.spawnProcess;
     const installations: string[][] = [];
     using resources = new DisposableStack();
@@ -50,7 +52,9 @@ configurations = ${JSON.stringify(command === 'add' ? [] : ['bash'])}
         ]);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/config/shellcheckrc'))).toBe(command === 'add');
+    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/bash/shellcheckrc'))).toBe(
+        command === 'add',
+    );
     expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gspot/package-lock.json'))).toBe(false);
 });

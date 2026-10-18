@@ -69,7 +69,7 @@ test('the init plan deletes the replaced tool files and lists the lint folder', 
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     for (const carried of ['udid', 'SC2086', 'MD013']) expect(settings).not.toContain(carried);
     expect(await readFile(join(sandbox.path, 'eslint.config.mjs'), 'utf8')).toContain(
-        'export { default } from "./.gspot/config/eslint.config.mjs";\n',
+        'export { default } from "./.gspot/configurations/language/javascript/eslint.mjs";\n',
     );
     expect(await isOnDisk(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
 });
@@ -149,7 +149,7 @@ exclude_rules = LT01
         const attributes = await stat(target);
         expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(!isDryRun);
-        expect(await isOnDisk(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(!isDryRun);
+        expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/sql/sqlfluff.cfg'))).toBe(!isDryRun);
     },
 );
 

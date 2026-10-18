@@ -28,15 +28,22 @@ test('odd JSON keys and YAML values stay literal in tool files', async () => {
     });
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    for (const path of ['.gspot/config/prettier.json', '.gspot/config/knip.json']) {
+    for (const path of [
+        '.gspot/configurations/general/format/prettier.json',
+        '.gspot/configurations/language/javascript/knip.json',
+    ]) {
         const file = output.files.find((entry) => entry.path === path);
         expect(file).toBeDefined();
         const parsed: unknown = parseJsonc(file!.content);
         expect(parsed).toMatchObject({ [ODD_KEY]: ODD_VALUE });
     }
-    const markdownRules = output.files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
+    const markdownRules = output.files.find(
+        ({ path }) => path === '.gspot/configurations/language/markdown/markdownlint.jsonc',
+    )!;
     expect(parseJsonc(markdownRules.content)).toMatchObject({ MD044: { names: [ODD_KEY, ODD_VALUE] } });
-    const markdownCli = output.files.find((entry) => entry.path === '.gspot/config/markdownlint-cli2.mjs')!;
+    const markdownCli = output.files.find(
+        (entry) => entry.path === '.gspot/configurations/language/markdown/markdownlint-cli2.mjs',
+    )!;
     const markdownPath = join(sandbox.path, markdownCli.path);
     await Bun.write(markdownPath, markdownCli.content);
     const toolResult = await runCommand(
@@ -50,16 +57,21 @@ test('odd JSON keys and YAML values stay literal in tool files', async () => {
     );
     expect(toolResult.code, toolResult.stderr).toBe(0);
     expect(JSON.parse(toolResult.stdout)).toStrictEqual({
-        extends: join(sandbox.path, '.gspot/config/markdownlint.jsonc'),
+        extends: join(sandbox.path, '.gspot/configurations/language/markdown/markdownlint.jsonc'),
     });
     const yaml = new Map(
         output.files
             .filter((file) => /\.ya?ml$/u.test(file.path))
             .map((file) => [file.path, parseYaml(file.content) as unknown]),
     );
-    expect(yaml.get('.gspot/config/periphery.yml')).toMatchObject({ project: XCODE_PROJECT, schemes: [XCODE_SCHEME] });
-    expect(yaml.get('.gspot/config/hadolint.yml')).toMatchObject({ trustedRegistries: REGISTRIES });
-    expect(yaml.get('.gspot/config/yamllint.yml')).toMatchObject({
+    expect(yaml.get('.gspot/configurations/language/swift/periphery.yml')).toMatchObject({
+        project: XCODE_PROJECT,
+        schemes: [XCODE_SCHEME],
+    });
+    expect(yaml.get('.gspot/configurations/infrastructure/docker/hadolint.yml')).toMatchObject({
+        trustedRegistries: REGISTRIES,
+    });
+    expect(yaml.get('.gspot/configurations/general/files/yamllint.yml')).toMatchObject({
         rules: { truthy: { 'allowed-values': ['yes', 'no'] }, indentation: { spaces: 'consistent' } },
     });
 });
@@ -93,14 +105,14 @@ test('TOML tool files keep odd strings and option keys', async () => {
     const parsed = new Map(
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parseToml(file.content)]),
     );
-    expect(parsed.get('.gspot/config/osv-scanner.toml')).toMatchObject({
+    expect(parsed.get('.gspot/configurations/general/dependencies/osv-scanner.toml')).toMatchObject({
         IgnoredVulns: [{ id: text, reason, ignoreUntil: new Date('2099-09-20T00:00:00.000Z') }],
     });
-    expect(parsed.get('.gspot/config/taplo.toml')).toMatchObject({
+    expect(parsed.get('.gspot/configurations/general/files/taplo.toml')).toMatchObject({
         formatting: { [option]: text, column_width: 88, indent_string: '\t' },
     });
-    expect(parsed.get('.gspot/config/lychee.toml')).toMatchObject({ exclude: [text] });
-    expect(parsed.get('.gspot/config/ruff.toml')).toMatchObject({
-        lint: { 'per-file-ignores': { [`../../${path}`]: ['F401'] } },
+    expect(parsed.get('.gspot/configurations/general/docs/lychee.toml')).toMatchObject({ exclude: [text] });
+    expect(parsed.get('.gspot/configurations/language/python/ruff.toml')).toMatchObject({
+        lint: { 'per-file-ignores': { [`../../../../${path}`]: ['F401'] } },
     });
 });

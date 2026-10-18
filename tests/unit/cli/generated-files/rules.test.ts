@@ -8,11 +8,11 @@ import { runGspot } from '#tests/setup/run-gspot.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { generate } from '#cli/generation/generate.ts';
 import { type Level } from '#cli/types/configurations.ts';
-import { RULES_PATH } from '#cli/config/system/locations.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import { JAVASCRIPT_IN_APP, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/data/rules.ts';
@@ -99,10 +99,10 @@ test.each(['', 'app'].flatMap((scope) => RUNTIME_RULE_CASES.map((row) => ({ ...r
             settingsFile: { ...session.settingsFile, settings: { ...session.settingsFile.settings, level: 'all' } },
         });
         const paths = files.map((file) => file.path);
-        expect(paths.includes('language/javascript/DENO.md')).toBe(runtime === 'deno');
-        expect(paths.includes('language/javascript/NODE.md')).toBe(hasNode);
-        expect(paths).not.toContain('platform/supabase/DENO.md');
-        expect(paths).toContain('general/engineering/agent/TALKING.md');
+        expect(paths.includes('language/javascript/rules/DENO.md')).toBe(runtime === 'deno');
+        expect(paths.includes('language/javascript/rules/NODE.md')).toBe(hasNode);
+        expect(paths).not.toContain('platform/supabase/rules/DENO.md');
+        expect(paths).toContain('general/engineering/rules/TALKING.md');
     },
 );
 
@@ -131,7 +131,7 @@ test('rules > an always-selected configuration installs its rule file once', asy
             scopes: [{ ...session.scopes[0]!, selected: selected }],
             settingsFile: { ...session.settingsFile, settings: { ...session.settingsFile.settings, level: 'all' } },
         });
-        expect(files.filter((file) => file.path === 'general/engineering/agent/TALKING.md')).toHaveLength(1);
+        expect(files.filter((file) => file.path === 'general/engineering/rules/TALKING.md')).toHaveLength(1);
     }
 });
 
@@ -160,7 +160,7 @@ test('rules > the managed block > with no configurations the block still lists t
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': buildSettingsText([], { rules: true }) });
     const block = await buildManagedBlock(sandbox.path);
-    expect(block).toContain('agent/WORKING.md');
+    expect(block).toContain('engineering/rules/WORKING.md');
     expect(block).toContain('Run `mise exec -- gspot check --staged`.');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
@@ -170,13 +170,13 @@ test('rules > the managed block > with a check selected the block names the comm
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['spelling'], {
             rules: true,
-            tables: '\n[rules]\nexclude = [".gspot/rules/general/engineering/code/ACCESSIBILITY.md"]\n',
+            tables: '\n[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESSIBILITY.md"]\n',
         }),
     });
     const block = await buildManagedBlock(sandbox.path);
     expect(block).toContain('Run `mise exec -- gspot check --staged`.');
     expect(block).not.toContain('ACCESSIBILITY.md');
-    expect(block).toContain('code/TESTING.md');
+    expect(block).toContain('engineering/rules/TESTING.md');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
@@ -191,9 +191,9 @@ describe('rules', () => {
     });
 
     test('a rule file whose sections are all for level all is written only at all', () => {
-        expect(recommended.has(`${RULES_PATH}/general/naming/NAMING.md`)).toBe(false);
-        expect(all.has(`${RULES_PATH}/general/naming/NAMING.md`)).toBe(true);
-        expect(recommended.has(`${RULES_PATH}/general/engineering/agent/WORKING.md`)).toBe(true);
+        expect(recommended.has(`${GSPOT_CONFIGURATIONS_PATH}/general/naming/rules/NAMING.md`)).toBe(false);
+        expect(all.has(`${GSPOT_CONFIGURATIONS_PATH}/general/naming/rules/NAMING.md`)).toBe(true);
+        expect(recommended.has(`${GSPOT_CONFIGURATIONS_PATH}/general/engineering/rules/WORKING.md`)).toBe(true);
     });
 
     test('rule files that need a file or a dependency are written only when it is there', async () => {
@@ -203,12 +203,12 @@ describe('rules', () => {
                 '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
         });
         for (const path of [
-            'language/javascript/BUN.md',
-            'language/css/TAILWIND.md',
-            'language/javascript/PLAYWRIGHT.md',
+            'language/javascript/rules/BUN.md',
+            'language/css/rules/TAILWIND.md',
+            'language/javascript/rules/PLAYWRIGHT.md',
         ]) {
-            expect(all.has(`${RULES_PATH}/${path}`)).toBe(false);
-            expect(present.has(`${RULES_PATH}/${path}`)).toBe(true);
+            expect(all.has(`${GSPOT_CONFIGURATIONS_PATH}/${path}`)).toBe(false);
+            expect(present.has(`${GSPOT_CONFIGURATIONS_PATH}/${path}`)).toBe(true);
         }
     });
 
@@ -217,9 +217,9 @@ describe('rules', () => {
             'View.swift': '// import UIKit\nlet text = "import SwiftUI"\n',
         });
         const present = await generateRuleFiles('all', { 'View.swift': 'import SwiftUI\nimport class UIKit.UIView\n' });
-        for (const path of ['language/swift/SWIFTUI.md', 'language/swift/UIKIT.md']) {
-            expect(absent.has(`${RULES_PATH}/${path}`)).toBe(false);
-            expect(present.has(`${RULES_PATH}/${path}`)).toBe(true);
+        for (const path of ['language/swift/rules/SWIFTUI.md', 'language/swift/rules/UIKIT.md']) {
+            expect(absent.has(`${GSPOT_CONFIGURATIONS_PATH}/${path}`)).toBe(false);
+            expect(present.has(`${GSPOT_CONFIGURATIONS_PATH}/${path}`)).toBe(true);
         }
     });
 });

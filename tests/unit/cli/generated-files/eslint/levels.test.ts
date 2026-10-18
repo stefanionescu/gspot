@@ -123,7 +123,7 @@ test('switching the level and back writes the same files', async () => {
         await Bun.write(join(sandbox.path, 'gspot.toml'), settings);
         const session = await openSession(sandbox.path);
         const output = generate(session);
-        const config = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!;
+        const config = output.files.find((file) => file.path.endsWith('/javascript/eslint.mjs'))!;
         using log = openWriter(sandbox.path);
         writeGeneratedFiles(session, output, log);
         outputs.push(config.content);

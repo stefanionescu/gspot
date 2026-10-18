@@ -25,7 +25,7 @@ TOTAL: int = "three"
     );
     // The pointer replaces the file; gspot.toml keeps none of the old settings.
     const pointer = await Bun.file(`${root}/pyrightconfig.json`).text();
-    expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
+    expect(pointer).toContain('"extends": "./.gspot/configurations/language/python/basedpyright.json"');
     expect(pointer).not.toContain('basic');
     const settings = await Bun.file(`${root}/gspot.toml`).text();
     expect(settings).not.toContain('example/skipped.py');

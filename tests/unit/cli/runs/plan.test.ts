@@ -160,7 +160,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     using log = openWriter(initial.root);
     writeGeneratedFiles(initial, generate(initial), log);
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/config/prettier.json'))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/format/prettier.json'))).toBe(true);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     const excluded = await openSession(sandbox.path);
     const plans = planRun(excluded, { stage: 'commit', only: ['format/prettier'] });
@@ -170,7 +170,9 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
         'prettier',
     );
     const generated = generate(excluded);
-    expect(generated.files.map((file) => file.path)).not.toContain('.gspot/config/prettier.json');
+    expect(generated.files.map((file) => file.path)).not.toContain(
+        '.gspot/configurations/general/format/prettier.json',
+    );
     const removed = writeGeneratedFiles(excluded, generated, log);
     expect(removed.removed).toContain('.prettierignore');
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(false);

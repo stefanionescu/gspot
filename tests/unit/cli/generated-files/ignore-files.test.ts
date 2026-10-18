@@ -105,7 +105,7 @@ test.each([...LANGUAGE_IGNORES])(
         expect(files.has('.markdownlint-cli2.mjs')).toBe(markdownPointer === '.markdownlint-cli2.mjs');
         if (markdownPointer !== '') expect(files.has(markdownPointer)).toBe(true);
         expect(files.has('.prettierignore')).toBe(true);
-        expect(files.has('.gspot/config/prettierignore')).toBe(false);
+        expect(files.has('.gspot/configurations/general/format/.prettierignore')).toBe(false);
     },
 );
 

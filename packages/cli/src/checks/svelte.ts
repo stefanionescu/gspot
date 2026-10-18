@@ -9,9 +9,9 @@ import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
 import { writeScopeTsconfig } from '#cli/checks/typescript/compiler.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
+import { TSCONFIG_SCRATCH_FOLDER } from '#cli/config/checks/language/typescript.ts';
 
 import {
     FAILURE_LINE,
@@ -77,7 +77,7 @@ function parseSvelteCheckFindings(input: CheckInput, stdout: string): Finding[] 
  */
 export async function runSvelteCheck(input: CheckInput): Promise<Finding[]> {
     using runtime = createScratchFolder();
-    const target = join(runtime.path, TOOL_FILES_FOLDER, input.selection.scope.path, TSCONFIG_FILE);
+    const target = join(runtime.path, TSCONFIG_SCRATCH_FOLDER, input.selection.scope.path, TSCONFIG_FILE);
     const tsconfigPath = writeScopeTsconfig(
         {
             root: input.root,

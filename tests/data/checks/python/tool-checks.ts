@@ -6,8 +6,16 @@ const RUFF_RULE_SOURCE = 'answer = missing_name\nprint(answer)\n';
 
 /** An editor that runs Ruff must find the tool file of each scope. */
 const RUFF_FORMAT_CASES = [
-    { file: 'sample.py', config: '.gspot/config/ruff.toml', formatted: "VALUE = 'example'\r\n" },
-    { file: 'app/sample.py', config: '.gspot/config/ruff/app/ruff.toml', formatted: 'VALUE = "example"\n' },
+    {
+        file: 'sample.py',
+        config: '.gspot/configurations/language/python/ruff.toml',
+        formatted: "VALUE = 'example'\r\n",
+    },
+    {
+        file: 'app/sample.py',
+        config: '.gspot/configurations/language/python/scopes/app/ruff.toml',
+        formatted: 'VALUE = "example"\n',
+    },
 ] as const;
 
 /** Python versions whose annotations require different runtime syntax. */

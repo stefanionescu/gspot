@@ -65,8 +65,8 @@ Node.js 24.15 or newer.
 6. Run \`gspot check\`, and show the user its last line. Fix the findings in the files that you changed. Ask the user
    before you fix findings in other files, and before you add an ignore or a suppression.
    \`gspot explain <check or lint rule>\` explains a finding.
-7. Read \`AGENTS.md\` and the files in \`.gspot/rules/\` before you write more code. Commit with the hooks on, and do
-   not use \`git commit --no-verify\`.
+7. Read \`AGENTS.md\` and the rules it lists under \`.gspot/configurations/\` before you write more code. Commit
+   with the hooks on, and do not use \`git commit --no-verify\`.
 8. Tell the user what gspot wrote, the level, which checks run, and which findings are left.
 `;
 

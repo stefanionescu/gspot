@@ -14,7 +14,7 @@ test('a language choice brings its security rules without selecting security', a
         'gspot.toml': buildSettingsText(['bash']),
         'sample.sh': 'echo sample\n',
     });
-    const target = '.gspot/config/semgrep/bash.yml';
+    const target = '.gspot/configurations/language/bash/semgrep.yml';
     const plainSession = await openSession(sandbox.path);
     const plainOutput = generate(plainSession);
     expect(
@@ -43,7 +43,7 @@ test.each([...(['recommended', 'all'] as const)])(
         });
         const session = await openSession(sandbox.path);
         const output = generate(session);
-        const worker = output.files.find(({ path }) => path.endsWith('/semgrep/cloudflare.yml'));
+        const worker = output.files.find(({ path }) => path.endsWith('/cloudflare/semgrep.yml'));
         if (level === 'recommended') expect(worker).toBeUndefined();
         else {
             expect(parseDocument(worker!.content).toJS()).toMatchObject({
@@ -51,12 +51,14 @@ test.each([...(['recommended', 'all'] as const)])(
             });
             expect(parseDocument(worker!.content).getIn(['rules', 0, 'paths'])).toBeUndefined();
         }
-        const javascript = output.files.find(({ path }) => path === '.gspot/config/semgrep/javascript.yml')!;
+        const javascript = output.files.find(
+            ({ path }) => path === '.gspot/configurations/language/javascript/semgrep.yml',
+        )!;
         const runtimeRules: unknown = expect.arrayContaining([
             expect.objectContaining({ id: 'gspot.javascript.ssrf-web-request-user-input' }),
         ]);
         expect(parseDocument(javascript.content).toJS()).toMatchObject({ rules: runtimeRules });
-        const supabase = output.files.find(({ path }) => path.endsWith('/semgrep/supabase.yml'))!;
+        const supabase = output.files.find(({ path }) => path.endsWith('/supabase/semgrep.yml'))!;
         const expected: unknown = expect.arrayContaining(
             [
                 { id: 'gspot.supabase.edge-cors-wildcard-with-credentials', paths: { include: ['/api/edge/**'] } },
@@ -85,7 +87,7 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
     const session = await openSession(sandbox.path);
     const output = generate(session);
     const declaration = session.scopes[0]!.selected.flatMap(({ toolFiles }) => toolFiles).find(
-        ({ target }) => target === '.gspot/config/semgrep/javascript.yml',
+        ({ target }) => target === '.gspot/configurations/language/javascript/semgrep.yml',
     )!;
     for (const scope of ['', 'jwt', 'jwt/child', 'other']) {
         const target = buildScopeTarget(scope, declaration, session.toolFiles().targets);

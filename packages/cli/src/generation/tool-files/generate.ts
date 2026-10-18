@@ -1,8 +1,8 @@
 // Build each distinct tool file text once, and give its path to every scope that uses it.
+import { join } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
-import { join, extname, basename } from 'node:path/posix';
-import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { buildToolFile } from '#cli/generation/tool-files/build.ts';
+import { TOOL_FILE_SCOPES_FOLDER } from '#cli/config/generation/files.ts';
 import { listPointerPaths, buildPointerFiles } from '#cli/generation/pointers.ts';
 import { listToolFileDeclarations } from '#cli/generation/tool-files/declarations.ts';
 
@@ -40,15 +40,14 @@ function groupToolOutputs(
     );
 }
 
-// Distinct scope settings share a tool folder while preserving the declared root destination.
+// The first text keeps the declared path. A root file with other text goes to its scope, and any other tool file to
+// scopes/<scope>/ in the folder of its configuration.
 function chooseTarget(declared: string, index: number, first: ToolFileContent): string {
     if (index === 0) return declared;
-    if (!declared.startsWith(TOOL_FILE_PREFIX)) return join(first.owner.selection.scope.path, declared);
-    const relative = declared.slice(TOOL_FILE_PREFIX.length);
-    const tool = relative.includes('/')
-        ? relative.slice(0, relative.indexOf('/'))
-        : basename(relative, extname(relative));
-    return join(TOOL_FILE_PREFIX, tool, first.owner.selection.scope.path, basename(declared));
+    const { file, root } = first.toolFile;
+    const scope = first.owner.selection.scope.path;
+    if (root) return join(scope, declared);
+    return join(declared.slice(0, declared.length - file.length), TOOL_FILE_SCOPES_FOLDER, scope, file);
 }
 
 // Record one text group at its chosen path and map every participating scope to it.

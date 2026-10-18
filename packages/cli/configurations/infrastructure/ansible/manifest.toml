@@ -16,7 +16,7 @@ version = "26.8.0"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/ansible-lint.yml"
+target = "ansible-lint.yml"
 tool = "ansible-lint"
 
 [[check]]

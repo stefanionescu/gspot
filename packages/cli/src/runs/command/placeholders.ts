@@ -117,7 +117,7 @@ export function readToolFileDeclaration(
     planned: SubstitutionCheck,
     name: string,
 ): ToolFileDeclaration {
-    const target = listToolFiles(session, planned).find((toolFile) => extractToolFileName(toolFile.target) === name);
+    const target = listToolFiles(session, planned).find((toolFile) => extractToolFileName(toolFile.file) === name);
     if (!target)
         throw new Error(`Check ${planned.check.name} names {tool_file:${name}} and no configuration writes it.`);
     return target;

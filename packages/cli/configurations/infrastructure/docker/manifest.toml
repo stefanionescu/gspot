@@ -37,17 +37,17 @@ system = true
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/hadolint.yml"
+target = "hadolint.yml"
 tool = "hadolint"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/trivy.yml"
+target = "trivy.yml"
 tool = "trivy"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/trivyignore"
+target = "trivyignore"
 tool = "trivy"
 
 [[check]]

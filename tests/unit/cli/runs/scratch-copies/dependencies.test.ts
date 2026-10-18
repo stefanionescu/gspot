@@ -123,10 +123,10 @@ test('a nested revision copy links .gspot/node_modules instead of copying it', a
 
 test.each(['', 'nested/'])('revision copies reuse the installed Vale packages under %s', async (prefix) => {
     await using sandbox = await testdir();
-    const config = `${prefix}.gspot/config/vale.ini`;
+    const config = `${prefix}.gspot/configurations/general/prose/vale.ini`;
     const packagePath = '.gspot/vale/Example/rule.yml';
     await createFileTree(sandbox.path, {
-        [config]: 'StylesPath = ../vale\nPackages = Example\n',
+        [config]: 'StylesPath = ../../../vale\nPackages = Example\n',
         [packagePath]: 'extends: existence\n',
         '.gitignore': '.gspot/vale/\n',
     });

@@ -97,7 +97,9 @@ test.each([...NON_JAVASCRIPT_PROJECTS])(
             );
             for (const name of ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'])
                 expect(Object.keys(project.dependencies)).not.toContain(name);
-            expect(await Bun.file(join(sandbox.path, '.gspot/config/eslint.config.mjs')).exists()).toBe(false);
+            expect(
+                await Bun.file(join(sandbox.path, '.gspot/configurations/language/javascript/eslint.mjs')).exists(),
+            ).toBe(false);
         }
         await Bun.write(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
         const discovered = await runGspot(sandbox.path, ['add', 'javascript']);
@@ -112,7 +114,9 @@ test.each([...NON_JAVASCRIPT_PROJECTS])(
                 selected.requirePackageManager().name,
             );
             expect(Object.keys(project.dependencies)).toContain('eslint');
-            expect(await Bun.file(join(sandbox.path, '.gspot/config/eslint.config.mjs')).exists()).toBe(true);
+            expect(
+                await Bun.file(join(sandbox.path, '.gspot/configurations/language/javascript/eslint.mjs')).exists(),
+            ).toBe(true);
         }
     },
 );

@@ -257,13 +257,13 @@ export const FIXED_VALE_INSTALL_SCRIPT = String.raw`
 if (process.env.NO_COLOR !== '1' || process.env.FORCE_COLOR !== '0') process.exit(9);
 const { mkdirSync, writeFileSync } = await import('node:fs');
 for (const name of ["Google", "write-good", "proselint", "alex", "Harper", "config/dictionaries"]) {
-    mkdirSync('../vale/' + name, { recursive: true });
-    writeFileSync('../vale/' + name + '/terms.yml', 'package bytes\\n');
+    mkdirSync('../../../vale/' + name, { recursive: true });
+    writeFileSync('../../../vale/' + name + '/terms.yml', 'package bytes\\n');
 }
-writeFileSync('../vale/Google/terms.yml', 'corrected bytes\n');
+writeFileSync('../../../vale/Google/terms.yml', 'corrected bytes\n');
 `;
 
-export const VALE_PACKAGES_INI = `StylesPath = ../vale\nPackages = Google, write-good, proselint, alex, Harper\n`;
+export const VALE_PACKAGES_INI = `StylesPath = ../../../vale\nPackages = Google, write-good, proselint, alex, Harper\n`;
 
 export const PROSE_CASES = [
     {

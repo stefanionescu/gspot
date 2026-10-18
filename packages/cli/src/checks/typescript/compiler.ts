@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { findScope } from '#cli/repository/scopes.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
@@ -16,7 +17,6 @@ import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 import type { TypeScriptReferenceCopy } from '#cli/types/checks/language.ts';
-import { DOT_GSPOT, TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 
@@ -38,6 +38,7 @@ import {
     TSBUILDINFO_FLAG,
     TSC_REFERENCE_BUNDLE,
     TSC_CONFIG_INPUT_PATHS,
+    TSCONFIG_SCRATCH_FOLDER,
     TSC_PATHS_BASE_REQUIRED,
     TSC_COMPILER_INPUT_PATHS,
     TYPESCRIPT_TSCONFIG_CHECK,
@@ -195,7 +196,7 @@ async function runTsc(
     if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {
         command.push(...TSC_BUILD_COMMAND, project.path);
     } else {
-        const generatedPath = join(metadataRoot, TOOL_FILES_FOLDER, planned.selection.scope.path, TSCONFIG_FILE);
+        const generatedPath = join(metadataRoot, TSCONFIG_SCRATCH_FOLDER, planned.selection.scope.path, TSCONFIG_FILE);
         writeScopeTsconfig(session, planned.selection, generatedPath);
         command.push(...TSC_PROJECT_COMMAND, generatedPath);
         appendBuildMetadata(command, project?.config.options, metadataRoot, TSCONFIG_TSBUILDINFO);

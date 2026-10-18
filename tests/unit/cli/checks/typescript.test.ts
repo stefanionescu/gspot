@@ -28,7 +28,7 @@ test('tsc: a scope whose project lists no JavaScript file passes with nothing to
     });
     const session = await openSession(sandbox.path);
     const projects = generate(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
-    expect(projects.map(({ path }) => path)).toStrictEqual(['.gspot/config/jsconfig.json']);
+    expect(projects.map(({ path }) => path)).toStrictEqual(['.gspot/configurations/language/javascript/jsconfig.json']);
     const applied = await runRegisteredCommand(sandbox.path, ['apply']);
     expect(applied.exitCode).toBe(0);
     const reopened = await openSession(sandbox.path);

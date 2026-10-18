@@ -58,12 +58,12 @@ system = true
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/shellcheckrc"
+target = "shellcheckrc"
 tool = "shellcheck"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/semgrep/bash.yml"
+target = "semgrep.yml"
 tool = "semgrep"
 when = { configuration = "security" }
 

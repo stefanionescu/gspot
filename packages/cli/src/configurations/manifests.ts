@@ -7,7 +7,6 @@ import { parse as parseToml } from '@decimalturn/toml-patch';
 import { readAsset, listAssets } from '#cli/system/assets.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
-import { TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { type NamingDefaults } from '#cli/types/checks/general.ts';
 import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
@@ -47,7 +46,7 @@ function readToolFileDeclarations(configurationFolder: string, toolFiles: unknow
     const declaredTargets = new Set(declarations.flatMap((entry) => (isRecord(entry) ? [entry['target']] : [])));
     const folder = `${configurationFolder}/${SHIPPED_TOOL_FILES_FOLDER}/`;
     const copied = listAssets(folder)
-        .map((path) => ({ target: TOOL_FILE_PREFIX + posix.relative(folder, path) }))
+        .map((path) => ({ target: posix.relative(folder, path) }))
         .filter(({ target }) => !declaredTargets.has(target));
     const tool = findOnlyToolName(tools);
     return [...declarations, ...copied].map((entry) =>
@@ -189,7 +188,7 @@ function listRuleFiles(manifest: Manifest): ShippedRule[] {
     return sources.map((source) => ({
         source,
         group,
-        path: `${group}/${name}/${posix.relative(manifest.folder + '/' + RULES_FOLDER, source)}`,
+        path: `${group}/${name}/${RULES_FOLDER}/${posix.relative(manifest.folder + '/' + RULES_FOLDER, source)}`,
     }));
 }
 

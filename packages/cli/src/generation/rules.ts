@@ -7,13 +7,13 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
-import { RULES_PATH } from '#cli/config/system/locations.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { type Level, type Manifest } from '#cli/types/configurations.ts';
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
 import { type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { RuleFile, ShippedRule, RuleSection, AgentsBlockInput } from '#cli/types/rules.ts';
 import { FIRST_READ, RULES_HEADING, ALL_LEVEL_MARKER, RULE_OPENING_PREFIX } from '#cli/config/rules.ts';
@@ -75,7 +75,7 @@ function formatRulesIndex(files: RuleFile[]): string[] {
     return [
         'Read these rules first:',
         '',
-        ...FIRST_READ.map((path) => `- \`${RULES_PATH}/${path}\``),
+        ...FIRST_READ.map((path) => `- \`${GSPOT_CONFIGURATIONS_PATH}/${path}\``),
         '',
         'Read each rule below when its sentence applies. A rule followed by folders applies only in those folders.',
         'A more specific rule wins over a general one.',
@@ -142,14 +142,16 @@ function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'rep
         .values()
         .filter(
             ({ path }) =>
-                !rules.exclude.some((entry) => isInScope(`${RULES_PATH}/${path}`, trimTrailingSlashes(entry))),
+                !rules.exclude.some((entry) =>
+                    isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${path}`, trimTrailingSlashes(entry)),
+                ),
         )
         .flatMap(({ source, path, group }) => {
             const text = readAsset(source);
             const content = stripAllLevelSections(text, level);
             if (content !== text && !parseHeadingSections(content).some((section) => section.depth > 1)) return [];
             const scopes = scopeRules.filter((scope) => scope.rules.has(path)).map((scope) => scope.path);
-            return [{ path, target: `${RULES_PATH}/${path}`, content, group, scopes }];
+            return [{ path, target: `${GSPOT_CONFIGURATIONS_PATH}/${path}`, content, group, scopes }];
         })
         .toArray();
 }

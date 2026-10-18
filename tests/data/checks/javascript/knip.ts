@@ -49,7 +49,7 @@ export const KNIP_ARGUMENTS = [
     'node',
     '.gspot/node_modules/knip/bin/knip.js',
     '--config',
-    '.gspot/config/knip.json',
+    '.gspot/configurations/language/javascript/knip.json',
     '--no-progress',
     '--reporter',
     'json',

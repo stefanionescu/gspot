@@ -23,7 +23,7 @@ name = "openssl"
 system = true
 
 [[tool_file]]
-target = ".gspot/config/gixy.cfg"
+target = "gixy.cfg"
 tool = "gixy"
 
 [[check]]

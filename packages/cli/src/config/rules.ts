@@ -1,9 +1,9 @@
 export const RULES_HEADING = '# Rules';
 
 export const FIRST_READ: readonly string[] = [
-    'general/engineering/agent/WORKING.md',
-    'general/prose/WRITING.md',
-    'general/engineering/agent/TALKING.md',
+    'general/engineering/rules/WORKING.md',
+    'general/prose/rules/WRITING.md',
+    'general/engineering/rules/TALKING.md',
 ];
 
 export const RULE_FILE_PATTERN = /^[A-Z0-9-]+\.md$/u;

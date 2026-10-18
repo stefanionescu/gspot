@@ -40,7 +40,7 @@ export const MODULE_TARGETS = ['100%', '#fragment', '?query', "author's", 'café
 
 export const MODULE_VALUE = { location: 'the requested module' } as const;
 
-export const ESLINT_FILE = '.gspot/config/eslint.config.mjs';
+export const ESLINT_FILE = '.gspot/configurations/language/javascript/eslint.mjs';
 
 export const TOOL_FILE_PROJECT = {
     '.github/workflows/check.yml': `name: Check
@@ -77,11 +77,11 @@ export const PLAIN_TOOL_FILES = [
 ] as const;
 
 export const RECOMMENDED_VALE_FILES = [
-    '.gspot/config/vale.ini',
-    '.gspot/config/vale/styles/gspot/alt-text.yml',
-    '.gspot/config/vale/styles/gspot/dates.yml',
-    '.gspot/config/vale/styles/gspot/link-text.yml',
-    '.gspot/config/vale/styles/LICENSES.md',
+    '.gspot/configurations/general/prose/styles/gspot/alt-text.yml',
+    '.gspot/configurations/general/prose/styles/gspot/dates.yml',
+    '.gspot/configurations/general/prose/styles/gspot/link-text.yml',
+    '.gspot/configurations/general/prose/styles/LICENSES.md',
+    '.gspot/configurations/general/prose/vale.ini',
 ] as const;
 
 /** A whole-check ignore drops the files of that check and keeps those of the other checks of its configuration. */
@@ -90,14 +90,18 @@ export const IGNORED_CHECK_FILES = [
         name: 'ignoring SwiftLint and Periphery keeps SwiftFormat',
         settings: SWIFT_FORMAT_SETTINGS,
         files: { 'main.swift': 'let value = 1\n' },
-        kept: ['.gspot/config/swiftformat'],
-        dropped: ['.gspot/config/swiftlint.yml', '.gspot/config/periphery.yml', '.gspot/package.json'],
+        kept: ['.gspot/configurations/language/swift/swiftformat'],
+        dropped: [
+            '.gspot/configurations/language/swift/swiftlint.yml',
+            '.gspot/configurations/language/swift/periphery.yml',
+            '.gspot/package.json',
+        ],
     },
     {
         name: 'ignoring Prettier keeps EditorConfig',
         settings: EDITORCONFIG_SETTINGS,
         files: { 'sample.json': '{"value":1}\n' },
         kept: ['.editorconfig'],
-        dropped: ['.gspot/config/prettier.json', '.prettierignore'],
+        dropped: ['.gspot/configurations/general/format/prettier.json', '.prettierignore'],
     },
 ] as const;

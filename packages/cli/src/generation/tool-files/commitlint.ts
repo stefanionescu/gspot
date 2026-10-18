@@ -29,9 +29,7 @@ function buildCommitlintFile(context: ToolFileContext): string {
     for (const [name, value] of Object.entries(settings['tools.commitlint.rules'] as Record<string, unknown[]>))
         if (rules[name]?.[0] !== 0) rules[name] = [COMMITLINT_ERROR_SEVERITY, ...value];
     for (const name of rulesOff('commits/commitlint')) rules[name] = [0];
-    const document = { rules };
-    const serialized = JSON.stringify(document, null, JSON_INDENT);
-    return `module.exports = ${serialized};`;
+    return JSON.stringify({ rules }, null, JSON_INDENT);
 }
 
 export { buildCommitlintFile };

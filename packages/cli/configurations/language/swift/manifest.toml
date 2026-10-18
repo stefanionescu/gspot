@@ -67,22 +67,28 @@ system = true
 [[tool_file]]
 per_scope = true
 pointer = { path = ".swiftlint.yml", body = "parent_config: {target_json}\n" }
-target = ".gspot/config/swiftlint.yml"
+target = "swiftlint.yml"
 tool = "swiftlint"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/swiftformat"
+pointer = { path = ".swiftlint.yml", folders = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n", when = { configuration = "swift-tests" } }
+target = "swiftlint.yml"
+tool = "swiftlint"
+
+[[tool_file]]
+per_scope = true
+target = "swiftformat"
 tool = "swiftformat"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/periphery.yml"
+target = "periphery.yml"
 tool = "periphery"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/semgrep/swift.yml"
+target = "semgrep.yml"
 tool = "semgrep"
 when = { configuration = "security" }
 

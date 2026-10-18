@@ -72,8 +72,8 @@ export const STAGED_FORMAT_SOURCE = {
 
 export const STAGED_FORMAT_PATHS = {
     source: 'app/value.js',
-    rootConfig: '.gspot/config/prettier.json',
-    scopeConfig: '.gspot/config/prettier/app/prettier.json',
+    rootConfig: '.gspot/configurations/general/format/prettier.json',
+    scopeConfig: '.gspot/configurations/general/format/scopes/app/prettier.json',
     settings: 'gspot.toml',
 } as const;
 

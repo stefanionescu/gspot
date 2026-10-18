@@ -64,8 +64,8 @@ test('a gspot.toml below the Git root writes and checks only its own folder', as
     const source = join(app, 'src');
     const applied = await runGspot(source, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(app, '.gspot/config/sqlfluff.cfg'))).toBe(true);
-    expect(await isOnDisk(join(folder.path, '.gspot/config/shellcheckrc'))).toBe(false);
+    expect(await isOnDisk(join(app, '.gspot/configurations/language/sql/sqlfluff.cfg'))).toBe(true);
+    expect(await isOnDisk(join(folder.path, '.gspot/configurations/language/bash/shellcheckrc'))).toBe(false);
     const selected = await runGspot(source, ['set', 'level', 'all']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(outerPolicy);

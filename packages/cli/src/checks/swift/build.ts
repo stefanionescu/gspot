@@ -7,7 +7,7 @@ import { readCachedText } from '#cli/system/files/reads.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
+import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
 import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
@@ -17,13 +17,13 @@ import {
     RULE_SUFFIX,
     BUILD_LEVELS,
     MESSAGE_LINE,
-    PERIPHERY_YML,
     RESPONSE_FILE,
-    SWIFTLINT_YML,
     REPORTED_LEVELS,
     COMPILER_LOG_FLAG,
     PERIPHERY_COMMAND,
     MACOS_PRIVATE_PATH,
+    PERIPHERY_TOOL_FILE,
+    SWIFTLINT_TOOL_FILE,
     BUILD_SOURCE_FOLDER,
     SWIFTLINT_CONFIG_FILE,
     SWIFTLINT_CONFIG_FLAG,
@@ -123,7 +123,7 @@ export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[
     const plan = buildPlan(input, { purpose: 'analyze' });
     const build = await runSwiftBuild(input, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const toolFile = join(input.root, TOOL_FILES_FOLDER, input.selection.scope.path, SWIFTLINT_YML);
+    const toolFile = join(input.root, selectToolFilePath(input, input, SWIFTLINT_TOOL_FILE));
     const commandArguments = [
         ...SWIFTLINT_ANALYZE_COMMAND,
         SWIFTLINT_CONFIG_FLAG,
@@ -145,7 +145,7 @@ export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[
  */
 export async function checkSwiftPeriphery(input: CheckInput): Promise<Finding[]> {
     const folder = getScopeBuildFolder(input, 'periphery');
-    const toolFile = join(input.root, TOOL_FILES_FOLDER, input.selection.scope.path, PERIPHERY_YML);
+    const toolFile = join(input.root, selectToolFilePath(input, input, PERIPHERY_TOOL_FILE));
     const commandArguments = [...PERIPHERY_COMMAND, toolFile];
     const prepared = prepareBuild(input, folder);
     using files = prepared.files;

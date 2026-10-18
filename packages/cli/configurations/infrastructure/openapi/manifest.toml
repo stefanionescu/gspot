@@ -17,7 +17,7 @@ version = "6.15.0"
 name = "ajv"
 
 [[tool_file]]
-target = ".gspot/config/spectral.yaml"
+target = "spectral.yml"
 tool = "spectral"
 
 [[check]]

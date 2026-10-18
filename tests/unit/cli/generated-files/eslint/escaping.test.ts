@@ -84,7 +84,9 @@ test('a reason text cannot add JavaScript statements or ignore entries', async (
         });
         const session = await openSession(sandbox.path);
         const output = generate(session);
-        const script = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
+        const script = output.files.find(
+            (file) => file.path === '.gspot/configurations/language/javascript/eslint.mjs',
+        );
         expect(script).toBeDefined();
         const tree = await parseSource('javascript', script!.content);
         expect(tree).not.toBeNull();
@@ -94,7 +96,7 @@ test('a reason text cannot add JavaScript statements or ignore entries', async (
         } finally {
             tree.delete();
         }
-        const vale = output.files.find((file) => file.path === '.gspot/config/vale.ini');
+        const vale = output.files.find((file) => file.path === '.gspot/configurations/general/prose/vale.ini');
         expect(vale).toBeDefined();
         expect(
             vale!.content

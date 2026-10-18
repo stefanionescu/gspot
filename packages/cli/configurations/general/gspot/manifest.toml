@@ -15,7 +15,7 @@ version_command = ["--version"]
 winget = "OpenJS.NodeJS.LTS"
 
 [[check]]
-example = "An edit by hand to a tool file under `.gspot/config/` reports drift. Move the change into gspot.toml, then run `gspot apply`."
+example = "An edit by hand to a tool file under `.gspot/configurations/` reports drift. Move the change into gspot.toml, then run `gspot apply`."
 help = "Change gspot.toml, then run `gspot apply`. After a merge, run `gspot apply`, followed by `gspot install`."
 level = "recommended"
 name = "generated-files"

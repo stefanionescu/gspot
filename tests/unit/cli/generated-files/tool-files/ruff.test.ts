@@ -7,13 +7,15 @@ import { type RuffToolFile } from '#tests/types/generated-files.ts';
 
 test('Ruff selects the pytest and FastAPI families only when selected, and adds no per-file ignores', async () => {
     const plain = parse(
-        await generateFile(buildSettingsText(['python']), '.gspot/config/ruff.toml', { 'example.py': 'value = 1\n' }),
+        await generateFile(buildSettingsText(['python']), '.gspot/configurations/language/python/ruff.toml', {
+            'example.py': 'value = 1\n',
+        }),
     ) as RuffToolFile;
     expect(plain.lint.select.filter((code) => /^(?:AIR|DJ|FAST|NPY|PT)/u.test(code))).toStrictEqual([]);
     expect(plain.lint['per-file-ignores']).toBeUndefined();
     expect(plain.lint.pylint['max-statements']).toBe(30);
     const tested = parse(
-        await generateFile(buildSettingsText(['python', 'pytest']), '.gspot/config/ruff.toml', {
+        await generateFile(buildSettingsText(['python', 'pytest']), '.gspot/configurations/language/python/ruff.toml', {
             'example.py': 'value = 1\n',
         }),
     ) as RuffToolFile;
@@ -41,9 +43,13 @@ test('Ruff selects the pytest and FastAPI families only when selected, and adds 
     );
     expect(tested.lint['per-file-ignores']).toBeUndefined();
     const served = parse(
-        await generateFile(buildSettingsText(['python', 'fastapi']), '.gspot/config/ruff.toml', {
-            'example.py': 'value = 1\n',
-        }),
+        await generateFile(
+            buildSettingsText(['python', 'fastapi']),
+            '.gspot/configurations/language/python/ruff.toml',
+            {
+                'example.py': 'value = 1\n',
+            },
+        ),
     ) as RuffToolFile;
     expect(served.lint.select).toContain('FAST003');
     expect(served.lint['per-file-ignores']).toBeUndefined();
@@ -55,9 +61,9 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
             buildSettingsText(['python', 'pytest'], {
                 tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/test_*.py"]\nreason = "The sandbox uses deliberate assertions."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Samples are documented by their names."\n',
             }),
-            '.gspot/config/ruff.toml',
+            '.gspot/configurations/language/python/ruff.toml',
             { 'example.py': 'value = 1\n' },
         ),
     ) as RuffToolFile;
-    expect(ignored.lint['per-file-ignores']?.['../../**/test_*.py']).toStrictEqual(['S101', 'D103']);
+    expect(ignored.lint['per-file-ignores']?.['../../../../**/test_*.py']).toStrictEqual(['S101', 'D103']);
 });

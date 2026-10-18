@@ -38,7 +38,7 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
         const session = await openSession(sandbox.path);
         const files = generate(session).files;
         const pointer = files.find((file) => file.path === `${folder}/.swiftlint.yml`)!;
-        const config = '.gspot/config/swiftlint.yml';
+        const config = '.gspot/configurations/language/swift/swiftlint.yml';
         expect(parse(pointer.content)).toMatchObject({
             parent_config: `${'../'.repeat(folder.split('/').length)}${config}`,
         });

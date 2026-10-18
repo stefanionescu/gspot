@@ -38,18 +38,25 @@ test('format.indent_width reaches EditorConfig, Prettier and each tool file', as
     const path = join(folder.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     expect(editor?.tabWidth).toBe(width);
-    const configuration = JSON.parse(generated.get('.gspot/config/prettier.json')!) as Options;
+    const configuration = JSON.parse(generated.get('.gspot/configurations/general/format/prettier.json')!) as Options;
     expect(configuration.tabWidth).toBe(width);
-    expect(parseJsonc(generated.get('.gspot/config/markdownlint.jsonc')!)).toMatchObject({ MD007: { indent: width } });
-    expect(parseYaml(generated.get('.gspot/config/yamllint.yml')!)).toMatchObject({
+    expect(parseJsonc(generated.get('.gspot/configurations/language/markdown/markdownlint.jsonc')!)).toMatchObject({
+        MD007: { indent: width },
+    });
+    expect(parseYaml(generated.get('.gspot/configurations/general/files/yamllint.yml')!)).toMatchObject({
         rules: { indentation: { spaces: 'consistent' } },
     });
-    expect(parseToml(generated.get('.gspot/config/ruff.toml')!)).toHaveProperty('indent-width', width);
-    expect(parseToml(generated.get('.gspot/config/taplo.toml')!)).toMatchObject({
+    expect(parseToml(generated.get('.gspot/configurations/language/python/ruff.toml')!)).toHaveProperty(
+        'indent-width',
+        width,
+    );
+    expect(parseToml(generated.get('.gspot/configurations/general/files/taplo.toml')!)).toMatchObject({
         formatting: { indent_string: ' '.repeat(width) },
     });
-    expect(generated.get('.gspot/config/sqlfluff.cfg')).toContain(`tab_space_size = ${String(width)}`);
-    expect(generated.get('.gspot/config/swiftformat')).toContain(`--indent ${String(width)}\n`);
+    expect(generated.get('.gspot/configurations/language/sql/sqlfluff.cfg')).toContain(
+        `tab_space_size = ${String(width)}`,
+    );
+    expect(generated.get('.gspot/configurations/language/swift/swiftformat')).toContain(`--indent ${String(width)}\n`);
 });
 
 test('a YAML indent override gives EditorConfig and Prettier the same width', async () => {
@@ -115,7 +122,7 @@ test('Prettier loads the selected plugin through the root pointer', async () => 
     const generated = generate(await openSession(sandbox.path));
     await createFileTree(sandbox.path, Object.fromEntries(generated.files.map(({ path, content }) => [path, content])));
     const toolFile = JSON.parse(
-        generated.files.find(({ path }) => path === '.gspot/config/prettier.json')!.content,
+        generated.files.find(({ path }) => path === '.gspot/configurations/general/format/prettier.json')!.content,
     ) as Options;
     expect(toolFile.plugins).toStrictEqual(['./.gspot/node_modules/prettier-plugin-svelte/plugin.js']);
     const pointer = await prettier.resolveConfig(join(sandbox.path, 'source.svelte'), {
@@ -133,7 +140,7 @@ test('Prettier plugin overrides precede your overrides, and no plugin adds no ke
         format: { override: [{ paths: ['docs/**'], print_width: 80 }] },
     };
     const pluginPolicy = JSON.parse(
-        await generateFile(stringify(settings), '.gspot/config/prettier.json', {
+        await generateFile(stringify(settings), '.gspot/configurations/general/format/prettier.json', {
             'source.svelte': '<h1>Example</h1>\n',
         }),
     ) as Options;
@@ -142,9 +149,13 @@ test('Prettier plugin overrides precede your overrides, and no plugin adds no ke
         { files: ['docs/**'], options: { printWidth: 80 } },
     ]);
     const without = JSON.parse(
-        await generateFile(stringify({ ...settings, configurations: ['format'] }), '.gspot/config/prettier.json', {
-            'source.js': 'export {};\n',
-        }),
+        await generateFile(
+            stringify({ ...settings, configurations: ['format'] }),
+            '.gspot/configurations/general/format/prettier.json',
+            {
+                'source.js': 'export {};\n',
+            },
+        ),
     ) as Options;
     expect(without).not.toHaveProperty('plugins');
     expect(without['overrides']).toMatchObject([{ files: ['docs/**'] }]);

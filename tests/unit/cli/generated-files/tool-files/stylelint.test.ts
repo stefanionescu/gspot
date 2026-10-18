@@ -18,8 +18,10 @@ test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
     const outputs = generate(await openSession(sandbox.path)).files;
     const documents = Object.fromEntries(
         ['', 'vue', 'svelte', 'mixed'].map((scope) => {
-            const prefix = scope === '' ? '' : `stylelint/${scope}/`;
-            const output = outputs.find((file) => file.path === `.gspot/config/${prefix}stylelint.json`)!;
+            const prefix = scope === '' ? '' : `scopes/${scope}/`;
+            const output = outputs.find(
+                (file) => file.path === `.gspot/configurations/language/css/${prefix}stylelint.json`,
+            )!;
             return [scope, JSON.parse(output.content) as StylelintToolFile];
         }),
     );
@@ -53,7 +55,7 @@ test.each(['recommended', 'all'] as const)(
         const session = await openSession(sandbox.path);
         const generated = generate(session);
         const declaration = session.scopes[0]!.selected.flatMap(({ toolFiles }) => toolFiles).find(
-            ({ target }) => target === '.gspot/config/stylelint.json',
+            ({ target }) => target === '.gspot/configurations/language/css/stylelint.json',
         )!;
         expect(generated.files.filter(({ path }) => path.endsWith('/stylelint.json'))).toHaveLength(1);
         for (const scope of ['', 'child']) {

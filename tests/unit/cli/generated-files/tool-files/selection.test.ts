@@ -24,13 +24,15 @@ test('a Ruff-only Python scope gets no type checker file or pointer', async () =
         'typed/source.py': 'value: int = 1\n',
     });
     const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
-    expect(paths).toContain('.gspot/config/ruff.toml');
+    expect(paths).toContain('.gspot/configurations/language/python/ruff.toml');
     expect(paths).toContain('linted/ruff.toml');
     expect(paths).toContain('typed/ruff.toml');
-    expect(paths).not.toContain('.gspot/config/basedpyrightconfig/linted/basedpyrightconfig.json');
+    expect(paths).not.toContain('.gspot/configurations/language/python/scopes/linted/basedpyright.json');
     expect(paths).not.toContain('linted/pyrightconfig.json');
-    expect(paths.filter((path) => path.startsWith('.gspot/config/') && path.endsWith('/ruff.toml'))).toHaveLength(1);
-    expect(paths).toContain('.gspot/config/basedpyrightconfig.json');
+    expect(
+        paths.filter((path) => path.startsWith('.gspot/configurations/') && path.endsWith('/ruff.toml')),
+    ).toHaveLength(1);
+    expect(paths).toContain('.gspot/configurations/language/python/basedpyright.json');
     expect(paths).toContain('typed/pyrightconfig.json');
 });
 test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
@@ -41,8 +43,8 @@ test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
     });
     const session = await openSession(sandbox.path);
     const paths = generate(session).files.map((file) => file.path);
-    expect(paths).toContain('.gspot/config/knip.json');
-    expect(paths).not.toContain('.gspot/config/jsconfig.json');
+    expect(paths).toContain('.gspot/configurations/language/javascript/knip.json');
+    expect(paths).not.toContain('.gspot/configurations/language/javascript/jsconfig.json');
 });
 test.each([...IGNORED_CHECK_FILES])(
     '$name and drops the files of the ignored checks',
@@ -65,8 +67,9 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
     const files = generate(session).files;
     const paths = files.map((file) => file.path);
     expect(paths).toContain('.editorconfig');
-    expect(paths).toContain('.gspot/config/taplo.toml');
-    for (const path of ['.gspot/config/prettier.json', '.prettierignore']) expect(paths).not.toContain(path);
+    expect(paths).toContain('.gspot/configurations/general/files/taplo.toml');
+    for (const path of ['.gspot/configurations/general/format/prettier.json', '.prettierignore'])
+        expect(paths).not.toContain(path);
     const packages = listToolProjectPins(session.neededToolManifests).npm;
     const manifests = readManifests(createReadCache(process.cwd()));
     const fileManifest = manifests.get('files')!;

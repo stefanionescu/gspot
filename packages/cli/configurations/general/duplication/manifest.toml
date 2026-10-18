@@ -14,7 +14,7 @@ replace = [".jscpd.json"]
 version = "5.2.0"
 
 [[tool_file]]
-target = ".gspot/config/jscpd.json"
+target = "jscpd.json"
 tool = "jscpd"
 
 [[check]]

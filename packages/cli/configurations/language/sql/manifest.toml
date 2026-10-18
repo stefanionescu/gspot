@@ -33,7 +33,7 @@ table = "sqlfluff"
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/sqlfluff.cfg"
+target = "sqlfluff.cfg"
 tool = "sqlfluff"
 
 [[check]]

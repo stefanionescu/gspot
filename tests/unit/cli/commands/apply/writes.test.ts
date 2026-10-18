@@ -19,6 +19,7 @@ import { runGspot, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/data/checks/css.ts';
 import { COMMITLINT_PACKAGE, COMMITLINT_PROJECT } from '#tests/data/checks/commits.ts';
+import { CURRENT_LAYOUT_FILES, PREVIOUS_LAYOUT_FILES } from '#tests/data/commands/apply.ts';
 
 test('generated files stay writable: apply keeps their bytes and removes them when nothing needs them', async () => {
     await using sandbox = await testdir();
@@ -33,7 +34,7 @@ test('generated files stay writable: apply keeps their bytes and removes them wh
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
     const written = (applied.json as ApplyReport).written;
 
-    const output = written.find((path) => path.endsWith('/agent/WORKING.md'))!;
+    const output = written.find((path) => path.endsWith('/engineering/rules/WORKING.md'))!;
     expect(output).toBeDefined();
     const bytes = await readFile(join(sandbox.path, output), 'utf8');
     const attributes = await stat(join(sandbox.path, output));
@@ -56,7 +57,7 @@ test.each([...EXTERNAL_INPUT_CASES])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...files,
-            'project/.gspot/config/.keep': '',
+            'project/.gspot/configurations/.keep': '',
             outside,
         });
         const project = join(sandbox.path, 'project');
@@ -95,7 +96,7 @@ test('a fresh Git clone keeps the committed generated files byte for byte and mo
     const cloned = runGit(original.path, ['clone', '--quiet', '--no-local', original.path, clone.path]);
     expect(cloned.code, cloned.stderr).toBe(0);
     using files = openFiles(clone.path);
-    const config = '.gspot/config/shellcheckrc';
+    const config = '.gspot/configurations/language/bash/shellcheckrc';
     const initial = files.read(config)!;
     const applied = await runGspot(clone.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -140,15 +141,30 @@ test.each([
         changes: [
             {
                 path: 'package.json',
-                changes: [{ path: ['commitlint'], value: { extends: './.gspot/config/commitlint.config.cjs' } }],
+                changes: [
+                    {
+                        path: ['commitlint'],
+                        value: { extends: './.gspot/configurations/general/commits/commitlint.json' },
+                    },
+                ],
             },
             {
                 path: 'app/child/package.json',
-                changes: [{ path: ['commitlint'], value: { extends: '../../.gspot/config/commitlint.config.cjs' } }],
+                changes: [
+                    {
+                        path: ['commitlint'],
+                        value: { extends: '../../.gspot/configurations/general/commits/commitlint.json' },
+                    },
+                ],
             },
             {
                 path: 'app/package.json',
-                changes: [{ path: ['commitlint'], value: { extends: '../.gspot/config/commitlint.config.cjs' } }],
+                changes: [
+                    {
+                        path: ['commitlint'],
+                        value: { extends: '../.gspot/configurations/general/commits/commitlint.json' },
+                    },
+                ],
             },
         ],
     },
@@ -232,3 +248,20 @@ function writeObsoleteFile(root: string): void {
         }),
     ]);
 }
+
+test('the first apply after an upgrade moves tool files and rules from the 0.2 layout', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['javascript', 'prose'], { rules: true, tables: '[rules]\nenabled = true\n' }),
+        'index.js': 'export const value = 1;\n',
+        ...PREVIOUS_LAYOUT_FILES,
+    });
+
+    const applied = await runRegisteredCommand(sandbox.path, ['apply']);
+
+    expect(applied.exitCode).toBe(0);
+    for (const path of Object.keys(PREVIOUS_LAYOUT_FILES)) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
+    for (const path of CURRENT_LAYOUT_FILES) expect(await isOnDisk(join(sandbox.path, path))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, '.gspot/config'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, '.gspot/rules'))).toBe(false);
+});

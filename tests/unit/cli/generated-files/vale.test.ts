@@ -20,8 +20,8 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
     readGitOutput(sandbox.path, ['init', '-q']);
     const output = generate(await openSession(sandbox.path));
     const paths = new Set(output.files.map((file) => file.path));
-    expect(paths.has('.gspot/config/vale/styles/gspot/link-text.yml')).toBe(true);
-    const configuration = output.files.find((file) => file.path === '.gspot/config/vale.ini')!;
+    expect(paths.has('.gspot/configurations/general/prose/styles/gspot/link-text.yml')).toBe(true);
+    const configuration = output.files.find((file) => file.path === '.gspot/configurations/general/prose/vale.ini')!;
     expect(configuration.content.includes(`Packages = ${VALE_PACKAGES.join(', ')}`)).toBe(level === 'all');
     expect(configuration.content).toContain(
         `BasedOnStyles = ${level === 'all' ? ['gspot', 'Vale', ...VALE_PACKAGES].join(', ') : 'gspot'}`,
@@ -39,7 +39,9 @@ test('at level recommended, gspot writes only the Vale styles that run', async (
         'gspot.toml': buildSettingsText(['prose'], { level: 'recommended' }),
     });
     const output = generate(await openSession(sandbox.path));
-    const paths = output.files.map((file) => file.path).filter((path) => path.startsWith('.gspot/config/vale'));
+    const paths = output.files
+        .map((file) => file.path)
+        .filter((path) => path.startsWith('.gspot/configurations/general/prose/'));
     expect(paths.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([...RECOMMENDED_VALE_FILES]);
 });
 

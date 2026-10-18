@@ -14,17 +14,17 @@ description = "A local configuration used by manifest loading."
 
 export const SEMGREP_TOOL_FILES = `
 [[tool_file]]
-target = ".gspot/config/other.yml"
+target = "other.yml"
 pointer = { path = "other.yml" }
 
 [[tool_file]]
-target = ".gspot/config/semgrep/first.yml"
+target = "semgrep/first.yml"
 tool = "semgrep"
 per_scope = true
 when = { configuration = "security" }
 
 [[tool_file]]
-target = ".gspot/config/semgrep/second.yml"
+target = "semgrep/second.yml"
 tool = "semgrep"
 per_scope = true
 when = { configuration = "security" }
@@ -37,11 +37,11 @@ name = "semgrep"
 version = "1.0.0"
 
 [[tool_file]]
-target = ".gspot/config/semgrep/first.yml"
+target = "semgrep/first.yml"
 level = "all"
 
 [[tool_file]]
-target = ".gspot/config/semgrep/second.yml"
+target = "semgrep/second.yml"
 check = "example/scan"
 `;
 

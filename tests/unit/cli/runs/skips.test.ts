@@ -96,7 +96,7 @@ test('Prettier filters its files through a linked ignore file inside the reposit
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['markdown']),
         'settings/format.ignore': ignored,
-        '.gspot/config/.keep': '',
+        '.gspot/configurations/.keep': '',
         'ignored.md': '# Ignored\n',
         'kept.md': '# Kept\n',
     });

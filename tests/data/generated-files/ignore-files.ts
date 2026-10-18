@@ -64,16 +64,21 @@ export const PATH_IGNORE_CASES = [
     {
         configuration: 'spelling',
         check: 'spelling/typos',
-        path: '.gspot/config/typos.toml',
+        path: '.gspot/configurations/general/spelling/typos.toml',
         nativePath: ['files', 'extend-exclude'],
     },
     {
         configuration: 'duplication',
         check: 'duplication/jscpd',
-        path: '.gspot/config/jscpd.json',
+        path: '.gspot/configurations/general/duplication/jscpd.json',
         nativePath: ['ignore'],
     },
-    { configuration: 'javascript', check: 'javascript/knip', path: '.gspot/config/knip.json', nativePath: ['ignore'] },
+    {
+        configuration: 'javascript',
+        check: 'javascript/knip',
+        path: '.gspot/configurations/language/javascript/knip.json',
+        nativePath: ['ignore'],
+    },
 ] as const;
 
 export const PRETTIER_IGNORE_ATTRIBUTES = '/generated/** linguist-generated\n/vendored/** linguist-vendored\n';

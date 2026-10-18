@@ -11,12 +11,6 @@ tags = ["swift-test", "swift-test-target"]
 filenames = ["*.xctestplan"]
 paths = ["**/*Tests/**/*.swift"]
 
-[[tool_file]]
-per_scope = true
-pointer = { path = ".swiftlint.yml", folders = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
-target = ".gspot/config/swiftlint.yml"
-tool = "swiftlint"
-
 [[check]]
 example = "`throw XCTSkip()` in a Swift test reports a missing reason. Restore the test, or give a reason such as `throw XCTSkip(\"Requires the hardware test device\")`."
 files = { tags = ["swift-test"] }

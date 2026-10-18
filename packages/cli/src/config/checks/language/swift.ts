@@ -32,7 +32,8 @@ export const MACOS_PRIVATE_REPLACEMENT = '$<before>/$<folder>/';
 
 export const BUILD_LEVELS: ReadonlySet<string> = new Set(['error']);
 
-export const SWIFTLINT_YML = 'swiftlint.yml';
+/** The tool file names that the Swift build checks pass to SwiftLint and Periphery. */
+export const SWIFTLINT_TOOL_FILE = 'swiftlint';
 
 export const SWIFTLINT_ANALYZE_COMMAND = ['swiftlint', 'analyze', '--strict', '--quiet'] as const;
 
@@ -42,7 +43,7 @@ export const COMPILER_LOG_FLAG = '--compiler-log-path';
 
 export const REPORTED_LEVELS: ReadonlySet<string> = new Set(['error', 'warning']);
 
-export const PERIPHERY_YML = 'periphery.yml';
+export const PERIPHERY_TOOL_FILE = 'periphery';
 
 export const PERIPHERY_COMMAND = [
     'periphery',

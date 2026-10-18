@@ -35,7 +35,13 @@ test.each([...SYNCPACK_FILES])(
         expect(await Bun.file(join(sandbox.path, file)).exists()).toBe(false);
         expect(await Bun.file(join(sandbox.path, 'syncpack.config.cts')).text()).toBe('module.exports = {};\n');
         expect(await Bun.file(join(sandbox.path, 'syncpack.config.mts')).text()).toBe('export default {};\n');
-        const command = ['syncpack', 'lint', '--config', '.gspot/config/syncpack.json', '--no-ansi'];
+        const command = [
+            'syncpack',
+            'lint',
+            '--config',
+            '.gspot/configurations/general/dependencies/syncpack.json',
+            '--no-ansi',
+        ];
         const after = await runCommand(command, execution);
         expect(after.code, after.stdout + after.stderr).toBe(1);
         expect(after.stderr).toContain('fixture');

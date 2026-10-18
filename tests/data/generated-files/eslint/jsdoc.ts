@@ -75,7 +75,7 @@ export const TSC_ARGUMENTS = [
     'node',
     'node_modules/typescript/lib/tsc.js',
     '--project',
-    '.gspot/config/jsconfig.json',
+    '.gspot/configurations/language/javascript/jsconfig.json',
     '--pretty',
     'false',
 ] as const;

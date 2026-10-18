@@ -57,7 +57,7 @@ test('generated attributes keep LF through an autocrlf checkout', async () => {
     readGitOutput(sandbox.path, ['init', '-q']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const path = '.gspot/rules/general/engineering/agent/WORKING.md';
+    const path = '.gspot/configurations/general/engineering/rules/WORKING.md';
     const bytes = await readFile(join(sandbox.path, path));
     readGitOutput(sandbox.path, ['add', '--', '.gitattributes', path]);
     await rm(join(sandbox.path, path));

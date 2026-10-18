@@ -1,5 +1,3 @@
-import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
-
 const ESLINT_INDENT_WIDTH = 4;
 const FRAGMENT_BLANK_LINES = 3;
 
@@ -178,7 +176,6 @@ export const FILE_PRESETS = [
 export const PACKAGE_JSON_PATTERN = '**/package.json';
 
 export const ESLINT_RUNTIME_FILE = 'eslint-runtime.mjs';
-export const ESLINT_RUNTIME_TARGET = `${TOOL_FILES_FOLDER}/eslint-runtime.mjs`;
 
 export const ESLINT_BASE_IMPORTS = [
     ['{ root, runtimeMatches, stripRuntimeGlobals, componentMatches }', './' + ESLINT_RUNTIME_FILE],

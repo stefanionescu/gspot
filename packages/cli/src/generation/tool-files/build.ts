@@ -6,6 +6,7 @@ import { buildJscpdFile } from '#cli/generation/tool-files/jscpd.ts';
 import { buildTyposFile } from '#cli/generation/tool-files/typos.ts';
 import { buildEslintFile } from '#cli/generation/eslint/tool-file.ts';
 import { buildPrettierignore } from '#cli/generation/ignore-files.ts';
+import { ESLINT_RUNTIME_FILE } from '#cli/config/generation/eslint.ts';
 import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
 import { buildSquawkFile } from '#cli/generation/tool-files/squawk.ts';
 import { buildSemgrepFile } from '#cli/generation/tool-files/semgrep.ts';
@@ -22,8 +23,7 @@ import { buildSwiftformatFile } from '#cli/generation/tool-files/swiftformat.ts'
 import { buildEditorconfigFile } from '#cli/generation/tool-files/editorconfig.ts';
 import { buildMarkdownlintFile } from '#cli/generation/tool-files/markdownlint.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/tool-files/python.ts';
-import { ESLINT_RUNTIME_FILE, ESLINT_RUNTIME_TARGET } from '#cli/config/generation/eslint.ts';
-import { TOOL_FILE_REFERENCE, SEMGREP_RULE_PACK_FOLDER } from '#cli/config/generation/files.ts';
+import { TOOL_FILE_REFERENCE, SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/files.ts';
 import { buildBuiltHtmlFile, buildSourceHtmlFile } from '#cli/generation/tool-files/html-validate.ts';
 
 import {
@@ -58,52 +58,51 @@ import {
 } from '#cli/generation/tool-files/vale.ts';
 
 const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
-    [ESLINT_RUNTIME_TARGET]: (context) => readAsset(`${context.manifest.folder}/${ESLINT_RUNTIME_FILE}`),
-    '.gspot/config/ansible-lint.yml': buildAnsibleLintFile,
-    '.gspot/config/vale/styles/gspot/acronyms.yml': buildAcronymsStyle,
-    '.gspot/config/gixy.cfg': buildGixyFile,
-    '.gspot/config/squawk.toml': buildSquawkFile,
-    '.gspot/config/trivy.yml': buildTrivyFile,
-    '.gspot/config/shellcheckrc': buildShellcheckFile,
-    '.gspot/config/commitlint.config.cjs': buildCommitlintFile,
-    '.gspot/config/markdownlint.jsonc': buildMarkdownlintFile,
-    '.gspot/config/markdownlint-cli2.mjs': () => MARKDOWNLINT_CLI_TEXT,
-    '.gspot/config/jscpd.json': buildJscpdFile,
-    '.gspot/config/taplo.toml': buildTaploFile,
-    '.gspot/config/lychee.toml': buildLycheeFile,
-    '.gspot/config/hadolint.yml': buildHadolintFile,
-    '.gspot/config/spectral.yaml': buildSpectralFile,
-    '.gspot/config/v8r.yml': buildV8rFile,
-    '.gspot/config/yamllint.yml': buildYamllintFile,
-    '.gspot/config/osv-scanner.toml': buildOsvScannerFile,
-    '.gspot/config/purgecss.config.mjs': buildPurgecssFile,
-    '.gspot/config/html-validate-built.json': buildBuiltHtmlFile,
-    '.prettierignore': buildPrettierignore,
-    '.editorconfig': buildEditorconfigFile,
-    '.gspot/config/vale/styles/config/vocabularies/words/accept.txt': buildAcceptedWordsFile,
-    '.gspot/config/vale.ini': buildValeIniFile,
-    '.gspot/config/vale/styles/gspot/heading-case.yml': buildCapitalizationStyle,
-    '.gspot/config/vale/styles/gspot/paragraph-length.yml': buildParagraphLengthStyle,
-    '.gspot/config/vale/styles/gspot/alt-text.yml': buildAltTextStyle,
-    '.gspot/config/vale/styles/gspot/banned-headings.yml': buildBannedHeadingsStyle,
-    '.gspot/config/vale/styles/gspot/sentence-length.yml': buildSentenceLengthStyle,
-    '.gspot/config/vale/styles/gspot/title-case.yml': buildCapitalizationStyle,
-    '.gspot/config/vale/styles/gspot/item-length.yml': buildListItemStyle,
-    '.gspot/config/vale/styles/gspot/possessives.yml': buildPossessivesStyle,
-    '.gspot/config/typos.toml': buildTyposFile,
-    '.gspot/config/basedpyrightconfig.json': buildBasedpyrightFile,
-    '.gspot/config/ruff.toml': buildRuffFile,
-    '.gspot/config/stylelint.json': buildStylelintFile,
-    '.gspot/config/html-validate-source.json': buildSourceHtmlFile,
-    '.gspot/config/periphery.yml': buildPeripheryFile,
-    '.gspot/config/swiftformat': buildSwiftformatFile,
-    '.gspot/config/swiftlint.yml': buildSwiftlintFile,
-    '.gspot/config/knip.json': buildKnipFile,
-    '.gspot/config/sqlfluff.cfg': buildSqlfluffFile,
-    '.gspot/config/eslint.config.mjs': buildEslintFile,
-    '.gspot/config/jsconfig.json': buildJsconfig,
-    '.gspot/config/prettier.json': buildPrettierFile,
-    [SEMGREP_RULE_PACK_FOLDER]: buildSemgrepFile,
+    [`javascript/${ESLINT_RUNTIME_FILE}`]: (context) => readAsset(`${context.manifest.folder}/${ESLINT_RUNTIME_FILE}`),
+    'ansible/ansible-lint.yml': buildAnsibleLintFile,
+    'prose/styles/gspot/acronyms.yml': buildAcronymsStyle,
+    'nginx/gixy.cfg': buildGixyFile,
+    'postgres/squawk.toml': buildSquawkFile,
+    'docker/trivy.yml': buildTrivyFile,
+    'bash/shellcheckrc': buildShellcheckFile,
+    'commits/commitlint.json': buildCommitlintFile,
+    'markdown/markdownlint.jsonc': buildMarkdownlintFile,
+    'markdown/markdownlint-cli2.mjs': () => MARKDOWNLINT_CLI_TEXT,
+    'duplication/jscpd.json': buildJscpdFile,
+    'files/taplo.toml': buildTaploFile,
+    'docs/lychee.toml': buildLycheeFile,
+    'docker/hadolint.yml': buildHadolintFile,
+    'openapi/spectral.yml': buildSpectralFile,
+    'files/v8r.yml': buildV8rFile,
+    'files/yamllint.yml': buildYamllintFile,
+    'dependencies/osv-scanner.toml': buildOsvScannerFile,
+    'site/purgecss.mjs': buildPurgecssFile,
+    'site/html-validate.json': buildBuiltHtmlFile,
+    'format/.prettierignore': buildPrettierignore,
+    'format/.editorconfig': buildEditorconfigFile,
+    'prose/styles/config/vocabularies/words/accept.txt': buildAcceptedWordsFile,
+    'prose/vale.ini': buildValeIniFile,
+    'prose/styles/gspot/heading-case.yml': buildCapitalizationStyle,
+    'prose/styles/gspot/paragraph-length.yml': buildParagraphLengthStyle,
+    'prose/styles/gspot/alt-text.yml': buildAltTextStyle,
+    'prose/styles/gspot/banned-headings.yml': buildBannedHeadingsStyle,
+    'prose/styles/gspot/sentence-length.yml': buildSentenceLengthStyle,
+    'prose/styles/gspot/title-case.yml': buildCapitalizationStyle,
+    'prose/styles/gspot/item-length.yml': buildListItemStyle,
+    'prose/styles/gspot/possessives.yml': buildPossessivesStyle,
+    'spelling/typos.toml': buildTyposFile,
+    'python/basedpyright.json': buildBasedpyrightFile,
+    'python/ruff.toml': buildRuffFile,
+    'css/stylelint.json': buildStylelintFile,
+    'html/html-validate.json': buildSourceHtmlFile,
+    'swift/periphery.yml': buildPeripheryFile,
+    'swift/swiftformat': buildSwiftformatFile,
+    'swift/swiftlint.yml': buildSwiftlintFile,
+    'javascript/knip.json': buildKnipFile,
+    'sql/sqlfluff.cfg': buildSqlfluffFile,
+    'javascript/eslint.mjs': buildEslintFile,
+    'javascript/jsconfig.json': buildJsconfig,
+    'format/prettier.json': buildPrettierFile,
 };
 /**
  * Build one tool file and its pointers.
@@ -113,8 +112,11 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
  */
 function buildToolFile(context: ToolFileContext, targets: ToolFileGeneration['targets']): GeneratedFile {
     const { toolFile, targetPath } = context;
-    const folder = toolFile.target.slice(0, toolFile.target.lastIndexOf('/') + 1);
-    const builder = builders[toolFile.target] ?? builders[folder];
+    // Every Semgrep rule pack has the same builder; any other tool file has its own by configuration and file.
+    const builder =
+        toolFile.file === SEMGREP_RULE_PACK_FILE
+            ? buildSemgrepFile
+            : builders[`${context.manifest.configuration.name}/${toolFile.file}`];
     const source = (
         builder === undefined ? readAsset(`${context.manifest.folder}/${toolFile.source}`) : builder(context)
     ).replaceAll(TOOL_FILE_REFERENCE, (match: string, ...replacementArguments: unknown[]) => {

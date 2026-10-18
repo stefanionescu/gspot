@@ -24,7 +24,7 @@ test('a hand edit of the ESLint config shows as a byte diff without running it',
     });
     const applied = await runRegisteredCommand(sandbox.path, ['apply']);
     expect(applied.exitCode, applied.text).toBe(0);
-    const path = '.gspot/config/eslint.config.mjs';
+    const path = '.gspot/configurations/language/javascript/eslint.mjs';
     const authored = 'throw new Error("The preview executed authored configuration.");\n';
     await chmod(join(sandbox.path, path), 0o644);
     await writeFile(join(sandbox.path, path), authored);
@@ -49,7 +49,7 @@ test("turned-off rules have the same stray paths in a dry run and in apply's rem
     await createFileTree(sandbox.path, { 'gspot.toml': settings });
     expect(await runRegisteredCommand(sandbox.path, ['apply'])).toHaveProperty('exitCode', 0);
     const initial = await openSession(sandbox.path);
-    const owned = initial.repository.files.filter((entry) => entry.path.startsWith('.gspot/rules/'));
+    const owned = initial.repository.files.filter((entry) => entry.path.includes('/rules/'));
     expect(owned.length).toBeGreaterThan(0);
     await Bun.write(join(sandbox.path, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
@@ -97,7 +97,9 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const result = JSON.parse(preview.stdout) as DryRunJson;
     expect(result.dryRun).toBe(true);
-    expect(result.stale).toContainEqual(matchFields({ path: '.gspot/config/shellcheckrc', kind: 'missing' }));
+    expect(result.stale).toContainEqual(
+        matchFields({ path: '.gspot/configurations/language/bash/shellcheckrc', kind: 'missing' }),
+    );
     expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(settings);
     expect(await isOnDisk(join(folder.path, '.gspot'))).toBe(false);
     expect(await readTree(folder.path)).toStrictEqual(before);
@@ -155,7 +157,7 @@ test('apply --dry-run reports a changed file, a stray, a conflict, and an edited
         await chmod(full, 0o644);
         await writeFile(full, text(await readFile(full, 'utf8')));
     };
-    await edit('.gspot/config/shellcheckrc', (current) => `${current}# Edited.\n`);
+    await edit('.gspot/configurations/language/bash/shellcheckrc', (current) => `${current}# Edited.\n`);
     await edit(
         '.gspot/package.json',
         (current) => `<<<<<<< ours
@@ -175,7 +177,7 @@ ${current}=======
     const { stale } = JSON.parse(preview.stdout) as DryRunJson;
     expect(stale).toContainEqual(
         matchFields({
-            path: '.gspot/config/shellcheckrc',
+            path: '.gspot/configurations/language/bash/shellcheckrc',
             kind: 'changed',
             diff: matchSubstring('-# Edited.'),
         }),
@@ -184,7 +186,9 @@ ${current}=======
     expect(stale).toContainEqual(
         matchFields({ path: 'AGENTS.md', kind: 'changed', diff: matchSubstring('-Edited inside.') }),
     );
-    expect(stale).toContainEqual(matchFields({ path: '.gspot/config/markdownlint.jsonc', kind: 'stray' }));
+    expect(stale).toContainEqual(
+        matchFields({ path: '.gspot/configurations/language/markdown/markdownlint.jsonc', kind: 'stray' }),
+    );
     expect(stale.some(({ path }) => path === 'README.md' || path === 'settings.json')).toBe(false);
     expect(await readTree(folder.path)).toStrictEqual(before);
 });

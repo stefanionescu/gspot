@@ -14,8 +14,8 @@ test('prose/vale reports a finding in a .sh file and passes after the fix', asyn
     const path = 'sample.sh';
     await createFileTree(folder.path, {
         'gspot.toml': buildSettingsText(['prose', 'bash', 'markdown']),
-        '.gspot/config/vale.ini': VALE_INI,
-        '.gspot/config/styles/Example/Concrete.yml': CONCRETE_RULE,
+        '.gspot/configurations/general/prose/vale.ini': VALE_INI,
+        '.gspot/configurations/general/prose/styles/Example/Concrete.yml': CONCRETE_RULE,
         [path]: '# We delve into the records.\n',
     });
     const failed = await spawnRootCheck(folder.path, 'prose/vale');
@@ -35,7 +35,7 @@ test.each([
     const path = `source.${extension}`;
     await createFileTree(folder.path, {
         'gspot.toml': buildSettingsText(['prose']),
-        '.gspot/config/vale.ini': [
+        '.gspot/configurations/general/prose/vale.ini': [
             'StylesPath = styles',
             '[formats]',
             ...Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
@@ -46,7 +46,7 @@ test.each([
             `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
             '',
         ].join('\n'),
-        '.gspot/config/styles/Example/Concrete.yml': CONCRETE_RULE,
+        '.gspot/configurations/general/prose/styles/Example/Concrete.yml': CONCRETE_RULE,
         [path]: [
             `${marker} Pass \`delve\` to the command.`,
             `${marker} We delve into records.`,
@@ -81,8 +81,8 @@ test.each([
         const source = `${prefix}${marker} We delve into records.\n${code}\n`;
         await createFileTree(folder.path, {
             'gspot.toml': buildSettingsText(['prose', 'bash']),
-            '.gspot/config/vale.ini': `${VALE_INI}[**/british/**]\nExample.Concrete = NO\n`,
-            '.gspot/config/styles/Example/Concrete.yml': CONCRETE_RULE,
+            '.gspot/configurations/general/prose/vale.ini': `${VALE_INI}[**/british/**]\nExample.Concrete = NO\n`,
+            '.gspot/configurations/general/prose/styles/Example/Concrete.yml': CONCRETE_RULE,
             [path]: source,
             [`british/${path}`]: source,
         });

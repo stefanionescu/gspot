@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { sep, relative } from 'node:path';
 
 // TypeScript resolves the project service from the repository root without a closing separator.
-const root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\/]$/u, '');
+const root = fileURLToPath(new URL('../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 /** @type {WeakMap<object, Set<string>>} */
 const runtimeGlobalNames = new WeakMap();
 /** @type {WeakMap<object, ((path: string) => boolean)[]>} */

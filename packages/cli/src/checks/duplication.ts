@@ -11,7 +11,7 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { TOOL_FILES_FOLDER } from '#cli/config/system/locations.ts';
+import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
@@ -65,9 +65,10 @@ export async function checkJscpd(input: CheckInput): Promise<Finding[]> {
         ),
     ];
     using files = openFiles(input.root);
-    const generated = files.read(`${TOOL_FILES_FOLDER}/${JSCPD_TOOL_FILE}`);
-    if (generated === undefined) throw new Error(`Missing ${TOOL_FILES_FOLDER}/${JSCPD_TOOL_FILE}. Run gspot apply.`);
-    const shipped = parseJsonFile(`${TOOL_FILES_FOLDER}/${JSCPD_TOOL_FILE}`, generated.bytes.toString('utf8'));
+    const generatedPath = selectToolFilePath(input, input, JSCPD);
+    const generated = files.read(generatedPath);
+    if (generated === undefined) throw new Error(`Missing ${generatedPath}. Run gspot apply.`);
+    const shipped = parseJsonFile(generatedPath, generated.bytes.toString('utf8'));
     // A long file list overflows a command line, so the paths go into a tool file of their own.
     const toolFile = join(work, JSCPD_TOOL_FILE);
     writeFileSync(toolFile, JSON.stringify({ ...shipped, path: owned.map((path) => join(input.root, path)) }));

@@ -136,7 +136,7 @@ test('a packed install runs the pinned language tools, reports their findings, a
     }
     // The Vale word list exists at level all, which the Swift check turned on.
     const vocabulary = await readFile(
-        join(installation.root, '.gspot/config/vale/styles/config/vocabularies/words/accept.txt'),
+        join(installation.root, '.gspot/configurations/general/prose/styles/config/vocabularies/words/accept.txt'),
         'utf8',
     );
     const acceptedWords = vocabulary.trim().split('\n');

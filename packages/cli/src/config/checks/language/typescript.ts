@@ -1,3 +1,5 @@
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
+
 export const TSBUILDINFO_FLAG = '--tsBuildInfoFile';
 export const TYPESCRIPT_TSC_CHECK = 'typescript/tsc';
 export const TSC_TOOL = 'tsc';
@@ -9,3 +11,6 @@ export const TSC_PATHS_BASE_REQUIRED = 'The compiler did not supply the TypeScri
 export const TSC_CONFIGURATION_REQUIRED = 'A captured TypeScript configuration is missing.';
 
 export const TYPESCRIPT_TSCONFIG_CHECK = 'typescript/tsconfig';
+
+/** Where a compiler run writes the project file of each scope, below the run folder. */
+export const TSCONFIG_SCRATCH_FOLDER = `${GSPOT_CONFIGURATIONS_PATH}/language/typescript`;

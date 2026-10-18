@@ -64,7 +64,7 @@ reason = "Test assertions deliberately verify the behavior."
     );
     await runSandboxStep(sandbox.path, ['apply'], {}, 'apply');
     const configs = await Promise.all(
-        [...new Bun.Glob('.gspot/config/**/ruff.toml').scanSync({ cwd: sandbox.path, dot: true })].map(
+        [...new Bun.Glob('.gspot/configurations/**/ruff.toml').scanSync({ cwd: sandbox.path, dot: true })].map(
             async (path) => ({
                 path: convertToPosixPath(path),
                 content: await Bun.file(join(sandbox.path, path)).text(),
@@ -72,10 +72,12 @@ reason = "Test assertions deliberately verify the behavior."
         ),
     );
     expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        '.gspot/config/ruff.toml',
-        '.gspot/config/ruff/app/ruff.toml',
+        '.gspot/configurations/language/python/ruff.toml',
+        '.gspot/configurations/language/python/scopes/app/ruff.toml',
     ]);
-    const app: unknown = parse(configs.find(({ path }) => path === '.gspot/config/ruff/app/ruff.toml')!.content);
+    const app: unknown = parse(
+        configs.find(({ path }) => path === '.gspot/configurations/language/python/scopes/app/ruff.toml')!.content,
+    );
     expect(app).toMatchObject({ lint: { select: matchItems(['PT001']) } });
 
     await verifyPytestSelection(sandbox.path, sample);
@@ -105,7 +107,7 @@ test.each([...LEVELS])('Ruff at level %s reports correctness, and print calls on
     const command = ['check', 'sample.py', '--only', 'python/ruff', '--json'];
     const config = z
         .object({ lint: z.object({ select: z.array(z.string()) }) })
-        .parse(parse(await Bun.file(join(sandbox.path, '.gspot/config/ruff.toml')).text()));
+        .parse(parse(await Bun.file(join(sandbox.path, '.gspot/configurations/language/python/ruff.toml')).text()));
     expect(config.lint.select.filter((code) => previewCodes.has(code))).toStrictEqual([]);
     const options = { cwd: sandbox.path, env: { PATH: buildSandboxPath() } };
     const result = await spawnGspot(sandbox.path, command, options.env);

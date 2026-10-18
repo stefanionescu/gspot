@@ -59,7 +59,7 @@ rules = ["gspot/no-trivial-files"]
 
 [[tool_file]]
 per_scope = true
-target = ".gspot/config/semgrep/nextjs.yml"
+target = "semgrep.yml"
 tool = "semgrep"
 
 [[check]]

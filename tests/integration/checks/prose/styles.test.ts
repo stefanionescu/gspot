@@ -15,8 +15,8 @@ test("Vale's dashes rule checks the reason text of ESLint comments and skips the
     await using folder = await testdir();
     await createFileTree(folder.path, {
         'gspot.toml': buildSettingsText(['prose', 'typescript']),
-        '.gspot/config/vale.ini': VALE_INI,
-        '.gspot/config/styles/Example/Dashes.yml': readAsset(
+        '.gspot/configurations/general/prose/vale.ini': VALE_INI,
+        '.gspot/configurations/general/prose/styles/Example/Dashes.yml': readAsset(
             'configurations/general/prose/tool-files/vale/styles/gspot/dashes.yml',
         ),
         'source.ts': [
@@ -43,8 +43,8 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
     await using folder = await testdir();
     await createFileTree(folder.path, {
         'gspot.toml': buildSettingsText(['prose', 'markdown']),
-        '.gspot/config/vale.ini': VALE_INI,
-        '.gspot/config/styles/Example/Versions.yml': readAsset(
+        '.gspot/configurations/general/prose/vale.ini': VALE_INI,
+        '.gspot/configurations/general/prose/styles/Example/Versions.yml': readAsset(
             'configurations/general/prose/tool-files/vale/styles/gspot/version-range.yml',
         ),
         'versions.md': [

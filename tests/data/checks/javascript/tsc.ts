@@ -153,10 +153,10 @@ export const JSCONFIG_CHOICES = [
 ] as const;
 
 export const SCOPE_JSCONFIG_PATHS = [
-    '.gspot/config/jsconfig.json',
-    '.gspot/config/jsconfig/app/child/jsconfig.json',
-    '.gspot/config/jsconfig/app/jsconfig.json',
-    '.gspot/config/jsconfig/sibling/jsconfig.json',
+    '.gspot/configurations/language/javascript/jsconfig.json',
+    '.gspot/configurations/language/javascript/scopes/app/child/jsconfig.json',
+    '.gspot/configurations/language/javascript/scopes/app/jsconfig.json',
+    '.gspot/configurations/language/javascript/scopes/sibling/jsconfig.json',
 ] as const;
 
 export const TYPESCRIPT_PACKAGE = `{

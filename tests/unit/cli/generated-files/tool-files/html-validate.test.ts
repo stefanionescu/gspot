@@ -19,8 +19,8 @@ test.each([...LEVELS])(
             'app/index.html': '<!doctype html><title>App</title>',
         });
         const output = generate(await openSession(sandbox.path));
-        const source = output.files.filter(({ path }) => path.endsWith('html-validate-source.json'));
-        expect(source.map(({ path }) => path)).toEqual(['.gspot/config/html-validate-source.json']);
+        const source = output.files.filter(({ path }) => path.endsWith('/html/html-validate.json'));
+        expect(source.map(({ path }) => path)).toEqual(['.gspot/configurations/language/html/html-validate.json']);
         for (const file of source) {
             expect(parse(file.content)).toMatchObject({
                 rules: {
@@ -28,8 +28,8 @@ test.each([...LEVELS])(
                 },
             });
         }
-        const built = output.files.filter(({ path }) => path.endsWith('html-validate-built.json'));
-        expect(built.map(({ path }) => path)).toEqual(['.gspot/config/html-validate-built.json']);
+        const built = output.files.filter(({ path }) => path.endsWith('/site/html-validate.json'));
+        expect(built.map(({ path }) => path)).toEqual(['.gspot/configurations/framework/site/html-validate.json']);
     },
 );
 
@@ -46,12 +46,11 @@ test.each(['html/html-validate', 'site/html-validate'])(
         });
         const output = generate(await openSession(sandbox.path));
         for (const [name, selected] of [
-            ['source', 'html/html-validate'],
-            ['built', 'site/html-validate'],
+            ['html', 'html/html-validate'],
+            ['site', 'site/html-validate'],
         ] as const) {
-            const file = output.files.find(({ path }) => path.endsWith(`html-validate-${name}.json`))!;
-            if (selected !== check && name === 'source')
-                expect(parse(file.content)).not.toHaveProperty('rules.valid-id');
+            const file = output.files.find(({ path }) => path.endsWith(`/${name}/html-validate.json`))!;
+            if (selected !== check && name === 'html') expect(parse(file.content)).not.toHaveProperty('rules.valid-id');
             else
                 expect(parse(file.content)).toMatchObject({
                     rules: { 'valid-id': selected === check ? 'off' : ['error', { relaxed: true }] },

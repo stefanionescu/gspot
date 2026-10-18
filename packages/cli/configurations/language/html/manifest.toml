@@ -16,7 +16,7 @@ version = "11.6.1"
 
 [[tool_file]]
 check = "html/html-validate"
-target = ".gspot/config/html-validate-source.json"
+target = "html-validate.json"
 tool = "html-validate"
 
 [[check]]

@@ -1,8 +1,8 @@
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { classifyFile, isInGspotFolder } from '#cli/repository/classify.ts';
-import { SETTINGS_FILE, TOOL_FILE_PREFIX } from '#cli/config/system/locations.ts';
 import { isInScope, joinScope, isOutsideChildren } from '#cli/repository/scopes.ts';
 import { type Manifest, type CheckDeclaration } from '#cli/types/configurations.ts';
 import { listCoveredFiles as listRepositoryCoveredFiles } from '#cli/repository/coverage.ts';
@@ -136,7 +136,7 @@ export function isRootOnlyCheck(manifest: Manifest | undefined, check: CheckDecl
         (config) =>
             config.per_scope &&
             (config.check.includes(check.name) ||
-                command.some((part) => part.includes(`{tool_file:${extractToolFileName(config.target)}}`))),
+                command.some((part) => part.includes(`{tool_file:${extractToolFileName(config.file)}}`))),
     );
 }
 
@@ -171,11 +171,10 @@ export function selectCheckFiles(
 
 /**
  * Get the name that a tool-file placeholder uses for a tool file.
- * @param target the tool file path.
- * @returns the file name under .gspot/config without its extensions.
+ * @param file the path that the manifest names.
+ * @returns the path without its extensions.
  */
-export function extractToolFileName(target: string): string {
-    const bare = target.startsWith(TOOL_FILE_PREFIX) ? target.slice(TOOL_FILE_PREFIX.length) : target;
-    const dot = bare.indexOf('.');
-    return dot === -1 ? bare : bare.slice(0, dot);
+export function extractToolFileName(file: string): string {
+    const dot = file.indexOf('.');
+    return dot === -1 ? file : file.slice(0, dot);
 }

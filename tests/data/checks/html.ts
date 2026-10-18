@@ -57,7 +57,7 @@ export const AUTOPLAY_CHECKS = [
         arguments: ['check', 'index.html', '--json', '--only', 'html/html-validate'],
         source: 'index.html',
         preserved: 'app/page.html',
-        configuration: '.gspot/config/html-validate-source.json',
+        configuration: '.gspot/configurations/language/html/html-validate.json',
         findings: [
             { file: 'index.html', line: 7, column: 24, rule: 'no-autoplay' },
             { file: 'index.html', line: 8, column: 24, rule: 'no-autoplay' },
@@ -69,7 +69,7 @@ export const AUTOPLAY_CHECKS = [
         arguments: ['check', 'app', '--json', '--only', 'site/html-validate'],
         source: 'app/page.html',
         preserved: 'index.html',
-        configuration: '.gspot/config/app/html-validate-built.json',
+        configuration: '.gspot/configurations/framework/site/scopes/app/html-validate.json',
         findings: [
             { file: 'app/dist/index.html', line: 7, rule: 'no-autoplay' },
             { file: 'app/dist/index.html', line: 8, rule: 'no-autoplay' },

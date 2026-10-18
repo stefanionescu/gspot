@@ -43,7 +43,7 @@ with `./` when it also names a configuration or a check: `gspot explain bash` de
 the `./` form describes the file.
 
 When a scope needs a tool file with other text than the shared copy, gspot writes it to
-`.gspot/config/<tool>/<scope path>/<file>`.
+`.gspot/configurations/<group>/<configuration>/scopes/<scope path>/<file>`.
 
 ## Settings in a scope
 

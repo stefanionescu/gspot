@@ -31,7 +31,10 @@ test('Vale package install deletes a package gspot no longer ships', async () =>
     const sandbox = installedSandbox();
     await using _change = await updateSandbox(sandbox, {
         check: '',
-        files: { 'authored.txt': 'keep\n', '.gspot/config/vale/styles/Google/legacy.yml': 'authored legacy bytes\n' },
+        files: {
+            'authored.txt': 'keep\n',
+            '.gspot/configurations/general/prose/styles/Google/legacy.yml': 'authored legacy bytes\n',
+        },
     });
     await createFileTree(sandbox.root, { '.gspot/vale/Retired/terms.yml': 'old rule\n' });
     const installed = await spawnGspot(sandbox.root, ['install'], sandbox.environment);
@@ -39,16 +42,19 @@ test('Vale package install deletes a package gspot no longer ships', async () =>
     expect(await isOnDisk(join(sandbox.root, '.gspot/vale/Retired'))).toBe(false);
     expect(await isOnDisk(join(sandbox.root, GOOGLE_TERMS_FILE))).toBe(true);
     expect(await readFile(join(sandbox.root, 'authored.txt'), 'utf8')).toBe('keep\n');
-    expect(await readFile(join(sandbox.root, '.gspot/config/vale/styles/Google/legacy.yml'), 'utf8')).toBe(
-        'authored legacy bytes\n',
-    );
+    expect(
+        await readFile(join(sandbox.root, '.gspot/configurations/general/prose/styles/Google/legacy.yml'), 'utf8'),
+    ).toBe('authored legacy bytes\n');
 });
 
 test('Vale package install replaces an edited package and keeps your files', async () => {
     const sandbox = installedSandbox();
     await using _change = await updateSandbox(sandbox, {
         check: '',
-        files: { 'authored.txt': 'keep\n', '.gspot/config/vale/styles/Google/legacy.yml': 'authored legacy bytes\n' },
+        files: {
+            'authored.txt': 'keep\n',
+            '.gspot/configurations/general/prose/styles/Google/legacy.yml': 'authored legacy bytes\n',
+        },
     });
     const original = await readFile(join(sandbox.root, GOOGLE_TERMS_FILE));
     await chmod(join(sandbox.root, GOOGLE_TERMS_FILE), 0o644);
@@ -57,7 +63,7 @@ test('Vale package install replaces an edited package and keeps your files', asy
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await readFile(join(sandbox.root, GOOGLE_TERMS_FILE))).toStrictEqual(original);
     expect(await readFile(join(sandbox.root, 'authored.txt'), 'utf8')).toBe('keep\n');
-    expect(await readFile(join(sandbox.root, '.gspot/config/vale/styles/Google/legacy.yml'), 'utf8')).toBe(
-        'authored legacy bytes\n',
-    );
+    expect(
+        await readFile(join(sandbox.root, '.gspot/configurations/general/prose/styles/Google/legacy.yml'), 'utf8'),
+    ).toBe('authored legacy bytes\n');
 });
