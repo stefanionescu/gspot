@@ -23,7 +23,6 @@ import {
     UNUSED_FUNCTION_CASES,
 } from '#tests/data/checks/bash/function-checks.ts';
 import {
-    NODE_EMBEDS,
     SAFETY_SOURCES,
     BASH_SAFETY_CASES,
     SCOPE_READER_FILES,
@@ -34,17 +33,6 @@ import {
     SCOPE_READER_SETTINGS,
 } from '#tests/data/checks/bash/script-checks.ts';
 
-test.each([...NODE_EMBEDS])('inline-scripts: inline Node (%s) is reported once', async (source) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['bash'], { level: 'all' }),
-        'source.sh': source,
-    });
-    const result = await checkReport(sandbox.path, ['check', '--only', 'bash/inline-scripts', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(result.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: 'source.sh', line: 1, rule: 'runtime-embed' },
-    ]);
-});
 test.each([...SAFETY_SOURCES])(
     'safety: a trap that removes its own temporary file is allowed and other recursive removals are reported: $source',
     async ({ source, unsafeLines }) => {

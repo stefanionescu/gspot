@@ -93,6 +93,28 @@ venv
 
 export const DOCKER_CONTEXT_CASES = [
     {
+        name: 'each scope lists the folders of its own configurations',
+        files: {
+            'gspot.toml':
+                'level = "all"\nconfigurations = ["docker"]\n\n[[scope]]\npath = "app"\nconfigurations = ["python"]\n',
+            Dockerfile: 'FROM scratch\n',
+            'app/Dockerfile': 'FROM scratch\n',
+        },
+        findings: [
+            {
+                file: 'app/Dockerfile',
+                rule: 'missing-file',
+                message:
+                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, .venv, venv.',
+            },
+            {
+                file: 'Dockerfile',
+                rule: 'missing-file',
+                message: 'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env.',
+            },
+        ],
+    },
+    {
         name: 'a Dockerfile-specific ignore',
         files: { Dockerfile: 'FROM scratch\n', 'Dockerfile.dockerignore': '.git\n.env\n' },
         findings: [],

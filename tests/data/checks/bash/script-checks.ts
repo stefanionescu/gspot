@@ -46,15 +46,6 @@ main "$@"
     },
 ] as const;
 
-export const NODE_EMBEDS = [
-    'node -e "console.log(1)"\n',
-    'node -p "1 + 1"\n',
-    `node <<'JS'
-console.log(1)
-JS
-`,
-] as const;
-
 export const INLINE_SCRIPT_CASES = [
     {
         check: 'bash/inline-scripts',
@@ -83,6 +74,34 @@ main "$@"
 `,
         },
         expected: { file: 'scripts/python.sh', rule: 'runtime-embed', line: 10 },
+    },
+    {
+        check: 'bash/inline-scripts',
+        files: {
+            'scripts/print.sh': `${BASH_HEADER}# main: runs the script.
+main() {
+    node -p '1 + 1' "$1"
+}
+
+main "$@"
+`,
+        },
+        expected: { file: 'scripts/print.sh', rule: 'runtime-embed', line: 10 },
+    },
+    {
+        check: 'bash/inline-scripts',
+        files: {
+            'scripts/node-heredoc.sh': `${BASH_HEADER}# main: runs the script.
+main() {
+    node <<'JS'
+console.log(1)
+JS
+}
+
+main "$@"
+`,
+        },
+        expected: { file: 'scripts/node-heredoc.sh', rule: 'runtime-embed', line: 10 },
     },
 ] as const;
 

@@ -53,17 +53,22 @@ export const UNUSED_PATH_CASES = [
         },
         unmatched: [],
     },
-] as const;
-
-export const UNMATCHED_PATTERN_SETTINGS = {
-    level: 'all',
-    configurations: ['docs', 'structure', 'nextjs'],
-    command_check: [{ name: 'reports/collect', command: ['echo'], stage: 'commit', paths: ['.reports/command.json'] }],
-    ignore: [
-        {
-            check: 'docs/lychee',
-            paths: ['.reports/output.json', '.reports/unused.json'],
-            reason: 'An obsolete source exclusion.',
+    {
+        name: 'a document that names a path does not make it tracked',
+        files: { 'docs/guide.md': 'The runner writes `.reports/output.json`.\n' },
+        settings: {
+            configurations: ['docs', 'structure', 'nextjs'],
+            command_check: [
+                { name: 'reports/collect', command: ['echo'], stage: 'commit', paths: ['.reports/command.json'] },
+            ],
+            ignore: [
+                {
+                    check: 'docs/lychee',
+                    paths: ['.reports/output.json', '.reports/unused.json'],
+                    reason: 'An obsolete source exclusion.',
+                },
+            ],
         },
-    ],
-} as const;
+        unmatched: ['.reports/output.json', '.reports/unused.json', '.reports/command.json'],
+    },
+] as const;

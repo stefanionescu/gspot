@@ -94,6 +94,16 @@ not code {
     { name: 'unclosed JSX', markdown: '```jsx\nexport const panel = <div>Hello;\n```', lines: [2] },
     { name: 'fixed TSX', markdown: '```tsx\nexport const panel = <div>Hello</div>;\n```', lines: [] },
     { name: 'fixed JSX', markdown: '```jsx\nexport const panel = <div>Hello</div>;\n```', lines: [] },
+    {
+        name: 'a Bash fence that does not parse',
+        markdown: '```bash\nif then\n```\n',
+        lines: [2],
+    },
+    {
+        name: 'a Bash fence that parses',
+        markdown: '```bash\nprintf "%s\\n" "Hello"\n```\n',
+        lines: [],
+    },
 ] as const;
 
 export const MARKDOWN_SANDBOX = {

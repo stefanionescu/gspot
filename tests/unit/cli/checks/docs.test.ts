@@ -17,7 +17,10 @@ import {
     DOC_TASK_FILES,
     DOC_TASK_SCOPES,
     DOC_TASK_FINDINGS,
+    MISE_TASK_SOURCES,
+    LICENSE_FILE_CASES,
     DOC_FENCE_PATH_CASES,
+    MALFORMED_TASK_FILES,
 } from '#tests/data/checks/docs.ts';
 
 async function collectDocsFindings(
@@ -82,50 +85,22 @@ test('missing-paths: command check names count as present; unknown ones are repo
     ).toStrictEqual([{ file: 'a.md', line: 1, rule: 'missing-path', message: matchSubstring('tests/missing') }]);
 });
 
-test('missing-paths: mise task aliases count; unknown aliases are reported', async () => {
-    const found = await collectDocsFindings(
-        {
-            'a.md': 'Run `mise run compile`, `mise run verify`, `mise run validate`, and `mise run absent`.\n',
-            'mise.toml':
-                '[tasks.build]\nalias = "compile"\nrun = "true"\n[tasks.test]\nalias = ["verify", "validate"]\nrun = "true"\n',
-        },
-        { paths: ['a.md'] },
-    );
-    expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 1, rule: 'missing-task', message: matchSubstring('mise run absent') },
-    ]);
-});
+test.each([...MISE_TASK_SOURCES])(
+    'missing-paths: $name count, and an unknown task is reported',
+    async ({ tasks, files }) => {
+        const named = [...tasks, 'absent'].map((task) => '`mise run ' + task + '`').join(', ');
+        const found = await collectDocsFindings({ 'a.md': `Run ${named}.\n`, ...files }, { paths: ['a.md'] });
+        expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+            { file: 'a.md', line: 1, rule: 'missing-task', message: 'mise run absent names no task or script.' },
+        ]);
+    },
+);
 
 test('missing-paths: clone host names are skipped while missing repository paths are reported', async () => {
     const found = await collectDocsFindings({
         'README.md': 'Clone github.com/example/demo.git and read docs/guide.md.\n',
     });
     expect(found.map(({ message }) => message)).toStrictEqual(['docs/guide.md names no tracked file or folder.']);
-});
-
-test('missing-paths: mise file tasks include nested names while unknown tasks are reported', async () => {
-    const found = await collectDocsFindings({
-        'README.md': 'Run `mise run setup`, `mise run docs:build`, and `mise run absent`.\n',
-        '.mise/tasks/setup': '#!/usr/bin/env bash\ntrue\n',
-        '.mise/tasks/docs/build': '#!/usr/bin/env bash\ntrue\n',
-    });
-    expect(found.map(({ message }) => message)).toStrictEqual(['mise run absent names no task or script.']);
-});
-
-test('missing-paths: tasks in .mise/config.toml, mise.local.toml and conf.d files count, and .tool-versions is not read as TOML', async () => {
-    const found = await collectDocsFindings(
-        {
-            'a.md': 'Run `mise run config-task`, `mise run local-task`, `mise run included-task`, and `mise run absent`.\n',
-            '.mise/config.toml': '[tasks.config-task]\nrun = "true"\n',
-            'mise.local.toml': '[tasks.local-task]\nrun = "true"\n',
-            '.mise/conf.d/project.toml': '[tasks.included-task]\nrun = "true"\n',
-            '.tool-versions': 'node 22\n',
-        },
-        { paths: ['a.md'] },
-    );
-    expect(found.map(({ message: description }) => description)).toStrictEqual([
-        'mise run absent names no task or script.',
-    ]);
 });
 
 test('missing-paths: paths relative to the document are found, and missing ones nearby are still reported', async () => {
@@ -146,24 +121,23 @@ test('missing-paths: paths relative to the document are found, and missing ones 
     ]);
 });
 
-test.each([
-    ['package.json', '{broken'],
-    ['mise.toml', '[tasks'],
-])('missing-paths: a malformed %s is a read error, not a missing task', async (path, text) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'a.md': 'Run `bun run build`.\n',
-        [path]: path === 'package.json' ? '{}' : '',
-    });
-    await Bun.write(join(sandbox.path, 'gspot.toml'), buildSettingsText(['docs'], { level: 'all' }));
-    const session = await openSession(sandbox.path);
-    await Bun.write(join(sandbox.path, path), text);
-    session.reads = createReadCache(sandbox.path);
-    const selected = buildCheckInput(session, 'docs/missing-paths', { paths: ['a.md'] });
-    expect(() => CHECK_IMPLEMENTATIONS['docs/missing-paths'].check(selected)).toThrow(
-        `Cannot read task definitions from ${path}.`,
-    );
-});
+test.each([...MALFORMED_TASK_FILES])(
+    'missing-paths: a malformed $path is a read error, not a missing task',
+    async ({ path, text, document, tables, files }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildSettingsText(['docs'], { level: 'all', tables }),
+            ...files,
+        });
+        const session = await openSession(sandbox.path);
+        await Bun.write(join(sandbox.path, path), text);
+        session.reads = createReadCache(sandbox.path);
+        const input = buildCheckInput(session, 'docs/missing-paths', { paths: [document] });
+        expect(() => CHECK_IMPLEMENTATIONS['docs/missing-paths'].check(input)).toThrow(
+            `Cannot read task definitions from ${path}.`,
+        );
+    },
+);
 
 test('missing-paths: documented tasks are checked against their task tool and the nearest scope that defines them', async () => {
     const found = await collectDocsFindings({
@@ -189,24 +163,6 @@ test('missing-paths: a document in a child scope does not read unrelated or shad
             buildCheckInput(session, 'docs/missing-paths', { paths: ['app/nested/guide.md'] }),
         ),
     ).toStrictEqual([]);
-});
-
-test.each([
-    ['app/package.json', '{broken'],
-    ['app/mise.toml', '[tasks'],
-])('missing-paths: a document in a child scope reports a malformed %s at the file that has it', async (path, text) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([], { tables: DOC_TASK_SCOPES }),
-        ...DOC_TASK_FILES,
-    });
-    const session = await openSession(sandbox.path);
-    await Bun.write(join(sandbox.path, path), text);
-    session.reads = createReadCache(sandbox.path);
-    const input = buildCheckInput(session, 'docs/missing-paths', { paths: ['app/nested/guide.md'] });
-    expect(() => CHECK_IMPLEMENTATIONS['docs/missing-paths'].check(input)).toThrow(
-        `Cannot read task definitions from ${path}.`,
-    );
 });
 
 test.each([...DOC_FENCE_PATH_CASES])(
@@ -244,25 +200,15 @@ test('required-files: a root without LICENSE is reported and passes once LICENSE
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
-test.each(['COPYING', 'LICENCE', 'LICENSE-MIT', 'LICENSE.rst'])(
-    'required-files: the license file %s counts as a LICENSE',
-    async (name) => {
+test.each([...LICENSE_FILE_CASES])(
+    'required-files: $name counts as a LICENSE only when it is one',
+    async ({ name, findings }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSettingsText(['docs'], { level: 'all' }),
             'README.md': README,
             [name]: LICENSE,
         });
-        expect(await checkFindings(sandbox.path, 'docs/required-files')).toStrictEqual([]);
+        const found = await checkFindings(sandbox.path, 'docs/required-files');
+        expect(found.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...findings]);
     },
 );
-
-test('required-files: a NOTICE file does not count as a LICENSE', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['docs'], { level: 'all' }),
-        'README.md': README,
-        NOTICE: 'Copyright Example',
-    });
-    expect(await checkFindings(sandbox.path, 'docs/required-files')).toMatchObject([
-        { file: 'LICENSE', rule: 'missing-license' },
-    ]);
-});

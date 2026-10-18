@@ -112,3 +112,74 @@ Copyright (c) 2026 Alex Garcia
 `;
 
 export const DOCS_SETTINGS = `configurations = ["docs"]\n[[scope]]\npath = "api"\n\nconfigurations = ["docs"]\n[[ignore]]\ncheck = "docs/lychee"\npaths = ["api/ignored/**"]\nreason = "These pages are evaluated only after the documentation build."\n`;
+
+/** The places mise reads tasks from, and the tasks that each one defines. */
+export const MISE_TASK_SOURCES = [
+    {
+        name: 'task aliases in mise.toml',
+        tasks: ['compile', 'verify', 'validate'],
+        files: {
+            'mise.toml':
+                '[tasks.build]\nalias = "compile"\nrun = "true"\n[tasks.test]\nalias = ["verify", "validate"]\nrun = "true"\n',
+        },
+    },
+    {
+        name: 'file tasks with nested names',
+        tasks: ['setup', 'docs:build'],
+        files: {
+            '.mise/tasks/setup': '#!/usr/bin/env bash\ntrue\n',
+            '.mise/tasks/docs/build': '#!/usr/bin/env bash\ntrue\n',
+        },
+    },
+    {
+        name: 'tasks in .mise/config.toml, mise.local.toml, and conf.d files, beside a .tool-versions file',
+        tasks: ['config-task', 'local-task', 'included-task'],
+        files: {
+            '.mise/config.toml': '[tasks.config-task]\nrun = "true"\n',
+            'mise.local.toml': '[tasks.local-task]\nrun = "true"\n',
+            '.mise/conf.d/project.toml': '[tasks.included-task]\nrun = "true"\n',
+            '.tool-versions': 'node 22\n',
+        },
+    },
+] as const;
+
+/** Task files that gspot cannot parse. Each row names the document that reads them. */
+export const MALFORMED_TASK_FILES = [
+    {
+        path: 'package.json',
+        text: '{broken',
+        document: 'a.md',
+        tables: '',
+        files: { 'a.md': 'Run `bun run build`.\n', 'package.json': '{}' },
+    },
+    {
+        path: 'mise.toml',
+        text: '[tasks',
+        document: 'a.md',
+        tables: '',
+        files: { 'a.md': 'Run `bun run build`.\n', 'mise.toml': '' },
+    },
+    {
+        path: 'app/package.json',
+        text: '{broken',
+        document: 'app/nested/guide.md',
+        tables: DOC_TASK_SCOPES,
+        files: DOC_TASK_FILES,
+    },
+    {
+        path: 'app/mise.toml',
+        text: '[tasks',
+        document: 'app/nested/guide.md',
+        tables: DOC_TASK_SCOPES,
+        files: DOC_TASK_FILES,
+    },
+] as const;
+
+/** Root files that count as a license, and one that does not. */
+export const LICENSE_FILE_CASES = [
+    { name: 'COPYING', findings: [] },
+    { name: 'LICENCE', findings: [] },
+    { name: 'LICENSE-MIT', findings: [] },
+    { name: 'LICENSE.rst', findings: [] },
+    { name: 'NOTICE', findings: [{ file: 'LICENSE', rule: 'missing-license' }] },
+] as const;

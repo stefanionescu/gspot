@@ -178,28 +178,3 @@ test.each([...COMPOSE_PAIRING_CASES])(
         ]);
     },
 );
-
-test.each(['', 'app'])(
-    'a missing ignore file lists the entries of the configurations selected in root and child (%j)',
-    async (scope) => {
-        const prefix = scope === '' ? '' : scope + '/';
-        await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['docker'], {
-                level: 'all',
-                tables: '[[scope]]\npath = "app"\nconfigurations = ["python"]\n',
-            }),
-            Dockerfile: 'FROM scratch\n',
-            'app/Dockerfile': 'FROM scratch\n',
-        });
-        const findings = await checkFindings(sandbox.path, 'docker/dockerignore', {
-            paths: [prefix + 'Dockerfile'],
-        });
-        expect(findings).toMatchObject([
-            {
-                file: prefix + 'Dockerfile',
-                rule: 'missing-file',
-                message: `Add an ignore file at ${prefix}Dockerfile.dockerignore or ${prefix}.dockerignore that lists .git, .env${scope === '' ? '' : ', .venv, venv'}.`,
-            },
-        ]);
-    },
-);
