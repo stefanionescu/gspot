@@ -258,6 +258,25 @@ export function expandCommand(
 }
 
 /**
+ * Expand a command, then run the resolved executable in place of its first part.
+ * @param session the repository and settings.
+ * @param planned the check and its scope.
+ * @param command the authored arguments.
+ * @param run the expansion values and the resolved executable.
+ * @param run.substitutions the expansion values.
+ * @param run.toolPath the resolved executable path.
+ * @returns argument text and file markers.
+ */
+export function expandToolCommand(
+    session: CommandInputs,
+    planned: SubstitutionCheck,
+    command: string[],
+    run: { substitutions: Substitutions; toolPath: string },
+): CommandPart[] {
+    return expandCommand(session, planned, command, run.substitutions).with(0, run.toolPath);
+}
+
+/**
  * Replaces every file marker after variable-length arguments have expanded.
  * @param parts the expanded command.
  * @param files the paths relative to the working folder.

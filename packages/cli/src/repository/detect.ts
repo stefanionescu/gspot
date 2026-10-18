@@ -3,8 +3,7 @@ import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
-import { listNpmToolNames } from '#cli/configurations/tools.ts';
-import { isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
+import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
 import { isInScope, joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
@@ -171,10 +170,7 @@ export function detectConfigurations(
     dependencyFiles: DependencyFile[],
     scope = '',
 ): ConfigurationEvidence[] {
-    const npmNames = listNpmToolNames(manifests.values());
-    const toolOnlyPackages = new Set(
-        dependencyFiles.filter((manifest) => isToolOnlyPackage(manifest, npmNames)).map((manifest) => manifest.path),
-    );
+    const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, manifests.values());
     const tree = buildScopeContents(
         files.filter((file) => !toolOnlyPackages.has(file.path)),
         dependencyFiles.filter((manifest) => !toolOnlyPackages.has(manifest.path)),

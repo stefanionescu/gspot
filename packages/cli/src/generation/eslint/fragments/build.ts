@@ -8,13 +8,13 @@ import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
 import { buildVueFragment } from '#cli/generation/eslint/fragments/vue.ts';
 import { buildJestFragment } from '#cli/generation/eslint/fragments/jest.ts';
 import { groupFragmentSelectors } from '#cli/generation/eslint/selectors.ts';
-import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import { buildAstroFragment } from '#cli/generation/eslint/fragments/astro.ts';
 import { buildReactFragment } from '#cli/generation/eslint/fragments/react.ts';
 import { buildNestjsFragment } from '#cli/generation/eslint/fragments/nestjs.ts';
 import { buildNextjsFragment } from '#cli/generation/eslint/fragments/nextjs.ts';
 import { buildSvelteFragment } from '#cli/generation/eslint/fragments/svelte.ts';
 import { buildVitestFragment } from '#cli/generation/eslint/fragments/vitest.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { buildDrizzleFragment } from '#cli/generation/eslint/fragments/drizzle.ts';
 import { buildZustandFragment } from '#cli/generation/eslint/fragments/zustand.ts';
@@ -97,7 +97,7 @@ function buildSelectedFragments(session: Session, fragments: Fragment[], inputs:
                 ...selection.view,
                 scope,
                 testFiles: selection.view.test_files,
-                scopeDependencies: Object.keys(getProjectDependencies(session.repository.dependencyFiles, scope)),
+                scopeDependencies: listProjectDependencyNames(session.repository.dependencyFiles, scope),
                 blockWriter: module,
                 eslintFiles: {
                     ...inputs.eslintFiles,

@@ -20,8 +20,8 @@ import { findTool, runPlannedTool, buildCompanionEnvironment } from '#cli/checks
 import { buildCheckResult, recordInvocation, parseCommandFindings } from '#cli/checks/run/command/output.ts';
 
 import {
-    expandCommand,
     listScratchFiles,
+    expandToolCommand,
     replacePlaceholders,
     buildFileInvocations,
     listCommandToolFiles,
@@ -135,8 +135,10 @@ async function runInScratch(run: CommandRun, scratchCopyFolder: string | undefin
     );
     const result = await runCommands(planned, { session: scratchSession, tool, prepared, base });
     if (root === undefined) return result;
-    const reported = expandCommand(session, planned, command, environment.substitutions);
-    reported[0] = toolPath;
+    const reported = expandToolCommand(session, planned, command, {
+        substitutions: environment.substitutions,
+        toolPath,
+    });
     return { ...result, command: reported.filter((part) => typeof part === 'string') };
 }
 
@@ -261,8 +263,7 @@ export function prepareCommand(
 ): PreparedCommand {
     const { session, command, environment, toolPath } = commandRun;
     const { root, cwd, files, substitutions, env } = environment;
-    const commandArguments = expandCommand(session, planned, command, substitutions);
-    commandArguments[0] = toolPath;
+    const commandArguments = expandToolCommand(session, planned, command, { substitutions, toolPath });
     const commands = command.includes(FILES_PLACEHOLDER)
         ? buildInvocations(planned, { session, command, substitutions, toolPath })
         : buildFileInvocations(commandArguments, files);

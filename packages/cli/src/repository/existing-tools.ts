@@ -13,7 +13,6 @@ import { HOOKS_PATH } from '#cli/config/system/locations.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { listNpmToolNames } from '#cli/configurations/tools.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
@@ -21,7 +20,7 @@ import { join, extname, dirname, basename, relative } from 'node:path';
 import { MARKDOWN_EXTENSION } from '#cli/config/repository/inventory.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
-import { readPackageJson, isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
+import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
 import type { CiJob, TrackedFile, ExistingTools, FoundToolFile } from '#cli/types/repository/inventory.ts';
 
 import {
@@ -282,13 +281,9 @@ export function readExistingTools(
 ): ExistingTools {
     const paths = new Set(files.map((file) => file.path));
     const manifests = readManifests(reads);
-    const npmNames = listNpmToolNames(manifests.values());
-    const toolOnlyPackages = dependencyFiles
-        .filter(
-            (dependencyFile) => dependencyFile.kind === 'package.json' && isToolOnlyPackage(dependencyFile, npmNames),
-        )
-        .map((dependencyFile) => dependencyFile.path)
-        .toSorted((a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON));
+    const toolOnlyPackages = [...listToolOnlyPackages(dependencyFiles, manifests.values())].toSorted(
+        (a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON),
+    );
 
     const inventory = new Set(
         files.filter((file) => file.kind === 'source' && !isInGspotFolder(file.path)).map((file) => file.path),

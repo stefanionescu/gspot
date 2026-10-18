@@ -3,6 +3,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { hasValePackages } from '#cli/tools/vale.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { parseReport } from '#cli/parsers/output/json.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
@@ -24,7 +25,7 @@ import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/type
  * @returns the alerts of every file.
  */
 function parseValeAlerts(stdout: string): ValeAlert[] {
-    return Object.entries(valeReportSchema.parse(JSON.parse(stdout))).flatMap(([file, alerts]) =>
+    return Object.entries(parseReport('Vale', stdout, valeReportSchema)).flatMap(([file, alerts]) =>
         alerts.map((alert) => ({
             file: convertToPosixPath(file),
             line: alert.Line,

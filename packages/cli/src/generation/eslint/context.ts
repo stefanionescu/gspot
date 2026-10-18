@@ -12,8 +12,8 @@ import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
 import { buildBoundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
-import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import { getCachedValue, getCachedMapValue } from '#cli/system/files/cache.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { listFragmentConfigurations } from '#cli/generation/eslint/fragments/build.ts';
 import { buildFilePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 import { listScriptPaths, buildRuntimeBlocks } from '#cli/generation/eslint/runtimes.ts';
@@ -185,9 +185,7 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
         roles: view.roles,
         testFiles: view.test_files,
         scope: selection.scope.path,
-        scopeDependencies: Object.keys(
-            getProjectDependencies(session.repository.dependencyFiles, selection.scope.path),
-        ),
+        scopeDependencies: listProjectDependencyNames(session.repository.dependencyFiles, selection.scope.path),
         isAll: repositorySettings.level === 'all',
         sourceFiles: session.repository.files.flatMap((file) => (file.kind === 'source' ? [file.path] : [])),
     };

@@ -5,13 +5,13 @@ import { runChecks } from '#cli/checks/run/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { VALE_ALERT } from '#tests/data/checks/prose.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { CHECK_IMPLEMENTATIONS } from '#cli/checks/implementations.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { checkFindings, buildCheckInput, openPinnedSession } from '#tests/setup/check-input.ts';
 
@@ -179,9 +179,9 @@ test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malfo
     const session = await prepareValeSession(resources);
 
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout })));
-    const failure = await checkFindings(session.root, 'prose/vale').catch((error: unknown) => error);
-    if (stdout.startsWith('{')) expect(String(failure)).toContain('Line');
-    else expect(failure).toBeInstanceOf(SyntaxError);
+    expect(await captureRejection(checkFindings(session.root, 'prose/vale'))).toBe(
+        'Vale returned invalid structured findings.',
+    );
 });
 
 /** Create a Markdown sandbox for the valid and refused Vale output tests. */

@@ -5,6 +5,7 @@ import { buildFinding } from '#cli/checks/finding.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
+import { parseReport } from '#cli/parsers/output/json.ts';
 import { parseOutput } from '#cli/parsers/output/formats.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -118,7 +119,7 @@ export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]>
     if (result.code !== 0 && result.code !== 1) throw new Error(`Linkinator failed: ${result.stderr}`);
     const start = result.stdout.indexOf('{');
     if (start === -1) throw new Error('Linkinator returned no JSON report.');
-    const report = linkinatorReportSchema.parse(JSON.parse(result.stdout.slice(start)));
+    const report = parseReport('linkinator', result.stdout.slice(start), linkinatorReportSchema);
     if (result.code === 1 && !report.links.some((link) => link.state === BROKEN_LINK))
         throw new Error(`Linkinator failed without reporting broken links: ${result.stderr}`);
     return report.links
@@ -193,7 +194,7 @@ export async function checkSitePurgecss(input: CheckInput): Promise<Finding[]> {
         { cwd: build.folder, stdin: JSON.stringify({ toolFile, css: sheets, content: PURGECSS_CONTENT }) },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
-    const report = purgecssReportSchema.parse(JSON.parse(result.stdout));
+    const report = parseReport('PurgeCSS', result.stdout, purgecssReportSchema);
     return report.flatMap((sheet) =>
         sheet.rejected.map((selector) =>
             buildFinding(

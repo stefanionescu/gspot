@@ -13,7 +13,7 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { type RunOptions } from '#cli/types/checks/run/check.ts';
-import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { DECLARATION_FILES } from '#tests/data/repository/file-classification.ts';
 import { CLEAR_DEPENDENCIES_SCRIPT } from '#tests/data/tools/npm-tool-project.ts';
 import { TEXT_FIX, TEXT_CHECK, FIX_LINTER_CASES } from '#tests/data/runs/fixes.ts';
@@ -259,8 +259,8 @@ format = "none"
     expect(result.fixes?.results).toMatchObject([
         { check: 'project/update-package', status: 'changed', changed: ['package.json'] },
     ]);
-    expect(getProjectDependencies(session.repository.dependencyFiles, '')).toStrictEqual({ react: '19.0.0' });
-    expect(getProjectDependencies(session.repository.dependencyFiles, 'app')).toStrictEqual({ vue: '3.5.0' });
+    expect(listProjectDependencyNames(session.repository.dependencyFiles, '')).toStrictEqual(['react']);
+    expect(listProjectDependencyNames(session.repository.dependencyFiles, 'app')).toStrictEqual(['vue']);
     expect(await Bun.file(join(sandbox.path, 'package.json')).text()).toBe(ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
     expect(await Bun.file(join(sandbox.path, 'app/package.json')).text()).toBe(REACT_VUE_PACKAGES['app/package.json']);
 });

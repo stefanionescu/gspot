@@ -3,13 +3,15 @@
 import { posix } from 'node:path';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
+import { listNpmToolNames } from '#cli/configurations/tools.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
 import { readText, readCachedText } from '#cli/system/files/reads.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
+import { type PackageJson, type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { packageJsonSchema, selectDependencyFileParser } from '#cli/parsers/dependency-files.ts';
-import { type PackageJson, type DependencyMap, type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 
 // Keep each parser failure tied to the dependency file that caused it.
 async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<DependencyFile | undefined> {
@@ -53,25 +55,31 @@ export function readPackageJson(repositoryRoot: string, path: string): PackageJs
 }
 
 /**
- * Check whether a package.json holds only declared npm tools and Git hook packages: a tool-only package.
- * @param dependencyFile the parsed file.
- * @param npmNames the declared npm tools.
- * @returns whether the file holds tools only.
+ * List the tool-only packages: each package.json that holds only declared npm tools and Git hook packages.
+ * @param dependencyFiles the parsed files.
+ * @param manifests the configurations that declare the npm tools.
+ * @returns the paths of the tool-only packages.
  */
-export function isToolOnlyPackage(dependencyFile: DependencyFile, npmNames: ReadonlySet<string>): boolean {
-    if (dependencyFile.kind !== 'package.json') return false;
-    const names = Object.keys(dependencyFile.installed);
-    if (names.length === 0) return false;
-    return names.every((name) => npmNames.has(name) || HOOK_PACKAGES.has(name));
+export function listToolOnlyPackages(dependencyFiles: DependencyFile[], manifests: Iterable<Manifest>): Set<string> {
+    const npmNames = listNpmToolNames(manifests);
+    return new Set(
+        dependencyFiles
+            .filter((dependencyFile) => {
+                if (dependencyFile.kind !== 'package.json') return false;
+                const names = Object.keys(dependencyFile.installed);
+                return names.length > 0 && names.every((name) => npmNames.has(name) || HOOK_PACKAGES.has(name));
+            })
+            .map((dependencyFile) => dependencyFile.path),
+    );
 }
 
 /**
- * Get dependencies from the nearest declared npm project that contains a scope.
+ * List the dependency names of the nearest declared npm project that contains a scope.
  * @param dependencyFiles the validated files.
  * @param scope the repository-relative project folder.
- * @returns the declared dependencies without those of child projects or sibling projects.
+ * @returns the declared dependency names. Child and sibling projects keep their own.
  */
-export function getProjectDependencies(dependencyFiles: DependencyFile[], scope: string): DependencyMap {
+export function listProjectDependencyNames(dependencyFiles: DependencyFile[], scope: string): string[] {
     const owner = dependencyFiles
         .filter((manifest) => {
             if (manifest.kind !== PACKAGE_JSON) return false;
@@ -79,6 +87,5 @@ export function getProjectDependencies(dependencyFiles: DependencyFile[], scope:
             return folder === '' || scope === folder || scope.startsWith(`${folder}/`);
         })
         .toSorted((first, second) => second.path.length - first.path.length)[0];
-    if (owner === undefined) return {};
-    return owner.dependencies;
+    return owner === undefined ? [] : Object.keys(owner.dependencies);
 }

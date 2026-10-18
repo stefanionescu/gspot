@@ -5,6 +5,7 @@ import { FULL_PERCENTAGE } from '#cli/config/units.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { type Files } from '#cli/types/system/files.ts';
+import { parseReport } from '#cli/parsers/output/json.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, resolve, relative } from 'node:path';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
@@ -60,7 +61,7 @@ async function measureXcodeCoverage(input: CheckInput, plan: SwiftBuildPlan, cwd
         throw new Error(
             `The test run wrote no coverage report: ${formatOutputTail(viewed, 'The coverage viewer printed no error output.')}`,
         );
-    return xccovSchema.parse(JSON.parse(viewed.stdout));
+    return parseReport('xccov', viewed.stdout, xccovSchema);
 }
 
 /**
@@ -181,8 +182,8 @@ async function checkSwiftTestsCoverage(input: CheckInput): Promise<Finding[]> {
  * @returns the coverage of each source target.
  */
 function parseSwiftCoverage(text: string, packageText: string, folder: string): CoverageReport {
-    const report = swiftCoverageSchema.parse(JSON.parse(text));
-    const description = swiftPackageCoverageSchema.parse(JSON.parse(packageText));
+    const report = parseReport('swift test', text, swiftCoverageSchema);
+    const description = parseReport('swift package', packageText, swiftPackageCoverageSchema);
     const root = realpathSync(folder);
     const measured = new Map(
         report.data.flatMap((data) => data.files).map((file) => [file.filename, file.summary.lines]),

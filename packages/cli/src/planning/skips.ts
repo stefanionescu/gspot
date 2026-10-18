@@ -3,9 +3,9 @@ import { isScopeCovered } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning.ts';
 import { findMissingBuild } from '#cli/configurations/tools.ts';
-import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { Skip, System, Session, ToolIgnore, PlanInputs, PlannedCheck, SettingsSkip } from '#cli/types/planning.ts';
 
@@ -19,7 +19,9 @@ function findConditionSkip(check: PlannedCheck, hasGit: boolean, dependencyFiles
         };
     if (
         dependencies !== undefined &&
-        !dependencies.some((name) => name in getProjectDependencies(dependencyFiles, check.selection.scope.path))
+        !dependencies.some((name) =>
+            listProjectDependencyNames(dependencyFiles, check.selection.scope.path).includes(name),
+        )
     )
         return { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
     if (git !== true || hasGit) return undefined;

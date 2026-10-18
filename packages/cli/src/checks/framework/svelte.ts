@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { parseReport } from '#cli/parsers/output/json.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
@@ -47,11 +48,12 @@ function parseSvelteCheckFindings(input: CheckInput, stdout: string): Finding[] 
     const failure = lines
         .map((line) => FAILURE_LINE.exec(line)?.groups?.['message'])
         .find((text) => text !== undefined);
-    if (failure !== undefined) throw new Error(`The svelte-check run failed: ${z.string().parse(JSON.parse(failure))}`);
+    if (failure !== undefined)
+        throw new Error(`The svelte-check run failed: ${parseReport('svelte-check', failure, z.string())}`);
     return lines.flatMap((line): Finding[] => {
         const text = FINDING_LINE.exec(line)?.groups?.['message'];
         if (text === undefined) return [];
-        const reported = findingSchema.parse(JSON.parse(text));
+        const reported = parseReport('svelte-check', text, findingSchema);
         const rule = typeof reported.code === 'number' ? `TS${String(reported.code)}` : reported.code;
         return [
             buildFinding(

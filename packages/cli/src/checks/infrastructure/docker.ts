@@ -3,6 +3,7 @@ import { parse } from 'yaml';
 import { join, posix } from 'node:path';
 import { buildFinding } from '#cli/checks/finding.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { parseReport } from '#cli/parsers/output/json.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/checks/run/command/tool.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -114,7 +115,7 @@ async function scanImage(input: CheckInput, image: string, path: string): Promis
         const detail = formatOutputTail(result, `exit ${String(result.code)}`);
         throw new Error(`Trivy could not scan ${image}: ${detail}`);
     }
-    const report = imageReportSchema.parse(JSON.parse(result.stdout));
+    const report = parseReport('Trivy', result.stdout, imageReportSchema);
     const findings = (report.Results ?? []).flatMap((entry) => [
         ...(entry.Vulnerabilities ?? []).map((vulnerability) =>
             buildFinding(

@@ -30,9 +30,14 @@ function fixFailure(planned: PlannedCheck, result: SpawnResult): string | undefi
     return detail === '' ? `${planned.check.name} exited ${String(result.code)}` : detail;
 }
 
+// The files a fixer may change: its files and the deleted paths that trigger it, each once.
+function listFixPaths(planned: PlannedCheck): string[] {
+    return [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
+}
+
 async function runFix(session: Session, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
     const check = planned.check.name;
-    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
+    const paths = listFixPaths(planned);
     const before = readContents(prepared.root, paths);
     let note: string | undefined;
     for (const command of prepared.commands) {
@@ -73,7 +78,7 @@ async function runFixInScratch(
     using scratch = preparedScratch.copy;
     const prepared = preparedScratch.prepared;
     using files = openFiles(root);
-    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
+    const paths = listFixPaths(planned);
     const originals = new Map(paths.map((path) => [path, files.read(path)]));
     const result = await runFix(session, planned, prepared);
     using corrected = openFiles(scratch.path);
@@ -238,9 +243,7 @@ async function runFixerPasses(
 export async function runFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {
     const { isDryRun } = options;
     const checks = planned.filter((check) => check.check.fix !== undefined);
-    const paths = [
-        ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
-    ].toSorted((a, b) => a.localeCompare(b));
+    const paths = [...new Set(checks.flatMap((check) => listFixPaths(check)))].toSorted((a, b) => a.localeCompare(b));
     using scratch = isDryRun
         ? await copyIntoScratch(
               selectScratchCopyPaths(

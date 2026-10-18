@@ -8,7 +8,7 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildTrackedFile, readTestRepository } from '#tests/setup/builders.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/data/tools/python-tool-project.ts';
-import { readPackageJson, readDependencyFiles, getProjectDependencies } from '#cli/repository/dependency-files.ts';
+import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 
 import {
     PACKAGE_FIELDS,
@@ -98,7 +98,7 @@ test('declared framework dependencies follow the nearest npm project', async () 
     const repository = await readTestRepository(sandbox.path);
     const manifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     for (const { scope, dependencies } of PROJECT_DEPENDENCY_SCOPES) {
-        expect(getProjectDependencies(manifests, scope), scope).toStrictEqual(dependencies);
+        expect(listProjectDependencyNames(manifests, scope), scope).toStrictEqual(Object.keys(dependencies));
     }
 });
 
@@ -118,7 +118,7 @@ test('a broken package.json stops the next session and a fixed one changes the s
     const current = await openSession(sandbox.path);
     expect(
         current.scopes.map((selection) =>
-            Object.keys(getProjectDependencies(current.repository.dependencyFiles, selection.scope.path)),
+            listProjectDependencyNames(current.repository.dependencyFiles, selection.scope.path),
         ),
     ).toStrictEqual([[], ['vue']]);
 });

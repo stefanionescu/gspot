@@ -2,10 +2,9 @@
 import picomatch from 'picomatch';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
-import { listNpmToolNames } from '#cli/configurations/tools.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
-import { isToolOnlyPackage } from '#cli/repository/dependency-files.ts';
 import type { ToolFileGeneration } from '#cli/types/generation/files.ts';
+import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Scope, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
@@ -109,12 +108,7 @@ export function findScopes(
 ): Scope[] {
     const configurations = [...manifests];
     const patterns = configurations.flatMap((manifest) => manifest.detect.project_files);
-    const npmNames = listNpmToolNames(configurations);
-    const toolOnlyPackages = new Set(
-        dependencyFiles
-            .filter((dependencyFile) => isToolOnlyPackage(dependencyFile, npmNames))
-            .map((dependencyFile) => dependencyFile.path),
-    );
+    const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, configurations);
     const folders = new Set<string>();
     const sources = files.filter(
         (file) => file.kind === 'source' && !toolOnlyPackages.has(file.path) && !isInstalledToolPath(file.path),

@@ -70,7 +70,7 @@ xcode_scheme = "Example"
     },
     {
         failure: 'malformed',
-        note: 'targets',
+        note: 'xccov returned invalid structured findings.',
         settings: XCTEST_SETTINGS,
         build: '',
         coverage: undefined,

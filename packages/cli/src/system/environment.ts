@@ -40,6 +40,15 @@ export function normalizeEnvironmentKey(name: string): string {
 }
 
 /**
+ * Find how an environment spells the key of the executable search path. Windows matches names in any case.
+ * @param env the environment variables.
+ * @returns the key, or undefined when the environment has none.
+ */
+export function findPathKey(env: Readonly<Record<string, unknown>>): string | undefined {
+    return Object.keys(env).find((name) => normalizeEnvironmentKey(name) === 'PATH');
+}
+
+/**
  * Read the gspot cache folder of this system. Refuse a relative cache path from the environment.
  * @returns the absolute cache folder.
  */

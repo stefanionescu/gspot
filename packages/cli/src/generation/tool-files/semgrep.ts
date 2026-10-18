@@ -1,7 +1,7 @@
 import { parse, stringify } from 'yaml';
 import { readAsset } from '#cli/system/assets.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
-import { getProjectDependencies } from '#cli/repository/dependency-files.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { type SemgrepDocument, type ToolFileContext } from '#cli/types/generation/files.ts';
 
 /**
@@ -14,7 +14,7 @@ function buildSemgrepFile(context: ToolFileContext): string {
     const { scopes } = context.session;
     const { dependencyFiles } = context.session.repository;
     const document = parse(readAsset(`${context.manifest.folder}/${toolFile.source}`)) as SemgrepDocument;
-    const scopeDependencies = new Set(Object.keys(getProjectDependencies(dependencyFiles, selection.scope.path)));
+    const scopeDependencies = new Set(listProjectDependencyNames(dependencyFiles, selection.scope.path));
     const conditions = toolFile.rule_dependencies;
     const dropped =
         conditions === undefined
