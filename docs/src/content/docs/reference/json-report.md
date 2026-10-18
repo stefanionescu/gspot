@@ -1,6 +1,6 @@
 ---
-title: JSON output
-description: Read check reports and command errors as JSON.
+title: JSON report
+description: The fields of `gspot check --json` and the error object of every `--json` command.
 ---
 
 Use `gspot check --json` to write one report to standard output. The process exit code matches `exitCode`.
@@ -25,7 +25,7 @@ gspot check --json
 | `unstagedChanges` | Number of changed files left out when the run reads the staging area.                         |
 | `partial`         | Whether the run selected only staged files, changed files, or named paths.                    |
 | `failed`          | Check IDs that failed, including checks whose fixer failed.                                   |
-| `exitCode`        | The process exit code. See [Exit codes](/reference/exit-codes/).                              |
+| `exitCode`        | The process exit code. See [Exit codes](/reference/commands/#exit-codes).                     |
 
 ## Check results
 

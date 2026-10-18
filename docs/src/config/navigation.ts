@@ -93,7 +93,7 @@ export const SIDEBAR = [
             { label: 'Configurations', slug: 'reference/configurations/index' },
             { label: 'Checks', slug: 'reference/checks/index' },
             { label: 'ESLint plugin', slug: 'reference/eslint-plugin/index' },
-            { label: 'Exit codes and environment variables', slug: 'reference/exit-codes' },
+            { label: 'Environment variables', slug: 'reference/environment-variables' },
             { label: 'JSON report', slug: 'reference/json-report' },
         ],
     },

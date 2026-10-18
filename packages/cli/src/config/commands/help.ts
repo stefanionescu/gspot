@@ -245,5 +245,7 @@ export const COMMAND_HELP = {
 
 export const HELP_TERM_WIDTH = 29;
 
-export const PROGRAM_HELP_FOOTER =
-    'Options:\n  --version                    Print the version\n  -h, --help                   Print this help\n\nExit codes:\n  0         The command finished. For check: no findings remain.\n  1         check found findings, or doctor found a setup problem.\n  2         The command could not finish, or an argument is not valid.\n  130, 143  check or install stopped because of Ctrl-C or SIGTERM.\n\nExample:\n  gspot init --dry-run\n\nRun gspot <command> --help to see the options of one command.\n';
+export const PROGRAM_EXIT_CODES =
+    '  0         The command finished. For check: no findings remain.\n  1         check found findings, or doctor found a setup problem.\n  2         The command could not finish, or an argument is not valid.\n  130, 143  check or install stopped because of Ctrl-C or SIGTERM.';
+
+export const PROGRAM_HELP_FOOTER = `Options:\n  --version                    Print the version\n  -h, --help                   Print this help\n\nExit codes:\n${PROGRAM_EXIT_CODES}\n\nExample:\n  gspot init --dry-run\n\nRun gspot <command> --help to see the options of one command.\n`;

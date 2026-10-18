@@ -20,6 +20,7 @@ export type SettingVariant = { setting: SettingDeclaration; owners: string[] };
 /** Plain data read by the documentation build. */
 export type ReferenceData = {
     commands: CommandReference[];
+    exitCodes: string;
     configurations: Manifest[];
     checks: ConfigurationCheck[];
     settings: SettingVariant[];

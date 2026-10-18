@@ -23,7 +23,7 @@ import {
 function buildReferencePages(): Map<string, ReferencePage> {
     const data = readReferenceData();
     const pages = new Map([
-        ...buildCommandPages(data.commands),
+        ...buildCommandPages(data),
         ...buildConfigurationPages(data),
         ...buildSettingsPages(data),
         ...buildPluginPages(),

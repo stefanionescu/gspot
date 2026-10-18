@@ -1,5 +1,5 @@
 import type { ReferencePage } from '../types/reference.ts';
-import type { readReferenceData } from '#cli/reference.ts';
+import type { ReferenceData } from '#cli/types/reference.ts';
 import { EXIT_CODE_LINE, REFERENCE_FOLDERS, HELP_CONTINUATION } from '../config/reference.ts';
 import { escapeCell, formatTable, formatSection, formatDefinitions, buildReferencePage } from './markdown.ts';
 
@@ -19,12 +19,15 @@ function formatExitCodes(text: string): string {
 
 /**
  * Build the command pages from the CLI help data, in program order.
- * @param commands the help data the CLI registers
+ * @param data the CLI reference data
+ * @param data.commands the help data the CLI registers
+ * @param data.exitCodes the exit codes of every command
  * @returns pages keyed by their Markdown path
  */
-export function buildCommandPages(
-    commands: ReturnType<typeof readReferenceData>['commands'],
-): Map<string, ReferencePage> {
+export function buildCommandPages({
+    commands,
+    exitCodes,
+}: Pick<ReferenceData, 'commands' | 'exitCodes'>): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>();
     for (const [order, command] of commands.entries()) {
         const argumentsBody = formatDefinitions(
@@ -74,7 +77,8 @@ export function buildCommandPages(
                     ],
                 ),
             ) +
-            '\nSee [Exit codes and environment variables](/reference/exit-codes/).\n',
+            formatSection('Exit codes', formatExitCodes(exitCodes)) +
+            '\nSee also [Environment variables](/reference/environment-variables/).\n',
     );
     index.data.sidebar = { order: 0 };
     pages.set(`${REFERENCE_FOLDERS.commands}/index.md`, index);
