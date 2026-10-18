@@ -1,6 +1,6 @@
 #:schema https://unpkg.com/@gspothq/cli@0.1.1/gspot.schema.json
 
-# gspot settings for this repository. Change them with gspot set, unset, ignore, add, and remove.
+# gspot settings for this repository. Change them with gspot set, unset, add, remove, ignore, and unignore.
 
 level = "all"
 configurations = ["typescript", "markdown", "github-actions", "bash"]
@@ -97,7 +97,7 @@ reason = "These tool report properties retain the exact TruffleHog, Semgrep, mar
 [[naming.override]]
 paths = ["tests/unit/cli/generation/tool-files/v8r.test.ts"]
 allow_digits = true
-reason = "These files retain the official v8r and markdownlint-cli2 tool names."
+reason = "v8r is the name of the tool."
 
 [[naming.override]]
 paths = ["tests/types/ci.ts"]
@@ -466,7 +466,7 @@ reason = "A lint plugin that runs at development time and is linked dynamically;
 [[licenses.allowed_package]]
 name = "lightningcss"
 version = "1.33.0"
-reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
+reason = "Vite depends on it to build the docs site; the license binds changes to its own files, and none are made."
 
 [tools.eslint]
 import_extension = "ts"
@@ -657,7 +657,7 @@ reason = "Astro routes the home page by this file."
 [[ignore]]
 check = "structure/lone-files"
 paths = ["docs/src/types/reference.ts"]
-reason = "The Folders rule keeps every type of the docs site in docs/src/types/, and the site has one type file."
+reason = "The docs site has one shared type, ReferencePage, and keeps it in docs/src/types/ like every package."
 
 [[ignore]]
 check = "structure/shared-prefixes"

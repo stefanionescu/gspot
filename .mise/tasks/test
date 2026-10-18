@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-#MISE description="Run one test suite: unit (the default), integration, or e2e. A direct bun test of an integration or e2e file needs bun tests/setup/prepare-run.ts <suite> first, and again after changes under packages/."
+#MISE description="Run one test suite: unit (the default), integration, or e2e."
 #MISE depends=["build"]
+# A direct bun test of an integration or e2e file needs bun tests/setup/prepare-run.ts <suite> first, and again after
+# changes under packages/.
 set -euo pipefail
 
 suite=${1:-unit}
