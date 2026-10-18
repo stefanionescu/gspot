@@ -101,22 +101,16 @@ test('a file path reports its scope, checks, and ignores', async () => {
         ],
     });
 });
-test('explain of a missing ./ path fails with an arguments error that names the path', async () => {
+test.each([
+    ['./missing.sh', 'missing.sh'],
+    ['unknown-configuration', 'gspot cannot explain unknown-configuration.'],
+])('explain of %s fails with an arguments error that names the subject', async (subject, message) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': EXPLAIN_SETTINGS, 'api/build.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
-    const missing = await runGspot(sandbox.path, ['explain', './missing.sh', '--json']);
-    expect(missing.code).toBe(2);
-    expect(JSON.parse(missing.stdout)).toMatchObject({ error: 'arguments', message: matchSubstring('missing.sh') });
-});
-test('an unknown subject gets the command error', async () => {
-    await using sandbox = await testdir();
-    const result = await runGspot(sandbox.path, ['explain', 'unknown-configuration', '--json']);
+    const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'arguments',
-        message: matchSubstring('gspot cannot explain unknown-configuration.'),
-    });
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: matchSubstring(message) });
 });
 test.each([
     ['bash', 'configuration'],

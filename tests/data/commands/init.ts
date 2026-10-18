@@ -1,5 +1,6 @@
 import { COMMITLINT_PACKAGE } from '#tests/data/checks/commits.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
+import { INVALID_CSS, STYLELINT_PACKAGE_JSON } from '#tests/data/checks/css.ts';
 
 /** pyproject.toml tables that init leaves in place while a generated tool file takes over. */
 const REPLACED_PYPROJECT_TABLES = [
@@ -276,3 +277,23 @@ export {
     STYLELINT_LOOKUP_SCRIPT,
     REPLACED_PYPROJECT_TABLES,
 };
+
+/** Files that change between the init plan and the write: an edited package.json field and a new shared file. */
+export const SHARED_FILE_RACES = [
+    {
+        name: 'one of its managed fields changed after the plan',
+        files: { 'package.json': STYLELINT_PACKAGE_JSON, 'source.css': INVALID_CSS },
+        configuration: 'css',
+        path: 'package.json',
+        note: 'managed stylelint fields; other content stays',
+        edited: STYLELINT_PACKAGE_JSON.replace('native-project', 'edited-project'),
+    },
+    {
+        name: 'it was created after the plan',
+        files: { 'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}' },
+        configuration: 'dependencies',
+        path: 'bunfig.toml',
+        note: 'managed install.minimumReleaseAge, install.minimumReleaseAgeExcludes fields; other content stays',
+        edited: '[install]\nexact = true\n',
+    },
+] as const;

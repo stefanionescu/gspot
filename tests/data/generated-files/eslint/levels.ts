@@ -1,3 +1,8 @@
+import { STRICT_COMPILER_OPTIONS } from '#tests/data/checks/typescript/projects.ts';
+
+const PORT_SOURCE =
+    '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
+
 export const COALESCING_SOURCE = `export function fallback(value) {
     const alternate = value || {};
     return alternate ?? {};
@@ -20,3 +25,30 @@ export const TYPE_EXPORT_FILES = {
     'index.ts':
         'import { value, Shape } from "./value.js";\nexport { value };\nexport { Shape } from "./value.js";\nexport const shape: Shape = value;\n',
 } as const;
+
+/** A root TypeScript project, and a TypeScript scope under a root without TypeScript. */
+export const TYPED_RULE_PROJECTS = [
+    {
+        name: 'a root TypeScript project',
+        configurations: ['typescript'],
+        tables: '',
+        files: {
+            'package.json': '{"private":true,"type":"module"}\n',
+            'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
+            'source.ts': PORT_SOURCE,
+        },
+        file: 'source.ts',
+    },
+    {
+        name: 'a TypeScript scope under a root without TypeScript',
+        configurations: [],
+        tables: '[[scope]]\npath = "api"\nconfigurations = [ "typescript" ]\n',
+        files: {
+            'package.json': '{"name":"example","private":true,"type":"module","workspaces":["api"]}\n',
+            'api/package.json': '{"name":"api","private":true,"type":"module"}\n',
+            'api/tsconfig.json': JSON.stringify({ compilerOptions: STRICT_COMPILER_OPTIONS, include: ['src'] }) + '\n',
+            'api/src/port.ts': PORT_SOURCE,
+        },
+        file: 'api/src/port.ts',
+    },
+] as const;

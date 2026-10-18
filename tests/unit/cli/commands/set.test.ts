@@ -39,6 +39,11 @@ test.each([
         ['set', 'limits.file_lines', '100', '--scope', 'web'],
         'gspot.toml has no [[scope]] with path = "web". Add one, or leave out --scope.',
     ],
+    [
+        'an invalid level',
+        ['set', 'level', 'everything'],
+        'The value `everything` is not valid for level. Use recommended or all.',
+    ],
 ])('set refuses %s', async (_, commandArguments, expected) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -99,18 +104,6 @@ test.each([
     const result = await runGspot(sandbox.path, commandArguments);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toContain('No change: gspot.toml already has this value.');
-});
-
-test('an invalid level leaves gspot.toml as it was', async () => {
-    await using sandbox = await testdir();
-    const settingsPath = join(sandbox.path, 'gspot.toml');
-    const settings = buildSettingsText(['bash', 'naming']);
-    await Bun.write(settingsPath, settings);
-    const refused = await runGspot(sandbox.path, ['set', 'level', 'everything']);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stderr.trim()).toBe('The value `everything` is not valid for level. Use recommended or all.');
-    expect(refused.stderr.trim().split('\n')).toHaveLength(1);
-    expect(await Bun.file(settingsPath).text()).toBe(settings);
 });
 
 test.each([

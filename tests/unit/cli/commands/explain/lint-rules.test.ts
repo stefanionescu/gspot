@@ -33,28 +33,6 @@ test('a rule is explained with the page its manifest declares', async () => {
     });
 });
 
-test('a plugin rule is explained with the page of the plugin its prefix names', async () => {
-    await using sandbox = await testdir();
-    const setMembership = await runRegisteredCommand(sandbox.path, ['explain', 'eslint/unicorn/prefer-set-has']);
-    expect(setMembership.json).toMatchObject({
-        page: 'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
-    });
-    const typescriptAny = await runRegisteredCommand(sandbox.path, [
-        'explain',
-        'eslint/@typescript-eslint/no-explicit-any',
-    ]);
-    expect(typescriptAny.json).toMatchObject({
-        page: 'https://typescript-eslint.io/rules/no-explicit-any',
-    });
-    const identicalFunctions = await runRegisteredCommand(sandbox.path, [
-        'explain',
-        'eslint/sonarjs/no-identical-functions',
-    ]);
-    expect(identicalFunctions.json).toMatchObject({
-        page: null,
-    });
-});
-
 test.each([
     ['gspot/no-trivial-functions', 'https://generativespotting.com/reference/eslint-plugin/no-trivial-functions/'],
     ['@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
@@ -62,7 +40,13 @@ test.each([
         'unicorn/prefer-set-has',
         'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
     ],
-])('a plugin rule without the eslint/ prefix finds its page: %s', async (subject, page) => {
+    [
+        'eslint/unicorn/prefer-set-has',
+        'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
+    ],
+    ['eslint/@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
+    ['eslint/sonarjs/no-identical-functions', null],
+])('a plugin rule, with or without the eslint/ prefix, finds the page of its plugin: %s', async (subject, page) => {
     await using sandbox = await testdir();
     const subjectExplanation = await runRegisteredCommand(sandbox.path, ['explain', subject]);
     expect(subjectExplanation.json).toMatchObject({

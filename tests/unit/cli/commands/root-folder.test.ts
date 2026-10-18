@@ -4,7 +4,6 @@ import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { isGitRepository } from '#cli/system/git.ts';
 import { SQL_CHECK } from '#tests/data/checks/sql.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
@@ -84,18 +83,11 @@ test('a gspot.toml below the Git root writes and checks only its own folder', as
     ]);
 });
 
-test('finds the nearest gspot.toml in a folder with no Git', async () => {
+test.each([
+    { name: 'the nearest gspot.toml', files: { 'gspot.toml': 'configurations = []\n' }, start: 'nested' },
+    { name: 'the requested folder when no gspot.toml exists', files: {}, start: '' },
+])('a folder with no Git finds $name', async ({ files, start }) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'configurations = []\n',
-        'nested/source.ts': 'export {});\n',
-    });
-    expect(findRoot(join(sandbox.path, 'nested'))).toBe(sandbox.path);
-});
-
-test('keeps the requested folder when no Git root or gspot.toml exists', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'source.ts': 'export {});\n' });
-    expect(findRoot(sandbox.path)).toBe(sandbox.path);
-    expect(isGitRepository(sandbox.path)).toBe(false);
+    await createFileTree(sandbox.path, { ...files, 'nested/source.ts': 'export {});\n' });
+    expect(findRoot(join(sandbox.path, start))).toBe(sandbox.path);
 });
