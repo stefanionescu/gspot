@@ -70,7 +70,7 @@ function buildBlocksBeforeFragments(
         ...buildBasePresetBlocks(base.eslintPresets.get('javascript') as EslintPresets, CODE_PRESETS, eslintFiles.code),
         [
             { files: eslintFiles.code, rules: { ...rules.code, ...pluginOptions, ...parts.allLevelRules } },
-            `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }${parts.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
+            `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }, 'import-x/ignore': ${JSON.stringify(parts.importIgnores)}${parts.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
             { expression: `gspot.configs.${isAll ? 'all' : 'recommended'}.rules`, rules: {} },
         ],
         [{ files: eslintFiles.javascript, rules: JAVASCRIPT_RULES }],

@@ -86,3 +86,22 @@ test('Ruff formats with double quotes unless format.quotes is written, while Pre
     ) as RuffToolFile;
     expect(written.format['quote-style']).toBe('single');
 });
+
+test('basedpyright reads the uv environment of a project with a tracked uv.lock, whether .venv exists yet or not', async () => {
+    const basedpyrightPath = '.gspot/configurations/language/python/basedpyright.json';
+    const locked = JSON.parse(
+        await generateFile(buildSettingsText(['python']), basedpyrightPath, {
+            'example.py': 'value = 1\n',
+            'uv.lock': 'version = 1\n',
+        }),
+    ) as { venv?: string; venvPath?: string };
+    expect(locked.venv).toBe('.venv');
+    expect(locked.venvPath).toBeDefined();
+    const unlocked = JSON.parse(
+        await generateFile(buildSettingsText(['python']), basedpyrightPath, {
+            'example.py': 'value = 1\n',
+            '.venv/pyvenv.cfg': 'home = /usr/bin\n',
+        }),
+    ) as { venv?: string };
+    expect(unlocked.venv).toBeUndefined();
+});

@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { readGitOutput } from '#tests/setup/git.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
@@ -105,4 +106,20 @@ test('a Node script imports through package.json imports, never through TypeScri
         filePath: 'tools/run/tool.mjs',
     });
     expect(fixed?.output).toBe('import { value } from "#src/app/value.mjs";\nexport { value };\n');
+});
+
+test('import-x never parses a gitignored bundle that code imports', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['javascript']),
+        '.gitignore': '.open-next/\n',
+        'worker.js': '',
+    });
+    readGitOutput(sandbox.path, ['init', '-q']);
+    readGitOutput(sandbox.path, ['add', '--', '.gitignore', 'worker.js', 'gspot.toml']);
+    const eslint = await createEslint(sandbox.path);
+    const config = (await eslint.calculateConfigForFile('worker.js')) as { settings: Record<string, unknown> };
+    const ignored = (config.settings['import-x/ignore'] as string[]).map((source) => new RegExp(source, 'u'));
+    expect(ignored.some((pattern) => pattern.test(`${sandbox.path}/.open-next/worker.js`))).toBe(true);
+    expect(ignored.some((pattern) => pattern.test(`${sandbox.path}/worker.js`))).toBe(false);
 });

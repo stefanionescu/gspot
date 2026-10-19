@@ -46,18 +46,19 @@ test('missing-paths: wildcard examples are skipped; bold, italic and code paths 
     ]);
 });
 
-test('missing-paths: gitignored literal paths count as present; missing paths are reported', async () => {
+test('missing-paths: gitignored paths and paths inside ignored folders count as present; others are reported', async () => {
     const found = await collectDocsFindings(
         {
-            'a.md': 'Build `output/report.json` and `app/cache`.\nSee `app/absent.ts` and `app/private.ts`.\n',
-            '.gitignore': '/output/report.json\n',
+            'a.md': 'Build `output/report.json` and `app/cache`.\nSee `app/absent.ts`, `app/private.ts`, `.next/types/routes.d.ts`, and `src/gone.ts`.\n',
+            '.gitignore': '/output/report.json\n.next/\n',
             'app/.gitignore': 'cache/\n*.ts\n!private.ts\n',
+            'src/here.ts': '',
         },
         { paths: ['a.md'] },
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 2, rule: 'missing-path', message: matchSubstring('app/absent.ts') },
         { file: 'a.md', line: 2, rule: 'missing-path', message: matchSubstring('app/private.ts') },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: matchSubstring('src/gone.ts') },
     ]);
 });
 

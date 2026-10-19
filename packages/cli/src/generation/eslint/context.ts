@@ -20,18 +20,19 @@ import { listScriptPaths, buildRuntimeBlocks } from '#cli/generation/eslint/runt
 import type { EslintParts, EslintFacts, EslintPresets, EslintContext } from '#cli/types/generation/eslint.ts';
 
 import {
-    buildNodeScriptBlocks,
-    buildImportStyleBlocks,
-    buildScopeImportBlocks,
-    buildImportBoundariesRule,
-} from '#cli/generation/eslint/imports.ts';
-import {
     buildRuleOptions,
     buildIgnoreBlocks,
     buildRulesOffBlocks,
     buildTrivialRuleBlocks,
     buildEnvironmentRuleBlocks,
 } from '#cli/generation/eslint/lint-rules.ts';
+import {
+    buildImportIgnores,
+    buildNodeScriptBlocks,
+    buildImportStyleBlocks,
+    buildScopeImportBlocks,
+    buildImportBoundariesRule,
+} from '#cli/generation/eslint/imports.ts';
 import {
     CODE_LANGUAGES,
     NODE_SHEBANG_TAG,
@@ -133,6 +134,7 @@ function buildProjectOptions(session: ToolFileContext['session'], context: Eslin
         boundaryBlocks: buildBoundaryBlocks(context),
         scopeBlocks: [...buildScopeImportBlocks(context), ...buildNodeScriptBlocks(context)],
         ignoredPaths: context.generatedPatterns,
+        importIgnores: buildImportIgnores(context.generatedPatterns),
         extra: buildExtraBlock(context),
     };
 }

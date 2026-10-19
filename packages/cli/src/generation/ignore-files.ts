@@ -2,6 +2,7 @@
 import { join, basename } from 'node:path/posix';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { LEADING_SLASH } from '#cli/config/system/paths.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { listPointerPaths } from '#cli/generation/pointers.ts';
@@ -9,6 +10,7 @@ import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { type ScopeView } from '#cli/types/settings/values.ts';
 import { listActiveIgnores } from '#cli/settings/scope-view.ts';
+import { listGitignorePatterns } from '#cli/repository/gitignore.ts';
 import { IGNORE_FILE_PURPOSES } from '#cli/config/generation/formatting.ts';
 import { listToolFileDeclarations } from '#cli/generation/tool-files/declarations.ts';
 import { type IgnoreSection, type ToolFileContext } from '#cli/types/generation/files.ts';
@@ -20,6 +22,16 @@ import {
     BUILD_OUTPUT_PATTERNS,
     LOCAL_ENVIRONMENT_PATTERNS,
 } from '#cli/config/generation/ignore-files.ts';
+
+// Tool files leave out what Git ignores, unless a tracked file matches the pattern, such as a force-added file. The
+// managed block names .gspot/ paths, which the section of generated files already holds.
+function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
+    return listGitignorePatterns(session.reads, tracked).filter((pattern) => {
+        if (isInGspotFolder(pattern.replace(LEADING_SLASH, ''))) return false;
+        const matches = buildPathMatcher(buildGlobSections([{ title: '', patterns: [pattern] }]));
+        return !tracked.some((path) => matches(path));
+    });
+}
 
 // Collect the generated files and pointers outside .gspot that this run writes, so that scanners leave them alone.
 function collectToolExclusions(session: Session): string[] {
@@ -61,6 +73,13 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
                 }),
                 ...folders.filter((folder) => BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
             ],
+        },
+        {
+            title: IGNORE_SECTION_TITLES.git,
+            patterns: listGitIgnoredPatterns(
+                session,
+                tracked.map(({ path }) => path),
+            ),
         },
         { title: IGNORE_SECTION_TITLES.gspot, patterns: [...GSPOT_FOLDER_PATTERNS, ...toolFiles] },
         {

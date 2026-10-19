@@ -1,4 +1,6 @@
+import picomatch from 'picomatch';
 import { escapeGlob } from '#cli/repository/matchers.ts';
+import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
 import { type ScopeSelection } from '#cli/types/settings/values.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { findParentSelection } from '#cli/generation/eslint/lint-rules.ts';
@@ -7,12 +9,15 @@ import { readScopeAliases, readPackageAliases } from '#cli/generation/eslint/ali
 import { type EslintBlock, type EslintContext, type EslintImportBoundaryRule } from '#cli/types/generation/eslint.ts';
 
 import {
+    REGEX_SYMBOLS,
     CODE_LANGUAGES,
+    ANY_DEPTH_PREFIX,
     IMPORT_EXTENSIONS,
     EXTENSIONLESS_CODE,
     FILE_EXTENSION_RULE,
     NODE_SCRIPT_PATTERNS,
     ESLINT_SETTINGS_TABLE,
+    PATH_SEPARATOR_PATTERN,
     IMPORT_BOUNDARIES_RULE,
     ESLINT_BOUNDARY_FOLDERS,
     TYPESCRIPT_EXTENSION_MAP,
@@ -137,4 +142,26 @@ function buildNodeScriptBlocks(context: Pick<EslintContext, 'root' | 'scopes' | 
     });
 }
 
-export { buildNodeScriptBlocks, buildImportStyleBlocks, buildScopeImportBlocks, buildImportBoundariesRule };
+/**
+ * Turn the ignored folder globs into the patterns that import-x/ignore matches against resolved module paths, so the
+ * import rules never parse a gitignored bundle or build output.
+ * @param globs the ignore globs of the ESLint file.
+ * @returns a pattern for each ignored folder without other wildcards.
+ */
+function buildImportIgnores(globs: string[]): string[] {
+    return globs.flatMap((glob) => {
+        if (glob.startsWith('!') || !glob.endsWith(FOLDER_CONTENTS)) return [];
+        const folder = glob.slice(0, -FOLDER_CONTENTS.length).replace(ANY_DEPTH_PREFIX, '');
+        if (folder === '' || picomatch.scan(folder).isGlob) return [];
+        const escaped = folder.replaceAll(REGEX_SYMBOLS, String.raw`\$&`).replaceAll('/', PATH_SEPARATOR_PATTERN);
+        return [`${PATH_SEPARATOR_PATTERN}${escaped}${PATH_SEPARATOR_PATTERN}`];
+    });
+}
+
+export {
+    buildImportIgnores,
+    buildNodeScriptBlocks,
+    buildImportStyleBlocks,
+    buildScopeImportBlocks,
+    buildImportBoundariesRule,
+};

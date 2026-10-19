@@ -6,6 +6,7 @@ import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
+import { matchItems } from '#tests/setup/matchers.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
@@ -143,4 +144,38 @@ test('a second apply writes the same files when .prettierignore covers every sou
     }
     expect(outputs[1]).toStrictEqual(outputs[0]);
     expect(outputs[0]!.some((file) => file.startsWith('.prettierignore\n'))).toBe(true);
+});
+
+test('tool files leave out what the tracked .gitignore files ignore, apart from patterns that match a tracked file', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['python', 'javascript']),
+        '.gitignore': '.open-next/\n# A comment\n!keep.log\n.env*\n',
+        'app/.gitignore': 'other/\n/generated/types\n',
+        '.env.example': 'TOKEN=\n',
+        'app/main.py': 'value = 1\n',
+        'entry.js': 'export const value = 1;\n',
+    });
+    readGitOutput(sandbox.path, ['init', '-q']);
+    readGitOutput(sandbox.path, [
+        'add',
+        '-f',
+        '--',
+        '.gitignore',
+        'app/.gitignore',
+        '.env.example',
+        'app/main.py',
+        'entry.js',
+    ]);
+    const session = await openSession(sandbox.path);
+    const section = buildIgnoreSections(session).find(({ title }) => title === IGNORE_SECTION_TITLES.git)!;
+    expect(section.patterns).toStrictEqual(['.open-next/', '/app/**/other/', '/app/generated/types']);
+    const pyright = generate(session).files.find(({ path }) => path.endsWith('basedpyright.json'))!;
+    const excluded = (JSON.parse(pyright.content) as { exclude: string[] }).exclude;
+    expect(excluded.filter((pattern) => pattern.includes('other') || pattern.includes('.open-next'))).toStrictEqual(
+        matchItems([
+            expect.stringMatching(/\/app\/\*\*\/other\/\*\*$/u),
+            expect.stringMatching(/\/\*\*\/\.open-next\/\*\*$/u),
+        ]),
+    );
 });

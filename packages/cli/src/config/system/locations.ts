@@ -9,7 +9,10 @@ export const SETTINGS_FILE = 'gspot.toml';
 
 export const PYTHON_TOOL_PROJECT_FILE = `${DOT_GSPOT}/pyproject.toml`;
 
-export const UV_LOCKFILE = `${DOT_GSPOT}/uv.lock`;
+/** The lockfile of a uv project, which keeps its environment in the .venv folder beside it. */
+export const PROJECT_UV_LOCKFILE = 'uv.lock';
+
+export const UV_LOCKFILE = `${DOT_GSPOT}/${PROJECT_UV_LOCKFILE}`;
 
 export const VALE_TOOL_FILE_PATH = `${GSPOT_CONFIGURATIONS_PATH}/general/prose/vale.ini`;
 

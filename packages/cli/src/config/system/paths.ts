@@ -27,3 +27,6 @@ export const WHOLE_TREE_GLOBS = ['**', '**/*'] as const;
 export const GLOB_SPECIAL_CHARACTERS = /[\\*?{}[\]()!+@,]/gu;
 
 export const TRAILING_SLASH = /\/$/u;
+
+/** The slash that anchors a path at the root of an ignore file. */
+export const LEADING_SLASH = /^\//u;

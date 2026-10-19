@@ -2,6 +2,8 @@ import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { readGitOutput } from '#tests/setup/git.ts';
+import { matchItems } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
@@ -138,4 +140,36 @@ test('tool file source values list the dependencies of each scope', async () => 
     expect(configuration.rules['testing-library/no-dom-import']).toStrictEqual([2, 'react']);
     const applicationConfiguration = (await eslint.calculateConfigForFile('app/sample.test.js')) as EslintConfiguration;
     expect(applicationConfiguration.rules['testing-library/no-dom-import']).toStrictEqual([2, 'vue']);
+});
+
+test('a jsconfig beside a tsconfig excludes build output and lists only tracked declaration files', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'configurations = ["javascript", "typescript"]\n[rules]\nenabled = false\n',
+        '.gitignore': '.next/\n.open-next/\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*.ts"],"exclude":["vendor"]}',
+        'src/main.ts': 'export const value = 1;\n',
+        'worker.js': 'export const worker = 1;\n',
+        'cloudflare-env.d.ts': 'declare const env: string;\n',
+        '.next/types/routes.d.ts': 'declare const routes: string;\n',
+        '.open-next/worker.js': 'export const bundle = 1;\n',
+    });
+    readGitOutput(sandbox.path, ['init', '-q']);
+    readGitOutput(sandbox.path, [
+        'add',
+        '--',
+        '.gitignore',
+        'tsconfig.json',
+        'src/main.ts',
+        'worker.js',
+        'cloudflare-env.d.ts',
+    ]);
+    const files = generate(await openSession(sandbox.path)).files;
+    const jsconfig = JSON.parse(
+        files.find(({ path }) => path === '.gspot/configurations/language/javascript/jsconfig.json')!.content,
+    ) as { files: string[]; exclude: string[] };
+    expect(jsconfig.files).toStrictEqual(['../../../../cloudflare-env.d.ts']);
+    expect(jsconfig.exclude).toStrictEqual(
+        matchItems(['../../../../**/.open-next/**', '../../../../**/node_modules/**', '../../../../vendor']),
+    );
 });

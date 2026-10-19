@@ -4,6 +4,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { TAIL_LINES } from '#cli/config/runs/command.ts';
 import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
+import { OUT_OF_MEMORY } from '#cli/config/runs/output.ts';
 import { normalizeOutputPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { OutputPaths } from '#cli/types/runs/output.ts';
@@ -257,6 +258,9 @@ export function formatOutputTail(
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
     placeholder = 'The tool printed no error output.',
 ): string {
+    // An out-of-memory crash ends in a garbage collector dump, which names no cause.
+    if (OUT_OF_MEMORY.test(result.stderr) || OUT_OF_MEMORY.test(result.stdout))
+        return 'The tool ran out of memory. It most likely read build output or a bundle: keep that folder in .gitignore, or add an [[ignore]] with its paths.';
     const output = [result.stderr, result.stdout]
         .map((stream) => stream.trim().split('\n').slice(-TAIL_LINES).join('\n'))
         .filter((stream) => stream !== '');

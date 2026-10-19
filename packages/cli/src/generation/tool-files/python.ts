@@ -1,10 +1,12 @@
-import { statSync } from 'node:fs';
-import { join, posix } from 'node:path';
+import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
 import { stringify } from '@decimalturn/toml-patch';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
 import { DEFAULT_QUOTES } from '#cli/config/generation/formatting.ts';
+import { PROJECT_UV_LOCKFILE } from '#cli/config/system/locations.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 import { buildGlobSections, buildIgnoreSections } from '#cli/generation/ignore-files.ts';
 import { type PythonInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
 import { RUFF_ISORT, RUFF_IGNORED_RULES, BASEDPYRIGHT_OPTIONS } from '#cli/config/generation/python.ts';
@@ -17,7 +19,6 @@ import { RUFF_ISORT, RUFF_IGNORED_RULES, BASEDPYRIGHT_OPTIONS } from '#cli/confi
  */
 function buildPythonInputs(context: ToolFileContext): PythonInputs {
     const { session, selection, level } = context;
-    const root = session.installedRoot;
     const base = posix.relative(posix.dirname(context.targetPath), '.');
     // Ruff and basedpyright read only Python files. Give them folders and Python file patterns only.
     const exclusions = buildGlobSections(buildIgnoreSections(session)).filter(
@@ -31,10 +32,13 @@ function buildPythonInputs(context: ToolFileContext): PythonInputs {
             ...(level === 'all' ? manifest.ruff.all : []),
         ]),
         pythonScopePath: posix.join(base, selection.scope.path),
-        pythonVenv:
-            statSync(join(root, selection.scope.path, '.venv'), { throwIfNoEntry: false })?.isDirectory() === true
-                ? '.venv'
-                : undefined,
+        // uv keeps the environment in .venv beside its lockfile; reading the tracked lockfile keeps this file the same on
+        // a clone where the environment does not exist yet.
+        pythonVenv: session.repository.files.some(
+            (file) => file.path === joinScope(selection.scope.path, PROJECT_UV_LOCKFILE),
+        )
+            ? PYTHON_ENVIRONMENT_FOLDER
+            : undefined,
         pythonExcludes: (check: string) =>
             [
                 ...exclusions,

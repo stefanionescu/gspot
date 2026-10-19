@@ -4,6 +4,7 @@ export const GSPOT_FOLDER_PATTERNS = [`${DOT_GSPOT}/**`] as const;
 
 export const IGNORE_SECTION_TITLES = {
     build: 'Build output',
+    git: 'Ignored by Git',
     gspot: 'Files that gspot generates',
     generators: 'Generator outputs',
     dependencies: 'Dependencies',

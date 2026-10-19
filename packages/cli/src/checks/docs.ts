@@ -1,4 +1,3 @@
-import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { visit } from 'unist-util-visit';
 import { statSync, readdirSync } from 'node:fs';
@@ -12,6 +11,7 @@ import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/runs/output.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
+import { buildGitignoreTest } from '#cli/repository/gitignore.ts';
 import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
@@ -62,22 +62,6 @@ function listKnownPaths(input: CheckInput): Set<string> {
     for (const toolFile of input.selection.selected.flatMap((manifest) => manifest.toolFiles))
         known.add(toolFile.target);
     for (const path of listGeneratorPaths(input)) known.add(path);
-    const ignored = input.repositoryFiles
-        .filter((file) => posix.basename(file.path) === '.gitignore')
-        .flatMap((file) =>
-            readCachedBytes(input.reads, file.path)
-                .toString('utf8')
-                .split('\n')
-                .map((line) => line.trim())
-                .filter(
-                    (line) =>
-                        line !== '' && !line.startsWith('#') && !line.startsWith('!') && !picomatch.scan(line).isGlob,
-                )
-                .map((line) =>
-                    posix.join(posix.dirname(file.path), line.replace(/^\//u, '').replace(TRAILING_SLASH, '')),
-                ),
-        );
-    for (const path of includeParentFolders(ignored)) known.add(path);
     // A check ID such as postgres/migration-order looks like a path, so count it as known.
     for (const check of input.manifests.values().flatMap((manifest) => manifest.checks)) known.add(check.name);
     for (const check of Object.values(input.settingsFile.settings.commandChecks)) known.add(check.name);
@@ -105,10 +89,15 @@ function readPackageScripts(input: CheckInput, file: string): string[] | undefin
     }
 }
 
+// A file or folder holds the path, or Git ignores it, such as a build folder that docs name.
+function isPresent(relative: string, clean: string, index: PathIndex): boolean {
+    return index.known.has(relative) || index.isIgnored(relative) || index.isIgnored(clean);
+}
+
 function isMissing(token: string, file: string, index: PathIndex): boolean {
     const clean = token.replace(LEADING_DOT_SLASH, '').replace(TRAILING_SLASH, '');
     const relative = posix.normalize(posix.join(posix.dirname(file), clean));
-    if (index.known.has(relative)) return false;
+    if (isPresent(relative, clean, index)) return false;
     if (token.startsWith('./') || token.startsWith('../')) return true;
     const first = clean.split('/', 1)[0] ?? '';
     return !index.known.has(clean) && (index.known.has(first) || (!first.includes('.') && FILE_EXTENSION.test(clean)));
@@ -232,9 +221,13 @@ function extractPathTokens(line: string): string[] {
 export function checkDocsMissingPaths(input: CheckInput): Finding[] {
     const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
     const known = listKnownPaths(input);
+    const isIgnored = buildGitignoreTest(
+        input.reads,
+        input.repositoryFiles.map((file) => file.path),
+    );
     const projects = Map.groupBy(files, (file) => findScope(file.path, input.scopes).path);
     return [...projects].flatMap(([scope, sources]) => {
-        const index: PathIndex = { known, tasks: readTaskNames(input, scope) };
+        const index: PathIndex = { known, isIgnored, tasks: readTaskNames(input, scope) };
         return sources.flatMap((file) => {
             const text = readCachedBytes(input.reads, file.path).toString('utf8');
             return extractProseLines(text).flatMap((prose) => checkProseLine(input, file.path, prose, index));

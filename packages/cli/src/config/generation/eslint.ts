@@ -165,6 +165,15 @@ export const FILE_EXTENSION_RULE = 'n/file-extension-in-import';
 /** Bundled code drops the suffix of these code modules only; stylesheets, JSON, images, and fonts keep theirs. */
 export const EXTENSIONLESS_CODE = { '.js': 'never', '.jsx': 'never', '.ts': 'never', '.tsx': 'never' } as const;
 
+/** A glob prefix that matches at any folder depth. */
+export const ANY_DEPTH_PREFIX = /^\*\*\//u;
+
+/** The characters that a regular expression reads as syntax. */
+export const REGEX_SYMBOLS = /[.*+?^${}()|[\]\\]/gu;
+
+/** A folder separator on any system, in a regular expression source. */
+export const PATH_SEPARATOR_PATTERN = String.raw`[\\/]`;
+
 /** Node runs these scripts without a bundler, so their imports keep the full file name. */
 export const NODE_SCRIPT_PATTERNS = ['**/*.mjs', '**/*.cjs'] as const;
 export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;

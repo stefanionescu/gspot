@@ -85,6 +85,8 @@ export type EslintParts = {
     boundaryBlocks: EslintBlock[];
     scopeBlocks: EslintBlock[];
     ignoredPaths: string[];
+    /** Folders whose modules import-x never parses: gitignored and build output, as regular expression sources. */
+    importIgnores: string[];
     restrictedImports: unknown[];
     extra: { reason: string | undefined; entries: Record<string, unknown> } | undefined;
 };
