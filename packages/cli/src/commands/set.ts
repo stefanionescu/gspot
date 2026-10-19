@@ -125,7 +125,8 @@ function describeSettingChange(
 ): string {
     const { declaration, options, shown, previous } = context;
     const isReasonTable = declaration.reason_values === true;
-    const was = previous === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
+    const was =
+        previous?.value === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
     if (isReasonTable) return `Added ${options.items.join(' and ')} to ${shown}.${was}`;
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
     if (!Array.isArray(change.value)) return `Set ${shown} to ${JSON.stringify(change.value)}.${reason}${was}`;

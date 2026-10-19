@@ -105,6 +105,7 @@ test('set names -- when a value reads as an option, and takes the values after -
     );
     const set = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'bun', 'install', '--frozen-lockfile']);
     expect(set.code, set.stdout + set.stderr).toBe(0);
+    expect(set.stdout).not.toContain('(was undefined');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(getValueAt(written, ['ci', 'setup_command'])).toEqual(['bun', 'install', '--frozen-lockfile']);
 });
