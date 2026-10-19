@@ -1,4 +1,3 @@
-/** A package whose Feature target keeps its sources in Sources/FeatureKit. */
 const SWIFT_PACKAGE = `// swift-tools-version:5.9
 import PackageDescription
 let package = Package(
@@ -11,7 +10,6 @@ let package = Package(
 )
 `;
 
-/** Three Python rules: core first, then storage, and web, which may import storage only. */
 export const PYTHON_IMPORT_RULES = `[python]
 externals = ["folder_paths"]
 
@@ -29,7 +27,6 @@ paths = ["src/app/web/**"]
 can_import = ["storage"]
 `;
 
-/** A src layout: absolute imports start in src/, and the tests and setup.py belong to no rule. */
 export const PYTHON_IMPORT_FILES = {
     'src/app/__init__.py': '',
     'src/app/core/__init__.py': '',

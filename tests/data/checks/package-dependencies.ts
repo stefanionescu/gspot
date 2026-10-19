@@ -1,4 +1,3 @@
-/** A Bun project whose package.json moved on from bun.lock: a new range, an added package, and a removed one. */
 export const STALE_LOCKFILE_FILES = {
     'package.json': JSON.stringify({
         name: 'shop',

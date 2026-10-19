@@ -1,4 +1,3 @@
-// Apply [[import_rule]] to Python and Swift imports, and report the code files that no import rule covers.
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { GspotError } from '#cli/system/errors.ts';
@@ -28,7 +27,6 @@ import {
     UNCOVERED_FILE_MESSAGE,
 } from '#cli/config/checks/import-rules.ts';
 
-/** The import rule that covers each file: the first rule whose paths match it. */
 type RuleLookup = { rules: ImportRule[]; ownerOf: (path: string) => number | undefined; allowed: string[][] };
 
 function buildRuleLookup(rules: ImportRule[]): RuleLookup {
@@ -43,7 +41,6 @@ function buildRuleLookup(rules: ImportRule[]): RuleLookup {
     };
 }
 
-// Tests, tool settings files, scripts, and Node.js shebang files belong to no import rule.
 function buildExemption(input: CheckInput): (file: TrackedFile) => boolean {
     const { view, scope } = input.selection;
     const matches = buildPathMatcher([
@@ -69,7 +66,6 @@ function listUncoveredFiles(input: CheckInput, lookup: RuleLookup): Finding[] {
         .map((file) => buildFinding(input, { file: file.path, line: 1 }, 'uncovered-file', UNCOVERED_FILE_MESSAGE));
 }
 
-// The first import rule among the owners of an imported file or module that the importing rule may not import.
 function findRefusedOwner(lookup: RuleLookup, from: number, owners: (number | undefined)[]): string | undefined {
     const allowed = lookup.allowed[from] ?? [];
     const refused = owners
@@ -79,7 +75,6 @@ function findRefusedOwner(lookup: RuleLookup, from: number, owners: (number | un
     return refused.length === 0 ? undefined : `${IMPORT_RULE_CATEGORY}${String(refused[0])}`;
 }
 
-// Parse one file of a rule, list its imports with the rules that own what each loads, and report each refused import.
 async function checkFileImports(
     input: CheckInput,
     lookup: RuleLookup,
@@ -131,7 +126,6 @@ async function checkPythonImports(input: CheckInput, lookup: RuleLookup): Promis
     return findings.flat();
 }
 
-// A Swift file imports a module of the repository other than its own, by the module name.
 function listSwiftImports(root: Node, path: string, modules: SwiftModule[], lookup: RuleLookup): ImportOwners[] {
     const own = new Set(modules.filter((module) => module.files.includes(path)).map(({ name }) => name));
     return root.descendantsOfType(SWIFT_IMPORT_NODE).flatMap((node) => {

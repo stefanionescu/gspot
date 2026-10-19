@@ -1,4 +1,3 @@
-/** The code files that an [[import_rule]] covers. ESLint applies the rules to JavaScript and TypeScript imports. */
 export const IMPORT_RULE_EXTENSIONS = [
     '.ts',
     '.tsx',
@@ -13,15 +12,12 @@ export const IMPORT_RULE_EXTENSIONS = [
     '.swift',
 ] as const;
 
-/** Tool settings files, which belong to no import rule. */
 export const TOOL_SETTINGS_FILES = ['**/*.config.*', '**/.*rc.*', '**/Package.swift', '**/setup.py'] as const;
 
 export const PYTHON_EXTENSIONS = ['.py', '.pyi'] as const;
 
-/** The Python files that a dotted module name can name, after its path. */
 export const PYTHON_MODULE_SUFFIXES = ['.py', '.pyi', '/__init__.py', '/__init__.pyi'] as const;
 
-/** The folders, relative to the scope, that hold the first part of an absolute Python import. */
 export const PYTHON_SOURCE_ROOTS = ['', 'src'] as const;
 
 export const PYTHON_IMPORT_STATEMENT = 'import_statement';

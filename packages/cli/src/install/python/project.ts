@@ -59,7 +59,6 @@ function readPythonLockfile(work: string, credentials: string[], project: Python
     return lockfile;
 }
 
-// uv runs inside the tool project and uses its exact Python version.
 async function runUv(
     context: InstallContext,
     { work, commandArguments, executable, credentials, configFile = join(work, UV_SETTINGS_FILE) }: UvExecution,

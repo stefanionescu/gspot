@@ -1,4 +1,3 @@
-// Find the files of the repository that Python imports load.
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import type { ImportTarget, PythonSearch, LocatedImport } from '#cli/types/checks/import-rules.ts';
@@ -10,7 +9,6 @@ import {
     PYTHON_IMPORT_STATEMENT,
 } from '#cli/config/checks/import-rules.ts';
 
-// A folder path and a dotted name join into the path of the module, without its suffix.
 function findModuleFile(folder: string, dotted: string, files: ReadonlySet<string>): string | undefined {
     const base = posix.join(folder, ...dotted.split('.').filter((part) => part !== ''));
     return PYTHON_MODULE_SUFFIXES.map((suffix) => `${base}${suffix}`).find((path) => files.has(path));
@@ -24,18 +22,15 @@ function findAbsoluteModule(dotted: string, search: PythonSearch): string | unde
     return undefined;
 }
 
-// The name of an import item, without its alias.
 function readImportedName(node: Node): string {
     return node.type === 'aliased_import' ? (node.childForFieldName('name')?.text ?? '') : node.text;
 }
 
-// The first candidate module that the repository holds, with the name to report.
 function findFirstModule(candidates: { module: string; target: string | undefined }[]): ImportTarget[] {
     const found = candidates.find((candidate) => candidate.target !== undefined);
     return found?.target === undefined ? [] : [{ module: found.module, target: found.target }];
 }
 
-// The names after import, or none for a wildcard import.
 function listImportedNames(node: Node): (string | undefined)[] {
     const names = node.childrenForFieldName('name').map((item) => readImportedName(item));
     return names.length === 0 ? [undefined] : names;

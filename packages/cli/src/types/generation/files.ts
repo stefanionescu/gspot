@@ -72,7 +72,6 @@ export type TyposSettings = { default?: TyposDictionary; type?: Record<string, T
 
 export type HookName = (typeof CHECK_HOOKS)[number];
 
-/** A hook that git lfs install writes. */
 export type LfsHookName = (typeof LFS_HOOKS)[number];
 
 export type NpmProjectInputs = {

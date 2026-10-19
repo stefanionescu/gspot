@@ -15,7 +15,6 @@ const importRuleSchema = z.strictObject({
     can_import: z.array(z.string()).optional().describe(SETTING_DECLARATIONS['import_rule.can_import'].description),
 } satisfies SchemaShape<ImportRule, WrittenImportRule>);
 
-// Each rule names only declared rules, and lists them in can_import or can_also_import, never both.
 function listImportRuleIssues(rules: ImportRule[]): SettingsError[] {
     const names = new Set(rules.map((rule) => rule.name));
     return rules.flatMap((rule, index) => [
@@ -43,7 +42,6 @@ function listImportRuleIssues(rules: ImportRule[]): SettingsError[] {
     ]);
 }
 
-/** The [[import_rule]] records, each of which may name only import rules that exist. */
 const importRulesSchema = z
     .array(importRuleSchema)
     .superRefine((rules, context) => {

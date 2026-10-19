@@ -4,7 +4,6 @@ import { relativePath } from '#cli/settings/schema/parts.ts';
 import type { WrittenSettings } from '#cli/types/settings/file.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
 
-/** The [javascript] table: script files, and the modules the runtime provides. */
 const javascriptSchema = z
     .strictObject({
         script_files: z
@@ -25,7 +24,6 @@ const javascriptSchema = z
     } satisfies SchemaShape<TableSettings<'javascript'>, NonNullable<WrittenSettings['javascript']>>)
     .optional();
 
-/** The [python] table: the modules the host application provides, and extra import folders. */
 const pythonSchema = z
     .strictObject({
         externals: z

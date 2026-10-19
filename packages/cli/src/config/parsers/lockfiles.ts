@@ -47,7 +47,6 @@ export const LOCKFILES = [
 
 export const PNPM_ROOT_IMPORTER = '.';
 
-/** The lockfiles whose locked package versions gspot reads, by format. */
 export const LOCKED_PACKAGE_LOCKFILES = [
     'package-lock.json',
     'npm-shrinkwrap.json',
@@ -57,7 +56,6 @@ export const LOCKED_PACKAGE_LOCKFILES = [
     'uv.lock',
 ] as const;
 
-/** The lockfiles of npm-compatible projects, and of Python projects under uv. */
 export const JAVASCRIPT_LOCKFILES = [
     'bun.lock',
     'pnpm-lock.yaml',
@@ -67,19 +65,15 @@ export const JAVASCRIPT_LOCKFILES = [
 ] as const;
 export const PYTHON_LOCKFILES = ['uv.lock'] as const;
 
-/** The folder that npm lockfile keys name before each package. */
 export const NPM_PACKAGE_FOLDER = 'node_modules/';
 
 /** pnpm adds the peer dependencies of a package to its key, in parentheses after its version. */
 export const PNPM_PEER_START = '(';
 
-/** The lockfiles that record the dependency specifiers of each workspace, as package.json declares them. */
 export const IMPORTER_LOCKFILES = ['bun.lock', 'package-lock.json', 'pnpm-lock.yaml'] as const;
 
-/** The sections of package.json that an install resolves and a lockfile records. */
 export const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
 
-/** The command that brings each importer lockfile in line with package.json. */
 export const LOCKFILE_UPDATE_COMMANDS = {
     'bun.lock': 'bun install',
     'package-lock.json': 'npm install',

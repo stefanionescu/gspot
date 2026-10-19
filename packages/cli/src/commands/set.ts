@@ -56,7 +56,6 @@ function parseSettingValue(items: string[], declaration: SettingDeclaration): Pa
     return { type: 'scalar', value: scalar };
 }
 
-// A table of reasons, such as allowed_words, writes each item as a key with the --reason as its value.
 function parseReasonEntries(options: SetOptions): ParsedSettingValue {
     const { reason } = options;
     if (reason === undefined)
@@ -118,7 +117,6 @@ function refuseUnneededReason(
     );
 }
 
-// Name what set wrote: the items it added or the value it set, then the reason and the earlier value.
 function describeSettingChange(
     change: ParsedSettingValue,
     context: { declaration: SettingDeclaration; options: SetOptions; shown: string; previous?: EffectiveSetting },

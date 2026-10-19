@@ -138,10 +138,8 @@ export const PYTHON_CONSTANT = /^_?[A-Z][A-Z\d_]*$/u;
 
 export const PYTHON_EXCEPTION_BASE = /(?:Error|Exception|Warning)\b/u;
 
-/** The TypeAlias annotation of an explicit type alias, which typing and typing_extensions both export. */
 export const PYTHON_TYPE_ALIAS_ANNOTATION = /^(?:\w+\.)?TypeAlias$/u;
 
-/** The subscripted forms whose value names a type, such as Optional[int] or dict[str, int]. */
 export const PYTHON_TYPE_FORMS: ReadonlySet<string> = new Set([
     'Literal',
     'Union',
@@ -155,7 +153,6 @@ export const PYTHON_TYPE_FORMS: ReadonlySet<string> = new Set([
     'type',
 ]);
 
-/** A name in a union of types: a class name or a builtin type. */
 export const PYTHON_TYPE_NAME =
     /^(?:[A-Z][a-z]\w*|int|str|float|bool|bytes|complex|object|list|dict|set|tuple|type|frozenset|bytearray)$/u;
 
@@ -182,7 +179,6 @@ export const TYPESCRIPT_NAME_NODES = new Set([
     'type_identifier',
 ]);
 
-/** A call that returns a component or a context, which React code names in PascalCase, such as a memo call. */
 export const COMPONENT_FACTORY = /^(?:React\.)?(?:createContext|lazy|memo|forwardRef)$|^styled\b/u;
 
 export const TYPESCRIPT_PATTERN_FIELDS = {

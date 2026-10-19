@@ -253,7 +253,6 @@ async function hasSyntaxError(grammar: GrammarName, bytes: Buffer): Promise<bool
     }
 }
 
-// A fixer can merge or cut code into text that fails to parse; name each file that parsed before the fixers ran.
 async function listBrokenSyntax(
     changed: string[],
     before: Map<string, Buffer | undefined>,

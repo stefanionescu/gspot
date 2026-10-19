@@ -72,7 +72,6 @@ export const UNKNOWN_IMPORT_POLICIES = [
 /** The final policy refuses server values even when your own module rule permits the import. */
 /** The boundary category of the files of each import rule, before the name of the rule. */
 export const IMPORT_RULE_CATEGORY = 'import-rule:';
-/** The import and the import rule category of its file, in the Handlebars template of a boundaries message. */
 export const BOUNDARY_SOURCE_TEMPLATE = '{{dependency.source}}';
 export const BOUNDARY_OWNER_TEMPLATE = '{{to.file.categories.[0]}}';
 /** A rule name that holds {{ stays text in a boundaries message. */
@@ -160,7 +159,6 @@ export const IMPORT_LAYOUT_RULES = {
 } as const;
 export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
 
-/** The rules whose options take the bans of tools.eslint.restricted_imports. */
 export const RESTRICTED_IMPORT_RULES: ReadonlySet<string> = new Set([
     'no-restricted-imports',
     '@typescript-eslint/no-restricted-imports',
@@ -177,13 +175,10 @@ export const FILE_EXTENSION_RULE = 'n/file-extension-in-import';
 /** Bundled code drops the suffix of these code modules only; stylesheets, JSON, images, and fonts keep theirs. */
 export const EXTENSIONLESS_CODE = { '.js': 'never', '.jsx': 'never', '.ts': 'never', '.tsx': 'never' } as const;
 
-/** A glob prefix that matches at any folder depth. */
 export const ANY_DEPTH_PREFIX = /^\*\*\//u;
 
-/** The characters that a regular expression reads as syntax. */
 export const REGEX_SYMBOLS = /[.*+?^${}()|[\]\\]/gu;
 
-/** A folder separator on any system, in a regular expression source. */
 export const PATH_SEPARATOR_PATTERN = String.raw`[\\/]`;
 
 /** Node runs these scripts without a bundler, so their imports keep the full file name. */

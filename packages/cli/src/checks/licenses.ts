@@ -77,7 +77,6 @@ async function scanJavascriptLicenses(input: CheckInput, start: string): Promise
     }));
 }
 
-// A license expression or a metadata text that names license IDs, when the package states one.
 function findExpression(entry: PythonLicenseReport): string | undefined {
     return [entry['License-Expression'], entry['License-Metadata']].find(
         (field) => field !== undefined && field !== UNKNOWN_LICENSE && isSpdxExpression(field),
@@ -178,7 +177,6 @@ async function scanLicenses(input: CheckInput) {
     };
 }
 
-// A record names a package or a name glob, and an exact version, a semver range, or any version.
 function matchesRecord(record: AllowedPackage, identity: string, packageKey: (name: string) => string): boolean {
     const parts = splitIdentity(packageKey(identity));
     const wanted = splitIdentity(packageKey(`${record.name}@${record.version}`));

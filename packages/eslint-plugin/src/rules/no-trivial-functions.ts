@@ -103,7 +103,6 @@ function isSharedFunction(node: ImplementedFunction, source: TSESLint.SourceCode
     );
 }
 
-// A call through a type assertion or a non-null assertion still calls the function, and so does JSX.
 function isCalled(identifier: TSESTree.Identifier | TSESTree.JSXIdentifier): boolean {
     if (identifier.type === AST_NODE_TYPES.JSXIdentifier) return true;
     const value = findOutermostValue(identifier);

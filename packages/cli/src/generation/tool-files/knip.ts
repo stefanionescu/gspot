@@ -82,7 +82,6 @@ function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Sco
         }),
     );
 }
-// The word that a package runner at this index runs, such as wrangler@4 in bunx wrangler@4 deploy.
 function findRunTarget(words: string[], index: number): string | undefined {
     const subcommands = PACKAGE_RUNNERS[words[index] ?? ''];
     if (subcommands === undefined) return undefined;
@@ -91,7 +90,6 @@ function findRunTarget(words: string[], index: number): string | undefined {
     return words.slice(index + 1 + Number(hasSubcommand)).find((candidate) => !candidate.startsWith('-'));
 }
 
-// The package after a package runner in each command, without its version.
 function listRunPackages(text: string): string[] {
     const words = text.split(COMMAND_WORD_SEPARATORS);
     return words.flatMap((_word, index) => {

@@ -26,10 +26,8 @@ const eslintOptions = z.union([z.array(z.never()).max(0), z.tuple([firstEslintOp
     error: ESLINT_OPTIONS_HELP,
 }) satisfies z.ZodType<TableSettings<'tools.eslint'>['rules'][string]>;
 
-/** ESLint option arrays by rule ID, without a severity. */
 const eslintRules = z.record(z.string(), eslintOptions) satisfies z.ZodType<TableSettings<'tools.eslint'>['rules']>;
 
-/** Your own ESLint plugins: each module, its rule prefix, and the rules that turn on. */
 const eslintPluginsSchema = z
     .array(
         z.strictObject({

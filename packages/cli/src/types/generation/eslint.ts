@@ -60,7 +60,6 @@ export type EslintBoundaryPolicy = {
         to: { file: EslintBoundaryFile };
         dependency?: { kind: 'value' };
     };
-    /** The Handlebars message of an import that this policy refuses. */
     message?: string;
 };
 
@@ -87,7 +86,6 @@ export type EslintParts = {
     boundaryBlocks: EslintBlock[];
     scopeBlocks: EslintBlock[];
     ignoredPaths: string[];
-    /** Folders whose modules import-x never parses: gitignored and build output, as regular expression sources. */
     importIgnores: string[];
     restrictedImports: unknown[];
     extra: { reason: string | undefined; entries: Record<string, unknown> } | undefined;
@@ -119,7 +117,6 @@ export type EslintSettingsBlock = {
 /** A block writer bound to its scope. */
 export type BlockWriter = {
     block: (block: EslintSettingsBlock, runtime?: string, preset?: EslintRuleExpression) => string;
-    /** The rules of tools.eslint.rules and overrides that no block turns on, read after the last block. */
     listUnappliedRules: () => string[];
 };
 

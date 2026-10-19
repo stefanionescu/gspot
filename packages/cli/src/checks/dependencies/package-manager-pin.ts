@@ -1,4 +1,3 @@
-// The packageManager field of package.json and the mise pin of that package manager must name one version.
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { isRecord } from '#cli/system/values.ts';
@@ -12,7 +11,6 @@ import { MISE_FILES, NPM_TOOL_PREFIX } from '#cli/config/checks/dependencies.ts'
 
 const miseToolsSchema = z.looseObject({ tools: z.record(z.string(), z.unknown()).default({}) });
 
-// The version that mise pins for a tool: a version string, the first of a list, or the version of a table.
 function readPinnedVersion(value: unknown): string | undefined {
     const first: unknown = Array.isArray(value) ? value[0] : value;
     if (typeof first === 'string') return first;
@@ -20,7 +18,6 @@ function readPinnedVersion(value: unknown): string | undefined {
     return typeof version === 'string' ? version : undefined;
 }
 
-// The version that one mise file pins for a tool, or undefined when it pins none.
 function readMisePin(input: CheckInput, path: string, tool: string): string | undefined {
     const text = readCachedText(input.reads, path);
     if (text === undefined) return undefined;
@@ -28,7 +25,6 @@ function readMisePin(input: CheckInput, path: string, tool: string): string | un
     return readPinnedVersion(tools[tool] ?? tools[`${NPM_TOOL_PREFIX}${tool}`]);
 }
 
-// The nearest mise file from the scope up to the root that pins the tool, with the version it pins.
 function findMisePin(input: CheckInput, folder: string, tool: string): { path: string; version: string } | undefined {
     const segments = folder === '' ? [] : folder.split('/');
     const paths = Array.from({ length: segments.length + 1 }, (_value, index) =>
@@ -41,7 +37,6 @@ function findMisePin(input: CheckInput, folder: string, tool: string): { path: s
     return undefined;
 }
 
-// The package manager and the version of a packageManager field, without the Corepack hash.
 function splitPackageManager(field: string | undefined): { tool: string; version: string } | undefined {
     const declared = field?.split('+', 1)[0] ?? '';
     const separator = declared.lastIndexOf('@');

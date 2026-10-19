@@ -1,9 +1,7 @@
-// Finds lint disable comments that name rules of a plugin that the new setup does not load.
 import type { Session } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { CODE_FILE_TAGS, DIRECTIVE_TAIL, ESLINT_DIRECTIVE } from '#cli/config/commands/init.ts';
 
-// A rule ID names its plugin before its last slash, such as @next/next/no-img-element; core rules name none.
 function readPluginPrefix(rule: string): string | undefined {
     const slash = rule.lastIndexOf('/');
     return slash === -1 ? undefined : rule.slice(0, slash);

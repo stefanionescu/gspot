@@ -1,4 +1,3 @@
-// Load your own ESLint plugins from tools.eslint.plugins: each module by its path, and its rules as errors.
 import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -7,7 +6,6 @@ import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint.ts';
 import type { EslintPlugins, EslintSettingsBlock } from '#cli/types/generation/eslint.ts';
 
-// Every plugin record of every JavaScript scope, each with the scope whose code files take its rules.
 function listPluginRecords(scopes: ScopeSelection[]) {
     return scopes
         .filter(({ view }) => view.configurations.includes('javascript'))

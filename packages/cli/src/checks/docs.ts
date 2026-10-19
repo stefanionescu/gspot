@@ -89,7 +89,6 @@ function readPackageScripts(input: CheckInput, file: string): string[] | undefin
     }
 }
 
-// A file or folder holds the path, or Git ignores it, such as a build folder that docs name.
 function isPresent(relative: string, clean: string, index: PathIndex): boolean {
     return index.known.has(relative) || index.isIgnored(relative) || index.isIgnored(clean);
 }

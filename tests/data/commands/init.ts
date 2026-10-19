@@ -290,7 +290,6 @@ export const SHARED_FILE_RACES = [
     },
 ] as const;
 
-/** The import suffix style that init writes for a JavaScript project: it follows the compiler options and the bundler. */
 export const IMPORT_STYLE_CASES = [
     {
         name: 'a tsconfig that imports .ts files by name',

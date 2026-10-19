@@ -8,7 +8,6 @@ createRuleTester().run<keyof (typeof plugin.rules)['import-boundaries']['meta'][
     plugin.rules['import-boundaries'],
     {
         valid: [
-            // A specifier that the runtime provides, such as a host application module, leaves no boundary of the repository.
             {
                 code: "import { app } from '../../scripts/app.js';",
                 filename: '/repo/web/src/a.ts',

@@ -1,4 +1,3 @@
-/** Each style rule still checks prose and does not report source notation. */
 export const STYLE_CASES = [
     {
         rule: 'en-dashes',

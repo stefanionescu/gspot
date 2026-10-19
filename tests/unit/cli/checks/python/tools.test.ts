@@ -254,7 +254,6 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
     ).toStrictEqual(['google', 'numpy']);
 });
 
-/** Run python/deptry with fake pinned tools, and return the report and each command that it started. */
 async function runFakeDeptry(root: string) {
     const session = await openSession(root);
     using resources = fakePinnedExecutables(

@@ -55,7 +55,6 @@ function isImportedName(node: Node): boolean {
     return callee?.type === 'import' || callee?.text === 'require';
 }
 
-// A variable that holds the result of memo, forwardRef, lazy, createContext, or styled may take PascalCase.
 function isComponentFactory(declarator: Node): boolean {
     const value = declarator.childForFieldName('value');
     if (value?.type !== 'call_expression') return false;

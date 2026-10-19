@@ -1,4 +1,3 @@
-/** One lockfile of each format, and the packages it holds. */
 export const LOCKED_PACKAGE_CASES = [
     {
         file: 'package-lock.json',

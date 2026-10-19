@@ -70,7 +70,6 @@ test('a translation keeps the arguments, tags, and select keys of its base messa
     ]);
 });
 
-/** Run translations/messages at level all on message files under messages/. */
 async function checkMessageFiles(files: Record<string, string>) {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

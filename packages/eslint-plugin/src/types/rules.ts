@@ -15,7 +15,6 @@ export type TrivialFunctionsOptions = [{ trivialStatements: number }];
 
 export type TrivialFilesOptions = [{ trivialStatements: number; allowIndex: boolean }];
 
-/** The options of @typescript-eslint/no-magic-numbers, which gspot/no-magic-numbers passes on unchanged. */
 export type MagicNumbersOptions = [Record<string, unknown>];
 export type RuleContext = Readonly<TSESLint.RuleContext<string, unknown[]>>;
 

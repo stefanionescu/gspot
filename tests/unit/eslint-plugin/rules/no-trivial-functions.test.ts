@@ -46,7 +46,6 @@ createRuleTester().run<
         'const base = "root"; const path = file => join(base, file); path("first"); path("second");',
         'function callback() { update(); } on(callback); off(callback);',
 
-        // A function passed only as a value has no call to inline into.
         'function subscribe(listener) { return store.subscribe(listener); } export function useValue() { return useSyncExternalStore(subscribe, getSnapshot); }',
         'function noop() {} export function build() { setup(); configure(); return noop; }',
 

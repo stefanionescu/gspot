@@ -53,6 +53,5 @@ export const TYPED_RULE_PROJECTS = [
     },
 ] as const;
 
-/** Options for two rules that only level all runs, and for a gspot rule. */
 export const LEVEL_RULE_OPTIONS =
     '[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n"gspot/no-trivial-functions" = [{trivialStatements = 4}]\n';

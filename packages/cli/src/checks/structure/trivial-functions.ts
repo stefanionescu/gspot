@@ -98,7 +98,6 @@ const LANGUAGE_SUBSTANCE: Record<CountedLanguage, Record<string, IsSubstantial>>
         },
     },
     python: {
-        // An interface class declares a contract, as a TypeScript interface does.
         class_definition: (node, language, limit) =>
             isInterfaceClass(node) || isSubstantialContainer(node, language, limit),
     },

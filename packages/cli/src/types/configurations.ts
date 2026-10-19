@@ -43,7 +43,6 @@ export type ParsedManifest = {
     };
     shared_prefixes: { prefixes: string[]; kinds: string[] };
     ignored_folders: string[];
-    /** File name globs that a framework routes by their folder. lone-files skips a folder that holds only one of them. */
     route_files: string[];
     generated: string[];
     allowed_words: string[];

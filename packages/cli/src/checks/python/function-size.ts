@@ -1,11 +1,9 @@
-// Check the code line count of each Python function against limits.function_lines, as ESLint checks JavaScript.
 import { buildFinding } from '#cli/runs/finding.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { COMMENT_MARKERS } from '#cli/config/checks/structure.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
-// The lines of a function that hold code: not blank, and not only a comment.
 function countCodeLines(lines: string[], start: number, end: number): number {
     return lines
         .slice(start, end + 1)

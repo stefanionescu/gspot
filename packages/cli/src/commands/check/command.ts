@@ -40,7 +40,6 @@ async function readPushInput(signal: AbortSignal): Promise<string> {
     }
 }
 
-// Collect the check IDs of every --only value. A value holds one ID, or several separated by commas.
 function collectChecks(value: string, previous: string[] | undefined): string[] {
     const checks = value
         .split(CHECK_LIST_SEPARATOR)

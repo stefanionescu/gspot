@@ -53,7 +53,6 @@ function findBoundary(parentFolder: string, folders: readonly string[]): string 
     return ancestors.findLast((ancestor) => folders.some((glob) => isGlobMatch(ancestor, glob)));
 }
 
-// The constant specifier of an import, unless the runtime provides it, such as a module of a host application.
 function readRepositoryImport(
     node: TSESTree.Node | null | undefined,
     isExternal: (source: string) => boolean,

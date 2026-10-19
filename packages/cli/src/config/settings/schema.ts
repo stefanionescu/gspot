@@ -126,7 +126,6 @@ export const ALLOWED_WORD = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}_]*(?:[-'’][\p{L}\p{
 
 export const KNIP_PACKAGE_NAME = /^[^*+\\(|{^$\s]+$/u;
 
-/** A rule prefix for your own ESLint plugin: lowercase words joined by hyphens. */
 export const ESLINT_PLUGIN_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 
 /** Your own ESLint plugin: an ES module that Node loads without a build step. */

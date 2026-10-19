@@ -25,7 +25,6 @@ export const NON_EXECUTABLE_STATEMENTS = new Set(['BlockStatement', 'EmptyStatem
 export const STRUCTURED_EXPRESSIONS = new Set<string>(['ObjectExpression', 'ArrayExpression']);
 
 /** Nodes that introduce no implementation or owned schema. */
-/** The returned values of a function that only forwards: a constant, another value, or one of its members. */
 export const FORWARDED_VALUES = new Set(['Literal', 'Identifier', 'MemberExpression']);
 
 export const FORWARDING_NODES = new Set([

@@ -1,4 +1,3 @@
-// The magic number rule of typescript-eslint, except for the numbers that a module-level constant already names.
 import { createRequire } from 'node:module';
 import { createRule } from '../create-rule.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';

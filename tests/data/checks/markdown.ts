@@ -31,7 +31,6 @@ Long prose stays with the formatter. Long prose stays with the formatter. Long p
 `,
 } as const;
 
-/** Pages in .mdx files that start with import and export blocks: one with a top heading after them, and one without. */
 export const MDX_FILES = {
     'policy.mdx': `import { Notice } from './notice';
 import Updated from './updated';

@@ -90,10 +90,8 @@ export const STYLESHEETS = {
 `,
 } as const;
 
-/** Scopes inherit the options of the rules that run at both levels. */
 export const STYLELINT_SETTINGS = `[tools.stylelint.rules]\ncolor-hex-length = "short"\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-hex-length = "long"\n`;
 
-/** The same settings, plus an option for number-max-precision, which only level all runs. */
 export const ALL_LEVEL_STYLELINT_SETTINGS = `[tools.stylelint.rules]\ncolor-hex-length = "short"\nnumber-max-precision = 0\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-hex-length = "long"\n`;
 
 /** Standard properties and the scoped color option fix every finding at the level. */

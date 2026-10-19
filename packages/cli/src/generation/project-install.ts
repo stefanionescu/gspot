@@ -1,4 +1,3 @@
-// Installs the locked dependencies of each project in CI, so the checks that read them find them.
 import { quoteArgument } from '#cli/system/text.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { joinScope } from '#cli/repository/scopes.ts';

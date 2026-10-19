@@ -42,7 +42,6 @@ function findBaseFile(
     return paths.has(nested) || hasBaseFolder ? nested : sibling;
 }
 
-// Each message that does not parse, and each key of the base file that the file leaves out.
 function compareMessages(
     input: CheckInput,
     path: string,
@@ -97,7 +96,6 @@ function listMessageParts(elements: MessageFormatElement[]): string[] {
     });
 }
 
-// What a translated message adds to or leaves out of the parts of its base message, or undefined when both match.
 function compareMessageParts(text: string, baseText: string, base: string): string | undefined {
     let parts: Set<string>;
     let baseParts: Set<string>;
@@ -123,7 +121,6 @@ function readMessages(input: CheckInput, path: string): Map<string, string> | st
     return 'error' in parsed ? parsed.error : flattenMessages(parsed.value);
 }
 
-// Read each message file of the run and the base-locale file that it compares with.
 function readMessageFiles(
     input: CheckInput,
     files: string[],

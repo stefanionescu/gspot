@@ -152,7 +152,6 @@ function hasStructuredValue(expression: TSESTree.Node | null): boolean {
     }
 }
 
-// A type predicate, constructor state, or a returned structure counts as content of a function.
 function hasSignatureContent(node: ImplementedFunction): boolean {
     if (isTypePredicate(node) || hasConstructorState(node)) return true;
     return node.body.type !== AST_NODE_TYPES.BlockStatement && hasStructuredValue(node.body);

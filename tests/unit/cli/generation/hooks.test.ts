@@ -134,8 +134,6 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
     expect(hooks.map((file) => file.path)).toStrictEqual(
         ['post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'].map((name) => `.gspot/hooks/${name}`),
     );
-    // A fake git stands in for the git lfs call, because Git finds a real git-lfs in its own folder first. The search
-    // path holds only the fakes, so a real git or git-lfs never runs.
     const bin = await fakeTool(sandbox.path, 'bin/git', LOGGING_PROGRAM);
     await fakeTool(sandbox.path, 'bin/git-lfs', LOGGING_PROGRAM);
     await fakeTool(sandbox.path, 'bin/mise', LOGGING_PROGRAM);

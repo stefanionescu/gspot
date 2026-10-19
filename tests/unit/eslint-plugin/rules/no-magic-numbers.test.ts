@@ -7,7 +7,6 @@ createRuleTester().run<keyof (typeof plugin.rules)['no-magic-numbers']['meta']['
     plugin.rules['no-magic-numbers'],
     {
         valid: [
-            // A module-level constant names every number of its initializer: in an array, or in arithmetic.
             'const SIZES = [16, 32, 64];',
             'export const TIMEOUT_MS = 60 * 1000;',
             'export const STEPS = [1, 2, 4].map((step) => step) as const;',

@@ -11,7 +11,6 @@ export type Pipeline = {
     packageManager?: PackageManager | undefined;
     manualTools: ToolDeclaration[];
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
-    /** The shell lines that install the locked project dependencies when no setup command replaces them. */
     projectInstall: string[];
     operatingSystems: NonNullable<Settings['ci']>['operating_systems'];
     /** Whether a scope includes Swift. */

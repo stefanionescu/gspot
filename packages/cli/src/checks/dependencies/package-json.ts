@@ -1,4 +1,3 @@
-// Read the dependency specifiers and the package manager that a package.json declares.
 import { z } from 'zod';
 import { parseJsonc } from '#cli/parsers/json.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';

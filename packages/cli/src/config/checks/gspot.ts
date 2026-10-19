@@ -60,6 +60,5 @@ export const SUPPRESSION_LIMITS = new Map([
 /** Leave installed dependencies out of generator output snapshots. */
 export const GENERATOR_SCAN_EXCLUSIONS = [NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER] as const;
 
-/** A parenthesis or bracket without a backslash, which a glob reads as syntax rather than a folder name. */
 export const UNESCAPED_GROUP = /(?<!\\)[()[\]]/u;
 export const GROUP_HINT = String.raw` If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`;

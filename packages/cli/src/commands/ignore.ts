@@ -19,7 +19,6 @@ import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type IgnoreOptions } from '#cli/types/commands/edit-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
-// An ignore names a known check, or no check and the paths that every check skips.
 function assertIgnoreTarget(options: IgnoreOptions, settings: Settings, reads: ReadCache): void {
     if (options.check !== undefined) {
         assertKnownCheck(options.check, settings, reads);

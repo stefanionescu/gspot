@@ -19,7 +19,6 @@ type InitPlanInputs = {
     everySelected: Manifest[];
     answers: InitAnswers;
     replaced: ReplacedFiles;
-    /** Files whose disable comments name rules that the new setup does not load. */
     foreignDisableComments: { path: string; note: string }[];
 };
 
@@ -143,7 +142,6 @@ type InitFormatOptions = {
     tabWidth?: number | undefined;
     printWidth?: number | undefined;
     singleQuote?: boolean | undefined;
-    /** Prettier options for some files, which become [[format.override]] records. */
     overrides?: { files: string | string[]; options: Omit<InitFormatOptions, 'overrides'> }[] | undefined;
 };
 

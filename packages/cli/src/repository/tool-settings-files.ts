@@ -1,4 +1,3 @@
-// Find the settings files of the tools that gspot writes settings for.
 import picomatch from 'picomatch';
 import { extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
@@ -12,7 +11,6 @@ import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { TrackedFile, FoundToolFile } from '#cli/types/repository/inventory.ts';
 import { INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/existing-tools.ts';
 
-// Find the tracked tool files that one replace row names.
 function findReplacedToolFiles(
     root: string,
     inventory: Set<string>,
@@ -53,13 +51,6 @@ function parseSharedFile(text: string, extension: string, path: string): unknown
     throw new Error(`${path}: shared configuration format is unsupported.`);
 }
 
-/**
- * Check whether a shared tool file holds the declared key or table.
- * @param text the file contents.
- * @param path the file, whose extension names the format.
- * @param selector the key or table that the tool owns.
- * @returns whether that section exists.
- */
 function hasToolSection(text: string, path: string, selector: Pick<FoundToolFile, 'key' | 'table'>): boolean {
     const extension = extname(path);
     if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) return hasIniSection(text, selector.table);

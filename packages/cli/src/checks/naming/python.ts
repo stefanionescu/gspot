@@ -64,12 +64,10 @@ function classifyDeclaredName(node: Node, name: string): NamedCategory {
     return holder === 'module' && PYTHON_CONSTANT.test(name) ? 'constants' : 'variables';
 }
 
-// The name after the last dot of a dotted name.
 function readLastName(node: Node | null): string {
     return node?.text.split('.').at(-1) ?? '';
 }
 
-// One side of a union of types: None, a class name, a builtin type, or another type form.
 function isTypeOperand(operand: Node | null): boolean {
     if (operand === null) return false;
     if (operand.type === 'none') return true;
@@ -78,7 +76,6 @@ function isTypeOperand(operand: Node | null): boolean {
     return isTypeForm(operand);
 }
 
-// A type form: a subscript of a typing form, such as Literal["a"], or a union of type operands.
 function isTypeForm(node: Node | null): boolean {
     if (node === null) return false;
     if (node.type === 'subscript') return PYTHON_TYPE_FORMS.has(readLastName(node.childForFieldName('value')));
@@ -86,7 +83,6 @@ function isTypeForm(node: Node | null): boolean {
     return isTypeOperand(node.childForFieldName('left')) && isTypeOperand(node.childForFieldName('right'));
 }
 
-// A module-level assignment declares a type alias when TypeAlias annotates it, or when its value names a type.
 function isTypeAlias(node: Node): boolean {
     if (getHolderType(node.parent ?? node) !== 'module') return false;
     const annotation = node.childForFieldName('type');

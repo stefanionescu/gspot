@@ -1,4 +1,3 @@
-// Compare each package.json with the specifiers that its lockfile records, as a frozen install does.
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
@@ -8,7 +7,6 @@ import { readLockedSpecifiers } from '#cli/parsers/locked-specifiers.ts';
 import { readDeclaredSpecifiers } from '#cli/checks/dependencies/package-json.ts';
 import { IMPORTER_LOCKFILES, LOCKFILE_UPDATE_COMMANDS } from '#cli/config/parsers/lockfiles.ts';
 
-// The nearest importer lockfile from the scope folder up to the repository root.
 function findImporterLockfile(input: CheckInput, folder: string) {
     const segments = folder === '' ? [] : folder.split('/');
     for (let depth = segments.length; depth >= 0; depth -= 1) {
@@ -22,7 +20,6 @@ function findImporterLockfile(input: CheckInput, folder: string) {
     return undefined;
 }
 
-// Each dependency whose declared specifier the lockfile does not record, and each that it records without a declaration.
 function compareSpecifiers(declared: Map<string, string>, locked: Map<string, string>, lockfilePath: string): string[] {
     const changed = [...declared].flatMap(([name, specifier]) => {
         const recorded = locked.get(name);

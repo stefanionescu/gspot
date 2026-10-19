@@ -1,4 +1,3 @@
-// Picks the import suffix style of each JavaScript scope from its compiler options and its bundler.
 import ts from 'typescript';
 import { join } from 'node:path';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -13,12 +12,10 @@ import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { BUNDLER_PACKAGES, IMPORT_STYLE_SETTING } from '#cli/config/commands/init.ts';
 
-// Node and Bun run .ts files that code imports by name, and the compiler options say so.
 function importsTypeScriptFiles(options: ts.CompilerOptions): boolean {
     return options.allowImportingTsExtensions === true || options.rewriteRelativeImportExtensions === true;
 }
 
-// A bundler resolves imports without a suffix: the compiler resolves like one, or the project depends on one.
 function isBundled(options: ts.CompilerOptions | undefined, repository: Repository, scope: string): boolean {
     return (
         options?.moduleResolution === ts.ModuleResolutionKind.Bundler ||
@@ -26,7 +23,6 @@ function isBundled(options: ts.CompilerOptions | undefined, repository: Reposito
     );
 }
 
-// Code that imports its .ts files by name keeps the suffix; code that a bundler builds drops it.
 function detectImportStyle(
     repository: Repository,
     scope: string,

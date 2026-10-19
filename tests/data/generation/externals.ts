@@ -1,7 +1,5 @@
-/** A host application module that a web extension imports by a path outside the repository. */
 export const HOST_MODULE = '../../scripts/app.js';
 
-/** A project-local ESLint plugin with one rule that reports the identifier forbidden. */
 export const LOCAL_PLUGIN = `export default {
     rules: {
         'no-forbidden': {

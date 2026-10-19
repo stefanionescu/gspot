@@ -267,7 +267,6 @@ function deriveLimits(settings: NamingSettings, identifier: Identifier, override
     return { ...base, caseNames: listCaseNames(base, identifier, overrides) };
 }
 
-// The cases of the last override that sets them, or of the category, and the cases that the declaration allows.
 function listCaseNames(base: CategoryLimits, identifier: Identifier, overrides: CompiledOverride[]): NamingCase[] {
     const caseOverride = overrides.findLast((override) => override.cases !== undefined);
     return [...(caseOverride?.cases ?? base.caseNames), ...(identifier.extraCases ?? [])];

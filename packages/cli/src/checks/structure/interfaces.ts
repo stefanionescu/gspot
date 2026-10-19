@@ -1,5 +1,3 @@
-// Find the Python functions that exist for their signature: overloads, abstract and protocol methods, accessors, and
-// method stubs. Inlining them breaks the interface that they declare.
 import type { Node } from 'web-tree-sitter';
 import { isDocstring } from '#cli/parsers/python.ts';
 
@@ -10,7 +8,6 @@ import {
     PYTHON_INTERFACE_DECORATORS,
 } from '#cli/config/checks/structure.ts';
 
-// The decorators of a definition, without the @ and the call arguments, such as typing.overload.
 function listDecorators(node: Node): string[] {
     const parent = node.parent;
     if (parent?.type !== 'decorated_definition') return [];
@@ -23,13 +20,11 @@ function readLastName(text: string): string {
     return text.split('.').at(-1) ?? '';
 }
 
-// The class whose body defines a method, or undefined for a function outside a class.
 function findOwnerClass(node: Node): Node | undefined {
     const holder = node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent;
     return holder?.type === 'block' && holder.parent?.type === 'class_definition' ? holder.parent : undefined;
 }
 
-// A method body of only pass, an ellipsis, or a docstring.
 function isStub(node: Node): boolean {
     const statements = node.childForFieldName('body')?.namedChildren ?? [];
     return statements

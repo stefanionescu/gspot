@@ -42,7 +42,6 @@ export const LINT_IMPORTS_COMMAND = ['lint-imports', '--no-cache', '--verbose', 
 
 export const VULTURE_COMMAND = ['vulture'] as const;
 
-/** The exit code of a vulture run that found dead code. */
 export const VULTURE_DEAD_CODE = 3;
 
 /**

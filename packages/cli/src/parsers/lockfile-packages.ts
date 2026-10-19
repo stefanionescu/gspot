@@ -1,4 +1,3 @@
-// Reads which package versions a lockfile holds, so checks read the locked dependency set, not every installed folder.
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { parse as parseYaml } from 'yaml';

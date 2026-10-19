@@ -26,7 +26,6 @@ type SettingDeclaration = {
     default_all?: unknown;
     language_defaults?: Record<string, unknown>;
     reason_needed?: 'raising' | 'lowering' | 'adding';
-    /** A table that holds a reason for each key, such as allowed_words. */
     reason_values?: boolean;
     summary: string;
     languages?: string[];
@@ -174,7 +173,6 @@ type ParsedFormat = {
     print_width: number;
     line_ending: (typeof LINE_ENDINGS)[number];
     final_newline: boolean;
-    /** Unset means each formatter's gspot default: double quotes for Python, single for the rest. */
     quotes?: (typeof QUOTE_STYLES)[number] | undefined;
     trailing_commas: (typeof TRAILING_COMMAS)[number];
     semicolons: boolean;

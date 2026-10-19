@@ -143,7 +143,6 @@ function findForwardedExpression(body: ts.ConciseBody): ts.Expression | undefine
         : expression;
 }
 
-// A use in the file that defines the function, outside its declaration, counts as one more user than the importer.
 function isUsedLocally(checker: ts.TypeChecker, nodes: ts.Node[], symbol: ts.Symbol): boolean {
     const declaration = symbol.valueDeclaration;
     if (declaration === undefined) return false;
@@ -156,7 +155,6 @@ function isUsedLocally(checker: ts.TypeChecker, nodes: ts.Node[], symbol: ts.Sym
     );
 }
 
-// A function that this file declares, that forwards one expression, and that no other code of the file uses.
 function isLocalForwarder(
     input: CheckInput,
     module: { checker: ts.TypeChecker; source: ts.SourceFile; path: string },

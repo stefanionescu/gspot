@@ -87,7 +87,6 @@ export const BASEDPYRIGHT_OPTIONS = {
     reportEmptyAbstractUsage: 'error',
 } as const;
 
-/** Level all also reports import cycles, and an override without @override, as TypeScript reports noImplicitOverride. */
 export const BASEDPYRIGHT_ALL_LEVEL_OPTIONS = {
     reportImportCycles: 'error',
     reportImplicitOverride: 'error',

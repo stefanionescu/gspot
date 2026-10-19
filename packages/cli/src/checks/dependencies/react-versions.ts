@@ -1,4 +1,3 @@
-// React refuses to run when react and react-dom differ, so their locked versions must match.
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
@@ -8,7 +7,6 @@ import { readDeclaredSpecifiers } from '#cli/checks/dependencies/package-json.ts
 import { REACT_PACKAGE, REACT_DOM_PACKAGE } from '#cli/config/checks/dependencies.ts';
 import { splitIdentity, readLockedPackages } from '#cli/parsers/lockfile-packages.ts';
 
-// The locked versions of one package, or its declared specifier when the project has no lockfile.
 function listVersions(locked: Set<string> | undefined, declared: Map<string, string>, name: string): string[] {
     if (locked === undefined) return [declared.get(name) ?? ''].filter(Boolean);
     return [...locked].flatMap((identity) => {

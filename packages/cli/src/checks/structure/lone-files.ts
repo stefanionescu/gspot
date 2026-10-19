@@ -7,7 +7,6 @@ import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
 
-// A code file of the scope that no framework routes by its folder.
 function isLoneCode(name: string, extensions: string[], isRouteFile: (name: string) => boolean): boolean {
     return extensions.some((extension) => name.endsWith(extension)) && !isRouteFile(name);
 }

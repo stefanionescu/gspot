@@ -184,7 +184,6 @@ export const LICENSE_FILE_CASES = [
     { name: 'NOTICE', findings: [{ file: 'LICENSE', rule: 'missing-license' }] },
 ] as const;
 
-/** A root guide with a root-relative link, and a site whose root-relative links name routes. */
 export const ROOT_LINK_FILES = {
     'gspot.toml': `level = "recommended"
 configurations = []

@@ -39,7 +39,6 @@ const TRANSLATION_CASES = [
 
 export { TRANSLATION_CASES, TRANSLATION_SANDBOX };
 
-/** A folder of locale files per catalog, and a folder per locale: each message file compares with its own base file. */
 export const MESSAGE_LAYOUTS: {
     layout: string;
     files: Record<string, string>;
@@ -67,7 +66,6 @@ export const MESSAGE_LAYOUTS: {
     },
 ];
 
-/** A base message file and a translation that renames an argument, drops a select key, and adds a plural category. */
 export const MESSAGE_ARGUMENTS = {
     base: {
         greet: 'Hello {name}, you have {count, plural, one {# item} other {# items}}.',

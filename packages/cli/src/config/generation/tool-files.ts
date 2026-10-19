@@ -215,7 +215,6 @@ export const MISE_FILE_TASK_GLOBS = [
     '**/.config/mise/tasks/**',
 ] as const;
 
-/** The package runners that a task calls a package binary with, each with the words that follow its program name. */
 export const PACKAGE_RUNNERS: Readonly<Record<string, readonly string[]>> = {
     bunx: [],
     npx: [],
@@ -225,14 +224,12 @@ export const PACKAGE_RUNNERS: Readonly<Record<string, readonly string[]>> = {
     yarn: ['exec', 'dlx'],
 };
 
-/** The characters that separate the words of a shell command line, and its commands. */
 export const COMMAND_WORD_SEPARATORS = /[\s;&|()]+/u;
 
 export const KNIP_IGNORED_DEPENDENCIES = ['@gspothq/cli'] as const;
 
 export const KNIP_ENTRY_SETTING = 'entry';
 
-/** The configuration whose scopes serve root-relative links as routes of the built site. */
 export const SITE_CONFIGURATION = 'site';
 
 /**
@@ -244,7 +241,6 @@ export const LYCHEE_ROOT_LINKS = String.raw`^file://(.*)/\.gspot/root-links/`;
 /** Where a root-relative link points outside a site: the same path from the repository root, as GitHub reads it. */
 export const LYCHEE_REPOSITORY_LINKS = 'file://$1/';
 
-/** The Markdownlint CLI configuration, with the front matter of .mdx pages, and its JSON report formatter. */
 export const MARKDOWNLINT_CLI_TEXT = `import { fileURLToPath } from 'node:url';
 
 export default {

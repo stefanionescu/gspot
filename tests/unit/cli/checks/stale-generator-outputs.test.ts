@@ -95,7 +95,6 @@ async function mockWrangler(root: string): Promise<DisposableStack> {
     return fakePinnedExecutables([pin]);
 }
 
-// The fake wrangler types writes the source into the folder it runs in, and keeps that folder.
 function spyOnWranglerTypes(source: string, folders: string[]) {
     return spyOn(processes, 'spawnProcess').mockImplementation(async (commandArguments, options) => {
         expect(commandArguments.slice(1)).toStrictEqual([

@@ -130,7 +130,6 @@ export const CI_STEP_NAMES = {
 
 export const NEXTJS_CONFIGURATION = 'nextjs';
 
-/** The install that each lockfile allows in CI: it installs what the lockfile holds, and fails on an outdated lockfile. */
 export const FROZEN_INSTALLS: Readonly<Record<string, readonly string[]>> = {
     'package-lock.json': ['npm', 'ci'],
     'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile'],
@@ -140,7 +139,6 @@ export const FROZEN_INSTALLS: Readonly<Record<string, readonly string[]>> = {
     'uv.lock': ['uv', 'sync', '--locked'],
 };
 
-/** Yarn 2 and later name the frozen install differently. */
 export const YARN_BERRY_INSTALL = ['yarn', 'install', '--immutable'] as const;
 
 /** Next.js writes its route types, which a fresh clone lacks, without building the app. */

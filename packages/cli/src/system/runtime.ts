@@ -1,4 +1,3 @@
-// Refuse a runtime older than the engines floor of the package, before any command runs.
 import semver from 'semver';
 import { RUNTIME_NAMES } from '#cli/config/system/runtime.ts';
 

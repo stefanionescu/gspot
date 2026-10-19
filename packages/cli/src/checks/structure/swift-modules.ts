@@ -1,4 +1,3 @@
-// Find the Swift modules of the repository: SwiftPM targets in Package.swift files, and Xcode native targets.
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { parsePbxproj } from '#cli/parsers/xcode.ts';
@@ -11,7 +10,6 @@ import type { SwiftModule } from '#cli/types/checks/import-rules.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { SWIFTPM_TARGET_FOLDERS, SWIFT_MODULE_NAME_CHARACTERS } from '#cli/config/checks/import-rules.ts';
 
-// The text of the string argument that has a label, such as name: "Core" in a target call.
 function readStringArgument(call: Node, label: string): string | undefined {
     const argument = call
         .descendantsOfType('value_argument')
@@ -20,7 +18,6 @@ function readStringArgument(call: Node, label: string): string | undefined {
     return value?.type === 'line_string_literal' ? (value.childForFieldName('text')?.text ?? '') : undefined;
 }
 
-// A target without a path lives in the first of its default folders that the package holds.
 function findDefaultFolder(folders: readonly string[], packageFolder: string, swiftFiles: string[]): string {
     const present = folders.find((folder) =>
         swiftFiles.some((file) => file.startsWith(`${posix.join(packageFolder, folder)}/`)),

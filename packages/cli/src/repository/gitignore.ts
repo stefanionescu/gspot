@@ -1,4 +1,3 @@
-// Reads the tracked .gitignore files, so tool files and checks treat ignored paths alike on every clone.
 import ignore from 'ignore';
 import { posix } from 'node:path';
 import { readCachedText } from '#cli/system/files/reads.ts';

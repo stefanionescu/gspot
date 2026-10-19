@@ -1,6 +1,5 @@
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 
-/** Framework files that count as code, so a one-file folder of them needs an authored check ignore. */
 export const ROUTE_CASES = [
     { framework: 'astro', name: 'index.astro', folder: 'src/pages', content: '<main>Example</main>\n' },
     { framework: 'svelte', name: 'Card.svelte', folder: 'src/lib', content: '<p>Example</p>\n' },

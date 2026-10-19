@@ -54,7 +54,6 @@ export const MODULE_FILES = {
     'apps/api/app/value.ts': 'export const value = 2;\n',
 } as const;
 
-/** The app rule may import storage but not core, although core comes first. */
 export const CAN_IMPORT_TABLES = `[[import_rule]]
 name = "core"
 paths = ["core/**"]

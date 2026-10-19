@@ -28,7 +28,6 @@ import {
     type PlanAfterFixes,
 } from '#cli/types/runs/check.ts';
 
-// An ignore with names covers only the findings that name one of those functions.
 function isNameMatch(record: IgnoreRecord, finding: Finding): boolean {
     return record.names === undefined || (finding.name !== undefined && record.names.includes(finding.name));
 }

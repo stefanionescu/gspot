@@ -1,4 +1,3 @@
-// The meaning of [[import_rule]] records, which the ESLint boundaries and the Python and Swift import check share.
 import type { ImportRule } from '#cli/types/settings/imports.ts';
 
 /**

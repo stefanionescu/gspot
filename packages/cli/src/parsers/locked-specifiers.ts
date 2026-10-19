@@ -1,5 +1,3 @@
-// Read the dependency specifiers that a lockfile records for each workspace, which a frozen install compares with
-// each package.json.
 import { z } from 'zod';
 import { parse as parseYaml } from 'yaml';
 import { isRecord } from '#cli/system/values.ts';

@@ -52,7 +52,6 @@ function buildHookScript(name: HookName, runner: StartRunner, prefix: string, us
     return `${HOOK_SHEBANG}\n${body}`;
 }
 
-// A Git LFS hook that runs no check: it calls git lfs, and does nothing without git-lfs.
 function buildLfsHookScript(name: LfsHookName): string {
     return `${HOOK_SHEBANG}\ncommand -v git-lfs >/dev/null 2>&1 || exit 0\nexec git lfs ${name} "$@"\n`;
 }

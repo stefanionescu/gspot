@@ -39,7 +39,6 @@ export type FixResult = { check: string; changed: string[] } & (
     | { status: 'failed'; note: string }
 );
 
-/** What the fixers changed, and the code files that parsed before a fixer ran and do not parse after. */
 export type FixReport = { results: FixResult[]; changed: string[]; broken: string[]; diffs: string[] };
 
 export type RunnableCheck = {
@@ -176,7 +175,6 @@ export type Finding = {
     column?: number;
     rule?: string;
     help?: string;
-    /** The function that the finding names, which an [[ignore]] with names matches. */
     name?: string;
 };
 

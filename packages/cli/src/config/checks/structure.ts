@@ -61,7 +61,6 @@ export const CONTAINER_NOISE = new Set([
     'inheritance_specifier',
 ]);
 
-/** Python decorators that mark a function as a signature or an accessor rather than a call to inline. */
 export const PYTHON_INTERFACE_DECORATORS: ReadonlySet<string> = new Set([
     'overload',
     'override',
@@ -73,7 +72,6 @@ export const PYTHON_INTERFACE_DECORATORS: ReadonlySet<string> = new Set([
 ]);
 export const PYTHON_ACCESSOR_DECORATOR = /\.(?:setter|getter|deleter)$/u;
 
-/** Python base classes whose methods declare an interface. */
 export const PYTHON_INTERFACE_BASES: ReadonlySet<string> = new Set(['Protocol', 'ABC']);
 export const PYTHON_ABSTRACT_METACLASS = 'ABCMeta';
 
@@ -103,7 +101,6 @@ export const SWIFT_ACCESSOR_NODES = new Set([
 export const LANGUAGE_BY_EXTENSION = { '.py': 'python', '.swift': 'swift' } as const;
 export const SPEC_SUFFIX = /\.spec$/u;
 
-/** The suffix of a companion file, such as button.test.tsx or button.module.css beside button.tsx. */
 export const COMPANION_SUFFIX = /\.(?:test|spec|stories|story|module|styles?|mock|bench)$/u;
 
 export const BASH_COMMAND_NODES: ReadonlySet<string> = new Set(['command', 'declaration_command']);

@@ -11,7 +11,6 @@ export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
 
 export const BUILD_SCRIPT = ['run', 'build'] as const;
 
-/** The package that builds a Next.js app for Cloudflare. */
 export const OPENNEXT_PACKAGE = '@opennextjs/cloudflare';
 
 /** The types file and interface that the OpenNext guide passes to wrangler types. */

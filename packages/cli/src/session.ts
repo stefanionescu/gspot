@@ -114,7 +114,6 @@ function findSessionMisePaths(
     return readMiseBinPaths(installedRoot, [...new Set(tools)], timeoutSeconds, []);
 }
 
-// An OpenNext project names its Worker types after the OpenNext guide. Only scopes that run cloudflare hold these defaults.
 function applyOpenNextDefaults(known: KnownSettings): void {
     for (const [name, value] of Object.entries(OPENNEXT_TYPE_DEFAULTS)) {
         const held = known.defaults.get(name);

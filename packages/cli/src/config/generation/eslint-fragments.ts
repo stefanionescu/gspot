@@ -89,7 +89,6 @@ const TYPESCRIPT_RULES = {
     '@typescript-eslint/strict-boolean-expressions': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'error',
     '@typescript-eslint/prefer-optional-chain': 'error',
-    // gspot/no-magic-numbers runs @typescript-eslint/no-magic-numbers, and accepts the numbers of a module-level const.
     'gspot/no-magic-numbers': [
         'error',
         {
@@ -133,10 +132,8 @@ const NEXT_PAGES_FOLDERS = ['pages/', 'src/pages/'] as const;
 
 const NEXT_SERVER_FILES = ['**/server/**', '**/*.server.*'] as const;
 
-/** The Fast Refresh rule, which reports a module that exports more than components. */
 const REFRESH_RULE = 'react-refresh/only-export-components';
 
-/** The jsx-a11y rules of React and of Astro that report tabIndex on an element that takes no input. */
 const TABINDEX_RULES = ['jsx-a11y/no-noninteractive-tabindex', 'astro/jsx-a11y/no-noninteractive-tabindex'] as const;
 
 /** Roles that may take tabIndex: a tab panel, as jsx-a11y allows, and a scrollable region that keyboards must reach. */

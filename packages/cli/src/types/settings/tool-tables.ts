@@ -72,7 +72,6 @@ type ParsedEslint = {
         rules?: ParsedEslint['rules'] | undefined;
         runtime?: string | undefined;
     }[];
-    /** Your own plugin modules: the rule prefix, the module path, and the rules that turn on as errors. */
     plugins: { name: string; path: string; rules: ParsedEslint['rules'] }[];
 };
 

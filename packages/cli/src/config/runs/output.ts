@@ -67,5 +67,4 @@ export const SEMGREP_PARSE_ERRORS: ReadonlySet<string> = new Set(['ParseError', 
 export const SEMGREP_PARSE_RULE = 'parse-error';
 export const JSON_START = /[[{]/u;
 
-/** What Node prints when a tool runs past its memory limit, before the garbage collector dump. */
 export const OUT_OF_MEMORY = /JavaScript heap out of memory|Reached heap limit/u;

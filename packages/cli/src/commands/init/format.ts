@@ -75,7 +75,6 @@ function readQuoteStyle(file: string, text: string): string | undefined {
     return format?.['quote-style'];
 }
 
-// The Python formatter that init replaces keeps its quotes through a Python override, which Ruff reads.
 function readPythonQuotes(root: string): string | undefined {
     for (const file of RUFF_SETTINGS_FILES) {
         const text = readText(root, file);
@@ -85,8 +84,6 @@ function readPythonQuotes(root: string): string | undefined {
     return undefined;
 }
 
-// Python keeps the quotes of the formatter that init replaces, or the double quotes of Ruff, apart from the quotes that
-// Prettier settings give the scope.
 function buildPythonOverride(root: string, quotes: string | undefined, hasPython: boolean): TomlTable[] {
     if (!hasPython) return [];
     const python = readPythonQuotes(root) ?? DEFAULT_QUOTES.ruff;
@@ -175,16 +172,6 @@ function readFormatOptions(
     return readFormattingFields(file);
 }
 
-/**
- * Read the formatting table of one scope.
- * @param scope the scope path.
- * @param context what init read about the repository.
- * @param context.draft the configurations and the template.
- * @param context.repository the root and the tracked files.
- * @param context.manifests every configuration.
- * @param context.dependencyFiles the parsed package declarations.
- * @returns the formatting table, or an empty table when the scope runs no formatter or has no settings.
- */
 function readScopeFormat(
     scope: string,
     context: {

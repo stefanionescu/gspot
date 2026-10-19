@@ -258,7 +258,6 @@ export function formatOutputTail(
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
     placeholder = 'The tool printed no error output.',
 ): string {
-    // An out-of-memory crash ends in a garbage collector dump, which names no cause.
     if (OUT_OF_MEMORY.test(result.stderr) || OUT_OF_MEMORY.test(result.stdout))
         return 'The tool ran out of memory. It most likely read build output or a bundle: keep that folder in .gitignore, or add an [[ignore]] with its paths.';
     const output = [result.stderr, result.stdout]

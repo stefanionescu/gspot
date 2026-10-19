@@ -120,7 +120,6 @@ function buildGeneratorInputs(input: CheckInput):
     return { values, commandText, declaration, patterns, named, targets, selected };
 }
 
-// Untracked and missing outputs end the check before the generator runs, and so does a scope with nothing to compare.
 function checkBeforeRun(
     input: CheckInput,
     inputs: Pick<

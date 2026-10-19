@@ -1,4 +1,3 @@
-// Find Python definitions that no code uses, and code that never runs, across every Python file of the scope.
 import { buildFinding } from '#cli/runs/finding.ts';
 import { listChildScopes } from '#cli/planning/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
@@ -7,7 +6,6 @@ import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { isInScope, isOutsideChildren } from '#cli/repository/scopes.ts';
 import { VULTURE_COMMAND, VULTURE_FINDING, VULTURE_DEAD_CODE } from '#cli/config/checks/python.ts';
 
-// Each unused definition, with the name that an [[ignore]] with names matches, or each line of unreachable code.
 function readVultureFinding(input: CheckInput, line: string, selected: ReadonlySet<string>): Finding[] {
     const groups = VULTURE_FINDING.exec(line)?.groups;
     if (groups === undefined) return [];
