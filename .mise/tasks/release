@@ -20,15 +20,6 @@ for workflow in ci.yml gspot.yml; do
     fi
 done
 
-# The GitHub release takes the notes of this version from the notes file, so they must exist before anything ships.
-cli_version=$(npm pkg get version --prefix packages/cli)
-cli_version=${cli_version//\"/}
-notes=$(awk -v heading="## ${cli_version}" '$0 == heading { found = 1; next } found && /^## / { exit } found { print }' packages/cli/RELEASE_NOTES.md)
-if [[ -z ${notes//[[:space:]]/} ]]; then
-    printf 'packages/cli/RELEASE_NOTES.md has no notes under "## %s".\n' "${cli_version}" >&2
-    exit 1
-fi
-
 # The plugin goes first, because the CLI pins its version. npm pkg get prints JSON strings, so the quotes go.
 tags=()
 for package in packages/eslint-plugin packages/cli; do
@@ -55,4 +46,8 @@ for tag in "${tags[@]}"; do
     git tag "${tag}"
     git push origin "${tag}"
 done
-printf '%s\n' "${notes}" | gh release create "v${cli_version}" --verify-tag --title "v${cli_version}" --notes-file -
+
+# GitHub writes the release notes from the commits after the previous release.
+cli_version=$(npm pkg get version --prefix packages/cli)
+cli_version=${cli_version//\"/}
+gh release create "v${cli_version}" --verify-tag --title "v${cli_version}" --generate-notes
