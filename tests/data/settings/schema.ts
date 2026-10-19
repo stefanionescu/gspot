@@ -48,6 +48,15 @@ export const PUBLISHED_SCHEMA_CASES = [
                 allowed_package: [{ name: 'example', version: '^1.2.3', reason: 'Reviewed its MIT license.' }],
             },
         },
+        valid: true,
+    },
+    {
+        name: 'an allowed package with a tag for a version',
+        input: {
+            licenses: {
+                allowed_package: [{ name: 'example', version: 'latest', reason: 'Reviewed its MIT license.' }],
+            },
+        },
         valid: false,
     },
     {

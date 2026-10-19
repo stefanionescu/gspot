@@ -41,8 +41,6 @@ export const GIT_SUFFIX = '.git';
 
 export const PYTHON_NAME_SEPARATORS = /[._-]+/gu;
 
-export const PYTHON_IDENTITY_NAME = /^[^@]+(?=@)/u;
-
 export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 
 export const PIPFILE = 'Pipfile';

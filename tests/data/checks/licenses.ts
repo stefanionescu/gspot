@@ -2,16 +2,10 @@ export const ALLOWED_PACKAGE_REASON = 'reason = "Reviewed the installed project.
 
 export const ALLOWED_PACKAGE_SCOPE_CASES = [
     {
-        name: 'root allowed package absent from every inherited project',
+        name: 'root allowed package that no project installs but the root lockfile holds',
         scopes: ['docs', 'cli'],
         reports: { docs: 'present@1.0.0', cli: 'present@1.0.0' },
-        findings: [
-            {
-                file: 'gspot.toml',
-                rule: 'unused-record',
-                message: 'Absent_Package@2.0.0 is absent from the installed project dependencies.',
-            },
-        ],
+        findings: [],
     },
     {
         name: 'root allowed package used only by documentation without a root manifest',
@@ -49,7 +43,7 @@ export const ALLOWED_PACKAGE_CASES = [
         package: 'strict@2.0.0',
         findings: [
             { rule: 'disallowed-license', message: 'strict@1.0.0 uses GPL-3.0-only' },
-            { rule: 'unused-record', message: 'strict@2.0.0 is absent from the installed project dependencies' },
+            { rule: 'unused-record', message: 'strict@2.0.0 matches no locked or installed project dependency' },
         ],
     },
     {
@@ -140,8 +134,8 @@ export const NPM_LICENSE_REPORT = {
 } as const;
 
 export const PYTHON_LICENSE_REPORT = [
-    { Name: 'python-package', Version: '2.0.0', License: 'GPL-3.0-only' },
-    { Name: 'prohibited-python', Version: '2.0.0', License: 'GPL-3.0-only' },
+    { Name: 'python-package', Version: '2.0.0', 'License-Expression': 'GPL-3.0-only' },
+    { Name: 'prohibited-python', Version: '2.0.0', 'License-Expression': 'GPL-3.0-only' },
 ] as const;
 
 export const ABSENT_PACKAGE_LOCKFILE = `[[package]]

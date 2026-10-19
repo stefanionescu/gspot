@@ -55,7 +55,7 @@ reason = "PurgeCSS exports its class under this exact name."
 
 [[naming.override]]
 paths = ["packages/cli/src/checks/licenses.ts"]
-allowed_names = ["License", "Name", "Version"]
+allowed_names = ["Name", "Version"]
 reason = "pip-licenses identifies these JSON fields with this exact capitalization."
 
 [[naming.override]]

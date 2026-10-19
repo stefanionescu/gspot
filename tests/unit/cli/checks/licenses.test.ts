@@ -4,6 +4,7 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeNpmTool } from '#tests/setup/fakes.ts';
 import * as processes from '#cli/system/processes.ts';
+import { checkReport } from '#tests/setup/run-gspot.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
@@ -42,7 +43,7 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])('allowed-packages: allowed packages:
                     {
                         Name: name,
                         Version: version,
-                        License: 'MIT',
+                        'License-Expression': 'MIT',
                     },
                 ]),
             }),
@@ -71,7 +72,7 @@ test.each([...ALLOWED_PACKAGE_CASES])('allowed-packages: an allowed package: $na
     resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
             buildProcessResult({
-                stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', License: license }]),
+                stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', 'License-Expression': license }]),
             }),
         ),
     );
@@ -178,4 +179,71 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
     const pythonFolder = folders.find((folder) => folder !== sandbox.path);
     expect(pythonFolder).toBeDefined();
     expect(await isOnDisk(pythonFolder!)).toBe(false);
+});
+
+test('scan: a Python license comes from its SPDX expression, then its metadata, then its trove classifiers', async () => {
+    await using sandbox = await testdir();
+    await prepareLicenseSandbox(sandbox.path, '[licenses]\nallowed = ["MIT", "BSD-3-Clause", "Apache-2.0"]\n');
+    using _scan = spyOn(processes, 'spawnProcess').mockResolvedValue(
+        buildProcessResult({
+            stdout: JSON.stringify([
+                { Name: 'expression', Version: '1.0.0', 'License-Expression': 'MIT', 'License-Metadata': 'GPL' },
+                {
+                    Name: 'metadata',
+                    Version: '1.0.0',
+                    'License-Expression': 'UNKNOWN',
+                    'License-Metadata': 'Apache-2.0',
+                },
+                {
+                    Name: 'classifier',
+                    Version: '1.0.0',
+                    'License-Metadata': 'BSD',
+                    'License-Classifier': 'BSD License',
+                },
+                { Name: 'choice', Version: '1.0.0', 'License-Classifier': 'MIT License; Apache Software License' },
+                {
+                    Name: 'copyleft',
+                    Version: '1.0.0',
+                    'License-Metadata': 'GPLv3',
+                    'License-Classifier': 'GNU General Public License v3 (GPLv3)',
+                },
+            ]),
+        }),
+    );
+    expect(await checkFindings(sandbox.path, 'licenses/allowed')).toStrictEqual([
+        matchFields({ rule: 'disallowed-license', message: 'copyleft@1.0.0 uses GPL-3.0-only, which is not allowed.' }),
+    ]);
+});
+
+test('scan: only the packages that the lockfile holds are checked, and a locked platform build keeps its record', async () => {
+    await using sandbox = await testdir();
+    await prepareLicenseSandbox(
+        sandbox.path,
+        `[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "nvidia-*"\nversion = "*"\nreason = "The CUDA builds ship under the NVIDIA license."\n`,
+    );
+    await createFileTree(sandbox.path, {
+        'uv.lock':
+            '[[package]]\nname = "app"\nversion = "1.0.0"\n[[package]]\nname = "nvidia-cudnn-cu12"\nversion = "9.1.0"\n',
+    });
+    using _scan = spyOn(processes, 'spawnProcess').mockResolvedValue(
+        buildProcessResult({
+            stdout: JSON.stringify([
+                { Name: 'app', Version: '1.0.0', 'License-Expression': 'MIT' },
+                { Name: 'torch', Version: '2.5.0', 'License-Expression': 'LicenseRef-Host' },
+            ]),
+        }),
+    );
+    expect(await checkFindings(sandbox.path, 'licenses/allowed')).toStrictEqual([]);
+});
+
+test('scan: the check skips with a note while licenses.allowed is empty', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['licenses']),
+        'pyproject.toml': '[project]\nname = "app"\nversion = "1.0.0"\n',
+    });
+    const { report } = await checkReport(sandbox.path, ['check', '--only', 'licenses/allowed', '--json']);
+    expect(report.checks).toMatchObject([
+        { check: 'licenses/allowed', status: 'skipped', note: 'Set licenses.allowed to check licenses.' },
+    ]);
 });

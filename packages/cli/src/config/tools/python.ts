@@ -34,13 +34,8 @@ export const UV_SETTINGS_FILE = 'uv.toml';
 export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;
 export const PINNED_PACKAGE_NAME = /^[^=]+/u;
 
-export const PIP_LICENSES_COMMAND = [
-    'pip-licenses',
-    '--format=json',
-    '--with-system',
-    '--from=mixed',
-    '--python',
-] as const;
+/** pip-licenses prints every license field it finds: the license expression, the metadata text, and the classifiers. */
+export const PIP_LICENSES_COMMAND = ['pip-licenses', '--format=json', '--from=all', '--python'] as const;
 
 export const UV_LOCKFILE_CREDENTIAL_MESSAGE =
     'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install';

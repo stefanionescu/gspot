@@ -23,10 +23,12 @@ export const RECORD_DECLARATIONS = {
     },
     'coverage.swift_target.reason': { description: 'Why this target may cover less.' },
     'licenses.allowed_package.name': {
-        description: 'The package name, such as `lightningcss` or `@fontsource-variable/geist`.',
+        description:
+            'The package name, such as `lightningcss`, or a glob that covers one package built for each platform, such as `@img/sharp-libvips-*`.',
     },
     'licenses.allowed_package.version': {
-        description: 'The exact installed version; gspot reports a record that matches no installed package.',
+        description:
+            'An exact version, a semver range such as `^1.2.0`, or `*`; gspot reports a record that matches no locked package.',
     },
     'licenses.allowed_package.reason': { description: 'Why you accept its license; name the license here.' },
     'site.size_limit.paths': {
