@@ -57,7 +57,8 @@ function copyPackageFile(installed: Files, destination: Files, path: string): vo
     destination.write(path, content, undefined);
 }
 
-// Python environments stay in place; their tools check the files of the scratch copy.
+// Python environments stay in place: UV_PROJECT_ENVIRONMENT and the interpreter flag point the tools at them while
+// they check the files of the scratch copy.
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);

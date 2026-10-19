@@ -9,9 +9,9 @@ import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { hasIniSection } from '#cli/repository/existing-tools.ts';
-import { buildUvRunCommand } from '#cli/install/python/project.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
+import { buildUvRunCommand, buildScratchPythonEnvironment } from '#cli/install/python/project.ts';
 import { BROKEN_CONTRACT, IMPORT_LINTER_FILES, LINT_IMPORTS_COMMAND } from '#cli/config/checks/python.ts';
 
 function importLinterFile(input: CheckInput): string | undefined {
@@ -52,7 +52,10 @@ export async function checkImportLinter(input: CheckInput): Promise<Finding[]> {
             ...LINT_IMPORTS_COMMAND,
             basename(configuration),
         ]),
-        { cwd: join(input.root, input.selection.scope.path) },
+        {
+            cwd: join(input.root, input.selection.scope.path),
+            env: buildScratchPythonEnvironment(input, input.selection.scope.path),
+        },
     );
     const lines = stripVTControlCharacters(result.stdout).split('\n');
     const broken = lines.slice(lines.findIndex((line) => line.trim() === 'Contracts')).flatMap((line) => {

@@ -2,8 +2,11 @@ import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
 
 export const PYTHON_ENVIRONMENT_FOLDER = '.venv';
 
-/** Arguments shared by uv execution and its installation preview. */
-export const UV_LOCKFILE_ARGUMENTS = ['lock'] as const;
+/**
+ * Arguments shared by uv execution and its installation preview. Every call names the Python of the tool project,
+ * which wins over a UV_PYTHON variable and a .python-version file of the repository.
+ */
+export const UV_LOCKFILE_ARGUMENTS = ['lock', '--python', PYTHON_VERSION] as const;
 export const UV_VENV_ARGUMENTS = [
     'venv',
     '--python',
@@ -11,7 +14,7 @@ export const UV_VENV_ARGUMENTS = [
     '--allow-existing',
     PYTHON_ENVIRONMENT_FOLDER,
 ] as const;
-export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project'] as const;
+export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project', '--python', PYTHON_VERSION] as const;
 export const INDEX_SETTINGS = new Set([
     'index',
     'index-url',

@@ -3,19 +3,21 @@ import { checkInput } from '#cli/runs/built-in.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { RAN_STATUSES } from '#cli/config/runs/run.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { buildInvocations } from '#cli/runs/command/batches.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
 import { stripCoverageArguments } from '#cli/planning/checks.ts';
-import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { listCompanionTools } from '#cli/planning/needed-tools.ts';
 import { copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { buildScratchPythonEnvironment } from '#cli/install/python/project.ts';
+import { INTERPRETER_FLAGS, PYTHON_EXECUTABLE } from '#cli/config/runs/command.ts';
+import { convertToPosixPath, buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { Finding, CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
+import { FILES_PLACEHOLDER, PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
 import { findTool, runPlannedTool, buildCompanionEnvironment } from '#cli/runs/command/tool.ts';
 import { buildCheckResult, recordInvocation, parseCommandFindings } from '#cli/runs/command/output.ts';
 
@@ -156,6 +158,15 @@ function findUnavailableCompanion(
     return undefined;
 }
 
+// A type checker that reads its environment from its settings file gets the interpreter of a scratch copy's project.
+function listInterpreterArguments(tool: ToolDeclaration, env: Record<string, string>): string[] {
+    const flag = Object.hasOwn(INTERPRETER_FLAGS, tool.name) ? INTERPRETER_FLAGS[tool.name] : undefined;
+    const environment = env['UV_PROJECT_ENVIRONMENT'];
+    return flag === undefined || environment === undefined
+        ? []
+        : [flag, buildVenvExecutablePath(environment, PYTHON_EXECUTABLE)];
+}
+
 /**
  * Copies the check files into a scratch copy and prepares the command there.
  * @param planned the check to run.
@@ -222,7 +233,11 @@ export function buildCommandEnvironment(
             replacePlaceholders(session, planned, value, substitutions),
         ]),
     );
-    return { root: session.root, cwd, files, substitutions, env };
+    const python =
+        planned.manifest?.configuration.name === PYTHON_CONFIGURATION
+            ? buildScratchPythonEnvironment(session, selection.scope.path)
+            : {};
+    return { root: session.root, cwd, files, substitutions, env: { ...env, ...python } };
 }
 
 /**
@@ -282,10 +297,13 @@ export async function runCheckCommand(
     planned: PlannedCheck,
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {
-    const command = stripCoverageArguments(planned, options) as string[];
     const tool = planned.tool as ToolDeclaration;
     const base = buildBaseResult(planned, session);
     const environment = buildCommandEnvironment(session, planned, options);
+    const command = [
+        ...(stripCoverageArguments(planned, options) as string[]),
+        ...listInterpreterArguments(tool, environment.env),
+    ];
     const { env, cwd } = environment;
     const missing = findMissingToolFile(planned, { session, command, base, options });
     if (missing !== undefined) return missing;

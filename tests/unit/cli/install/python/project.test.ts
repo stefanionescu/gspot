@@ -90,3 +90,21 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     expect(await isOnDisk(join(repository.path, '.gspot/.venv'))).toBe(false);
     expect(boundary).toHaveBeenCalledTimes(1);
 });
+
+test('uv installs the tool project with its own Python, whatever UV_PYTHON and .python-version the repository sets', async () => {
+    await using repository = await testdir();
+    await createFileTree(repository.path, { ...buildPythonProjectFiles(), '.python-version': '3.12.13\n' });
+    const runs: { command: string[]; env: Record<string, string | undefined> | undefined }[] = [];
+    using _boundary = fakeCommand('pinned-uv', (command, options) => {
+        runs.push({ command: [...command], env: options.env });
+        return Promise.resolve({ code: 0, missing: false, duration: 0, stdout: '', stderr: '' });
+    });
+    using log = openWriter(repository.path);
+    await installPythonTools(buildInstallContext(await openSession(repository.path), log), 'pinned-uv');
+    expect(runs.map(({ command }) => command[1])).toStrictEqual(['venv', 'sync']);
+    for (const { command, env } of runs) {
+        const flag = command.indexOf('--python');
+        expect(command.slice(flag, flag + 2)).toStrictEqual(['--python', PYTHON_VERSION]);
+        expect(env).toHaveProperty('UV_PYTHON', undefined);
+    }
+});

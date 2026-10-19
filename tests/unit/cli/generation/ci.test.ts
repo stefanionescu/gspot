@@ -10,6 +10,7 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { type Pipeline } from '#cli/types/generation/ci.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { listProjectInstallLines } from '#cli/generation/project-install.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 
@@ -152,6 +153,7 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
     const pipeline: Pipeline = {
         ...LINUX_PIPELINE,
         operatingSystems: [...LINUX_PIPELINE.operatingSystems],
+        projectInstall: [...LINUX_PIPELINE.projectInstall],
         manualChecks: session.configuredChecks.filter(({ check }) =>
             ['docs/lychee-external', 'project/audit'].includes(check.name),
         ),
@@ -160,3 +162,29 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
     };
     return pipeline;
 }
+
+test('without a setup command, CI installs the locked dependencies of each project and writes Next.js route types', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['javascript', 'python'], {
+            tables: '[ci]\nenabled = true\nprovider = "github"\n[[scope]]\npath = "web"\nconfigurations = ["nextjs"]\n',
+        }),
+        'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
+        'package-lock.json': '{"lockfileVersion":3}',
+        'pyproject.toml': '[project]\nname = "service"\nversion = "1.0.0"\n',
+        'uv.lock': 'version = 1\n',
+        'web/package.json': '{"private":true,"dependencies":{"next":"16.0.0"}}',
+        'web/pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
+        'web/next.config.ts': 'export default {};\n',
+        'main.py': 'value = 1\n',
+        'web/app/page.tsx': 'export default function Page() { return null; }\n',
+    });
+    const session = await openSession(sandbox.path);
+    const uv = session.manifests.get('python')!.tools.find(({ name }) => name === 'uv')?.version;
+    expect(listProjectInstallLines(session)).toStrictEqual([
+        'npm ci',
+        `mise exec uv@${String(uv)} -- uv sync --locked`,
+        '(cd web && pnpm install --frozen-lockfile)',
+        '(cd web && npx --no -- next typegen)',
+    ]);
+});

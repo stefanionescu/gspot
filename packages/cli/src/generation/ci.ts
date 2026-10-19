@@ -120,6 +120,9 @@ function buildJob(
                           run: pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' '),
                       },
                   ]),
+            ...(pipeline.projectInstall.length === 0
+                ? []
+                : [{ name: CI_STEP_NAMES.projectInstall, run: pipeline.projectInstall.join('\n') }]),
             { name: CI_STEP_NAMES.install, env: { ...MISE_TOKEN_ENVIRONMENT }, run: `${command} install` },
             structuredClone(check.step),
         ],
@@ -212,7 +215,7 @@ function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     const command = buildGspotCommand(pipeline);
     const setup =
         pipeline.setupCommand === undefined
-            ? []
+            ? pipeline.projectInstall
             : [pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' ')];
     const check = [GITLAB_BASE_LINE, buildCheckScript(`${command} check`)].join('\n');
     const branches = OPERATING_SYSTEMS.flatMap((system) =>

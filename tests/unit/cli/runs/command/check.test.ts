@@ -1,6 +1,12 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/session.ts';
+import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { checkReport } from '#tests/setup/run-gspot.ts';
+import { buildRunOptions } from '#tests/setup/builders.ts';
+import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildCommandEnvironment } from '#cli/runs/command/check.ts';
 import { PENDING_NOTES_SCRIPT } from '#tests/data/runs/command-checks.ts';
 
 test('a command check runs its command and reports file and line through its output format', async () => {
@@ -30,4 +36,29 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
             findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
         },
     ]);
+});
+
+test('a Python check of a scratch copy reads the environment that the working tree installed', async () => {
+    await using working = await testdir();
+    await using scratch = await testdir();
+    const files = {
+        'gspot.toml': buildSettingsText(['python']),
+        'pyproject.toml': '[project]\nname = "app"\nversion = "1.0.0"\nrequires-python = ">=3.12"\n',
+        'uv.lock': 'version = 1\n',
+        'app/main.py': 'import requests\n',
+    };
+    await createFileTree(working.path, { ...files, '.venv/pyvenv.cfg': 'home = /usr/bin\n' });
+    await createFileTree(scratch.path, files);
+    const session = await openSession(scratch.path, undefined, { installedRoot: working.path });
+    const planned = planRun(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
+        ({ check }) => check.name === 'python/basedpyright',
+    )!;
+    expect(buildCommandEnvironment(session, planned, {}).env['UV_PROJECT_ENVIRONMENT']).toBe(
+        join(working.path, '.venv'),
+    );
+    const inPlace = await openSession(working.path);
+    const local = planRun(inPlace, buildRunOptions({ only: ['python/basedpyright'] })).find(
+        ({ check }) => check.name === 'python/basedpyright',
+    )!;
+    expect(buildCommandEnvironment(inPlace, local, {}).env).not.toHaveProperty('UV_PROJECT_ENVIRONMENT');
 });

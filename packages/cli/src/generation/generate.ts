@@ -17,6 +17,7 @@ import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import { buildBunScannerEdits } from '#cli/generation/bun-scanner.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
+import { listProjectInstallLines } from '#cli/generation/project-install.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
@@ -48,6 +49,7 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
             version,
             packageManager: session.getPackageManager(),
             setupCommand: settings.ci.setup_command,
+            projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
             operatingSystems: settings.ci.operating_systems,
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
             manualChecks: manual,

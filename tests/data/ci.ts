@@ -45,6 +45,7 @@ export const LINUX_PIPELINE = {
     operatingSystems: ['linux'],
     hasSwift: false,
     manualChecks: ['docs/lychee-external'],
+    projectInstall: [],
 } as const;
 
 export const GITLAB_PIPELINE = `stages: [test]

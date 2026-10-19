@@ -6,11 +6,11 @@ import { parse } from '@decimalturn/toml-patch';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
+import { statSync, readFileSync, writeFileSync } from 'node:fs';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { buildLockfileResult } from '#cli/generation/projects.ts';
@@ -59,7 +59,7 @@ function readPythonLockfile(work: string, credentials: string[], project: Python
     return lockfile;
 }
 
-// uv runs inside the tool project and uses its exact Python requirement.
+// uv runs inside the tool project and uses its exact Python version.
 async function runUv(
     context: InstallContext,
     { work, commandArguments, executable, credentials, configFile = join(work, UV_SETTINGS_FILE) }: UvExecution,
@@ -81,7 +81,8 @@ async function runUv(
         cancelSignal: context.cancelSignal,
         cwd: work,
         timeoutSeconds,
-        env: { UV_PROJECT_ENVIRONMENT: join(work, PYTHON_ENVIRONMENT_FOLDER) },
+        // The repository's interpreter choice belongs to its own project, not to the tool project of gspot.
+        env: { UV_PROJECT_ENVIRONMENT: join(work, PYTHON_ENVIRONMENT_FOLDER), UV_PYTHON: undefined },
     });
     context.cancelSignal?.throwIfAborted();
     if (result.missing)
@@ -281,10 +282,32 @@ function isPythonLockfileCurrent(project: PythonToolProject, lockfile: string | 
     return isDeepStrictEqual(normalizeRequirements(projectEntry.metadata['requires-dist']), expected);
 }
 
+/**
+ * Point the Python tools that check a scratch copy at the environment the working tree installed. The hook checks a
+ * pushed revision in a copy that holds no environment, after it verifies that the dependency files match.
+ *
+ * @param roots the folder the tools check, and the working tree.
+ * @param roots.root the folder the tools check.
+ * @param roots.installedRoot the working tree that holds the installed environments.
+ * @param scope the project folder.
+ * @returns UV_PROJECT_ENVIRONMENT, or nothing in the working tree or for a project without an environment.
+ */
+function buildScratchPythonEnvironment(
+    roots: { root: string; installedRoot: string },
+    scope: string,
+): Record<string, string> {
+    if (roots.root === roots.installedRoot) return {};
+    const environment = join(roots.installedRoot, scope, PYTHON_ENVIRONMENT_FOLDER);
+    return statSync(environment, { throwIfNoEntry: false })?.isDirectory() === true
+        ? { UV_PROJECT_ENVIRONMENT: environment }
+        : {};
+}
+
 export {
     buildUvRunCommand,
     installPythonTools,
     preparePythonLockfile,
     pythonToolProjectSchema,
     isPythonLockfileCurrent,
+    buildScratchPythonEnvironment,
 };

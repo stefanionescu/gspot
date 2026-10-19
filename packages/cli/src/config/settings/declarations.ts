@@ -264,7 +264,7 @@ export const SETTING_DECLARATIONS = {
     'ci.enabled': { description: 'Whether gspot writes a CI workflow; set it at the root only.' },
     'ci.provider': { description: 'Which CI service gets the workflow; set it at the root only.' },
     'ci.setup_command': {
-        description: 'A command that CI runs before `gspot install`, such as `npm ci`; set it at the root only.',
+        description: 'A command CI runs before `gspot install`, in place of the frozen install of each lockfile.',
     },
     'scope.path': { description: 'The folder of the scope; no two records may name the same folder.' },
     'scope.configurations': {
