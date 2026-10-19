@@ -204,3 +204,20 @@ test('Knip workspaces come from package workspaces, your entries and the configu
     expect(withoutEntries.workspaces['.']!.entry).toStrictEqual(matchItems(['src/main.{ts,js}']));
     expect(withoutEntries.workspaces['.']!.entry).not.toContain('cli.js');
 });
+
+test('Knip keeps a declared package that a mise file task runs through a package runner', async () => {
+    const knip = JSON.parse(
+        await generateFile(buildSettingsText(['javascript']), '.gspot/configurations/language/javascript/knip.json', {
+            'package.json': JSON.stringify({
+                private: true,
+                devDependencies: { wrangler: '4.0.0', 'left-pad': '1.3.0' },
+            }),
+            'main.js': 'export const value = 1;\n',
+            '.mise/tasks/deploy': '#!/usr/bin/env bash\nbunx wrangler@4 deploy\n',
+            'mise-tasks/typecheck': '#!/usr/bin/env bash\nnpx --yes undeclared-tool\n',
+        }),
+    ) as { ignoreDependencies: string[] };
+    expect(knip.ignoreDependencies).toContain('wrangler');
+    expect(knip.ignoreDependencies).not.toContain('left-pad');
+    expect(knip.ignoreDependencies).not.toContain('undeclared-tool');
+});

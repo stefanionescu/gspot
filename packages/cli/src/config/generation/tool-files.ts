@@ -199,6 +199,28 @@ export const SHELLCHECK_OPTIONS = [
 
 export const KNIP_SCHEMA_URL = 'https://unpkg.com/knip@6/schema.json';
 
+/** The folders of mise file tasks, which Knip does not read. */
+export const MISE_FILE_TASK_GLOBS = [
+    '**/mise-tasks/**',
+    '**/.mise-tasks/**',
+    '**/mise/tasks/**',
+    '**/.mise/tasks/**',
+    '**/.config/mise/tasks/**',
+] as const;
+
+/** The package runners that a task calls a package binary with, each with the words that follow its program name. */
+export const PACKAGE_RUNNERS: Readonly<Record<string, readonly string[]>> = {
+    bunx: [],
+    npx: [],
+    bun: ['x'],
+    npm: ['exec'],
+    pnpm: ['exec', 'dlx'],
+    yarn: ['exec', 'dlx'],
+};
+
+/** The characters that separate the words of a shell command line, and its commands. */
+export const COMMAND_WORD_SEPARATORS = /[\s;&|()]+/u;
+
 export const KNIP_IGNORED_DEPENDENCIES = ['@gspothq/cli'] as const;
 
 export const KNIP_ENTRY_SETTING = 'entry';

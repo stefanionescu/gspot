@@ -37,5 +37,5 @@ why = "An allowed name that nothing uses hides an obsolete exception."
 [[naming.override]]
 allowed_names = ["_default"]
 categories = ["files"]
-paths = ["**/.mise/tasks/**", "**/mise-tasks/**", "**/.config/mise/tasks/**"]
+paths = ["**/mise-tasks/**", "**/.mise-tasks/**", "**/.mise/tasks/**", "**/.config/mise/tasks/**", "**/mise/tasks/**"]
 reason = "mise runs a task file named _default under the name of its folder."

@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { parseJsonResult } from '#cli/parsers/json.ts';
-import { parse } from '@formatjs/icu-messageformat-parser';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-import { MESSAGE_FILE_SUFFIX } from '#cli/config/checks/translations.ts';
+import { ARGUMENT_FORMATS, MESSAGE_FILE_SUFFIX } from '#cli/config/checks/translations.ts';
+import { TYPE, parse, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
@@ -66,7 +66,56 @@ function compareMessages(
                 `The key ${key} of ${base} has no message here.`,
             ),
         );
-    return [...broken, ...missing];
+    const changed = [...messages].flatMap(([key, text]) => {
+        const baseText = baseMessages.get(key);
+        const message = baseText === undefined ? undefined : compareMessageParts(text, baseText, base);
+        return message === undefined
+            ? []
+            : [buildFinding(input, { file: path, line: 1 }, 'message-arguments', `${key}: ${message}`)];
+    });
+    return [...broken, ...missing, ...changed];
+}
+
+// The parts of a message that every locale keeps: each argument with its format, each tag, and the keys of each select.
+// Plural categories differ between languages, so a plural keeps only its argument.
+function listMessageParts(elements: MessageFormatElement[]): string[] {
+    return elements.flatMap((element): string[] => {
+        if (element.type === TYPE.literal || element.type === TYPE.pound) return [];
+        if (element.type === TYPE.tag) return [`<${element.value}>`, ...listMessageParts(element.children)];
+        if (element.type === TYPE.select || element.type === TYPE.plural) {
+            const keys =
+                element.type === TYPE.select
+                    ? `, select, ${Object.keys(element.options)
+                          .toSorted((left, right) => left.localeCompare(right))
+                          .join(' ')}`
+                    : ', plural';
+            const nested = Object.values(element.options).flatMap((option) => listMessageParts(option.value));
+            return [`{${element.value}${keys}}`, ...nested];
+        }
+        const format = ARGUMENT_FORMATS[element.type];
+        return [`{${element.value}${format}}`];
+    });
+}
+
+// What a translated message adds to or leaves out of the parts of its base message, or undefined when both match.
+function compareMessageParts(text: string, baseText: string, base: string): string | undefined {
+    let parts: Set<string>;
+    let baseParts: Set<string>;
+    try {
+        parts = new Set(listMessageParts(parse(text)));
+        baseParts = new Set(listMessageParts(parse(baseText)));
+    } catch {
+        return undefined;
+    }
+    const missing = [...baseParts].filter((part) => !parts.has(part));
+    const extra = [...parts].filter((part) => !baseParts.has(part));
+    if (missing.length === 0 && extra.length === 0) return undefined;
+    return [
+        missing.length === 0 ? '' : `${base} has ${missing.join(', ')}, which this message leaves out.`,
+        extra.length === 0 ? '' : `This message has ${extra.join(', ')}, which ${base} does not have.`,
+    ]
+        .filter(Boolean)
+        .join(' ');
 }
 
 function readMessages(input: CheckInput, path: string): Map<string, string> | string {

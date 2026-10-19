@@ -66,3 +66,17 @@ export const MESSAGE_LAYOUTS: {
         expected: [{ file: 'messages/fr/common.json', message: 'The key hello of en has no message here.' }],
     },
 ];
+
+/** A base message file and a translation that renames an argument, drops a select key, and adds a plural category. */
+export const MESSAGE_ARGUMENTS = {
+    base: {
+        greet: 'Hello {name}, you have {count, plural, one {# item} other {# items}}.',
+        pick: '{gender, select, male {He} female {She} other {They}} replied.',
+        link: 'Read <b>this</b>.',
+    },
+    translated: {
+        greet: 'Bonjour {nom}, vous avez {count, plural, one {# article} many {# articles} other {# articles}}.',
+        pick: '{gender, select, male {Il} other {Iel}} a répondu.',
+        link: 'Lisez <b>ceci</b>.',
+    },
+} as const;

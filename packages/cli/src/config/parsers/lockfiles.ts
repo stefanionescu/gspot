@@ -72,3 +72,16 @@ export const NPM_PACKAGE_FOLDER = 'node_modules/';
 
 /** pnpm adds the peer dependencies of a package to its key, in parentheses after its version. */
 export const PNPM_PEER_START = '(';
+
+/** The lockfiles that record the dependency specifiers of each workspace, as package.json declares them. */
+export const IMPORTER_LOCKFILES = ['bun.lock', 'package-lock.json', 'pnpm-lock.yaml'] as const;
+
+/** The sections of package.json that an install resolves and a lockfile records. */
+export const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
+
+/** The command that brings each importer lockfile in line with package.json. */
+export const LOCKFILE_UPDATE_COMMANDS = {
+    'bun.lock': 'bun install',
+    'package-lock.json': 'npm install',
+    'pnpm-lock.yaml': 'pnpm install',
+} as const;

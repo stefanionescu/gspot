@@ -73,6 +73,7 @@ const commandCheckSchema = z.strictObject({
     name: z.string().min(1).describe(SETTING_DECLARATIONS['command_check.name'].description),
     command: commandCheckFields.command.unwrap().describe('The executable and arguments to run on selected files.'),
     paths: nonemptyPaths.meta({ description: 'Repository-relative glob patterns selecting inputs.' }),
+    outputs: relativePaths.optional().describe(SETTING_DECLARATIONS['command_check.outputs'].description),
     stage: commandCheckFields.stage
         .exclude(['message'])
         .meta({ description: 'The earliest stage that runs this check.' }),

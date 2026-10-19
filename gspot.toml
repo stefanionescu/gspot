@@ -146,7 +146,7 @@ allowed_names = ["ARBITRARY_LOADS"]
 reason = "Apple names the key NSAllowsArbitraryLoads."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/dependencies.ts"]
+paths = ["packages/cli/src/checks/dependencies/lockfiles.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 

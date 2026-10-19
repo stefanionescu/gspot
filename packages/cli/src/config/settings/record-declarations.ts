@@ -2,6 +2,10 @@ export const RECORD_DECLARATIONS = {
     'command_check.name': {
         description: 'The check ID that `--only` and `[[ignore]] check` use, which may not match a shipped check.',
     },
+    'command_check.outputs': {
+        description:
+            'The files that the command writes. With outputs, the check runs the command in a scratch copy and reports each output that differs from the committed file.',
+    },
     'ignore.check': {
         description:
             'The check whose findings you accept: a shipped check or a command check. Leave it out to keep the paths out of every check.',

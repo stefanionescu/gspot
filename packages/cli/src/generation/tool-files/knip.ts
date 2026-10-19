@@ -1,9 +1,12 @@
 // Find the entry files of a folder: the ones in the settings, then the ones that the configurations of the nearest scope know.
 
 import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
+import { splitIdentity } from '#cli/parsers/lockfile-packages.ts';
 import { listIgnoredGlobs } from '#cli/generation/ignore-files.ts';
 import { listWorkspaceFolders } from '#cli/repository/packages.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
@@ -12,7 +15,10 @@ import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 
 import {
     KNIP_SCHEMA_URL,
+    PACKAGE_RUNNERS,
     KNIP_ENTRY_SETTING,
+    MISE_FILE_TASK_GLOBS,
+    COMMAND_WORD_SEPARATORS,
     KNIP_IGNORED_DEPENDENCIES,
     KNIP_JAVASCRIPT_ENTRY_FILES,
 } from '#cli/config/generation/tool-files.ts';
@@ -76,6 +82,38 @@ function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Sco
         }),
     );
 }
+// The word that a package runner at this index runs, such as wrangler@4 in bunx wrangler@4 deploy.
+function findRunTarget(words: string[], index: number): string | undefined {
+    const subcommands = PACKAGE_RUNNERS[words[index] ?? ''];
+    if (subcommands === undefined) return undefined;
+    const hasSubcommand = subcommands.length > 0;
+    if (hasSubcommand && !subcommands.includes(words[index + 1] ?? '')) return undefined;
+    return words.slice(index + 1 + Number(hasSubcommand)).find((candidate) => !candidate.startsWith('-'));
+}
+
+// The package after a package runner in each command, without its version.
+function listRunPackages(text: string): string[] {
+    const words = text.split(COMMAND_WORD_SEPARATORS);
+    return words.flatMap((_word, index) => {
+        const target = findRunTarget(words, index);
+        return target === undefined ? [] : [splitIdentity(target)?.[0] ?? target];
+    });
+}
+
+// Knip reads the [tasks] of mise.toml but not mise file tasks, so a package that only a file task runs, such as bunx
+// wrangler, reads as unused. Knip keeps each package that a project declares and a file task runs.
+function listFileTaskPackages(context: ToolFileContext): string[] {
+    const { files, dependencyFiles } = context.session.repository;
+    const isFileTask = buildPathMatcher([...MISE_FILE_TASK_GLOBS]);
+    const declared = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
+    const names = files
+        .filter((file) => file.kind === 'source' && isFileTask(file.path))
+        .flatMap((file) => listRunPackages(readCachedText(context.session.reads, file.path) ?? ''));
+    return [...new Set(names)]
+        .filter((name) => declared.has(name))
+        .toSorted((left, right) => left.localeCompare(right));
+}
+
 /**
  * Build the Knip file from the settings.
  * @param context the tool file to build.
@@ -109,6 +147,7 @@ function buildKnipFile(context: ToolFileContext): string {
                     ...toolPackages,
                     ...(scanner === undefined ? [] : [scanner]),
                     ...options.ignore_dependencies,
+                    ...listFileTaskPackages(context),
                 ]),
             ],
             ignoreBinaries: [...new Set(toolBinaries)],

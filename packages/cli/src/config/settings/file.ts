@@ -39,7 +39,7 @@ const SCHEMA_FILE = 'gspot.schema.json';
 
 const RECORD_FIELDS = {
     scope: ['path', 'configurations', 'removed_configurations', 'test_files'],
-    command_check: ['name', 'command', 'paths', 'stage', 'summary', 'help', 'fix', 'exit_codes', 'output'],
+    command_check: ['name', 'command', 'paths', 'outputs', 'stage', 'summary', 'help', 'fix', 'exit_codes', 'output'],
     ignore: ['check', 'rule', 'names', 'paths', 'reason', 'until'],
     import_rule: ['name', 'paths', 'can_also_import', 'can_import'],
     'format.override': [

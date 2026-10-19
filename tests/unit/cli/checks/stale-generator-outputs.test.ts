@@ -8,6 +8,7 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { checkReport } from '#tests/setup/run-gspot.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -228,4 +229,29 @@ test('Supabase types need Docker before the local stack starts', async () => {
         note: 'Docker is not installed. Install Docker to run this check.',
     });
     expect(fixture.requests).toStrictEqual([]);
+});
+
+test('a [[command_check]] with outputs reports an output that differs from what its command writes', async () => {
+    await using sandbox = await testdir();
+    const generator = JSON.stringify([
+        process.execPath,
+        '-e',
+        String.raw`require("node:fs").writeFileSync("generated/api.ts", "export const version = 2;\n");`,
+    ]);
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText([], {
+            tables: `[[command_check]]\nname = "project/codegen"\ncommand = ${generator}\npaths = ["schema/**"]\noutputs = ["generated/api.ts"]\nstage = "commit"\n`,
+        }),
+        'schema/api.json': '{"version":2}\n',
+        'generated/api.ts': 'export const version = 1;\n',
+    });
+    commitAll(sandbox.path);
+    const stale = await checkReport(sandbox.path, ['check', '--only', 'project/codegen', '--json']);
+    expect(
+        stale.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
+    ).toStrictEqual([{ file: 'generated/api.ts', rule: 'stale' }]);
+    expect(await readFile(join(sandbox.path, 'generated/api.ts'), 'utf8')).toBe('export const version = 1;\n');
+    await Bun.write(join(sandbox.path, 'generated/api.ts'), 'export const version = 2;\n');
+    const fresh = await checkReport(sandbox.path, ['check', '--only', 'project/codegen', '--json']);
+    expect(fresh.code, fresh.stdout + fresh.stderr).toBe(0);
 });

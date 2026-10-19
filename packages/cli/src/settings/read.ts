@@ -92,11 +92,14 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
     return Object.fromEntries(
         (checks ?? []).map((entry) => {
             const name = entry.name;
-            const { paths, ...definition } = stripUndefined(entry);
+            const { paths, outputs, ...definition } = stripUndefined(entry);
             return [
                 name,
                 {
                     ...definition,
+                    ...(outputs === undefined
+                        ? {}
+                        : { generator_outputs: outputs.map((path) => ({ kind: 'path' as const, path })) }),
                     name,
                     ...COMMAND_CHECK_DEFAULTS,
                     summary: entry.summary ?? `Runs the repository's own check ${name}.`,

@@ -30,6 +30,8 @@ type CommandCheckFields = {
     name: string;
     command: string[];
     paths: string[];
+    /** The files that the command writes, which the check compares with the committed files. */
+    outputs?: string[] | undefined;
     stage: Exclude<(typeof STAGES)[number], 'message'>;
     help?: string | undefined;
     fix?: string[] | undefined;

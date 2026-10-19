@@ -10,7 +10,6 @@ import { checkAnsibleLint } from '#cli/checks/ansible.ts';
 import { checkDeptry } from '#cli/checks/python/deptry.ts';
 import { checkSiteBuild } from '#cli/checks/site/build.ts';
 import { checkBashSafety } from '#cli/checks/bash/safety.ts';
-import { checkLockfiles } from '#cli/checks/dependencies.ts';
 import { checkVulture } from '#cli/checks/python/vulture.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { checkCommitlintPushed } from '#cli/checks/commits.ts';
@@ -24,6 +23,7 @@ import { checkLoneFiles } from '#cli/checks/structure/lone-files.ts';
 import { checkLongFiles } from '#cli/checks/structure/long-files.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { checkSuppressions } from '#cli/checks/gspot/suppressions.ts';
+import { checkLockfiles } from '#cli/checks/dependencies/lockfiles.ts';
 import { checkDockerignore } from '#cli/checks/docker/dockerignore.ts';
 import { checkTranslationMessages } from '#cli/checks/translations.ts';
 import { checkFilesWithoutTarget } from '#cli/checks/xcode/project.ts';
@@ -47,11 +47,14 @@ import { checkPythonFunctionSize } from '#cli/checks/python/function-size.ts';
 import { checkSharedPrefixes } from '#cli/checks/structure/shared-prefixes.ts';
 import { checkBashUnreadArguments } from '#cli/checks/bash/unread-arguments.ts';
 import { checkBashUnusedFunctions } from '#cli/checks/bash/unused-functions.ts';
+import { checkReactVersions } from '#cli/checks/dependencies/react-versions.ts';
+import { checkStaleLockfile } from '#cli/checks/dependencies/stale-lockfile.ts';
 import { checkUnmatchedPatterns } from '#cli/checks/gspot/unmatched-patterns.ts';
 import { checkTrivialFunctions } from '#cli/checks/structure/trivial-functions.ts';
 import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/docs.ts';
 import { checkFileFolderClashes } from '#cli/checks/structure/file-folder-clashes.ts';
 import { checkEnvironmentReaders } from '#cli/checks/structure/environment-readers.ts';
+import { checkPackageManagerPin } from '#cli/checks/dependencies/package-manager-pin.ts';
 import { checkStaleGeneratorOutputs } from '#cli/checks/gspot/stale-generator-outputs.ts';
 import { checkMarkdownFences, buildMarkdownlintArguments } from '#cli/checks/markdown.ts';
 import { checkCloudflareHeaders, checkCloudflareRedirects } from '#cli/checks/cloudflare.ts';
@@ -111,6 +114,9 @@ const CHECK_IMPLEMENTATIONS = {
     'repository/local-files': { check: checkLocalFiles },
     'licenses/allowed': { check: checkAllowedLicenses },
     'dependencies/lockfiles': { check: checkLockfiles },
+    'dependencies/stale-lockfile': { check: checkStaleLockfile },
+    'dependencies/react-versions': { check: checkReactVersions },
+    'dependencies/package-manager-pin': { check: checkPackageManagerPin },
     'cloudflare/headers': { check: checkCloudflareHeaders },
     'cloudflare/redirects': { check: checkCloudflareRedirects },
     'site/build': { check: checkSiteBuild },
