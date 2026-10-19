@@ -38,6 +38,9 @@ createRuleTester().run<
         'export function heading(title) { return `# ${title}`; }',
         'export function work() { first(); second(); third(); }',
         'export function work(items) { return items.map(item => { first(item); second(item); return item; }); }',
+        // An exported function that does more than forward counts as the content of its file, as in no-trivial-functions.
+        'export function work(items) { return items.map(item => owner(item)); }',
+        'export function label(user, locale) { return format(user, locale, "short"); }',
         'export function isText(value: unknown): value is string { return typeof value === "string"; }',
         'export function assertText(value: unknown): asserts value is string { if (typeof value !== "string") throw new Error(); }',
         'export const schema = z.object({ name: z.string() });',
@@ -64,7 +67,6 @@ createRuleTester().run<
         'import { run } from "./owner"; export const alias = run;',
         'export function run() { return owner(); }',
         'export const callback = () => 1;',
-        'export function work(items) { return items.map(item => owner(item)); }',
         'class A { method() { return 1; } }',
         'class Settings { constructor(enabled) {} }',
         'defineProps<ExistingProps>();',

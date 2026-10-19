@@ -1,9 +1,10 @@
-import type { ImplementedFunction } from './types/syntax.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { NamedFunction, ImplementedFunction } from './types/syntax.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     FUNCTIONS,
     TYPE_ONLY,
+    EXPORT_REFERENCES,
     UNWRAPPABLE_NODES,
     COMPARISON_OPERATORS,
     EXECUTABLE_DECLARATIONS,
@@ -117,4 +118,54 @@ export function hasCalculation(node: TSESTree.Node, visitorKeys: Readonly<Record
     if (isDynamicValue(node)) return true;
     if (node.type === AST_NODE_TYPES.CallExpression && isComposedCall(node)) return true;
     return listChildNodes(node, visitorKeys).some((child) => hasCalculation(child, visitorKeys));
+}
+
+/**
+ * List the variables through which callers reach a function: its own name, or the variable that holds it.
+ * @param node the function implementation
+ * @param source the parsed file, with its scopes
+ * @returns the declared variables of the function
+ */
+export function listCallableVariables(
+    node: ImplementedFunction,
+    source: TSESLint.SourceCode,
+): TSESLint.Scope.Variable[] {
+    const owners: NamedFunction[] = [];
+    if (node.type !== AST_NODE_TYPES.ArrowFunctionExpression && node.id !== null) owners.push({ node, id: node.id });
+    if (node.parent.type === AST_NODE_TYPES.VariableDeclarator) owners.push({ node: node.parent, id: node.parent.id });
+    return owners.flatMap(({ node: owner, id }) =>
+        source
+            .getDeclaredVariables(owner)
+            .filter((variable) => variable.identifiers.some((entry) => entry.range[0] === id?.range[0])),
+    );
+}
+
+/**
+ * Check whether the module exports a function: in its declaration, in an export list, or as the default export.
+ * Callers in other modules can use it.
+ * @param node the function implementation
+ * @param source the parsed file, with its scopes
+ * @returns whether the module exports the function
+ */
+export function isExportedFunction(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
+    const owner = node.parent.type === AST_NODE_TYPES.VariableDeclarator ? node.parent.parent : node;
+    if (
+        owner.parent.type === AST_NODE_TYPES.ExportNamedDeclaration ||
+        owner.parent.type === AST_NODE_TYPES.ExportDefaultDeclaration
+    )
+        return true;
+    return listCallableVariables(node, source).some((variable) =>
+        variable.references.some(
+            (reference) => reference.isRead() && EXPORT_REFERENCES.has(reference.identifier.parent.type),
+        ),
+    );
+}
+
+/**
+ * Check whether a function declares a type predicate as its return type, such as `value is string`.
+ * @param node the function implementation
+ * @returns whether the function narrows the type of an argument
+ */
+export function isTypePredicate(node: ImplementedFunction): boolean {
+    return node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate;
 }

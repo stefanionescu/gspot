@@ -5,11 +5,19 @@ import type { TrivialFilesOptions } from '../types/rules.ts';
 import { createRule, buildOptionsSchema } from '../create-rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { ContentCheck, ImplementedFunction } from '../types/syntax.ts';
-import { unwrap, hasCalculation, countStatements, hasConstructorState } from '../syntax.ts';
 
+import {
+    unwrap,
+    hasCalculation,
+    countStatements,
+    isTypePredicate,
+    isExportedFunction,
+    hasConstructorState,
+} from '../syntax.ts';
 import {
     SHEBANG,
     FUNCTIONS,
+    FORWARDED_VALUES,
     FORWARDING_NODES,
     FUNCTION_SELECTOR,
     TRIVIAL_STATEMENTS,
@@ -95,6 +103,33 @@ function hasCallContent(node: TSESTree.CallExpression | TSESTree.NewExpression, 
     );
 }
 
+// The value that a function body returns, when the body holds one return or one expression statement: null for an
+// empty body, and undefined for any other body.
+function readOnlyValue(node: ImplementedFunction): TSESTree.Node | null | undefined {
+    if (node.body.type !== AST_NODE_TYPES.BlockStatement) return node.body;
+    const [statement, ...rest] = node.body.body;
+    if (statement === undefined) return null;
+    if (rest.length > 0) return undefined;
+    if (statement.type === AST_NODE_TYPES.ReturnStatement) return statement.argument;
+    return statement.type === AST_NODE_TYPES.ExpressionStatement ? statement.expression : undefined;
+}
+
+// An exported function that only forwards returns a constant, another value or its member, or a call that passes on its
+// own parameters unchanged. An exported function that does more counts as the content of its file.
+function isForwarding(node: ImplementedFunction): boolean {
+    const value = unwrap(readOnlyValue(node) ?? null);
+    if (value === null) return readOnlyValue(node) === null;
+    if (FORWARDED_VALUES.has(value.type)) return true;
+    if (value.type === AST_NODE_TYPES.TemplateLiteral) return value.expressions.length === 0;
+    if (value.type !== AST_NODE_TYPES.CallExpression && value.type !== AST_NODE_TYPES.NewExpression) return false;
+    const parameters = new Set(
+        node.params.flatMap((parameter) => (parameter.type === AST_NODE_TYPES.Identifier ? [parameter.name] : [])),
+    );
+    return value.arguments.every(
+        (argument) => argument.type === AST_NODE_TYPES.Identifier && parameters.has(argument.name),
+    );
+}
+
 // A built structure counts as content, also inside a call to a schema builder.
 function hasStructuredValue(expression: TSESTree.Node | null): boolean {
     const node = unwrap(expression);
@@ -117,6 +152,12 @@ function hasStructuredValue(expression: TSESTree.Node | null): boolean {
     }
 }
 
+// A type predicate, constructor state, or a returned structure counts as content of a function.
+function hasSignatureContent(node: ImplementedFunction): boolean {
+    if (isTypePredicate(node) || hasConstructorState(node)) return true;
+    return node.body.type !== AST_NODE_TYPES.BlockStatement && hasStructuredValue(node.body);
+}
+
 export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
     name: 'no-trivial-files',
     meta: {
@@ -127,7 +168,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
                 'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Set `allowIndex: true` to permit an index barrel.',
             level: 'all',
             description:
-                'Reports files containing only forwarding, aliases, re-exports, or trivial functions. Records, arrays, schema declarations, type predicates, and functions above the statement limit are exempt.',
+                'Reports files containing only forwarding, aliases, re-exports, or trivial functions. Records, arrays, schema declarations, type predicates, functions above the statement limit, and exported functions that do more than forward are exempt.',
             why: 'A file that only forwards to another module adds a step to every import and hides where the code lives.',
             fix: 'Import re-exported values from the modules that define them. Move aliases and small functions into the modules that use them, then delete the forwarding file.',
         },
@@ -146,7 +187,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         ],
         messages: {
             trivial:
-                'This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.',
+                'This file only forwards or renames code. Import from the module that defines it, and delete this file.',
         },
     },
     create(context, [options]) {
@@ -183,11 +224,10 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
             },
             [FUNCTION_SELECTOR](node: ImplementedFunction) {
                 if (
-                    node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate ||
-                    hasConstructorState(node) ||
+                    (isExportedFunction(node, context.sourceCode) && !isForwarding(node)) ||
+                    hasSignatureContent(node) ||
                     hasCalculation(node.body, context.sourceCode.visitorKeys) ||
-                    countStatements(node, context.sourceCode.visitorKeys) > max ||
-                    (node.body.type !== AST_NODE_TYPES.BlockStatement && hasStructuredValue(node.body))
+                    countStatements(node, context.sourceCode.visitorKeys) > max
                 )
                     hasImplementation = true;
             },

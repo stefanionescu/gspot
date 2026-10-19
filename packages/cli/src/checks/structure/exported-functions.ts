@@ -143,6 +143,33 @@ function findForwardedExpression(body: ts.ConciseBody): ts.Expression | undefine
         : expression;
 }
 
+// A use in the file that defines the function, outside its declaration, counts as one more user than the importer.
+function isUsedLocally(checker: ts.TypeChecker, nodes: ts.Node[], symbol: ts.Symbol): boolean {
+    const declaration = symbol.valueDeclaration;
+    if (declaration === undefined) return false;
+    return nodes.some(
+        (node) =>
+            ts.isIdentifier(node) &&
+            !ts.isExportSpecifier(node.parent) &&
+            (node.end <= declaration.pos || node.pos >= declaration.end) &&
+            checker.getSymbolAtLocation(node) === symbol,
+    );
+}
+
+// A function that this file declares, that forwards one expression, and that no other code of the file uses.
+function isLocalForwarder(
+    input: CheckInput,
+    module: { checker: ts.TypeChecker; source: ts.SourceFile; path: string },
+    symbol: ts.Symbol,
+    callable: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
+): boolean {
+    return (
+        convertToPosixPath(relative(input.root, callable.getSourceFile().fileName)) === module.path &&
+        findForwardedExpression(callable.body as ts.ConciseBody) !== undefined &&
+        !isUsedLocally(module.checker, listTypescriptNodes(module.source), symbol)
+    );
+}
+
 function checkModuleExports(
     input: CheckInput,
     program: ts.Program,
@@ -157,12 +184,7 @@ function checkModuleExports(
         const symbol = exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
         if (importers.get(symbol)?.size !== 1) return [];
         const callable = findExportedFunction(symbol);
-        if (
-            callable === undefined ||
-            convertToPosixPath(relative(input.root, callable.getSourceFile().fileName)) !== path ||
-            findForwardedExpression(callable.body as ts.ConciseBody) === undefined
-        )
-            return [];
+        if (callable === undefined || !isLocalForwarder(input, { checker, source, path }, symbol, callable)) return [];
         const name = symbol.getName() === 'export=' ? 'The default export' : symbol.getName();
         return [
             buildFinding(

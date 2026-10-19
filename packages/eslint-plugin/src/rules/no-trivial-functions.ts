@@ -1,17 +1,23 @@
+import type { ImplementedFunction } from '../types/syntax.ts';
 import type { TrivialFunctionsOptions } from '../types/rules.ts';
 import { createRule, buildOptionsSchema } from '../create-rule.ts';
-import type { NamedFunction, ImplementedFunction } from '../types/syntax.ts';
-import { hasCalculation, countStatements, hasConstructorState } from '../syntax.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     VALUE_PARENTS,
     MIN_SHARED_READS,
     FUNCTION_SELECTOR,
-    EXPORT_REFERENCES,
     TRIVIAL_STATEMENTS,
     TRANSPARENT_EXPRESSIONS,
 } from '../config/syntax.ts';
+import {
+    hasCalculation,
+    countStatements,
+    isTypePredicate,
+    isExportedFunction,
+    hasConstructorState,
+    listCallableVariables,
+} from '../syntax.ts';
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 
@@ -39,18 +45,6 @@ const VALUE_HOLDERS: [AST_NODE_TYPES, (parent: TSESTree.Node, value: TSESTree.No
             (parent as TSESTree.NewExpression).arguments.some((argument) => argument.range[0] === value.range[0]),
     ],
 ];
-
-// Callers reach a function through its own name or the variable that holds it.
-function listCallableVariables(node: ImplementedFunction, source: TSESLint.SourceCode): TSESLint.Scope.Variable[] {
-    const owners: NamedFunction[] = [];
-    if (node.type !== AST_NODE_TYPES.ArrowFunctionExpression && node.id !== null) owners.push({ node, id: node.id });
-    if (node.parent.type === AST_NODE_TYPES.VariableDeclarator) owners.push({ node: node.parent, id: node.parent.id });
-    return owners.flatMap(({ node: owner, id }) =>
-        source
-            .getDeclaredVariables(owner)
-            .filter((variable) => variable.identifiers.some((entry) => entry.range[0] === id?.range[0])),
-    );
-}
 
 /**
  * Walk up through type assertions and conditional or logical expressions to the outermost value.
@@ -100,22 +94,39 @@ function isRecursive(node: ImplementedFunction, source: TSESLint.SourceCode): bo
 
 // An exported API may have callers in other modules. A local helper must have at least two reads.
 function isSharedFunction(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
-    const owner = node.parent.type === AST_NODE_TYPES.VariableDeclarator ? node.parent.parent : node;
-    if (
-        owner.parent.type === AST_NODE_TYPES.ExportNamedDeclaration ||
-        owner.parent.type === AST_NODE_TYPES.ExportDefaultDeclaration
-    )
-        return true;
-    const variables = listCallableVariables(node, source);
-    return variables.some((variable) => {
-        const reads = variable.references.filter(
-            (reference) => reference.isRead() && reference.identifier.parent.type !== AST_NODE_TYPES.TSTypeQuery,
-        );
-        return (
-            reads.length >= MIN_SHARED_READS ||
-            reads.some(({ identifier }) => EXPORT_REFERENCES.has(identifier.parent.type))
-        );
-    });
+    if (isExportedFunction(node, source)) return true;
+    return listCallableVariables(node, source).some(
+        (variable) =>
+            variable.references.filter(
+                (reference) => reference.isRead() && reference.identifier.parent.type !== AST_NODE_TYPES.TSTypeQuery,
+            ).length >= MIN_SHARED_READS,
+    );
+}
+
+// A call through a type assertion or a non-null assertion still calls the function, and so does JSX.
+function isCalled(identifier: TSESTree.Identifier | TSESTree.JSXIdentifier): boolean {
+    if (identifier.type === AST_NODE_TYPES.JSXIdentifier) return true;
+    const value = findOutermostValue(identifier);
+    return value.parent.type === AST_NODE_TYPES.CallExpression && value.parent.callee === value;
+}
+
+// A function passed as a value from inside another function, and never called, keeps one identity. Inlining it creates
+// a new function on each call, such as the subscribe argument of useSyncExternalStore, or a returned noop.
+function isPassedOnly(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
+    const reads = listCallableVariables(node, source).flatMap((variable) =>
+        variable.references
+            .filter(
+                (reference) =>
+                    reference.isRead() &&
+                    reference.identifier.parent.type !== AST_NODE_TYPES.TSTypeQuery &&
+                    (reference.identifier.range[0] < node.range[0] || reference.identifier.range[1] > node.range[1]),
+            )
+            .map((reference) => ({ reference, scope: variable.scope.variableScope })),
+    );
+    return (
+        reads.length > 0 &&
+        reads.every(({ reference, scope }) => reference.from.variableScope !== scope && !isCalled(reference.identifier))
+    );
 }
 
 // Empty and argument-forwarding constructors already belong to no-useless-constructor.
@@ -174,11 +185,12 @@ function isInheritedMethod(node: ImplementedFunction, source: TSESLint.SourceCod
 
 // Each exemption identifies a language contract or an existing shared API.
 function isRequiredFunction(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
-    if (node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate) return true;
+    if (isTypePredicate(node)) return true;
     if (hasCalculation(node.body, source.visitorKeys)) return true;
     if (isInlineValue(node)) return true;
     if (isRecursive(node, source)) return true;
     if (isSharedFunction(node, source)) return true;
+    if (isPassedOnly(node, source)) return true;
     if (hasDeclaredSignature(node)) return true;
     return isInheritedMethod(node, source);
 }
@@ -193,7 +205,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
                 'The function `function one() { return 1; }` reports `trivial` at the default limit of two statements. Replace its calls with the value `1` and delete the function. A function written inline as an argument keeps its place, because the call takes a function.',
             level: 'all',
             description:
-                'Reports named functions with two statements or fewer at the default limit.\n\n- The count includes nested callbacks.\n- Exempts inline function values, recursive functions, and type predicates.\n- Accessors, overrides, and decorated methods retain their language contracts.\n- Constructors that set state remain exempt.\n- The inherited-method exemption needs type information.\n- A function used in two or more places, or exported, is not reported.',
+                'Reports named functions with two statements or fewer at the default limit.\n\n- The count includes nested callbacks.\n- Exempts inline function values, recursive functions, and type predicates.\n- Accessors, overrides, and decorated methods retain their language contracts.\n- Constructors that set state remain exempt.\n- The inherited-method exemption needs type information.\n- A function used in two or more places, or exported, is not reported.\n- A function passed as a value from inside another function, and never called, is not reported: inlining it creates a new function on each call.',
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline the function at its call sites and delete it.',
         },

@@ -46,6 +46,10 @@ createRuleTester().run<
         'const base = "root"; const path = file => join(base, file); path("first"); path("second");',
         'function callback() { update(); } on(callback); off(callback);',
 
+        // A function passed only as a value has no call to inline into.
+        'function subscribe(listener) { return store.subscribe(listener); } export function useValue() { return useSyncExternalStore(subscribe, getSnapshot); }',
+        'function noop() {} export function build() { setup(); configure(); return noop; }',
+
         // A function includes its callback statements.
         'function process(items) { return items.map(item => { inspect(item); validate(item); return item; }); }',
         'function process(groups) { return groups.map(items => items.map(item => { inspect(item); validate(item); return item; })); }',
@@ -77,6 +81,14 @@ createRuleTester().run<
         'const object = { get value() { return 1; }, set value(value) { store(value); } };',
     ],
     invalid: [
+        {
+            code: 'function Row() { return <div />; } export function List() { setup(); configure(); return <Row />; }',
+            errors: [{ messageId: 'trivial', line: 1, column: 1 }],
+        },
+        {
+            code: 'function subscribe(listener) { return store.subscribe(listener); } subscribe(listener);',
+            errors: [{ messageId: 'trivial', line: 1, column: 1 }],
+        },
         {
             code: 'consume(ready ? undefined : value => write(value));\nconst local = value => value; local(item);',
             errors: [{ messageId: 'trivial', line: 2, column: 15 }],
