@@ -1,27 +1,23 @@
 // Find existing lint commands, hooks, and tool files.
 import { z } from 'zod';
-import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
-import { isInside } from '#cli/system/paths.ts';
-import { isRecord } from '#cli/system/values.ts';
-import { parseJsonFile } from '#cli/parsers/json.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { parse as parseToml } from '@decimalturn/toml-patch';
 import { HOOKS_PATH } from '#cli/config/system/locations.ts';
-import { isInGspotFolder } from '#cli/repository/classify.ts';
+import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import { join, extname, dirname, basename, relative } from 'node:path';
+import { join, dirname, resolve, basename, relative } from 'node:path';
 import { MARKDOWN_EXTENSION } from '#cli/config/repository/inventory.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import { listToolSettingsFiles } from '#cli/repository/tool-settings-files.ts';
 import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
-import type { CiJob, TrackedFile, ExistingTools, FoundToolFile } from '#cli/types/repository/inventory.ts';
+import type { CiJob, TrackedFile, ExistingTools } from '#cli/types/repository/inventory.ts';
 
 import {
     HUSKY_PATH,
@@ -46,7 +42,6 @@ import {
     KEPT_DOT_FILE,
     TASK_AFTER_RUN,
     GITLAB_CI_FILE,
-    INI_EXTENSIONS,
     YAML_EXTENSIONS,
     FOREIGN_CI_FILES,
     GITLAB_CI_FOLDER,
@@ -146,66 +141,6 @@ function listLintCommands(path: string, document: unknown): string[] {
     });
 }
 
-// Find the tracked tool files that one replace row names.
-function findReplacedToolFiles(
-    root: string,
-    inventory: Set<string>,
-    tool: string,
-    replacement: Pick<FoundToolFile, 'path' | 'shared' | 'key' | 'table'>,
-): FoundToolFile[] {
-    const matches = buildPathMatcher([replacement.path, `**/${replacement.path}`]);
-    const candidates = new Set(inventory);
-    if (
-        !picomatch.scan(replacement.path).isGlob &&
-        !candidates.has(replacement.path) &&
-        readText(root, replacement.path) !== undefined
-    )
-        candidates.add(replacement.path);
-    return [...candidates]
-        .filter((candidate) => matches(candidate))
-        .filter((path) => {
-            const source = readText(root, path);
-            if (source === undefined) return false;
-            return (
-                (replacement.table === undefined && replacement.key === undefined) ||
-                hasToolSection(source, path, replacement)
-            );
-        })
-        .map((path) => ({
-            tool,
-            path,
-            shared: replacement.shared,
-            ...(replacement.table === undefined ? {} : { table: replacement.table }),
-            ...(replacement.key === undefined ? {} : { key: replacement.key }),
-        }));
-}
-
-function parseSharedFile(text: string, extension: string, path: string): unknown {
-    if (extension === '.json') return parseJsonFile(path, text);
-    if (YAML_EXTENSIONS.includes(extension)) return parseYaml(text) as unknown;
-    if (extension === '.toml') return parseToml(text);
-    throw new Error(`${path}: shared configuration format is unsupported.`);
-}
-
-/**
- * Check whether a shared tool file holds the declared key or table.
- * @param text the file contents.
- * @param path the file, whose extension names the format.
- * @param selector the key or table that the tool owns.
- * @returns whether that section exists.
- */
-function hasToolSection(text: string, path: string, selector: Pick<FoundToolFile, 'key' | 'table'>): boolean {
-    const extension = extname(path);
-    if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) return hasIniSection(text, selector.table);
-    const parts = selector.key === undefined ? (selector.table as string).split('.') : [selector.key];
-    let value = parseSharedFile(text, extension, path);
-    for (const part of parts) {
-        if (!isRecord(value) || !Object.hasOwn(value, part)) return false;
-        value = value[part];
-    }
-    return true;
-}
-
 // Read the folder that core.hooksPath names. Husky points it at its stubs in .husky/_, or at .husky in Husky 8, and
 // keeps the hooks of the user in .husky, which the Husky entry lists.
 function readHooksPathEntry(root: string, hooksPath: string, isHuskyPath: boolean): ExistingTools['hooks'] {
@@ -222,7 +157,15 @@ function readHooksPathEntry(root: string, hooksPath: string, isHuskyPath: boolea
 export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
     const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
     const packageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
-    const hooksPath = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
+    const written = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
+    // core.hooksPath can name an absolute path or start with ./; compare it with the hook folders as a repository path.
+    const hooksPath =
+        written === ''
+            ? ''
+            : convertToPosixPath(relative(repositoryRoot, resolve(repositoryRoot, written))).replace(
+                  TRAILING_SLASH,
+                  '',
+              );
     const isHuskyPath = hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
     const hookNames = [
         ...LEFTHOOK_NAMES.flatMap((name) =>
@@ -292,17 +235,7 @@ export function readExistingTools(
         (a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON),
     );
 
-    const inventory = new Set(
-        files.filter((file) => file.kind === 'source' && !isInGspotFolder(file.path)).map((file) => file.path),
-    );
-    const configurations = [...manifests.values()].flatMap((manifest) =>
-        manifest.tools.flatMap((tool) =>
-            [
-                ...(tool.replace ?? []).map((path) => ({ path, shared: false })),
-                ...(tool.replace_key ?? []).map(({ file, ...selector }) => ({ path: file, shared: true, ...selector })),
-            ].flatMap((replacement) => findReplacedToolFiles(repositoryRoot, inventory, tool.name, replacement)),
-        ),
-    );
+    const configurations = listToolSettingsFiles(repositoryRoot, files, manifests.values());
     return {
         toolFiles: [
             ...new Map(
@@ -331,15 +264,4 @@ export function readExistingTools(
         lintFolders: LINT_FOLDERS.filter((name) => listFolder(repositoryRoot, name).length > 0),
         toolOnlyPackages,
     };
-}
-
-/**
- * Find one INI section or its colon-delimited subsections.
- * @param text the file contents.
- * @param section the INI heading to match, including colon-delimited subsections.
- * @returns true when a matching bracketed heading starts a line.
- */
-export function hasIniSection(text: string, section: string): boolean {
-    const header = new RegExp(String.raw`^\s*\[${RegExp.escape(section)}(?::[^\]]+)?\]\s*(?:[#;].*)?$`, 'mu');
-    return header.test(text);
 }

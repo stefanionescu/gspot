@@ -1,5 +1,6 @@
 // Select the rules and build their managed block.
 import { posix } from 'node:path';
+import { visit } from 'unist-util-visit';
 import { readAsset } from '#cli/system/assets.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Session } from '#cli/types/planning.ts';
@@ -17,7 +18,14 @@ import { type Level, type Manifest } from '#cli/types/configurations.ts';
 import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
 import { type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { RuleFile, ShippedRule, RuleSection, AgentsBlockInput } from '#cli/types/rules.ts';
-import { FIRST_READ, RULES_HEADING, ALL_LEVEL_MARKER, RULE_OPENING_PREFIX } from '#cli/config/rules.ts';
+
+import {
+    FIRST_READ,
+    RULES_HEADING,
+    ALL_LEVEL_MARKER,
+    MARKDOWN_HEADING,
+    RULE_OPENING_PREFIX,
+} from '#cli/config/rules.ts';
 
 // List the rules of the configurations; a file with a condition installs only when the repository meets it.
 function listConfigurationRules(
@@ -172,16 +180,24 @@ function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'rep
  * @param inputs.generatedPaths the files gspot writes outside .gspot, with managed keys.
  * @param inputs.fileEdits the keys that gspot manages inside authored tool files.
  * @param inputs.hasChecks whether any configuration runs a check.
+ * @param inputs.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
  * @param inputs.startCommand the command that starts gspot.
  *
  * @returns the heading, rule index, and instructions for changing settings.
  */
-function buildAgentsBlock({ files, generatedPaths, fileEdits, hasChecks, startCommand }: AgentsBlockInput): string {
+function buildAgentsBlock({
+    files,
+    generatedPaths,
+    fileEdits,
+    hasChecks,
+    startCommand,
+    hasOwnTitle,
+}: AgentsBlockInput): string {
     const index = files.length > 0 ? formatRulesIndex(files) : [];
     const outside = [...new Set(generatedPaths)]
         .toSorted((first, second) => first.localeCompare(second))
         .map((path) => `- \`${path}\``);
-    return [
+    const lines = [
         RULES_HEADING,
         '',
         ...index,
@@ -202,7 +218,22 @@ function buildAgentsBlock({ files, generatedPaths, fileEdits, hasChecks, startCo
             `gspot also sets ${keys.length === 1 ? 'one key' : 'these keys'} in \`${path}\`: ${keys.map((key) => '`' + key + '`').join(' and ')}.`,
             'You can edit the other keys of that file.',
         ]),
-    ].join('\n');
+    ];
+    // A file with its own title keeps one top heading, which markdownlint asks for.
+    return (hasOwnTitle ? lines.map((line) => line.replace(MARKDOWN_HEADING, '#$1 ')) : lines).join('\n');
 }
 
-export { selectRuleFiles, buildAgentsBlock };
+/**
+ * Check whether Markdown text has a top heading, outside code blocks.
+ * @param text the authored part of the file.
+ * @returns whether a level-one heading exists.
+ */
+function hasTopHeading(text: string): boolean {
+    let found = false;
+    visit(fromMarkdown(text), 'heading', (node) => {
+        if (node.depth === 1) found = true;
+    });
+    return found;
+}
+
+export { hasTopHeading, selectRuleFiles, buildAgentsBlock };

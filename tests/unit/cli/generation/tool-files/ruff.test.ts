@@ -105,3 +105,19 @@ test('basedpyright reads the uv environment of a project with a tracked uv.lock,
     ) as { venv?: string };
     expect(unlocked.venv).toBeUndefined();
 });
+
+test('Ruff takes its style from a format override that names every Python file', async () => {
+    const tables =
+        '[format]\nprint_width = 120\n[[format.override]]\npaths = ["**/*.py"]\nquotes = "single"\nprint_width = 88\n';
+    const ruff = parse(
+        await generateFile(
+            buildSettingsText(['python'], { tables }),
+            '.gspot/configurations/language/python/ruff.toml',
+            {
+                'example.py': 'value = 1\n',
+            },
+        ),
+    ) as RuffToolFile & { 'line-length': number };
+    expect(ruff.format['quote-style']).toBe('single');
+    expect(ruff['line-length']).toBe(88);
+});

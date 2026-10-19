@@ -141,6 +141,7 @@ async function buildManagedBlock(root: string): Promise<string> {
     const selected = listSelectedManifests(session.scopes);
     const generated = generate(session);
     return buildAgentsBlock({
+        hasOwnTitle: false,
         generatedPaths: generated.files.map(({ path }) => path).filter((path) => !path.startsWith('.gspot/')),
         fileEdits: generated.fileEdits.map(({ path, changes }) => ({
             path,
@@ -222,4 +223,20 @@ describe('rules', () => {
             expect(present.has(`${GSPOT_CONFIGURATIONS_PATH}/${path}`)).toBe(true);
         }
     });
+});
+
+test('the AGENTS.md block moves its headings one level down in a file with its own title', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText([], { rules: true }),
+        'AGENTS.md': '# Shop\n\nHow agents work here.\n\n```bash\n# not a heading\n```\n',
+    });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
+    expect(agents.split('\n').filter((line) => line.startsWith('# '))).toStrictEqual(['# Shop', '# not a heading']);
+    expect(agents).toContain('## Rules\n');
+    expect(agents).toContain('### Commands\n');
+    const again = await runGspot(sandbox.path, ['apply']);
+    expect(again.code, again.stdout + again.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
 });

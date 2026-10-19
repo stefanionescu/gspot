@@ -58,3 +58,29 @@ test.each([...SCOPE_FORMAT_CASES])(
             expect(await Bun.file(`${sandbox.path}/${path}`).text()).toBe(source);
     },
 );
+
+test('init turns Prettier overrides and the Ruff quote style into format overrides', async () => {
+    await using sandbox = await testdir({
+        '.prettierrc.json': JSON.stringify({
+            tabWidth: 4,
+            printWidth: 120,
+            overrides: [{ files: ['*.ts', 'src/**/*.css'], options: { tabWidth: 2, printWidth: 100 } }],
+        }),
+        'ruff.toml': '[format]\nquote-style = "single"\n',
+        'main.py': 'value = 1\n',
+        'package.json': '{"private":true,"devDependencies":{"prettier":"3.8.1"}}',
+    });
+    const result = await runGspot(sandbox.path, [...buildInitArguments(['format']), '--dry-run', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const text = (JSON.parse(result.stdout) as InitJson).settings!;
+    const settings = parseSettings(text, undefined, createReadCache(process.cwd()));
+    expect(settings.written).toMatchObject({
+        format: {
+            quotes: 'double',
+            override: [
+                { paths: ['**/*.ts', 'src/**/*.css'], indent_width: 2, print_width: 100 },
+                { paths: ['**/*.py'], quotes: 'single' },
+            ],
+        },
+    });
+});

@@ -5,12 +5,12 @@ import { GspotError } from '#cli/system/errors.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { listExpectedPaths } from '#cli/apply/stale.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { readTemplate } from '#cli/settings/templates.ts';
-import { type Command } from '@commander-js/extra-typings';
 import { print, getColors } from '#cli/system/terminal.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -22,11 +22,13 @@ import { readManifests } from '#cli/configurations/manifests.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { planReplacedFiles } from '#cli/commands/init/replace.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
+import { Option, type Command } from '@commander-js/extra-typings';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { readExistingTools } from '#cli/repository/existing-tools.ts';
 import type { ExistingTools } from '#cli/types/repository/inventory.ts';
+import { listForeignDisableComments } from '#cli/commands/init/disable-comments.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { INIT_INSTALL_NOTES, INIT_TEMPLATE_DEFAULTS } from '#cli/config/commands/init.ts';
 import { buildInitPlan, formatInitPlan, formatDetection } from '#cli/commands/init/plan.ts';
@@ -108,6 +110,7 @@ function registerInit(program: Command, onResult: CommandCompletion): void {
         .option('--from <template>', COMMAND_HELP.init.options['--from <template>'])
         .option('--configurations <names...>', COMMAND_HELP.init.options['--configurations <names...>'])
         .option('--no-configurations', COMMAND_HELP.init.options['--no-configurations'])
+        .addOption(new Option('--level <level>', COMMAND_HELP.init.options['--level <level>']).choices(LEVELS))
         .action(async (flags, command) => {
             if (command.getOptionValue('json') === true && flags.yes !== true && flags.dryRun !== true)
                 throw new GspotError(
@@ -121,6 +124,7 @@ function registerInit(program: Command, onResult: CommandCompletion): void {
                     isDryRun: flags.dryRun === true,
                     ...stripUndefined({
                         from: flags.from,
+                        level: flags.level,
                         configurations: flags.configurations === false ? [] : flags.configurations,
                     }),
                 }),
@@ -145,7 +149,7 @@ async function planInit(repositoryRoot: string, options: InitOptions): Promise<I
     const existingTools = readExistingTools(repositoryRoot, repository.files, dependencyFiles, reads);
     const answers = buildInitAnswers(repositoryRoot, options, existingTools);
     const draft = buildSettingsDraft(selection, answers);
-    const effective = { ...draft, ...stripUndefined({ template: options.template }) };
+    const effective = { ...draft, ...stripUndefined({ template: options.template, level: options.level }) };
     const formats = readFormatTables(effective, repository, manifests, dependencyFiles);
     const settingsText = buildInitSettings(effective, repository, manifests, formats);
     const settings = parseSettings(settingsText, repositoryRoot, reads);
@@ -179,6 +183,7 @@ async function planInit(repositoryRoot: string, options: InitOptions): Promise<I
         everySelected,
         answers,
         replaced,
+        foreignDisableComments: listForeignDisableComments(session),
     };
     return {
         detection,

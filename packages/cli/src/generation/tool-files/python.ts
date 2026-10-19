@@ -2,7 +2,10 @@ import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
 import { stringify } from '@decimalturn/toml-patch';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { stripUndefined } from '#cli/system/values.ts';
+import { PYTHON_FILES } from '#cli/config/commands/init.ts';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
+import type { FormatSettings } from '#cli/types/settings/file.ts';
 import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
 import { DEFAULT_QUOTES } from '#cli/config/generation/formatting.ts';
 import { PROJECT_UV_LOCKFILE } from '#cli/config/system/locations.ts';
@@ -49,13 +52,24 @@ function buildPythonInputs(context: ToolFileContext): PythonInputs {
             ].map((path) => `${base}/${path}`),
     };
 }
+// Ruff takes one style for every Python file, so a format override that names every Python file sets it.
+function selectPythonFormat(view: ToolFileContext['selection']['view']): FormatSettings {
+    const override = view.values.format.override.find(({ paths }) =>
+        paths.every((path) => (PYTHON_FILES as readonly string[]).includes(path)),
+    );
+    if (override === undefined) return view.format;
+    const { paths: _paths, ...fields } = override;
+    return { ...view.format, ...stripUndefined(fields) };
+}
+
 /**
  * Build the Ruff file from the settings.
  * @param context the tool file to build.
  * @returns the Ruff lint rules, import settings, and source exclusions.
  */
 function buildRuffFile(context: ToolFileContext): string {
-    const { settings, format, limit, ignoresFor, rulesOff } = context.selection.view;
+    const { settings, limit, ignoresFor, rulesOff } = context.selection.view;
+    const format = selectPythonFormat(context.selection.view);
     const { pythonScopePath, pythonExcludes, ruffRules } = buildPythonInputs(context);
     const scope = context.selection.scope.path;
     const off = rulesOff('python/ruff');

@@ -18,10 +18,10 @@ import { buildBunScannerEdits } from '#cli/generation/bun-scanner.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { listProjectInstallLines } from '#cli/generation/project-install.ts';
-import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
+import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/projects.ts';
 import { DOT_GSPOT, STATE_PATH, VERSION_PIN_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
@@ -112,7 +112,12 @@ function addManagedBlocks(
         );
     }
     if (!settings.rules.enabled) return;
+    const agents = readCachedText(reads, AGENTS_FILE) ?? '';
+    const agentsSpan = findBlockSpan(agents, { path: AGENTS_FILE, style: 'markdown' });
+    const agentsText =
+        agentsSpan === undefined ? agents : agents.slice(0, agentsSpan.start) + agents.slice(agentsSpan.end);
     const block = buildAgentsBlock({
+        hasOwnTitle: hasTopHeading(agentsText),
         generatedPaths: generated.files.map(({ path }) => path).filter((path) => !isInGspotFolder(path)),
         fileEdits: generated.fileEdits.map(({ path, changes }) => ({
             path,

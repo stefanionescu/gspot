@@ -8,7 +8,7 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { hasIniSection } from '#cli/repository/existing-tools.ts';
+import { hasIniSection } from '#cli/repository/tool-settings-files.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { buildUvRunCommand, buildScratchPythonEnvironment } from '#cli/install/python/project.ts';

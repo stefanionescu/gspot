@@ -19,6 +19,8 @@ type InitPlanInputs = {
     everySelected: Manifest[];
     answers: InitAnswers;
     replaced: ReplacedFiles;
+    /** Files whose disable comments name rules that the new setup does not load. */
+    foreignDisableComments: { path: string; note: string }[];
 };
 
 type InitPlan = {
@@ -42,6 +44,7 @@ type ReplacedFiles = {
 
 type SettingsDraft = InitAnswers & {
     template?: Template;
+    level?: Level;
     configurations: string[];
     scopes: Scope[];
 };
@@ -94,6 +97,7 @@ type InitOptions = {
     cwd: string;
     yes: boolean;
     isDryRun: boolean;
+    level?: Level;
     configurations?: string[];
     from?: string;
     template?: Template;
@@ -139,6 +143,8 @@ type InitFormatOptions = {
     tabWidth?: number | undefined;
     printWidth?: number | undefined;
     singleQuote?: boolean | undefined;
+    /** Prettier options for some files, which become [[format.override]] records. */
+    overrides?: { files: string | string[]; options: Omit<InitFormatOptions, 'overrides'> }[] | undefined;
 };
 
 export type {

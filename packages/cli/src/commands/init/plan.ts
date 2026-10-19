@@ -29,6 +29,7 @@ import {
     PYTHON_TOOL_PROJECT_FILE,
 } from '#cli/config/system/locations.ts';
 import {
+    COUNT,
     HOOKS_ROW,
     COLUMN_GAP,
     REASON_WIDTH,
@@ -190,6 +191,7 @@ function buildInitPlan(
             ...replaced.retained,
             ...listSubmodulePaths(planning.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...buildKeptCiRows(answers.ci, existingTools.ci, readLintJobs(root, existingTools.ci)),
+            ...planning.foreignDisableComments,
         ],
         change: [...change, ...replaced.changed, ...buildPinnedDependencyRows(planning, requirements)],
         noLongerRuns: existingTools.lintFolders.map((folder) => ({
@@ -250,7 +252,7 @@ function formatExistingTools(summary: DetectionSummary): (string | undefined)[] 
             ...existingTools.agentFiles,
             ...existingTools.ruleFolders.map((folder) => `${folder}/`),
         ]),
-        formatDetectionRow('lint folders', lint.length === 0 ? [] : [...lint, 'yours; gspot leaves them alone']),
+        formatDetectionRow('lint folders', lint.length === 0 ? [] : [...lint, 'old lint setup; gspot replaces it']),
     ];
 }
 
@@ -274,7 +276,12 @@ function formatDetection(summary: DetectionSummary): string {
                 evidence.group === 'language' &&
                 summary.manifests.get(evidence.configuration)?.configuration.always_selected !== true,
         )
-        .map((evidence) => `${evidence.configuration} ${evidence.evidence.split(' ', 1)[0] ?? ''}`);
+        .map((evidence) => {
+            const count = evidence.evidence.split(' ', 1)[0] ?? '';
+            return COUNT.test(count)
+                ? `${evidence.configuration} ${count}`
+                : `${evidence.configuration} (${evidence.evidence})`;
+        });
     const rows = [
         formatDetectionRow(GROUP_LABELS.language.toLowerCase(), languages),
         ...Object.entries(GROUP_LABELS)
@@ -295,7 +302,7 @@ function formatDetection(summary: DetectionSummary): string {
         ...formatExistingTools(summary),
     ].filter((line) => line !== undefined);
     return [
-        `reading ${summary.files.length.toLocaleString('en-US')} tracked files`,
+        `reading ${summary.files.length.toLocaleString('en-US')} files: tracked, and untracked but not ignored`,
         ...(summary.hasGit
             ? []
             : ['no git repository: the hooks and the configurations that read git stay out until git init runs']),

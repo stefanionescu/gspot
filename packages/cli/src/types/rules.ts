@@ -16,6 +16,8 @@ export type AgentsBlockInput = {
     fileEdits: { path: string; keys: string[] }[];
     hasChecks: boolean;
     startCommand: string;
+    /** Whether the file has its own top heading outside the block, so the block headings move one level down. */
+    hasOwnTitle: boolean;
 };
 
 /** The source range, depth, and all-level marker of one Markdown heading. */

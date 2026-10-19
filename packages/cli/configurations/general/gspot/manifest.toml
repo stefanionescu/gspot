@@ -15,6 +15,16 @@ version_command = ["--version"]
 winget = "OpenJS.NodeJS.LTS"
 
 [[check]]
+example = "A `.commitlintrc.json` while gspot runs commitlint reports a replaced file. Delete it, and write the rule you need in `gspot.toml`, such as `tools.commitlint.types`."
+help = "Delete the file. gspot writes the settings this tool reads; move a rule you need into gspot.toml."
+level = "recommended"
+name = "replaced-files"
+runs = "once"
+stage = "commit"
+summary = "Finds the settings file of a tool that gspot writes settings for, such as `.commitlintrc.json` while commitlint runs."
+why = "The tool reads only the settings gspot writes, so a rule left in the old file looks active and does nothing."
+
+[[check]]
 example = "An edit by hand to a generated tool file reports drift. Move the change into gspot.toml, then run `gspot apply`."
 help = "Change gspot.toml, then run `gspot apply`. After a merge, run `gspot apply`, followed by `gspot install`."
 level = "recommended"

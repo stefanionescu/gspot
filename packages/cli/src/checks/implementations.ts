@@ -28,6 +28,7 @@ import { checkTranslationMessages } from '#cli/checks/translations.ts';
 import { checkFilesWithoutTarget } from '#cli/checks/xcode/project.ts';
 import { checkBashDocComments } from '#cli/checks/bash/doc-comments.ts';
 import { checkImportLinter } from '#cli/checks/python/import-linter.ts';
+import { checkReplacedFiles } from '#cli/checks/gspot/replaced-files.ts';
 import { checkBashFunctionSize } from '#cli/checks/bash/function-size.ts';
 import { checkBashScriptLayout } from '#cli/checks/bash/script-layout.ts';
 import { checkDockerTrivyImage } from '#cli/checks/docker/trivy-image.ts';
@@ -159,6 +160,7 @@ const CHECK_IMPLEMENTATIONS = {
     'markdown/markdownlint': { run: runCheckCommand, arguments: buildMarkdownlintArguments },
     'swift/swiftlint': { run: runCheckCommand, toolFiles: listSwiftlintToolFiles },
     'gspot/generated-files': { run: checkGeneratedFiles },
+    'gspot/replaced-files': { run: checkReplacedFiles },
     'security/semgrep': { run: checkSemgrep },
     'nextjs/tsc': { run: checkNextjsTsc },
     'docker/compose': { run: checkDockerCompose },

@@ -3,12 +3,18 @@ import picomatch from 'picomatch';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
+import { LINT_FOLDERS } from '#cli/config/repository/existing-tools.ts';
 import type { ToolFileGeneration } from '#cli/types/generation/files.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { Scope, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS, WHOLE_TREE_GLOBS } from '#cli/config/system/paths.ts';
+
+// An old lint setup in its own folder, such as quality/, holds a package.json, and gspot replaces it.
+function isLintFolder(path: string): boolean {
+    return LINT_FOLDERS.some((folder) => path.startsWith(`${folder}/`));
+}
 
 /**
  * Test scope containment. The empty root path matches every file.
@@ -111,7 +117,11 @@ export function findScopes(
     const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, configurations);
     const folders = new Set<string>();
     const sources = files.filter(
-        (file) => file.kind === 'source' && !toolOnlyPackages.has(file.path) && !isInstalledToolPath(file.path),
+        (file) =>
+            file.kind === 'source' &&
+            !toolOnlyPackages.has(file.path) &&
+            !isInstalledToolPath(file.path) &&
+            !isLintFolder(file.path),
     );
     for (const file of sources) {
         for (const pattern of patterns) {

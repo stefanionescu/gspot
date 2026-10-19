@@ -162,3 +162,13 @@ test.each([
     await using sandbox = await testdir({ 'package.json': text });
     expect(readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path)).hooks).toStrictEqual([...hooks]);
 });
+
+test('hook discovery lists a hooks folder once when core.hooksPath names it by its absolute path', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { '.githooks/pre-commit': '#!/bin/sh\nexit 0\n' });
+    readGitOutput(sandbox.path, ['init', '-q']);
+    readGitOutput(sandbox.path, ['config', 'core.hooksPath', join(sandbox.path, '.githooks')]);
+    expect(readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path)).hooks).toStrictEqual([
+        { kind: 'hooksPath', path: '.githooks', files: ['pre-commit'] },
+    ]);
+});

@@ -68,3 +68,22 @@ export const BUNDLER_PACKAGES: ReadonlySet<string> = new Set([
 
 /** The setting a framework configuration sets when it chooses the import suffix style. */
 export const IMPORT_STYLE_SETTING = 'tools.eslint.import_extension';
+
+/** The evidence of a language starts with its file count, such as 12 .ts files. */
+export const COUNT = /^\d+$/u;
+
+/** The settings files where Ruff keeps its quote style, in the order Ruff reads them. */
+export const RUFF_SETTINGS_FILES = ['.ruff.toml', 'ruff.toml', 'pyproject.toml'] as const;
+
+/** The paths of a format override that applies to every Python file. */
+export const PYTHON_FILES = ['**/*.py'] as const;
+export const PYTHON_EXTENSION = '.py';
+
+/** An ESLint disable or enable comment and the rest of its line, which names the rules and an optional reason. */
+export const ESLINT_DIRECTIVE = /eslint-(?:disable|enable)(?:-next-line|-line)?(?<rules>[^\n]*)/gu;
+
+/** The text after the rules of a disable comment: a reason after two hyphens, or the end of a block comment. */
+export const DIRECTIVE_TAIL = /--|\*\//u;
+
+/** The inventory tags of the files that ESLint reads. */
+export const CODE_FILE_TAGS: ReadonlySet<string> = new Set(['javascript', 'typescript']);

@@ -13,6 +13,7 @@ export const COMMAND_HELP = {
                 'Start from a template: a file path, an HTTPS URL, or `github:owner/repository[/path][@ref]`',
             '--configurations <names...>': 'Use these configurations at the root instead of the detected ones',
             '--no-configurations': 'Select no configurations at the root',
+            '--level <level>': 'Start at this level, so the plan replaces the tool files that this level runs',
             '--json': 'Print the result as JSON. Needs `--yes` or `--dry-run`',
             '-h, --help': 'Print help',
         },

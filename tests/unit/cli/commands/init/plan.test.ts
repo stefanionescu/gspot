@@ -110,3 +110,42 @@ test('the init plan lists each submodule once and reads none of it', async () =>
     expect(await readFile(join(outside.path, 'package.json'), 'utf8')).toBe('{');
     expect(await isOnDisk(join(folder.path, 'gspot.toml'))).toBe(false);
 });
+
+test('init plans no scope for an old lint folder, and --level all replaces the tool files of that level', async () => {
+    await using sandbox = await testdir({
+        'package.json': '{"name":"shop","private":true,"type":"module","dependencies":{"react":"19.0.0"}}\n',
+        'src/app.tsx': 'export const App = () => null;\n',
+        'quality/package.json': '{"name":"shop-quality","private":true,"dependencies":{"ts-morph":"26.0.0"}}\n',
+        'quality/check.ts': 'export const value = 1;\n',
+        '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n',
+    });
+    readGitOutput(sandbox.path, ['init', '-q']);
+    const result = await runGspot(sandbox.path, [
+        ...buildInitArguments([], { json: true }),
+        '--dry-run',
+        '--level',
+        'all',
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan, settings } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
+    expect(plan.level).toBe('all');
+    expect(settings).toContain('level = "all"');
+    expect(settings).not.toContain('path = "quality"');
+    expect(plan.noLongerRuns.map(({ path }) => path)).toStrictEqual(['quality/']);
+    expect(plan.delete.map(({ path }) => path)).toContain('.commitlintrc.json');
+});
+
+test('init names disable comments for rules that the new setup does not load', async () => {
+    await using sandbox = await testdir({
+        'package.json': '{"name":"app","private":true,"type":"module"}\n',
+        'src/old.js':
+            '// eslint-disable-next-line local-rules/no-legacy -- the old setup had this rule\nexport const value = 1;\n/* eslint-disable no-console, unicorn/no-null */\n',
+    });
+    const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    expect(plan.retained).toContainEqual({
+        path: 'src/old.js',
+        note: 'local-rules/no-legacy: gspot does not load these rules; delete the comments',
+    });
+});

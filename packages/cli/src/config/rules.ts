@@ -13,3 +13,6 @@ export const AGENTS_FILE = 'AGENTS.md';
 export const ALL_LEVEL_MARKER = '<!-- level: all -->';
 
 export const RULE_OPENING_PREFIX = 'Read this rule ';
+
+/** A Markdown heading line, with its marks captured. */
+export const MARKDOWN_HEADING = /^(#{1,5}) /u;

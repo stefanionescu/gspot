@@ -113,6 +113,7 @@ function buildHeadTables(
     const scope = draft.scopes.map(({ path, configurations }) => ({ path, configurations, ...tables.get(path) }));
     return {
         ...draft.template?.tables,
+        ...(draft.level === undefined ? {} : { level: draft.level }),
         configurations: draft.configurations,
         ...tables.get(''),
         ...stripUndefined({ scope: scope.length === 0 ? undefined : scope }),
