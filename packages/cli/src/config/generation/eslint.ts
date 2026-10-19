@@ -161,6 +161,12 @@ export const DEFAULT_TRIVIAL_FUNCTION_LIMIT = 2;
 export const ENVIRONMENT_LANGUAGES = ['javascript', 'typescript', 'vue', 'svelte', 'astro'] as const;
 export const TYPED_LANGUAGES = ['typescript', 'vue', 'svelte', 'astro'] as const;
 export const FILE_EXTENSION_RULE = 'n/file-extension-in-import';
+
+/** Bundled code drops the suffix of these code modules only; stylesheets, JSON, images, and fonts keep theirs. */
+export const EXTENSIONLESS_CODE = { '.js': 'never', '.jsx': 'never', '.ts': 'never', '.tsx': 'never' } as const;
+
+/** Node runs these scripts without a bundler, so their imports keep the full file name. */
+export const NODE_SCRIPT_PATTERNS = ['**/*.mjs', '**/*.cjs'] as const;
 export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;
 export const CODE_LANGUAGES = ['javascript', 'typescript'] as const;
 

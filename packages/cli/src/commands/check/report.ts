@@ -206,5 +206,11 @@ export function formatFixes(fixes: FixReport, options: { isDryRun: boolean; verb
             '',
         ];
     if (count === 0) return ['No fixer changed anything.'];
-    return [`fixed ${formatCount(count, 'file')}: ${fixes.changed.join(', ')}. The changes are not staged.`];
+    return [
+        `fixed ${formatCount(count, 'file')}: ${fixes.changed.join(', ')}. The changes are not staged.`,
+        ...fixes.broken.map(
+            (path) =>
+                `The fixers left a syntax error in ${path}. Restore it with git checkout -- ${path}, then fix it by hand.`,
+        ),
+    ];
 }

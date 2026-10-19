@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
@@ -8,7 +9,14 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/data/checks/xcode.ts';
-import { LINT_JOBS, SDK_DESTINATIONS, CI_PREFERENCE_CASES, TEMPLATE_SWIFT_CHOICES } from '#tests/data/commands/init.ts';
+
+import {
+    LINT_JOBS,
+    SDK_DESTINATIONS,
+    IMPORT_STYLE_CASES,
+    CI_PREFERENCE_CASES,
+    TEMPLATE_SWIFT_CHOICES,
+} from '#tests/data/commands/init.ts';
 
 test.each([...CI_PREFERENCE_CASES])(
     'init proposes the CI provider from %s',
@@ -150,3 +158,11 @@ test.each([...LINT_JOBS])(
         expect(parse(output.settings)).not.toHaveProperty('ci');
     },
 );
+
+test.each([...IMPORT_STYLE_CASES])('init writes the import style of $name', async ({ files, expected }) => {
+    await using sandbox = await testdir(files);
+    const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
+    expect(getValueAt(parse(output.settings), ['tools', 'eslint', 'import_extension'])).toBe(expected);
+});

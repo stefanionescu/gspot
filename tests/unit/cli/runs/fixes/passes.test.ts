@@ -264,3 +264,25 @@ format = "none"
     expect(await Bun.file(join(sandbox.path, 'package.json')).text()).toBe(ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
     expect(await Bun.file(join(sandbox.path, 'app/package.json')).text()).toBe(REACT_VUE_PACKAGES['app/package.json']);
 });
+
+test('a fixer that leaves a code file that fails to parse is named in the fix report', async () => {
+    await using sandbox = await testdir();
+    const breaker = String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "import Hls, type { A } from 'hls.js';\n");`;
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `configurations = []
+[[command_check]]\nname = "project/merge-imports"
+stage = "commit"
+paths = ["*.ts"]
+command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]
+fix = [${JSON.stringify(process.execPath)}, "breaker.cjs", "{files}"]
+[command_check.output]
+format = "none"
+`,
+        'client.ts': "import Hls from 'hls.js';\nexport { Hls };\n",
+        'notes.ts': "export const note = 'kept';\n",
+        'breaker.cjs': breaker,
+    });
+    const session = await openSession(sandbox.path);
+    const result = await runChecks(session, { ...buildRunOptions({ only: ['project/merge-imports'] }), fix: true });
+    expect(result.fixes?.broken).toStrictEqual(['client.ts', 'notes.ts']);
+});

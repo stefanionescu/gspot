@@ -79,3 +79,21 @@ test('reexports = index-only keeps re-exports in index files and reports forward
     );
     expect(corrected.filter(({ rule }) => rule === 'no-restricted-syntax')).toStrictEqual([]);
 });
+
+test('a default import with an inline type merges with a type-only import into code that parses', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['typescript']),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
+        'client.ts': '',
+    });
+    const eslint = await createEslint(sandbox.path, { fix: ({ ruleId }) => ruleId === 'import-x/no-duplicates' });
+    const source =
+        "import type { Level } from 'hls.js';\nimport Hls, { Events, type Config } from 'hls.js';\nexport { Hls, Events, type Config, type Level };\n";
+    const [result] = await eslint.lintText(source, { filePath: 'client.ts' });
+    expect(result?.fatalErrorCount).toBe(0);
+    expect(result?.output).toBeDefined();
+    const [again] = await eslint.lintText(result!.output!, { filePath: 'client.ts' });
+    expect(again?.fatalErrorCount).toBe(0);
+});

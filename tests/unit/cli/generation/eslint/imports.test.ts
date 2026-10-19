@@ -61,3 +61,48 @@ test.each([...SORT_LEVELS])(
         }
     },
 );
+
+test('a bundler scope drops only code suffixes, and its Node scripts keep every suffix', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `configurations = ["javascript"]\n[[scope]]\npath = "app"\nconfigurations = ["react"]\n`,
+        'app/value.js': 'export const value = 1;\n',
+        'app/styles.css': '.card { color: red; }\n',
+        'app/data.json': '{"value":1}\n',
+        'app/lib.mjs': 'export const lib = 1;\n',
+        'app/source.js': '',
+        'app/tool.mjs': '',
+    });
+    const eslint = await createEslint(sandbox.path, { fix: true });
+    const rules = ['n/file-extension-in-import'];
+    const bundled =
+        'import "./styles.css";\nimport data from "./data.json" with { type: "json" };\nimport { value } from "./value";\nexport { data, value };\n';
+    const script = 'import { lib } from "./lib.mjs";\nexport { lib };\n';
+    await createFileTree(sandbox.path, { 'app/source.js': bundled, 'app/tool.mjs': script });
+    expect(await collectLintFindings(eslint, sandbox.path, ['app/source.js', 'app/tool.mjs'], rules)).toStrictEqual([]);
+    const [fixed] = await eslint.lintText('import { value } from "./value.js";\nexport { value };\n', {
+        filePath: 'app/source.js',
+    });
+    expect(fixed?.output).toBe('import { value } from "./value";\nexport { value };\n');
+    const [kept] = await eslint.lintText('import { lib } from "./lib";\nexport { lib };\n', {
+        filePath: 'app/tool.mjs',
+    });
+    expect(kept?.output).toBe('import { lib } from "./lib.mjs";\nexport { lib };\n');
+});
+
+test('a Node script imports through package.json imports, never through TypeScript paths', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['typescript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module","imports":{"#src/*":"./src/*"}}',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"paths":{"@/*":["./src/*"]}},"include":["src/**/*.ts"]}',
+        'src/app/value.mjs': 'export const value = 1;\n',
+        'src/app/entry.ts': '',
+        'tools/run/tool.mjs': '',
+    });
+    const eslint = await createEslint(sandbox.path, { fix: ({ ruleId }) => ruleId === 'gspot/import-boundaries' });
+    const [fixed] = await eslint.lintText('import { value } from "../../src/app/value.mjs";\nexport { value };\n', {
+        filePath: 'tools/run/tool.mjs',
+    });
+    expect(fixed?.output).toBe('import { value } from "#src/app/value.mjs";\nexport { value };\n');
+});

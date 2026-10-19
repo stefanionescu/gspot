@@ -39,7 +39,8 @@ export type FixResult = { check: string; changed: string[] } & (
     | { status: 'failed'; note: string }
 );
 
-export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };
+/** What the fixers changed, and the code files that parsed before a fixer ran and do not parse after. */
+export type FixReport = { results: FixResult[]; changed: string[]; broken: string[]; diffs: string[] };
 
 export type RunnableCheck = {
     check: PlannedCheck;

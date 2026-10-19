@@ -20,6 +20,7 @@ import { listScriptPaths, buildRuntimeBlocks } from '#cli/generation/eslint/runt
 import type { EslintParts, EslintFacts, EslintPresets, EslintContext } from '#cli/types/generation/eslint.ts';
 
 import {
+    buildNodeScriptBlocks,
     buildImportStyleBlocks,
     buildScopeImportBlocks,
     buildImportBoundariesRule,
@@ -130,7 +131,7 @@ function buildProjectOptions(session: ToolFileContext['session'], context: Eslin
         importStyleBlocks: buildImportStyleBlocks(scopes, nodeFiles),
         runtimes: buildRuntimeBlocks(scopes),
         boundaryBlocks: buildBoundaryBlocks(context),
-        scopeBlocks: buildScopeImportBlocks(context),
+        scopeBlocks: [...buildScopeImportBlocks(context), ...buildNodeScriptBlocks(context)],
         ignoredPaths: context.generatedPatterns,
         extra: buildExtraBlock(context),
     };

@@ -15,7 +15,13 @@ function findImportTarget(target: unknown): string | undefined {
     return Object.values(target).find((value) => typeof value === 'string');
 }
 
-function readPackageAliases(root: string, prefix: string): Record<string, string> {
+/**
+ * Read the package.json imports of one project, which Node resolves without a compiler.
+ * @param root the repository root.
+ * @param prefix the project folder with a trailing slash, or empty for the root.
+ * @returns the alias prefixes and their repository-relative folders.
+ */
+export function readPackageAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
     const path = `${prefix}package.json`;
     const packageJson = readPackageJson(root, path);

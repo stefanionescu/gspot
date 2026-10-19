@@ -9,7 +9,9 @@ import type { PreparedCommand } from '#cli/types/runs/command.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { findTool, runPlannedTool } from '#cli/runs/command/tool.ts';
+import type { GrammarName } from '#cli/types/parsers/tree-sitter.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/runs/run.ts';
+import { parseSource, findGrammarByExtension } from '#cli/parsers/tree-sitter.ts';
 import { copyIntoScratch, selectScratchCopyPaths } from '#cli/runs/scratch-copy/scratch.ts';
 import { prepareCommand, prepareInScratch, buildCommandEnvironment } from '#cli/runs/command/check.ts';
 
@@ -242,6 +244,35 @@ async function runFixerPasses(
     return { results: [...results.values()], before: firstBefore ?? after, after };
 }
 
+async function hasSyntaxError(grammar: GrammarName, bytes: Buffer): Promise<boolean> {
+    const tree = await parseSource(grammar, bytes.toString('utf8'));
+    try {
+        return tree.rootNode.hasError;
+    } finally {
+        tree.delete();
+    }
+}
+
+// A fixer can merge or cut code into text that fails to parse; name each file that parsed before the fixers ran.
+async function listBrokenSyntax(
+    changed: string[],
+    before: Map<string, Buffer | undefined>,
+    after: Map<string, Buffer | undefined>,
+): Promise<string[]> {
+    const checked = await Promise.all(
+        changed.map(async (path) => {
+            const grammar = findGrammarByExtension(path);
+            if (grammar === undefined) return [];
+            const was = before.get(path);
+            const now = after.get(path);
+            if (was === undefined || now === undefined) return [];
+            const isBroken = !(await hasSyntaxError(grammar, was)) && (await hasSyntaxError(grammar, now));
+            return isBroken ? [path] : [];
+        }),
+    );
+    return checked.flat();
+}
+
 /**
  * Runs fixes in passes and collects their results. A dry run always removes its scratch copy.
  * @param session the repository and its tools.
@@ -265,6 +296,7 @@ export async function runFixers(session: Session, planned: PlannedCheck[], optio
     const root = scratch?.path ?? session.root;
     const { before, after, results } = await runFixerPasses(session, checks, root, { paths, selectImplementation });
     const changed = listChangedPaths(before, after);
+    const broken = await listBrokenSyntax(changed, before, after);
     const diffs = isDryRun
         ? changed.map((path) =>
               createTwoFilesPatch(
@@ -278,5 +310,5 @@ export async function runFixers(session: Session, planned: PlannedCheck[], optio
               ),
           )
         : [];
-    return { results, changed, diffs };
+    return { results, changed, broken, diffs };
 }

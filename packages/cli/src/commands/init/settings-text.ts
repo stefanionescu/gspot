@@ -16,6 +16,7 @@ import { buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import { PBXPROJ, PBXPROJ_NAME } from '#cli/config/parsers/xcode.ts';
 import { XCODE_DESTINATIONS } from '#cli/config/settings/defaults.ts';
 import { TEMPLATE_COMMENT_PREFIX } from '#cli/config/settings/file.ts';
+import { buildImportStyleTables } from '#cli/commands/init/import-style.ts';
 import type { ConfigurationSelection } from '#cli/types/repository/selection.ts';
 import { type Repository, type ExistingTools } from '#cli/types/repository/inventory.ts';
 import { PREFACE_BODY, REMOTE_URL_USER, REMOTE_URL_SCHEME } from '#cli/config/commands/init.ts';
@@ -102,8 +103,12 @@ function buildHeadTables(
         }),
     );
     const openapiTables = buildOpenapiTables(selections, draft, repository);
+    const importStyles = buildImportStyleTables(selections, repository);
     const tables = new Map(
-        scopes.map((scope) => [scope, { ...projects.get(scope), ...openapiTables.get(scope), ...formats.get(scope) }]),
+        scopes.map((scope) => [
+            scope,
+            { ...projects.get(scope), ...openapiTables.get(scope), ...formats.get(scope), ...importStyles.get(scope) },
+        ]),
     );
     const scope = draft.scopes.map(({ path, configurations }) => ({ path, configurations, ...tables.get(path) }));
     return {

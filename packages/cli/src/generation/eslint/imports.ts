@@ -1,15 +1,17 @@
 import { escapeGlob } from '#cli/repository/matchers.ts';
-import { listNestedScopes } from '#cli/repository/scopes.ts';
 import { type ScopeSelection } from '#cli/types/settings/values.ts';
-import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { findParentSelection } from '#cli/generation/eslint/lint-rules.ts';
 import { buildNodePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
+import { readScopeAliases, readPackageAliases } from '#cli/generation/eslint/aliases.ts';
 import { type EslintBlock, type EslintContext, type EslintImportBoundaryRule } from '#cli/types/generation/eslint.ts';
 
 import {
     CODE_LANGUAGES,
     IMPORT_EXTENSIONS,
+    EXTENSIONLESS_CODE,
     FILE_EXTENSION_RULE,
+    NODE_SCRIPT_PATTERNS,
     ESLINT_SETTINGS_TABLE,
     IMPORT_BOUNDARIES_RULE,
     ESLINT_BOUNDARY_FOLDERS,
@@ -53,7 +55,12 @@ function buildImportStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[]): 
                               typescriptExtensionMap: styles === 'js' ? TYPESCRIPT_EXTENSION_MAP : [],
                           },
                       },
-                      rules: { [FILE_EXTENSION_RULE]: ['error', styles === 'extensionless' ? 'never' : 'always'] },
+                      rules: {
+                          [FILE_EXTENSION_RULE]:
+                              styles === 'extensionless'
+                                  ? ['error', 'always', EXTENSIONLESS_CODE]
+                                  : ['error', 'always'],
+                      },
                   },
               ];
     });
@@ -100,4 +107,34 @@ function buildScopeImportBlocks(
         });
 }
 
-export { buildImportStyleBlocks, buildScopeImportBlocks, buildImportBoundariesRule };
+/**
+ * Keep the imports of Node scripts runnable: Node needs full file names, and resolves only package.json imports.
+ * These blocks come after the style and project blocks, so they win for .mjs, .cjs, and Node shebang files.
+ * @param context the scopes and the Node scripts without a code extension.
+ * @returns one block for each project.
+ */
+function buildNodeScriptBlocks(context: Pick<EslintContext, 'root' | 'scopes' | 'nodeFiles'>): EslintBlock[] {
+    const { root, scopes, nodeFiles } = context;
+    const paths = scopes.map((entry) => entry.scope.path);
+    return scopes.map((entry) => {
+        const path = entry.scope.path;
+        const prefix = path === '' ? '' : `${escapeGlob(path)}/`;
+        return {
+            files: [
+                ...NODE_SCRIPT_PATTERNS.map((pattern) => `${prefix}${pattern}`),
+                ...buildNodePatterns(nodeFiles, path),
+            ],
+            ignores: listNestedScopes(paths, path).map((child) => `${escapeGlob(child)}/**`),
+            settings: { n: { tryExtensions: IMPORT_EXTENSIONS, typescriptExtensionMap: [] } },
+            rules: {
+                [FILE_EXTENSION_RULE]: ['error', 'always'],
+                [IMPORT_BOUNDARIES_RULE]: buildImportBoundariesRule(
+                    scopes,
+                    readPackageAliases(root, joinScope(path, '')),
+                ),
+            },
+        };
+    });
+}
+
+export { buildNodeScriptBlocks, buildImportStyleBlocks, buildScopeImportBlocks, buildImportBoundariesRule };

@@ -67,6 +67,9 @@ const TYPESCRIPT_RULES = {
         'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
     ],
+    // import-x groups `import A, { type B }` with `import type { C }` and merges them into code that does not parse,
+    // unless the merge writes inline type specifiers.
+    'import-x/no-duplicates': ['error', { 'prefer-inline': true }],
     '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: false }],
     '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
     '@typescript-eslint/prefer-readonly': 'error',

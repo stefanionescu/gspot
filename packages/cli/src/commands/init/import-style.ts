@@ -1,0 +1,60 @@
+// Picks the import suffix style of each JavaScript scope from its compiler options and its bundler.
+import ts from 'typescript';
+import { join } from 'node:path';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { readTsconfig } from '#cli/parsers/tsconfig.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
+import type { Repository } from '#cli/types/repository/inventory.ts';
+import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
+import { BUNDLER_PACKAGES, IMPORT_STYLE_SETTING } from '#cli/config/commands/init.ts';
+
+// Node and Bun run .ts files that code imports by name, and the compiler options say so.
+function importsTypeScriptFiles(options: ts.CompilerOptions): boolean {
+    return options.allowImportingTsExtensions === true || options.rewriteRelativeImportExtensions === true;
+}
+
+// A bundler resolves imports without a suffix: the compiler resolves like one, or the project depends on one.
+function isBundled(options: ts.CompilerOptions | undefined, repository: Repository, scope: string): boolean {
+    return (
+        options?.moduleResolution === ts.ModuleResolutionKind.Bundler ||
+        listProjectDependencyNames(repository.dependencyFiles, scope).some((name) => BUNDLER_PACKAGES.has(name))
+    );
+}
+
+// Code that imports its .ts files by name keeps the suffix; code that a bundler builds drops it.
+function detectImportStyle(
+    repository: Repository,
+    scope: string,
+    reads: ReadCache,
+): (typeof IMPORT_EXTENSION_STYLES)[number] | undefined {
+    const path = join(repository.root, joinScope(scope, TSCONFIG_FILE));
+    const options = readTsconfig(repository.root, path, reads)?.options;
+    if (options !== undefined && importsTypeScriptFiles(options)) return 'ts';
+    return isBundled(options, repository, scope) ? 'extensionless' : undefined;
+}
+
+/**
+ * Choose the import suffix style of each JavaScript scope that no framework configuration chooses.
+ * @param selections each scope with its selected configurations.
+ * @param repository the tracked files and dependency declarations.
+ * @returns the settings table to write for each scope that needs a style other than the default.
+ */
+export function buildImportStyleTables(
+    selections: { scope: string; selected: Manifest[] }[],
+    repository: Repository,
+): Map<string, TomlTable> {
+    const reads = createReadCache(repository.root);
+    return new Map(
+        selections.flatMap(({ scope, selected }): [string, TomlTable][] => {
+            if (!selected.some((manifest) => manifest.configuration.name === 'javascript')) return [];
+            if (selected.some((manifest) => Object.hasOwn(manifest.defaults, IMPORT_STYLE_SETTING))) return [];
+            const style = detectImportStyle(repository, scope, reads);
+            return style === undefined ? [] : [[scope, { tools: { eslint: { import_extension: style } } }]];
+        }),
+    );
+}

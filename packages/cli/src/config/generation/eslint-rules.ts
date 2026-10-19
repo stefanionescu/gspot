@@ -204,6 +204,8 @@ export const ALL_LEVEL_RULES = {
         'jsdoc/require-jsdoc': [
             'error',
             {
+                // The fixer writes an empty /** */ block, which documents nothing.
+                enableFixer: false,
                 publicOnly: true,
                 require: {
                     FunctionDeclaration: true,

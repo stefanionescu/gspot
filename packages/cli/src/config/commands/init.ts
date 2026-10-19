@@ -55,3 +55,16 @@ export const INIT_TEMPLATE_DEFAULTS = {
 export const EDITORCONFIG_SECTION = /^\s*\[(.+)\]\s*$/u;
 
 export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE]);
+
+/** Packages that build JavaScript into bundles, so imports drop the suffix of code modules. */
+export const BUNDLER_PACKAGES: ReadonlySet<string> = new Set([
+    'esbuild',
+    'vite',
+    'webpack',
+    'rollup',
+    'rolldown',
+    '@rspack/core',
+]);
+
+/** The setting a framework configuration sets when it chooses the import suffix style. */
+export const IMPORT_STYLE_SETTING = 'tools.eslint.import_extension';

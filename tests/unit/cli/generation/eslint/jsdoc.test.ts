@@ -109,3 +109,17 @@ test('jsdoc/match-name reports the root0 placeholder and keeps a parameter named
         { file: 'source.js', rule: 'jsdoc/match-name', line: 11 },
     ]);
 });
+
+test('a missing doc block is reported, and the fixer adds no empty block', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'client.js': '',
+    });
+    const eslint = await createEslint(sandbox.path, { fix: true });
+    const source = 'export function measure(value) {\n    return value.length;\n}\n';
+    const [result] = await eslint.lintText(source, { filePath: 'client.js' });
+    expect(result?.output ?? source).not.toContain('/**');
+    expect(result?.messages.map(({ ruleId }) => ruleId)).toContain('jsdoc/require-jsdoc');
+});

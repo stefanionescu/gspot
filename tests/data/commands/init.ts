@@ -289,3 +289,33 @@ export const SHARED_FILE_RACES = [
         edited: STYLELINT_PACKAGE_JSON.replace('native-project', 'edited-project'),
     },
 ] as const;
+
+/** The import suffix style that init writes for a JavaScript project: it follows the compiler options and the bundler. */
+export const IMPORT_STYLE_CASES = [
+    {
+        name: 'a tsconfig that imports .ts files by name',
+        files: {
+            'package.json': '{"private":true,"type":"module"}',
+            'tsconfig.json': '{"compilerOptions":{"allowImportingTsExtensions":true,"noEmit":true}}',
+            'src/entry.ts': 'export const value = 1;\n',
+        },
+        expected: 'ts',
+    },
+    {
+        name: 'an esbuild bundle',
+        files: {
+            'package.json': '{"private":true,"type":"module","devDependencies":{"esbuild":"0.25.0"}}',
+            'src/entry.ts': 'export const value = 1;\n',
+        },
+        expected: 'extensionless',
+    },
+    {
+        name: 'a Node.js package',
+        files: {
+            'package.json': '{"private":true,"type":"module"}',
+            'tsconfig.json': '{"compilerOptions":{"module":"NodeNext","moduleResolution":"NodeNext"}}',
+            'src/entry.ts': 'export const value = 1;\n',
+        },
+        expected: undefined,
+    },
+] as const;

@@ -51,7 +51,7 @@ function getParser(name: GrammarName): Promise<Parser> {
  * @param path the file to parse.
  * @returns the grammar, or undefined for a file that no code grammar reads.
  */
-function findGrammarByExtension(path: string): GrammarName | undefined {
+export function findGrammarByExtension(path: string): GrammarName | undefined {
     if (DECLARATION_EXTENSIONS.some((extension) => path.endsWith(extension))) return undefined;
     const extension = posix.extname(path);
     if (extension === '') return undefined;
