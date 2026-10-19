@@ -20,6 +20,7 @@ import {
     QA_MODULE_TABLES,
     ENVIRONMENT_CASES,
     ROLE_IMPORT_CASES,
+    CAN_IMPORT_TABLES,
     ENVIRONMENT_TABLES,
     TEST_IMPORT_TABLES,
     ENVIRONMENT_COMPOSED,
@@ -219,4 +220,28 @@ test('roles > environment rules stay off when no env role is set, at all', async
         await createFileTree(sandbox.path, { 'src/source.js': source });
         expect(await collectLintFindings(eslint, sandbox.path, ['src/source.js'], [rule])).toStrictEqual([]);
     }
+});
+
+test('modules > can_import names exactly the rules a rule may import, and a refused import says what it may import', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        ...MODULE_FILES,
+        'gspot.toml': buildSettingsText(['typescript'], { tables: CAN_IMPORT_TABLES }),
+        'core/value.ts': 'export const value = 3;\n',
+        'app/source.ts':
+            "import { value } from '../storage/value.js';\nimport { value as core } from '../core/value.js';\nexport const result = value + core;\n",
+    });
+    const eslint = await createEslint(sandbox.path);
+    const [result] = await eslint.lintFiles(['app/source.ts']);
+    expect(
+        result?.messages
+            .filter(({ ruleId }) => ruleId === 'boundaries/dependencies')
+            .map(({ line, message }) => ({ line, message })),
+    ).toStrictEqual([
+        {
+            line: 2,
+            message:
+                'Import rule "app" may import its own files and "storage", not ../core/value.js from import-rule:core. Move the code, or add that rule to can_also_import or can_import.',
+        },
+    ]);
 });

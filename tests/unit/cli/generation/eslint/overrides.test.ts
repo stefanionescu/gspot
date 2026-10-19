@@ -143,3 +143,32 @@ test('files > Node file patterns match a filename with a backslash and not its n
     expect(matches(file)).toBe(true);
     expect(matches('scripts/runname')).toBe(false);
 });
+
+test('blocks > an override of no-restricted-imports keeps the bans of tools.eslint.restricted_imports', async () => {
+    await using folder = await testdir();
+    await createFileTree(folder.path, {
+        'gspot.toml': buildSettingsText(['javascript'], {
+            tables: `[[tools.eslint.restricted_imports]]
+name = "lodash"
+message = "Use the built-in methods."
+
+[[tools.eslint.override]]
+paths = ["app/**"]
+rules = { "no-restricted-imports" = [{ paths = [{ name = "moment", message = "Use Temporal." }] }] }
+`,
+        }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'app/source.js':
+            "import lodash from 'lodash';\nimport moment from 'moment';\nexport const both = [lodash, moment];\n",
+        'other.js':
+            "import lodash from 'lodash';\nimport moment from 'moment';\nexport const both = [lodash, moment];\n",
+    });
+    const eslint = await createEslint(folder.path);
+    expect(
+        await collectLintFindings(eslint, folder.path, ['app/source.js', 'other.js'], ['no-restricted-imports']),
+    ).toStrictEqual([
+        { file: 'app/source.js', rule: 'no-restricted-imports', line: 1 },
+        { file: 'app/source.js', rule: 'no-restricted-imports', line: 2 },
+        { file: 'other.js', rule: 'no-restricted-imports', line: 1 },
+    ]);
+});

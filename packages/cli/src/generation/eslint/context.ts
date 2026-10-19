@@ -149,7 +149,7 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
     const context = buildEslintFacts(input);
     const { repositorySettings, scopes, nodeFiles } = context;
     const { view } = selection;
-    const options = buildRuleOptions(repositorySettings);
+    const options = buildRuleOptions(repositorySettings, scopes);
     const allRules = new Set(
         [...session.manifests.values()].flatMap((manifest) => [...manifest.eslint.all_level_rules]),
     );

@@ -72,6 +72,12 @@ export const UNKNOWN_IMPORT_POLICIES = [
 /** The final policy refuses server values even when your own module rule permits the import. */
 /** The boundary category of the files of each import rule, before the name of the rule. */
 export const IMPORT_RULE_CATEGORY = 'import-rule:';
+/** The import and the import rule category of its file, in the Handlebars template of a boundaries message. */
+export const BOUNDARY_SOURCE_TEMPLATE = '{{dependency.source}}';
+export const BOUNDARY_OWNER_TEMPLATE = '{{to.file.categories.[0]}}';
+/** A rule name that holds {{ stays text in a boundaries message. */
+export const TEMPLATE_OPEN = '{{';
+export const TEMPLATE_OPEN_ESCAPED = String.raw`\{{`;
 /** The boundary category of the tRPC server files. */
 export const TRPC_SERVER_CATEGORY = 'trpc:server';
 
@@ -153,6 +159,12 @@ export const IMPORT_LAYOUT_RULES = {
     'import-x/newline-after-import': ['error', { count: 1, considerComments: true }],
 } as const;
 export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
+
+/** The rules whose options take the bans of tools.eslint.restricted_imports. */
+export const RESTRICTED_IMPORT_RULES: ReadonlySet<string> = new Set([
+    'no-restricted-imports',
+    '@typescript-eslint/no-restricted-imports',
+]);
 export const NODE_SHEBANG_TAG = 'shebang:node';
 export const TRIVIAL_FILES_RULE = 'gspot/no-trivial-files';
 export const TRIVIAL_FUNCTIONS_RULE = 'gspot/no-trivial-functions';

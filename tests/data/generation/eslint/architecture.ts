@@ -54,6 +54,21 @@ export const MODULE_FILES = {
     'apps/api/app/value.ts': 'export const value = 2;\n',
 } as const;
 
+/** The app rule may import storage but not core, although core comes first. */
+export const CAN_IMPORT_TABLES = `[[import_rule]]
+name = "core"
+paths = ["core/**"]
+
+[[import_rule]]
+name = "storage"
+paths = ["storage/**"]
+
+[[import_rule]]
+name = "app"
+paths = ["app/**"]
+can_import = ["storage"]
+`;
+
 export const FIXED_SOURCE = "import { value } from './value.js';\nexport const result = value;\n";
 
 /** Production files cannot import test files; test files may import production files. */

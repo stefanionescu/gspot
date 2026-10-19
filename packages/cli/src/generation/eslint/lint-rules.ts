@@ -1,4 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
+import { isRecord } from '#cli/system/values.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { listActiveIgnores } from '#cli/settings/scope-view.ts';
@@ -27,32 +28,69 @@ import {
     ENVIRONMENT_RULES,
     TRIVIAL_FILES_RULE,
     PACKAGE_JSON_PATTERN,
+    ESLINT_SETTINGS_TABLE,
     ENVIRONMENT_LANGUAGES,
     TRIVIAL_FUNCTIONS_RULE,
     TRIVIAL_FUNCTION_LIMIT,
+    RESTRICTED_IMPORT_RULES,
     DEFAULT_TRIVIAL_FUNCTION_LIMIT,
 } from '#cli/config/generation/eslint.ts';
+
+// ESLint replaces the options of a rule in each later block, so an option list of no-restricted-imports keeps the
+// bans of tools.eslint.restricted_imports in the same scope.
+function addRestrictedImports(options: unknown[], restricted: unknown[]): unknown[] {
+    const [first, ...rest] = options;
+    if (rest.length > 0 || !isRecord(first) || Object.hasOwn(first, 'name')) return [...restricted, ...options];
+    const paths: unknown = first['paths'];
+    return [{ ...first, paths: [...restricted, ...(Array.isArray(paths) ? (paths as unknown[]) : [])] }];
+}
+
+function mergeRestrictedImports(rules: EslintRuleOptions['rules'], restricted: unknown[]): EslintRuleOptions['rules'] {
+    if (restricted.length === 0) return rules;
+    return Object.fromEntries(
+        Object.entries(rules).map(([rule, options]) => [
+            rule,
+            RESTRICTED_IMPORT_RULES.has(rule) && options.length > 0
+                ? addRestrictedImports(options, restricted)
+                : options,
+        ]),
+    );
+}
 
 /**
  * Build the lint rule options and the path overrides in order, each for its own project.
  *
  * @param settings the parsed gspot.toml.
+ * @param scopes every project, whose restricted imports join its own no-restricted-imports options.
  *
  * @returns one option block per scope and path override, in the order they apply.
  */
-function buildRuleOptions(settings: Settings): EslintRuleOptions[] {
+function buildRuleOptions(settings: Settings, scopes: ScopeSelection[]): EslintRuleOptions[] {
     const tables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scope ?? '', second.scope ?? ''),
     );
     const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) =>
         table.tools?.['eslint'] === undefined ? [] : [{ scope, settings: table.tools['eslint'] }],
     );
+    const restrictedFor = (scope: string): unknown[] =>
+        scopes.find((selection) => selection.scope.path === scope)?.view.options(ESLINT_SETTINGS_TABLE)
+            .restricted_imports ?? [];
     const base = scopeSettings.flatMap(({ scope, settings }): EslintRuleOptions[] =>
-        settings.rules === undefined ? [] : [{ scope, ...splitGlobSelectors(['**/*']), rules: settings.rules }],
+        settings.rules === undefined
+            ? []
+            : [
+                  {
+                      scope,
+                      ...splitGlobSelectors(['**/*']),
+                      rules: mergeRestrictedImports(settings.rules, restrictedFor(scope)),
+                  },
+              ],
     );
     const overrides = scopeSettings.flatMap(({ scope, settings }) =>
         (settings.override ?? []).flatMap(({ paths, rules }) =>
-            rules === undefined ? [] : [{ scope, ...splitGlobSelectors(paths), rules }],
+            rules === undefined
+                ? []
+                : [{ scope, ...splitGlobSelectors(paths), rules: mergeRestrictedImports(rules, restrictedFor(scope)) }],
         ),
     );
     return [...base, ...overrides];

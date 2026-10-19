@@ -1,5 +1,6 @@
 import { joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
+import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { buildNodePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 
 import type {
@@ -9,6 +10,7 @@ import type {
     EslintBoundaryContext,
 } from '#cli/types/generation/eslint.ts';
 import {
+    TEMPLATE_OPEN,
     CODE_LANGUAGES,
     TRPC_CONFIGURATION,
     TEST_IMPORT_POLICY,
@@ -16,35 +18,41 @@ import {
     IMPORT_RULE_CATEGORY,
     TRPC_SERVER_CATEGORY,
     TRPC_DEPENDENCY_NODES,
+    TEMPLATE_OPEN_ESCAPED,
     UNKNOWN_IMPORT_POLICIES,
+    BOUNDARY_OWNER_TEMPLATE,
     TRPC_SERVER_VALUE_POLICY,
+    BOUNDARY_SOURCE_TEMPLATE,
     TRPC_DEPENDENCY_SELECTORS,
 } from '#cli/config/generation/eslint.ts';
 
-// Your import rules precede the fixed test and server-value restrictions. A rule allows its own files, the files of
-// every rule above it, and the rules in can_also_import.
+// Your import rules precede the fixed test and server-value restrictions. The last policy that matches decides. Each
+// rule first refuses every file, with a message that names what it may import. Then it allows the rules from
+// listAllowedRules.
 function buildDependencyPolicies({
     importRules,
     enforceTests,
     tests,
     trpcPaths,
 }: EslintBoundaryContext): EslintBoundaryPolicy[] {
-    const policies: EslintBoundaryPolicy[] = importRules.map((rule, index) => ({
-        from: { file: { categories: `${IMPORT_RULE_CATEGORY}${rule.name}` } },
-        allow: {
-            to: {
-                file: {
-                    categories: {
-                        anyOf: [
-                            ...importRules.slice(0, index).map(({ name }) => name),
-                            rule.name,
-                            ...rule.can_also_import,
-                        ].map((name) => `${IMPORT_RULE_CATEGORY}${name}`),
-                    },
+    const policies: EslintBoundaryPolicy[] = importRules.flatMap((rule, index) => {
+        const from = { file: { categories: `${IMPORT_RULE_CATEGORY}${rule.name}` } };
+        const allowed = listAllowedRules(importRules, index);
+        const message = formatRefusedImport(
+            allowed.map((name) => name.replaceAll(TEMPLATE_OPEN, TEMPLATE_OPEN_ESCAPED)),
+            BOUNDARY_SOURCE_TEMPLATE,
+            BOUNDARY_OWNER_TEMPLATE,
+        );
+        return [
+            { from, disallow: { to: { file: { path: '**/*' } } }, message },
+            {
+                from,
+                allow: {
+                    to: { file: { categories: { anyOf: allowed.map((name) => `${IMPORT_RULE_CATEGORY}${name}`) } } },
                 },
             },
-        },
-    }));
+        ];
+    });
     if (trpcPaths.length > 0 || enforceTests)
         policies.push(
             ...UNKNOWN_IMPORT_POLICIES,

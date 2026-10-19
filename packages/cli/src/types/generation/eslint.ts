@@ -60,6 +60,8 @@ export type EslintBoundaryPolicy = {
         to: { file: EslintBoundaryFile };
         dependency?: { kind: 'value' };
     };
+    /** The Handlebars message of an import that this policy refuses. */
+    message?: string;
 };
 
 /** Classification data shared by the settings and dependency settings constructors. */
