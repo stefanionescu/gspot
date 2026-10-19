@@ -1,3 +1,5 @@
+route_files = ["+page.*", "+layout.*", "+server.*", "+error.*"]
+
 [configuration]
 description = "Svelte components: markup and script rules, HTML injection checks at both levels, and DOM and typing rules at level all."
 requires = ["javascript"]

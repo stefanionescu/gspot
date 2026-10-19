@@ -119,6 +119,8 @@ export type EslintSettingsBlock = {
 /** A block writer bound to its scope. */
 export type BlockWriter = {
     block: (block: EslintSettingsBlock, runtime?: string, preset?: EslintRuleExpression) => string;
+    /** The rules of tools.eslint.rules and overrides that no block turns on, read after the last block. */
+    listUnappliedRules: () => string[];
 };
 
 /** Component patterns, detected Node files, and your test or script patterns. */

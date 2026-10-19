@@ -120,7 +120,7 @@ test('lone-files: build, dist and coverage folders are checked; folders marked l
 });
 
 test.each([...ROUTE_CASES])(
-    'lone-files: a lone .astro or .svelte route file is reported when its framework is selected',
+    'lone-files: a lone .astro page or .svelte component is reported when its framework is selected',
     async ({ framework, name, folder, content }) => {
         await using sandbox = await testdir();
         const route = `${folder}/users/${name}`;
@@ -142,3 +142,30 @@ test.each([...ROUTE_CASES])(
         ]);
     },
 );
+
+test('lone-files: a folder with only a Next.js route file is a route, not a lone file', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['typescript', 'react', 'react-dom', 'nextjs'], { level: 'all' }),
+        'app/about/page.tsx': 'export default function About() { return null; }\n',
+        'app/api/health/route.ts': 'export function GET() { return new Response("ok"); }\n',
+        'app/lone/widget.tsx': 'export const widget = 1;\n',
+    });
+    const findings = await checkFindings(sandbox.path, 'structure/lone-files');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'app/lone/widget.tsx', rule: 'lone-file' },
+    ]);
+});
+
+test('lone-files: a folder with only a SvelteKit route file is a route, not a lone file', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['typescript', 'svelte'], { level: 'all' }),
+        'package.json': '{"name":"example","private":true,"type":"module"}\n',
+        'src/routes/users/+page.svelte': '<p>Users</p>\n',
+        'src/routes/api/+server.ts': 'export function GET() { return new Response("ok"); }\n',
+        'src/lib/cards/Card.svelte': '<p>Card</p>\n',
+    });
+    const findings = await checkFindings(sandbox.path, 'structure/lone-files');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'src/lib/cards/Card.svelte', rule: 'lone-file' },
+    ]);
+});

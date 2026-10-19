@@ -6,7 +6,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { runCheckSample } from '#tests/setup/sample-checks.ts';
-import { TRANSLATION_CASES, TRANSLATION_SANDBOX } from '#tests/data/checks/translations.ts';
+import { MESSAGE_LAYOUTS, TRANSLATION_CASES, TRANSLATION_SANDBOX } from '#tests/data/checks/translations.ts';
 
 test('a missing base locale is reported and restoring it enables key comparisons', async () => {
     await using sandbox = await testdir();
@@ -34,3 +34,21 @@ test.each([...TRANSLATION_CASES])('$check reports $expected.rule and passes afte
     expect(passed.code, `${entry.check} corrected: ${passed.stdout}${passed.stderr}`).toBe(0);
     expect(passed.report.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
 });
+
+test.each([...MESSAGE_LAYOUTS])(
+    'each message file compares with its own base locale file: $layout',
+    async ({ files, expected }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            ...files,
+            'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
+            'gspot.toml': stringify({
+                level: 'all',
+                configurations: ['translations'],
+                translations: { messages_folder: 'messages' },
+            }),
+        });
+        const findings = await checkFindings(sandbox.path, 'translations/messages');
+        expect(findings.map(({ file, message }) => ({ file, message }))).toStrictEqual(expected);
+    },
+);

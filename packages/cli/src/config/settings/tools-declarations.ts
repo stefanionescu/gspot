@@ -18,7 +18,7 @@ export const TOOLS_DECLARATIONS = {
     'tools.eslint.rules': {
         configurations: ['javascript'],
         description:
-            'Option arrays by ESLint rule ID, without a severity, which apply only where the level turns the rule on; accept findings with gspot ignore --rule.',
+            'Option arrays by ESLint rule ID, without a severity, for rules that the level runs; gspot refuses options for any other rule. Accept findings with gspot ignore --rule.',
     },
     'tools.eslint.plugins': {
         configurations: ['javascript'],
@@ -91,7 +91,7 @@ export const TOOLS_DECLARATIONS = {
     'tools.stylelint.rules': {
         configurations: ['css'],
         description:
-            'Options for the Stylelint rules that run at the level, which stay errors. Accept a finding with gspot ignore css/stylelint --rule `<rule>` --reason `<why>`.',
+            'Options for the Stylelint rules that run at the level, which stay errors; gspot refuses options for any other rule. Accept a finding with gspot ignore css/stylelint --rule `<rule>` --reason `<why>`.',
     },
     'tools.squawk.assume_in_transaction': {
         configurations: ['postgres'],

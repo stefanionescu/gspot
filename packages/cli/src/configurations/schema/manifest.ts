@@ -250,6 +250,7 @@ export const manifestSchema = z
             >)
             .prefault({}),
         ignored_folders: z.array(z.string().min(1)).default([]),
+        route_files: z.array(z.string().min(1)).default([]),
         generated: z.array(z.string().min(1)).default([]),
         allowed_words: optionalStringList,
         configuration: z.strictObject({

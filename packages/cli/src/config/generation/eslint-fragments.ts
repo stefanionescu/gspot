@@ -89,7 +89,8 @@ const TYPESCRIPT_RULES = {
     '@typescript-eslint/strict-boolean-expressions': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'error',
     '@typescript-eslint/prefer-optional-chain': 'error',
-    '@typescript-eslint/no-magic-numbers': [
+    // gspot/no-magic-numbers runs @typescript-eslint/no-magic-numbers, and accepts the numbers of a module-level const.
+    'gspot/no-magic-numbers': [
         'error',
         {
             ignoreEnums: true,
@@ -113,7 +114,7 @@ const TYPESCRIPT_RULES = {
 } as const;
 
 const TYPESCRIPT_TEST_RULES_OFF = {
-    '@typescript-eslint/no-magic-numbers': 'off',
+    'gspot/no-magic-numbers': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
 } as const;
 
@@ -131,6 +132,12 @@ const NESTJS_INJECTABLE_FILTER_PATHS = [
 const NEXT_PAGES_FOLDERS = ['pages/', 'src/pages/'] as const;
 
 const NEXT_SERVER_FILES = ['**/server/**', '**/*.server.*'] as const;
+
+/** The Fast Refresh rule, which reports a module that exports more than components. */
+const REFRESH_RULE = 'react-refresh/only-export-components';
+
+/** Next.js higher-order components that react-refresh does not know: catchError from next/error, in Next.js 16.2. */
+const NEXT_EXTRA_HOCS = ['catchError'] as const;
 
 const NEXT_RULES = {
     '@next/next/no-html-link-for-pages': 'error',
@@ -225,10 +232,12 @@ export {
     ASTRO_RULES,
     REACT_RULES,
     ASTRO_FILES,
+    REFRESH_RULE,
     SVELTE_RULES,
     SVELTE_FILES,
     DRIZZLE_RULES,
     JSX_CODE_FILES,
+    NEXT_EXTRA_HOCS,
     TYPESCRIPT_RULES,
     NEXT_SERVER_FILES,
     NEXT_PAGES_FOLDERS,

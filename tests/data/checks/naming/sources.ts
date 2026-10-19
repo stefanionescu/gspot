@@ -61,7 +61,7 @@ const table = { keyOne: 1 };
 /** Declared names, grouped by the naming categories of each language. */
 const EXPECTED_TYPESCRIPT_NAMES = {
     functions: ['parseHttpUrl'],
-    parameters: ['rawInput', 'retries', 'rest', 'first', 'second', 'event', 'baseUrl', 'body'],
+    parameters: ['rawInput', 'rest', 'first', 'second', 'event', 'baseUrl', 'body'],
     variables: ['enhancedHandler', 'payload', 'table'],
     classes: ['HttpClient'],
     properties: ['secret', 'DEFAULT_PORT', 'baseUrl', 'retries'],

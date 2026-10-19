@@ -3,11 +3,11 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { HOOK_FOLDERS } from '#cli/config/repository/hooks.ts';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-import { SPEC_SUFFIX, INDEX_STEMS } from '#cli/config/checks/structure.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
 import { listTaggedExtensions, isInDependencyFolder } from '#cli/repository/classify.ts';
 import { extractStem, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
+import { SPEC_SUFFIX, INDEX_STEMS, COMPANION_SUFFIX } from '#cli/config/checks/structure.ts';
 
 // A configuration such as NestJS declares <name>.<kind>.<ext> file names, so these do not count as a shared prefix.
 function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
@@ -64,9 +64,13 @@ export function checkSharedPrefixes(input: CheckInput): Finding[] {
             const peerStem = extractStem(entry.name);
             return !INDEX_STEMS.has(peerStem) && extractPrefix(peerStem) === prefix;
         });
+        // A file and its companions, such as button.tsx, button.module.css, and button.test.tsx, count as one name.
         if (
-            new Set(peers.map((entry) => (entry.kind === 'folder' ? `${entry.name}/` : extractStem(entry.name)))).size <
-            limit
+            new Set(
+                peers.map((entry) =>
+                    entry.kind === 'folder' ? `${entry.name}/` : extractStem(entry.name).replace(COMPANION_SUFFIX, ''),
+                ),
+            ).size < limit
         )
             return [];
         seen.add(key);

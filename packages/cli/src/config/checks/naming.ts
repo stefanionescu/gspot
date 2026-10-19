@@ -174,13 +174,16 @@ export const TYPESCRIPT_DECLARATIONS = [
     [['enum_assignment'], 'enum_cases'],
 ] as const;
 
+// A shorthand pattern such as const { handleSubmit } = useForm() takes the name that the destructured value declares.
 export const TYPESCRIPT_NAME_NODES = new Set([
     'identifier',
     'property_identifier',
     'private_property_identifier',
     'type_identifier',
-    'shorthand_property_identifier_pattern',
 ]);
+
+/** A call that returns a component or a context, which React code names in PascalCase, such as a memo call. */
+export const COMPONENT_FACTORY = /^(?:React\.)?(?:createContext|lazy|memo|forwardRef)$|^styled\b/u;
 
 export const TYPESCRIPT_PATTERN_FIELDS = {
     pair_pattern: 'value',

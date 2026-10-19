@@ -3,10 +3,19 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
 
 import {
     NEXT_RULES,
+    REFRESH_RULE,
     JSX_CODE_FILES,
+    NEXT_EXTRA_HOCS,
     NEXT_SERVER_FILES,
     NEXT_PAGES_FOLDERS,
 } from '#cli/config/generation/eslint-fragments.ts';
+
+// Next.js wraps a component in an error boundary with catchError from next/error, which react-refresh does not know.
+function addExtraHocs(entry: unknown): unknown {
+    if (!Array.isArray(entry)) return entry;
+    const [severity, options] = entry as [unknown, Record<string, unknown> | undefined];
+    return [severity, { ...options, extraHOCs: [...NEXT_EXTRA_HOCS] }];
+}
 
 /**
  * Apply the Next.js presets and the pages and JSX settings.
@@ -38,6 +47,7 @@ function buildNextjsFragment(
                         ? NEXT_RULES['@next/next/no-html-link-for-pages']
                         : 'off',
                     ...presets.refresh.blocks[0].rules,
+                    [REFRESH_RULE]: addExtraHocs(presets.refresh.blocks[0].rules?.[REFRESH_RULE]),
                     '@next/next/no-async-client-component': NEXT_RULES['@next/next/no-async-client-component'],
                 },
             },

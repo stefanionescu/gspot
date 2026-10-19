@@ -63,7 +63,8 @@ const relativePath = z
     .string()
     .min(1)
     .regex(
-        /^(?!!?\/)(?![\s\S]*(?:^!?|\/)\.\.(?:\/|$))[^\\:\p{Cc}]+$/u,
+        // A backslash may only escape a glob character, such as \( in app/\(legal\)/**; any other marks a Windows path.
+        /^(?!!?\/)(?![\s\S]*(?:^!?|\/)\.\.(?:\/|$))(?:[^\\:\p{Cc}]|\\[()[\]{}*?!+@,])+$/u,
         'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
     )
     .meta({ pathRole: 'source' });

@@ -1,3 +1,5 @@
+import { GspotError } from '#cli/system/errors.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { selectStylelintComponents } from '#cli/planning/needed-tools.ts';
@@ -6,6 +8,7 @@ import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts'
 
 import {
     TAILWIND_AT_RULES,
+    CSS_MODULES_OVERRIDE,
     STYLELINT_BASE_RULES,
     VUE_STYLELINT_OVERRIDE,
     STYLELINT_ALL_LEVEL_RULES,
@@ -55,6 +58,32 @@ function buildComponentOverrides(
     });
 }
 
+// A scope with CSS Modules files accepts their syntax in those files. The override keeps the Tailwind at-rules.
+function buildCssModulesOverrides(
+    context: ToolFileContext,
+    tailwindAtRules: readonly string[],
+    chosen: Record<string, unknown>,
+    off: string[],
+) {
+    const scope = context.selection.scope.path;
+    const hasModules = context.session.repository.files.some(
+        (file) => isInScope(file.path, scope) && file.path.endsWith(CSS_MODULES_OVERRIDE.suffix),
+    );
+    if (!hasModules) return [];
+    const rules: Record<string, unknown> = {
+        ...CSS_MODULES_OVERRIDE.rules,
+        'at-rule-no-unknown': [true, { ignoreAtRules: [...tailwindAtRules, ...CSS_MODULES_OVERRIDE.atRules] }],
+    };
+    return [
+        {
+            files: [...CSS_MODULES_OVERRIDE.files],
+            rules: Object.fromEntries(
+                Object.entries(rules).filter(([rule]) => !off.includes(rule) && chosen[rule] === undefined),
+            ),
+        },
+    ];
+}
+
 /**
  * Build the Stylelint file from the settings.
  * @param context the tool file to build.
@@ -75,11 +104,22 @@ function buildStylelintFile(context: ToolFileContext): string {
     const activeRules = new Set(
         [...stylelintRuleNames, 'function-no-unknown'].filter((rule) => isAll || !STYLELINT_ALL_LEVEL_RULES.has(rule)),
     );
-    const chosen = Object.fromEntries(Object.entries(options.rules).filter(([rule]) => activeRules.has(rule)));
+    const refused = Object.keys(options.rules).filter((rule) => !activeRules.has(rule));
+    if (refused.length > 0)
+        throw new GspotError(
+            'settings',
+            refused
+                .map((rule) => `${rule} does not run at level ${level}; gspot sets options only for rules it runs.`)
+                .join('\n'),
+        );
+    const chosen = options.rules;
     const tailwind = scopeDependencies.includes('tailwindcss');
     const tailwindAtRules = tailwind ? TAILWIND_AT_RULES : [];
     const tailwindFunctions = tailwind ? ['theme'] : [];
-    const overrides = buildComponentOverrides(configurations, tailwindFunctions, chosen, off);
+    const overrides = [
+        ...buildComponentOverrides(configurations, tailwindFunctions, chosen, off),
+        ...buildCssModulesOverrides(context, tailwindAtRules, chosen, off),
+    ];
     const syntaxRules: Record<string, unknown> = {
         'at-rule-no-unknown': true,
         'function-no-unknown': true,

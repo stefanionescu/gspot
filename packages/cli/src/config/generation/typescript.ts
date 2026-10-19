@@ -21,6 +21,8 @@ export const JAVASCRIPT_OPTIONS = {
     allowJs: true,
     strict: true,
     noEmit: true,
+    // JavaScript that a runtime such as Bun or Node.js runs may import TypeScript files by their extension.
+    allowImportingTsExtensions: true,
     maxNodeModuleJsDepth: 0,
 } as const;
 

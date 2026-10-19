@@ -115,6 +115,24 @@ export const STYLELINT_ALL_LEVEL_RULES: ReadonlySet<string> = new Set([
     'selector-not-notation',
 ]);
 
+/** CSS Modules syntax, as stylelint-config-css-modules 4.6.0 accepts it: composes, :global and :export, and @value. */
+export const CSS_MODULES_OVERRIDE = {
+    files: ['**/*.module.css'],
+    suffix: '.module.css',
+    rules: {
+        'selector-pseudo-class-no-unknown': [
+            true,
+            { ignorePseudoClasses: ['export', 'import', 'global', 'local', 'external'] },
+        ],
+        'selector-type-no-unknown': [true, { ignore: ['custom-elements'], ignoreTypes: ['from'] }],
+        'property-no-unknown': [
+            true,
+            { ignoreProperties: ['composes', 'compose-with'], ignoreSelectors: [':export', '/^:import/'] },
+        ],
+    },
+    atRules: ['value'],
+} as const;
+
 export const TAILWIND_AT_RULES = [
     'tailwind',
     'apply',

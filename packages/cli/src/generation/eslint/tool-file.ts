@@ -1,5 +1,6 @@
 // Build the ESLint tool file from the settings and the scope.
 
+import { GspotError } from '#cli/system/errors.ts';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { buildEslintContext } from '#cli/generation/eslint/context.ts';
@@ -54,6 +55,19 @@ function buildEslintFile(context: ToolFileContext): string {
         ),
         '\n];\n',
     );
+    const unapplied = blockWriter.listUnappliedRules();
+    if (unapplied.length > 0) {
+        const level = session.settingsFile.settings.level;
+        throw new GspotError(
+            'settings',
+            unapplied
+                .map(
+                    (rule) =>
+                        `${rule} does not run at level ${level}; gspot sets options only for rules it runs. Use tools.eslint.plugins for your own rules.`,
+                )
+                .join('\n'),
+        );
+    }
     return output.join('').trimStart();
 }
 

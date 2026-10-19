@@ -2,6 +2,7 @@ import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { noClientEnv } from './rules/no-client-env.ts';
 import { noAliasExports } from './rules/no-alias-exports.ts';
 import { noIndexImports } from './rules/no-index-imports.ts';
+import { noMagicNumbers } from './rules/no-magic-numbers.ts';
 import { noTrivialFiles } from './rules/no-trivial-files.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
 import { requireServerOnly } from './rules/require-server-only.ts';
@@ -15,6 +16,7 @@ const rules = {
     'import-boundaries': importBoundaries,
     'no-alias-exports': noAliasExports,
     'no-index-imports': noIndexImports,
+    'no-magic-numbers': noMagicNumbers,
     'no-trivial-files': noTrivialFiles,
     'no-trivial-functions': noTrivialFunctions,
     'require-server-only': requireServerOnly,

@@ -163,3 +163,20 @@ test.only('checks the value', () => { expect({value: 1}).toEqual({value: 1}); })
         },
     );
 });
+
+test('a template message to a logger method, including log, is reported, and console.log is not', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'source.js':
+            'export function report(logger, count) {\n    logger.log(`Saved ${count}`);\n    logger.info(`Read ${count}`);\n    console.log(`Printed ${count}`);\n}\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    const [result] = await eslint.lintFiles(['source.js']);
+    expect(
+        result?.messages
+            .filter(({ ruleId, message }) => ruleId === 'no-restricted-syntax' && message.startsWith('Log a stable'))
+            .map(({ line }) => line),
+    ).toStrictEqual([2, 3]);
+});

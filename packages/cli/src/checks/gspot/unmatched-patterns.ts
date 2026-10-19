@@ -2,13 +2,13 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
-import { NEGATED_PATTERN } from '#cli/config/checks/gspot.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { type PathVisitor } from '#cli/types/settings/values.ts';
 import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { scopeSchema, settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { GROUP_HINT, NEGATED_PATTERN, UNESCAPED_GROUP } from '#cli/config/checks/gspot.ts';
 
 /**
  * Reports setting paths that match no tracked file or folder.
@@ -35,7 +35,7 @@ export function checkUnmatchedPatterns(input: CheckInput): Finding[] {
                         input,
                         { file: SETTINGS_FILE, line: 1 },
                         'unused-record',
-                        `${pattern} under ${where} matches no tracked file or folder.`,
+                        `${pattern} under ${where} matches no tracked file or folder.${UNESCAPED_GROUP.test(pattern) ? GROUP_HINT : ''}`,
                     ),
                 );
             }

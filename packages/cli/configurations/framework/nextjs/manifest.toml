@@ -1,5 +1,6 @@
 allowed_words = ["Next.js"]
 generated = ["next-env.d.ts"]
+route_files = ["page.*", "route.*", "layout.*", "default.*", "template.*", "loading.*", "error.*", "global-error.*", "not-found.*"]
 
 [configuration]
 description = "Next.js apps: the framework and hooks rules, and server code that never reaches the client. A Semgrep rule refuses ignoreBuildErrors and ignoreDuringBuilds in next.config."

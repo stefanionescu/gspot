@@ -229,3 +229,29 @@ test('identifiers: Python dunders and type aliases follow their own naming', asy
         report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),
     ).toStrictEqual([{ file: 'source.py', line: 13, rule: 'case' }]);
 });
+
+test('identifiers: React component variables may take PascalCase, and destructured names keep their source spelling', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['typescript', 'react', 'naming'], { level: 'all' }),
+        'context.ts': [
+            "import { createContext, memo } from 'react';",
+            "import styled from 'styled-components';",
+            'export const CartContext = createContext(null);',
+            'export const Row = memo(() => null);',
+            'export const Title = styled.h1`font-weight: bold;`;',
+            'export const BadValue = readValue();',
+            'const { user_name, account: bad_account } = payload;',
+            'export const names = [user_name, bad_account];',
+            '',
+        ].join('\n'),
+        'header.tsx': 'export const Header = readHeader();\n',
+    });
+    const { report } = await checkReport(sandbox.path, ['check', '--json', '--only', 'naming/identifiers']);
+    expect(
+        report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),
+    ).toStrictEqual([
+        { file: 'context.ts', line: 6, rule: 'case' },
+        { file: 'context.ts', line: 7, rule: 'case' },
+    ]);
+});

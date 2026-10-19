@@ -25,6 +25,12 @@ paths = ["**/*.tsx", "**/*.jsx"]
 reason = "A function that returns JSX is a component and takes a capital."
 
 [[naming.override]]
+cases = ["camel", "upper-snake", "pascal"]
+categories = ["variables"]
+paths = ["**/*.tsx", "**/*.jsx"]
+reason = "A variable that holds a component, such as a memo or lazy result, takes the component's capital."
+
+[[naming.override]]
 allowed_names = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
 categories = ["functions", "methods", "variables"]
 languages = ["typescript", "javascript"]

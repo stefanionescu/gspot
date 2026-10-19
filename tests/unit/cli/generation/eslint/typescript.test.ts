@@ -97,3 +97,23 @@ test('a default import with an inline type merges with a type-only import into c
     const [again] = await eslint.lintText(result!.output!, { filePath: 'client.ts' });
     expect(again?.fatalErrorCount).toBe(0);
 });
+
+test('gspot/no-magic-numbers accepts the numbers of a module-level const and reports the others', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['typescript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["source.ts"]}\n',
+        'source.ts':
+            'export const SIZES = [16, 32, 64];\nexport const TIMEOUT_MS = 60 * 1000;\nexport function wait(): number {\n    return TIMEOUT_MS + 250;\n}\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    expect(
+        await collectLintFindings(
+            eslint,
+            sandbox.path,
+            ['source.ts'],
+            ['gspot/no-magic-numbers', '@typescript-eslint/no-magic-numbers'],
+        ),
+    ).toStrictEqual([{ file: 'source.ts', rule: 'gspot/no-magic-numbers', line: 4 }]);
+});

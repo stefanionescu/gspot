@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runGspot } from '#tests/setup/run-gspot.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
@@ -9,7 +10,7 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
-import { COALESCING_FIXED, COALESCING_SOURCE } from '#tests/data/generation/eslint/levels.ts';
+import { COALESCING_FIXED, COALESCING_SOURCE, LEVEL_RULE_OPTIONS } from '#tests/data/generation/eslint/levels.ts';
 
 test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside their scope', async (level) => {
     await using sandbox = await testdir();
@@ -54,13 +55,10 @@ test('level all keeps every rule that recommended turns on for a React file', as
     expect(active.map(([name]) => name)).toContain('react/jsx-key');
     for (const [name] of active) expect((rules['all']![name] as unknown[])[0], name).not.toBe(0);
 });
-test.each([...LEVELS])('%s applies your rule options except in script and test files', async (level) => {
+test('all applies your rule options except in script and test files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
-            level,
-            tables: '[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n"gspot/no-trivial-functions" = [{trivialStatements = 4}]\n',
-        }),
+        'gspot.toml': buildSettingsText(['javascript'], { level: 'all', tables: LEVEL_RULE_OPTIONS }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
         'scripts/run.js': '',
@@ -70,13 +68,25 @@ test.each([...LEVELS])('%s applies your rule options except in script and test f
     const source = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
     const script = (await eslint.calculateConfigForFile('scripts/run.js')) as EslintConfiguration;
     const test = (await eslint.calculateConfigForFile('tests/example.test.js')) as EslintConfiguration;
-    expect(source.rules['n/no-process-exit']![0]).toBe(level === 'all' ? 2 : 0);
+    expect(source.rules['n/no-process-exit']![0]).toBe(2);
     expect(script.rules['n/no-process-exit']![0]).toBe(0);
     expect(test.rules['jsdoc/require-description']![0]).toBe(0);
-    expect(source.rules['gspot/no-trivial-functions']![0]).toBe(level === 'all' ? 2 : 0);
-    if (level === 'all')
-        expect(source.rules['gspot/no-trivial-functions']).toStrictEqual([2, { trivialStatements: 4 }]);
+    expect(source.rules['gspot/no-trivial-functions']).toStrictEqual([2, { trivialStatements: 4 }]);
 });
+
+test('recommended refuses options for rules that only level all runs', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['javascript'], { level: 'recommended', tables: LEVEL_RULE_OPTIONS }),
+        'package.json': '{"private":true,"type":"module"}',
+        'source.js': '',
+    });
+    const refused = await runGspot(sandbox.path, ['apply']);
+    expect(refused.code).toBe(2);
+    expect(refused.stdout + refused.stderr).toContain(
+        'n/no-process-exit does not run at level recommended; gspot sets options only for rules it runs. Use tools.eslint.plugins for your own rules.',
+    );
+});
+
 test.each([...LEVELS])(
     'layout rules stay off and empty-object fallbacks are reported only at level all (%s)',
     async (level) => {

@@ -10,10 +10,11 @@ import type {
     EslintRuleExpression,
 } from '#cli/types/generation/eslint.ts';
 
-// Your own options apply only to rules that this block already enables.
+// Your own options apply only to rules that this block already enables. Each applied rule joins the applied set.
 function buildOptionBlocks(
     block: EslintSettingsBlock & { rules: Record<string, unknown> },
     input: BlockWriterInput,
+    applied: Set<string>,
 ): EslintSettingsBlock[] {
     return input.ruleOptions.flatMap((options): EslintSettingsBlock[] => {
         const entries = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
@@ -21,6 +22,7 @@ function buildOptionBlocks(
             const severity: unknown = Array.isArray(value) ? value[0] : value;
             return chosen === undefined || severity === 'off' || severity === 0 ? [] : [[name, [severity, ...chosen]]];
         });
+        for (const [name] of entries) applied.add(name);
         if (entries.length === 0) return [];
         return [
             {
@@ -70,7 +72,13 @@ function formatBlocks(
  */
 function createBlockWriter(input: BlockWriterInput): BlockWriter {
     const { allRules, isAll, codeFiles, scope } = input;
+    const applied = new Set<string>();
     return {
+        listUnappliedRules: () => [
+            ...new Set(
+                input.ruleOptions.flatMap((options) => Object.keys(options.rules)).filter((rule) => !applied.has(rule)),
+            ),
+        ],
         block: (payload, runtime, preset) => {
             const rules: Record<string, unknown> = Object.fromEntries(
                 (payload.rules === undefined ? [] : Object.entries(payload.rules)).map(([name, value]) => [
@@ -89,7 +97,7 @@ function createBlockWriter(input: BlockWriterInput): BlockWriter {
                           ignores: [...(payload.ignores ?? []), ...scope.excluded],
                       };
             const block = { ...payload, ...nested, rules };
-            return formatBlocks([block, ...buildOptionBlocks(block, input)], input, runtime, preset);
+            return formatBlocks([block, ...buildOptionBlocks(block, input, applied)], input, runtime, preset);
         },
     };
 }

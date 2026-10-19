@@ -230,3 +230,34 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
         matchFields({ ruleId: '@darraghor/nestjs-typed/controllers-should-supply-api-tags', line: 7 }),
     );
 });
+
+test('nextjs > react-refresh knows the catchError wrapper of next/error', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['javascript'], {
+            level: 'all',
+            tables: '[[scope]]\npath = "web"\nconfigurations = [ "nextjs" ]\n',
+        }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'web/app/layout.jsx': 'export const fontClass = "sans";\nexport default function Layout() { return null; }\n',
+        'web/components/panel.jsx':
+            "import { catchError } from 'next/error';\nfunction Panel() { return null; }\nexport default catchError(Panel, { fallback: () => null });\n",
+        'web/components/mixed.jsx': 'export const count = 2;\nexport function Mixed() { return null; }\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    const config = (await eslint.calculateConfigForFile(
+        join(sandbox.path, 'web/components/panel.jsx'),
+    )) as EslintConfiguration;
+    expect(config.rules['react-refresh/only-export-components']?.[1]).toMatchObject({ extraHOCs: ['catchError'] });
+    expect(
+        await collectLintFindings(
+            eslint,
+            sandbox.path,
+            ['web/app/layout.jsx', 'web/components/panel.jsx', 'web/components/mixed.jsx'],
+            ['react-refresh/only-export-components'],
+        ),
+    ).toStrictEqual([
+        { file: 'web/app/layout.jsx', rule: 'react-refresh/only-export-components', line: 1 },
+        { file: 'web/components/mixed.jsx', rule: 'react-refresh/only-export-components', line: 1 },
+    ]);
+});

@@ -27,8 +27,74 @@ function validateMessage(text: string): string | undefined {
     }
 }
 
+// The base-locale file that a message file compares with. In a folder of locale files, that file sits beside it. In a
+// folder per locale, it has the same path under the folder of the base locale.
+function findBaseFile(
+    path: string,
+    messageFiles: { folder: string; base: string; paths: ReadonlySet<string> },
+): string {
+    const { folder, base, paths } = messageFiles;
+    const sibling = posix.join(posix.dirname(path), `${base}${MESSAGE_FILE_SUFFIX}`);
+    const [, ...rest] = posix.relative(folder, path).split('/');
+    if (paths.has(sibling) || rest.length === 0) return sibling;
+    const nested = posix.join(folder, base, ...rest);
+    const hasBaseFolder = [...paths].some((entry) => entry.startsWith(`${posix.join(folder, base)}/`));
+    return paths.has(nested) || hasBaseFolder ? nested : sibling;
+}
+
+// Each message that does not parse, and each key of the base file that the file leaves out.
+function compareMessages(
+    input: CheckInput,
+    path: string,
+    messages: Map<string, string>,
+    baseMessages: Map<string, string>,
+): Finding[] {
+    const base = input.selection.view.options('translations').base_locale;
+    const broken = [...messages].flatMap(([key, text]) => {
+        const message = validateMessage(text);
+        return message === undefined
+            ? []
+            : [buildFinding(input, { file: path, line: 1 }, 'message', `${key}: ${message}`)];
+    });
+    const missing = [...baseMessages.keys()]
+        .filter((key) => !messages.has(key))
+        .map((key) =>
+            buildFinding(
+                input,
+                { file: path, line: 1 },
+                'missing-key',
+                `The key ${key} of ${base} has no message here.`,
+            ),
+        );
+    return [...broken, ...missing];
+}
+
+function readMessages(input: CheckInput, path: string): Map<string, string> | string {
+    const parsed = parseJsonResult(readCachedBytes(input.reads, path).toString('utf8'), messagesSchema);
+    return 'error' in parsed ? parsed.error : flattenMessages(parsed.value);
+}
+
+// Read each message file of the run and the base-locale file that it compares with.
+function readMessageFiles(
+    input: CheckInput,
+    files: string[],
+    messageFiles: { folder: string; base: string; paths: ReadonlySet<string> },
+): { messagesByPath: Map<string, Map<string, string>>; findings: Finding[] } {
+    const messagesByPath = new Map<string, Map<string, string>>();
+    const findings: Finding[] = [];
+    const paths = new Set([...files, ...files.map((file) => findBaseFile(file, messageFiles))]);
+    for (const path of [...paths].filter((entry) => messageFiles.paths.has(entry))) {
+        const messages = readMessages(input, path);
+        if (typeof messages === 'string')
+            findings.push(buildFinding(input, { file: path, line: 1 }, 'syntax', messages));
+        else messagesByPath.set(path, messages);
+    }
+    return { messagesByPath, findings };
+}
+
 /**
- * Checks the message files in `translations.messages_folder` against the base locale.
+ * Checks the message files in `translations.messages_folder` against the base locale. Each folder of message files, and each
+ * namespace of a locale-folder layout, compares with its own base-locale file.
  * @param input the scope files and translation settings.
  * @returns the findings.
  */
@@ -36,52 +102,38 @@ function checkTranslationMessages(input: CheckInput): Finding[] {
     const options = input.selection.view.options('translations');
     const folder = options.messages_folder as string;
     const base = options.base_locale;
-    const files = input.files
-        .map((file) => file.path)
-        .filter((path) => path.startsWith(`${folder}/`) && path.endsWith(MESSAGE_FILE_SUFFIX));
-    const messagesByPath = new Map<string, Map<string, string>>();
-    const findings: Finding[] = [];
-    for (const path of files) {
-        const parsed = parseJsonResult(readCachedBytes(input.reads, path).toString('utf8'), messagesSchema);
-        if ('error' in parsed) findings.push(buildFinding(input, { file: path, line: 1 }, 'syntax', parsed.error));
-        else messagesByPath.set(path, flattenMessages(parsed.value));
-    }
+    const isMessageFile = (path: string): boolean =>
+        path.startsWith(`${folder}/`) && path.endsWith(MESSAGE_FILE_SUFFIX);
+    const files = input.files.map((file) => file.path).filter((path) => isMessageFile(path));
+    const messageFiles = {
+        folder,
+        base,
+        paths: new Set(input.repositoryFiles.map((file) => file.path).filter((path) => isMessageFile(path))),
+    };
+    const { messagesByPath, findings } = readMessageFiles(input, files, messageFiles);
     if (findings.length > 0) return findings;
-    const baseline = [...messagesByPath].find(([path]) => posix.basename(path) === `${base}${MESSAGE_FILE_SUFFIX}`);
-    if (baseline === undefined)
-        return [
+    const expected =
+        files.length === 0
+            ? [posix.join(folder, `${base}${MESSAGE_FILE_SUFFIX}`)]
+            : files.map((file) => findBaseFile(file, messageFiles));
+    const absent = [...new Set(expected)].filter((path) => !messagesByPath.has(path));
+    if (absent.length > 0)
+        return absent.map((path) =>
             buildFinding(
                 input,
-                { file: posix.join(folder, `${base}${MESSAGE_FILE_SUFFIX}`), line: 1 },
+                { file: path, line: 1 },
                 'base-locale',
-                `The base locale ${base}${MESSAGE_FILE_SUFFIX} is missing from ${folder}. Restore it or choose the intended base locale.`,
+                `The base locale ${base}${MESSAGE_FILE_SUFFIX} is missing from ${posix.dirname(path)}. Restore it or choose the intended base locale.`,
             ),
-        ];
-    const baseMessages = baseline[1];
-    return messagesByPath
-        .entries()
-        .flatMap(([path, messages]) => {
-            const broken = [...messages].flatMap(([key, text]) => {
-                const message = validateMessage(text);
-                return message === undefined
-                    ? []
-                    : [buildFinding(input, { file: path, line: 1 }, 'message', `${key}: ${message}`)];
-            });
-            const missing = baseMessages
-                .keys()
-                .filter((key) => !messages.has(key))
-                .map((key) =>
-                    buildFinding(
-                        input,
-                        { file: path, line: 1 },
-                        'missing-key',
-                        `The key ${key} of ${base} has no message here.`,
-                    ),
-                )
-                .toArray();
-            return [...broken, ...missing];
-        })
-        .toArray();
+        );
+    return files.flatMap((path) =>
+        compareMessages(
+            input,
+            path,
+            messagesByPath.get(path) ?? new Map<string, string>(),
+            messagesByPath.get(findBaseFile(path, messageFiles)) ?? new Map<string, string>(),
+        ),
+    );
 }
 
 const messagesSchema = z.record(z.string(), z.unknown()) satisfies z.ZodType<Record<string, unknown>>;

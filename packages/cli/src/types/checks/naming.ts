@@ -98,6 +98,8 @@ export type Identifier = {
     name: string;
     /** For a folder name: the folder path, so a path rule can match it. */
     folder?: string;
+    /** Cases that the declaration allows beside those of its category, such as pascal for a variable holding a component. */
+    extraCases?: NamingCase[];
 };
 
 /** A declaration before attaching its file, language, and display label. */

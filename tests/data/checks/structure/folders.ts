@@ -1,9 +1,9 @@
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 
-/** Route files whose one-file folders require authored check ignores. */
+/** Framework files that count as code, so a one-file folder of them needs an authored check ignore. */
 export const ROUTE_CASES = [
     { framework: 'astro', name: 'index.astro', folder: 'src/pages', content: '<main>Example</main>\n' },
-    { framework: 'svelte', name: '+page.svelte', folder: 'src/routes', content: '<p>Example</p>\n' },
+    { framework: 'svelte', name: 'Card.svelte', folder: 'src/lib', content: '<p>Example</p>\n' },
 ] as const;
 
 export const LONE_FILE_TREE = {
@@ -37,6 +37,10 @@ export const PREFIX_TREE = {
     'fine/index-page.ts': '',
     'fine/first.ts': '',
     'fine/second.ts': '',
+    'components/button.tsx': '',
+    'components/button.module.css': '',
+    'components/button.test.tsx': '',
+    'components/card.tsx': '',
     'paired/api.ts': '',
     'paired/api.d.ts': '',
     'paired/view.mts': '',

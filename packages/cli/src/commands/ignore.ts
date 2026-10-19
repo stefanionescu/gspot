@@ -1,5 +1,8 @@
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import { escapeGlob } from '#cli/repository/matchers.ts';
 import { mergeIgnore } from '#cli/settings/write/text.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { saveSettings } from '#cli/apply/save-settings.ts';
@@ -8,6 +11,7 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { type TomlTable } from '#cli/types/settings/file.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { stringify, LocalDate } from '@decimalturn/toml-patch';
+import { GROUP_CHARACTERS } from '#cli/config/commands/ignore.ts';
 import { startSettingsEdit } from '#cli/commands/edit-settings.ts';
 import { calendarDateSchema } from '#cli/settings/schema/parts.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
@@ -33,6 +37,20 @@ function assertIgnoreTarget(options: IgnoreOptions, settings: Settings, reads: R
         );
 }
 
+// A path through a route group or a dynamic segment holds parentheses or brackets that read as glob syntax. The
+// existing part of each path gets escaped, so the pattern matches that folder.
+function escapeExistingPaths(root: string, paths: string[] | undefined): string[] | undefined {
+    return paths?.map((path) => {
+        const parts = path.split('/');
+        for (let index = parts.length; index > 0; index -= 1) {
+            const prefix = parts.slice(0, index).join('/');
+            if (!GROUP_CHARACTERS.test(prefix)) return path;
+            if (existsSync(join(root, prefix))) return [escapeGlob(prefix), ...parts.slice(index)].join('/');
+        }
+        return path;
+    });
+}
+
 /**
  * Write an ignore with its reason.
  * @param options the parsed flags.
@@ -41,6 +59,7 @@ function assertIgnoreTarget(options: IgnoreOptions, settings: Settings, reads: R
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const { root, input, settings, reads } = startSettingsEdit(options.cwd);
     assertIgnoreTarget(options, settings, reads);
+    const paths = escapeExistingPaths(root, options.paths);
     const target = options.check ?? 'every check';
     const message = validateReason(`gspot ignore ${options.check ?? ''}`.trimEnd(), options.reason);
     if (message !== undefined) throw new GspotError('settings', message);
@@ -55,14 +74,14 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
                     check: options.check,
                     rule: options.rule,
                     names: options.names,
-                    paths: options.paths,
+                    paths,
                     reason: options.reason,
                     until: options.until === undefined ? undefined : parseExpiryDate(options.until),
                 }),
             );
             written['ignore'] = list;
         },
-        summary: `Ignored ${target}${options.paths === undefined ? '' : ' for ' + options.paths.join(' and ')}.`,
+        summary: `Ignored ${target}${paths === undefined ? '' : ' for ' + paths.join(' and ')}.`,
     });
     const written = stringify({ ignore: [saved] }).trimEnd();
     return result.exitCode === 0 && result.json.changed ? { ...result, text: `${written}\n${result.text}` } : result;

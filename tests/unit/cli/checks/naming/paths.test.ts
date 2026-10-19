@@ -109,3 +109,15 @@ test('a banned folder word such as shared is reported in folder names', async ()
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(paths.toSorted((left, right) => left.localeCompare(right)));
 });
+
+test('paths: a mise task file named _default passes, and the same name elsewhere does not', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['bash', 'naming'], { level: 'all' }),
+        '.mise/tasks/build/_default': '#!/usr/bin/env bash\necho build\n',
+        'scripts/_default': '#!/usr/bin/env bash\necho other\n',
+    });
+    const { report } = await checkReport(sandbox.path, ['check', '--json', '--only', 'naming/paths']);
+    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual([
+        'scripts/_default',
+    ]);
+});

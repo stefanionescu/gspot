@@ -38,3 +38,31 @@ const TRANSLATION_CASES = [
 ] as const;
 
 export { TRANSLATION_CASES, TRANSLATION_SANDBOX };
+
+/** A folder of locale files per catalog, and a folder per locale: each message file compares with its own base file. */
+export const MESSAGE_LAYOUTS: {
+    layout: string;
+    files: Record<string, string>;
+    expected: { file: string; message: string }[];
+}[] = [
+    {
+        layout: 'nested catalogs',
+        files: {
+            'messages/en.json': '{"title":"Shop"}',
+            'messages/fr.json': '{"title":"Boutique"}',
+            'messages/admin/en.json': '{"users":"Users"}',
+            'messages/admin/fr.json': '{}',
+        },
+        expected: [{ file: 'messages/admin/fr.json', message: 'The key users of en has no message here.' }],
+    },
+    {
+        layout: 'locale folders',
+        files: {
+            'messages/en/common.json': '{"hello":"Hello"}',
+            'messages/fr/common.json': '{}',
+            'messages/en/admin.json': '{"users":"Users"}',
+            'messages/fr/admin.json': '{"users":"Utilisateurs"}',
+        },
+        expected: [{ file: 'messages/fr/common.json', message: 'The key hello of en has no message here.' }],
+    },
+];

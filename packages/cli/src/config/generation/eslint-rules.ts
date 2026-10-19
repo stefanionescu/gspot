@@ -183,9 +183,10 @@ export const BASE_SELECTORS = [
             'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]',
         message: 'Start an error message with a capital letter.',
     },
+    // A logger's log method takes fields too; console.log prints output for a person to read.
     {
         selector:
-            'CallExpression[callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]',
+            'CallExpression:matches([callee.property.name=/^(debug|info|warn|error|fatal|trace)$/], [callee.property.name="log"][callee.object.name!="console"]) > TemplateLiteral.arguments:first-child[expressions.length>0]',
         message: 'Log a stable message and pass the values as fields.',
     },
 ] as const;

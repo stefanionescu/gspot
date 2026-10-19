@@ -103,6 +103,9 @@ export const SWIFT_ACCESSOR_NODES = new Set([
 export const LANGUAGE_BY_EXTENSION = { '.py': 'python', '.swift': 'swift' } as const;
 export const SPEC_SUFFIX = /\.spec$/u;
 
+/** The suffix of a companion file, such as button.test.tsx or button.module.css beside button.tsx. */
+export const COMPANION_SUFFIX = /\.(?:test|spec|stories|story|module|styles?|mock|bench)$/u;
+
 export const BASH_COMMAND_NODES: ReadonlySet<string> = new Set(['command', 'declaration_command']);
 export const BASH_SOURCE_COMMANDS: ReadonlySet<string> = new Set(['source', '.']);
 export const SWIFT_ACCESSOR_OWNERS: ReadonlySet<string> = new Set(['property_declaration', 'subscript_declaration']);

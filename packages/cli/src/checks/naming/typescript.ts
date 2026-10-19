@@ -3,6 +3,7 @@ import { addIdentifier } from '#cli/checks/naming/collect.ts';
 import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/naming.ts';
 
 import {
+    COMPONENT_FACTORY,
     TYPESCRIPT_NAME_NODES,
     TYPESCRIPT_DECLARATIONS,
     TYPESCRIPT_PATTERN_LISTS,
@@ -54,6 +55,20 @@ function isImportedName(node: Node): boolean {
     return callee?.type === 'import' || callee?.text === 'require';
 }
 
+// A variable that holds the result of memo, forwardRef, lazy, createContext, or styled may take PascalCase.
+function isComponentFactory(declarator: Node): boolean {
+    const value = declarator.childForFieldName('value');
+    if (value?.type !== 'call_expression') return false;
+    return COMPONENT_FACTORY.test(value.childForFieldName('function')?.text ?? '');
+}
+
+function addDeclarator(sink: ExtractSink, declarator: Node): void {
+    const start = sink.out.length;
+    addPattern(sink, declarator.childForFieldName('name'), 'variables');
+    if (isComponentFactory(declarator))
+        for (const identifier of sink.out.slice(start)) identifier.extraCases = ['pascal'];
+}
+
 function addNamed(sink: ExtractSink, root: Node): void {
     for (const [types, category] of TYPESCRIPT_DECLARATIONS) {
         const nodes = root
@@ -88,7 +103,7 @@ export function extractTypescriptIdentifiers(syntaxRoot: Node, file: string, lan
     addNamed(sink, syntaxRoot);
     addEnumCases(sink, syntaxRoot);
     const declarators = syntaxRoot.descendantsOfType('variable_declarator').filter((node) => !isImportedName(node));
-    for (const node of declarators) addPattern(sink, node.childForFieldName('name'), 'variables');
+    for (const node of declarators) addDeclarator(sink, node);
     const callables = syntaxRoot.descendantsOfType([...TYPESCRIPT_CALLABLE_NODES]);
     for (const node of callables) addParameters(sink, node);
     return sink.out;
