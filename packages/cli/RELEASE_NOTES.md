@@ -28,6 +28,10 @@ The newest version comes first. The release task copies the section of the versi
 - Each `Tests` or `*Tests` folder of a `swift` scope gets the SwiftLint test overrides, including a folder that forms
   its own scope.
 
+### Fixes
+
+- The help of `gspot install` keeps its list of tool folders apart from the sentence after it.
+
 ## 0.3.1
 
 `@gspothq/cli` 0.3.1 fixes repositories that use Husky, names the fix when `gspot.toml` holds a key that gspot
