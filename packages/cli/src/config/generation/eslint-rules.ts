@@ -234,6 +234,8 @@ export const ALL_LEVEL_RULES = {
         'jsdoc/require-param-description': 'error',
         'jsdoc/require-returns': 'error',
         'jsdoc/require-returns-description': 'error',
+        // A blank line before the tags makes them their own paragraph, so Vale reads the description alone.
+        'jsdoc/tag-lines': ['error', 'any', { startLines: 1 }],
     },
     node: {
         'n/prefer-global/url-search-params': ['error', 'always'],

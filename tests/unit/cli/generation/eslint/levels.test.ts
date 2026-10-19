@@ -141,3 +141,29 @@ test('switching the level and back writes the same files', async () => {
     expect(outputs[0]).not.toBe(outputs[1]);
     expect(outputs[2]).toBe(outputs[0]);
 });
+
+test.each([...LEVELS])(
+    '%s asks for a blank line between a description and its tags only at level all',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildSettingsText(['javascript'], { level }),
+            'package.json': '{"private":true,"type":"module"}',
+            'total.js': `/**
+ * Add the two prices.
+ * @param {number} first the first price.
+ * @param {number} second the second price.
+ * @returns {number} the total.
+ */
+export function addPrices(first, second) {
+    return first + second;
+}
+`,
+        });
+        const eslint = await createEslint(sandbox.path, { fix: true });
+        const [result] = await eslint.lintFiles(['total.js']);
+        expect(result?.output?.split('\n').slice(0, 3)).toStrictEqual(
+            level === 'all' ? ['/**', ' * Add the two prices.', ' *'] : undefined,
+        );
+    },
+);

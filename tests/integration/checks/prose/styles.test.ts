@@ -5,9 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { STYLE_CASES } from '#tests/data/checks/vale-styles.ts';
 import { spawnRootCheck, spawnCheckReport } from '#tests/setup/run-gspot.ts';
 import { shareProseSandbox, applySandboxChanges } from '#tests/setup/sandbox.ts';
-import { VALE_INI, STYLE_CASES, CURRENCY_CASES, VOCABULARY_SOURCE } from '#tests/data/checks/prose.ts';
+import { VALE_INI, CURRENCY_CASES, VOCABULARY_SOURCE } from '#tests/data/checks/prose.ts';
 
 const installedSandbox = shareProseSandbox();
 

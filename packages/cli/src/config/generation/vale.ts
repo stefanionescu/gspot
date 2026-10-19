@@ -108,15 +108,22 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'Google.Semicolons': 'gspot.semicolons holds the semicolon rule',
     'Google.WordListCase': 'Google product terminology: command-line tool for CLI',
     'Harper.OkToOkay': 'OK names a successful status and a button action',
+    'write-good.Passive': 'Google.Passive owns passive voice',
+    'Harper.NumericRangeEnDash': 'gspot.en-dashes owns ranges',
 } as const;
 
-/** Skip task metadata, URLs, and documentation-tag syntax; check tag descriptions and suppression reasons as prose. */
+/**
+ * Skip task metadata, URLs, documentation-tag syntax, snake_case identifiers, and upper-case file names; check tag
+ * descriptions and suppression reasons as prose.
+ */
 export const TOKEN_IGNORES = [
     String.raw`(?m)(^MISE[ \t]+[a-z_][a-z0-9_-]*[ \t]*=[^\r\n]*)`,
     String.raw`(eslint-(?:disable|enable)(?:-next-line|-line)?\s+[^\n]*?--\s*(?:reason:\s*)?)`,
     String.raw`(https?://[^\s)]+)`,
-    String.raw`(@(?:param|template|typedef)\s+(?:\{[^\n]*\}\s+)?(?:\[[^\]\n]*\]|\S+))`,
-    String.raw`(@(?:returns?|throws|type|see|example|deprecated)\b(?:\s+\{[^\n]*\})?)`,
+    String.raw`(@(?:param|template|typedef|property|prop|arg|argument|callback)\s+(?:\{[^\n]*\}\s+)?(?:\[[^\]\n]*\]|\S+))`,
+    String.raw`(@(?:returns?|throws|type|see|example|deprecated|yields|enum|this|satisfies)\b(?:\s+\{[^\n]*\})?)`,
+    String.raw`(\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b)`,
+    String.raw`(\b[A-Z][A-Z0-9_-]*\.(?:md|txt|json|toml|ya?ml)\b)`,
 ] as const;
 
 /** Skip front matter. */

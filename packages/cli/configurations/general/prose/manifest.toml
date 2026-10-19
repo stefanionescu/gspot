@@ -156,6 +156,10 @@ target = "styles/gspot/dashes.yml"
 
 [[tool_file]]
 level = "all"
+target = "styles/gspot/en-dashes.yml"
+
+[[tool_file]]
+level = "all"
 target = "styles/gspot/ordinal-adverbs.yml"
 
 [[tool_file]]
