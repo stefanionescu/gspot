@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { fakeTool } from '#tests/setup/fakes.ts';
+import { isWindows } from '#tests/setup/system.ts';
 import { chmod, realpath } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
@@ -146,22 +147,26 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
         await Bun.write(path, hook.content);
         await chmod(path, 0o755);
     }
+    // The process runner puts the folder of an absolute program first on the search path, so /usr/bin/sh brings
+    // /usr/bin/git ahead of the fakes. Each hook runs by its own path; Windows runs it through the sh of Git for Windows,
+    // whose folder holds no git.
     const shExecutable = Bun.which('sh')!;
+    const runHook = (name: string, ...hookArguments: string[]): string[] => {
+        const path = join(sandbox.path, '.gspot/hooks', name);
+        return isWindows ? [shExecutable, path, ...hookArguments] : [path, ...hookArguments];
+    };
     const input = 'refs/heads/main 123 refs/heads/main 456\n';
-    const pushed = await runCommand([shExecutable, join(sandbox.path, '.gspot/hooks/pre-push'), 'origin', 'url'], {
+    const pushed = await runCommand(runHook('pre-push', 'origin', 'url'), {
         cwd: sandbox.path,
         env: environment,
         stdin: input,
     });
     expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
-    const checkedOut = await runCommand(
-        [shExecutable, join(sandbox.path, '.gspot/hooks/post-checkout'), 'a', 'b', '1'],
-        {
-            cwd: sandbox.path,
-            env: environment,
-            stdin: '',
-        },
-    );
+    const checkedOut = await runCommand(runHook('post-checkout', 'a', 'b', '1'), {
+        cwd: sandbox.path,
+        env: environment,
+        stdin: '',
+    });
     expect(checkedOut.code, checkedOut.stdout + checkedOut.stderr).toBe(0);
     const logged = await Bun.file(log).text();
     const calls = logged
@@ -173,7 +178,7 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
         { name: 'mise', argv: ['exec', '--', 'gspot', 'check', '--hook', 'pre-push', '--', 'origin', 'url'], input },
         { name: 'git', argv: ['lfs', 'post-checkout', 'a', 'b', '1'], input: '' },
     ]);
-    const missing = await runCommand([shExecutable, join(sandbox.path, '.gspot/hooks/post-merge'), '0'], {
+    const missing = await runCommand(runHook('post-merge', '0'), {
         cwd: sandbox.path,
         env: { PATH: join(sandbox.path, 'empty') },
         stdin: '',
