@@ -39,6 +39,7 @@ you undo.
 - Use a file header only when it helps the reader. When present, the header describes the whole file in a single sentence. Update it
   when the file's job changes.
 - Do not write work status in a comment. For example, do not describe a paused job or a temporary choice.
+- Never copy a size, time, or default from the code into a comment; name the constant.
 
 ## Deferred work
 

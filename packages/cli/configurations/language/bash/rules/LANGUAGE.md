@@ -31,7 +31,7 @@ report_unreadable_files() {
 Use `name() { ... }` for a function that runs in the current shell, and a subshell body,
 `name() ( ... )`, to isolate state and traps from the caller on purpose.
 
-Every executable defines `main` and calls it last.
+An executable that defines functions defines `main` and calls it last.
 
 ## Variables and constants
 
@@ -64,7 +64,8 @@ base="${filename%.tar.gz}"
 ## Arrays and argument lists
 
 Command arguments live in arrays, expanded with `"${array[@]}"` and never populated from raw
-`$(...)`. Read lines with a `while read` loop or `readarray`, and filenames from `NUL`-delimited streams:
+`$(...)`. Read lines with a `while read` loop or `readarray`, and filenames from `NUL`-delimited streams.
+`readarray` needs Bash 4, and macOS ships `/bin/bash` 3.2:
 
 ```bash
 declare -a archive_args

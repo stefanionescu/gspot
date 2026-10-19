@@ -12,6 +12,9 @@ browser; that covers query hydration and Server Component props too. A hidden co
 does not restrict access. A client boundary pulls its imports into the browser bundle; keep it small
 and compose server-rendered children into it.
 
+Privileged modules import `server-only`, so a Client Component import fails the build. The `env` option of
+`next.config` inlines its values into the JavaScript bundle. Never put a secret there, and revoke one that shipped.
+
 Validate and authorize every mutation at its server entry point. Routes, actions, and RPC procedures
 share one domain operation. Initial server reads do not HTTP-fetch the application's own
 Route Handler. Rendering, `GET` requests, and prefetching perform no writes.

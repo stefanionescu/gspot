@@ -58,6 +58,9 @@ a silent `catch` that hides a missing catalog.
 - Use the framework's established i18n library. Translate on the server where it renders,
   and give each client provider the scoped messages its interactive children need, never
   every locale or the whole catalog.
+- In next-intl, a `NextIntlClientProvider` that a Server Component renders inherits every message by default,
+  and a nested provider replaces the `messages` of its ancestor instead of merging them. Pick the messages at
+  the provider that owns the subtree.
 - Format numbers, currencies, dates, relative times, and time zones through locale-aware APIs.
   Never infer currency or time zone from language alone.
 - Use an explicit product time-zone policy. Define when relative timestamps refresh.
@@ -98,4 +101,5 @@ Use documentation matching the installed release and enabled features.
 | Topic                | Primary source                                                                          |
 | -------------------- | --------------------------------------------------------------------------------------- |
 | ICU MessageFormat    | [ICU MessageFormat](https://unicode-org.github.io/icu/userguide/format_parse/messages/) |
+| next-intl providers  | [next-intl configuration](https://next-intl.dev/docs/usage/configuration)               |
 | BCP 47 language tags | [Request for Comments (RFC) 5646](https://www.rfc-editor.org/rfc/rfc5646)               |

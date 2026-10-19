@@ -24,7 +24,8 @@ See [parsing and inferred types](https://zod.dev/basics).
 Derive a patch from fields the caller may edit, not the whole persistence row. Keep omission,
 undefined, null, and empty input distinct. Defaults do not silently turn absence into a write.
 Normalize only where the contract permits it; never trim signed values, passwords, or exact-byte
-identifiers. Coercion must not turn an empty required number into zero.
+identifiers. Coercion must not turn an empty required number into zero. `z.coerce.boolean()` runs
+`Boolean(input)`, so the string `"false"` becomes `true`; parse flag strings with `z.stringbool()`.
 
 Select response fields before returning them. A loose object schema does not protect private data.
 Pass request-specific state to validation. Do not capture it in a process-wide schema.

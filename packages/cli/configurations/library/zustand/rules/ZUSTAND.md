@@ -12,6 +12,8 @@ Fetched server data stays in the query cache.
 - The provider keeps one instance for its mounted lifetime and exposes it through React context.
   Consumers call `useStore(store, selector)`. In a Next.js App Router project, declare this provider as a
   Client Component.
+- Keep the provider component alone in its `.tsx` file, and the hooks that read the store in a `.ts` module,
+  so Fast Refresh keeps state.
 - In a server-rendered app, create request-dependent stores per request. Never share a store
   initialized with one user's identity across requests.
 - An action called outside React uses the intended store instance, passed in, never a hidden

@@ -32,6 +32,7 @@ the behavior. When you add a file, tell the user why that code needs it.
 - Complete the requested task. Do not expand scope.
 - If you discover something unrelated that needs fixing, mention it to the user. Leave it unless the fix takes one small edit in a file you already change.
 - Do not add features, refactor surrounding code, or make unrequested improvements.
+- A request for a review or a plan stays read-only until the user allows changes.
 
 ## Verification and tests
 
@@ -83,6 +84,9 @@ When you replace or rename something:
 
 - Delete the old implementation entirely.
 - Update every call site to use the new version.
+
+Treat stored data and wire formats as contracts. Rename a stored key together with a migration of the stored data.
+During a rolling deploy, readers accept both shapes until no old writer runs.
 
 ## Structure
 

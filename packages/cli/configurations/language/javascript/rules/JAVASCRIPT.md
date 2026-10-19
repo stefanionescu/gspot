@@ -8,7 +8,7 @@ Keep development tools out of production runtime imports. Keep inputs and side e
 
 Use APIs supported by the runtime and version the project declares. Browser code follows the
 declared targets and build pipeline. Before adding a build step that needs another
-runtime, declare it in the configuration and documentation.
+runtime, declare it in the configuration and documentation. Test for a server with `'window' in globalThis`.
 
 ## Modules
 
@@ -59,6 +59,8 @@ A function that mutates its input names and documents that effect.
 
 Await a promise that must finish before the next step. Release child processes, subscriptions,
 and other resources in `finally` or the cleanup mechanism of the API.
+
+Check `response.ok` before parsing a `fetch` response, and never turn a failed read into an empty result.
 
 ## Workspaces
 

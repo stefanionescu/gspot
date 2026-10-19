@@ -83,6 +83,9 @@ convention. Use the explicit pydoclint style when the settings define one. Other
 or NumPy convention that Ruff carries, and failing that the pydoclint default. The examples
 here follow Google style.
 
+A docstring that a library reads at run time, such as a pydantic model description or Click help, counts as
+product text: changing it changes runtime output.
+
 ### Docstring conventions
 
 <!-- level: all -->
