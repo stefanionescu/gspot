@@ -169,7 +169,7 @@ export const orderCount = 1;
     {
         check: 'javascript/tsc',
         files: { 'src/orders/double.js': DOUBLE_JS.replace('twice(3)', "twice('3')") },
-        expected: { file: 'src/orders/double.js', rule: 'TS2345', line: 13, column: 28 },
+        expected: { file: 'src/orders/double.js', rule: 'TS2345', line: 14, column: 28 },
         corrected: {
             files: {
                 'src/orders/double.js': DOUBLE_JS,

@@ -180,6 +180,7 @@ export const DOUBLE_JS = `// A plain JavaScript file that doubles a number.
 
 /**
  * Doubles a number.
+ *
  * @param {number} value the operand to multiply
  * @returns {number} twice the value
  */
