@@ -32,6 +32,7 @@ export const DOCSTRING_STYLES = ['google', 'numpy', 'sphinx'] as const;
 export const PYDOCLINT_STYLE_FLAG = '--style';
 
 export const DEPTRY_EXCLUDE_FLAG = '--extend-exclude';
+export const DEPTRY_FIRST_PARTY_FLAG = '--known-first-party';
 
 export const NON_WORD_RUN = /[^a-z\d]+/gu;
 

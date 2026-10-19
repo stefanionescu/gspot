@@ -11,19 +11,32 @@ import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { buildUvRunCommand } from '#cli/install/python/project.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { DEPTRY_COMMAND, DEPTRY_EXCLUDE_FLAG } from '#cli/config/checks/python.ts';
+import { DEPTRY_COMMAND, DEPTRY_EXCLUDE_FLAG, DEPTRY_FIRST_PARTY_FLAG } from '#cli/config/checks/python.ts';
 
 const deptrySchema = z.object({
     tool: z
         .object({
             deptry: z
-                .object({ extend_exclude: z.array(z.string()).default([]) } satisfies SchemaShape<
-                    NonNullable<NonNullable<{ tool: { deptry: { extend_exclude: string[] } } }['tool']>['deptry']>
+                .object({
+                    extend_exclude: z.array(z.string()).default([]),
+                    known_first_party: z.array(z.string()).default([]),
+                } satisfies SchemaShape<
+                    NonNullable<
+                        { tool: { deptry: { extend_exclude: string[]; known_first_party: string[] } } }['tool']
+                    >['deptry']
                 >)
-                .default({ extend_exclude: [] }),
-        } satisfies SchemaShape<NonNullable<{ tool: { deptry: { extend_exclude: string[] } } }['tool']>>)
-        .default({ deptry: { extend_exclude: [] } }),
-} satisfies SchemaShape<{ tool: { deptry: { extend_exclude: string[] } } }>);
+                .default({ extend_exclude: [], known_first_party: [] }),
+        } satisfies SchemaShape<{ deptry: { extend_exclude: string[]; known_first_party: string[] } }>)
+        .default({ deptry: { extend_exclude: [], known_first_party: [] } }),
+} satisfies SchemaShape<{ tool: { deptry: { extend_exclude: string[]; known_first_party: string[] } } }>);
+
+// The modules of python.externals count as first party, beside the project's own known_first_party list, which the
+// command-line flag replaces.
+function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
+    const externals = planned.selection.view.values.python?.externals ?? [];
+    if (externals.length === 0) return [];
+    return [...new Set([...written, ...externals])].flatMap((module) => [DEPTRY_FIRST_PARTY_FLAG, module]);
+}
 
 /**
  * Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
@@ -34,7 +47,7 @@ const deptrySchema = z.object({
 export async function checkDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const text = readText(session.root, posix.join(planned.selection.scope.path, PYPROJECT_TOML));
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
-    const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
+    const { extend_exclude: exclusions, known_first_party: firstParty } = deptrySchema.parse(parse(text)).tool.deptry;
     return await runCheckCommand(session, planned, {
         command: buildUvRunCommand(planned.selection, join(session.root, planned.selection.scope.path), [
             ...DEPTRY_COMMAND,
@@ -50,6 +63,7 @@ export async function checkDeptry(session: Session, planned: PlannedCheck): Prom
                 }),
                 ...exclusions,
             ].flatMap((pattern) => [DEPTRY_EXCLUDE_FLAG, pattern]),
+            ...listFirstParty(planned, firstParty),
         ]),
     });
 }

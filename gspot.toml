@@ -75,8 +75,8 @@ reason = "The Xcode string format names its translation control shouldTranslate.
 
 [[naming.override]]
 paths = ["packages/cli/src/checks/python/deptry.ts"]
-allowed_names = ["extend_exclude"]
-reason = "deptry names this TOML setting extend_exclude."
+allowed_names = ["extend_exclude", "known_first_party"]
+reason = "deptry names these TOML settings extend_exclude and known_first_party."
 
 [[naming.override]]
 paths = ["packages/cli/src/checks/swift/coverage.ts", "packages/cli/src/checks/swift/skip-reasons.ts"]

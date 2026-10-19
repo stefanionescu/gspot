@@ -83,7 +83,15 @@ function buildImportBoundariesRule(
     aliases: Record<string, string>,
 ): EslintImportBoundaryRule {
     const scopePaths = scopes.map((entry) => escapeGlob(entry.scope.path)).filter((path) => path !== '');
-    return ['error', { folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths], aliases }];
+    const externals = [...new Set(scopes.flatMap(({ view }) => view.values.javascript?.externals ?? []))];
+    return [
+        'error',
+        {
+            folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths],
+            aliases,
+            ...(externals.length === 0 ? {} : { externals }),
+        },
+    ];
 }
 
 /**

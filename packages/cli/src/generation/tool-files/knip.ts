@@ -98,6 +98,7 @@ function buildKnipFile(context: ToolFileContext): string {
         tool.installers['npm']?.name === undefined ? [] : [tool.installers['npm'].name],
     );
     const workspaces = buildWorkspaces(root, settingsFile.settings, scopes);
+    const externals = [...new Set(scopes.flatMap(({ view }) => view.values.javascript?.externals ?? []))];
     return JSON.stringify(
         {
             $schema: KNIP_SCHEMA_URL,
@@ -112,6 +113,7 @@ function buildKnipFile(context: ToolFileContext): string {
             ],
             ignoreBinaries: [...new Set(toolBinaries)],
             ignoreExportsUsedInFile: settingsFile.settings.level !== 'all',
+            ...(externals.length === 0 ? {} : { ignoreUnresolved: externals }),
             workspaces,
             ...extra('knip'),
         },

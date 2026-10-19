@@ -8,7 +8,9 @@ export type RuleDocs = {
     example: string;
 };
 export type ClientEnvOptions = [{ isClient: boolean; publicPrefixes: readonly string[]; allowed: readonly string[] }];
-export type ImportBoundariesOptions = [{ folders: readonly string[]; aliases: Record<string, string> }];
+export type ImportBoundariesOptions = [
+    { folders: readonly string[]; aliases: Record<string, string>; externals: readonly string[] },
+];
 export type TrivialFunctionsOptions = [{ trivialStatements: number }];
 
 export type TrivialFilesOptions = [{ trivialStatements: number; allowIndex: boolean }];

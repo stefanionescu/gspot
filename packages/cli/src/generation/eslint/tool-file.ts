@@ -6,6 +6,7 @@ import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { buildEslintContext } from '#cli/generation/eslint/context.ts';
 import { buildSelectedBlocks } from '#cli/generation/eslint/lint-rules.ts';
 import { collectFragments } from '#cli/generation/eslint/fragments/build.ts';
+import { listLocalPlugins, buildLocalPluginBlocks } from '#cli/generation/eslint/local-plugins.ts';
 import { selectPlugins, buildBlocksAfterFragments, buildBlocksBeforeFragments } from '#cli/generation/eslint/base.ts';
 
 import {
@@ -27,7 +28,8 @@ function buildEslintFile(context: ToolFileContext): string {
     const base = buildEslintContext(context);
     const { eslint, blockWriter } = base;
     const { fragmentParts, fragmentImports, fragmentSelectors } = collectFragments(session, target, base);
-    const plugins = selectPlugins(base);
+    const shipped = selectPlugins(base);
+    const plugins = { ...shipped, ...listLocalPlugins(session.scopes, context.targetPath, shipped) };
     const output: string[] = [
         serializeImports(plugins, fragmentImports),
         serializeRuntimeSelectors(eslint.runtimes),
@@ -51,7 +53,9 @@ function buildEslintFile(context: ToolFileContext): string {
     output.push(
         serializeBlocks(
             blockWriter,
-            buildSelectedBlocks(base).map((block) => [block]),
+            [...buildSelectedBlocks(base), ...buildLocalPluginBlocks(session.scopes, base.eslintFiles.code)].map(
+                (block) => [block],
+            ),
         ),
         '\n];\n',
     );

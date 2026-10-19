@@ -55,19 +55,11 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
         ),
         [join(buildVenvBinPath('.gspot/.venv'), 'deptry')]: 'fixture',
     });
-    const session = await openSession(sandbox.path);
-    using resources = fakePinnedExecutables(
-        ['uv', 'deptry'].map((name) => getToolDeclaration(session.manifests.values(), name)),
-    );
-    const executed = resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })),
-    );
-    const checked = await checkReport(sandbox.path, ['check', '--only', 'python/deptry', '--json']);
+    const { checked, commands } = await runFakeDeptry(sandbox.path);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks.map(({ scope, status }) => [scope, status])).toStrictEqual(
         scopes.map((scope) => [scope, 'passed']),
     );
-    const commands = executed.mock.calls.map(([command]) => command);
     for (const scope of scopes) {
         const command = commands.find((commandArguments) => commandArguments.includes(join(sandbox.path, scope)))!;
         expect(command.slice(1, 5)).toStrictEqual(['run', '--no-sync', '--project', join(sandbox.path, scope)]);
@@ -83,6 +75,23 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
         expect(patterns.some((pattern) => new RegExp(pattern).test('appish/sample.py'))).toBe(false);
     }
 });
+test('deptry counts python.externals as first party beside the known_first_party of the project', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['python'], { tables: '[python]\nexternals = ["folder_paths", "comfy"]\n' }),
+        'pyproject.toml':
+            '[project]\nname = "example"\nversion = "1.0.0"\n[tool.deptry]\nknown_first_party = ["nodes"]\n',
+        'main.py': 'import folder_paths\n',
+        [join(buildVenvBinPath('.gspot/.venv'), 'deptry')]: 'fixture',
+    });
+    const { checked, commands } = await runFakeDeptry(sandbox.path);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    const command = commands.find((entry) => entry.includes('deptry'))!;
+    const firstParty = command.flatMap((value, index) =>
+        value === '--known-first-party' ? [command[index + 1]!] : [],
+    );
+    expect(firstParty).toStrictEqual(['nodes', 'folder_paths', 'comfy']);
+});
+
 test('import-linter skips a project without contracts', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -210,3 +219,16 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
         command.mock.calls.map(([commandArguments]) => commandArguments[commandArguments.indexOf('--style') + 1]),
     ).toStrictEqual(['google', 'numpy']);
 });
+
+/** Run python/deptry with fake pinned tools, and return the report and each command that it started. */
+async function runFakeDeptry(root: string) {
+    const session = await openSession(root);
+    using resources = fakePinnedExecutables(
+        ['uv', 'deptry'].map((name) => getToolDeclaration(session.manifests.values(), name)),
+    );
+    const executed = resources.use(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })),
+    );
+    const checked = await checkReport(root, ['check', '--only', 'python/deptry', '--json']);
+    return { checked, commands: executed.mock.calls.map(([command]) => command) };
+}

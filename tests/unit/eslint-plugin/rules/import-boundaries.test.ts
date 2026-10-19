@@ -8,6 +8,12 @@ createRuleTester().run<keyof (typeof plugin.rules)['import-boundaries']['meta'][
     plugin.rules['import-boundaries'],
     {
         valid: [
+            // A specifier that the runtime provides, such as a host application module, leaves no boundary of the repository.
+            {
+                code: "import { app } from '../../scripts/app.js';",
+                filename: '/repo/web/src/a.ts',
+                options: [{ externals: ['../../scripts/app.js'] }],
+            },
             {
                 code: "import { b } from '../../user/b';",
                 filename: '/repo/packages/shop/source/cart/inner/a.ts',
@@ -75,6 +81,11 @@ createRuleTester().run<keyof (typeof plugin.rules)['import-boundaries']['meta'][
             },
         ],
         invalid: [
+            {
+                code: "import { app } from '../../scripts/app.js';",
+                filename: '/repo/web/src/a.ts',
+                errors: [{ messageId: 'escape' }],
+            },
             {
                 code: "import { a } from '../a.js';",
                 filename: '/repo/scripts/inner/b.ts',

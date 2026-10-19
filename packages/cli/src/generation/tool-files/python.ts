@@ -118,6 +118,7 @@ function buildRuffFile(context: ToolFileContext): string {
  */
 function buildBasedpyrightFile(context: ToolFileContext): string {
     const { pythonVenv, pythonScopePath, pythonExcludes } = buildPythonInputs(context);
+    const extraPaths = context.selection.view.values.python?.extra_paths ?? [];
     return (
         JSON.stringify(
             {
@@ -125,7 +126,7 @@ function buildBasedpyrightFile(context: ToolFileContext): string {
                 typeCheckingMode: context.level,
                 ...(pythonVenv === undefined ? {} : { venvPath: pythonScopePath, venv: pythonVenv }),
                 include: [pythonScopePath],
-                extraPaths: [pythonScopePath],
+                extraPaths: [pythonScopePath, ...extraPaths.map((path) => posix.join(pythonScopePath, path))],
                 exclude: pythonExcludes('python/basedpyright'),
             },
             null,

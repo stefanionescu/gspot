@@ -53,10 +53,20 @@ function findBoundary(parentFolder: string, folders: readonly string[]): string 
     return ancestors.findLast((ancestor) => folders.some((glob) => isGlobMatch(ancestor, glob)));
 }
 
+// The constant specifier of an import, unless the runtime provides it, such as a module of a host application.
+function readRepositoryImport(
+    node: TSESTree.Node | null | undefined,
+    isExternal: (source: string) => boolean,
+): { node: TSESTree.Node; source: string } | undefined {
+    if (node === null || node === undefined) return undefined;
+    const source = ASTUtils.getStringIfConstant(node);
+    return source === null || isExternal(source) ? undefined : { node, source };
+}
+
 export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'escape'>({
     name: 'import-boundaries',
     meta: {
-        defaultOptions: [{ folders: DEFAULT_FOLDERS, aliases: {} }],
+        defaultOptions: [{ folders: DEFAULT_FOLDERS, aliases: {}, externals: [] }],
         type: 'suggestion',
         fixable: 'code',
         docs: {
@@ -80,6 +90,12 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
                     type: 'object',
                     additionalProperties: { type: 'string' },
                 },
+                externals: {
+                    description:
+                        'Import specifiers, or globs of them, that the runtime provides, such as ../../scripts/app.js in a host application.',
+                    type: 'array',
+                    items: { type: 'string' },
+                },
             }),
         ],
         messages: {
@@ -90,13 +106,14 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
     create(context, [options]) {
         const relative = getLintedPath(context);
         if (relative === undefined) return {};
-        const { folders, aliases } = options;
+        const { folders, aliases, externals } = options;
+        const isExternal = picomatch([...externals], { dot: true });
         const folder = findBoundary(posix.dirname(relative), folders);
         if (folder === undefined) return {};
-        const check = (node: TSESTree.Node | null | undefined): void => {
-            if (!node) return;
-            const source = ASTUtils.getStringIfConstant(node);
-            if (source === null) return;
+        const check = (candidate: TSESTree.Node | null | undefined): void => {
+            const imported = readRepositoryImport(candidate, isExternal);
+            if (imported === undefined) return;
+            const { node, source } = imported;
             const target = computeImportTarget(relative, source);
             if (target === undefined) return;
             if (isWithinFolder(target, folder)) return;
