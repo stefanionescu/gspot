@@ -76,8 +76,6 @@ const IGNORE_IDENTITY_FIELDS = ['check', 'rule', 'reason'] as const;
 const TOML_ASSIGNMENT_FORMAT = { ...TOML_FORMAT, inlineTableStart: 0 } as const;
 const TOML_HEADER_FORMAT = { ...TOML_FORMAT, inlineTableStart: Number.MAX_SAFE_INTEGER } as const;
 const SETTINGS_REFERENCE_URL = 'generativespotting.com/reference/gspot-toml/';
-/** The release notes of a version: this prefix, then `v<version>`. */
-const RELEASE_NOTES_URL = 'https://github.com/stefanionescu/gspot/releases/tag/';
 
 export {
     ROOT_KEYS,
@@ -87,7 +85,6 @@ export {
     FIRST_TABLES,
     RECORD_FIELDS,
     METADATA_PREFIXES,
-    RELEASE_NOTES_URL,
     TOML_HEADER_FORMAT,
     PARSE_CONTEXT_LINES,
     IGNORE_IDENTITY_FIELDS,

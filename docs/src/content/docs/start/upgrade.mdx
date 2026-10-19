@@ -6,8 +6,8 @@ description: Install a new gspot version and update the generated files.
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
 import { SETUP_COMMANDS } from '../../../config/setup.ts';
 
-Commit first, so you can go back. Read the [release notes](https://github.com/stefanionescu/gspot/releases), pick a
-release, such as `1.2.0`, and put it in place of `<version>` below.
+Commit first, so you can go back. Pick a [release](https://github.com/stefanionescu/gspot/releases), such as `1.2.0`,
+and put it in place of `<version>` below.
 
 <Tabs syncKey="package-manager">
     {SETUP_COMMANDS.filter(({ label }) => label !== 'mise').map(({ label, start, lines }) => (
@@ -32,8 +32,8 @@ mise exec -- gspot check
 </Tabs>
 
 `gspot apply` writes the new version to `.gspot/version` and updates the generated files. If it refuses a key of
-`gspot.toml` that the new version renamed or removed, the message names the close keys and links the release notes,
-which list each change. Edit `gspot.toml`, then run `gspot apply` again.
+`gspot.toml` that the new version renamed or removed, the message names the close keys and the gspot version that
+the repository ran before. Edit `gspot.toml`, then run `gspot apply` again.
 
 When `gspot apply` succeeds, review the diff and fix any findings. Then commit the generated files that changed, in `.gspot/` and outside it,
 and either `package.json` with its lockfile or `mise.toml`, together. Commit `gspot.toml` too if you changed it to fix

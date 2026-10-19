@@ -47,7 +47,6 @@ for tag in "${tags[@]}"; do
     git push origin "${tag}"
 done
 
-# GitHub writes the release notes from the commits after the previous release.
 cli_version=$(npm pkg get version --prefix packages/cli)
 cli_version=${cli_version//\"/}
-gh release create "v${cli_version}" --verify-tag --title "v${cli_version}" --generate-notes
+gh release create "v${cli_version}" --verify-tag --title "v${cli_version}" --notes ''

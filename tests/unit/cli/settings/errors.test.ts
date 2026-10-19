@@ -74,16 +74,16 @@ test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {
     ).not.toThrow();
 });
 
-test('a refusal names the release notes when the repository last ran another gspot version', async () => {
+test('a refusal names both versions when the repository last ran another gspot version', async () => {
     await using sandbox = await testdir({ 'gspot.toml': '[hooks]\npsh = "all"\n', '.gspot/version': '0.0.1\n' });
-    const notes = `This repository last ran gspot 0.0.1. The ${packageManifest.version} release notes`;
-    expect(() => readSettings(sandbox.path, createReadCache(sandbox.path))).toThrow(notes);
+    const versions = `This repository last ran gspot 0.0.1, and this run uses ${packageManifest.version}.`;
+    expect(() => readSettings(sandbox.path, createReadCache(sandbox.path))).toThrow(versions);
     await Bun.write(join(sandbox.path, '.gspot/version'), `${packageManifest.version}\n`);
     const current = await captureRejection(
         Promise.try(() => readSettings(sandbox.path, createReadCache(sandbox.path))),
     );
     expect(current).toContain('`psh` is not a gspot.toml setting.');
-    expect(current).not.toContain('release notes');
+    expect(current).not.toContain('last ran gspot');
 });
 
 test('a tool option named reason is passed on and is not a gspot reason', () => {
