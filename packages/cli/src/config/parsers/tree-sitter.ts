@@ -7,6 +7,15 @@ export const LANGUAGE_GRAMMARS: Readonly<Record<string, (typeof GRAMMAR_NAMES)[n
     javascript: 'javascript',
     typescript: 'typescript',
 };
-export const TSX_EXTENSION = '.tsx';
+
+/** The file extensions that each code grammar reads. Shell scripts without an extension use bash too. */
+export const GRAMMAR_EXTENSIONS: Readonly<Record<string, readonly string[]>> = {
+    javascript: ['.js', '.mjs', '.cjs', '.jsx'],
+    typescript: ['.ts', '.mts', '.cts'],
+    tsx: ['.tsx'],
+    python: ['.py', '.pyi'],
+    swift: ['.swift'],
+    bash: ['.sh', '.bash', '.zsh', '.bats'],
+};
 
 export const GRAMMAR_FILE_EXTENSION = '.wasm';

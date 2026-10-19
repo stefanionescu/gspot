@@ -206,3 +206,17 @@ test('sql: qualified SQL function and parameter names use their own declaration 
         { category: 'parameters', name: 'out', line: 5, column: 6 },
     ]);
 });
+
+test.each([
+    ['pyproject.toml', 'python', '[tool.comfy]\nDisplayName = "Live Shopping"\nPublisherId = "acme"\n'],
+    ['setup.cfg', 'python', '[metadata]\nLongName = value\n'],
+    ['package.json', 'javascript', '{"name": "app", "MainEntry": "index.js"}\n'],
+])(
+    'identifiers: the settings file %s of the %s configuration holds no code identifiers',
+    async (path, language, source) => {
+        using resources = new DisposableStack();
+        const context = { reads: createReadCache(process.cwd()), resources };
+        const { identifiers } = await parseIdentifiers(path, source, language, context);
+        expect(identifiers).toStrictEqual([]);
+    },
+);
