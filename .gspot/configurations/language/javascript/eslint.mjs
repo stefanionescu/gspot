@@ -874,7 +874,8 @@ export default [
                     {
                         "category": "import-rule:main",
                         "pattern": [
-                            "packages/cli/src/main.ts"
+                            "packages/cli/src/main.ts",
+                            "packages/cli/src/bin.ts"
                         ]
                     },
                     {

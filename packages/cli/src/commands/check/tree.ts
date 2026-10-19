@@ -173,10 +173,7 @@ export async function checkTree(
         session,
         buildRunOptions(options, { changed, staging, stage, paths }, signal, revision),
     );
-    const reportText = formatRunReport(result.report, {
-        verbose: options.verbose,
-        ...stripUndefined({ hook: options.hook }),
-    });
+    const reportText = formatRunReport(result.report, { verbose: options.verbose });
     const text = result.fixes
         ? `${formatFixes(result.fixes, { isDryRun: options.isDryRun, verbose: options.verbose }).join('\n')}\n${reportText}`
         : reportText;

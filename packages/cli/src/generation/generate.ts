@@ -16,10 +16,10 @@ import { readRootHoldDays } from '#cli/generation/release-holds.ts';
 import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
 import { buildBunScannerEdits } from '#cli/generation/bun-scanner.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { listProjectInstallLines } from '#cli/generation/project-install.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
 import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
+import { usesGitLfs, listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
@@ -192,7 +192,10 @@ function generate(session: Session): GenerationResult {
         ...buildPointerFieldEdits(session, generated.files, toolFiles.targets),
     );
     generated.files.push(
-        ...buildHookFiles(root, settings, session.startRunner, listHookNames(session.configuredChecks)),
+        ...buildHookFiles(root, settings, session.startRunner, {
+            names: listHookNames(session.configuredChecks),
+            usesLfs: usesGitLfs(session.repository.attributes),
+        }),
         // Only Yarn needs the version, which an undeclared package manager reads from the program.
         ...(packageManager === undefined
             ? []

@@ -91,6 +91,21 @@ export const HOOK_PROGRAM = `console.log(JSON.stringify({
 }));
 `;
 
+/** A fake git-lfs or mise that logs its name, arguments, and standard input. */
+export const LOGGING_PROGRAM = String.raw`const fs = require('node:fs');
+const name = require('node:path').basename(process.argv[1], '.js');
+const input = fs.readFileSync(0, 'utf8');
+fs.appendFileSync(process.env.CALLS_LOG, JSON.stringify({ name, argv: process.argv.slice(2), input }) + '\n');
+`;
+
+/** The pre-push hook that git lfs install writes today. */
+export const STOCK_LFS_PRE_PUSH = String.raw`#!/bin/sh
+command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'pre-push' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks')."; exit 2; }
+git lfs pre-push "$@"
+`;
+
+export const LFS_ATTRIBUTES = '*.bin filter=lfs diff=lfs merge=lfs -text\n';
+
 export const SAMPLE_COMMAND =
     'const found = process.argv.slice(1).filter((path) => require("node:fs").readFileSync(path, "utf8").includes("DEFECT")); found.forEach((path) => console.log(path)); process.exitCode = found.length > 0 ? 1 : 0;';
 

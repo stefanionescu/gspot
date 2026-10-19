@@ -96,6 +96,19 @@ test('set and unset change a setting of a configuration that the files select', 
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
 });
 
+test('set names -- when a value reads as an option, and takes the values after --', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([]) });
+    const refused = await runGspot(sandbox.path, ['set', 'ci.setup_command', 'bun', 'install', '--frozen-lockfile']);
+    expect(refused.code).toBe(2);
+    expect(refused.stderr).toContain(
+        "Unknown option '--frozen-lockfile'. To pass a value that starts with -, put -- before the values: gspot set ci.setup_command -- bun install --frozen-lockfile.",
+    );
+    const set = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'bun', 'install', '--frozen-lockfile']);
+    expect(set.code, set.stdout + set.stderr).toBe(0);
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(getValueAt(written, ['ci', 'setup_command'])).toEqual(['bun', 'install', '--frozen-lockfile']);
+});
+
 test.each([
     ['unset level', ['unset', 'level']],
     ['set level recommended', ['set', 'level', 'recommended']],

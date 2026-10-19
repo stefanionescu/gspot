@@ -25,7 +25,7 @@ test('ShellCheck reports dialect findings by shebang and an unchecked cd, and ch
     });
     const applied = await spawnGspot(sandbox.path, ['apply'], environment);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const command = ['check', '--only', 'bash/shellcheck', 'bash/safety', '--json'];
+    const command = ['check', '--only', 'bash/shellcheck,bash/safety', '--json'];
     const checked = await spawnGspot(sandbox.path, command, environment);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;

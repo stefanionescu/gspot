@@ -45,15 +45,7 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     await assertReplacedFiles(root, initialized.stdout);
     expect(initialized.stdout).not.toContain('formatter stdout');
     const checked = await runCommand(
-        [
-            ...consumer.command,
-            'check',
-            '--only',
-            'bash/shellcheck',
-            'dependencies/lockfiles',
-            'format/prettier',
-            '--json',
-        ],
+        [...consumer.command, 'check', '--only', 'bash/shellcheck,dependencies/lockfiles,format/prettier', '--json'],
         consumer.offlineOptions,
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);

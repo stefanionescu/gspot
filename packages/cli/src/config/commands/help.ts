@@ -59,7 +59,8 @@ export const COMMAND_HELP = {
             paths: 'Files or folders to check (default: the whole repository)',
         },
         options: {
-            '--only <checks...>': 'Run only these checks, such as `python/ruff`',
+            '--only <checks>':
+                'Run only these checks, such as `python/ruff`. Separate several with commas, or repeat the option',
             '--staged': 'Check the staged content of the staged files',
             '--changed [ref]':
                 'Check the files changed since ref (default: the upstream branch, else the default branch)',

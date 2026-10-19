@@ -83,7 +83,7 @@ test('typescript/tsc runs a covering parent tsconfig once for nested scopes', as
     await installCompiler(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const command = ['check', '--only', 'typescript/tsconfig', 'typescript/tsc', '--json'];
+    const command = ['check', '--only', 'typescript/tsconfig,typescript/tsc', '--json'];
     const original = await spawnCheckReport(sandbox.path, command);
     expect(original.code, original.stdout + original.stderr).toBe(0);
     const report = original.report;

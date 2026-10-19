@@ -24,8 +24,7 @@ test('file and folder arguments narrow the files each check gets', async () => {
         'src/selected.ts',
         'docs',
         '--only',
-        'sandbox/one',
-        'sandbox/two',
+        'sandbox/one,sandbox/two',
         '--json',
     ]);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
@@ -35,6 +34,73 @@ test('file and folder arguments narrow the files each check gets', async () => {
         expect(new Set(check.findings.map((finding) => finding.message))).toStrictEqual(
             new Set(['docs/guide.md', 'src/selected.ts']),
         );
+});
+
+test('--only repeats and leaves the paths after it as paths', async () => {
+    await using sandbox = await testdir();
+    const entries = ['one', 'two', 'three'].map((name) =>
+        buildReportingCheck({ name: `sandbox/${name}`, paths: ['src/**'], stage: 'commit' }),
+    );
+    await createFileTree(sandbox.path, {
+        'gspot.toml': stringify({ configurations: [], command_check: entries }),
+        'src/selected.ts': 'selected',
+        'src/other.ts': 'other',
+    });
+    const selected = await checkReport(sandbox.path, [
+        'check',
+        '--only',
+        'sandbox/one',
+        'src/selected.ts',
+        '--only',
+        'sandbox/two',
+        '--json',
+    ]);
+    expect(selected.code, selected.stdout + selected.stderr).toBe(1);
+    expect(selected.report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one', 'sandbox/two']);
+    for (const check of selected.report.checks)
+        expect(check.findings.map((finding) => finding.message)).toStrictEqual(['src/selected.ts']);
+    const empty = await checkReport(sandbox.path, ['check', '--only', ',', '--json']);
+    expect(empty.code).toBe(2);
+    expect(empty.stdout + empty.stderr).toContain('Name a check, such as --only python/ruff.');
+});
+
+test('path arguments keep the findings of a project-wide check in the named files', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': stringify({
+            configurations: [],
+            command_check: [
+                {
+                    name: 'sandbox/project',
+                    paths: ['src/**'],
+                    stage: 'commit',
+                    command: [
+                        process.execPath,
+                        '-e',
+                        String.raw`console.log("src/selected.ts:demo:here\nsrc/other.ts:demo:elsewhere\n:demo:fileless"); process.exitCode = 1;`,
+                    ],
+                    output: { format: 'regex', pattern: '^(?<file>[^:]*):(?<rule>[^:]+):(?<message>.*)$' },
+                },
+            ],
+        }),
+        'src/selected.ts': 'selected',
+        'src/other.ts': 'other',
+    });
+    const narrowed = await checkReport(sandbox.path, [
+        'check',
+        'src/selected.ts',
+        '--only',
+        'sandbox/project',
+        '--json',
+    ]);
+    expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
+    expect(narrowed.report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual(['here', 'fileless']);
+    const whole = await checkReport(sandbox.path, ['check', '--only', 'sandbox/project', '--json']);
+    expect(whole.report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual([
+        'here',
+        'elsewhere',
+        'fileless',
+    ]);
 });
 
 test('--staged keeps every stage while --hook pre-commit runs only commit checks', async () => {
@@ -57,8 +123,7 @@ stage = "${name}"
     const staged = await checkReport(sandbox.path, [
         'check',
         '--only',
-        'sandbox/commit',
-        'sandbox/push',
+        'sandbox/commit,sandbox/push',
         '--staged',
         '--json',
     ]);
@@ -71,8 +136,7 @@ stage = "${name}"
     const checked = await checkReport(sandbox.path, [
         'check',
         '--only',
-        'sandbox/commit',
-        'sandbox/push',
+        'sandbox/commit,sandbox/push',
         '--hook',
         'pre-commit',
         '--json',

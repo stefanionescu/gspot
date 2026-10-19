@@ -14,7 +14,6 @@ import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
 import {
     VERBOSITY_CASES,
     NO_COLOR_SETTINGS,
-    CHECK_REPORT_HOOKS,
     FAILED_CHECK_REPORT,
     VERBOSITY_ARGUMENTS,
     CHECK_REPORT_STATUSES,
@@ -163,20 +162,11 @@ test('the report prints planned skips once with their reason only in verbose out
     expect(formatRunReport(skipped, { verbose: false })).toContain('Skipped: 1 check.');
 });
 
-test.each([...CHECK_REPORT_HOOKS])(
-    'a failed $hook report prints each reproduce line once and the hook bypass',
-    ({ hook, command }) => {
-        const text = formatRunReport(FAILED_CHECK_REPORT, { verbose: false, hook: hook });
-        expect(text).toEndWith(`Bypass this hook once: git ${command} --no-verify\n`);
-        expect(text.split('run again: gspot check --only bash/shellcheck')).toHaveLength(2);
-        expect(formatRunReport({ ...FAILED_CHECK_REPORT, checks: [] }, { verbose: false, hook: hook })).toEndWith(
-            `Bypass this hook once: git ${command} --no-verify\n`,
-        );
-        expect(formatRunReport({ ...FAILED_CHECK_REPORT, exitCode: 0 }, { verbose: false, hook: hook })).not.toContain(
-            'Bypass this hook',
-        );
-    },
-);
+test('a failed report prints each reproduce line once and no hook bypass', () => {
+    const text = formatRunReport(FAILED_CHECK_REPORT, { verbose: false });
+    expect(text.split('run again: gspot check --only bash/shellcheck')).toHaveLength(2);
+    expect(text).not.toContain('--no-verify');
+});
 
 test('terminal progress rewrites one status line and log output stays empty', () => {
     const terminal: string[] = [];

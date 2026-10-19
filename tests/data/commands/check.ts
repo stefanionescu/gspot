@@ -52,11 +52,6 @@ const CHECK_REPORT_COMPARISONS = [
     { content: 'commit', header: 'Checked commit main.\n' },
 ] as const;
 
-const CHECK_REPORT_HOOKS = [
-    { hook: 'pre-commit', command: 'commit' },
-    { hook: 'pre-push', command: 'push' },
-] as const;
-
 const CHECK_REPORT_STATUSES = ['passed', 'skipped', 'failed', 'missing', 'error'] as const;
 
 const NO_COLOR_SETTINGS = `configurations = []
@@ -140,7 +135,7 @@ const VERBOSITY_CASES = [
 ] as const;
 
 /** Arguments that run only the failing and the passing check of the output sandbox. */
-const VERBOSITY_ARGUMENTS = ['check', '--only', 'example/findings', 'example/passing', '--changed', 'HEAD'] as const;
+const VERBOSITY_ARGUMENTS = ['check', '--only', 'example/findings,example/passing', '--changed', 'HEAD'] as const;
 
 const PUSH_CHECK_COMMAND = [...PUSH_CHECK_ARGUMENTS, 'origin', 'unused'] as const;
 
@@ -149,7 +144,6 @@ export {
     VERBOSITY_CASES,
     ARGUMENT_REFUSALS,
     NO_COLOR_SETTINGS,
-    CHECK_REPORT_HOOKS,
     PUSH_CHECK_COMMAND,
     FAILED_CHECK_REPORT,
     PUSH_INPUT_REFUSALS,

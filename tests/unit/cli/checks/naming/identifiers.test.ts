@@ -145,7 +145,7 @@ test('identifiers: a banned word is reported in a name, a file name and a folder
         'helper.js': 'export const helperCommand = 1;\n',
         'helper/port.js': 'export const port = 1;\n',
     });
-    const command = ['check', '--only', 'naming/identifiers', 'naming/paths', '--json'];
+    const command = ['check', '--only', 'naming/identifiers,naming/paths', '--json'];
     const refused = await checkReport(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = refused.report;

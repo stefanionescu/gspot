@@ -2,7 +2,6 @@
 
 import { GspotError } from '#cli/system/errors.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
-import { type Command } from '@commander-js/extra-typings';
 import { saveSettings } from '#cli/apply/save-settings.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
@@ -10,13 +9,14 @@ import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/set.ts';
+import { type Command, CommanderError } from '@commander-js/extra-typings';
 import type { Mutation, SettingsEdit } from '#cli/types/settings/edits.ts';
 import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { startSettingsEdit, findSettingDeclaration } from '#cli/commands/edit-settings.ts';
 import { setKey, addToList, findScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
+import { DECIMAL, INTEGER, STRUCTURED, DASH_VALUE_HINT } from '#cli/config/commands/set.ts';
 import { type SetOptions, type ParsedSettingValue } from '#cli/types/commands/edit-settings.ts';
 import type { Settings, KnownSettings, DeclarationMatch, EffectiveSetting } from '#cli/types/settings/values.ts';
 
@@ -206,6 +206,10 @@ export function registerSet(program: Command, onResult: CommandCompletion): void
         .description(COMMAND_HELP.set.description)
         .option('--reason <text>', COMMAND_HELP.set.options['--reason <text>'])
         .option('--scope <path>', COMMAND_HELP.set.options['--scope <path>'], trimTrailingSlashes)
+        .exitOverride((error) => {
+            if (error.code !== 'commander.unknownOption') throw error;
+            throw new CommanderError(error.exitCode, error.code, `${error.message}. ${DASH_VALUE_HINT}`);
+        })
         .action(async (setting, items, flags) => {
             onResult(
                 await runSetCommand({

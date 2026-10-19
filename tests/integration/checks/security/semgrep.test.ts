@@ -127,7 +127,7 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
             sandbox,
             buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
         );
-        const command = ['check', '--only', 'security/semgrep', 'xcode/app-transport-security', '--json'];
+        const command = ['check', '--only', 'security/semgrep,xcode/app-transport-security', '--json'];
         const failed = await spawnCheckReport(sandbox.root, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const findings = listFindingRows(failed.report);

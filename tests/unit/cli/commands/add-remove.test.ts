@@ -42,7 +42,9 @@ configurations = ${JSON.stringify(command === 'add' ? [] : ['bash'])}
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({ changed: true });
     expect(installations).toStrictEqual([]);
-    expect(result.stdout + result.stderr).toContain('Run: gspot install');
+    expect(result.stdout + result.stderr).toContain(
+        'Run gspot install; until then gspot/generated-files fails on the tool lockfile.',
+    );
     const saved = readSettings(sandbox.path, createReadCache(process.cwd())).settings;
     expect(saved.scopes['api']!.configurations).toStrictEqual(command === 'add' ? ['bash'] : []);
     expect(saved.configurations).toStrictEqual(['markdown']);

@@ -61,6 +61,17 @@ test.each(['docs/lychee-external', 'project/audit'])(
     },
 );
 
+test('the manual jobs name every manual check in one comma list', async () => {
+    await using resources = new AsyncDisposableStack();
+    const pipeline = await buildPipeline(resources);
+    const names = pipeline.manualChecks.map(({ check }) => check.name);
+    expect(names.length).toBeGreaterThan(1);
+    const expected = `gspot check --only ${quoteArgument(names.join(','))}`;
+    const github = parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow;
+    expect(github.jobs['manual-linux']!.steps.some((step) => step.run?.includes(expected) === true)).toBe(true);
+    expect(buildGitlabWorkflow(pipeline).content).toContain(expected);
+});
+
 test('only the steps that install tools receive the GitHub token for mise', async () => {
     await using resources = new AsyncDisposableStack();
     const pipeline = await buildPipeline(resources);

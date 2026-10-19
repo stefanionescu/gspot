@@ -4,16 +4,16 @@ import { openSession } from '#cli/session.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/system/git.ts';
-import { readGitOutput } from '#tests/setup/git.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { listHookNames } from '#cli/generation/hooks.ts';
-import { HOOK_REPOSITORIES } from '#tests/data/hooks.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { installHooks, readHookStatus } from '#cli/install/hooks.ts';
 import { matchItems, matchSubstring } from '#tests/setup/matchers.ts';
+import { readGitOutput, createLfsRepository } from '#tests/setup/git.ts';
+import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH } from '#tests/data/hooks.ts';
 
 test.each([...HOOK_REPOSITORIES])(
     'a repository with $name keeps its hooks and gets the lines to add',
@@ -35,11 +35,7 @@ test.each([...HOOK_REPOSITORIES])(
         const authored = await Promise.all(
             authoredPaths.map(async (path) => ({ path, content: await Bun.file(join(sandbox.path, path)).text() })),
         );
-        {
-            using log = openWriter(sandbox.path);
-            const session = await openSession(sandbox.path);
-            writeGeneratedFiles(session, generate(session), log);
-        }
+        await writeGenerated(sandbox.path);
 
         const steps: (readonly string[])[] = [];
         const text = installHooks(await readHookContext(sandbox.path), steps);
@@ -132,6 +128,29 @@ test('a nested gspot.toml reads other hooks from the repository Git hooks folder
     expect(absent.text).toContain('gspot check --hook pre-commit');
     expect(readGitSetting(root, 'core.hooksPath')).toBe('.githooks');
 });
+
+test('the hooks that git lfs install wrote are not other hooks, so install points Git at the gspot hooks', async () => {
+    await using sandbox = await createLfsRepository();
+    await Bun.write(join(sandbox.path, '.git/hooks/pre-push'), STOCK_LFS_PRE_PUSH);
+    await Bun.write(
+        join(sandbox.path, '.git/hooks/post-merge'),
+        STOCK_LFS_PRE_PUSH.replaceAll('pre-push', 'post-merge'),
+    );
+    await writeGenerated(sandbox.path);
+    const steps: (readonly string[])[] = [];
+    expect(installHooks(await readHookContext(sandbox.path), steps)).toBe('set core.hooksPath to .gspot/hooks');
+    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe('.gspot/hooks');
+    expect(await Bun.file(join(sandbox.path, '.gspot/hooks/post-merge')).text()).toContain('git lfs post-merge "$@"');
+    await Bun.write(join(sandbox.path, '.git/hooks/post-merge'), '#!/bin/sh\ngit lfs post-merge "$@"\necho custom\n');
+    readGitOutput(sandbox.path, ['config', '--unset', 'core.hooksPath']);
+    expect(installHooks(await readHookContext(sandbox.path), [])).toContain('hooks already run from .git/hooks');
+});
+
+async function writeGenerated(root: string): Promise<void> {
+    using log = openWriter(root);
+    const session = await openSession(root);
+    writeGeneratedFiles(session, generate(session), log);
+}
 
 async function readHookContext(root: string) {
     const { settingsFile, repository, startRunner, configuredChecks } = await openSession(root);

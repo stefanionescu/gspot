@@ -3,7 +3,6 @@ import { formatCount } from '#cli/system/text.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { warn, getColors } from '#cli/system/terminal.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { Finding, RunReport, FixReport, CheckResult, CheckProgress } from '#cli/types/runs/check.ts';
 
 import {
@@ -148,14 +147,10 @@ function formatComparison(comparison: RunReport['comparison']): string {
  * @param report the check results and totals.
  * @param options how to show the report.
  * @param options.verbose whether to show passing checks and full tool output.
- * @param options.hook pre-commit, pre-push, or commit-msg, when Git started the run.
  * @returns the check lines and the summary.
  */
-export function formatRunReport(
-    report: RunReport,
-    options: { verbose: boolean; hook?: (typeof CHECK_HOOKS)[number] },
-): string {
-    const { verbose, hook } = options;
+export function formatRunReport(report: RunReport, options: { verbose: boolean }): string {
+    const { verbose } = options;
     const checks = report.checks.filter(
         (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
     );
@@ -166,8 +161,6 @@ export function formatRunReport(
         formatSummary(report),
         `Time: ${formatSeconds(report.duration)}. Exit code ${String(report.exitCode)}.`,
     );
-    if (hook !== undefined && report.exitCode !== 0)
-        lines.push(`Bypass this hook once: git ${hook === 'pre-push' ? 'push' : 'commit'} --no-verify`);
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;
 }
 

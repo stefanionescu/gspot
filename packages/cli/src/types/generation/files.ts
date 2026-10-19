@@ -2,8 +2,8 @@ import type { Session } from '#cli/types/planning.ts';
 import type { FileEdit } from '#cli/types/ownership.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
-import type { RUNNERS, CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
+import type { RUNNERS, LFS_HOOKS, CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { Level, Manifest, ToolDeclaration, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 type ManagedBlock = { path: string; block: string; style: BlockStyle };
@@ -71,6 +71,9 @@ export type TyposDictionary = {
 export type TyposSettings = { default?: TyposDictionary; type?: Record<string, TyposDictionary> };
 
 export type HookName = (typeof CHECK_HOOKS)[number];
+
+/** A hook that git lfs install writes. */
+export type LfsHookName = (typeof LFS_HOOKS)[number];
 
 export type NpmProjectInputs = {
     root: string;

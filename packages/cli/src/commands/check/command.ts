@@ -16,10 +16,11 @@ import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { copyRevision } from '#cli/runs/scratch-copy/revision.ts';
-import { Option, type Command } from '@commander-js/extra-typings';
+import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import type { CheckResult, CheckProgress } from '#cli/types/runs/check.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
 import { type CheckFlags, type CheckOptions, type CheckCommandJson } from '#cli/types/commands/check.ts';
 
 // Read the pre-push lines from standard input until the signal stops the run.
@@ -37,6 +38,16 @@ async function readPushInput(signal: AbortSignal): Promise<string> {
             throw new GspotError('git', 'Git sent pre-push input that is not UTF-8 text.', { cause: error });
         throw error;
     }
+}
+
+// Collect the check IDs of every --only value. A value holds one ID, or several separated by commas.
+function collectChecks(value: string, previous: string[] | undefined): string[] {
+    const checks = value
+        .split(CHECK_LIST_SEPARATOR)
+        .map((check) => check.trim())
+        .filter((check) => check !== '');
+    if (checks.length === 0) throw new InvalidArgumentError('Name a check, such as --only python/ruff.');
+    return [...(previous ?? []), ...checks];
 }
 
 function getChangedBase(changed: CheckFlags['changed']): string | undefined {
@@ -211,7 +222,7 @@ export function registerCheck(program: Command, onResult: CommandCompletion): vo
         .argument('[paths...]', COMMAND_HELP.check.arguments['paths'])
         .summary(COMMAND_HELP.check.summary)
         .description(COMMAND_HELP.check.description)
-        .option('--only <checks...>', COMMAND_HELP.check.options['--only <checks...>'])
+        .option('--only <checks>', COMMAND_HELP.check.options['--only <checks>'], collectChecks)
         .option('--staged', COMMAND_HELP.check.options['--staged'])
         .option('--changed [ref]', COMMAND_HELP.check.options['--changed [ref]'])
         .option('--fix', COMMAND_HELP.check.options['--fix'])

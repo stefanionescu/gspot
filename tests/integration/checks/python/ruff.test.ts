@@ -187,7 +187,7 @@ test('Ruff alone reports an unused import, and basedpyright still reports the ty
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
     await runSandboxStep(sandbox.path, ['apply'], {}, 'apply');
-    const command = ['check', '--only', 'python/ruff', 'python/basedpyright', '--json'];
+    const command = ['check', '--only', 'python/ruff,python/basedpyright', '--json'];
     const checked = await spawnGspot(sandbox.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;

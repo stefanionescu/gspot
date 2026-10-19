@@ -1,15 +1,32 @@
-import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { join, resolve, relative } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { HOOKS_PATH } from '#cli/config/system/locations.ts';
 import { readHooks } from '#cli/repository/existing-tools.ts';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { HOOK_ARGUMENTS } from '#cli/config/generation/hooks.ts';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/hooks.ts';
 import type { ExistingTools } from '#cli/types/repository/inventory.ts';
 import type { HookPlan, HookStatus, HookContext } from '#cli/types/install.ts';
 import { readGitPrefix, readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
 import { HOOK_COMMAND, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install.ts';
+
+import {
+    LFS_HOOKS,
+    HOOK_SHEBANG,
+    LFS_PUSH_CALLS,
+    HOOK_ARGUMENTS,
+    LFS_GUARD_PREFIX,
+} from '#cli/config/generation/hooks.ts';
+
+// Check whether git lfs install wrote a hook: a shebang, an optional git-lfs guard, and the git lfs call.
+// The hooks of gspot run Git Large File Storage (LFS) themselves.
+function isLfsHook(folder: string, name: string): boolean {
+    if (!(LFS_HOOKS as readonly string[]).includes(name)) return false;
+    const lines = readFileSync(join(folder, name), 'utf8').trim().split(/\r?\n/u);
+    const call = lines.at(-1) ?? '';
+    const isCall = call === `git lfs ${name} "$@"` || (name === 'pre-push' && LFS_PUSH_CALLS.has(call));
+    return lines[0] === HOOK_SHEBANG && isCall && lines.slice(1, -1).every((line) => line.startsWith(LFS_GUARD_PREFIX));
+}
 
 // Find the hooks that another setup in this clone runs: another hooks folder, a hook tool,
 // or scripts in the default Git hooks folder.
@@ -18,7 +35,7 @@ function readForeignHooks(root: string, own: string): ExistingTools['hooks'] {
     const folder = readHooksFolder(root);
     if (readGitSetting(root, HOOKS_PATH_SETTING) !== undefined || !existsSync(folder)) return found;
     const scripts = readdirSync(folder, { withFileTypes: true }).filter(
-        (entry) => entry.isFile() && !entry.name.endsWith(SAMPLE_HOOK_SUFFIX),
+        (entry) => entry.isFile() && !entry.name.endsWith(SAMPLE_HOOK_SUFFIX) && !isLfsHook(folder, entry.name),
     );
     return scripts.length === 0
         ? found

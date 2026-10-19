@@ -55,7 +55,7 @@ test('safety: the Bash contract and safety agree on the specific temporary path 
     });
     commitAll(sandbox.path);
     await markExecutable(sandbox.path, 'source.sh');
-    const command = ['check', '--only', 'bash/script-layout', 'bash/safety', '--json'];
+    const command = ['check', '--only', 'bash/script-layout,bash/safety', '--json'];
     const wrong = await checkReport(sandbox.path, command);
     expect(wrong.code, wrong.stdout + wrong.stderr).toBe(1);
     expect(

@@ -9,6 +9,7 @@ import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import { findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
@@ -188,7 +189,7 @@ function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
                                                 : [
                                                       `(cd ${DOT_GSPOT} && mise install ${manual.tools.map((element) => quoteArgument(element)).join(' ')})`,
                                                   ]),
-                                            `${buildGspotCommand(pipeline)} check --only ${manual.checks.map((element) => quoteArgument(element)).join(' ')}`,
+                                            `${buildGspotCommand(pipeline)} check --only ${quoteArgument(manual.checks.join(CHECK_LIST_SEPARATOR))}`,
                                         ].join('\n') + '\n',
                                 },
                             }),
@@ -230,7 +231,7 @@ function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
                     : [
                           `        (cd ${DOT_GSPOT} && mise install ${manual.tools.map((element) => quoteArgument(element)).join(' ')})`,
                       ]),
-                `        ${command} check --only ${manual.checks.map((element) => quoteArgument(element)).join(' ')}`,
+                `        ${command} check --only ${quoteArgument(manual.checks.join(CHECK_LIST_SEPARATOR))}`,
                 '        ;;',
             ];
         }),

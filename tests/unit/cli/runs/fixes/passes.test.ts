@@ -170,9 +170,7 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
     const fixed = await checkReport(sandbox.path, [
         'check',
         '--only',
-        'sandbox/first',
-        'sandbox/second',
-        'sandbox/third',
+        'sandbox/first,sandbox/second,sandbox/third',
         '--fix',
         '--json',
     ]);

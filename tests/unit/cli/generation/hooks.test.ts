@@ -4,7 +4,6 @@ import { openSession } from '#cli/session.ts';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { chmod, realpath } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { readGitOutput } from '#tests/setup/git.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
@@ -13,7 +12,8 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectRunner, buildHookFiles } from '#cli/generation/hooks.ts';
-import { HOOK_CASES, HOOK_PROGRAM, START_COMMANDS, HOOK_LEVEL_CASES } from '#tests/data/hooks.ts';
+import { readGitOutput, createLfsRepository } from '#tests/setup/git.ts';
+import { HOOK_CASES, HOOK_PROGRAM, START_COMMANDS, LOGGING_PROGRAM, HOOK_LEVEL_CASES } from '#tests/data/hooks.ts';
 
 /** Build new settings with hooks on, for each script run. */
 function buildHookSettings(): Settings {
@@ -28,12 +28,10 @@ test('a repository at the Git top level gets hooks that change no folder', async
     await using sandbox = await testdir();
     readGitOutput(sandbox.path, ['init', '-q']);
     const settings = buildHookSettings();
-    const files = buildHookFiles(
-        sandbox.path,
-        settings,
-        await selectRunner(sandbox.path),
-        HOOK_CASES.map(([name]) => name),
-    );
+    const files = buildHookFiles(sandbox.path, settings, await selectRunner(sandbox.path), {
+        names: HOOK_CASES.map(([name]) => name),
+        usesLfs: false,
+    });
     expect(files).toHaveLength(3);
     for (const file of files) expect(file.content).not.toContain('\ncd ');
 });
@@ -66,12 +64,10 @@ test.each(START_COMMANDS)(
                 }),
             );
         const settings = buildHookSettings();
-        const files = buildHookFiles(
-            root,
-            settings,
-            await selectRunner(root),
-            HOOK_CASES.map(([name]) => name),
-        );
+        const files = buildHookFiles(root, settings, await selectRunner(root), {
+            names: HOOK_CASES.map(([name]) => name),
+            usesLfs: false,
+        });
         expect(files.map((file) => file.path)).toStrictEqual(HOOK_CASES.map(([name]) => `.gspot/hooks/${name}`));
         await fakeTool(sandbox.path, `bin/${program}`, HOOK_PROGRAM);
         const cwd = await realpath(join(sandbox.path, "app's dir"));
@@ -106,12 +102,10 @@ test('a hook says how to install mise when mise is missing', async () => {
     await using sandbox = await testdir();
     readGitOutput(sandbox.path, ['init', '-q']);
     const settings = buildHookSettings();
-    const hook = buildHookFiles(
-        sandbox.path,
-        settings,
-        await selectRunner(sandbox.path),
-        HOOK_CASES.map(([name]) => name),
-    ).find((file) => file.path.endsWith('pre-push'))!;
+    const hook = buildHookFiles(sandbox.path, settings, await selectRunner(sandbox.path), {
+        names: HOOK_CASES.map(([name]) => name),
+        usesLfs: false,
+    }).find((file) => file.path.endsWith('pre-push'))!;
     const path = join(sandbox.path, 'pre-push');
     await Bun.write(path, hook.content);
     await chmod(path, 0o755);
@@ -123,4 +117,54 @@ test('a hook says how to install mise when mise is missing', async () => {
     });
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stderr).toContain('mise is not installed. Install mise, then run: mise install.');
+});
+
+test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {
+    await using sandbox = await createLfsRepository();
+    const hooks = generate(await openSession(sandbox.path)).files.filter((file) => file.kind === 'hook');
+    expect(hooks.map((file) => file.path)).toStrictEqual(
+        ['post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'].map((name) => `.gspot/hooks/${name}`),
+    );
+    const bin = await fakeTool(sandbox.path, 'bin/git-lfs', LOGGING_PROGRAM);
+    await fakeTool(sandbox.path, 'bin/mise', LOGGING_PROGRAM);
+    const log = join(sandbox.path, 'calls.jsonl');
+    const environment = { PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`, CALLS_LOG: log };
+    for (const hook of hooks) {
+        const path = join(sandbox.path, hook.path);
+        await Bun.write(path, hook.content);
+        await chmod(path, 0o755);
+    }
+    const shExecutable = Bun.which('sh')!;
+    const input = 'refs/heads/main 123 refs/heads/main 456\n';
+    const pushed = await runCommand([shExecutable, join(sandbox.path, '.gspot/hooks/pre-push'), 'origin', 'url'], {
+        cwd: sandbox.path,
+        env: environment,
+        stdin: input,
+    });
+    expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
+    const checkedOut = await runCommand(
+        [shExecutable, join(sandbox.path, '.gspot/hooks/post-checkout'), 'a', 'b', '1'],
+        {
+            cwd: sandbox.path,
+            env: environment,
+            stdin: '',
+        },
+    );
+    expect(checkedOut.code, checkedOut.stdout + checkedOut.stderr).toBe(0);
+    const logged = await Bun.file(log).text();
+    const calls = logged
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as unknown);
+    expect(calls).toStrictEqual([
+        { name: 'git-lfs', argv: ['pre-push', 'origin', 'url'], input },
+        { name: 'mise', argv: ['exec', '--', 'gspot', 'check', '--hook', 'pre-push', '--', 'origin', 'url'], input },
+        { name: 'git-lfs', argv: ['post-checkout', 'a', 'b', '1'], input: '' },
+    ]);
+    const missing = await runCommand([shExecutable, join(sandbox.path, '.gspot/hooks/post-merge'), '0'], {
+        cwd: sandbox.path,
+        env: { PATH: join(sandbox.path, 'empty') },
+        stdin: '',
+    });
+    expect(missing.code, missing.stdout + missing.stderr).toBe(0);
 });

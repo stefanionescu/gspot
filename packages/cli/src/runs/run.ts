@@ -105,8 +105,18 @@ function dropIgnoredFindings(result: CheckResult, uses: Map<IgnoreRecord, Ignore
     result.status = result.findings.length > 0 ? 'failed' : 'passed';
 }
 
+// A project-wide check reads the whole project; path arguments keep the findings in the named files and those without a file.
+function dropOutsideFindings(result: CheckResult, options: RunOptions): void {
+    if (options.paths === undefined || options.staged !== undefined) return;
+    const paths = new Set(options.paths);
+    result.findings = result.findings.filter((finding) => finding.file === '' || paths.has(finding.file));
+}
+
 function filterResult(runState: RunState, result: CheckResult): void {
-    if (RAN_STATUSES.has(result.status)) dropIgnoredFindings(result, runState.uses);
+    if (RAN_STATUSES.has(result.status)) {
+        dropOutsideFindings(result, runState.options);
+        dropIgnoredFindings(result, runState.uses);
+    }
     if (FAILED_STATUSES.has(result.status))
         result.reproduce = formatReproduceCommand(result.check, result.scope, {
             ...(runState.options.messageFile === undefined ? {} : { messageFile: runState.options.messageFile }),

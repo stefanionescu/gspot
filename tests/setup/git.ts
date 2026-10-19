@@ -1,13 +1,14 @@
 // Creates test commits and reads Git output.
 import { join } from 'node:path';
-import { createFileTree } from 'testdirs';
 import { isWindows } from '#tests/setup/system.ts';
+import { LFS_ATTRIBUTES } from '#tests/data/hooks.ts';
 import { stat, chmod, writeFile } from 'node:fs/promises';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { NESTED_SCOPE_FILES } from '#tests/data/runs/scratch-copies.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 
@@ -145,4 +146,19 @@ export async function prepareAppliedBashRepository(sourceRoot: string): Promise<
     const applied = await runRegisteredCommand(sourceRoot, ['apply']);
     if (applied.exitCode !== 0) throw new Error(`Sandbox apply failed: ${applied.text}`);
     commitAll(sourceRoot);
+}
+
+/**
+ * Create a committed repository with hooks on and one file that Git Large File Storage (LFS) stores.
+ * @returns the sandbox, which removes itself on disposal.
+ */
+export async function createLfsRepository(): Promise<TestdirResult> {
+    const sandbox = await testdir({
+        'gspot.toml': buildSettingsText([], { tables: '[hooks]\nenabled = true\n' }),
+        '.gitattributes': LFS_ATTRIBUTES,
+        'asset.bin': 'binary',
+    });
+    readGitOutput(sandbox.path, ['init', '-q']);
+    commitAll(sandbox.path);
+    return sandbox;
 }
