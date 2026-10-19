@@ -92,6 +92,40 @@ test('deptry counts python.externals as first party beside the known_first_party
     expect(firstParty).toStrictEqual(['nodes', 'folder_paths', 'comfy']);
 });
 
+test('vulture reads every Python file of the scope and reports unused definitions and unreachable code only', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['python'], { level: 'all', tables: '[[scope]]\npath = "child"\n' }),
+        'app/nodes.py': 'def helper():\n    return 1\n',
+        'app/main.py': 'import os\n',
+        'child/other.py': 'VALUE = 1\n',
+        [join(buildVenvBinPath('.gspot/.venv'), 'vulture')]: 'fixture',
+    });
+    const session = await openSession(sandbox.path);
+    using resources = fakePinnedExecutables([getToolDeclaration(session.manifests.values(), 'vulture')]);
+    const output = [
+        "app/main.py:1: unused import 'os' (90% confidence)",
+        "app/nodes.py:1: unused function 'helper' (60% confidence)",
+        "app/nodes.py:3: unreachable code after 'return' (100% confidence)",
+        "app/nodes.py:4: unused variable 'value' (60% confidence)",
+    ].join('\n');
+    const executed = resources.use(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),
+    );
+    const checked = await checkReport(sandbox.path, ['check', '--only', 'python/vulture', '--json']);
+    const findings = checked.report.checks.flatMap((check) => check.findings);
+    expect(findings.map(({ file, line, rule, name }) => ({ file, line, rule, name }))).toStrictEqual([
+        { file: 'app/nodes.py', line: 1, rule: 'unused-function', name: 'helper' },
+        { file: 'app/nodes.py', line: 3, rule: 'unreachable-code', name: undefined },
+    ]);
+    const command = executed.mock.calls
+        .map(([entry]) => entry)
+        .find((entry) => entry.some((part) => part.endsWith('vulture')))!;
+    expect(command.slice(1).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        'app/main.py',
+        'app/nodes.py',
+    ]);
+});
+
 test('import-linter skips a project without contracts', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

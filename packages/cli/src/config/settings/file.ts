@@ -100,4 +100,4 @@ export {
 export const SETTINGS_COMMANDS = ['set', 'unset', 'add', 'remove', 'ignore', 'unignore'] as const;
 
 /** The checks whose findings name a function, so that an [[ignore]] can list the names it covers. */
-export const NAMED_FINDING_CHECKS: ReadonlySet<string> = new Set(['structure/trivial-functions']);
+export const NAMED_FINDING_CHECKS: ReadonlySet<string> = new Set(['structure/trivial-functions', 'python/vulture']);

@@ -56,3 +56,18 @@ test('tools.eslint.plugins loads your plugin by its path and turns its rules on 
         'tools.eslint.plugins: gspot is the rule prefix of a plugin that gspot loads. Choose another name.',
     );
 });
+
+test.each(['recommended', 'all'] as const)(
+    'basedpyright reports import cycles and implicit overrides at level all only (%s)',
+    async (level) => {
+        const config = JSON.parse(
+            await generateFile(
+                buildSettingsText(['python'], { level }),
+                '.gspot/configurations/language/python/basedpyright.json',
+                { 'main.py': 'VALUE = 1\n' },
+            ),
+        ) as Record<string, unknown>;
+        const expected = level === 'all' ? 'error' : 'none';
+        expect([config['reportImportCycles'], config['reportImplicitOverride']]).toStrictEqual([expected, expected]);
+    },
+);

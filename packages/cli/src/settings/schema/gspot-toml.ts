@@ -55,7 +55,7 @@ const ignoreSchema = z
             context.addIssue({
                 code: 'custom',
                 path: ['names'],
-                message: `names applies only to ${[...NAMED_FINDING_CHECKS].join(', ')}, whose findings name a function.`,
+                message: `names applies only to ${new Intl.ListFormat('en', { type: 'conjunction' }).format(NAMED_FINDING_CHECKS)}, whose findings name a definition.`,
             });
         if (entry.check !== undefined) return;
         if (entry.paths === undefined || entry.paths.length === 0)

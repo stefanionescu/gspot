@@ -11,6 +11,7 @@ import { checkDeptry } from '#cli/checks/python/deptry.ts';
 import { checkSiteBuild } from '#cli/checks/site/build.ts';
 import { checkBashSafety } from '#cli/checks/bash/safety.ts';
 import { checkLockfiles } from '#cli/checks/dependencies.ts';
+import { checkVulture } from '#cli/checks/python/vulture.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { checkCommitlintPushed } from '#cli/checks/commits.ts';
 import { checkAllowedLicenses } from '#cli/checks/licenses.ts';
@@ -42,6 +43,7 @@ import { checkLargeFiles, checkLocalFiles } from '#cli/checks/repository.ts';
 import { checkTsc, checkJavascriptTsc } from '#cli/checks/typescript/tsc.ts';
 import { checkTypescriptTsconfig } from '#cli/checks/typescript/tsconfig.ts';
 import { checkForeignKeyIndexes } from '#cli/checks/postgres/foreign-keys.ts';
+import { checkPythonFunctionSize } from '#cli/checks/python/function-size.ts';
 import { checkSharedPrefixes } from '#cli/checks/structure/shared-prefixes.ts';
 import { checkBashUnreadArguments } from '#cli/checks/bash/unread-arguments.ts';
 import { checkBashUnusedFunctions } from '#cli/checks/bash/unused-functions.ts';
@@ -175,6 +177,8 @@ const CHECK_IMPLEMENTATIONS = {
     'bash/shellcheck': { run: checkShellcheck },
     'python/pydoclint': { run: checkPydoclint },
     'python/deptry': { run: checkDeptry },
+    'python/vulture': { check: checkVulture },
+    'python/function-size': { check: checkPythonFunctionSize },
     'github-actions/actionlint': { run: checkActionlint },
 } satisfies CheckImplementations;
 

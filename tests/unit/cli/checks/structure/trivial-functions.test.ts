@@ -110,7 +110,7 @@ test('an ignore with names keeps those functions out of the findings, and only t
     const refused = await runGspot(sandbox.path, ['check', '--json']);
     expect(refused.code).toBe(2);
     expect(refused.stdout + refused.stderr).toContain(
-        'names applies only to structure/trivial-functions, whose findings name a function.',
+        'names applies only to structure/trivial-functions and python/vulture, whose findings name a definition.',
     );
 });
 

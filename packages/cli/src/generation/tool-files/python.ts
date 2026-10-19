@@ -13,7 +13,13 @@ import { PROJECT_UV_LOCKFILE } from '#cli/config/system/locations.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 import { buildGlobSections, buildIgnoreSections } from '#cli/generation/ignore-files.ts';
 import { type PythonInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
-import { RUFF_ISORT, RUFF_IGNORED_RULES, BASEDPYRIGHT_OPTIONS } from '#cli/config/generation/python.ts';
+
+import {
+    RUFF_ISORT,
+    RUFF_IGNORED_RULES,
+    BASEDPYRIGHT_OPTIONS,
+    BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
+} from '#cli/config/generation/python.ts';
 
 /**
  * Resolve the Python paths for the type checker and the linter.
@@ -123,6 +129,7 @@ function buildBasedpyrightFile(context: ToolFileContext): string {
         JSON.stringify(
             {
                 ...BASEDPYRIGHT_OPTIONS,
+                ...(context.level === 'all' ? BASEDPYRIGHT_ALL_LEVEL_OPTIONS : {}),
                 typeCheckingMode: context.level,
                 ...(pythonVenv === undefined ? {} : { venvPath: pythonScopePath, venv: pythonVenv }),
                 include: [pythonScopePath],

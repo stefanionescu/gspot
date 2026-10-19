@@ -99,6 +99,12 @@ name = "deptry"
 pypi = "deptry"
 version = "0.25.1"
 
+[[tool]]
+mise = "pipx:vulture"
+name = "vulture"
+pypi = "vulture"
+version = "2.16"
+
 [ruff]
 recommended = [
     "A",
@@ -432,6 +438,30 @@ stage = "push"
 summary = "Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones."
 tool = ["uv", "deptry"]
 why = "An import that works through somebody else's dependency breaks the day they drop it."
+
+[[check]]
+example = "A function that no Python file of the scope calls reports `unused-function`. Delete it. A hook that a framework calls by name gets an ignore with `names`."
+files = { extensions = [".py"] }
+help = "Delete the unused definition or the unreachable code. For a definition that a framework uses by name, run `gspot ignore python/vulture --names <name> --reason \"<why>\"`."
+level = "all"
+name = "vulture"
+runs = "scope"
+stage = "push"
+summary = "Finds functions, classes, methods, attributes, and properties that no Python file of the scope uses, and code that never runs."
+tool = "vulture"
+why = "Code that nothing calls still costs a reader time and still has to compile and pass review."
+
+[[check]]
+example = "A Python function of 80 code lines reports `function-lines` at the default limit of 60. Split it into functions that each do one job."
+files = { extensions = [".py"] }
+help = "Split the function by responsibility, or raise `limits.python.function_lines` with a reason."
+level = "all"
+name = "function-size"
+runs = "scope"
+settings = ["limits.function_lines"]
+stage = "commit"
+summary = "Checks the code line count of each Python function against `limits.function_lines`."
+why = "A long function does more than one job, and a reader has to hold all of it at once."
 
 [[check]]
 example = "A `requirements.txt` kept by hand beside a locked project reports a second dependency list. Export it from the lockfile, declare it generated, and install from the lock."

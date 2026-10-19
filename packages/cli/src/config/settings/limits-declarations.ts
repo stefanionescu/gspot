@@ -10,7 +10,7 @@ export const LIMITS_DECLARATIONS = {
         configurations: ['structure'],
         description: 'The most lines one function may have.',
         reason_needed: 'raising',
-        languages: ['typescript', 'javascript', 'swift', 'bash'],
+        languages: ['typescript', 'javascript', 'python', 'swift', 'bash'],
         language_defaults: { bash: 40 },
     },
     'limits.function_parameters': {
