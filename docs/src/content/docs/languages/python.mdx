@@ -19,6 +19,54 @@ your project. basedpyright and pytest read the `.venv` of the project, so sync i
 uv sync
 ```
 
+gspot names its pinned Python on every uv call. A `.python-version` file or a `UV_PYTHON` variable in the repository
+leaves the tool environment alone, and your project keeps its own pin.
+
+## Quotes
+
+Ruff formats Python strings with double quotes. Your `format.quotes` value covers every language, so set it to keep
+single quotes in Python:
+
+```shell
+gspot set format.quotes single
+```
+
+## Modules from outside the project
+
+Name the modules that a host application provides at run time in `python.externals`, so deptry and
+`structure/import-rules` skip them:
+
+```toml
+[python]
+externals = { value = ["folder_paths", "comfy"], reason = "ComfyUI provides these modules at run time." }
+```
+
+`python.extra_paths` adds folders inside the scope where basedpyright looks for imports. For a host outside the
+repository, add a `.pth` file to the `site-packages` folder of `.venv` that lists the host folder. Python and
+basedpyright read the folder paths of a `.pth` file, as they do for an editable install:
+
+```shell
+echo "$HOME/ComfyUI" > .venv/lib/<python-folder>/site-packages/comfyui.pth
+```
+
+Here `<python-folder>` names the Python of the environment, such as `python3.12`.
+
+## Import rules
+
+`[[import_rule]]` records apply to Python imports too; [Import rules](/configure/import-rules/#python) shows how
+gspot finds each module.
+
+## Unused code and long functions
+
+At level `all`, `python/vulture` finds functions, classes, and attributes that no file of the scope uses, and code that
+never runs. A framework can call a definition by name; record it with a reason:
+
+```shell
+gspot ignore python/vulture --names execute --reason "ComfyUI calls the execute method of each node."
+```
+
+`python/function-size` checks each function against `limits.function_lines`.
+
 ## Docstring style
 
 pydoclint takes its docstring style from the first source that sets one:

@@ -8,11 +8,15 @@ documentation and comments. gspot selects both in every repository.
 
 ## Spelling
 
-typos checks American English by default. `spelling.locale` accepts `en`, `en-us`, `en-gb`, `en-ca`, and `en-au`:
+By default, `spelling.locale` holds `en`: typos reports real misspellings and accepts every English dialect. To ask
+for one dialect, pick `en-us`, `en-gb`, `en-ca`, or `en-au`:
 
 ```shell
 gspot set spelling.locale en-gb
 ```
+
+The check then reports the spellings of other dialects too. `gspot check --fix` corrects only real misspellings, and
+leaves a dialect spelling for you to change.
 
 To accept a word, add it with a reason:
 

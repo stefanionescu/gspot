@@ -69,6 +69,24 @@ Your own JSX setting stays; without one, the generated project uses `jsx: "prese
 Bundler resolution when imports without extensions name JavaScript source files. Ambient types come from the source
 project, including your own type roots.
 
+## Import extensions
+
+`tools.eslint.import_extension` decides how a relative import of a code file ends: `js`, `ts`, or `extensionless`.
+`gspot init` picks it from the project:
+
+| Project                                                                                  | Style           |
+| ---------------------------------------------------------------------------------------- | --------------- |
+| The tsconfig sets `allowImportingTsExtensions` or `rewriteRelativeImportExtensions`      | `ts`            |
+| The tsconfig uses `Bundler` resolution, or the project depends on a bundler such as Vite | `extensionless` |
+| Any other project                                                                        | `js`            |
+
+A framework configuration that chooses a style wins over the project. An import of another file, such as
+`./theme.css` or `./data.json`, keeps its extension. `.mjs` files, `.cjs` files, and Node.js shebang scripts always
+import the full file name, because Node.js needs it, and they take aliases only from the `imports` of `package.json`.
+
+For modules that a host application provides at run time, such as `../../scripts/app.js`, see
+[modules that the host provides](/configure/import-rules/#modules-that-the-host-provides).
+
 ## Next.js
 
 The Next.js configuration runs `nextjs/tsc` instead of `typescript/tsc`, at level `recommended` and stage `push`. The

@@ -22,7 +22,7 @@ You need Node.js 22.12 or newer and ESLint 9.38.0 or newer with a flat config fi
 ## Use
 
 Add a plugin config to `eslint.config.mjs`. `recommended` turns on `gspot/no-client-env`; `all` turns on every
-lint rule except `gspot/require-server-only`.
+lint rule except `gspot/require-server-only` and `gspot/no-magic-numbers`.
 
 ```javascript
 import gspot from '@gspothq/eslint-plugin';
@@ -39,16 +39,17 @@ src/orders.js
 
 ## Rules
 
-| Rule                           | In          | What it finds                                                                     |
-| ------------------------------ | ----------- | --------------------------------------------------------------------------------- |
-| `gspot/no-client-env`          | recommended | Private environment reads in client modules.                                      |
-| `gspot/no-comments-in-imports` | all         | Comments inside or right after the import block.                                  |
-| `gspot/import-boundaries`      | all         | Relative imports that leave the nearest boundary folder.                          |
-| `gspot/no-alias-exports`       | all         | Exported constants that only rename another value.                                |
-| `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.    |
-| `gspot/no-trivial-files`       | all         | Files with only forwarding code, aliases, re-exports, or small functions.         |
-| `gspot/no-trivial-functions`   | all         | Unexported named functions of two statements or fewer, used in one place at most. |
-| `gspot/require-server-only`    | none        | Selected server modules that do not import `server-only` or declare `use server`. |
+| Rule                           | In          | What it finds                                                                        |
+| ------------------------------ | ----------- | ------------------------------------------------------------------------------------ |
+| `gspot/no-client-env`          | recommended | Private environment reads in client modules.                                         |
+| `gspot/no-comments-in-imports` | all         | Comments inside or right after the import block.                                     |
+| `gspot/import-boundaries`      | all         | Relative imports that leave the nearest boundary folder.                             |
+| `gspot/no-alias-exports`       | all         | Exported constants that only rename another value.                                   |
+| `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.       |
+| `gspot/no-trivial-files`       | all         | Files with only forwarding code, aliases, re-exports, or small unexported functions. |
+| `gspot/no-trivial-functions`   | all         | Unexported named functions of two statements or fewer, called in one place at most.  |
+| `gspot/no-magic-numbers`       | none        | Numbers without a name, outside the initializers of module-level constants.          |
+| `gspot/require-server-only`    | none        | Selected server modules that do not import `server-only` or declare `use server`.    |
 
 The [rule reference](https://generativespotting.com/reference/eslint-plugin/) gives the options, defaults,
 and examples of each lint rule.
@@ -84,6 +85,18 @@ export default [
 
 `gspot/no-trivial-functions` uses the type information from `projectService` to skip a method that an
 interface or a base class declares.
+
+## Magic numbers
+
+`gspot/no-magic-numbers` reports the numbers that `@typescript-eslint/no-magic-numbers` reports. It skips the
+initializer of a module-level `const`, where an array of numbers counts as named. It takes the options of that rule
+and needs `@typescript-eslint/eslint-plugin` 8.70 or newer installed:
+
+```javascript
+import gspot from '@gspothq/eslint-plugin';
+
+export default [{ files: ['**/*.ts'], plugins: { gspot }, rules: { 'gspot/no-magic-numbers': ['error', { ignore: [0, 1] }] } }];
+```
 
 ## License
 

@@ -54,10 +54,25 @@ can run.
 Each GitHub job installs mise, then runs `gspot install` with the gspot version pinned in the generated workflow. The
 GitLab job needs mise on the CI machine.
 
-To prepare the project first, set one command. The job runs it before `gspot install` and stops if it fails:
+Before `gspot install`, the GitHub job installs the locked dependencies of the root and of each scope, so the checks
+that read them find them:
+
+| Lockfile                | Command                          |
+| ----------------------- | -------------------------------- |
+| `package-lock.json`     | `npm ci`                         |
+| `pnpm-lock.yaml`        | `pnpm install --frozen-lockfile` |
+| `yarn.lock`, Yarn 2 on  | `yarn install --immutable`       |
+| `yarn.lock`, Yarn 1     | `yarn install --frozen-lockfile` |
+| `bun.lock`, `bun.lockb` | `bun install --frozen-lockfile`  |
+| `uv.lock`               | `uv sync --locked`               |
+
+Each command fails on a lockfile that does not match its project. In a Next.js scope, the step then runs
+`next typegen`, so the typed lint rules find the route types.
+
+To run your own command instead, set it. The job runs it before `gspot install` and stops if it fails:
 
 ```shell
-gspot set ci.setup_command npm ci
+gspot set ci.setup_command -- bun install --frozen-lockfile
 ```
 
 gspot quotes each argument, so spaces, quotes, and `$` reach the command as plain text.

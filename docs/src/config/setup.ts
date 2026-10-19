@@ -43,7 +43,9 @@ export const LLMS_DESCRIPTION =
 export const AGENT_STEPS = `## Steps for coding agents
 
 Set up gspot in the repository of the user. Run each command at the root of the repository. gspot needs Git and
-Node.js 24.15 or newer.
+Node.js 24.15 or newer, or Bun 1.4.2 or newer when Bun runs it. A package manager that holds new releases, such as
+pnpm 11, needs @gspothq/cli and @gspothq/eslint-plugin in its exclusions: minimumReleaseAgeExclude for pnpm,
+install.minimumReleaseAgeExcludes for Bun, min-release-age-exclude for npm, and npmPreapprovedPackages for Yarn.
 
 1. Add gspot, pinned to one version, with the package manager of the repository:
    - npm: \`npm i -D -E @gspothq/cli\`

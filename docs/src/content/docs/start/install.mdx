@@ -8,7 +8,14 @@ import { SETUP_COMMANDS } from '../../../config/setup.ts';
 
 ## What you need
 
-Git and Node.js 24.15 or newer. The tools that your checks run need these:
+Git and Node.js 24.15 or newer. When Bun runs gspot, it needs Bun 1.4.2 or newer. An older runtime stops gspot
+with exit code 2 and names the version it found:
+
+```text
+gspot needs Node.js 24.15.0 or newer (found 22.11.0).
+```
+
+The tools that your checks run need these:
 
 | Tools                                                    | What you need                                                                                                                                                                                                                        |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -128,6 +135,24 @@ mise exec -- gspot check
 
 `gspot install` installs the tools and turns on hooks in this clone.
 If it changes a lockfile under `.gspot/`, commit that file.
+
+## A hold on new releases
+
+A package manager can hold back versions younger than a set age; pnpm 11 holds each version for one day by default. To
+install a gspot release on the day it ships, exempt its packages:
+
+| Package manager | Setting                                              |
+| --------------- | ---------------------------------------------------- |
+| pnpm            | `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`  |
+| Bun             | `install.minimumReleaseAgeExcludes` in `bunfig.toml` |
+| npm             | `min-release-age-exclude` in `.npmrc`                |
+| Yarn            | `npmPreapprovedPackages` in `.yarnrc.yml`            |
+
+```yaml title="pnpm-workspace.yaml"
+minimumReleaseAgeExclude:
+    - '@gspothq/cli'
+    - '@gspothq/eslint-plugin'
+```
 
 ## Private registries
 

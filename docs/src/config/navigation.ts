@@ -32,6 +32,7 @@ export const SIDEBAR = [
             { slug: 'configure/gspot-toml' },
             { slug: 'configure/files' },
             { slug: 'configure/lint-rules' },
+            { slug: 'configure/import-rules' },
             { slug: 'configure/monorepos' },
             { slug: 'configure/command-checks' },
             { slug: 'configure/share-settings' },

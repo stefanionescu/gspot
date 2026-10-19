@@ -10,6 +10,19 @@ gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "
 
 Every ignore needs a reason. Leave out `--rule` to ignore the whole check, and add `--paths` to select files.
 
+Leave out the check to keep paths out of every check and every generated tool file:
+
+```shell
+gspot ignore --paths "vendor/**" --reason "Vendored releases of upstream packages."
+```
+
+For `structure/trivial-functions` and `python/vulture`, `--names` limits the ignore to the definitions with those
+names, such as the hooks that a framework calls by name:
+
+```shell
+gspot ignore structure/trivial-functions --names define_schema execute --reason "ComfyUI calls these node hooks."
+```
+
 Add `--until YYYY-MM-DD` for an ignore that ends at 00:00 UTC on that date. After that date, the record stays in
 `gspot.toml` for review.
 

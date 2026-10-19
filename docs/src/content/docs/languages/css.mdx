@@ -19,3 +19,8 @@ Tailwind directives and `theme()` need a `tailwindcss` dependency in the nearest
 
 Value checks skip declarations that contain `theme()` or the Vue `v-bind()`. Variables inside `v-bind()` keep their
 case, but CSS keywords need lowercase letters.
+
+## CSS module files
+
+In `*.module.css` files, Stylelint accepts the `composes` property and the `:global`, `:local`, `:export`, and
+`:import` selectors of CSS Modules.

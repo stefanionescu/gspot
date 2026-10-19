@@ -41,7 +41,7 @@ name = "markdownlint"
 output = { format = "markdownlint" }
 run_in_copy = true
 stage = "commit"
-summary = "Checks every Markdown file against markdownlint with the shipped rule set."
+summary = "Checks every Markdown file against markdownlint with the shipped rule set. In an `.mdx` page, the rules start after the leading import and export blocks."
 why = "Consistent Markdown renders the same in every viewer."
 
 [[check]]

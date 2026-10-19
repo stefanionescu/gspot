@@ -19,6 +19,13 @@ gspot install
 gspot check --only licenses/allowed
 ```
 
+The check keeps the installed packages that the lockfile of the project records: `uv.lock` for Python, and
+`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, or `bun.lock` for npm. A package left in `node_modules` or in the
+environment after its removal does not count. Without a lockfile, the check reads every installed package.
+
+A Python package states its license in one of three fields. gspot takes the first that names license IDs:
+`License-Expression`, then the `License` metadata, then the trove classifiers, such as `MIT License` for `MIT`.
+
 ## Allow a license or one package
 
 Add a license to `licenses.allowed` to allow every package under it. To allow
@@ -31,7 +38,18 @@ version = "0.4.6"
 reason = "BSD. Installed metadata reports the reviewed BSD license in its short form."
 ```
 
-An allowed package holds only for that exact installed version. gspot reports a record that matches no installed package.
+`version` takes an exact version, a semver range such as `^1.2.0`, or `*`. `name` takes a glob for a package built for
+each platform:
+
+```toml
+[[licenses.allowed_package]]
+name = "@img/sharp-libvips-*"
+version = "*"
+reason = "LGPL-3.0-or-later. sharp loads the library as a separate file."
+```
+
+gspot reports a record that matches no package of the lockfile. A package that the lockfile records for another
+platform still counts as a match.
 Python package names match as pip matches them: letter case and runs of `.`, `_`, and `-` do not matter.
 When init replaces `.license-checker.json`, move packages you still allow into `[[licenses.allowed_package]]` records,
 with exact versions.
@@ -40,6 +58,18 @@ with exact versions.
 
 `dependencies/osv-scanner` reads your lockfiles and reports known vulnerable packages at push. Update the package,
 then check again. An accepted advisory needs an [ignore with a reason](/use/ignore/).
+
+## Lockfiles and package managers
+
+These checks read the project files at push, without the network:
+
+| Check                              | Reports                                                                                        |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `dependencies/stale-lockfile`      | A `package.json` whose dependencies differ from what its npm, pnpm, or Bun lockfile records.   |
+| `dependencies/react-versions`      | A project that locks `react` and `react-dom` at two versions.                                  |
+| `dependencies/package-manager-pin` | A `packageManager` field that names another version than the mise pin of that package manager. |
+
+For a stale lockfile, run the install of your package manager, such as `bun install`, and commit the lockfile.
 
 ## Registry hosts
 

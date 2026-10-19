@@ -15,6 +15,11 @@ package or Xcode scheme, finds declarations that nothing uses, and measures test
 
 Install the Swift toolchain, then install gspot with mise, as the [Quickstart](/start/quickstart/) shows.
 
+## Import rules
+
+`[[import_rule]]` records apply to Swift imports. gspot maps each module to the folder of its SwiftPM or Xcode target;
+[Import rules](/configure/import-rules/#swift) has an example.
+
 ## Xcode projects
 
 `gspot init` writes the Xcode project, scheme, and destination that it finds. To set them yourself:

@@ -29,7 +29,7 @@ level = "recommended"
 name = "lychee"
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 stage = "commit"
-summary = "Checks that local documentation links reach existing files and valid anchor or text fragments."
+summary = "Checks that local documentation links reach existing files and valid anchor or text fragments. A link that starts with `/` starts at the repository root, as on GitHub; a scope that selects `site` leaves it to `site/linkinator`."
 why = "A dead link inside the repository breaks silently, and readers hit it first."
 
 [[check]]

@@ -65,6 +65,10 @@ The pre-push hook needs the remote arguments and revision updates that Git passe
 gspot check --changed origin/main
 ```
 
-## Skip the hooks once
+## Large files
 
-`git commit --no-verify` and `git push --no-verify` bypass the local hooks once. CI still runs. To stop a finding on every run, add an ignore. See [Ignore findings](/use/ignore/).
+When `.gitattributes` sends files through the `lfs` filter of Git Large File Storage (LFS), gspot writes the `pre-push`, `post-checkout`, `post-commit`, and `post-merge` hooks. When your `PATH` holds `git-lfs`, each one runs `git lfs` first, then the gspot checks of that hook. gspot replaces the stock hooks that `git lfs install` writes, so LFS needs no other hook manager.
+
+## When a hook fails
+
+Fix each finding, then commit or push again. To stop a finding on every run, add an ignore with a reason. See [Ignore findings](/use/ignore/).

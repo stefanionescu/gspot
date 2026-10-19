@@ -38,9 +38,13 @@ Fix the file, then run the check again.
 | `gspot check --changed`                               | The files changed since your upstream branch or the default branch. |
 | `gspot check --changed origin/main`                   | The files changed since another branch, tag, or commit.             |
 | `gspot check <file> <folder>`                         | Some files and folders, relative to the current folder.             |
-| `gspot check --only javascript/eslint typescript/tsc` | Some checks.                                                        |
+| `gspot check --only javascript/eslint,typescript/tsc` | Some checks.                                                        |
 
-A check that reads the whole project, such as `typescript/tsc`, still reports findings in every file.
+Repeat `--only` or separate the checks with commas: `--only a,b` and `--only a --only b` select the same checks. A path
+after `--only` names files to check, not another check.
+
+A check that reads the whole project, such as `typescript/tsc`, reads every file. With path arguments, the report keeps
+its findings in those paths only. A staged or pushed run keeps every finding.
 
 ## Fix findings automatically
 

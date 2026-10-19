@@ -63,11 +63,32 @@ gspot set level all
 To change a setting in one folder only, see [Settings in a scope](/configure/monorepos/#settings-in-a-scope).
 
 A value that loosens a check needs a reason beside it. This covers a raised limit, lowered coverage, and an item that
-the shipped list lacks added to an allow-list, such as `allowed_words` or `dependencies.allowed_registries`:
+the shipped list lacks added to an allow-list, such as `dependencies.allowed_registries`. gspot refuses a reason on a
+value that loosens nothing.
+
+```shell
+gspot set limits.function_lines 80 --reason "The parser is one state machine."
+```
 
 ```toml title="gspot.toml"
 [limits]
 function_lines = { value = 80, reason = "The parser is one state machine." }
+```
+
+`allowed_words` holds one reason per word:
+
+```shell
+gspot set allowed_words Acmeflow --reason "Our product name."
+```
+
+```toml title="gspot.toml"
+allowed_words = { Acmeflow = "Our product name.", AGENTS = "File name of the agent rules." }
+```
+
+To pass a value that starts with `-`, put `--` before the values:
+
+```shell
+gspot set ci.setup_command -- bun install --frozen-lockfile
 ```
 
 ## Edit the file by hand

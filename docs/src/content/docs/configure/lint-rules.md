@@ -3,8 +3,14 @@ title: Lint rule options
 description: Set lint rule options in gspot.toml instead of the tool files.
 ---
 
-Set lint rule options in `gspot.toml`; gspot writes them into the tool file. Options take effect only for lint rules
-that the selected level turns on. To turn a lint rule off, use an [ignore](/use/ignore/) with a reason.
+Set lint rule options in `gspot.toml`; gspot writes them into the tool file. To turn a lint rule off, use an
+[ignore](/use/ignore/) with a reason.
+
+gspot refuses options for an ESLint or Stylelint rule that the selected level does not run:
+
+```text
+n/no-process-exit does not run at level recommended; gspot sets options only for rules it runs. Use tools.eslint.plugins for your own rules.
+```
 
 None of these settings turns a lint rule on or off, and none takes a severity; the level decides which rules run.
 
@@ -42,6 +48,38 @@ This table holds options only; do not put a severity such as `"off"` in it.
 `gspot explain eslint/eqeqeq` links the documentation of the lint rule, which lists its options, and prints the
 commands that set its options or ignore it.
 
+## Your own ESLint rules
+
+A plugin module in the repository adds your own rules. Each `[[tools.eslint.plugins]]` record names the rule prefix,
+the module, and the rules to turn on as errors for the code files of its scope:
+
+```javascript title="tools/lint/plugin.mjs"
+export default {
+    rules: {
+        'no-legacy-api': {
+            meta: { type: 'problem', schema: [] },
+            create(context) {
+                return {
+                    Identifier(node) {
+                        if (node.name === 'legacyFetch') context.report({ node, message: 'Use the current API.' });
+                    },
+                };
+            },
+        },
+    },
+};
+```
+
+```toml
+[[tools.eslint.plugins]]
+name = "local"
+path = "tools/lint/plugin.mjs"
+rules = { "no-legacy-api" = [] }
+```
+
+Name a tracked `.js` or `.mjs` file as the module. The name cannot take the prefix of a plugin that gspot loads.
+ESLint then reports `local/no-legacy-api`.
+
 ## Ruff
 
 Ruff takes no lint rule options from `gspot.toml`. Its limits, such as `limits.cyclomatic_complexity` and
@@ -56,10 +94,9 @@ Stylelint options go in `tools.stylelint.rules`:
 ```toml
 [tools.stylelint.rules]
 color-hex-length = "long"
-number-max-precision = 0
 ```
 
-This requires long hexadecimal colors at both levels. The precision option counts only at `all`, where that lint rule runs.
+This requires long hexadecimal colors at both levels.
 To allow a WebKit property that your project needs, use the `ignoreProperties` option of `property-no-vendor-prefix`.
 To allow an at-rule, use the `ignoreAtRules` option of `at-rule-no-unknown`:
 

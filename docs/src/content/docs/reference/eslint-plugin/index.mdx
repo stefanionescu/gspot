@@ -26,7 +26,7 @@ You need Node.js 22.12 or newer and ESLint 9.38.0 or newer with a flat config fi
 ## Use
 
 Add a plugin config to `eslint.config.mjs`. `recommended` turns on `gspot/no-client-env`; `all` turns on every lint
-rule except `gspot/require-server-only`.
+rule except `gspot/require-server-only` and `gspot/no-magic-numbers`.
 
 ```javascript
 import gspot from '@gspothq/eslint-plugin';
@@ -99,3 +99,15 @@ export default [
 
 `gspot/no-trivial-functions` uses the type information from `projectService` to skip a method that an interface or a
 base class declares.
+
+## Magic numbers
+
+`gspot/no-magic-numbers` reports the numbers that `@typescript-eslint/no-magic-numbers` reports. It skips the
+initializer of a module-level `const`, where an array of numbers counts as named. It takes the options of that rule
+and needs `@typescript-eslint/eslint-plugin` 8.70 or newer installed:
+
+```javascript
+import gspot from '@gspothq/eslint-plugin';
+
+export default [{ files: ['**/*.ts'], plugins: { gspot }, rules: { 'gspot/no-magic-numbers': ['error', { ignore: [0, 1] }] } }];
+```
