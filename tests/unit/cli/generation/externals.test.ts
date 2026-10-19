@@ -37,6 +37,7 @@ test('tools.eslint.plugins loads your plugin by its path and turns its rules on 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['javascript'], { tables: LOCAL_PLUGIN_TABLES }),
+        '.gitignore': 'node_modules/\n',
         'package.json': '{"private":true,"type":"module"}\n',
         'tools/lint/plugin.mjs': LOCAL_PLUGIN,
         'source.js': 'export const forbidden = 1;\n',

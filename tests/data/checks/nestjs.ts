@@ -9,12 +9,14 @@ import { Get, Param, Controller } from '@nestjs/common';
 export class GreetingController {
     /**
      * Takes the service that builds greetings.
+     *
      * @param greetings dependency that formats the response
      */
     constructor(private readonly greetings: GreetingService) {}
 
     /**
      * Greets the person the route names.
+     *
      * @param name route text to trim and include in the response
      * @returns trimmed visitor text with a hello prefix
      */
@@ -40,6 +42,7 @@ import { Injectable } from '@nestjs/common';
 export class GreetingService {
     /**
      * Greets one person.
+     *
      * @param name route text to trim and include in the response
      * @returns trimmed visitor text with a hello prefix
      */
@@ -77,12 +80,14 @@ import { Get, Param, Controller } from '@nestjs/common';
 export class GreetingController {
     /**
      * Takes the service that builds greetings.
+     *
      * @param greetings dependency that formats the response
      */
     constructor(private readonly greetings: GreetingService) {}
 
     /**
      * Greets the person the route names.
+     *
      * @param name route text to trim and include in the response
      * @returns trimmed visitor text with a hello prefix
      */
@@ -97,7 +102,7 @@ export class GreetingController {
         expected: {
             file: 'src/greeting.controller.ts',
             rule: '@darraghor/nestjs-typed/param-decorator-name-matches-route-param',
-            line: 20,
+            line: 22,
         },
     },
 ] as const;

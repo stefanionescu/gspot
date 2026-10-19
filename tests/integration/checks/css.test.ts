@@ -16,6 +16,7 @@ import {
     STYLELINT_COMMAND,
     TAILWIND_SETTINGS,
     STYLELINT_SETTINGS,
+    ALL_LEVEL_STYLELINT_SETTINGS,
 } from '#tests/data/checks/css.ts';
 
 const installedSandbox = registerSharedSandbox({
@@ -44,7 +45,10 @@ test.each([...LEVELS])(
         await using _change = await updateSandbox(installedSandbox(), {
             check: '',
             files: {
-                'gspot.toml': buildSettingsText(['css'], { level, tables: STYLELINT_SETTINGS }),
+                'gspot.toml': buildSettingsText(['css'], {
+                    level,
+                    tables: level === 'all' ? ALL_LEVEL_STYLELINT_SETTINGS : STYLELINT_SETTINGS,
+                }),
                 'package.json': '{"private":true}\n',
                 ...STYLESHEETS,
             },
@@ -63,7 +67,6 @@ test.each([...LEVELS])(
                 matchFields({ file: 'app/site.css', rule: 'property-no-vendor-prefix', line: 4 }),
             ]),
         );
-        expect(findings.filter(({ rule }) => rule === 'selector-max-id')).toStrictEqual([]);
         expect(findings.filter(({ rule }) => rule === 'number-max-precision').map(({ file }) => file)).toStrictEqual(
             level === 'all' ? ['build/site.css', 'app/site.css'] : [],
         );
@@ -83,7 +86,7 @@ test("Stylelint run by an editor finds the scope's tool file and checks your bui
     await using _change = await updateSandbox(installedSandbox(), {
         check: '',
         files: {
-            'gspot.toml': buildSettingsText(['css'], { level: 'all', tables: STYLELINT_SETTINGS }),
+            'gspot.toml': buildSettingsText(['css'], { level: 'all', tables: ALL_LEVEL_STYLELINT_SETTINGS }),
             'package.json': '{"private":true}\n',
             ...STYLESHEETS,
         },

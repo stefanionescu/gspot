@@ -13,7 +13,15 @@ import type { Settings } from '#cli/types/settings/values.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectRunner, buildHookFiles } from '#cli/generation/hooks.ts';
 import { readGitOutput, createLfsRepository } from '#tests/setup/git.ts';
-import { HOOK_CASES, HOOK_PROGRAM, START_COMMANDS, LOGGING_PROGRAM, HOOK_LEVEL_CASES } from '#tests/data/hooks.ts';
+
+import {
+    HOOK_CASES,
+    CAT_PROGRAM,
+    HOOK_PROGRAM,
+    START_COMMANDS,
+    LOGGING_PROGRAM,
+    HOOK_LEVEL_CASES,
+} from '#tests/data/hooks.ts';
 
 /** Build new settings with hooks on, for each script run. */
 function buildHookSettings(): Settings {
@@ -125,12 +133,14 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
     expect(hooks.map((file) => file.path)).toStrictEqual(
         ['post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'].map((name) => `.gspot/hooks/${name}`),
     );
-    // A fake git stands in for the git lfs call, because Git finds a real git-lfs in its own folder first.
+    // A fake git stands in for the git lfs call, because Git finds a real git-lfs in its own folder first. The search
+    // path holds only the fakes, so a real git or git-lfs never runs.
     const bin = await fakeTool(sandbox.path, 'bin/git', LOGGING_PROGRAM);
     await fakeTool(sandbox.path, 'bin/git-lfs', LOGGING_PROGRAM);
     await fakeTool(sandbox.path, 'bin/mise', LOGGING_PROGRAM);
+    await fakeTool(sandbox.path, 'bin/cat', CAT_PROGRAM);
     const log = join(sandbox.path, 'calls.jsonl');
-    const environment = { PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`, CALLS_LOG: log };
+    const environment = { PATH: bin, CALLS_LOG: log };
     for (const hook of hooks) {
         const path = join(sandbox.path, hook.path);
         await Bun.write(path, hook.content);

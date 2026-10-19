@@ -23,6 +23,7 @@ import type { ReactNode } from 'react';
 ` +
     `/**
  * Greets one person.
+ *
  * @param props display text for the visitor
  * @param props.name text shown inside the paragraph
  * @returns a paragraph addressed to the visitor
@@ -44,6 +45,7 @@ import type { ReactNode } from "react";
 
 /**
  * Counts, some of the time.
+ *
  * @param props display controls for this component
  * @param props.isOn whether the counter is visible
  * @returns the current total in a paragraph
@@ -61,7 +63,7 @@ const REACT_CASES = [
     {
         check: 'javascript/eslint',
         files: { 'src/Counter.tsx': COUNTER },
-        expected: { file: 'src/Counter.tsx', rule: 'react-hooks/rules-of-hooks', line: 13 },
+        expected: { file: 'src/Counter.tsx', rule: 'react-hooks/rules-of-hooks', line: 14 },
         corrected: {
             files: {
                 'src/Counter.tsx': `// A test component.
@@ -69,6 +71,7 @@ import type { ReactNode } from 'react';
 
 /**
  * Greets one person.
+ *
  * @param props display text for the visitor
  * @param props.name text shown inside the paragraph
  * @returns a paragraph addressed to the visitor

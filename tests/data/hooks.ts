@@ -98,6 +98,10 @@ const input = fs.readFileSync(0, 'utf8');
 fs.appendFileSync(process.env.CALLS_LOG, JSON.stringify({ name, argv: process.argv.slice(2), input }) + '\n');
 `;
 
+/** A cat that copies its input, so a hook can read its standard input when the search path holds only fakes. */
+export const CAT_PROGRAM = `process.stdout.write(require('node:fs').readFileSync(0));
+`;
+
 /** The pre-push hook that git lfs install writes today. */
 export const STOCK_LFS_PRE_PUSH = String.raw`#!/bin/sh
 command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'pre-push' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks')."; exit 2; }

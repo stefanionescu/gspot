@@ -32,6 +32,7 @@ import type { OrderLine } from '#types/orders.js';
 
 /**
  * Adds up the lines of an order.
+ *
  * @param lines the purchased quantities and unit prices
  * @param currency the currency of every line
  * @returns the total price
@@ -81,6 +82,7 @@ import { receipt } from '#entry';
 
 /**
  * Prefix the entry receipt with the order label.
+ *
  * @returns the text shown on the order screen
  */
 export function receiptLabel(): string {
