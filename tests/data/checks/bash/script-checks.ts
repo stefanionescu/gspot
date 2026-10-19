@@ -103,6 +103,58 @@ main "$@"
         },
         expected: { file: 'scripts/node-heredoc.sh', rule: 'runtime-embed', line: 10 },
     },
+    {
+        check: 'bash/inline-scripts',
+        files: {
+            'scripts/bun.sh': `${BASH_HEADER}# main: runs the script.
+main() {
+    bun --eval 'console.log(1)' "$1"
+}
+
+main "$@"
+`,
+        },
+        expected: { file: 'scripts/bun.sh', rule: 'runtime-embed', line: 10 },
+    },
+    {
+        check: 'bash/inline-scripts',
+        files: {
+            'scripts/deno.sh': `${BASH_HEADER}# main: runs the script.
+main() {
+    deno eval 'console.log(1)'
+}
+
+main "$@"
+`,
+        },
+        expected: { file: 'scripts/deno.sh', rule: 'runtime-embed', line: 10 },
+    },
+    {
+        check: 'bash/inline-scripts',
+        files: {
+            'scripts/perl.sh': `${BASH_HEADER}# main: runs the script.
+main() {
+    perl -pi -e 's/old/new/' "$1"
+}
+
+main "$@"
+`,
+        },
+        expected: { file: 'scripts/perl.sh', rule: 'runtime-embed', line: 10 },
+    },
+    {
+        check: 'bash/inline-scripts',
+        files: {
+            'scripts/ruby.sh': `${BASH_HEADER}# main: runs the script.
+main() {
+    ruby -e 'puts 1'
+}
+
+main "$@"
+`,
+        },
+        expected: { file: 'scripts/ruby.sh', rule: 'runtime-embed', line: 10 },
+    },
 ] as const;
 
 export const SCRIPT_LAYOUT_CASES = [

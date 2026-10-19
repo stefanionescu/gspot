@@ -135,6 +135,9 @@ export const LENGTH_STYLES = {
     sentence: { extends: 'occurrence', scope: 'sentence', token: String.raw`\b\w+\b` },
 } as const;
 export const VALE_SKIPPED_SCOPES = 'script, style, pre, figure, table';
+/** The level-all gspot rules that read markup files only. */
+export const VALE_MARKUP_RULES = ['gspot.merge-conflict-markers', 'gspot.tree-blocks'] as const;
+
 export const VALE_MARKUP_FILES = '*.{md,mdx,html,htm,astro,svelte,vue}';
 
 /** Punctuation escaped in human-readable Go regular-expression word lists. */

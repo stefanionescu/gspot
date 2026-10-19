@@ -19,6 +19,7 @@ import {
     VALE_OFF_RULES,
     ALT_TEXT_TOKENS,
     BANNED_HEADINGS,
+    VALE_MARKUP_RULES,
     VALE_MARKUP_FILES,
     VALE_REGEX_SYMBOLS,
     VALE_SKIPPED_SCOPES,
@@ -108,11 +109,11 @@ function buildValeIniFile(context: ToolFileContext): string {
         ...(isAll ? Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]) : []),
         '# Markup checks read markup only.',
         'gspot.alt-text = NO',
-        ...(isAll ? ['gspot.merge-conflict-markers = NO'] : []),
+        ...(isAll ? VALE_MARKUP_RULES.map((rule) => `${rule} = NO`) : []),
         '',
         `[${VALE_MARKUP_FILES}]`,
         'gspot.alt-text = YES',
-        ...(isAll ? ['gspot.merge-conflict-markers = YES'] : []),
+        ...(isAll ? VALE_MARKUP_RULES.map((rule) => `${rule} = YES`) : []),
         '',
     ];
     return `${lines.join('\n')}\n`;

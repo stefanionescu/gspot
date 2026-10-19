@@ -1,4 +1,5 @@
 import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
+import { allowFocusableRegions } from '#cli/generation/eslint/fragments/react-dom.ts';
 import { pickPresetFields, buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
 import { serializeBlocks, serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { ASTRO_FILES, ASTRO_RULES, ASTRO_SCRIPT_FILES } from '#cli/config/generation/eslint-fragments.ts';
@@ -28,7 +29,9 @@ function buildAstroFragment(
             {
                 ...pickPresetFields(block),
                 files: block.files ?? ASTRO_FILES,
-                ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
+                ...(block.rules === undefined
+                    ? {}
+                    : { rules: allowFocusableRegions(convertWarningsToErrors(block.rules)) }),
             },
             `...${source}[${String(index)}]`,
             { expression: `${source}[${String(index)}].rules`, rules: block.rules },

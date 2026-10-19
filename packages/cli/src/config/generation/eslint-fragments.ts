@@ -136,6 +136,12 @@ const NEXT_SERVER_FILES = ['**/server/**', '**/*.server.*'] as const;
 /** The Fast Refresh rule, which reports a module that exports more than components. */
 const REFRESH_RULE = 'react-refresh/only-export-components';
 
+/** The jsx-a11y rules of React and of Astro that report tabIndex on an element that takes no input. */
+const TABINDEX_RULES = ['jsx-a11y/no-noninteractive-tabindex', 'astro/jsx-a11y/no-noninteractive-tabindex'] as const;
+
+/** Roles that may take tabIndex: a tab panel, as jsx-a11y allows, and a scrollable region that keyboards must reach. */
+const FOCUSABLE_ROLES = ['tabpanel', 'region'] as const;
+
 /** Next.js higher-order components that react-refresh does not know: catchError from next/error, in Next.js 16.2. */
 const NEXT_EXTRA_HOCS = ['catchError'] as const;
 
@@ -237,6 +243,8 @@ export {
     SVELTE_FILES,
     DRIZZLE_RULES,
     JSX_CODE_FILES,
+    TABINDEX_RULES,
+    FOCUSABLE_ROLES,
     NEXT_EXTRA_HOCS,
     TYPESCRIPT_RULES,
     NEXT_SERVER_FILES,

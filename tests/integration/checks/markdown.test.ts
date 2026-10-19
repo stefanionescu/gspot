@@ -10,6 +10,7 @@ import { buildSettingsText } from '#tests/setup/settings.ts';
 import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {
+    MDX_FILES,
     MARKDOWN_FILES,
     MARKDOWN_SANDBOX,
     MARKDOWNLINT_SETTINGS,
@@ -155,4 +156,21 @@ test('markdownlint JSON keeps file name delimiters, positions, and fixability', 
     const corrected = await spawnGspot(root, command, environment);
     expect(corrected.code, corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
+});
+
+test('markdownlint reads an MDX page from after its import and export blocks', async () => {
+    const { root } = installedSandbox();
+    await using _change = await applySandboxChanges(installedSandbox(), {
+        check: 'markdown/markdownlint',
+        files: { 'gspot.toml': buildSettingsText(['markdown'], { level: 'all' }), ...MDX_FILES },
+    });
+    const command = ['check', ...Object.keys(MDX_FILES), '--only', 'markdown/markdownlint', '--json'];
+    const failed = await spawnGspot(root, command);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
+        matchFields({ file: 'untitled.mdx', line: 3, rule: 'MD041' }),
+    ]);
+    await Bun.write(join(root, 'untitled.mdx'), MDX_FILES['untitled.mdx'].replace('The page', '# Notice\n\nThe page'));
+    const corrected = await spawnGspot(root, command);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

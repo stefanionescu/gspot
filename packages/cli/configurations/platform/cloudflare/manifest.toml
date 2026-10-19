@@ -1,5 +1,5 @@
 allowed_words = ["Cloudflare"]
-generated = ["worker-configuration.d.ts"]
+generated = ["worker-configuration.d.ts", "cloudflare-env.d.ts"]
 
 [configuration]
 description = "Cloudflare Pages and Workers: valid headers and redirects files, current binding types, and security rules for worker code."

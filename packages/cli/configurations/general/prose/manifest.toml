@@ -120,6 +120,10 @@ target = "styles/gspot/merge-conflict-markers.yml"
 
 [[tool_file]]
 level = "all"
+target = "styles/gspot/tree-blocks.yml"
+
+[[tool_file]]
+level = "all"
 target = "styles/gspot/percentage-numbers.yml"
 
 [[tool_file]]

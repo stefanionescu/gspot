@@ -31,6 +31,25 @@ Long prose stays with the formatter. Long prose stays with the formatter. Long p
 `,
 } as const;
 
+/** Pages in .mdx files that start with import and export blocks: one with a top heading after them, and one without. */
+export const MDX_FILES = {
+    'policy.mdx': `import { Notice } from './notice';
+import Updated from './updated';
+
+export const metadata = {
+    description: 'How the shop keeps your data.',
+};
+
+# Privacy
+
+The shop keeps your order history.
+`,
+    'untitled.mdx': `import { Notice } from './notice';
+
+The page has no heading.
+`,
+} as const;
+
 /** Options of an inactive rule do not turn it on; scope options replace only the values of their own rule. */
 export const MARKDOWNLINT_SETTINGS = `[format]\nindent_width = 6\n[tools.markdownlint.rules]\nMD044 = { names = ["Root label"], code_blocks = false }\nMD041 = {}\nMD013 = { line_length = 10 }\nMD033 = {}\nMD060 = { style = "aligned" }\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.markdownlint.rules]\nMD044 = { names = ["Nested label"] }\n`;
 

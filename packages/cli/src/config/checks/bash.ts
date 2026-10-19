@@ -23,6 +23,10 @@ export const RUNTIME_EMBEDS = [
     [/\$\{\w+\}"?\s+-\s*<</u, 'a heredoc piped into an interpreter variable'],
     [/\bnode\s+-[ep]\b/u, 'an inline Node command'],
     [/\bnode\s+<</u, 'an inline Node heredoc'],
+    [/\bbun\s+(?:-[ep]|--eval|--print)\b/u, 'an inline Bun command'],
+    [/\bdeno\s+eval\b/u, 'an inline Deno command'],
+    [/\bperl(?:\s+-[a-zA-Z]+)*?\s+-[a-zA-Z]*e(?=\s|$)/u, 'an inline Perl command'],
+    [/\bruby(?:\s+-[a-zA-Z]+)*?\s+-[a-zA-Z]*e(?=\s|$)/u, 'an inline Ruby command'],
 ] as const;
 
 /** Safety patterns and their finding text. */

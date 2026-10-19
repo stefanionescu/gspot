@@ -11,6 +11,15 @@ export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
 
 export const BUILD_SCRIPT = ['run', 'build'] as const;
 
+/** The package that builds a Next.js app for Cloudflare. */
+export const OPENNEXT_PACKAGE = '@opennextjs/cloudflare';
+
+/** The types file and interface that the OpenNext guide passes to wrangler types. */
+export const OPENNEXT_TYPE_DEFAULTS = {
+    'cloudflare.types_file': 'cloudflare-env.d.ts',
+    'cloudflare.types_interface': 'CloudflareEnv',
+} as const;
+
 export const SETTING_DEFAULTS = {
     file_lines: 300,
     function_lines: 60,
@@ -45,4 +54,10 @@ export const SETTING_DEFAULTS = {
 } as const;
 
 /** Settings whose default comes from project files, which the settings writer cannot read. */
-export const DETECTED_SETTINGS = ['openapi.document', 'site.build_command', 'swift.xcode_destination'] as const;
+export const DETECTED_SETTINGS = [
+    'openapi.document',
+    'site.build_command',
+    'swift.xcode_destination',
+    'cloudflare.types_file',
+    'cloudflare.types_interface',
+] as const;

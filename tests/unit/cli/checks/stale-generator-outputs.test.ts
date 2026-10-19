@@ -95,6 +95,21 @@ async function mockWrangler(root: string): Promise<DisposableStack> {
     return fakePinnedExecutables([pin]);
 }
 
+// The fake wrangler types writes the source into the folder it runs in, and keeps that folder.
+function spyOnWranglerTypes(source: string, folders: string[]) {
+    return spyOn(processes, 'spawnProcess').mockImplementation(async (commandArguments, options) => {
+        expect(commandArguments.slice(1)).toStrictEqual([
+            'types',
+            'cloudflare-env.d.ts',
+            '--env-interface',
+            'CloudflareEnv',
+        ]);
+        folders.push(options.cwd);
+        await Bun.write(join(options.cwd, 'cloudflare-env.d.ts'), source);
+        return buildProcessResult();
+    });
+}
+
 test('custom Worker type settings reach wrangler types as --env-interface', async () => {
     await using sandbox = await testdir();
     const source = 'interface CloudflareEnv {}\n';
@@ -108,19 +123,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     using resources = new DisposableStack();
     resources.use(await mockWrangler(sandbox.path));
     const folders: string[] = [];
-    resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation(async (commandArguments, options) => {
-            expect(commandArguments.slice(1)).toStrictEqual([
-                'types',
-                'cloudflare-env.d.ts',
-                '--env-interface',
-                'CloudflareEnv',
-            ]);
-            folders.push(options.cwd);
-            await Bun.write(join(options.cwd, 'cloudflare-env.d.ts'), source);
-            return buildProcessResult();
-        }),
-    );
+    resources.use(spyOnWranglerTypes(source, folders));
     expect(
         await checkStaleGeneratorOutputs(buildCheckInput(session, 'cloudflare/stale-types', { scope: 'workers/api' })),
     ).toStrictEqual([]);
@@ -128,6 +131,38 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     expect(folders[0]).not.toBe(join(sandbox.path, 'workers/api'));
     expect(await isOnDisk(folders[0]!)).toBe(false);
     expect(await readFile(join(sandbox.path, 'workers/api/cloudflare-env.d.ts'), 'utf8')).toBe(source);
+});
+
+test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and reports the file until Git tracks it', async () => {
+    await using sandbox = await testdir();
+    const source = 'interface CloudflareEnv {}\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['cloudflare']),
+        'package.json': JSON.stringify({ private: true, devDependencies: { '@opennextjs/cloudflare': '1.0.0' } }),
+        'wrangler.jsonc': '{ "name": "shop" }\n',
+    });
+    commitAll(sandbox.path);
+    await Bun.write(join(sandbox.path, 'cloudflare-env.d.ts'), source);
+    using resources = new DisposableStack();
+    resources.use(await mockWrangler(sandbox.path));
+    const run = resources.use(spyOnWranglerTypes(source, []));
+    const untracked = await openSession(sandbox.path);
+    expect(untracked.scopes[0]!.view.options('cloudflare')).toStrictEqual({
+        types_file: 'cloudflare-env.d.ts',
+        types_interface: 'CloudflareEnv',
+    });
+    expect(await checkStaleGeneratorOutputs(buildCheckInput(untracked, 'cloudflare/stale-types'))).toMatchObject([
+        {
+            file: 'cloudflare-env.d.ts',
+            rule: 'untracked',
+            message: 'cloudflare-env.d.ts is not tracked. Commit it, so the other checks and this check can read it.',
+        },
+    ]);
+    expect(run).not.toHaveBeenCalled();
+    commitAll(sandbox.path);
+    const tracked = await openSession(sandbox.path);
+    expect(await checkStaleGeneratorOutputs(buildCheckInput(tracked, 'cloudflare/stale-types'))).toStrictEqual([]);
+    expect(run).toHaveBeenCalledTimes(1);
 });
 
 async function prepareSupabaseCheck(

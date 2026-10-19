@@ -8,8 +8,8 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { VALE_OFF_RULES, VALE_MARKUP_FILES } from '#cli/config/generation/vale.ts';
 import { PINNED_PACKAGES, RECOMMENDED_VALE_FILES } from '#tests/data/generation/tool-files.ts';
+import { VALE_OFF_RULES, VALE_MARKUP_RULES, VALE_MARKUP_FILES } from '#cli/config/generation/vale.ts';
 
 test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (level) => {
     await using sandbox = await testdir();
@@ -27,7 +27,9 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
         `BasedOnStyles = ${level === 'all' ? ['gspot', 'Vale', ...VALE_PACKAGES].join(', ') : 'gspot'}`,
     );
     const [general = '', markup = ''] = configuration.content.split(`[${VALE_MARKUP_FILES}]`);
-    expect(general.match(/ = NO$/gmu)?.length).toBe(level === 'all' ? Object.keys(VALE_OFF_RULES).length + 2 : 1);
+    expect(general.match(/ = NO$/gmu)?.length).toBe(
+        level === 'all' ? Object.keys(VALE_OFF_RULES).length + VALE_MARKUP_RULES.length + 1 : 1,
+    );
     expect(general).toContain('gspot.alt-text = NO');
     expect(markup).toContain('gspot.alt-text = YES');
     expect(configuration.content.includes('Vocab = words')).toBe(level === 'all');

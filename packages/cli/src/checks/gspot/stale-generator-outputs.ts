@@ -27,6 +27,28 @@ function checkMissingOutputs(input: CheckInput, targets: GeneratorOutput[], comm
     ];
 }
 
+// A pattern from a setting names one file, such as the Worker types file. A copy on disk that Git does not track hides it
+// from the type checks and from this check, which compare tracked files.
+function checkUntrackedOutputs(input: CheckInput, named: string[]): Finding[] {
+    const scope = input.selection.scope.path;
+    const tracked = new Set(input.index.map(({ path }) => path));
+    const excluded = [...GENERATOR_SCAN_EXCLUSIONS, DOT_GSPOT].map((name) => `!**/${name}/**`);
+    return named.length === 0 || !input.hasGit
+        ? []
+        : listMatchingPaths(join(input.root, scope), [...named, ...excluded])
+              .map((path) => posix.join(scope, path))
+              .filter((path) => !tracked.has(path))
+              .toSorted((left, right) => left.localeCompare(right))
+              .map((path) =>
+                  buildFinding(
+                      input,
+                      { file: path, line: 1 },
+                      'untracked',
+                      `${path} is not tracked. Commit it, so the other checks and this check can read it.`,
+                  ),
+              );
+}
+
 // Both snapshots use the same traversal and source containment boundary.
 function readOutputContents(
     root: string,
@@ -45,12 +67,37 @@ function readOutputContents(
     ]);
 }
 
+// A pattern from a setting holds a repository path; the scan of a scope reads it from the scope folder.
+function stripScopePrefix(path: string, scope: string): string {
+    const prefix = path.startsWith('**/') ? '**/' : '';
+    const scopePath = path.slice(prefix.length);
+    return scope !== '' && scopePath.startsWith(`${scope}/`) ? `${prefix}${scopePath.slice(scope.length + 1)}` : path;
+}
+
+function listDeclaredOutputs(
+    input: CheckInput,
+    values: Substitutions,
+): { declared: GeneratorOutput[]; named: string[] } {
+    const named: string[] = [];
+    const declared = (input.check.generator_outputs ?? []).flatMap((entry): GeneratorOutput[] => {
+        const { kind, path: original } = entry;
+        const isNamed = kind === 'pattern' && original.includes('{setting:');
+        const replaced = replacePlaceholders(input, input, original, values);
+        const path = isNamed ? stripScopePrefix(replaced, input.selection.scope.path) : replaced;
+        if (path === '') return [];
+        if (isNamed) named.push(path);
+        return [{ kind, path }];
+    });
+    return { declared, named };
+}
+
 function buildGeneratorInputs(input: CheckInput):
     | {
           values: Substitutions;
           commandText: string;
           declaration: string[];
           patterns: string[];
+          named: string[];
           targets: GeneratorOutput[];
           selected: string[];
       }
@@ -60,18 +107,7 @@ function buildGeneratorInputs(input: CheckInput):
     const command = expandCommand(input, input, declaration, values);
     if (command.length === 0) return undefined;
 
-    const declared = (input.check.generator_outputs ?? []).flatMap((entry): GeneratorOutput[] => {
-        const { kind, path: original } = entry;
-        let path = replacePlaceholders(input, input, original, values);
-        if (kind === 'pattern' && original.includes('{setting:') && input.selection.scope.path !== '') {
-            const prefix = path.startsWith('**/') ? '**/' : '';
-            const scopePath = path.slice(prefix.length);
-            if (scopePath.startsWith(`${input.selection.scope.path}/`))
-                path = `${prefix}${scopePath.slice(input.selection.scope.path.length + 1)}`;
-        }
-        return path === '' ? [] : [{ kind, path }];
-    });
-
+    const { declared, named } = listDeclaredOutputs(input, values);
     if (declared.length === 0) return undefined;
     const targets = declared.filter((entry) => entry.kind !== 'pattern');
     const patterns = declared.filter((entry) => entry.kind === 'pattern').map((entry) => entry.path);
@@ -80,9 +116,23 @@ function buildGeneratorInputs(input: CheckInput):
         .map((file) => posix.relative(input.selection.scope.path, file.path))
         .filter((path) => isMatched(path));
 
-    if (targets.length === 0 && selected.length === 0) return undefined;
     const commandText = command.filter((part) => typeof part === 'string').join(' ');
-    return { values, commandText, declaration, patterns, targets, selected };
+    return { values, commandText, declaration, patterns, named, targets, selected };
+}
+
+// Untracked and missing outputs end the check before the generator runs, and so does a scope with nothing to compare.
+function checkBeforeRun(
+    input: CheckInput,
+    inputs: Pick<
+        NonNullable<ReturnType<typeof buildGeneratorInputs>>,
+        'named' | 'targets' | 'selected' | 'commandText'
+    >,
+): Finding[] | undefined {
+    const untracked = checkUntrackedOutputs(input, inputs.named);
+    if (untracked.length > 0) return untracked;
+    if (inputs.targets.length === 0 && inputs.selected.length === 0) return [];
+    const missing = checkMissingOutputs(input, inputs.targets, inputs.commandText);
+    return missing.length > 0 ? missing : undefined;
 }
 
 /**
@@ -94,8 +144,8 @@ export async function checkStaleGeneratorOutputs(input: CheckInput): Promise<Fin
     const inputs = buildGeneratorInputs(input);
     if (inputs === undefined) return [];
     const { values, commandText, declaration, patterns, targets, selected } = inputs;
-    const missing = checkMissingOutputs(input, targets, commandText);
-    if (missing.length > 0) return missing;
+    const early = checkBeforeRun(input, inputs);
+    if (early !== undefined) return early;
     using folder = await copyIntoScratch(
         checkCopyInputs(
             input,

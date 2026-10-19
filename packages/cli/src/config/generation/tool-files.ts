@@ -6,6 +6,13 @@ const COMMITLINT_ERROR_SEVERITY = 2;
 
 const COMMIT_LINE_LENGTH = 72;
 
+/**
+ * The text that markdownlint skips at the start of a file: YAML, TOML, or JSON front matter, then the import and export
+ * blocks of an .mdx page. Such a page reads a line that starts with import or export and a space as JavaScript, up to a
+ * blank line.
+ */
+const MARKDOWN_FRONT_MATTER = String.raw`^(?:(?:---[^\S\r\n]*\r?\n[\s\S]*?\r?\n---|\+\+\+[^\S\r\n]*\r?\n[\s\S]*?\r?\n(?:\+\+\+|\.\.\.)|\{[^\S\r\n]*\r?\n[\s\S]*?\r?\n\})[^\S\r\n]*(?:\r?\n|$))?(?:(?:[^\S\r\n]*\r?\n)*(?:import|export) [^\r\n]*(?:\r?\n[^\S\r\n]*\S[^\r\n]*)*(?:\r?\n|$))*`;
+
 /** Generated identifiers that contain no spelling words. */
 export const TYPOS_IGNORE_PATTERNS = [
     String.raw`\b[0-9a-f]{7,40}\b`,
@@ -225,11 +232,24 @@ export const KNIP_IGNORED_DEPENDENCIES = ['@gspothq/cli'] as const;
 
 export const KNIP_ENTRY_SETTING = 'entry';
 
-/** The Markdownlint CLI configuration, with its JSON report formatter. */
+/** The configuration whose scopes serve root-relative links as routes of the built site. */
+export const SITE_CONFIGURATION = 'site';
+
+/**
+ * The file links that lychee builds from root-relative links: docs/lychee passes the repository root plus
+ * .gspot/root-links as its root folder.
+ */
+export const LYCHEE_ROOT_LINKS = String.raw`^file://(.*)/\.gspot/root-links/`;
+
+/** Where a root-relative link points outside a site: the same path from the repository root, as GitHub reads it. */
+export const LYCHEE_REPOSITORY_LINKS = 'file://$1/';
+
+/** The Markdownlint CLI configuration, with the front matter of .mdx pages, and its JSON report formatter. */
 export const MARKDOWNLINT_CLI_TEXT = `import { fileURLToPath } from 'node:url';
 
 export default {
     config: { extends: fileURLToPath(new URL('markdownlint.jsonc', import.meta.url)) },
+    frontMatter: String.raw\`${MARKDOWN_FRONT_MATTER}\`,
     noBanner: true,
     noProgress: true,
     outputFormatters: [
@@ -277,6 +297,7 @@ export const TOOL_FILE_NOTES = {
     lychee: [
         '# This file stops lychee from reading a lychee.toml in the folder where it runs.',
         '# Allow a URL with the docs.allowed_urls setting.',
+        '# A link that starts with / starts at the repository root, as on GitHub; in a site, it names a route.',
     ],
     osvScanner: [
         '# This file stops OSV-Scanner from reading an osv-scanner.toml next to a lockfile.',

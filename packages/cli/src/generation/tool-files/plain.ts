@@ -9,10 +9,13 @@ import {
     TOML_FORMAT,
     TOOL_FILE_NOTES,
     TAPLO_FORMATTING,
+    LYCHEE_ROOT_LINKS,
+    SITE_CONFIGURATION,
     PURGECSS_EXTRACTOR,
     PURGECSS_TOKEN_END,
     ALWAYS_SKIPPED_TAGS,
     TRIVY_SKIPPED_FOLDERS,
+    LYCHEE_REPOSITORY_LINKS,
     SPECTRAL_RECOMMENDED_OFF,
     PURGECSS_PSEUDO_CLASS_PATTERN,
 } from '#cli/config/generation/tool-files.ts';
@@ -44,10 +47,17 @@ function buildGixyFile(context: ToolFileContext): string {
  * @returns a note on why the file exists, and the lychee link exclusions as TOML.
  */
 function buildLycheeFile(context: ToolFileContext): string {
-    const { options } = context.selection.view;
+    const { selected, view } = context.selection;
 
-    const exclude = options('docs').allowed_urls;
-    return [...TOOL_FILE_NOTES.lychee, stringifyToml(exclude.length === 0 ? {} : { exclude }, TOML_FORMAT)].join('\n');
+    const allowed = view.options('docs').allowed_urls;
+    // site/linkinator checks the routes in the built site, so lychee skips them.
+    const document = selected.some(({ configuration }) => configuration.name === SITE_CONFIGURATION)
+        ? { exclude: [...allowed, LYCHEE_ROOT_LINKS] }
+        : {
+              ...(allowed.length === 0 ? {} : { exclude: allowed }),
+              remap: [`${LYCHEE_ROOT_LINKS} ${LYCHEE_REPOSITORY_LINKS}`],
+          };
+    return [...TOOL_FILE_NOTES.lychee, stringifyToml(document, TOML_FORMAT)].join('\n');
 }
 /**
  * Build the `osv-scanner` tool file from the settings.

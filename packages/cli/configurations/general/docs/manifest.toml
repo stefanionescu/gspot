@@ -22,7 +22,7 @@ target = "lychee.toml"
 tool = "lychee"
 
 [[check]]
-command = ["lychee", "--config", "{tool_file:lychee}", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
+command = ["lychee", "--config", "{tool_file:lychee}", "--root-dir", "{root}/.gspot/root-links", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
 example = "The link `[Setup](missing.md)` reports a broken target when no `missing.md` exists. Point it at the setup guide, or add that file."
 help = "Point the link at the file or heading that exists, or delete it."
 level = "recommended"

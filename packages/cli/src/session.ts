@@ -11,7 +11,6 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
-import { BUILD_SCRIPT } from '#cli/config/settings/defaults.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -26,8 +25,10 @@ import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
 import { buildScopeView, findRootSelection } from '#cli/settings/scope-view.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { classifyFile, listFileDeclarations } from '#cli/repository/classify.ts';
-import type { Settings, SettingsFile, ScopeSelection } from '#cli/types/settings/values.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { selectPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
+import { BUILD_SCRIPT, OPENNEXT_PACKAGE, OPENNEXT_TYPE_DEFAULTS } from '#cli/config/settings/defaults.ts';
+import type { Settings, SettingsFile, KnownSettings, ScopeSelection } from '#cli/types/settings/values.ts';
 import { type PackageManager, type PackageManagerDeclaration } from '#cli/types/parsers/dependency-files.ts';
 
 function buildSession(values: Omit<Session, 'toolFiles' | 'generatedPaths' | 'uvPath' | 'miseBinPaths'>): Session {
@@ -113,6 +114,14 @@ function findSessionMisePaths(
     return readMiseBinPaths(installedRoot, [...new Set(tools)], timeoutSeconds, []);
 }
 
+// An OpenNext project names its Worker types after the OpenNext guide. Only scopes that run cloudflare hold these defaults.
+function applyOpenNextDefaults(known: KnownSettings): void {
+    for (const [name, value] of Object.entries(OPENNEXT_TYPE_DEFAULTS)) {
+        const held = known.defaults.get(name);
+        if (held !== undefined) known.defaults.set(name, { ...held, value });
+    }
+}
+
 // Resolve every scope: its configurations, known settings, and merged view.
 async function buildScopeSelections(
     settings: Settings,
@@ -144,6 +153,8 @@ async function buildScopeSelections(
                     value: [name, ...BUILD_SCRIPT],
                 });
             }
+            if (listProjectDependencyNames(repository.dependencyFiles, scope.path).includes(OPENNEXT_PACKAGE))
+                applyOpenNextDefaults(known);
             const view = buildScopeView(known, effective, selected, scope.path);
             return { scope, selected, known, view };
         }),

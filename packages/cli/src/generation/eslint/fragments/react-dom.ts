@@ -1,6 +1,21 @@
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
-import { JSX_CODE_FILES } from '#cli/config/generation/eslint-fragments.ts';
+import { TABINDEX_RULES, JSX_CODE_FILES, FOCUSABLE_ROLES } from '#cli/config/generation/eslint-fragments.ts';
 import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
+
+/**
+ * Let a scrollable region take tabIndex={0}, so that a keyboard can scroll it; the preset allows only tab panels.
+ * @param rules the rules of a jsx-a11y preset block.
+ * @returns the rules, with the region role allowed in each tabIndex rule.
+ */
+function allowFocusableRegions(rules: Record<string, unknown>): Record<string, unknown> {
+    return Object.fromEntries(
+        Object.entries(rules).map(([rule, entry]) => {
+            if (!(TABINDEX_RULES as readonly string[]).includes(rule) || !Array.isArray(entry)) return [rule, entry];
+            const [severity, options] = entry as [unknown, Record<string, unknown> | undefined];
+            return [rule, [severity, { ...options, roles: [...FOCUSABLE_ROLES] }]];
+        }),
+    );
+}
 
 /**
  * Apply the accessibility lint rules to the React DOM files.
@@ -22,7 +37,9 @@ function buildReactDomFragment(
             blockWriter.block(
                 {
                     files: JSX_CODE_FILES,
-                    ...(preset.blocks[0].rules === undefined ? {} : { rules: preset.blocks[0].rules }),
+                    ...(preset.blocks[0].rules === undefined
+                        ? {}
+                        : { rules: allowFocusableRegions(preset.blocks[0].rules) }),
                 },
                 "plugins: { 'jsx-a11y': accessibility }",
                 {
@@ -37,4 +54,4 @@ function buildReactDomFragment(
     return { imports: imports, blocks: output.join('') };
 }
 
-export { buildReactDomFragment };
+export { allowFocusableRegions, buildReactDomFragment };

@@ -173,6 +173,31 @@ The price is USD 5.
 /** Each style rule still checks prose and does not report source notation. */
 export const STYLE_CASES = [
     {
+        rule: 'tree-blocks',
+        path: 'tree.md',
+        source: `# Guide
+
+The app keeps its routes apart from its data.
+
+\`\`\`text
+src/
+├── routes/
+│   └── cart.ts
+└── data/
+\`\`\`
+`,
+        lines: [7],
+    },
+    {
+        rule: 'tree-blocks',
+        path: 'tree.ts',
+        source: `// Prints the folders as a tree, such as:
+// └── data/
+export const branch = '└──';
+`,
+        lines: [],
+    },
+    {
         rule: 'file-paths',
         path: 'paths.md',
         source: `# Guide

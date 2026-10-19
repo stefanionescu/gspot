@@ -78,11 +78,11 @@ export const SETTING_DECLARATIONS = {
     },
     'cloudflare.types_file': {
         configurations: ['cloudflare'],
-        description: 'Tracked Worker environment types file, relative to the repository root.',
+        description: 'Tracked Worker types file from the repository root; OpenNext defaults to cloudflare-env.d.ts.',
     },
     'cloudflare.types_interface': {
         configurations: ['cloudflare'],
-        description: 'Environment interface name passed to wrangler types; OpenNext uses CloudflareEnv.',
+        description: 'Environment interface name passed to wrangler types; OpenNext defaults to CloudflareEnv.',
     },
     'coverage.lines': {
         configurations: ['jest', 'pytest', 'vitest', 'swift'],

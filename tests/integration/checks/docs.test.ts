@@ -8,7 +8,7 @@ import type { RunReport } from '#cli/types/runs/check.ts';
 import { buildSandboxPath } from '#tests/setup/install.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { LinkFailure } from '#tests/types/tool-output.ts';
-import { LINK_PAGE, LINK_TEXT_CASES, LINK_SCOPE_SETTINGS } from '#tests/data/checks/docs.ts';
+import { LINK_PAGE, ROOT_LINK_FILES, LINK_TEXT_CASES, LINK_SCOPE_SETTINGS } from '#tests/data/checks/docs.ts';
 
 // Checks the exit code, and the status and finding positions of the root and child scopes.
 async function assertLinkFailures(root: string, check: string, failures: readonly LinkFailure[]): Promise<void> {
@@ -80,4 +80,21 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
     } finally {
         await server.stop(true);
     }
+});
+
+test('docs/lychee reads a root-relative link from the repository root, and leaves a site route to the site', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, ROOT_LINK_FILES);
+    commitAll(sandbox.path);
+    const applied = await spawnGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const command = ['check', '--only', 'docs/lychee', '--json'];
+    const passed = await spawnGspot(sandbox.path, command, { PATH: buildSandboxPath() });
+    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+    await Bun.write(join(sandbox.path, 'root.md'), '# Links\n\nRead [the setup guide](/guides/missing.md).\n');
+    const failed = await spawnGspot(sandbox.path, command, { PATH: buildSandboxPath() });
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual([
+        matchFields({ file: 'root.md', line: 3, column: 6 }),
+    ]);
 });
