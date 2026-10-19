@@ -1,15 +1,20 @@
 /** Commands and exit codes for both unformatted tutorial projects. */
-export const QUICKSTART_COMMANDS = [
-    { command: ['mise', 'exec', '--', 'gspot', 'install'], code: 0 },
-    { command: ['mise', 'exec', '--', 'gspot', 'check'], code: 1 },
-    { command: ['mise', 'exec', '--', 'gspot', 'check', '--fix'], code: 0 },
-    { command: ['mise', 'exec', '--', 'gspot', 'check'], code: 0 },
-] as const;
+/** The tutorial commands. The first check fails on what the fixers then correct, unless the project starts clean. */
+export function listQuickstartCommands(firstCheckCode: number): { command: readonly string[]; code: number }[] {
+    return [
+        { command: ['mise', 'exec', '--', 'gspot', 'install'], code: 0 },
+        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: firstCheckCode },
+        { command: ['mise', 'exec', '--', 'gspot', 'check', '--fix'], code: 0 },
+        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: 0 },
+    ];
+}
 
 export const TUTORIALS = [
     {
         configuration: 'python',
         folder: 'orders-python',
+        // uv init writes double quotes, which Ruff keeps, so the new project starts clean.
+        firstCheckCode: 0,
         projectCommands: [
             ['uv', 'init', '--lib'],
             ['uv', 'sync'],
@@ -24,6 +29,7 @@ export const TUTORIALS = [
     {
         configuration: 'swift',
         folder: 'orders-swift',
+        firstCheckCode: 1,
         projectCommands: [['swift', 'package', 'init', '--type', 'library']],
         files: {
             'Sources/orders-swift/orders_swift.swift': `public func total(_ values: [Int]) -> Int {

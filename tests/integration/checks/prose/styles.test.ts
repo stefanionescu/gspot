@@ -76,7 +76,7 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
         files: {
             'gspot.toml': buildSettingsText(['prose'], {
                 level: 'all',
-                tables: 'allowed_words = { value = ["Microsoft", "Edge"], reason = "The guide names this browser." }\n',
+                tables: 'allowed_words = { Microsoft = "The guide names this browser.", Edge = "The guide names this browser." }\n',
             }),
             'guide.md': `# Guide
 
@@ -171,7 +171,7 @@ test.each([{ scope: '' }, { scope: 'app' }])(
         const settings = buildSettingsText(scope === '' ? ['prose', 'sql', 'spelling'] : ['prose', 'spelling'], {
             level: 'all',
             tables:
-                'allowed_words = { value = ["NebulaProduct"], reason = "The project product." }\n' +
+                'allowed_words = { NebulaProduct = "The project product." }\n' +
                 (scope === ''
                     ? ''
                     : `[[scope]]

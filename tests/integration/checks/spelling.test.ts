@@ -23,7 +23,9 @@ test('typos locale and word allowances stay in their scope at level all', async 
     const sourceFiles = {
         'gspot.toml': buildSettingsText(['spelling'], {
             level: 'all',
-            tables: `[[scope]]
+            tables: `[spelling]
+locale = "en-us"
+[[scope]]
 path = "british"
 [scope.spelling]
 locale = "en-gb"

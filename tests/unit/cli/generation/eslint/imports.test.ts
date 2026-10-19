@@ -112,7 +112,7 @@ test('import-x never parses a gitignored bundle that code imports', async () => 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['javascript']),
-        '.gitignore': '.open-next/\n',
+        '.gitignore': 'node_modules/\n.open-next/\n',
         'worker.js': '',
     });
     readGitOutput(sandbox.path, ['init', '-q']);

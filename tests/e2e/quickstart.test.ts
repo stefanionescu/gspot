@@ -11,7 +11,7 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { testRunFolder, buildSandboxPath } from '#tests/setup/install.ts';
-import { TUTORIALS, QUICKSTART_COMMANDS } from '#tests/data/quickstart.ts';
+import { TUTORIALS, listQuickstartCommands } from '#tests/data/quickstart.ts';
 
 test.each(
     TUTORIALS.filter(
@@ -45,7 +45,7 @@ test.each(
     commitAll(root);
     for (const { command, code } of [
         { command: ['mise', 'exec', '--', 'gspot', 'init', '--yes'], code: 0 },
-        ...QUICKSTART_COMMANDS,
+        ...listQuickstartCommands(row.firstCheckCode),
     ]) {
         const result = await runCommand([...command], { cwd: root, env: environment });
         const launchFailure =

@@ -111,16 +111,19 @@ function dropIgnoredFindings(result: CheckResult, uses: Map<IgnoreRecord, Ignore
     result.status = result.findings.length > 0 ? 'failed' : 'passed';
 }
 
-// A project-wide check reads the whole project; path arguments keep the findings in the named files and those without a file.
-function dropOutsideFindings(result: CheckResult, options: RunOptions): void {
+// A project-wide check reads the whole project. Path arguments drop its findings in the other tracked files. Findings
+// without a file stay, and so do findings in an untracked file, such as the build output that a site check reads.
+function dropOutsideFindings(result: CheckResult, runState: RunState): void {
+    const { options, session } = runState;
     if (options.paths === undefined || options.staged !== undefined) return;
     const paths = new Set(options.paths);
-    result.findings = result.findings.filter((finding) => finding.file === '' || paths.has(finding.file));
+    const tracked = new Set(session.repository.files.map((file) => file.path));
+    result.findings = result.findings.filter((finding) => paths.has(finding.file) || !tracked.has(finding.file));
 }
 
 function filterResult(runState: RunState, result: CheckResult): void {
     if (RAN_STATUSES.has(result.status)) {
-        dropOutsideFindings(result, runState.options);
+        dropOutsideFindings(result, runState);
         dropIgnoredFindings(result, runState.uses);
     }
     if (FAILED_STATUSES.has(result.status))

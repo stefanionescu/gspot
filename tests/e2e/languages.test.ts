@@ -50,7 +50,7 @@ async function prepareLanguages(installation: PackedSandbox): Promise<void> {
             ...command,
             'set',
             'allowed_words',
-            '["NebulaConfiguration"]',
+            'NebulaConfiguration',
             '--reason',
             'NebulaConfiguration is the project name.',
         ],

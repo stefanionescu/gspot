@@ -51,7 +51,7 @@ test('one Astro project reaches ESLint, astro check, and Prettier, and passes af
     expect(await Bun.file(join(root, PAGE)).text()).toBe(ASTRO_PAGE);
     const clean = await spawnGspot(
         root,
-        ['check', '--json', '--only', 'javascript/eslint', 'astro/astro-check'],
+        ['check', '--json', '--only', 'javascript/eslint,astro/astro-check'],
         environment,
     );
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);

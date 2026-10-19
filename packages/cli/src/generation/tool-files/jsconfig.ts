@@ -19,13 +19,30 @@ import {
     JAVASCRIPT_BUNDLED_IMPORTS,
 } from '#cli/config/generation/typescript.ts';
 
-// An exclude here replaces the inherited one and the compiler defaults, so it repeats the authored entries.
-function buildExtendedExclude(prefix: string, exclusions: string[], authored: TypeScriptConfiguration): string[] {
-    const inherited = getValueAt(authored.raw, ['exclude']);
-    return [
-        ...exclusions.map((path) => `${prefix}${path}`),
-        ...(Array.isArray(inherited) ? inherited.map((path) => `${prefix}${String(path)}`) : []),
-    ];
+// An exclude here replaces the inherited one and the compiler defaults, so it repeats the authored entries. TypeScript
+// takes the exclude of the nearest file in the extends chain, relative to that file.
+function buildExtendedExclude(
+    context: ToolFileContext,
+    paths: { prefix: string; owner: string; exclusions: string[] },
+    authored: TypeScriptConfiguration,
+): string[] {
+    const { root, reads } = context.session;
+    const generatedFolder = join(root, dirname(context.targetPath));
+    const chain = [paths.owner, ...authored.extendedConfigurationFiles];
+    const declaring = chain
+        .map((file) => ({
+            file,
+            exclude: getValueAt(file === paths.owner ? authored.raw : readTsconfig(root, file, reads)?.raw, [
+                'exclude',
+            ]),
+        }))
+        .find(({ exclude }) => Array.isArray(exclude));
+    const inherited = Array.isArray(declaring?.exclude)
+        ? declaring.exclude.map((entry) =>
+              convertToPosixPath(relative(generatedFolder, join(dirname(declaring.file), String(entry)))),
+          )
+        : [];
+    return [...paths.exclusions.map((path) => `${paths.prefix}${path}`), ...inherited];
 }
 
 // Only tracked declaration files: a gitignored one, such as a dev server's route types, differs per machine.
@@ -84,7 +101,11 @@ function buildJsconfig(context: ToolFileContext): string {
     }
     jsconfig['extends'] = `${prefix}${owner}`;
     if (authored.options.jsx !== undefined) delete compilerOptions['jsx'];
-    jsconfig['exclude'] = buildExtendedExclude(prefix, [...declarationPaths, ...JAVASCRIPT_EXCLUSIONS], authored);
+    jsconfig['exclude'] = buildExtendedExclude(
+        context,
+        { prefix, owner: join(root, scope, owner), exclusions: [...declarationPaths, ...JAVASCRIPT_EXCLUSIONS] },
+        authored,
+    );
     if (jsconfigOwner === undefined) jsconfig['files'] = listTrackedDeclarations(context, authored);
     return JSON.stringify(jsconfig, null, JSON_INDENT) + '\n';
 }

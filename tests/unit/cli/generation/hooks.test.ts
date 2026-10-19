@@ -125,7 +125,9 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
     expect(hooks.map((file) => file.path)).toStrictEqual(
         ['post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'].map((name) => `.gspot/hooks/${name}`),
     );
-    const bin = await fakeTool(sandbox.path, 'bin/git-lfs', LOGGING_PROGRAM);
+    // A fake git stands in for the git lfs call, because Git finds a real git-lfs in its own folder first.
+    const bin = await fakeTool(sandbox.path, 'bin/git', LOGGING_PROGRAM);
+    await fakeTool(sandbox.path, 'bin/git-lfs', LOGGING_PROGRAM);
     await fakeTool(sandbox.path, 'bin/mise', LOGGING_PROGRAM);
     const log = join(sandbox.path, 'calls.jsonl');
     const environment = { PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`, CALLS_LOG: log };
@@ -157,9 +159,9 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
         .split('\n')
         .map((line) => JSON.parse(line) as unknown);
     expect(calls).toStrictEqual([
-        { name: 'git-lfs', argv: ['pre-push', 'origin', 'url'], input },
+        { name: 'git', argv: ['lfs', 'pre-push', 'origin', 'url'], input },
         { name: 'mise', argv: ['exec', '--', 'gspot', 'check', '--hook', 'pre-push', '--', 'origin', 'url'], input },
-        { name: 'git-lfs', argv: ['post-checkout', 'a', 'b', '1'], input: '' },
+        { name: 'git', argv: ['lfs', 'post-checkout', 'a', 'b', '1'], input: '' },
     ]);
     const missing = await runCommand([shExecutable, join(sandbox.path, '.gspot/hooks/post-merge'), '0'], {
         cwd: sandbox.path,

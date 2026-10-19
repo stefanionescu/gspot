@@ -2,7 +2,7 @@ export const PYTHON_PROJECTS = ['uv.toml', 'pyproject.toml'] as const;
 
 export const PYTHON_INSTALL_STEPS = [
     ['uv', 'venv', '--python', '{python-version}', '--allow-existing', '.venv'],
-    ['uv', 'sync', '--locked', '--no-install-project'],
+    ['uv', 'sync', '--locked', '--no-install-project', '--python', '{python-version}'],
 ] as const;
 
 export const PYTHON_TOOL_PROJECT = `[project]

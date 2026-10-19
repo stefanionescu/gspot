@@ -17,7 +17,11 @@ import { NEXT_PACKAGE, NEXTJS_SANDBOX, REFERENCE_PROJECT_FILES } from '#tests/da
 
 // Runs the named checks alone, expects the exit code, and returns the report.
 async function readCheckReport(repository: Sandbox, checks: string[], code: number): Promise<RunReport> {
-    const result = await spawnGspot(repository.root, ['check', '--only', ...checks, '--json'], repository.environment);
+    const result = await spawnGspot(
+        repository.root,
+        ['check', '--only', checks.join(','), '--json'],
+        repository.environment,
+    );
     expect(result.code, result.stdout + result.stderr).toBe(code);
     return JSON.parse(result.stdout) as RunReport;
 }
