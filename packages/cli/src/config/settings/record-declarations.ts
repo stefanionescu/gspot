@@ -2,7 +2,10 @@ export const RECORD_DECLARATIONS = {
     'command_check.name': {
         description: 'The check ID that `--only` and `[[ignore]] check` use, which may not match a shipped check.',
     },
-    'ignore.check': { description: 'The check whose findings you accept: a shipped check or a command check.' },
+    'ignore.check': {
+        description:
+            'The check whose findings you accept: a shipped check or a command check. Leave it out to keep the paths out of every check.',
+    },
     'ignore.rule': { description: 'One lint rule of that check.' },
     'ignore.paths': { description: 'Where the ignore applies.' },
     'ignore.reason': { description: 'Why you accept the findings.' },
@@ -10,6 +13,10 @@ export const RECORD_DECLARATIONS = {
     'import_rule.name': { description: 'The name that other import rules use in can_also_import.' },
     'import_rule.paths': { description: 'The files of the import rule.' },
     'import_rule.can_also_import': { description: 'The import rules listed below this one that its files may import.' },
+    'import_rule.can_import': {
+        description:
+            'Exactly the import rules whose files this rule may import, besides its own. Replaces the rules listed above it.',
+    },
     'coverage.swift_target.name': { description: 'A Swift target named in the coverage report.' },
     'coverage.swift_target.lines': {
         description: 'The least share of lines that the target must cover, in place of `coverage.lines`.',

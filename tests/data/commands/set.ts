@@ -12,9 +12,6 @@ const EXTRA_OPTION_SCOPES = [
     { name: 'child', scope: 'app', source: '[scope "app"]' },
 ] as const;
 
-/** Project names shared by settings exceptions and generated Vale words. */
-const PROJECT_WORDS = ['NebulaConfiguration', 'OrbitalLedger'] as const;
-
 /** List settings that loosen a check; each needs a reason, and set and unset edit them the same way. */
 const LOOSENED_SETTINGS = [
     {
@@ -29,7 +26,6 @@ const LOOSENED_SETTINGS = [
         second: 'packages.example.test',
         defaults: ['registry.npmjs.org', 'registry.yarnpkg.com'],
     } as const,
-    { key: 'allowed_words', value: PROJECT_WORDS[0], second: PROJECT_WORDS[1], defaults: [] } as const,
 ] as const;
 
 const TWO_SCOPES = `[rules]

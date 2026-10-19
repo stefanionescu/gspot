@@ -149,9 +149,9 @@ export const COMMAND_HELP = {
         summary: 'Turn off a check, or one lint rule, with a reason',
         group: 'Change gspot.toml:',
         description:
-            'Turn off a check, or one of its lint rules, everywhere or for some paths.\ngspot writes the ignore and your reason to `gspot.toml`, then writes the generated files again.\nEach report counts the ignores. `gspot check --verbose` prints them with their reasons.',
+            'Turn off a check, or one of its lint rules, everywhere or for some paths.\nWithout a check, the paths stay out of every check and every tool file.\ngspot writes the ignore and your reason to `gspot.toml`, then writes the generated files again.\nEach report counts the ignores. `gspot check --verbose` prints them with their reasons.',
         arguments: {
-            check: 'The check, such as `python/ruff`',
+            check: 'The check, such as `python/ruff`. Leave it out to keep --paths out of every check',
         },
         options: {
             '--reason <text>': 'Why you turn it off (required)',
@@ -171,7 +171,7 @@ export const COMMAND_HELP = {
         description:
             'Delete the ignores of a check from `gspot.toml`, then write the generated files again.\nWith `--rule`, delete only the ignores of that lint rule. With `--paths`, take those paths out of the ignores.\nAn ignore without paths covers every path, so `--paths` cannot narrow it. unignore keeps that ignore and says so.',
         arguments: {
-            check: 'The check, such as `python/ruff`',
+            check: 'The check, such as `python/ruff`. Leave it out to change the ignores of every check',
         },
         options: {
             '--rule <rule>': 'Delete only the ignores of this lint rule',

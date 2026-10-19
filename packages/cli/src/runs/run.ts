@@ -35,7 +35,7 @@ import {
  * @returns whether the ignore covers this finding.
  */
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
-    if (record.check !== finding.check) return false;
+    if (record.check !== undefined && record.check !== finding.check) return false;
     if (record.rule !== undefined && record.rule !== finding.rule) return false;
     return record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file);
 }

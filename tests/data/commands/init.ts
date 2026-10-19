@@ -124,7 +124,7 @@ const FORMAT_FILE_CASES = [
     {
         name: 'no formatter configuration',
         files: {},
-        expected: { indent_width: 4, print_width: 120, quotes: 'single' },
+        expected: { indent_width: 4, print_width: 120 },
     },
     {
         name: 'Prettier dependency without configuration',
@@ -155,7 +155,7 @@ indent_size = 3
 max_line_length = 96
 `,
         },
-        expected: { indent_width: 3, print_width: 96, quotes: 'single' },
+        expected: { indent_width: 3, print_width: 96 },
     },
     {
         name: 'Prettier precedence over EditorConfig',

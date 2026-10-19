@@ -76,7 +76,7 @@ function buildScopeView(known: KnownSettings, settings: Settings, selected: Mani
             if (value === undefined) throw new Error(`The selected scope has no ${name} settings.`);
             return value;
         },
-        ignoresFor: (check) => ignores.filter((entry) => entry.check === check),
+        ignoresFor: (check) => ignores.filter((entry) => entry.check === check || entry.check === undefined),
         rulesOff: (check) =>
             ignores
                 .filter((entry) => entry.check === check)

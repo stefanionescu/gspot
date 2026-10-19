@@ -6,9 +6,9 @@ import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { listPrettierPlugins } from '#cli/planning/needed-tools.ts';
 import { type ToolFileContext } from '#cli/types/generation/files.ts';
 import { GSPOT_NODE_MODULES_PATH } from '#cli/config/system/locations.ts';
-import { PRETTIER_FIXED_OPTIONS } from '#cli/config/generation/formatting.ts';
 import { escapeGlob, includeFolderContents } from '#cli/repository/matchers.ts';
 import type { WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';
+import { DEFAULT_QUOTES, PRETTIER_FIXED_OPTIONS } from '#cli/config/generation/formatting.ts';
 
 import type {
     ScopeFormat,
@@ -114,7 +114,7 @@ function buildPrettierOptions(input: PrettierInput): Record<string, unknown> {
         ...normalizeOverrides(extraOverrides as ExtraOverride<Record<string, unknown>>[]),
     ];
     return {
-        ...convertFormatSettings(format),
+        ...convertFormatSettings({ ...format, quotes: format.quotes ?? DEFAULT_QUOTES.prettier }),
         ...PRETTIER_FIXED_OPTIONS,
         ...extras,
         ...buildPluginsOption(plugins, extras),

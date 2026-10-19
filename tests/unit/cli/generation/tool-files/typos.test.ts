@@ -15,7 +15,7 @@ test('typos.toml keeps quoted words and paths and adds no settings', async () =>
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             configurations: ['spelling'],
-            allowed_words: { value: words, reason },
+            allowed_words: Object.fromEntries(words.map((word) => [word, reason])),
             ignore: [{ check: 'spelling/typos', paths, reason }],
         }),
     });
@@ -64,7 +64,7 @@ spelling.locale = "en-us"
         ({ target }) => target === '.gspot/configurations/general/spelling/typos.toml',
     )!;
     for (const [scope, locale] of [
-        ['', 'en-us'],
+        ['', 'en'],
         ['british', 'en-gb'],
         ['british/american', 'en-us'],
     ] as const) {

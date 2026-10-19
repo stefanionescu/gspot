@@ -4,6 +4,7 @@ import { relative } from 'node:path/posix';
 import { stringify } from '@decimalturn/toml-patch';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
+import { DEFAULT_QUOTES } from '#cli/config/generation/formatting.ts';
 import { buildGlobSections, buildIgnoreSections } from '#cli/generation/ignore-files.ts';
 import { type PythonInputs, type ToolFileContext } from '#cli/types/generation/files.ts';
 import { RUFF_ISORT, RUFF_IGNORED_RULES, BASEDPYRIGHT_OPTIONS } from '#cli/config/generation/python.ts';
@@ -68,7 +69,7 @@ function buildRuffFile(context: ToolFileContext): string {
         'extend-exclude': pythonExcludes('python/ruff'),
         format: {
             'indent-style': format.indent_style === 'tab' ? 'tab' : 'space',
-            'quote-style': format.quotes,
+            'quote-style': format.quotes ?? DEFAULT_QUOTES.ruff,
             'line-ending': format.line_ending === 'crlf' ? 'cr-lf' : 'lf',
             'docstring-code-format': true,
         },

@@ -56,6 +56,17 @@ function parseSettingValue(items: string[], declaration: SettingDeclaration): Pa
     return { type: 'scalar', value: scalar };
 }
 
+// A table of reasons, such as allowed_words, writes each item as a key with the --reason as its value.
+function parseReasonEntries(options: SetOptions): ParsedSettingValue {
+    const { reason } = options;
+    if (reason === undefined)
+        throw new GspotError(
+            'arguments',
+            `${options.key} keeps a reason for each entry. Add --reason "..." with why each one belongs.`,
+        );
+    return { type: 'scalar', value: Object.fromEntries(options.items.map((item) => [item, reason])) };
+}
+
 function buildSettingEdit(change: ParsedSettingValue, declaration: SettingDeclaration, options: SetOptions): Mutation {
     return (written) => {
         const scopeTable = findScopeTable(written, options.scope);
@@ -65,7 +76,7 @@ function buildSettingEdit(change: ParsedSettingValue, declaration: SettingDeclar
             const existing = getWrittenValue(written);
             setKey(scopeTable, options.key, { ...(isRecord(existing) ? existing : {}), ...change.value });
         } else setKey(scopeTable, options.key, change.value);
-        if (options.reason !== undefined) {
+        if (options.reason !== undefined && declaration.reason_values !== true) {
             const written = getValueAt(scopeTable, options.key.split('.'));
             const value = getWrittenValue(written);
             setKey(scopeTable, options.key, { value, reason: options.reason });
@@ -92,6 +103,37 @@ function refuseIncompleteReason(
         );
 }
 
+// gspot keeps reasons for values that loosen a check, so set refuses a reason on any other value before it writes.
+function refuseUnneededReason(
+    options: SetOptions,
+    declaration: SettingDeclaration,
+    change: ParsedSettingValue,
+    shippedDefault: unknown,
+): void {
+    if (options.reason === undefined || declaration.reason_values === true) return;
+    if (isLoosening(declaration, change.value, shippedDefault)) return;
+    throw new GspotError(
+        'settings',
+        `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,
+    );
+}
+
+// Name what set wrote: the items it added or the value it set, then the reason and the earlier value.
+function describeSettingChange(
+    change: ParsedSettingValue,
+    context: { declaration: SettingDeclaration; options: SetOptions; shown: string; previous?: EffectiveSetting },
+): string {
+    const { declaration, options, shown, previous } = context;
+    const isReasonTable = declaration.reason_values === true;
+    const was = previous === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
+    if (isReasonTable) return `Added ${options.items.join(' and ')} to ${shown}.${was}`;
+    const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
+    if (!Array.isArray(change.value)) return `Set ${shown} to ${JSON.stringify(change.value)}.${reason}${was}`;
+    const items = change.value.map((item) => (typeof item === 'string' ? item : JSON.stringify(item))).join(' and ');
+    const description = change.type === 'list' ? `Added ${items} to ${shown}.` : `Set ${shown} to ${items}.`;
+    return `${description}${reason}${was}`;
+}
+
 async function writeSetting({
     root,
     input,
@@ -110,8 +152,10 @@ async function writeSetting({
     shown: string;
 }): Promise<CommandResult> {
     const declaration = match.declaration;
-    const change = parseSettingValue(options.items, declaration);
-    const isList = change.type === 'list';
+    const change =
+        declaration.reason_values === true
+            ? parseReasonEntries(options)
+            : parseSettingValue(options.items, declaration);
     const previous = getSettingValue(known, settings, options.key, options.scope);
     const shippedDefault = findSettingDefault(
         known,
@@ -120,15 +164,14 @@ async function writeSetting({
         (dependentKey) => getSettingValue(known, settings, dependentKey, options.scope)?.value,
     )?.value;
     refuseIncompleteReason(options, declaration, change, previous, shippedDefault);
-    const setSettingValue = buildSettingEdit(change, declaration, options);
-    const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
-    const was = previous === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
-    const items = Array.isArray(change.value)
-        ? change.value.map((item) => (typeof item === 'string' ? item : JSON.stringify(item))).join(' and ')
-        : JSON.stringify(change.value);
-    const description = isList ? `Added ${items} to ${shown}.` : `Set ${shown} to ${items}.`;
-    const summary = `${description}${reason}${was}`;
-    return await saveSettings(root, { input, change: setSettingValue, summary });
+    refuseUnneededReason(options, declaration, change, shippedDefault);
+    const summary = describeSettingChange(change, {
+        declaration,
+        options,
+        shown,
+        ...(previous === undefined ? {} : { previous }),
+    });
+    return await saveSettings(root, { input, change: buildSettingEdit(change, declaration, options), summary });
 }
 
 /**

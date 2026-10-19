@@ -18,7 +18,7 @@ export type PathExplanation = {
     tags: string[];
     configurations: string[];
     checks: { check: string; stage: string; configuration?: string }[];
-    ignores: { check: string; rule?: string; reason?: string }[];
+    ignores: { check?: string; rule?: string; reason?: string }[];
     unchecked?: string;
     remedy?: string;
 };

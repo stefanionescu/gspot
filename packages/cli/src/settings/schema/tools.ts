@@ -2,13 +2,13 @@ import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { JsonValue } from '#cli/types/parsers/json.ts';
 import type { ToolTable } from '#cli/types/settings/file.ts';
 import { stylelintRules } from '#cli/settings/schema/stylelint.ts';
 import type { TableSettings } from '#cli/types/settings/tables.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { ESLINT_RUNTIME_NAMES_FILE } from '#cli/config/generation/eslint.ts';
 import { JAVASCRIPT_CONFIGURATION_FOLDER } from '#cli/config/configurations.ts';
+import { eslintRules, eslintPluginsSchema } from '#cli/settings/schema/eslint.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
 import { YAMLLINT_RULES, COMMITLINT_RULES } from '#cli/config/generation/tool-files.ts';
 
@@ -24,8 +24,6 @@ import {
     RULE_TOKEN,
     RULE_CONDITIONS,
     KNIP_PACKAGE_NAME,
-    ESLINT_OPTIONS_HELP,
-    ESLINT_OPTION_STRING,
     DOCSTRING_CONVENTIONS,
     YAMLLINT_OPTIONS_HELP,
     EXTRA_OPTIONS_METADATA,
@@ -46,21 +44,6 @@ const extraTable = z
 const toolOptionsSchema = z.strictObject({
     extra: buildReasonedValueSchema(extraTable, EXTRA_OPTIONS_METADATA).optional().meta(EXTRA_OPTIONS_METADATA),
 } satisfies SchemaShape<Pick<TableSettings<'tools.prettier'>, 'extra'>, NonNullable<WrittenTools['prettier']>>);
-
-const firstEslintOption = z.union([
-    z.string().regex(ESLINT_OPTION_STRING, { error: ESLINT_OPTIONS_HELP }),
-    z.number(),
-    z.boolean(),
-    z.null(),
-    z.array(z.json()),
-    z.record(z.string(), z.json()),
-]) satisfies z.ZodType<JsonValue>;
-
-const eslintOptions = z.union([z.array(z.never()).max(0), z.tuple([firstEslintOption]).rest(z.json())], {
-    error: ESLINT_OPTIONS_HELP,
-}) satisfies z.ZodType<TableSettings<'tools.eslint'>['rules'][string]>;
-
-const eslintRules = z.record(z.string(), eslintOptions) satisfies z.ZodType<TableSettings<'tools.eslint'>['rules']>;
 
 // Nested tool options retain the rule key before any option name or tuple index.
 function formatRuleHelp(issue: z.core.$ZodRawIssue, help: string): string {
@@ -149,6 +132,7 @@ const eslintTable = toolOptionsSchema.extend({
         )
         .default([])
         .meta(SETTING_DECLARATIONS['tools.eslint.override']),
+    plugins: eslintPluginsSchema,
 } satisfies SchemaShape<
     Omit<TableSettings<'tools.eslint'>, 'extra'>,
     Omit<NonNullable<WrittenTools['eslint']>, 'extra'>

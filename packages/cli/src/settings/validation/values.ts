@@ -105,6 +105,28 @@ function validateScopePaths(repositoryRoot: string, settings: Settings): Setting
 }
 
 /**
+ * Check that each of your own ESLint plugins names a module file in the repository.
+ * @param repositoryRoot the folder the paths start from.
+ * @param settings the parsed gspot.toml.
+ * @returns an error for each plugin path that names no file.
+ */
+function validatePluginPaths(repositoryRoot: string, settings: Settings): SettingsError[] {
+    const plugins = settings.tools['eslint']?.['plugins'];
+    if (!Array.isArray(plugins)) return [];
+    using files = openFiles(repositoryRoot);
+    return plugins.flatMap((plugin: { path: string }, index) =>
+        files.readStats(plugin.path)?.isFile() === true
+            ? []
+            : [
+                  {
+                      path: ['tools', 'eslint', 'plugins', index, 'path'],
+                      message: `\`${plugin.path}\` names no file. Point path at the plugin module, relative to the repository root.`,
+                  },
+              ],
+    );
+}
+
+/**
  * Check tool option constraints declared by tools, including inactive scopes.
  * @param table the written root or scope values.
  * @param tools the declarations with option limits.
@@ -154,4 +176,4 @@ function validateRuleExcludes(exclude: string[], manifests: Map<string, Manifest
     });
 }
 
-export { validateScopePaths, validateExtraOptions, validateDisabledRules };
+export { validateScopePaths, validatePluginPaths, validateExtraOptions, validateDisabledRules };

@@ -18,7 +18,7 @@ export type ConfigurationTables = {
     docs: { banned_headings: string[]; allowed_urls: string[] };
     drizzle: { client_names: string[] };
     duplication: { min_lines: number; min_tokens: number };
-    javascript: { script_files: string[] };
+    javascript: { script_files: string[]; externals: string[] };
     licenses: { allowed: string[]; allowed_package: AllowedPackage[] };
     openapi: { document?: string | undefined; generate_command?: string[] | undefined };
     postgres: {
@@ -26,6 +26,7 @@ export type ConfigurationTables = {
         frozen_through: string;
         migrations_folder?: string | undefined;
     };
+    python: { externals: string[]; extra_paths: string[] };
     prose: { max_sentence_words: number; max_list_item_words: number; max_paragraph_sentences: number };
     repository: { max_file_kilobytes: number };
     secrets: { env_examples: string[]; environment_functions: string[] };

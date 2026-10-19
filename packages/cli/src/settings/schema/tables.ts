@@ -10,6 +10,7 @@ import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { commandSchema } from '#cli/configurations/schema/parts.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
+import { pythonSchema, javascriptSchema } from '#cli/settings/schema/languages.ts';
 import { type TableValues, type TableSettings } from '#cli/types/settings/tables.ts';
 import { ciFields, hooksSchema, rulesSchema } from '#cli/settings/schema/integrations.ts';
 
@@ -95,17 +96,8 @@ const configurationTableSchemas = {
             client_names: nonemptyStrings.default(['db']).meta(SETTING_DECLARATIONS['drizzle.client_names']),
         } satisfies SchemaShape<TableSettings<'drizzle'>, NonNullable<WrittenSettings['drizzle']>>)
         .optional(),
-    javascript: z
-        .strictObject({
-            script_files: z
-                .array(relativePath)
-                .default(['scripts/**', '**/*.config.{js,mjs,cjs,ts}'])
-                .meta({
-                    configurations: ['javascript'],
-                    description: 'Script files, which may print to the console and call process.exit.',
-                }),
-        } satisfies SchemaShape<TableSettings<'javascript'>, NonNullable<WrittenSettings['javascript']>>)
-        .optional(),
+    javascript: javascriptSchema,
+    python: pythonSchema,
     trpc: z
         .strictObject({
             router_files: z
@@ -181,7 +173,7 @@ const configurationTableSchemas = {
         .optional(),
     spelling: z
         .strictObject({
-            locale: z.enum(SPELLING_LOCALES).default('en-us').meta(SETTING_DECLARATIONS['spelling.locale']),
+            locale: z.enum(SPELLING_LOCALES).default('en').meta(SETTING_DECLARATIONS['spelling.locale']),
         } satisfies SchemaShape<TableSettings<'spelling'>, NonNullable<WrittenSettings['spelling']>>)
         .optional(),
     supabase: z

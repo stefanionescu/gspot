@@ -63,7 +63,7 @@ export function buildRunReport(input: ReportInput): RunReport {
         ignores: uses
             .values()
             .map(({ record, matched }) => ({
-                check: record.check,
+                ...(record.check === undefined ? {} : { check: record.check }),
                 ...(record.rule === undefined ? {} : { rule: record.rule }),
                 ...(record.paths === undefined ? {} : { paths: record.paths }),
                 reason: record.reason,

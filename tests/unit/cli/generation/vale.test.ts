@@ -68,7 +68,7 @@ test('the Vale vocabulary and heading exceptions hold the products of every scop
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSettingsText(['prose'], {
             level: 'all',
-            tables: '[allowed_words]\nvalue = ["NebulaProduct", "Python"]\nreason = "The project uses these reviewed product names."\n[[scope]]\npath = "app"\n\nconfigurations = ["python"]\n[[scope]]\npath = "sibling"\n\nconfigurations = []\n',
+            tables: '[allowed_words]\nNebulaProduct = "The project uses this reviewed product name."\nPython = "The project uses this reviewed language name."\n[[scope]]\npath = "app"\n\nconfigurations = ["python"]\n[[scope]]\npath = "sibling"\n\nconfigurations = []\n',
         }),
         'sample.md': '# Guide\n',
         'app/sample.py': 'value = 1\n',

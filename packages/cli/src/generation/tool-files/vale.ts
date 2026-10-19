@@ -233,7 +233,7 @@ function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs 
     // The manifest list keys this cached value for the run.
     const cached = session.reads.memo.get(manifests) as ProseInputs | undefined;
     if (cached !== undefined) return cached;
-    const words = session.settingsFile.settings.allowed_words;
+    const words = Object.keys(session.settingsFile.settings.allowed_words);
     const prose = { words: [...new Set([...listProductNames(session), ...words])] };
     session.reads.memo.set(manifests, prose);
     return prose;

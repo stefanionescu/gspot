@@ -41,7 +41,7 @@ const RECORD_FIELDS = {
     scope: ['path', 'configurations', 'removed_configurations', 'test_files'],
     command_check: ['name', 'command', 'paths', 'stage', 'summary', 'help', 'fix', 'exit_codes', 'output'],
     ignore: ['check', 'rule', 'paths', 'reason', 'until'],
-    import_rule: ['name', 'paths', 'can_also_import'],
+    import_rule: ['name', 'paths', 'can_also_import', 'can_import'],
     'format.override': [
         'paths',
         'indent_style',

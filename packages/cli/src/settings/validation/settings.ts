@@ -19,7 +19,13 @@ import { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declarations.ts
 import { type Settings, type KnownSettings } from '#cli/types/settings/values.ts';
 import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
 import { formatCodeList, formatUnknownName, selectSimilarNames } from '#cli/system/text.ts';
-import { validateScopePaths, validateExtraOptions, validateDisabledRules } from '#cli/settings/validation/values.ts';
+
+import {
+    validateScopePaths,
+    validatePluginPaths,
+    validateExtraOptions,
+    validateDisabledRules,
+} from '#cli/settings/validation/values.ts';
 
 // The limit fields that some code reads for one language.
 function listLanguageLimits(language: string): string[] {
@@ -143,12 +149,13 @@ function validateSettings(settings: Settings, repositoryRoot: string | undefined
                 : [],
         ),
         ...settings.ignore.flatMap((entry, index) =>
-            checks.includes(entry.check)
+            entry.check === undefined || checks.includes(entry.check)
                 ? []
                 : [{ path: ['ignore', index, 'check'], message: formatUnknownName('check', entry.check, checks) }],
         ),
         ...validateDisabledRules(settings, manifests),
         ...(repositoryRoot === undefined ? [] : validateScopePaths(repositoryRoot, settings)),
+        ...(repositoryRoot === undefined ? [] : validatePluginPaths(repositoryRoot, settings)),
         ...listSettingsTables(settings).flatMap(({ table, path }) =>
             validateExtraOptions(table, tools).map((error) => ({ ...error, path: [...path, ...error.path] })),
         ),

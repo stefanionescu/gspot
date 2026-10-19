@@ -191,7 +191,8 @@ export const SETTING_DECLARATIONS = {
     },
     'spelling.locale': {
         configurations: ['spelling'],
-        description: 'The English locale typos checks against: en, en-us, en-gb, en-ca, or en-au.',
+        description:
+            'The English locale typos checks against: en accepts every dialect; en-us, en-gb, en-ca, and en-au report the spellings of the other dialects. The fixer never changes a dialect spelling.',
     },
     'supabase.functions_folder': {
         configurations: ['supabase'],
@@ -237,7 +238,8 @@ export const SETTING_DECLARATIONS = {
     },
     'format.quotes': {
         configurations: ['format'],
-        description: 'Single or double, for the languages where a formatter chooses.',
+        description:
+            'Single or double, for the languages where a formatter chooses. Unset, Python gets double quotes and the other languages single.',
     },
     'format.trailing_commas': {
         configurations: ['format'],

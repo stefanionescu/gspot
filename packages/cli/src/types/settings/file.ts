@@ -126,6 +126,7 @@ export type WrittenSettings = Optional<
         | 'cloudflare'
         | 'drizzle'
         | 'javascript'
+        | 'python'
         | 'trpc'
         | 'zustand'
         | 'openapi'
@@ -145,6 +146,7 @@ export type WrittenSettings = Optional<
     cloudflare?: Optional<ConfigurationTables['cloudflare']> | undefined;
     drizzle?: Optional<ConfigurationTables['drizzle']> | undefined;
     javascript?: Optional<ConfigurationTables['javascript']> | undefined;
+    python?: Optional<ConfigurationTables['python']> | undefined;
     trpc?: Optional<ConfigurationTables['trpc']> | undefined;
     zustand?: Optional<ConfigurationTables['zustand']> | undefined;
     openapi?: Optional<ConfigurationTables['openapi']> | undefined;
@@ -166,7 +168,7 @@ export type WrittenSettings = Optional<
           }
         | undefined;
     repository?: { max_file_kilobytes?: SettingValue<number> | undefined } | undefined;
-    allowed_words?: SettingValue<string[]> | undefined;
+    allowed_words?: Record<string, string> | undefined;
     scope?: WrittenScope[] | undefined;
     coverage?: WrittenCoverage | undefined;
     dependencies?: WrittenDependencies | undefined;
@@ -197,6 +199,7 @@ export type ParsedSettings = ParsedRoot & {
               docs?: Omit<ConfigurationTables['docs'], 'banned_headings'> | undefined;
               drizzle?: ConfigurationTables['drizzle'] | undefined;
               javascript?: ConfigurationTables['javascript'] | undefined;
+              python?: ConfigurationTables['python'] | undefined;
               trpc?: ConfigurationTables['trpc'] | undefined;
               zustand?: ConfigurationTables['zustand'] | undefined;
               structure?: Pick<ParsedStructure, 'environment_readers'> | undefined;
@@ -217,7 +220,7 @@ export type ParsedSettings = ParsedRoot & {
               naming?: Omit<ParsedNaming, 'override'> | undefined;
               tools?:
                   | (Omit<ParsedTools, 'eslint' | 'v8r'> & {
-                        eslint?: Omit<NonNullable<ParsedTools['eslint']>, 'override'> | undefined;
+                        eslint?: Omit<NonNullable<ParsedTools['eslint']>, 'override' | 'plugins'> | undefined;
                     })
                   | undefined;
               format?: Omit<ParsedFormat, 'override'> | undefined;
@@ -229,6 +232,7 @@ export type ParsedSettings = ParsedRoot & {
     docs?: ConfigurationTables['docs'] | undefined;
     drizzle?: ConfigurationTables['drizzle'] | undefined;
     javascript?: ConfigurationTables['javascript'] | undefined;
+    python?: ConfigurationTables['python'] | undefined;
     trpc?: ConfigurationTables['trpc'] | undefined;
     zustand?: ConfigurationTables['zustand'] | undefined;
     licenses?: ConfigurationTables['licenses'] | undefined;
@@ -251,7 +255,7 @@ export type ParsedSettings = ParsedRoot & {
     format?: ParsedFormat | undefined;
     ignore?:
         | {
-              check: string;
+              check?: string | undefined;
               rule?: string | undefined;
               paths?: string[] | undefined;
               reason: string;
@@ -269,7 +273,8 @@ export type IgnoreRecord = NonNullable<ParsedSettings['ignore']>[number];
 
 export type SettingsError = { path: KeyPath; message: string };
 
-export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['format']>, 'override'>>>;
+export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['format']>, 'override' | 'quotes'>>> &
+    Pick<NonNullable<ParsedSettings['format']>, 'quotes'>;
 
 export type ToolTable = Record<string, unknown>;
 
@@ -303,7 +308,7 @@ export type WrittenScope = Omit<
     structure?: { environment_readers?: string[] | undefined } | undefined;
     tools?:
         | (Omit<WrittenTools, 'eslint' | 'v8r'> & {
-              eslint?: Omit<NonNullable<WrittenTools['eslint']>, 'override'> | undefined;
+              eslint?: Omit<NonNullable<WrittenTools['eslint']>, 'override' | 'plugins'> | undefined;
           })
         | undefined;
     format?: Omit<WrittenFormat, 'override'> | undefined;

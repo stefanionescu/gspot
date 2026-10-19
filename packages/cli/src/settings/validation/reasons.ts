@@ -78,6 +78,9 @@ function validateSettingReasons(settings: Settings): SettingsError[] {
         ...settings.ignore.flatMap((entry, index) =>
             buildErrorsAt(['ignore', index, 'reason'], validateReason(`ignore.${String(index)}`, entry.reason)),
         ),
+        ...Object.entries(settings.allowed_words).flatMap(([word, reason]) =>
+            buildErrorsAt(['allowed_words', word], validateReason(`allowed_words.${word}`, reason)),
+        ),
         ...visit(settings.written, []),
     ];
 }

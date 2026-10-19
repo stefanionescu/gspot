@@ -270,3 +270,26 @@ async function readIgnoreRecords(root: string) {
         createReadCache(process.cwd()),
     ).ignore.map((entry) => ({ ...entry, until: entry.until?.toISOString() }));
 }
+
+test('ignore without a check keeps the paths out of every check and every tool file', async () => {
+    await using folder = await testdir();
+    await createFileTree(folder.path, {
+        'gspot.toml': buildSettingsText(['bash'], { rules: true, tables: '[rules]\nenabled = false\n' }),
+        'entry.sh': 'echo entry\n',
+        'data/facts.txt': 'Nebulix\n',
+    });
+    const refused = await runGspot(folder.path, ['ignore', '--rule', 'SC2086', '--paths', 'data/**', '--reason', 'x']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr).toContain('An ignore without a check cannot take --rule.');
+    const reason = 'Product facts copy words as printed on the packaging.';
+    const result = await runGspot(folder.path, ['ignore', '--paths', 'data/**', '--reason', reason]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('Ignored every check for data/**.');
+    const saved = parse(await readFile(join(folder.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(saved['ignore']).toStrictEqual([{ paths: ['data/**'], reason }]);
+    const typos = await readFile(join(folder.path, '.gspot/configurations/general/spelling/typos.toml'), 'utf8');
+    expect(typos).toContain('"data/**"');
+    const removed = await runGspot(folder.path, ['unignore', '--paths', 'data/**']);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect(parse(await readFile(join(folder.path, 'gspot.toml'), 'utf8'))).not.toHaveProperty('ignore');
+});

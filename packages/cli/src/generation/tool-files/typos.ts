@@ -134,7 +134,7 @@ function buildTyposFile(context: ToolFileContext): string {
     const ignoredPaths = grouped.flatMap((section) => section.patterns);
     const typos = extra('typos') as TyposSettings | undefined;
     const allowed = Object.fromEntries<string>(
-        context.session.settingsFile.settings.allowed_words.map((word) => [word, word]),
+        Object.keys(context.session.settingsFile.settings.allowed_words).map((word) => [word, word]),
     );
     const text = stringify(
         {

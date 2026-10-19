@@ -8,6 +8,7 @@ import { listPointerPaths } from '#cli/generation/pointers.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { type ScopeView } from '#cli/types/settings/values.ts';
+import { listActiveIgnores } from '#cli/settings/scope-view.ts';
 import { IGNORE_FILE_PURPOSES } from '#cli/config/generation/formatting.ts';
 import { listToolFileDeclarations } from '#cli/generation/tool-files/declarations.ts';
 import { type IgnoreSection, type ToolFileContext } from '#cli/types/generation/files.ts';
@@ -83,6 +84,9 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
             ).map(({ file }) => file),
         },
         { title: IGNORE_SECTION_TITLES.environment, patterns: [...LOCAL_ENVIRONMENT_PATTERNS] },
+        ...listActiveIgnores(session.settingsFile.settings)
+            .filter((entry) => entry.check === undefined)
+            .map((entry) => ({ title: entry.reason, patterns: entry.paths ?? [] })),
     ];
 }
 

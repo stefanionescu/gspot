@@ -126,11 +126,21 @@ test('an extra tool options table needs a reason', () => {
 test.each(['', 'because', 'Codex'])('a word with the reason %s is refused', (reason) => {
     expect(() =>
         parseSettings(
-            `configurations = ["prose"]\nallowed_words = { value = ["Codex"], reason = ${JSON.stringify(reason)} }\n`,
+            `configurations = ["prose"]\nallowed_words = { Codex = ${JSON.stringify(reason)} }\n`,
             undefined,
             createReadCache(process.cwd()),
         ),
-    ).toThrow('reason');
+    ).toThrow('allowed_words.Codex needs a reason');
+});
+
+test('allowed_words written as one list with one reason is refused with the table form', () => {
+    expect(() =>
+        parseSettings(
+            'configurations = ["prose"]\nallowed_words = { value = ["Codex"], reason = "The product is named Codex." }\n',
+            undefined,
+            createReadCache(process.cwd()),
+        ),
+    ).toThrow('Write allowed_words as a table of word = reason');
 });
 
 test('an OSV ignore expiry cannot add a TOML table', async () => {

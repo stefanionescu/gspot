@@ -29,7 +29,7 @@ until = 2026-12-31
         name: `merged ignores date array comments`,
         source: `# Copied from template team, sha256 abc.
 
-allowed_words={value=["BannedWord"],reason="The project uses this reviewed name."}
+allowed_words={BannedWord="The project uses this reviewed name."}
 
 # First ignore
 [[ignore]] # First header inline
@@ -49,7 +49,7 @@ paths=[
 ]
 reason="Reviewed findings stay ignored intentionally."
 `,
-        target: `allowed_words={value=["BannedWord"],reason="The project uses this reviewed name."}
+        target: `allowed_words={BannedWord="The project uses this reviewed name."}
 
 [[ignore]]
 check = "z/check"
@@ -65,7 +65,8 @@ until = 2026-12-31
 `,
         expected: `# Copied from template team, sha256 abc.
 
-allowed_words = { value = ["BannedWord"], reason = "The project uses this reviewed name." }
+[allowed_words]
+BannedWord = "The project uses this reviewed name."
 
 # First ignore
 # First header inline

@@ -21,7 +21,7 @@ export type DryRunJson = {
 
 export type IgnoreOptions = {
     cwd: string;
-    check: string;
+    check?: string;
     paths?: string[];
     rule?: string;
     reason: string;

@@ -52,7 +52,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
                 (entry) => entry.paths === undefined || entry.paths.length === 0 || buildPathMatcher(entry.paths)(path),
             )
             .map((entry) => ({
-                check: entry.check,
+                ...(entry.check === undefined ? {} : { check: entry.check }),
                 ...(entry.rule === undefined ? {} : { rule: entry.rule }),
                 reason: entry.reason,
             })),
@@ -81,7 +81,7 @@ function formatPathReport(report: PathExplanation): string {
     const ignores = report.ignores.map((entry) => {
         const rule = entry.rule === undefined ? '' : ` ${entry.rule}`;
         const reason = entry.reason === undefined ? '' : `  ${entry.reason}`;
-        return `  ${entry.check}${rule}${reason}`;
+        return `  ${entry.check ?? 'every check'}${rule}${reason}`;
     });
     const lines = [
         `${report.path}  (scope ${report.scope}, ${report.fileKind}${by})`,

@@ -20,7 +20,6 @@ import {
     relativePaths,
     nonemptyPaths,
     localDateSchema,
-    allowReasonedValue,
     calendarDateSchema,
     unwrapSettingSchema,
 } from '#cli/settings/schema/parts.ts';
@@ -35,17 +34,32 @@ import {
     INTERNAL_SCHEMA_METADATA,
 } from '#cli/config/settings/schema.ts';
 
-const ignoreSchema = z.strictObject({
-    check: z.string().describe(SETTING_DECLARATIONS['ignore.check'].description),
-    rule: z.string().optional().describe(SETTING_DECLARATIONS['ignore.rule'].description),
-    paths: relativePaths.optional().describe(SETTING_DECLARATIONS['ignore.paths'].description),
-    reason: z
-        .string({ error: 'needs a reason. Add `reason = "..."` to this entry.' })
-        .describe(SETTING_DECLARATIONS['ignore.reason'].description),
-    until: localDateSchema
-        .optional()
-        .meta({ description: 'Stop applying this ignore on this date, in YYYY-MM-DD format (UTC).' }),
-} satisfies SchemaShape<NonNullable<ParsedSettings['ignore']>[number], NonNullable<WrittenSettings['ignore']>[number]>);
+const ignoreSchema = z
+    .strictObject({
+        check: z.string().optional().describe(SETTING_DECLARATIONS['ignore.check'].description),
+        rule: z.string().optional().describe(SETTING_DECLARATIONS['ignore.rule'].description),
+        paths: relativePaths.optional().describe(SETTING_DECLARATIONS['ignore.paths'].description),
+        reason: z
+            .string({ error: 'needs a reason. Add `reason = "..."` to this entry.' })
+            .describe(SETTING_DECLARATIONS['ignore.reason'].description),
+        until: localDateSchema
+            .optional()
+            .meta({ description: 'Stop applying this ignore on this date, in YYYY-MM-DD format (UTC).' }),
+    } satisfies SchemaShape<
+        NonNullable<ParsedSettings['ignore']>[number],
+        NonNullable<WrittenSettings['ignore']>[number]
+    >)
+    .superRefine((entry, context) => {
+        if (entry.check !== undefined) return;
+        if (entry.paths === undefined || entry.paths.length === 0)
+            context.addIssue({ code: 'custom', path: ['paths'], message: 'An ignore without check needs paths.' });
+        if (entry.rule !== undefined)
+            context.addIssue({
+                code: 'custom',
+                path: ['rule'],
+                message: 'An ignore without check cannot name a rule. Add the check that owns the rule.',
+            });
+    });
 
 const commandCheckSchema = z.strictObject({
     ...commandCheckFields,
@@ -152,14 +166,13 @@ const rootSettingSchemas = {
     level: levelSchema.default('recommended').meta({
         description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY}`,
     }),
-    allowed_words: allowReasonedValue(
-        z.array(z.string().regex(ALLOWED_WORD, 'Use a plain word, without a regular expression pattern.')),
-        [],
-        {
-            reason_needed: 'adding',
-            description: 'Words accepted beyond the shipped spelling list; adding needs a reason.',
-        },
-    ),
+    allowed_words: z
+        .record(z.string().regex(ALLOWED_WORD, 'Use a plain word, without a regular expression pattern.'), z.string())
+        .default({})
+        .meta({
+            reason_values: true,
+            description: 'Words accepted beyond the shipped spelling list, each with the reason it is a real word.',
+        }),
     tool_timeout_seconds: z
         .number()
         .int()

@@ -20,6 +20,11 @@ export const TOOLS_DECLARATIONS = {
         description:
             'Option arrays by ESLint rule ID, without a severity, which apply only where the level turns the rule on; accept findings with gspot ignore --rule.',
     },
+    'tools.eslint.plugins': {
+        configurations: ['javascript'],
+        description:
+            'Your own ESLint plugins: a rule prefix as name, a tracked .js or .mjs module as path, and the rules that turn on as errors.',
+    },
     'tools.eslint.override': {
         configurations: ['javascript'],
         description: 'Lint rule options for repository-relative paths, in order, with ignores applied last.',

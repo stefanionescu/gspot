@@ -17,13 +17,13 @@ import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/edit-sett
 function registerUnignore(program: Command, onResult: CommandCompletion): void {
     program
         .command('unignore')
-        .argument('<check>', COMMAND_HELP.unignore.arguments['check'])
+        .argument('[check]', COMMAND_HELP.unignore.arguments['check'])
         .summary(COMMAND_HELP.unignore.summary)
         .description(COMMAND_HELP.unignore.description)
         .option('--rule <rule>', COMMAND_HELP.unignore.options['--rule <rule>'])
         .option('--paths <glob...>', COMMAND_HELP.unignore.options['--paths <glob...>'])
         .action(async (check, flags) => {
-            onResult(await runUnignoreCommand({ cwd: process.cwd(), check, ...flags }));
+            onResult(await runUnignoreCommand({ cwd: process.cwd(), ...stripUndefined({ check }), ...flags }));
         });
 }
 
@@ -76,7 +76,8 @@ async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
     const { root, input, settings, reads } = startSettingsEdit(options.cwd);
-    assertKnownCheck(options.check, settings, reads);
+    if (options.check !== undefined) assertKnownCheck(options.check, settings, reads);
+    const target = options.check ?? 'every check';
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
     const [verb, pronoun] = everywhere === 1 ? ['covers', 'it'] : ['cover', 'them'];
     const warning =
@@ -86,13 +87,13 @@ async function runUnignoreCommand(
     const warningFields = stripUndefined({ warning: everywhere === 0 ? undefined : warning.trim() });
     if (deleted === 0 && changedIgnores === 0) {
         return {
-            text: `No change: ${options.check} has no matching ignore.\n${warning}`,
+            text: `No change: ${target} has no matching ignore.\n${warning}`,
             json: { changed: false, ...warningFields },
             exitCode: 0,
         };
     }
     const summary = [
-        { count: deleted, message: `Removed ${formatCount(deleted, 'ignore')} for ${options.check}.` },
+        { count: deleted, message: `Removed ${formatCount(deleted, 'ignore')} for ${target}.` },
         {
             count: changedIgnores,
             message: `Removed ${formatCount(removedPaths, 'path')} from ${formatCount(changedIgnores, 'ignore')}.`,

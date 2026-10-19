@@ -74,7 +74,7 @@ export const SETTINGS_EXAMPLES = [
     { configurations: ['javascript'], tools: { eslint: { rules: { 'no-console': [{ allow: ['warn'] }] } } } },
     { format: { indent_width: 4, print_width: 100 } },
     { dependencies: { min_release_age_days: 7 } },
-    { allowed_words: { value: ['Acme'], reason: 'The project uses this product name.' } },
+    { allowed_words: { Acme: 'The project uses this product name.' } },
     { licenses: { allowed: ['MIT', 'Apache-2.0'] } },
     {
         ignore: [
@@ -126,6 +126,12 @@ export const ALLOWED_WORD = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}_]*(?:[-'’][\p{L}\p{
 
 export const KNIP_PACKAGE_NAME = /^[^*+\\(|{^$\s]+$/u;
 
+/** A rule prefix for your own ESLint plugin: lowercase words joined by hyphens. */
+export const ESLINT_PLUGIN_NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
+
+/** Your own ESLint plugin: an ES module that Node loads without a build step. */
+export const ESLINT_PLUGIN_MODULE = /\.m?js$/u;
+
 export const NAMING_TABLE_CATEGORIES = [
     'files',
     'folders',
@@ -175,7 +181,8 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     scope: 'Settings for one folder: its configurations and the tables that differ from the root.',
     import_rule:
         'Groups of files in import order: code may import the files of its own rule and of every rule listed above it.',
-    javascript: 'The script files, which may print to the console and exit.',
+    javascript: 'The script files, which may print to the console and exit, and the modules the runtime provides.',
+    python: 'The modules that the host application provides, and the folders basedpyright also searches.',
     trpc: 'The files that declare tRPC procedures, and the server files that other files import only as types.',
     zustand: 'The files that may create a Zustand store.',
     format: 'Indentation, line width, quotes, and line endings for every formatter, with overrides for some paths.',

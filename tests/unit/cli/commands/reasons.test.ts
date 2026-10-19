@@ -35,7 +35,41 @@ test.each([...LOOSENED_SETTINGS])('$key keeps its reason through list edits', as
     expect(saved).toMatchObject({ value: [second], reason: SETTING_REASON });
 });
 
-test.each(LOOSENED_SETTINGS.filter(({ key }) => key !== 'allowed_words'))(
+test('allowed_words keeps one reason for each word through edits', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['typescript'], { level: 'all' }),
+        'entry.ts': 'export const port = 8080;\n',
+    });
+    const before = await readTree(sandbox.path);
+    const refused = await runGspot(sandbox.path, ['set', 'allowed_words', 'Nebulix']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr).toContain('allowed_words keeps a reason for each entry');
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    for (const commandArguments of [
+        ['set', 'allowed_words', 'Nebulix', '--reason', 'The product name stays as the vendor writes it.'],
+        ['set', 'allowed_words', 'Quorbit', '--reason', SETTING_REASON],
+        ['unset', 'allowed_words', 'Nebulix'],
+    ]) {
+        const result = await runGspot(sandbox.path, commandArguments);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+    }
+    const saved = parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text()) as TomlTable;
+    expect(saved['allowed_words']).toStrictEqual({ Quorbit: SETTING_REASON });
+});
+
+test('a reason on a value that does not loosen the default is refused before writing', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['typescript'], {}),
+        'entry.ts': 'export const port = 8080;\n',
+    });
+    const before = await readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, ['set', 'spelling.locale', 'en-gb', '--reason', SETTING_REASON]);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(result.stderr).toContain('spelling.locale takes no reason here');
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test.each([...LOOSENED_SETTINGS])(
     '$key set in a scope keeps root and sibling reasons, and unset restores inheritance',
     async ({ key, value, second, defaults }) => {
         await using sandbox = await testdir({

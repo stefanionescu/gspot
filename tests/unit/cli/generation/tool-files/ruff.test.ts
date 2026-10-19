@@ -67,3 +67,22 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
     ) as RuffToolFile;
     expect(ignored.lint['per-file-ignores']?.['../../../../**/test_*.py']).toStrictEqual(['S101', 'D103']);
 });
+
+test('Ruff formats with double quotes unless format.quotes is written, while Prettier keeps single quotes', async () => {
+    const files = { 'example.py': 'value = 1\n', 'entry.js': 'export const value = 1;\n' };
+    const ruffPath = '.gspot/configurations/language/python/ruff.toml';
+    const unset = parse(await generateFile(buildSettingsText(['python']), ruffPath, files)) as RuffToolFile;
+    expect(unset.format['quote-style']).toBe('double');
+    const prettier = JSON.parse(
+        await generateFile(
+            buildSettingsText(['python', 'javascript']),
+            '.gspot/configurations/general/format/prettier.json',
+            files,
+        ),
+    ) as Record<string, unknown>;
+    expect(prettier['singleQuote']).toBe(true);
+    const written = parse(
+        await generateFile(buildSettingsText(['python'], { tables: '[format]\nquotes = "single"\n' }), ruffPath, files),
+    ) as RuffToolFile;
+    expect(written.format['quote-style']).toBe('single');
+});

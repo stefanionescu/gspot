@@ -129,7 +129,7 @@ export type RunReport = {
     started: string;
     duration: number;
     checks: readonly CheckResult[];
-    ignores: readonly { check: string; rule?: string; paths?: readonly string[]; reason?: string; matched: number }[];
+    ignores: readonly { check?: string; rule?: string; paths?: readonly string[]; reason?: string; matched: number }[];
     skips: readonly {
         check: string;
         cause: NonNullable<PlannedCheck['skip']>['cause'];

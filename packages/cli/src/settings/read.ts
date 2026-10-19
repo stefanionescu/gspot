@@ -1,5 +1,4 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { stripUndefined } from '#cli/system/values.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { limitsSchema } from '#cli/settings/schema/limits.ts';
@@ -8,6 +7,7 @@ import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { RELEASE_NOTES_URL } from '#cli/config/settings/file.ts';
+import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
 import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts';
@@ -25,6 +25,12 @@ import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/
  */
 function parseSettings(text: string, repositoryRoot: string | undefined, reads: ReadCache): Settings {
     const written = parseTomlText(text, SETTINGS_FILE, 'settings');
+    const words = written['allowed_words'];
+    if (isRecord(words) && Array.isArray(words['value']))
+        throw new GspotError(
+            'settings',
+            `${SETTINGS_FILE}: allowed_words: Write allowed_words as a table of word = reason, such as allowed_words = { Nebulix = "The product name." }.`,
+        );
     const result = settingsSchema.safeParse(written);
     if (!result.success)
         throw new GspotError('settings', result.error.issues.flatMap((issue) => formatSettingsIssue(issue)).join('\n'));
@@ -72,7 +78,7 @@ function normalizeScopeTables(
             ? undefined
             : stripUndefined({
                   ...tools,
-                  eslint: tools.eslint === undefined ? undefined : { ...tools.eslint, override: [] },
+                  eslint: tools.eslint === undefined ? undefined : { ...tools.eslint, override: [], plugins: [] },
               });
     return stripUndefined({
         ...table,

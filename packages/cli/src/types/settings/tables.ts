@@ -26,6 +26,8 @@ type SettingDeclaration = {
     default_all?: unknown;
     language_defaults?: Record<string, unknown>;
     reason_needed?: 'raising' | 'lowering' | 'adding';
+    /** A table that holds a reason for each key, such as allowed_words. */
+    reason_values?: boolean;
     summary: string;
     languages?: string[];
     categories?: string[];
@@ -40,6 +42,7 @@ type TableValues = {
     drizzle?: ConfigurationTables['drizzle'] | undefined;
     format: ParsedFormat;
     javascript?: ConfigurationTables['javascript'] | undefined;
+    python?: ConfigurationTables['python'] | undefined;
     trpc?: ConfigurationTables['trpc'] | undefined;
     zustand?: ConfigurationTables['zustand'] | undefined;
     licenses?: ConfigurationTables['licenses'] | undefined;
@@ -171,7 +174,8 @@ type ParsedFormat = {
     print_width: number;
     line_ending: (typeof LINE_ENDINGS)[number];
     final_newline: boolean;
-    quotes: (typeof QUOTE_STYLES)[number];
+    /** Unset means each formatter's gspot default: double quotes for Python, single for the rest. */
+    quotes?: (typeof QUOTE_STYLES)[number] | undefined;
     trailing_commas: (typeof TRAILING_COMMAS)[number];
     semicolons: boolean;
     override: {
@@ -189,7 +193,7 @@ type ParsedFormat = {
 
 type ParsedRoot = {
     level: (typeof LEVELS)[number];
-    allowed_words: string[];
+    allowed_words: Record<string, string>;
     removed_configurations: string[];
     tool_timeout_seconds: number;
     test_files: string[];

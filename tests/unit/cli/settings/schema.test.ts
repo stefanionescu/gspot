@@ -39,6 +39,62 @@ paths = ["storage/**"]
             parseSettings(text.replace('paths = ["app/**"]', 'paths = [3]'), undefined, createReadCache(process.cwd())),
         ).toThrow('import_rule.0.paths.0');
     });
+
+    test('can_import lists exact rules, names only declared rules, and never joins can_also_import', () => {
+        const text = `[[import_rule]]
+name = "storage"
+paths = ["storage/**"]
+
+[[import_rule]]
+name = "app"
+paths = ["app/**"]
+can_import = ["storage"]
+`;
+        const settings = parseSettings(text, undefined, createReadCache(process.cwd()));
+        expect(settings.import_rule[1]).toStrictEqual({
+            name: 'app',
+            paths: ['app/**'],
+            can_also_import: [],
+            can_import: ['storage'],
+        });
+        expect(() =>
+            parseSettings(
+                text.replace('can_import = ["storage"]', 'can_import = ["missing"]'),
+                undefined,
+                createReadCache(process.cwd()),
+            ),
+        ).toThrow('import_rule.1.can_import.0: There is no import rule named missing.');
+        expect(() =>
+            parseSettings(
+                text.replace('can_import = ["storage"]', 'can_import = ["storage"]\ncan_also_import = ["storage"]'),
+                undefined,
+                createReadCache(process.cwd()),
+            ),
+        ).toThrow('Write can_import or can_also_import, not both');
+    });
+});
+
+describe('global ignores', () => {
+    test('an ignore without check needs paths and takes no rule', () => {
+        const reads = createReadCache(process.cwd());
+        const reason = 'Product photos and facts are data, not code.';
+        const settings = parseSettings(
+            `[[ignore]]\npaths = ["assets/products/**"]\nreason = "${reason}"\n`,
+            undefined,
+            reads,
+        );
+        expect(settings.ignore).toStrictEqual([{ paths: ['assets/products/**'], reason }]);
+        expect(() => parseSettings(`[[ignore]]\nreason = "${reason}"\n`, undefined, reads)).toThrow(
+            'An ignore without check needs paths.',
+        );
+        expect(() =>
+            parseSettings(
+                `[[ignore]]\nrule = "no-console"\npaths = ["a/**"]\nreason = "${reason}"\n`,
+                undefined,
+                reads,
+            ),
+        ).toThrow('An ignore without check cannot name a rule.');
+    });
 });
 describe('parts', () => {
     test.each([...UNTIL_DATE_CASES])('$name: the until date of an ignore must be a TOML date', (row) => {

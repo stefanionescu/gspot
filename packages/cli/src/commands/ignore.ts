@@ -4,7 +4,9 @@ import { mergeIgnore } from '#cli/settings/write/text.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { saveSettings } from '#cli/apply/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { type TomlTable } from '#cli/types/settings/file.ts';
+import type { Settings } from '#cli/types/settings/values.ts';
 import { stringify, LocalDate } from '@decimalturn/toml-patch';
 import { startSettingsEdit } from '#cli/commands/edit-settings.ts';
 import { calendarDateSchema } from '#cli/settings/schema/parts.ts';
@@ -13,6 +15,24 @@ import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type IgnoreOptions } from '#cli/types/commands/edit-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
+// An ignore names a known check, or no check and the paths that every check skips.
+function assertIgnoreTarget(options: IgnoreOptions, settings: Settings, reads: ReadCache): void {
+    if (options.check !== undefined) {
+        assertKnownCheck(options.check, settings, reads);
+        return;
+    }
+    if (options.paths === undefined)
+        throw new GspotError(
+            'settings',
+            'An ignore without a check needs --paths. Name the paths to keep out of every check.',
+        );
+    if (options.rule !== undefined)
+        throw new GspotError(
+            'settings',
+            'An ignore without a check cannot take --rule. Name the check that owns the rule.',
+        );
+}
+
 /**
  * Write an ignore with its reason.
  * @param options the parsed flags.
@@ -20,8 +40,9 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
  */
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const { root, input, settings, reads } = startSettingsEdit(options.cwd);
-    assertKnownCheck(options.check, settings, reads);
-    const message = validateReason(`gspot ignore ${options.check}`, options.reason);
+    assertIgnoreTarget(options, settings, reads);
+    const target = options.check ?? 'every check';
+    const message = validateReason(`gspot ignore ${options.check ?? ''}`.trimEnd(), options.reason);
     if (message !== undefined) throw new GspotError('settings', message);
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
     let saved: TomlTable = {};
@@ -40,7 +61,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
             );
             written['ignore'] = list;
         },
-        summary: `Ignored ${options.check}${options.paths === undefined ? '' : ' for ' + options.paths.join(' and ')}.`,
+        summary: `Ignored ${target}${options.paths === undefined ? '' : ' for ' + options.paths.join(' and ')}.`,
     });
     const written = stringify({ ignore: [saved] }).trimEnd();
     return result.exitCode === 0 && result.json.changed ? { ...result, text: `${written}\n${result.text}` } : result;
@@ -54,7 +75,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
 function registerIgnore(program: Command, onResult: CommandCompletion): void {
     program
         .command('ignore')
-        .argument('<check>', COMMAND_HELP.ignore.arguments['check'])
+        .argument('[check]', COMMAND_HELP.ignore.arguments['check'])
         .summary(COMMAND_HELP.ignore.summary)
         .description(COMMAND_HELP.ignore.description)
         .requiredOption('--reason <text>', COMMAND_HELP.ignore.options['--reason <text>'])
@@ -65,8 +86,8 @@ function registerIgnore(program: Command, onResult: CommandCompletion): void {
             onResult(
                 await runIgnoreCommand({
                     cwd: process.cwd(),
-                    check,
                     ...stripUndefined({
+                        check,
                         paths: flags.paths,
                         rule: flags.rule,
                         reason: flags.reason,

@@ -50,7 +50,7 @@ const formatFields = z.strictObject({
         .meta(SETTING_DECLARATIONS['format.print_width']),
     line_ending: z.enum(LINE_ENDINGS).optional().default('lf').meta(SETTING_DECLARATIONS['format.line_ending']),
     final_newline: z.boolean().optional().default(true).meta(SETTING_DECLARATIONS['format.final_newline']),
-    quotes: z.enum(QUOTE_STYLES).optional().default('single').meta(SETTING_DECLARATIONS['format.quotes']),
+    quotes: z.enum(QUOTE_STYLES).optional().meta(SETTING_DECLARATIONS['format.quotes']),
     trailing_commas: z
         .enum(TRAILING_COMMAS)
         .optional()
@@ -121,9 +121,7 @@ const formatSchema = formatFields.extend({
                     final_newline: formatFields.shape.final_newline
                         .unwrap()
                         .describe(formatFields.shape.final_newline.description as string),
-                    quotes: formatFields.shape.quotes
-                        .unwrap()
-                        .describe(formatFields.shape.quotes.description as string),
+                    quotes: formatFields.shape.quotes.describe(formatFields.shape.quotes.description as string),
                     trailing_commas: formatFields.shape.trailing_commas
                         .unwrap()
                         .describe(formatFields.shape.trailing_commas.description as string),
