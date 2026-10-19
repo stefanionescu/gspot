@@ -37,3 +37,17 @@ test.each([...PROJECT_SYNTAX_CASES])('the project reader accepts $name', ({ sour
         '/repo/Root.swift',
     ]);
 });
+
+test('each native target keeps its own name, sources, and folders', () => {
+    const source = GROUPED_PBXPROJ.replace(
+        'T = {isa = PBXNativeTarget;',
+        'T = {isa = PBXNativeTarget; name = "App Kit";',
+    );
+    expect(parsePbxproj(source, '/repo').targets).toStrictEqual([
+        {
+            name: 'App Kit',
+            sources: ['/repo/First Group/Shared.swift', '/repo/Root.swift'],
+            folders: [{ path: '/repo/Synced/', excluded: new Set(['/repo/Synced/Excluded.swift']) }],
+        },
+    ]);
+});

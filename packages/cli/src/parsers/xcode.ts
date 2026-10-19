@@ -204,7 +204,7 @@ const pbxprojSchema = z.object({
  * Find the Swift sources and managed folders that belong to project targets.
  * @param text the project.pbxproj contents.
  * @param folder where the project file sits, relative to the repository root.
- * @returns the source paths and managed folders with their exclusions.
+ * @returns the source paths and managed folders of the project, and the same for each target.
  */
 export function parsePbxproj(text: string, folder: string): ProjectSources {
     const parsed = parseProjectMetadata(text);
@@ -217,15 +217,22 @@ export function parsePbxproj(text: string, folder: string): ProjectSources {
         parents: buildParentGroups(parsed.objects),
         visiting: new Set(),
     };
-    const sources = new Set<string>();
-    const folders: Folder[] = [];
-    for (const id of root.targets ?? []) {
+    const targets = (root.targets ?? []).flatMap((id) => {
         const target = getElement(project, id);
-        if (target.isa !== 'PBXNativeTarget') continue;
-        for (const source of listTargetSources(project, target)) sources.add(source);
-        folders.push(...listTargetFolders(project, id, target));
-    }
-    return { sources, folders };
+        if (target.isa !== 'PBXNativeTarget') return [];
+        return [
+            {
+                name: target.name ?? '',
+                sources: listTargetSources(project, target),
+                folders: listTargetFolders(project, id, target),
+            },
+        ];
+    });
+    return {
+        sources: new Set(targets.flatMap((target) => target.sources)),
+        folders: targets.flatMap((target) => target.folders),
+        targets,
+    };
 }
 
 /**

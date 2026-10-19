@@ -32,8 +32,12 @@ export type XcodeProject = {
 
 export type Folder = { path: string; excluded: Set<string> };
 
-/** Source membership and synchronized folder exclusions read from project targets. */
-export type ProjectSources = { sources: Set<string>; folders: Folder[] };
+/** Source membership and synchronized folder exclusions of the project, and the same for each of its targets. */
+export type ProjectSources = {
+    sources: Set<string>;
+    folders: Folder[];
+    targets: { name: string; sources: string[]; folders: Folder[] }[];
+};
 
 /** Compiler and SDK choices authored in Xcode build configurations. */
 export type ProjectBuildSettings = { sdkRoot: string | undefined; swiftVersion: string | undefined };

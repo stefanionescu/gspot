@@ -1,10 +1,21 @@
 [configuration]
 always_selected = true
-description = "Structure rules that no standard linter ships, at level `all`: lone files, shared name prefixes, file and folder clashes, long files, trivial functions, and environment reads outside the environment readers."
+description = "Structure rules that no standard linter ships: `[[import_rule]]` for Python and Swift imports and for files outside every rule, and at level `all`, lone files, shared name prefixes, file and folder clashes, long files, trivial functions, and environment reads outside the environment readers."
 title = "Structure"
 
 [files]
 languages = true
+
+[[check]]
+example = "With `[[import_rule]]` records, a Python file under `app/` that imports `storage.models` from a rule it may not import reports `refused-import`. A code file that no rule covers reports `uncovered-file`."
+files = { extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".py", ".pyi", ".swift"], kinds = ["source"] }
+help = "Move the code into a rule that may import it, add the rule to `can_also_import` or `can_import`, or add the file to the paths of a rule."
+level = "recommended"
+name = "import-rules"
+runs = "scope"
+stage = "commit"
+summary = "Applies `[[import_rule]]` to Python and Swift imports, and reports code files that no import rule covers. ESLint applies the rules to JavaScript and TypeScript imports."
+why = "An import that crosses the layers that the rules describe, or a file outside every rule, breaks the structure that the rules promise."
 
 [[check]]
 example = "With TypeScript at level `all`, a `feature/only.ts` alone in its folder reports `lone-file`. Move it up beside related code, and update its imports."

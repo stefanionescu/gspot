@@ -29,6 +29,7 @@ import { checkFilesWithoutTarget } from '#cli/checks/xcode/project.ts';
 import { checkBashDocComments } from '#cli/checks/bash/doc-comments.ts';
 import { checkImportLinter } from '#cli/checks/python/import-linter.ts';
 import { checkReplacedFiles } from '#cli/checks/gspot/replaced-files.ts';
+import { checkImportRules } from '#cli/checks/structure/import-rules.ts';
 import { checkBashFunctionSize } from '#cli/checks/bash/function-size.ts';
 import { checkBashScriptLayout } from '#cli/checks/bash/script-layout.ts';
 import { checkDockerTrivyImage } from '#cli/checks/docker/trivy-image.ts';
@@ -94,6 +95,7 @@ const CHECK_IMPLEMENTATIONS = {
     'ansible/ansible-lint': { check: checkAnsibleLint },
     'nginx/config-test': { check: checkNginxSyntax },
     'structure/trivial-functions': { check: checkTrivialFunctions },
+    'structure/import-rules': { check: checkImportRules },
     'structure/environment-readers': { check: checkEnvironmentReaders },
     'structure/long-files': { check: checkLongFiles },
     'gspot/suppressions': { check: checkSuppressions },
