@@ -192,4 +192,13 @@ function findRootSelection(scopes: readonly ScopeSelection[]): ScopeSelection {
     return root;
 }
 
-export { buildScopeView, findRootSelection, listActiveIgnores };
+/**
+ * Check whether an ignore covers whole files: it names no lint rule and no function.
+ * @param entry the ignore record.
+ * @returns whether the ignore keeps its paths out of the check.
+ */
+function isFileIgnore(entry: Pick<IgnoreRecord, 'rule' | 'names'>): boolean {
+    return entry.rule === undefined && entry.names === undefined;
+}
+
+export { isFileIgnore, buildScopeView, findRootSelection, listActiveIgnores };

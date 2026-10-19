@@ -1,4 +1,5 @@
 import ignore from 'ignore';
+import { isFileIgnore } from '#cli/settings/scope-view.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning.ts';
 import { findMissingBuild } from '#cli/configurations/tools.ts';
@@ -56,8 +57,7 @@ function findIgnoreSkip(selection: ScopeSelection, check: CheckDeclaration): Set
         .ignoresFor(check.name)
         .find(
             (entry) =>
-                entry.rule === undefined &&
-                (entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path)),
+                isFileIgnore(entry) && (entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path)),
         );
     if (ignored === undefined) return undefined;
     const reason = `: ${ignored.reason}`;

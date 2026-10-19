@@ -54,6 +54,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
                 stripUndefined({
                     check: options.check,
                     rule: options.rule,
+                    names: options.names,
                     paths: options.paths,
                     reason: options.reason,
                     until: options.until === undefined ? undefined : parseExpiryDate(options.until),
@@ -80,6 +81,7 @@ function registerIgnore(program: Command, onResult: CommandCompletion): void {
         .description(COMMAND_HELP.ignore.description)
         .requiredOption('--reason <text>', COMMAND_HELP.ignore.options['--reason <text>'])
         .option('--rule <rule>', COMMAND_HELP.ignore.options['--rule <rule>'])
+        .option('--names <names...>', COMMAND_HELP.ignore.options['--names <names...>'])
         .option('--paths <glob...>', COMMAND_HELP.ignore.options['--paths <glob...>'])
         .option('--until <date>', COMMAND_HELP.ignore.options['--until <date>'])
         .action(async (check, flags) => {
@@ -90,6 +92,7 @@ function registerIgnore(program: Command, onResult: CommandCompletion): void {
                         check,
                         paths: flags.paths,
                         rule: flags.rule,
+                        names: flags.names,
                         reason: flags.reason,
                         until: flags.until,
                     }),

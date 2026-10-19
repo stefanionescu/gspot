@@ -9,9 +9,9 @@ import { listPointerPaths } from '#cli/generation/pointers.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { type ScopeView } from '#cli/types/settings/values.ts';
-import { listActiveIgnores } from '#cli/settings/scope-view.ts';
 import { listGitignorePatterns } from '#cli/repository/gitignore.ts';
 import { IGNORE_FILE_PURPOSES } from '#cli/config/generation/formatting.ts';
+import { isFileIgnore, listActiveIgnores } from '#cli/settings/scope-view.ts';
 import { listToolFileDeclarations } from '#cli/generation/tool-files/declarations.ts';
 import { type IgnoreSection, type ToolFileContext } from '#cli/types/generation/files.ts';
 
@@ -118,7 +118,7 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
 function buildSettingsSections(view: ScopeView, check: string): IgnoreSection[] {
     return view
         .ignoresFor(check)
-        .filter(({ rule }) => rule === undefined)
+        .filter((entry) => isFileIgnore(entry))
         .map(({ reason, paths }) => ({ title: reason, patterns: paths }));
 }
 

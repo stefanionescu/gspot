@@ -25,6 +25,7 @@ export type CompiledOverride = {
     isDigitsAllowed: boolean;
     isRepeatAllowed: boolean;
     ignoredPrefix: RegExp | undefined;
+    ignoredNames: RegExp | undefined;
     cases: NamingCase[] | undefined;
     origin: string;
 };
@@ -77,6 +78,7 @@ export type NamingOverride = {
     languages?: string[] | undefined;
     categories?: string[] | undefined;
     ignored_prefix?: string | undefined;
+    ignored_names_pattern?: string | undefined;
     allow_digits?: boolean | undefined;
     allow_repeated_words?: boolean | undefined;
     allowed_names?: string[] | undefined;

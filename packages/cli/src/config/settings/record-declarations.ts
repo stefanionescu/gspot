@@ -7,6 +7,9 @@ export const RECORD_DECLARATIONS = {
             'The check whose findings you accept: a shipped check or a command check. Leave it out to keep the paths out of every check.',
     },
     'ignore.rule': { description: 'One lint rule of that check.' },
+    'ignore.names': {
+        description: 'The function names that the ignore covers, such as a hook that a framework calls.',
+    },
     'ignore.paths': { description: 'Where the ignore applies.' },
     'ignore.reason': { description: 'Why you accept the findings.' },
     'format.override.paths': { description: 'The files these formatting values apply to.' },

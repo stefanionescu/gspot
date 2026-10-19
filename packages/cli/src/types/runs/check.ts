@@ -176,6 +176,8 @@ export type Finding = {
     column?: number;
     rule?: string;
     help?: string;
+    /** The function that the finding names, which an [[ignore]] with names matches. */
+    name?: string;
 };
 
 /** Where a finding points: the file, and the line and column when the check knows them. */

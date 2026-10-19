@@ -40,7 +40,7 @@ const SCHEMA_FILE = 'gspot.schema.json';
 const RECORD_FIELDS = {
     scope: ['path', 'configurations', 'removed_configurations', 'test_files'],
     command_check: ['name', 'command', 'paths', 'stage', 'summary', 'help', 'fix', 'exit_codes', 'output'],
-    ignore: ['check', 'rule', 'paths', 'reason', 'until'],
+    ignore: ['check', 'rule', 'names', 'paths', 'reason', 'until'],
     import_rule: ['name', 'paths', 'can_also_import', 'can_import'],
     'format.override': [
         'paths',
@@ -58,6 +58,7 @@ const RECORD_FIELDS = {
         'languages',
         'categories',
         'ignored_prefix',
+        'ignored_names_pattern',
         'allow_digits',
         'allow_repeated_words',
         'allowed_names',
@@ -97,3 +98,6 @@ export {
 
 /** The commands that change gspot.toml. */
 export const SETTINGS_COMMANDS = ['set', 'unset', 'add', 'remove', 'ignore', 'unignore'] as const;
+
+/** The checks whose findings name a function, so that an [[ignore]] can list the names it covers. */
+export const NAMED_FINDING_CHECKS: ReadonlySet<string> = new Set(['structure/trivial-functions']);

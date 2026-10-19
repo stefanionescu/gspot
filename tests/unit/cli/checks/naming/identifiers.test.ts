@@ -202,3 +202,30 @@ test('identifiers: ordinary words and number words pass; a banned word and a dig
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'naming/identifiers', status: 'passed', findings: [] }]);
 });
+
+test('identifiers: Python dunders and type aliases follow their own naming', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSettingsText(['python', 'naming'], { level: 'all' }),
+        'source.py': [
+            'from typing import Literal, Optional, TypeAlias',
+            'Mode = Literal["read", "write"]',
+            'ModeChoice = Optional[Mode] | None',
+            'Reading: TypeAlias = "Reader"',
+            '_Private = dict[str, int]',
+            'READ_FLAG = 1',
+            'ACCESS_FLAGS = READ_FLAG | 2',
+            'class Reader:',
+            '    def __init_subclass__(cls):',
+            '        pass',
+            '    def __rich_repr__(self):',
+            '        pass',
+            'badAlias = Literal["x"]',
+            '',
+        ].join('\n'),
+    });
+    const { report } = await checkReport(sandbox.path, ['check', '--json', '--only', 'naming/identifiers']);
+    expect(
+        report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),
+    ).toStrictEqual([{ file: 'source.py', line: 13, rule: 'case' }]);
+});

@@ -283,7 +283,14 @@ export function checkIdentifier(identifier: Identifier, inputs: NamingInputs): F
     };
     const { settings } = inputs;
     const overrides = selectOverrides(settings, identifier);
-    if (overrides.some((override) => override.allowedNames?.has(identifier.name) === true)) return [];
+    if (
+        overrides.some(
+            (override) =>
+                override.allowedNames?.has(identifier.name) === true ||
+                override.ignoredNames?.test(identifier.name) === true,
+        )
+    )
+        return [];
     const limits = deriveLimits(settings, identifier, overrides);
     const name = stripPrefixes(identifier.name, overrides);
     const parts = splitParts(name);

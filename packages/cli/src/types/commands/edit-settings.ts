@@ -24,6 +24,7 @@ export type IgnoreOptions = {
     check?: string;
     paths?: string[];
     rule?: string;
+    names?: string[];
     reason: string;
     until?: string;
 };

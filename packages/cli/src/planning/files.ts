@@ -1,3 +1,4 @@
+import { isFileIgnore } from '#cli/settings/scope-view.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
@@ -56,7 +57,7 @@ function stripIgnoredFiles(
     check: CheckDeclaration,
     scope: ScopeSelection,
 ): Pick<PlannedCheck, 'files' | 'skip'> {
-    const paths = scope.view.ignoresFor(check.name).flatMap((entry) => (entry.rule === undefined ? entry.paths : []));
+    const paths = scope.view.ignoresFor(check.name).flatMap((entry) => (isFileIgnore(entry) ? entry.paths : []));
     const isIgnored = buildPathMatcher(paths);
     const selected = files.filter((file) => !isIgnored(file.path));
     return {

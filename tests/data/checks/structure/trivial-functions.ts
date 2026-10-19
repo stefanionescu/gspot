@@ -88,6 +88,35 @@ func isNew(_ name: String) -> Bool {
     { name: 'substantial function bodies', source: CLEAN_SWIFT, lines: [], trivialFile: false },
 ] as const;
 
+/** Interface code at a two-statement limit: only the parse implementation on line 25 forwards its argument. */
+export const PYTHON_INTERFACES = `from abc import ABC, abstractmethod
+from typing import Protocol, overload
+
+class Reader(Protocol):
+    def read(self) -> bytes: ...
+
+class Store(ABC):
+    @abstractmethod
+    def save(self) -> None:
+        pass
+
+class Sized:
+    @property
+    def size(self) -> int:
+        return self._size
+    @size.setter
+    def size(self, value: int) -> None:
+        self._size = value
+    def hook(self) -> None:
+        """Subclasses run their own code here."""
+@overload
+def parse(value: str) -> str: ...
+@overload
+def parse(value: int) -> int: ...
+def parse(value):
+    return value
+`;
+
 export const TRIVIAL_FILES = [
     {
         name: 'a Python forwarding wrapper',

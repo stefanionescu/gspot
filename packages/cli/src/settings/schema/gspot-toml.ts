@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
-import { SCHEMA_URL } from '#cli/config/settings/file.ts';
 import { namingSchema } from '#cli/settings/schema/naming.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
@@ -8,6 +7,7 @@ import { importRulesSchema } from '#cli/settings/schema/imports.ts';
 import { type TemplateTables } from '#cli/types/settings/templates.ts';
 import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
+import { SCHEMA_URL, NAMED_FINDING_CHECKS } from '#cli/config/settings/file.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/settings/schema/tools.ts';
 import { levelSchema, commandCheckFields } from '#cli/configurations/schema/parts.ts';
 import { ciSchema, rulesSchema, hooksSchema } from '#cli/settings/schema/integrations.ts';
@@ -38,6 +38,7 @@ const ignoreSchema = z
     .strictObject({
         check: z.string().optional().describe(SETTING_DECLARATIONS['ignore.check'].description),
         rule: z.string().optional().describe(SETTING_DECLARATIONS['ignore.rule'].description),
+        names: z.array(z.string().min(1)).min(1).optional().describe(SETTING_DECLARATIONS['ignore.names'].description),
         paths: relativePaths.optional().describe(SETTING_DECLARATIONS['ignore.paths'].description),
         reason: z
             .string({ error: 'needs a reason. Add `reason = "..."` to this entry.' })
@@ -50,6 +51,12 @@ const ignoreSchema = z
         NonNullable<WrittenSettings['ignore']>[number]
     >)
     .superRefine((entry, context) => {
+        if (entry.names !== undefined && !NAMED_FINDING_CHECKS.has(entry.check ?? ''))
+            context.addIssue({
+                code: 'custom',
+                path: ['names'],
+                message: `names applies only to ${[...NAMED_FINDING_CHECKS].join(', ')}, whose findings name a function.`,
+            });
         if (entry.check !== undefined) return;
         if (entry.paths === undefined || entry.paths.length === 0)
             context.addIssue({ code: 'custom', path: ['paths'], message: 'An ignore without check needs paths.' });

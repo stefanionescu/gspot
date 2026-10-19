@@ -28,6 +28,11 @@ import {
     type PlanAfterFixes,
 } from '#cli/types/runs/check.ts';
 
+// An ignore with names covers only the findings that name one of those functions.
+function isNameMatch(record: IgnoreRecord, finding: Finding): boolean {
+    return record.names === undefined || (finding.name !== undefined && record.names.includes(finding.name));
+}
+
 /**
  * Checks whether an ignore record covers a finding.
  * @param record one `[[ignore]]` entry of gspot.toml.
@@ -37,6 +42,7 @@ import {
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if (record.check !== undefined && record.check !== finding.check) return false;
     if (record.rule !== undefined && record.rule !== finding.rule) return false;
+    if (!isNameMatch(record, finding)) return false;
     return record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file);
 }
 

@@ -61,6 +61,22 @@ export const CONTAINER_NOISE = new Set([
     'inheritance_specifier',
 ]);
 
+/** Python decorators that mark a function as a signature or an accessor rather than a call to inline. */
+export const PYTHON_INTERFACE_DECORATORS: ReadonlySet<string> = new Set([
+    'overload',
+    'override',
+    'property',
+    'abstractmethod',
+    'abstractproperty',
+    'abstractclassmethod',
+    'abstractstaticmethod',
+]);
+export const PYTHON_ACCESSOR_DECORATOR = /\.(?:setter|getter|deleter)$/u;
+
+/** Python base classes whose methods declare an interface. */
+export const PYTHON_INTERFACE_BASES: ReadonlySet<string> = new Set(['Protocol', 'ABC']);
+export const PYTHON_ABSTRACT_METACLASS = 'ABCMeta';
+
 export const BARE_NAME_NODES = new Set(['identifier', 'simple_identifier', 'attribute', 'navigation_expression']);
 
 export const TYPE_REFERENCE_NODES = new Set(['type', 'user_type', 'identifier', 'type_identifier']);

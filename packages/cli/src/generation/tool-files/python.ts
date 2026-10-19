@@ -3,6 +3,7 @@ import { relative } from 'node:path/posix';
 import { stringify } from '@decimalturn/toml-patch';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { stripUndefined } from '#cli/system/values.ts';
+import { isFileIgnore } from '#cli/settings/scope-view.ts';
 import { PYTHON_FILES } from '#cli/config/commands/init.ts';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import type { FormatSettings } from '#cli/types/settings/file.ts';
@@ -47,7 +48,7 @@ function buildPythonInputs(context: ToolFileContext): PythonInputs {
                 ...exclusions,
                 ...selection.view
                     .ignoresFor(check)
-                    .filter((entry) => entry.rule === undefined)
+                    .filter((entry) => isFileIgnore(entry))
                     .flatMap((entry) => entry.paths),
             ].map((path) => `${base}/${path}`),
     };

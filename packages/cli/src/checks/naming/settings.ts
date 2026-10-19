@@ -31,6 +31,8 @@ function compileOverride(rule: NamingOverride, source: string): CompiledOverride
         isDigitsAllowed: rule.allow_digits === true,
         isRepeatAllowed: rule.allow_repeated_words === true,
         ignoredPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),
+        ignoredNames:
+            rule.ignored_names_pattern === undefined ? undefined : new RegExp(rule.ignored_names_pattern, 'u'),
         cases: rule.cases,
         origin: source,
     };

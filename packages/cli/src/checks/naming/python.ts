@@ -4,10 +4,13 @@ import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/n
 
 import {
     PYTHON_CONSTANT,
+    PYTHON_TYPE_NAME,
+    PYTHON_TYPE_FORMS,
     PYTHON_SPLAT_NODES,
     PYTHON_EXCEPTION_BASE,
     PYTHON_PARAMETER_NODES,
     PYTHON_IMPLICIT_PARAMETERS,
+    PYTHON_TYPE_ALIAS_ANNOTATION,
 } from '#cli/config/checks/naming.ts';
 
 // The block that holds a definition: the body of a class, the body of a function, or the module.
@@ -61,12 +64,44 @@ function classifyDeclaredName(node: Node, name: string): NamedCategory {
     return holder === 'module' && PYTHON_CONSTANT.test(name) ? 'constants' : 'variables';
 }
 
+// The name after the last dot of a dotted name.
+function readLastName(node: Node | null): string {
+    return node?.text.split('.').at(-1) ?? '';
+}
+
+// One side of a union of types: None, a class name, a builtin type, or another type form.
+function isTypeOperand(operand: Node | null): boolean {
+    if (operand === null) return false;
+    if (operand.type === 'none') return true;
+    if (operand.type === 'identifier' || operand.type === 'attribute')
+        return PYTHON_TYPE_NAME.test(readLastName(operand));
+    return isTypeForm(operand);
+}
+
+// A type form: a subscript of a typing form, such as Literal["a"], or a union of type operands.
+function isTypeForm(node: Node | null): boolean {
+    if (node === null) return false;
+    if (node.type === 'subscript') return PYTHON_TYPE_FORMS.has(readLastName(node.childForFieldName('value')));
+    if (node.type !== 'binary_operator' || node.childForFieldName('operator')?.text !== '|') return false;
+    return isTypeOperand(node.childForFieldName('left')) && isTypeOperand(node.childForFieldName('right'));
+}
+
+// A module-level assignment declares a type alias when TypeAlias annotates it, or when its value names a type.
+function isTypeAlias(node: Node): boolean {
+    if (getHolderType(node.parent ?? node) !== 'module') return false;
+    const annotation = node.childForFieldName('type');
+    if (annotation !== null) return PYTHON_TYPE_ALIAS_ANNOTATION.test(annotation.text);
+    return isTypeForm(node.childForFieldName('right'));
+}
+
+function addAssignment(sink: ExtractSink, node: Node): void {
+    const left = node.childForFieldName('left');
+    if (left?.type !== 'identifier') return;
+    addIdentifier(sink, left, isTypeAlias(node) ? 'type_aliases' : classifyDeclaredName(node, left.text));
+}
+
 function addAssignments(sink: ExtractSink, root: Node): void {
-    for (const node of root.descendantsOfType('assignment')) {
-        const left = node.childForFieldName('left');
-        if (left?.type !== 'identifier') continue;
-        addIdentifier(sink, left, classifyDeclaredName(node, left.text));
-    }
+    for (const node of root.descendantsOfType('assignment')) addAssignment(sink, node);
     for (const node of root.descendantsOfType('type_alias_statement')) {
         const left = node.childForFieldName('left') ?? node.namedChildren[0] ?? null;
         if (left !== null) addIdentifier(sink, left, 'type_aliases');

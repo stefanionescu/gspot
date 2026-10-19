@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { pathContainerSchema } from '#cli/configurations/schema/parts.ts';
+import { regexSchema, pathContainerSchema } from '#cli/configurations/schema/parts.ts';
 import { CASE_NAMES, ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/naming.ts';
 import type { NamedCategory, NamingDefaults, NamingOverride } from '#cli/types/checks/naming.ts';
 
@@ -28,6 +28,9 @@ export const namingOverrideSchema = z.strictObject({
         .optional()
         .meta({ description: 'The kinds of name it applies to. Unknown kinds are refused.' }),
     ignored_prefix: z.string().optional().meta({ description: 'A prefix not counted as a word, such as ^test_.' }),
+    ignored_names_pattern: regexSchema.optional().meta({
+        description: 'A regular expression for names that skip the naming rules, such as ^__[a-z][a-z0-9_]*__$.',
+    }),
     allow_digits: z.boolean().optional().meta({ description: 'Accept digits in names.' }),
     allow_repeated_words: z.boolean().optional().meta({ description: 'Accept a word twice in one name.' }),
     allowed_names: z.array(z.string()).optional().meta({ description: 'Names accepted despite the naming rules.' }),

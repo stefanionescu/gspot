@@ -158,6 +158,8 @@ export const COMMAND_HELP = {
         options: {
             '--reason <text>': 'Why you turn it off (required)',
             '--rule <rule>': 'Turn off only this lint rule',
+            '--names <names...>':
+                'Turn it off only for the functions with these names, for structure/trivial-functions',
             '--paths <glob...>': 'Turn it off only for these paths (default: every path)',
             '--until <date>': 'Turn it on again on this date, YYYY-MM-DD (UTC)',
             '--json': 'Print the result as JSON',

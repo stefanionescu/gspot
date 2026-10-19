@@ -6,6 +6,7 @@ import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/structure/convention-sources.ts';
 import { checkExportedFunctions } from '#cli/checks/structure/exported-functions.ts';
 import type { IsSubstantial, CountedLanguage } from '#cli/types/checks/structure.ts';
+import { isInterfaceClass, isPythonInterface } from '#cli/checks/structure/interfaces.ts';
 
 import {
     BARE_NAME_NODES,
@@ -96,7 +97,11 @@ const LANGUAGE_SUBSTANCE: Record<CountedLanguage, Record<string, IsSubstantial>>
             return !BASH_SOURCE_COMMANDS.has(name ?? '');
         },
     },
-    python: {},
+    python: {
+        // An interface class declares a contract, as a TypeScript interface does.
+        class_definition: (node, language, limit) =>
+            isInterfaceClass(node) || isSubstantialContainer(node, language, limit),
+    },
     swift: {},
 };
 
@@ -105,16 +110,20 @@ function isInert(node: Node): boolean {
     return node.type === 'hash_bang_line' || BARE_NAME_NODES.has(node.type);
 }
 
+function isSubstantialContainer(node: Node, language: CountedLanguage, limit: number): boolean {
+    const body = node.childForFieldName('body');
+    return (body?.namedChildren ?? node.namedChildren)
+        .filter((child) => !CONTAINER_NOISE.has(child.type))
+        .some((child) => isSubstantial(child, language, limit));
+}
+
 function isSubstantial(node: Node, language: CountedLanguage, limit: number): boolean {
     if (isInert(node)) return false;
+    const languageSubstance = LANGUAGE_SUBSTANCE[language][node.type];
+    if (languageSubstance !== undefined) return languageSubstance(node, language, limit);
     if (COUNTED_FUNCTION_NODES.has(node.type)) return isSubstantialFunction(node, language, limit);
-    if (CONTAINER_NODES.has(node.type)) {
-        const body = node.childForFieldName('body');
-        return (body?.namedChildren ?? node.namedChildren)
-            .filter((child) => !CONTAINER_NOISE.has(child.type))
-            .some((child) => isSubstantial(child, language, limit));
-    }
-    const substance = LANGUAGE_SUBSTANCE[language][node.type] ?? SUBSTANCE[node.type];
+    if (CONTAINER_NODES.has(node.type)) return isSubstantialContainer(node, language, limit);
+    const substance = SUBSTANCE[node.type];
     return substance === undefined ? true : substance(node, language, limit);
 }
 
@@ -191,22 +200,13 @@ async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
         const findings = (source.captures.get('function') ?? []).flatMap((node) => {
             const body = extractFunctionBody(node, source.language);
             const count = countExecutableStatements(body, source.language);
-            return count > limit
-                ? []
-                : [
-                      buildFinding(
-                          input,
-                          locateNode(source.path, node),
-                          'trivial-function',
-                          formatTrivialFunction(
-                              source.language === 'swift'
-                                  ? formatSwiftFunctionName(node)
-                                  : (node.childForFieldName('name')?.text ?? 'function'),
-                              count,
-                              limit,
-                          ),
-                      ),
-                  ];
+            if (count > limit || (source.language === 'python' && isPythonInterface(node))) return [];
+            const name =
+                source.language === 'swift'
+                    ? formatSwiftFunctionName(node)
+                    : (node.childForFieldName('name')?.text ?? 'function');
+            const message = formatTrivialFunction(name, count, limit);
+            return [{ ...buildFinding(input, locateNode(source.path, node), 'trivial-function', message), name }];
         });
         if (isTrivialFile(source.tree.rootNode, source.language, limit)) {
             const line =

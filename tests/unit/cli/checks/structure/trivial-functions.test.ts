@@ -1,13 +1,19 @@
+import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
+import { parse } from '@decimalturn/toml-patch';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { EXPORTED_FUNCTION_FILES } from '#tests/data/checks/structure/exported-functions.ts';
 
 import {
     TRIVIAL_FILES,
+    PYTHON_INTERFACES,
     ACCESSOR_DECLARATIONS,
     STATEMENT_COUNT_CASES,
     SWIFT_FUNCTION_LIMITS,
@@ -74,6 +80,65 @@ test('Python counts nested control flow, reports decorated methods and leaves la
     expect(increased.map((entry) => ({ rule: entry.rule, line: entry.line }))).toStrictEqual([
         ...[3, 5, 6, 11].map((line) => ({ rule: 'trivial-function', line })),
         { rule: 'trivial-file', line: 1 },
+    ]);
+});
+
+test('Python overloads, abstract and protocol methods, accessors, and method stubs are not trivial functions', async () => {
+    const findings = await checkTrivialFile('python', 'interfaces.py', PYTHON_INTERFACES);
+    expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'trivial-function', line: 25 }]);
+});
+
+test('an ignore with names keeps those functions out of the findings, and only that check takes names', async () => {
+    const ignore =
+        '[[ignore]]\ncheck = "structure/trivial-functions"\nnames = ["parse"]\npaths = ["interfaces.py"]\nreason = "The framework calls parse by name."\n';
+    await using sandbox = await testdir({
+        'interfaces.py': PYTHON_INTERFACES,
+        'gspot.toml': buildSettingsText(['python'], {
+            level: 'all',
+            tables: `[limits.python]\ntrivial_function_statements = 2\n${ignore}`,
+        }),
+    });
+    const { report } = await checkReport(sandbox.path, ['check', '--only', 'structure/trivial-functions', '--json']);
+    expect(report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    await Bun.write(
+        `${sandbox.path}/gspot.toml`,
+        buildSettingsText(['python'], {
+            level: 'all',
+            tables: ignore.replace('structure/trivial-functions', 'python/ruff'),
+        }),
+    );
+    const refused = await runGspot(sandbox.path, ['check', '--json']);
+    expect(refused.code).toBe(2);
+    expect(refused.stdout + refused.stderr).toContain(
+        'names applies only to structure/trivial-functions, whose findings name a function.',
+    );
+});
+
+test('gspot ignore --names writes the function names of a structure/trivial-functions ignore', async () => {
+    await using folder = await testdir({
+        'gspot.toml': buildSettingsText(['python'], { level: 'all' }),
+        'main.py': '',
+    });
+    const result = await runGspot(folder.path, [
+        'ignore',
+        'structure/trivial-functions',
+        '--names',
+        'define_schema',
+        'execute',
+        '--paths',
+        'nodes/**',
+        '--reason',
+        'The host application calls these hooks by name.',
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const written = parse(await readFile(join(folder.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['ignore']).toStrictEqual([
+        {
+            check: 'structure/trivial-functions',
+            names: ['define_schema', 'execute'],
+            paths: ['nodes/**'],
+            reason: 'The host application calls these hooks by name.',
+        },
     ]);
 });
 

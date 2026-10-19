@@ -83,6 +83,7 @@ export type ParsedNamingOverride = {
     languages?: SettingLanguage[] | undefined;
     categories?: NamedCategory[] | undefined;
     ignored_prefix?: string | undefined;
+    ignored_names_pattern?: string | undefined;
     allow_digits: boolean;
     allow_repeated_words: boolean;
     allowed_names?: string[] | undefined;
@@ -257,6 +258,7 @@ export type ParsedSettings = ParsedRoot & {
         | {
               check?: string | undefined;
               rule?: string | undefined;
+              names?: string[] | undefined;
               paths?: string[] | undefined;
               reason: string;
               until?: TomlDate | undefined;

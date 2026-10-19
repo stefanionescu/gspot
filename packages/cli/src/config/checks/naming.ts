@@ -138,6 +138,27 @@ export const PYTHON_CONSTANT = /^_?[A-Z][A-Z\d_]*$/u;
 
 export const PYTHON_EXCEPTION_BASE = /(?:Error|Exception|Warning)\b/u;
 
+/** The TypeAlias annotation of an explicit type alias, which typing and typing_extensions both export. */
+export const PYTHON_TYPE_ALIAS_ANNOTATION = /^(?:\w+\.)?TypeAlias$/u;
+
+/** The subscripted forms whose value names a type, such as Optional[int] or dict[str, int]. */
+export const PYTHON_TYPE_FORMS: ReadonlySet<string> = new Set([
+    'Literal',
+    'Union',
+    'Optional',
+    'Annotated',
+    'Callable',
+    'tuple',
+    'list',
+    'dict',
+    'set',
+    'type',
+]);
+
+/** A name in a union of types: a class name or a builtin type. */
+export const PYTHON_TYPE_NAME =
+    /^(?:[A-Z][a-z]\w*|int|str|float|bool|bytes|complex|object|list|dict|set|tuple|type|frozenset|bytearray)$/u;
+
 export const SWIFT_TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'] as const;
 
 export const SWIFT_MEMBER_PARENTS = new Set(['class_body', 'protocol_body', 'enum_class_body']);
