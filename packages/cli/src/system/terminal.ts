@@ -145,7 +145,10 @@ function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>, progr
         printError({ error: error.code, message: error.message });
         return EXIT_ERROR;
     }
-    const detail = (error instanceof Error ? error.message : String(error)).replaceAll(/\s+/gu, ' ').trim();
+    const detail = (error instanceof Error ? error.message : String(error))
+        .replaceAll(/\s+/gu, ' ')
+        .trim()
+        .replace(/\.$/u, '');
     const message = `gspot stopped because of an internal error: ${detail}. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.`;
     printError(output.json ? { error: 'failure', message } : message);
     return EXIT_ERROR;

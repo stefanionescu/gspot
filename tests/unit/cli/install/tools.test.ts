@@ -4,11 +4,10 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 
-test('an unexpected error during install reaches the failure handler and changes nothing', async () => {
+test('an unexpected error during install prints the internal error once and changes nothing', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': `configurations = ["markdown"]
@@ -31,14 +30,16 @@ enabled = false
     const human = await runGspot(sandbox.path, ['install']);
     expect(human.code, human.stdout + human.stderr).toBe(2);
     expect(human.stdout).toBe('');
-    expect(human.stderr).toContain('Unexpected process failure.');
+    const message =
+        'gspot stopped because of an internal error: Unexpected process failure. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.';
+    expect(human.stderr).toBe(`${message}\n`);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const failed = await runGspot(sandbox.path, ['install', '--json']);
     expect(failed.code).toBe(2);
     expect(failed.stderr).toBe('');
-    expect(JSON.parse(failed.stdout)).toMatchObject({
+    expect(JSON.parse(failed.stdout)).toStrictEqual({
         error: 'failure',
-        message: matchSubstring('Unexpected process failure.'),
+        message,
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'))).toStrictEqual(settings);
     expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
