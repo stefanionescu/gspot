@@ -86,7 +86,7 @@ test.each(['js', 'ts'])(
             { line: 9, rule: 'eslint-no-reason' },
             { line: 10, rule: 'eslint-no-reason' },
         ]);
-        const parsed = await parseComments(path, await Bun.file(`${sandbox.path}/${path}`).text());
+        const parsed = await parseComments(path, await Bun.file(`${sandbox.path}/${path}`).text(), []);
         expect(
             parsed.flatMap(({ text, line }) =>
                 /^(?:\/\/|#|--|<!--) ?marker:/u.test(stripCommentEnd(text)) ? [line] : [],

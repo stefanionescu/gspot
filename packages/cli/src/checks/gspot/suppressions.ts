@@ -129,7 +129,7 @@ export async function checkSuppressions(input: CheckInput): Promise<Finding[]> {
         )) {
             const forms = syntaxes.filter((form) => form.covers(file));
             const source = readCachedBytes(input.reads, file.path).toString('utf8');
-            const comments = await parseComments(file.path, source);
+            const comments = await parseComments(file.path, source, file.tags);
             found.push(
                 ...comments.flatMap((comment, index) => {
                     const preceding = findReasonAbove(comments[index - 1], comment);

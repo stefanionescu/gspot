@@ -6,11 +6,13 @@ import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
+import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { GrammarName } from '#cli/types/parsers/tree-sitter.ts';
 import { convertToSpaces, computePosition } from '#cli/system/text.ts';
 import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/comments.ts';
+import { parseSource, findGrammarByExtension } from '#cli/parsers/tree-sitter.ts';
 import type { CommentReader, SourceComment } from '#cli/types/parsers/comments.ts';
 
 import {
@@ -139,15 +141,7 @@ async function parseMarkdownComments(text: string): Promise<SourceComment[]> {
     return parseSyntaxComments('html', source, text);
 }
 
-const COMMENT_READERS = new Map<string, CommentReader>([
-    ['.ts', parseJavascriptComments],
-    ['.mts', parseJavascriptComments],
-    ['.cts', parseJavascriptComments],
-    ['.tsx', parseJavascriptComments],
-    ['.js', parseJavascriptComments],
-    ['.mjs', parseJavascriptComments],
-    ['.cjs', parseJavascriptComments],
-    ['.jsx', parseJavascriptComments],
+const COMMENT_PARSERS = new Map<string, CommentReader>([
     ['.toml', parseTomlComments],
     ['.yaml', parseYamlComments],
     ['.yml', parseYamlComments],
@@ -155,11 +149,6 @@ const COMMENT_READERS = new Map<string, CommentReader>([
     ['.pgsql', parseSqlComments],
     ['.psql', parseSqlComments],
     ['.scss', parseScssComments],
-    ['.py', parseGrammarComments.bind(undefined, 'python')],
-    ['.sh', parseGrammarComments.bind(undefined, 'bash')],
-    ['.bash', parseGrammarComments.bind(undefined, 'bash')],
-    ['.zsh', parseGrammarComments.bind(undefined, 'bash')],
-    ['.swift', parseGrammarComments.bind(undefined, 'swift')],
     ['.html', parseGrammarComments.bind(undefined, 'html')],
     ['.htm', parseGrammarComments.bind(undefined, 'html')],
     ['.md', parseMarkdownComments],
@@ -225,9 +214,21 @@ export function stripCommentEnd(text: string): string {
  *
  * @param path the file, whose name selects the syntax.
  * @param text the source contents.
+ * @param tags the file tags, which identify scripts without a known extension.
  * @returns comments in source order, with whether each occupies its line alone.
  */
-export async function parseComments(path: string, text: string): Promise<SourceComment[]> {
-    const reader = COMMENT_READERS.get(extractExtension(path));
-    return reader === undefined ? [] : reader(text, path);
+export async function parseComments(path: string, text: string, tags: readonly string[]): Promise<SourceComment[]> {
+    const lowerPath = path.toLowerCase();
+    if (DECLARATION_EXTENSIONS.some((extension) => lowerPath.endsWith(extension)))
+        return parseJavascriptComments(text, path);
+    let scriptGrammar: GrammarName | undefined;
+    if (tags.includes(SCRIPT_TAG)) scriptGrammar = 'bash';
+    else if (tags.includes('python')) scriptGrammar = 'python';
+    const grammar = findGrammarByExtension(lowerPath) ?? scriptGrammar;
+    if (grammar !== undefined) {
+        if (['javascript', 'typescript', 'tsx'].includes(grammar)) return parseJavascriptComments(text, path);
+        return parseGrammarComments(grammar, text);
+    }
+    const parser = COMMENT_PARSERS.get(extractExtension(path));
+    return parser === undefined ? [] : parser(text, path);
 }

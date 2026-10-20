@@ -1,6 +1,35 @@
 /** Where comments start and end in different source forms. */
 export const COMMENT_BOUNDARIES = [
     [
+        'Bats quoted hash',
+        'test/run.bats',
+        'echo "# marker: Literal sample text." # marker: Required interface.\n',
+        1,
+        ['shell', 'bash', 'bats', 'text'],
+    ],
+    ['Python type stub', 'stub.pyi', 'x: int  # marker: Required interface.\n', 1, ['python', 'pyi', 'text']],
+    [
+        'extensionless Bash script',
+        '.mise/tasks/test',
+        '#!/usr/bin/env bash\necho "# marker: Literal sample text." # marker: Required interface.\n',
+        2,
+        ['shell', 'executable', 'text'],
+    ],
+    [
+        'extensionless Python script',
+        'scripts/check',
+        '#!/usr/bin/env python3\nx = "# marker: Literal sample text."  # marker: Required interface.\n',
+        2,
+        ['python', 'executable', 'text'],
+    ],
+    [
+        'TypeScript declaration',
+        'source.d.ts',
+        'declare const text: "// marker: Literal sample text."; // marker: Required interface.\n',
+        1,
+        ['typescript', 'text'],
+    ],
+    [
         'TOML multiline basic string',
         'source.toml',
         `value = """
@@ -10,6 +39,7 @@ export const COMMENT_BOUNDARIES = [
 actual = 1
 `,
         4,
+        [],
     ],
     [
         'TOML multiline literal string',
@@ -21,6 +51,7 @@ actual = 1
 actual = 1
 `,
         4,
+        [],
     ],
     [
         'SQL dollar-quoted value',
@@ -32,6 +63,7 @@ $body$;
 select 1;
 `,
         4,
+        [],
     ],
     [
         'SQL multiline quoted value',
@@ -43,6 +75,7 @@ select 1;
 select 1;
 `,
         4,
+        [],
     ],
     [
         'Postgres block comment',
@@ -54,6 +87,7 @@ select 1;
 select 1;
 `,
         4,
+        [],
     ],
     [
         'psql echo argument',
@@ -63,6 +97,7 @@ select 1;
 select 1;
 `,
         2,
+        [],
     ],
     [
         'Markdown fenced HTML',
@@ -74,6 +109,7 @@ select 1;
 Text.
 `,
         4,
+        [],
     ],
     [
         'Markdown inline HTML',
@@ -83,6 +119,7 @@ Text.
 Text.
 `,
         2,
+        [],
     ],
     [
         'Markdown line after an emoji',
@@ -93,6 +130,7 @@ Text.
 Text.
 `,
         3,
+        [],
     ],
     [
         'YAML literal block',
@@ -103,6 +141,7 @@ Text.
 actual: 1
 `,
         3,
+        [],
     ],
     [
         'YAML multiline quoted value',
@@ -114,6 +153,7 @@ actual: 1
 actual: 1
 `,
         4,
+        [],
     ],
     [
         'Python multiline string',
@@ -125,6 +165,7 @@ actual: 1
 value = 1
 `,
         4,
+        [],
     ],
     [
         'Bash heredoc',
@@ -136,6 +177,7 @@ EOF
 value=1
 `,
         4,
+        [],
     ],
     [
         'Swift multiline string',
@@ -147,6 +189,7 @@ value=1
 let actual = 1
 `,
         4,
+        [],
     ],
     [
         'HTML script content',
@@ -158,6 +201,7 @@ const value = "<!-- marker: Literal sample text. -->";
 <div></div>
 `,
         4,
+        [],
     ],
 ] as const;
 
