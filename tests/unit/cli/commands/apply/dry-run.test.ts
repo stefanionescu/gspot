@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { listStaleFiles } from '#cli/apply/stale.ts';
 import { generate } from '#cli/generation/generate.ts';
@@ -8,11 +9,57 @@ import type { ApplyReport } from '#cli/types/apply.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
-import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { type DryRunJson } from '#cli/types/commands/edit-settings.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
-import { runGspot, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
+import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
+import { runGspot, checkReport, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { commitAll, readGitOutput, prepareAppliedBashRepository } from '#tests/setup/git.ts';
+
+// Windows reports the same mode for files writable by the owner or by everyone.
+test.skipIf(isWindows)(
+    'apply --dry-run lists a generated file whose mode changed, and gspot/generated-files reports it',
+    async () => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSettingsText(['format']),
+            'source.txt': 'authored text\n',
+        });
+        const initial = await runGspot(sandbox.path, ['apply']);
+        expect(initial.code, initial.stdout + initial.stderr).toBe(0);
+        const path = join(sandbox.path, '.editorconfig');
+        const bytes = await readFile(path);
+        await chmod(path, 0o600);
+        const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
+        expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+        const { stale } = JSON.parse(preview.stdout) as DryRunJson;
+        expect(stale.find((entry) => entry.path === '.editorconfig')).toStrictEqual({
+            path: '.editorconfig',
+            kind: 'changed',
+            diff: 'old mode 600\nnew mode 644\n',
+        });
+        const human = await runGspot(sandbox.path, ['apply', '--dry-run']);
+        expect(human.code, human.stdout + human.stderr).toBe(0);
+        expect(human.stdout).toContain('.editorconfig  changed');
+        expect(human.stdout).toContain('old mode 600');
+        expect(human.stdout).toContain('new mode 644');
+        const checked = await checkReport(sandbox.path, ['check', '--only', 'gspot/generated-files', '--json']);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+        expect(
+            checked.report.checks
+                .flatMap(({ findings }) => findings)
+                .filter((finding) => finding.file === '.editorconfig')
+                .map(({ file, rule }) => ({ file, rule })),
+        ).toStrictEqual([{ file: '.editorconfig', rule: 'changed' }]);
+        expect(await readFile(path)).toStrictEqual(bytes);
+        const unchanged = await stat(path);
+        expect(unchanged.mode & 0o777).toBe(0o600);
+        const applied = await runGspot(sandbox.path, ['apply', '--json']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        expect((JSON.parse(applied.stdout) as ApplyReport).written).toContain('.editorconfig');
+        expect(await readFile(path)).toStrictEqual(bytes);
+        const written = await stat(path);
+        expect(written.mode & 0o777).toBe(0o644);
+    },
+);
 
 test('a hand edit of the ESLint config shows as a byte diff without running it', async () => {
     await using sandbox = await testdir();

@@ -7,10 +7,12 @@ import { listStrayPaths } from '#cli/ownership/plans.ts';
 import { DIFF_CONTEXT_LINES } from '#cli/config/apply.ts';
 import { readBlock } from '#cli/system/managed-blocks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { isSameContents } from '#cli/system/files/entries.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import { listStaleLockfiles } from '#cli/install/project-lockfiles.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import { MODE_RADIX, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { UV_LOCKFILE, NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 
 function buildDiff(path: string, before: string, after: string, beforeName: string): string {
@@ -31,16 +33,19 @@ function listStaleWholeFiles(files: Files, generated: GenerationResult): StaleFi
     return generated.files.flatMap((file): StaleFile[] => {
         const current = files.read(file.path);
         if (current === undefined) return [{ path: file.path, kind: 'missing' }];
+        const mode = file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE;
+        if (isSameContents(current, { bytes: Buffer.from(file.content), mode })) return [];
         const disk = current.bytes.toString('utf8');
-        if (disk !== file.content)
-            return [
-                {
-                    path: file.path,
-                    kind: 'changed',
-                    diff: buildDiff(file.path, disk, file.content, 'on disk'),
-                },
-            ];
-        return [];
+        return [
+            {
+                path: file.path,
+                kind: 'changed',
+                diff:
+                    disk === file.content
+                        ? `old mode ${current.mode.toString(MODE_RADIX)}\nnew mode ${mode.toString(MODE_RADIX)}\n`
+                        : buildDiff(file.path, disk, file.content, 'on disk'),
+            },
+        ];
     });
 }
 

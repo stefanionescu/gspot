@@ -1,5 +1,7 @@
 // File modes for repository files and temporary folders.
 
+export const MODE_RADIX = 8;
+
 /** Read and written by the owner alone: the mode of a private file. */
 export const PRIVATE_FILE = 0o600;
 
