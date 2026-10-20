@@ -197,10 +197,17 @@ for (const folder of ['nested', 'source\nfiles'])
                     `${folder}/.gitignore`,
                     `${folder}/deeper/keep.log`,
                     `${folder}/keep.log`,
+                    'linked.ts',
                     'sibling/local.ts',
                     'source.ts',
                 ].toSorted((left, right) => left.localeCompare(right)),
             );
+            expect(entries.find(({ path }) => path === 'linked.ts')).toStrictEqual({
+                path: 'linked.ts',
+                size: Buffer.byteLength('source'),
+                executable: false,
+                symlink: true,
+            });
             await symlink('../outside/private.ts', join(root, 'external.ts'));
             const linked = await listTrackedFiles(root, [], { hasGit: false });
             expect(linked.map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));

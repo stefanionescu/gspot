@@ -92,7 +92,7 @@ function walkPaths(root: string): string[] {
         const { folder } = next;
         const { entries, ignores } = readFolderListing(root, folder, next.ignores);
         const retained = entries.filter((entry) => {
-            if (entry.name === GIT_FOLDER || entry.isSymbolicLink()) return false;
+            if (entry.name === GIT_FOLDER) return false;
             const path = `${folder}${entry.name}`;
             const candidate = entry.isDirectory() ? `${path}/` : path;
             return !isIgnored(candidate, ignores) && !STATE_FOLDER_PATTERN.test(path.normalize('NFC'));
@@ -100,7 +100,7 @@ function walkPaths(root: string): string[] {
         for (const entry of retained) {
             const path = `${folder}${entry.name}`;
             if (entry.isDirectory()) pending.push({ folder: `${path}/`, ignores });
-            else if (entry.isFile()) paths.push(path);
+            else if (entry.isFile() || entry.isSymbolicLink()) paths.push(path);
         }
     }
     return paths;
