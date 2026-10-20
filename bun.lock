@@ -29,7 +29,7 @@
     },
     "packages/cli": {
       "name": "@gspothq/cli",
-      "version": "0.3.4",
+      "version": "0.3.5",
       "bin": {
         "gspot": "dist/gspot.js",
       },
