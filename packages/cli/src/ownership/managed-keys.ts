@@ -4,8 +4,8 @@ import { openJsonFile } from '#cli/parsers/json.ts';
 import { openYamlFile } from '#cli/parsers/yaml.ts';
 import { NPMRC_FILE } from '#cli/config/tools/npm.ts';
 import { openNpmrcFile } from '#cli/parsers/npmrc.ts';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { normalizeTables } from '#cli/system/values.ts';
+import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { openTomlFile } from '#cli/parsers/toml/document.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
@@ -36,12 +36,10 @@ function planKeyChanges(request: KeyChangeRequest): KeyChangePlan {
  *
  * @param path the file, which also picks the format.
  * @param current the existing file, or undefined when generation creates it.
- *
  * @returns the editable document.
  */
 function openKeysDocument(path: string, current: FileContents | undefined): EditableFile {
-    const text = current === undefined ? undefined : decodeUtf8(current.bytes);
-    if (current !== undefined && text === undefined) throw new Error(`${path} is not UTF-8 text`);
+    const text = current === undefined ? undefined : decodeUtf8Text(path, current.bytes);
     return openEditableFile(path, text);
 }
 

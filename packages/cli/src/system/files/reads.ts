@@ -2,9 +2,9 @@
 import { isUtf8 } from 'node:buffer';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
-import { isMissingFileError } from '#cli/system/errors.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
+import { GspotError, isMissingFileError } from '#cli/system/errors.ts';
 import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
 
 // Close the descriptor even when a bounded read fails.
@@ -27,9 +27,7 @@ function readFilePrefix(source: string, limit: number): Buffer {
 // Decode both direct and cached reads through the same missing-file and encoding boundary.
 function readUtf8(path: string, read: () => Buffer): string | undefined {
     try {
-        const text = decodeUtf8(read());
-        if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
-        return text;
+        return decodeUtf8Text(path, read());
     } catch (error) {
         if (isMissingFileError(error)) return undefined;
         throw error;
@@ -120,4 +118,27 @@ function decodeUtf8(bytes: Uint8Array): string | undefined {
     return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }
 
-export { readText, readBytes, decodeUtf8, readCachedText, readCachedBytes, readCachedPrefix, readContainedPath };
+/**
+ * Decode a user file, or tell the user how to fix its encoding.
+ *
+ * @param path the file to name in an encoding error.
+ * @param bytes the file contents to decode.
+ * @returns the UTF-8 text.
+ */
+function decodeUtf8Text(path: string, bytes: Buffer): string {
+    const text = decodeUtf8(bytes);
+    if (text === undefined)
+        throw new GspotError('filesystem', `${path} is not UTF-8 text. Save it as UTF-8, then run the command again.`);
+    return text;
+}
+
+export {
+    readText,
+    readBytes,
+    decodeUtf8,
+    readCachedText,
+    decodeUtf8Text,
+    readCachedBytes,
+    readCachedPrefix,
+    readContainedPath,
+};

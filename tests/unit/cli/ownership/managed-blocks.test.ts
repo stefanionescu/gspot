@@ -1,11 +1,31 @@
 import { join } from 'node:path';
-import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import type { GspotError } from '#cli/system/errors.ts';
 import { planBlock, planRemoval } from '#cli/ownership/plans.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/data/system.ts';
 import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-blocks.ts';
+
+test.each([...BLOCK_FORMATS, { path: '.gitattributes', style: 'hash' as const }])(
+    'block updates and removal refuse non-UTF-8 $path with a file error and keep its bytes',
+    async ({ path, style }) => {
+        await using sandbox = await testdir();
+        const bytes = Buffer.from([0xff, 0xfe, 0x41, 0x00]);
+        await writeFile(join(sandbox.path, path), bytes);
+        using writer = openWriter(sandbox.path);
+        const failure = matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'filesystem',
+            message: `${path} is not UTF-8 text. Save it as UTF-8, then run the command again.`,
+        });
+        expect(() => planBlock(writer, path, 'instructions', style)).toThrow(failure);
+        expect(() => planRemoval(writer, path)).toThrow(failure);
+        expect(await readFile(join(sandbox.path, path))).toStrictEqual(bytes);
+    },
+);
 
 describe('blocks', () => {
     test('managed block updates and removal keep your text around the block', async () => {

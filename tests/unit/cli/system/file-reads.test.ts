@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { rm, link, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { readText, readBytes, readCachedText, readCachedBytes, readCachedPrefix } from '#cli/system/files/reads.ts';
@@ -13,7 +15,13 @@ test('reads tell a missing optional file, required bytes, and invalid UTF-8 apar
     const invalid = Buffer.from([0xc3, 0x28]);
     await writeFile(target, invalid);
     expect(readBytes(folder.path, 'source.txt')).toStrictEqual(invalid);
-    expect(() => readText(folder.path, 'source.txt')).toThrow('source.txt is not UTF-8 text.');
+    const failure = matchFields<GspotError>({
+        name: 'GspotError',
+        code: 'filesystem',
+        message: 'source.txt is not UTF-8 text. Save it as UTF-8, then run the command again.',
+    });
+    expect(() => readText(folder.path, 'source.txt')).toThrow(failure);
+    expect(() => readCachedText(createReadCache(folder.path), 'source.txt')).toThrow(failure);
     expect(await readFile(target)).toStrictEqual(invalid);
     await writeFile(target, 'valid café\n');
     expect(readText(folder.path, 'source.txt')).toBe('valid café\n');

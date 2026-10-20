@@ -80,3 +80,21 @@ test.each(['', '[]', 'false', '{"stylelint":', '{ /* comment */ "stylelint": {} 
         expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(source);
     },
 );
+
+test.each(['package.json', 'bunfig.toml'])(
+    'managed keys refuse non-UTF-8 %s with a file error and keep its bytes',
+    async (path) => {
+        await using sandbox = await testdir();
+        const bytes = Buffer.from([0xff, 0xfe, 0x41, 0x00]);
+        await writeFile(join(sandbox.path, path), bytes);
+        using writer = openWriter(sandbox.path);
+        expect(() => planManagedKeys(writer, path, [])).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: `${path} is not UTF-8 text. Save it as UTF-8, then run the command again.`,
+            }),
+        );
+        expect(await readFile(join(sandbox.path, path))).toStrictEqual(bytes);
+    },
+);

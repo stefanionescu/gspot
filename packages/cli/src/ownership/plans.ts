@@ -3,7 +3,7 @@ import { lstatSync } from 'node:fs';
 import { isInside } from '#cli/system/paths.ts';
 import { AGENTS_FILE } from '#cli/config/rules.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -18,6 +18,11 @@ import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-bloc
 import type { Writer, FileEdit, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
 import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
 
+// Markdown comments keep block markers out of the displayed document.
+function selectBlockStyle(path: string): BlockStyle {
+    return path.endsWith('.md') ? 'markdown' : 'hash';
+}
+
 /**
  * Remove only the marked block and its separating blank line.
  *
@@ -26,9 +31,8 @@ import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/syste
  * @returns the remaining file contents, or undefined when nothing remains.
  */
 function removeBlock(path: string, current: FileContents): FileContents | undefined {
-    const text = decodeUtf8(current.bytes);
-    if (text === undefined) throw new Error(`${path} is not UTF-8 text`);
-    const span = findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' });
+    const text = decodeUtf8Text(path, current.bytes);
+    const span = findBlockSpan(text, { path, style: selectBlockStyle(path) });
     if (span === undefined) return current;
     const before = text.slice(0, span.start).replace(/(\r?\n)\r?\n$/u, '$1');
     const after = text.slice(span.end);
@@ -92,10 +96,7 @@ export function listStrayPaths(
         if (isOwned(path, disk)) return true;
         if (!blockPaths.has(path)) return false;
         const text = disk.read(path)?.bytes.toString('utf8');
-        return (
-            text !== undefined &&
-            findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' }) !== undefined
-        );
+        return text !== undefined && findBlockSpan(text, { path, style: selectBlockStyle(path) }) !== undefined;
     });
 }
 
@@ -135,8 +136,7 @@ export function planReplacement(writer: Writer, request: ReplacementRequest): Wr
  */
 export function planBlock(writer: Writer, path: string, body: string, style: BlockStyle): WritePlan {
     const current = writer.files.read(path);
-    const text = current === undefined ? '' : decodeUtf8(current.bytes);
-    if (text === undefined) throw new Error(`${path} is not UTF-8 text`);
+    const text = current === undefined ? '' : decodeUtf8Text(path, current.bytes);
     const nextText = replaceBlock(text, body, { path, style });
     const next = {
         bytes: Buffer.from(nextText),
