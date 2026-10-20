@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { hasManagedKeys } from '#cli/ownership/managed-keys.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
@@ -65,7 +67,16 @@ test.each(['', '[]', 'false', '{"stylelint":', '{ /* comment */ "stylelint": {} 
         using log = openWriter(sandbox.path);
         expect(() =>
             planManagedKeys(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }]),
-        ).toThrow('package.json is not valid JSON. Fix the file.');
+        ).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message:
+                    source === '[]' || source === 'false'
+                        ? 'package.json must contain a JSON object. Fix the file.'
+                        : 'package.json is not valid JSON. Fix the file.',
+            }),
+        );
         expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(source);
     },
 );

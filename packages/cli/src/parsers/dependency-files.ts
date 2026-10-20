@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { parse as parseToml } from '@decimalturn/toml-patch';
+import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { parseGrammarComments } from '#cli/parsers/comments.ts';
 
 import type {
@@ -137,7 +137,7 @@ function parsePackageJson(path: string, text: string): DependencyFile {
 }
 
 function parsePipfile(path: string, text: string): DependencyFile {
-    const parsed = pipfileSchema.parse(parseToml(text));
+    const parsed = parseTomlFile({ path, source: text }, pipfileSchema);
     const dependencies: DependencyMap = {};
     for (const [name, value] of Object.entries({ ...parsed.packages, ...parsed['dev-packages'] })) {
         dependencies[normalizePythonPackage(name)] = typeof value === 'string' ? value : JSON.stringify(value);
@@ -146,7 +146,7 @@ function parsePipfile(path: string, text: string): DependencyFile {
 }
 
 function parsePyproject(path: string, text: string): DependencyFile {
-    const parsed = pyprojectSchema.parse(parseToml(text));
+    const parsed = parseTomlFile({ path, source: text }, pyprojectSchema);
     const dependencies = listPythonDependencies(parsed);
     return {
         path,

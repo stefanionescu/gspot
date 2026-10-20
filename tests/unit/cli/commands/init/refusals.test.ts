@@ -29,7 +29,15 @@ test('init refuses an unreadable package.json before writing', async () => {
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, buildInitArguments([]));
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toContain('package.json');
+    expect(result.stdout).toBe('');
+    expect(result.stderr).toBe('package.json is not valid JSON. Fix the file.\n');
+    const structured = await runGspot(sandbox.path, [...buildInitArguments([]), '--json']);
+    expect(structured.code).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({
+        error: 'filesystem',
+        message: 'package.json is not valid JSON. Fix the file.',
+    });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

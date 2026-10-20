@@ -40,6 +40,25 @@ export function formatZodIssue(issue: z.core.$ZodIssue): string[] {
 }
 
 /**
+ * Validate fields from a user file, and name the file and failing fields.
+ *
+ * @param path the file whose fields need validation.
+ * @param value the parsed file contents.
+ * @param schema the fields and constraints to check.
+ * @returns the validated fields.
+ */
+export function parseFileFields<Value>(path: string, value: unknown, schema: z.ZodType<Value>): Value {
+    const parsed = schema.safeParse(value);
+    if (!parsed.success)
+        throw new GspotError(
+            'filesystem',
+            `${path}: ${parsed.error.issues.flatMap((issue) => formatZodIssue(issue)).join('; ')}. Fix the field.`,
+            { cause: parsed.error },
+        );
+    return parsed.data;
+}
+
+/**
  * Check whether a file operation failed because the path does not exist.
  *
  * @param error the caught value.

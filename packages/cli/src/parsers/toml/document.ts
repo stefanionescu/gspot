@@ -1,6 +1,8 @@
 // Reads and edits TOML while preserving comments.
+import type { z } from 'zod';
 import { PATCH_FORMAT } from '#cli/config/parsers/toml.ts';
 import { patch, parse as parseToml } from '@decimalturn/toml-patch';
+import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
 import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
 import type { TomlInput, TomlSyntax, TomlComments, TomlTextChunk, TomlTableOptions } from '#cli/types/parsers/toml.ts';
@@ -100,19 +102,26 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
     );
 }
 
+export function parseTomlFile(input: TomlInput): Record<string, unknown>;
+export function parseTomlFile<Value>(input: TomlInput, schema: z.ZodType<Value>): Value;
 /**
- * Parses TOML and names the file on invalid syntax.
+ * Parse TOML, and name the file on invalid syntax or fields.
  *
  * @param input the file path and TOML text.
+ * @param schema the shape to check, when supplied.
  * @returns the parsed table.
  * @throws a file-specific error with the parser failure as its cause.
  */
-function parseTomlFile(input: TomlInput): Record<string, unknown> {
+export function parseTomlFile(input: TomlInput, schema?: z.ZodType): unknown {
+    let value: Record<string, unknown>;
     try {
-        return parseToml(input.source) as Record<string, unknown>;
+        value = parseToml(input.source) as Record<string, unknown>;
     } catch (error) {
-        throw new Error(`${input.path} is not valid TOML. Fix the file, then run gspot apply.`, { cause: error });
+        throw new GspotError('filesystem', `${input.path} is not valid TOML. Fix the file, then run gspot apply.`, {
+            cause: error,
+        });
     }
+    return schema === undefined ? value : parseFileFields(input.path, value, schema);
 }
 
 /**

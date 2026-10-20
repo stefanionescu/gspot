@@ -1,6 +1,7 @@
 // Reads repository dependency files and selects project dependencies.
 
 import { posix } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
@@ -15,16 +16,20 @@ import { packageJsonSchema, selectDependencyFileParser } from '#cli/parsers/depe
 
 // Keep each parser failure tied to the dependency file that caused it.
 async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<DependencyFile | undefined> {
+    const parse = selectDependencyFileParser(file.path);
+    if (parse === undefined) return undefined;
+    let text: string | undefined;
     try {
-        const parse = selectDependencyFileParser(file.path);
-        if (parse === undefined) return undefined;
-        const text = readCachedText(reads, file.path);
-        if (text === undefined) throw new Error(`The dependency file is missing: ${file.path}`);
-        return await parse(file.path, text);
+        text = readCachedText(reads, file.path);
     } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        throw new Error(`Cannot read the dependency file ${file.path}: ${detail}`, { cause: error });
+        if (!(error instanceof Error && 'code' in error && 'syscall' in error)) throw error;
+        throw new GspotError('filesystem', `${file.path} could not be read. Check the file and its permissions.`, {
+            cause: error,
+        });
     }
+    if (text === undefined)
+        throw new GspotError('filesystem', `${file.path} is tracked but missing. Restore it or commit its deletion.`);
+    return await parse(file.path, text);
 }
 
 /**

@@ -2,6 +2,7 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import type { Parsed } from '#cli/types/errors.ts';
+import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
 import { JSONC_OPTIONS, JSONC_EXTENSION } from '#cli/config/parsers/json.ts';
 import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
@@ -19,13 +20,14 @@ export function parseJsonFile<Value>(path: string, source: string, schema: z.Zod
  * @returns the parsed object.
  */
 export function parseJsonFile(path: string, source: string, schema?: z.ZodType): unknown {
+    let value: unknown;
     try {
-        const value: unknown = path.endsWith(JSONC_EXTENSION) ? parseJsonc(source) : JSON.parse(source);
-        if (!isRecord(value)) throw new Error('JSON configuration must contain an object.');
-        return schema === undefined ? value : schema.parse(value);
+        value = path.endsWith(JSONC_EXTENSION) ? parseJsonc(source) : JSON.parse(source);
     } catch (error) {
-        throw new Error(`${path} is not valid JSON. Fix the file.`, { cause: error });
+        throw new GspotError('filesystem', `${path} is not valid JSON. Fix the file.`, { cause: error });
     }
+    if (!isRecord(value)) throw new GspotError('filesystem', `${path} must contain a JSON object. Fix the file.`);
+    return schema === undefined ? value : parseFileFields(path, value, schema);
 }
 
 /**

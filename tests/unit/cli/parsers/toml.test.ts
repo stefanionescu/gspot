@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { openTomlFile } from '#cli/parsers/toml/document.ts';
 
 test('adding a root key keeps the leading comments on their table', () => {
@@ -36,10 +37,11 @@ test('reading TOML values: nested tables, arrays, scalars and missing keys', () 
     expect(document.getValue(['defaults', 'enabled'])).toBe(true);
 });
 
-test('a TOML syntax error names the file and keeps the parser error as its cause', () => {
-    expect(() => openTomlFile({ path: 'apps/api/bunfig.toml', source: '[install\n' })).toThrow(Error);
+test('a TOML syntax error is a GspotError that names the file and keeps the parser error as its cause', () => {
     expect(() => openTomlFile({ path: 'apps/api/bunfig.toml', source: '[install\n' })).toThrow(
-        matchFields<Error>({
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'filesystem',
             message: 'apps/api/bunfig.toml is not valid TOML. Fix the file, then run gspot apply.',
             cause: expect.any(Error),
         }),

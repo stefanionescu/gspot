@@ -5,6 +5,8 @@ import { unlink, symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import * as processes from '#cli/system/processes.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
@@ -163,7 +165,7 @@ test('library reads are kept per session and see a new install in the next sessi
 
 test.each([...PACKAGE_METADATA_FAILURES])(
     'a tool project library with a non-string $field is refused until it is fixed',
-    async ({ manifest }) => {
+    async ({ field, manifest }) => {
         await using sandbox = await testdir();
         const path = join(sandbox.path, '.gspot/node_modules/teller/package.json');
         const original = JSON.stringify(manifest);
@@ -175,7 +177,13 @@ test.each([...PACKAGE_METADATA_FAILURES])(
             version: '5.0.1',
             installers: { npm: { name: 'teller', version: '5.0.1' } },
         };
-        expect(() => inspectTool(context, tool)).toThrow(`${path} is not valid JSON. Fix the file.`);
+        expect(() => inspectTool(context, tool)).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: `${path}: ${field}: Invalid input: expected string, received boolean. Fix the field.`,
+            }),
+        );
         expect(await Bun.file(path).text()).toBe(original);
         await Bun.write(path, '{"name":"teller","version":"5.0.1"}');
         expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });

@@ -1,9 +1,31 @@
 import { test, expect } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { NON_RECORD_JSON } from '#tests/data/checks/format.ts';
 import { parseJsonc, parseJsonFile } from '#cli/parsers/json.ts';
 
-test.each(NON_RECORD_JSON)('JSON configuration rejects a non-object root %s', (text) => {
-    expect(() => parseJsonFile('example.json', text)).toThrow('example.json');
+test.each(NON_RECORD_JSON)(
+    'a JSON file whose root is %s, not an object, fails with an error that names the file and the shape',
+    (text) => {
+        expect(() => parseJsonFile('example.json', text)).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: 'example.json must contain a JSON object. Fix the file.',
+            }),
+        );
+    },
+);
+
+test('a JSON syntax error names the file and keeps the parser error as its cause', () => {
+    expect(() => parseJsonFile('package.json', '{')).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'filesystem',
+            message: 'package.json is not valid JSON. Fix the file.',
+            cause: expect.any(SyntaxError),
+        }),
+    );
 });
 
 test('JSON with comments names the error offset', () => {
