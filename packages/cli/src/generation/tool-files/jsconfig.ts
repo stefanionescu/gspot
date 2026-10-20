@@ -60,6 +60,7 @@ function listTrackedDeclarations(context: ToolFileContext, authored: TypeScriptC
 
 /**
  * Build the jsconfig file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the JavaScript type-checking project and its scoped source selectors.
  */

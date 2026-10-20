@@ -32,6 +32,7 @@ function getPackageFolder(): string {
 
 /**
  * Build the path of one asset in the package, for a tool that reads it by path.
+ *
  * @param path the asset, such as `configurations/language/bash/manifest.toml`.
  * @returns the absolute path.
  */
@@ -41,6 +42,7 @@ export function buildAssetPath(path: string): string {
 
 /**
  * Read one asset by its path in the package, such as `configurations/language/bash/manifest.toml`.
+ *
  * @param path the package-relative location to decode as UTF-8.
  * @returns the text.
  */
@@ -50,6 +52,7 @@ export function readAsset(path: string): string {
 
 /**
  * Find the path of a grammar WASM file in grammars/.
+ *
  * @param name the WASM file, such as `bash.wasm`.
  * @returns the WASM file path.
  */
@@ -62,6 +65,7 @@ export function findWasmPath(name: string): string {
 
 /**
  * List the asset paths under a prefix, relative to the package, sorted.
+ *
  * @param prefix the start of the paths, such as `configurations/`.
  * @returns the paths.
  */

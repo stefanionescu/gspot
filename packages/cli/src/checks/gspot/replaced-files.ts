@@ -7,6 +7,7 @@ import { listToolSettingsFiles } from '#cli/repository/tool-settings-files.ts';
 /**
  * Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint
  * runs. A level change or a new configuration can make gspot take over a tool after init ran.
+ *
  * @param session the repository and the tools that the selected checks run.
  * @param planned the repository-wide check.
  * @returns the check result.

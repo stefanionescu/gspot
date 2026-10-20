@@ -40,6 +40,7 @@ const importLinterSchema = z.object({
 
 /**
  * Runs the import-linter contracts of the first INI or TOML file in the scope that declares them.
+ *
  * @param input the scope to check.
  * @returns each broken contract with its dependency chain.
  */

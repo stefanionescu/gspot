@@ -21,6 +21,7 @@ function buildSectionPath(pattern: string, scope: string): string {
 
 /**
  * Build the EditorConfig file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the EditorConfig sections of this repository.
  */

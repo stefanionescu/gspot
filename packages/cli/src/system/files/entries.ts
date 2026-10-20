@@ -97,6 +97,7 @@ function isRenameBlocked(expected: FileContents | undefined): boolean {
 
 /**
  * Keep only the permissions that the system file API shows. Windows shows a read-only flag.
+ *
  * @param file the mode, and whether it holds a link.
  * @returns the mode the system can represent.
  */
@@ -109,6 +110,7 @@ export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isLink'>): 
 
 /**
  * Check whether two file contents hold the same bytes and the same mode, as far as the system can show it.
+ *
  * @param found the file contents on disk.
  * @param expected the file contents that the caller expects.
  * @returns true when neither exists or both match.
@@ -122,6 +124,7 @@ export function isSameContents(found: FileContents | undefined, expected: FileCo
 
 /**
  * Build the absolute path of a file after a check that every parent names a real folder, not a link.
+ *
  * @param bounds the root.
  * @param path the root-relative file.
  * @returns the absolute path.
@@ -132,6 +135,7 @@ export function verifyPath(bounds: FilesState, path: string): string {
 
 /**
  * Build the absolute path of a file, create missing parents, and refuse parents that link or name no folder.
+ *
  * @param bounds the root.
  * @param path the root-relative file.
  * @returns the absolute path after preparing its parents.
@@ -142,6 +146,7 @@ export function preparePath(bounds: FilesState, path: string): string {
 
 /**
  * Read a regular file with no other hard link, or return undefined when absent.
+ *
  * @param bounds the root.
  * @param path the root-relative file.
  * @returns the file contents.
@@ -158,6 +163,7 @@ export function readEntry(bounds: FilesState, path: string): FileContents | unde
 
 /**
  * Read a file or symbolic link without following the link, or return undefined when absent.
+ *
  * @param bounds the root.
  * @param path the root-relative file.
  * @returns the file contents.
@@ -175,6 +181,7 @@ export function readEntryKeepingLinks(bounds: FilesState, path: string): FileCon
 
 /**
  * Replace the file at a path with new file contents, through a staged file that moves into place.
+ *
  * @param bounds the root.
  * @param path the root-relative file.
  * @param value the file contents to write.

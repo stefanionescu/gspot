@@ -134,6 +134,7 @@ function printConfiguration(literal: string): string {
 
 /**
  * Serialize the runtime declarations used by the shared file selectors.
+ *
  * @param runtimes the ordered runtime declarations and their file selectors.
  * @returns the JavaScript declaration shared by runtime file matchers.
  */
@@ -194,6 +195,7 @@ function serializeBlocks(module: BlockWriter, blocks: Parameters<BlockWriter['bl
 
 /**
  * Indent every line of a generated ESLint block inside the export array.
+ *
  * @param source a serialized block or comment.
  * @returns the indented text.
  */

@@ -50,6 +50,7 @@ const knipReportSchema = z.strictObject({
 
 /**
  * Read the Knip JSON categories, and keep grouped symbols and source positions.
+ *
  * @param input the tool output to read.
  * @returns the findings, with each positioned member of a grouped issue.
  */

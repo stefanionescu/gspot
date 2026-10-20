@@ -225,6 +225,7 @@ function buildAgentsBlock({
 
 /**
  * Check whether Markdown text has a top heading, outside code blocks.
+ *
  * @param text the authored part of the file.
  * @returns whether a level-one heading exists.
  */

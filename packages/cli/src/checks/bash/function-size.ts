@@ -6,6 +6,7 @@ import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 /**
  * Checks each shell function against the size limits: code lines and parser counts.
+ *
  * @param input the scope scripts and limits.
  * @returns one finding per exceeded limit.
  */

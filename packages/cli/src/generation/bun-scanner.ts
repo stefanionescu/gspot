@@ -14,6 +14,7 @@ import {
 
 /**
  * Set the scanner in the bunfig.toml of each scope that selects dependencies, installs with Bun, and names a scanner.
+ *
  * @param repositoryRoot where the scopes sit.
  * @param scopes every scope.
  * @returns the bunfig.toml edits.

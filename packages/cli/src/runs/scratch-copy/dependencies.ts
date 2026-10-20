@@ -95,6 +95,7 @@ async function replaceLink(context: DependencyTreeCopy, { source, target }: Pend
 
 /**
  * Selects the paths that Git ignores.
+ *
  * @param repositoryRoot the repository folder.
  * @param paths the candidate prerequisites.
  * @param cancelSignal stops the Git query.
@@ -113,6 +114,7 @@ export async function readIgnoredPaths(
 
 /**
  * Clones installed dependency trees into the scratch copy and repairs the links inside them.
+ *
  * @param input the scratch copy and the dependencies to copy.
  */
 export async function copyDependencies(
@@ -144,6 +146,7 @@ export async function copyDependencies(
 
 /**
  * Lists the ignored declaration files that an authored tsconfig needs.
+ *
  * @param workingTree the checkout with installed declaration files.
  * @param entries the tracked files of the revision.
  * @param cancelSignal stops the Git queries.

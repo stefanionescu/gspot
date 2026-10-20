@@ -169,6 +169,7 @@ function listInterpreterArguments(tool: ToolDeclaration, env: Record<string, str
 
 /**
  * Copies the check files into a scratch copy and prepares the command there.
+ *
  * @param planned the check to run.
  * @param commandRun what to run.
  * @param commandRun.session the repository and its tools.
@@ -211,6 +212,7 @@ export async function prepareInScratch(
 
 /**
  * Resolves the working folder and expands the tool environment values.
+ *
  * @param session the repository or its scratch copy.
  * @param planned the check and its files.
  * @param options the overrides from the check implementation.
@@ -242,6 +244,7 @@ export function buildCommandEnvironment(
 
 /**
  * Computes the placeholder values from the scope and working folder.
+ *
  * @param source the repository and settings.
  * @param planned the check and its files.
  * @param cwd the folder that the tool runs in.
@@ -264,6 +267,7 @@ export function buildCommandSubstitutions(
 
 /**
  * Expands a check or fix command into file batches that fit the command line.
+ *
  * @param planned the check to run.
  * @param commandRun what to run.
  * @param commandRun.session the repository and its tools.
@@ -287,6 +291,7 @@ export function prepareCommand(
 
 /**
  * Finds the tool and runs the expanded commands of a check.
+ *
  * @param session the repository and its tools.
  * @param planned the check to run.
  * @param options the command and scratch folder overrides.
@@ -319,6 +324,7 @@ export async function runCheckCommand(
 
 /**
  * Runs each command group and merges the findings, keeping earlier findings when a later run fails.
+ *
  * @param session the repository and tools.
  * @param planned the check to run.
  * @param groups the files and command of each run.

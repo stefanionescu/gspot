@@ -5,6 +5,7 @@ import type { Identifier, ExtractSink, NamedCategory, IdentifierDeclaration } fr
 
 /**
  * Builds an identifier with its file and the label that findings show.
+ *
  * @param source the file and its language.
  * @param declaration what the code declares, and where.
  * @returns the labeled identifier.
@@ -19,6 +20,7 @@ export function createIdentifier(
 
 /**
  * Adds an identifier at its source place, except an empty name or `_`.
+ *
  * @param sink the file and the identifiers found so far.
  * @param node the parsed declaration.
  * @param category the kind of declared name.

@@ -153,6 +153,7 @@ async function checkSwiftImports(input: CheckInput, lookup: RuleLookup): Promise
 /**
  * Applies [[import_rule]] to Python and Swift imports, and reports the code files of every language that no rule covers.
  * ESLint applies the rules to JavaScript and TypeScript imports.
+ *
  * @param input the scope files, the repository files, and the settings.
  * @returns a finding for each refused import and each uncovered file.
  */

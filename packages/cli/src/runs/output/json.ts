@@ -89,6 +89,7 @@ export function parseJsonFindings(input: ReportInput): Finding[] {
 
 /**
  * Parse and validate a report, and keep its untrusted contents out of errors.
+ *
  * @param tool the program that printed the report.
  * @param text the JSON report.
  * @param schema the shape that the report must have.

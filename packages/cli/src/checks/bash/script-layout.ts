@@ -113,6 +113,7 @@ function checkScriptFile(
 
 /**
  * Removes a leading declaration word and its flags, and keeps the assignment or command.
+ *
  * @param code a line without comments.
  * @returns the value after export, readonly, local, declare, or typeset.
  */
@@ -126,6 +127,7 @@ function stripDeclaration(code: string): string {
 
 /**
  * Checks the layout of each Bash script, and skips scripts with a shebang for another shell.
+ *
  * @param input the scope scripts and environment readers.
  * @returns the findings.
  */

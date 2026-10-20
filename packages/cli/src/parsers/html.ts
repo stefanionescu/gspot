@@ -5,6 +5,7 @@ import type { MarkupAttribute } from '#cli/types/parsers/tree-sitter.ts';
 
 /**
  * Read the tag attributes while the source tree still exists.
+ *
  * @param element the parsed tag.
  * @returns the attributes, with their source nodes.
  */

@@ -11,6 +11,7 @@ import { deleteKey, findScopeTable, removeFromList, getWrittenValue } from '#cli
 
 /**
  * Register the unset command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
@@ -36,6 +37,7 @@ function registerUnset(program: Command, onResult: CommandCompletion): void {
 
 /**
  * Run the unset command and return its output.
+ *
  * @param options the flags and the settings edit choices.
  * @returns the edit result and the generated file changes.
  */

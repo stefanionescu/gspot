@@ -144,6 +144,7 @@ function formatComparison(comparison: RunReport['comparison']): string {
 
 /**
  * Format the report and its summary from one result list.
+ *
  * @param report the check results and totals.
  * @param options how to show the report.
  * @param options.verbose whether to show passing checks and full tool output.
@@ -166,6 +167,7 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean }
 
 /**
  * Print one terminal status line, or clear it before the report prints.
+ *
  * @param progress the last finished check and its place in the run.
  */
 export function printProgress(progress: CheckProgress | undefined): void {
@@ -182,6 +184,7 @@ export function printProgress(progress: CheckProgress | undefined): void {
 
 /**
  * Describe the fixes, and keep tool output and passing fixes out of the warnings.
+ *
  * @param fixes the fixer results and the verification state.
  * @param options how to show the fixes.
  * @param options.isDryRun whether the run shows fixes and writes nothing.

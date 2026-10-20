@@ -25,6 +25,7 @@ function splitContentLines(text: string): NumberedLine[] {
 
 /**
  * Parses a _headers file into path blocks and syntax errors, with line numbers.
+ *
  * @param text the _headers file.
  * @returns the blocks and syntax errors.
  */
@@ -75,6 +76,7 @@ function listMissingHeaders(blocks: HeaderBlock[]): string[] {
 
 /**
  * Checks that each redirect holds a source, a destination, and an optional Cloudflare status.
+ *
  * @param text the _redirects file.
  * @returns the errors, each with its line.
  */
@@ -97,6 +99,7 @@ function validateRedirects(text: string): NumberedLine[] {
 
 /**
  * Reports syntax errors in each _redirects file.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */
@@ -110,6 +113,7 @@ export function checkCloudflareRedirects(input: CheckInput): Finding[] {
 
 /**
  * Reports syntax errors in each _headers file, and each security header that the block for every path does not set.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */

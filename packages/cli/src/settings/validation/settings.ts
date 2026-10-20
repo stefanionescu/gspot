@@ -38,6 +38,7 @@ function listLanguageLimits(language: string): string[] {
 
 /**
  * Name the invalid setting, and keep the message of the validator.
+ *
  * @param issue the schema validation message.
  * @returns the setting path and its validation failure, each line after the gspot.toml name.
  */
@@ -104,6 +105,7 @@ function throwErrors(errors: SettingsError[]): never {
 
 /**
  * Validate written selections, tool options, ignores, and paths before a command uses them.
+ *
  * @param settings the parsed gspot.toml.
  * @param repositoryRoot the optional folder for checking declared scope paths.
  * @param reads the run cache.

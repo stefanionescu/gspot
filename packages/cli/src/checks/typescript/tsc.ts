@@ -39,6 +39,7 @@ import {
 
 /**
  * Lists the tsconfig files and sources of each project, for the scratch copy.
+ *
  * @param session the repository and read cache.
  * @param projects each scope path with its parsed tsconfig.
  * @returns the repository-relative paths.
@@ -58,6 +59,7 @@ function listCompilerInputs(
 
 /**
  * Selects the source files and type roots of a scope.
+ *
  * @param session the source repository or scratch copy.
  * @param scope the folder whose files to keep.
  * @param config the parsed jsconfig.json.
@@ -95,6 +97,7 @@ function selectReferenceProject(project: ReturnType<typeof readTsconfigProject>)
 
 /**
  * Finds the generated jsconfig of a scope without parsing the authored options of another scope.
+ *
  * @param session the repository and settings.
  * @param planned the JavaScript check and its scope.
  * @returns the path of the matching jsconfig.
@@ -124,6 +127,7 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
 
 /**
  * Runs tsc on a project, or on every project that a solution tsconfig names.
+ *
  * @param session the repository and its tools.
  * @param planned the compiler check for one scope.
  * @returns the check result.
@@ -175,6 +179,7 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
 
 /**
  * Type-checks JavaScript with the type declarations the project uses.
+ *
  * @param session the repository and its tools.
  * @param planned the JavaScript compiler check.
  * @returns the check result.

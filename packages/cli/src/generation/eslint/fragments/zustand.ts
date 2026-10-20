@@ -3,6 +3,7 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
 
 /**
  * Apply the Zustand store lint rules to the files of the scope.
+ *
  * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */

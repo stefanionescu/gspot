@@ -143,6 +143,7 @@ function isKeyGroup(known: KnownSettings, key: string, value: unknown): value is
 
 /**
  * List every setting key that a settings table writes, in dotted form.
+ *
  * @param settings the root table or one scope.
  * @param known the declarations, with nested tool keys.
  * @returns all known written keys, plus unknown keys from open settings tables.
@@ -174,6 +175,7 @@ function listWrittenKeys(settings: SettingsTable, known: KnownSettings): string[
 
 /**
  * Name an unknown setting, and list the closest keys in the same table.
+ *
  * @param known the declarations of the configurations.
  * @param key the written dotted name.
  * @returns the error, with a command that lists the settings.
@@ -200,6 +202,7 @@ function formatUnknownSetting(known: KnownSettings, key: string): string {
 
 /**
  * Validate every written key against the known settings and the loosening rule.
+ *
  * @param known the declarations and defaults of the selection.
  * @param settings the parsed gspot.toml.
  * @param scopeKnown the declarations of each scope by path, which its own table uses.

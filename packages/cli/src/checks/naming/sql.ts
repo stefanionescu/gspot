@@ -181,6 +181,7 @@ function extractStatementIdentifiers({
 
 /**
  * Lists the identifiers a SQL file declares, or the parse error.
+ *
  * @param file the repository path of the source.
  * @param source the SQL to parse.
  * @param reads the cache that SQL checks share.

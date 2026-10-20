@@ -7,6 +7,7 @@ const matcherCache = new Map<string, (path: string) => boolean>();
 
 /**
  * Build a picomatch matcher for root-relative POSIX paths, cached by pattern list.
+ *
  * @param patterns the globs, a leading `!` excludes.
  * @returns a predicate that includes positive globs and rejects excluded paths.
  */
@@ -29,6 +30,7 @@ export function buildPathMatcher(patterns: string[]): (path: string) => boolean 
 
 /**
  * Expand literal folder selectors, and keep each include or exclude.
+ *
  * @param patterns the selectors, a leading ! for an exclusion.
  * @returns the selectors, each literal path followed by everything under it.
  */
@@ -43,6 +45,7 @@ export function includeFolderContents(patterns: string[]): string[] {
 
 /**
  * Build a matcher for literal filenames and globs that tests both the filename and the repository path.
+ *
  * @param names exact filenames and glob selectors.
  * @returns the filename matcher that detection and ownership share.
  */
@@ -57,6 +60,7 @@ export function buildFilenameMatcher(names: string[]): (path: string) => boolean
 
 /**
  * Escape a repository path so glob selectors match that literal path.
+ *
  * @param path the literal repository file.
  * @returns a glob with every special character escaped.
  */

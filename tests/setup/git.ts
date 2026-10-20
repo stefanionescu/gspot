@@ -22,6 +22,7 @@ import {
 
 /**
  * Runs git with a throwaway identity, keeping the line endings the sandbox specifies.
+ *
  * @param cwd the sandbox.
  * @param commandArguments everything after git.
  * @param environment extra variables for git.
@@ -41,6 +42,7 @@ export function runGit(
 
 /**
  * Runs git and returns what it printed; throws when git fails.
+ *
  * @param cwd the sandbox.
  * @param commandArguments everything after git.
  * @returns the trimmed standard output.
@@ -54,6 +56,7 @@ export function readGitOutput(cwd: string, commandArguments: readonly string[]):
 
 /**
  * Makes the test folder a Git repository with one commit, the state init expects.
+ *
  * @param cwd the sandbox.
  */
 export function commitAll(cwd: string): void {
@@ -66,6 +69,7 @@ export function commitAll(cwd: string): void {
 /**
  * Marks a test file executable in the file mode and, on Windows, whose file systems keep no mode bits, in the Git
  * index.
+ *
  * @param cwd the sandbox.
  * @param path the repository-relative file.
  */
@@ -85,6 +89,7 @@ export async function markExecutable(cwd: string, path: string): Promise<void> {
 
 /**
  * Creates base, reviewed, and broken commits, plus different working-tree bytes, for the push tests.
+ *
  * @param sandboxRoot folder for the repository.
  * @returns the commit hashes and the zero hash for a new ref.
  */
@@ -135,6 +140,7 @@ export async function prepareNestedRepository(
 
 /**
  * Create a Bash repository, apply, and commit the generated files for the fresh-clone tests.
+ *
  * @param sourceRoot folder to initialize.
  */
 export async function prepareAppliedBashRepository(sourceRoot: string): Promise<void> {
@@ -150,6 +156,7 @@ export async function prepareAppliedBashRepository(sourceRoot: string): Promise<
 
 /**
  * Create a committed repository with hooks on and one file that Git Large File Storage (LFS) stores.
+ *
  * @returns the sandbox, which removes itself on disposal.
  */
 export async function createLfsRepository(): Promise<TestdirResult> {

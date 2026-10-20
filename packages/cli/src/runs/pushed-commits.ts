@@ -5,6 +5,7 @@ import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 
 /**
  * Starts a history check result, or skips the check outside a Git repository.
+ *
  * @param session the repository to check.
  * @param planned the history check.
  * @returns the empty result, or a skipped result.
@@ -22,6 +23,7 @@ function buildHistoryResult(session: Session, planned: PlannedCheck): CheckResul
 
 /**
  * Merges the findings of history runs and keeps the first missing-tool or run error.
+ *
  * @param results the merged run so far and the next run.
  * @returns their findings and final status.
  */
@@ -37,6 +39,7 @@ function mergeRuns(results: [CheckResult, ...CheckResult[]]): CheckResult {
 
 /**
  * Runs a check on each pushed commit and stops at the first missing tool or run error.
+ *
  * @param session the repository and its tools.
  * @param planned the history check.
  * @param perCommit the check to run on one commit.
@@ -61,6 +64,7 @@ async function runOverPushedCommits(
 
 /**
  * Reads the command of another check in the same shipped configuration.
+ *
  * @param planned the history check.
  * @param checkName the sibling ID.
  * @returns the executable and its arguments.

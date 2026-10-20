@@ -15,6 +15,7 @@ import {
 
 /**
  * Check whether a comment holds a tool directive, such as a suppression, a global declaration, or a coverage mark.
+ *
  * @param value the comment text without its markers
  * @returns whether a tool reads the comment
  */
@@ -26,6 +27,7 @@ function isToolComment(value: string): boolean {
 
 /**
  * Check whether only whitespace comes before a comment on its line.
+ *
  * @param source the parsed file, with line locations
  * @param comment the range to check
  * @returns whether the comment stands on its own line
@@ -37,6 +39,7 @@ function isOwnLine(source: TSESLint.SourceCode, comment: TSESTree.Comment): bool
 
 /**
  * Check for an import declaration or a CommonJS `require` statement.
+ *
  * @param node the statement
  * @param context the running rule, with its source type
  * @returns whether the statement belongs to the import block
@@ -54,6 +57,7 @@ function isImportLike(node: TSESTree.Statement, context: RuleContext): boolean {
 
 /**
  * Check whether an expression calls `require` with one argument.
+ *
  * @param node the expression, or nothing
  * @returns whether it calls `require`
  */

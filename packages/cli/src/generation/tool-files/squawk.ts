@@ -5,6 +5,7 @@ import { TOML_FORMAT, SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/tool
 
 /**
  * Build the Squawk file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the disabled Squawk migration rules.
  */

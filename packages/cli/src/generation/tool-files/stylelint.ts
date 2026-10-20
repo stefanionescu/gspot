@@ -86,6 +86,7 @@ function buildCssModulesOverrides(
 
 /**
  * Build the Stylelint file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the CSS lint presets and rules for this level.
  */

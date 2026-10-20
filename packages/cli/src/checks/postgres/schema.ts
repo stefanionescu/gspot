@@ -150,6 +150,7 @@ function summarize(state: SchemaState): Schema {
 
 /**
  * Reads every migration in order and gathers what they declare.
+ *
  * @param migrations parsed SQL files in version order.
  * @returns the schema summary.
  */

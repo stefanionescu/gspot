@@ -78,6 +78,7 @@ test.each(
 
 /**
  * Link the installed tool pins into the mise folders of the tutorial.
+ *
  * @param tutorialRoot repository that the quickstart test creates.
  * @param environment mise folder variables for that repository.
  */

@@ -127,6 +127,7 @@ function buildReplacement(kind: Omit<SqlToken, 'start'>['kind'], lexeme: string)
 
 /**
  * Read SQL strings, comments, and client syntax without interpreting quoted bodies as source.
+ *
  * @param text the SQL source.
  * @returns tokens with their original UTF-16 boundaries.
  */
@@ -146,6 +147,7 @@ export function* listSqlTokens(text: string): Generator<SqlToken> {
 
 /**
  * Prepare client-side psql syntax without changing SQL lexeme positions or quoted bodies.
+ *
  * @param text the SQL source with client commands and substitutions.
  * @returns parser text and substitution ranges in original UTF-16 coordinates.
  */

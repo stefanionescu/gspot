@@ -32,6 +32,7 @@ function listNamingVariants(known: KnownSettings, settings: Settings, scope: str
 
 /**
  * Select saved ignores whose expiry date has not arrived.
+ *
  * @param settings the parsed gspot.toml, with expired ignores.
  * @returns the ignores that apply today in UTC.
  */
@@ -42,6 +43,7 @@ function listActiveIgnores(settings: Settings): IgnoreRecord[] {
 
 /**
  * Build the merged view of a scope from the known settings, the written settings, and the configurations of the scope.
+ *
  * @param known the declarations and defaults of the selection.
  * @param settings the written root values and scoped overrides.
  * @param selected the manifests of the scope.
@@ -95,6 +97,7 @@ function buildScopeView(known: KnownSettings, settings: Settings, selected: Mani
 
 /**
  * Resolve the known settings once into validated table values and numeric limits.
+ *
  * @param known the declarations and defaults.
  * @param settings the written gspot.toml.
  * @param selected the configurations of the scope.
@@ -158,6 +161,7 @@ function buildScopeSettings(
 
 /**
  * Fill settings tables from direct settings and their declared naming variants.
+ *
  * @param namespaces the run tables of the scope.
  * @param rows the values that the declarations already resolved.
  */
@@ -183,6 +187,7 @@ function fillTableValues(namespaces: Record<string, unknown>, rows: EffectiveSet
 
 /**
  * Find the selection of the repository root, which every run has.
+ *
  * @param scopes the selection of each scope, the root among them.
  * @returns the selection of the scope with an empty path.
  */
@@ -194,6 +199,7 @@ function findRootSelection(scopes: readonly ScopeSelection[]): ScopeSelection {
 
 /**
  * Check whether an ignore covers whole files: it names no lint rule and no function.
+ *
  * @param entry the ignore record.
  * @returns whether the ignore keeps its paths out of the check.
  */

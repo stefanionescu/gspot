@@ -6,6 +6,7 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
 
 /**
  * Apply the React, hooks, and refresh lint rules for the JSX mode.
+ *
  * @param context the presets and the block writer.
  * @returns the imports and ESLint blocks for this configuration.
  */

@@ -125,6 +125,7 @@ function serializeExclusions(grouped: IgnoreSection[]): string {
 
 /**
  * Build the typos file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the spelling dictionaries and reason-grouped exclusions as TOML.
  */

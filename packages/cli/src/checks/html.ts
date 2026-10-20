@@ -85,6 +85,7 @@ function checkScriptAttributes(input: CheckInput, source: SourceTree): Finding[]
 
 /**
  * Reports inline scripts, handler attributes, and script links in each HTML file.
+ *
  * @param input the scope HTML files.
  * @returns the findings.
  */

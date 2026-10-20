@@ -151,6 +151,7 @@ function readHooksPathEntry(root: string, hooksPath: string, isHuskyPath: boolea
 
 /**
  * Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
+ *
  * @param repositoryRoot the repository to read.
  * @returns each hook setup and its location.
  */
@@ -194,6 +195,7 @@ export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
 
 /**
  * Find the existing lint jobs before init proposes a CI job.
+ *
  * @param repositoryRoot the repository to read.
  * @param paths the CI files to read.
  * @returns the names of the jobs that already run a linter.
@@ -217,6 +219,7 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
 
 /**
  * Find tool files to replace, hooks, CI, agent files, and lint folders.
+ *
  * @param repositoryRoot the repository to read.
  * @param files the tracked inventory.
  * @param dependencyFiles the parsed package declarations.

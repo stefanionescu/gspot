@@ -104,6 +104,7 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
 };
 /**
  * Build one tool file and its pointers.
+ *
  * @param context the tool file to build.
  * @param targets the tool file path for each scope.
  * @returns the generated file, with paths relative to where it sits.

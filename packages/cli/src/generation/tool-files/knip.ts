@@ -114,6 +114,7 @@ function listFileTaskPackages(context: ToolFileContext): string[] {
 
 /**
  * Build the Knip file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the workspace entry points, project selectors, and dependency exclusions.
  */

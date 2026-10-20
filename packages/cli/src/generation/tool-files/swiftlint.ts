@@ -15,6 +15,7 @@ function buildSeverityLimits(count: unknown) {
 }
 /**
  * Build the SwiftLint file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the SwiftLint rules with the source limits of the repository.
  */

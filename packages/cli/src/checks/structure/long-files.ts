@@ -6,6 +6,7 @@ import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 /**
  * Reports source files over the code-line limit of their language.
+ *
  * @param input the scope files and limits.
  * @returns one finding per long file.
  */

@@ -17,6 +17,7 @@ export const isMacos = process.platform === 'darwin';
 
 /**
  * Whether the pinned tool has a build for this machine.
+ *
  * @param name tool as its manifest pins it.
  * @returns whether a tool test may run it here.
  */
@@ -28,6 +29,7 @@ export function hasToolBuild(name: string): boolean {
 
 /**
  * Make process.platform report another system until disposal.
+ *
  * @param name system to report.
  * @returns a resource that restores the real value.
  */

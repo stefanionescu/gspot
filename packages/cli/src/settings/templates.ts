@@ -52,6 +52,7 @@ function readLocalText(source: string, cwd: string): string {
 
 /**
  * Export the reusable settings, and report each repository-specific setting left out.
+ *
  * @param settingsText the text of gspot.toml.
  * @returns the template text and the left-out settings.
  */
@@ -71,6 +72,7 @@ function exportTemplate(settingsText: string): ExportedTemplate {
 
 /**
  * Validate a template, and keep its source and text digest.
+ *
  * @param text the template contents.
  * @param source the local path or address, for errors.
  * @returns the validated template.
@@ -102,6 +104,7 @@ function parseTemplate(text: string, source: string): Template {
 
 /**
  * Read a template from a local path, HTTPS address, or GitHub repository reference.
+ *
  * @param source a path, HTTPS address, or github:owner/repository[/path][@ref].
  * @param cwd the folder where relative local paths start.
  * @returns the validated template.

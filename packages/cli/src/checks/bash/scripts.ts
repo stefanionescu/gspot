@@ -31,6 +31,7 @@ async function readScript(input: CheckInput, file: TrackedFile): Promise<ScriptF
 
 /**
  * Parses the scope scripts once and shares them across checks.
+ *
  * @param input the scope files and parser resources.
  * @returns the parsed scripts.
  */
@@ -48,6 +49,7 @@ export function readScripts(input: CheckInput): Promise<ScriptFile[]> {
 
 /**
  * Finds the innermost function that holds a line.
+ *
  * @param functions the parsed definitions.
  * @param line the number, counted from one.
  * @returns the function, or undefined at the top level.

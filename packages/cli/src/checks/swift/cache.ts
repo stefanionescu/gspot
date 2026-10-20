@@ -72,6 +72,7 @@ function pruneSources(folder: string, files: Files, wantedFiles: Map<string, Fil
 
 /**
  * Creates and locks a build folder without following links in it.
+ *
  * @param folder the private cache path.
  * @returns the locked root, which the caller disposes.
  */
@@ -89,6 +90,7 @@ function openBuildCache(folder: string): Files {
 
 /**
  * Computes the build folder for a scope and tool.
+ *
  * @param input the repository root and scope.
  * @param purpose the tool whose outputs stay separate.
  * @returns the cache folder path.
@@ -108,6 +110,7 @@ export function getScopeBuildFolder(input: Pick<CheckInput, 'root' | 'selection'
 
 /**
  * Plans the build of a scope: the command, its folder, and its log path.
+ *
  * @param input the scope and its Swift settings.
  * @param purpose the tool whose command uses a separate cache.
  * @param purpose.purpose the tool whose build needs its own cache.
@@ -156,6 +159,7 @@ export function buildPlan(
 
 /**
  * Locks a build folder and copies in the source files the tool needs.
+ *
  * @param input the repository and scope files.
  * @param folder the cache path for the tool.
  * @returns the source path and locked root, which the caller disposes.

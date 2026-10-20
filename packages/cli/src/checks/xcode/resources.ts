@@ -56,6 +56,7 @@ const assetContentsSchema = z.object({
 } satisfies SchemaShape<{ images?: { filename?: string | undefined }[] | undefined }>);
 /**
  * Checks that each asset catalog Contents.json parses and each image set holds its images.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */
@@ -82,6 +83,7 @@ export function checkXcodeAssets(input: CheckInput): Finding[] {
 
 /**
  * Reports asset sets that no source or Xcode build setting names.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */
@@ -113,6 +115,7 @@ export function checkXcodeUnusedAssets(input: CheckInput): Finding[] {
 
 /**
  * Checks that each string catalog parses and that every string has every locale the catalog uses.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */

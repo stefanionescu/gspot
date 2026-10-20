@@ -5,6 +5,7 @@ import type { BlockSpan, BlockContext } from '#cli/types/system/managed-blocks.t
 
 /**
  * Locate one complete block. Refuse ambiguous or malformed markers.
+ *
  * @param text the file contents.
  * @param context the file path and marker style.
  * @returns the character range of the block, or undefined when the file holds none.
@@ -32,6 +33,7 @@ export function findBlockSpan(text: string, context: BlockContext): BlockSpan | 
 
 /**
  * Replace a complete block or append it, and keep the text around it.
+ *
  * @param existing the file text.
  * @param block the body to install.
  * @param context the file path and marker style.
@@ -50,6 +52,7 @@ export function replaceBlock(existing: string, block: string, context: BlockCont
 
 /**
  * Read the block in a file.
+ *
  * @param text the file contents.
  * @param context the file path and marker style.
  * @returns the trimmed block body, or undefined.

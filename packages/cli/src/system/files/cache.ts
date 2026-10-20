@@ -4,6 +4,7 @@ import { type MemoKey, type ParseKey, type ReadCache, type CachedParseInput } fr
 
 /**
  * Reuse one value produced by a stable key during this run.
+ *
  * @param reads the run cache.
  * @param key the producer whose identity and return type own the entry.
  * @returns the cached value, or the first result of the producer.
@@ -19,6 +20,7 @@ export function getCachedValue<Value extends object>(reads: ReadCache, key: Memo
 
 /**
  * Reuse one calculated value in a map that the run owns.
+ *
  * @param reads the run cache.
  * @param key the map producer.
  * @param entry the key of the calculation.
@@ -40,6 +42,7 @@ export function getCachedMapValue<Key, Value>(
 
 /**
  * Create the cache of source bytes and derived values for one repository root.
+ *
  * @param repositoryRoot the folder to canonicalize before caching source reads.
  * @returns the run cache.
  */
@@ -49,6 +52,7 @@ export function createReadCache(repositoryRoot: string): ReadCache {
 
 /**
  * Parse the files once per reader key and ordered path list.
+ *
  * @param input the paths to parse and the run resources.
  * @param key the reader and its disposer.
  * @returns the parsed value for the lifetime of the input resources.

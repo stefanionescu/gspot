@@ -28,6 +28,7 @@ function buildFrozenInstall(session: Session, lockfile: string): readonly string
 /**
  * List the shell lines that install the locked dependencies of each project, then write the route types of each
  * Next.js project, which typed lint rules read.
+ *
  * @param session the repository, its scopes, and its tools.
  * @returns the lines, each run from the repository root.
  */

@@ -23,6 +23,7 @@ const markdownlintReportSchema = z.array(
 
 /**
  * Read the findings in the markdownlint JSON report.
+ *
  * @param input the tool output to read.
  * @returns the findings, with positions and lint rule names resolved against the tool folder.
  */

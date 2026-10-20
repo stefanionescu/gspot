@@ -4,6 +4,7 @@ import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
 
 /**
  * Open YAML for key edits that keep the rest of the file as written.
+ *
  * @param path where the file sits, for the error message.
  * @param source the YAML text.
  * @returns the editable file.

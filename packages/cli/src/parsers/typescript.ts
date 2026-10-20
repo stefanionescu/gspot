@@ -10,6 +10,7 @@ import {
 
 /**
  * Walk the parsed TypeScript syntax once, visiting declarations and expressions without comment or string contents.
+ *
  * @param syntaxRoot the source or subtree to inspect.
  * @returns nodes in source traversal order, including the root.
  */
@@ -39,6 +40,7 @@ function readEnvironmentKey(node: ts.Node, source: ts.SourceFile, getters: Set<s
 
 /**
  * Read environment members and calls to the environment functions in JavaScript or TypeScript.
+ *
  * @param file the original source path.
  * @param text the JavaScript or TypeScript source.
  * @param readers the environment functions.

@@ -30,6 +30,7 @@ async function runSiteBuild(input: CheckInput, scratch: string): Promise<SiteBui
 
 /**
  * Builds the site once per scope and shares the build with later checks.
+ *
  * @param input the scope to build.
  * @returns the build, shared by every caller.
  */
@@ -50,6 +51,7 @@ function getSiteBuild(input: CheckInput): Promise<SiteBuild> {
 
 /**
  * List every file under a folder as sorted relative paths.
+ *
  * @param folder the build output to walk.
  * @returns the relative paths.
  */
@@ -72,6 +74,7 @@ export function listBuiltFiles(folder: string): string[] {
 
 /**
  * Maps a built file to its repository path.
+ *
  * @param input the scope with the build folder setting.
  * @param path the file path inside the build folder.
  * @returns the repository-relative path.
@@ -82,6 +85,7 @@ export function deriveBuiltFilePath(input: Pick<CheckInput, 'selection'>, path: 
 
 /**
  * Returns the site build, or skips the check when the build failed.
+ *
  * @param input the scope to build.
  * @returns the built site, when the build succeeded.
  */
@@ -93,6 +97,7 @@ export async function getSuccessfulBuild(input: CheckInput): Promise<SiteBuild> 
 
 /**
  * Reports a build command that fails or writes no build folder.
+ *
  * @param input the scope to build.
  * @returns the findings.
  */

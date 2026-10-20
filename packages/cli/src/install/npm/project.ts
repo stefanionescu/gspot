@@ -164,6 +164,7 @@ async function runPackageManager(
 
 /**
  * Verify the declared package manager against its executable before writing project inputs.
+ *
  * @param packageManager the declaration to verify.
  * @param version what the executable printed.
  */
@@ -183,6 +184,7 @@ function assertPackageManagerVersion(packageManager: PackageManager, version: Sp
 
 /**
  * Verify the package manager executable before install changes any tool inputs.
+ *
  * @param context what install needs for this step.
  */
 async function verifyPackageManagerVersion(context: InstallContext): Promise<void> {
@@ -238,6 +240,7 @@ async function prepareNpmLockfile(
 
 /**
  * Install the npm tool project in .gspot.
+ *
  * @param context what install needs for this step.
  * @returns the install summary.
  */

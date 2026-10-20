@@ -23,6 +23,7 @@ function readSwiftVersion(input: SwiftVersionInput, projectPath: string): string
 }
 /**
  * Build the SwiftFormat file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the SwiftFormat settings of the repository.
  */

@@ -27,6 +27,7 @@ import { buildTestingLibraryFragment } from '#cli/generation/eslint/fragments/te
 /**
  * Select the configurations whose fragments add to this tool file.
  * A tool file for one scope asks that scope; a tool file written once asks every scope.
+ *
  * @param scopes every project and its settings.
  * @param selection the scope that gets the tool file.
  * @param target the tool file declaration and its scope requirements.

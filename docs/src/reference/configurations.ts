@@ -112,6 +112,7 @@ function listInstalledSections(manifest: Manifest): [string, string][] {
 
 /**
  * Build the reference page of a shipped configuration: how it gets selected, its settings, and its checks.
+ *
  * @param manifest the parsed configuration
  * @param data everything the CLI exports for the reference
  * @returns the title, summary, and Markdown body
@@ -151,6 +152,7 @@ function buildConfigurationPage(manifest: Manifest, data: ReturnType<typeof read
 
 /**
  * Build the grouped configuration index and its pages.
+ *
  * @param data everything the CLI exports for the reference
  * @returns the index and each configuration page, keyed by path
  */

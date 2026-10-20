@@ -175,6 +175,7 @@ async function writeSetting({
 
 /**
  * Write a setting, add list items, or change table entries.
+ *
  * @param options the parsed flags.
  * @returns the command result.
  */
@@ -193,6 +194,7 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
 
 /**
  * Register the set command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */

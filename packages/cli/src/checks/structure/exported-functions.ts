@@ -197,6 +197,7 @@ function checkModuleExports(
 
 /**
  * Reports exported functions that forward one expression and have one importing file.
+ *
  * @param input the files to check.
  * @returns the findings.
  */

@@ -18,6 +18,7 @@ import {
 
 /**
  * Find the mise package and version, with the backend that the manifest names.
+ *
  * @param tool the declaration to read.
  * @returns the installer pin with its backend prefix, or undefined for a system tool.
  */
@@ -32,6 +33,7 @@ function findMiseInstaller(tool: ToolDeclaration): InstallerPin | undefined {
 
 /**
  * Select the tools that mise installs, apart from those in the npm and Python tool projects.
+ *
  * @param manifests the configurations in use.
  * @param reads the run cache.
  * @returns the name and version of each mise tool.
@@ -56,6 +58,7 @@ export function listMisePins(manifests: Manifest[], reads: ReadCache): MisePin[]
 
 /**
  * Find the mise pin of one tool: its version, its systems, and its backend options.
+ *
  * @param tool the declaration to read.
  * @returns the mise pin, or undefined when mise does not install the tool.
  */
@@ -68,6 +71,7 @@ export function findMisePin(tool: ToolDeclaration): MisePin | undefined {
 
 /**
  * List the npm and Python tool project pins of the configurations.
+ *
  * @param manifests the configurations in use.
  * @returns the npm and Python pins.
  */
@@ -89,6 +93,7 @@ export function listToolProjectPins(manifests: Manifest[]): ToolProjectPins {
 
 /**
  * List each tool once, sorted by name.
+ *
  * @param manifests the configurations in use.
  * @returns the tool declarations.
  */
@@ -106,6 +111,7 @@ export function listDistinctTools(manifests: Manifest[]): ToolDeclaration[] {
 
 /**
  * Resolve a pin from the owning configuration, shared declarations, or a repository command.
+ *
  * @param manifests the configurations that may declare the tool.
  * @param name the executable to find.
  * @param owner the configuration whose check or fixer runs the tool.
@@ -123,6 +129,7 @@ export function getToolDeclaration(manifests: Iterable<Manifest>, name: string, 
 
 /**
  * Read the declared executable or the first argument of a manifest command.
+ *
  * @param check the validated declaration.
  * @returns the executable, or undefined for a built-in check without a tool.
  */
@@ -132,6 +139,7 @@ export function getToolName(check: CheckDeclaration): string | undefined {
 
 /**
  * Find the npm or Python package that installs a tool. Generated projects and lookup both use it.
+ *
  * @param tool the declaration to read.
  * @returns the package to install, or undefined when the system or mise gives the tool.
  */
@@ -151,6 +159,7 @@ export function findToolProjectPackage(tool: ToolDeclaration): ToolProjectPackag
 
 /**
  * List the exact npm package names that the configurations declare.
+ *
  * @param manifests the configuration declarations.
  * @returns the names, for tool-only package detection.
  */
@@ -167,6 +176,7 @@ export function listNpmToolNames(manifests: Iterable<Manifest>): Set<string> {
 
 /**
  * Find the build that a tool lacks on a system such as Windows or arm64 Linux.
+ *
  * @param tool the declaration with its builds.
  * @param platform the system name: macos, linux, or windows.
  * @param arch x64 or arm64.

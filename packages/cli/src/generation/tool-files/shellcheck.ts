@@ -8,6 +8,7 @@ import {
 
 /**
  * Build the ShellCheck file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the ShellCheck source-path and excluded-rule settings.
  */

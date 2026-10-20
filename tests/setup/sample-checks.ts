@@ -20,6 +20,7 @@ import type {
 
 /**
  * Write the sample, run its check, and restore the sandbox.
+ *
  * @param cwd the sandbox, already installed.
  * @param changes the sample.
  * @param environment variables for the command, including `PATH`.
@@ -40,6 +41,7 @@ export async function checkChanges(
 
 /**
  * Run the check on the sample and then on its fix, and return both reports.
+ *
  * @param repository the installed sandbox and how to run gspot in it.
  * @param entry the sample and expected finding.
  * @param plan what the sandbox holds, with the default fix.

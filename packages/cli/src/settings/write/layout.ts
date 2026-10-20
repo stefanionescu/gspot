@@ -118,6 +118,7 @@ function splitSection(
 
 /**
  * Write the ordered tables, with the kept comments around TOML values.
+ *
  * @param target the ordered written values.
  * @param indent the whitespace for one level.
  * @param comments the kept `#` lines on their keys and headers.
@@ -268,6 +269,7 @@ function findKeptCommentPlacement(
 /**
  * Keep each comment on the key that still owns it before records merge or move.
  * An unclear split gives its general comments to the first row; path comments follow their own values.
+ *
  * @param syntax the original keys, headers, and parsed values.
  * @param target the ordered written values.
  * @param written the draft before tool defaults drop out.

@@ -4,6 +4,7 @@ import { isTomlKind, getTomlRange, insertTomlComments } from '#cli/parsers/toml/
 
 /**
  * Write nested TOML arrays and inline tables, and keep their comments.
+ *
  * @param node the parsed value whose layout supplies the source ranges.
  * @param text the TOML source of those ranges.
  * @param path the setting key and array indexes for comment placement.

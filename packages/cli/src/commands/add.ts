@@ -13,6 +13,7 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 
 /**
  * Add configurations to the root list or to the list of one scope.
+ *
  * @param options the parsed flags.
  * @returns the command result.
  */
@@ -46,6 +47,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
 
 /**
  * Register the add command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */

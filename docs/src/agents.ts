@@ -17,6 +17,7 @@ import {
 /**
  * Build the address of the Markdown copy of a docs page. Starlight serves the entry `a/index` at `/a/`, and gives the
  * home page, which wraps itself in StarlightPage, an empty ID.
+ *
  * @param id - the collection ID
  * @returns the address, or undefined for the not-found page
  */
@@ -29,6 +30,7 @@ export function findMarkdownCopy(id: string): string | undefined {
 /**
  * Write the files for agents into the built site: the Markdown copy of the home page, and the Agent Skills index with
  * the gspot skill.
+ *
  * @param dir - the build output folder
  */
 export async function writeAgentFiles(dir: URL): Promise<void> {

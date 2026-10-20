@@ -15,6 +15,7 @@ import { TOML_EXTENSION, EMPTY_JSON_TEXT, YAML_EDIT_EXTENSIONS, JSON_EDIT_EXTENS
 
 /**
  * Merge the requested keys and leave every other value in place.
+ *
  * @param request the current file and the values to set.
  * @returns the merged file contents, and whether the text changed.
  */
@@ -46,6 +47,7 @@ function openKeysDocument(path: string, current: FileContents | undefined): Edit
 
 /**
  * Open a file in the editor that matches its name.
+ *
  * @param path the file, which also picks the format.
  * @param text the contents, or undefined when generation creates the file.
  * @returns an editor that sets keys and keeps other text.

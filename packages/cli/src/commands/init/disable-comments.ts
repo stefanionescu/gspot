@@ -10,6 +10,7 @@ function readPluginPrefix(rule: string): string | undefined {
 /**
  * List the files whose eslint-disable comments name a rule that no plugin of the new setup provides. ESLint reports
  * such a comment as a rule it cannot find.
+ *
  * @param session the repository and the tools that the selected checks run.
  * @returns a plan row for each file, with the rules it names.
  */

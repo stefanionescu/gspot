@@ -22,6 +22,7 @@ function findCheckProgram(check: CheckDeclaration): string | undefined {
 
 /**
  * Name the tools a check runs; a built-in check runs none.
+ *
  * @param check the declaration
  * @returns the display name, or nothing for a built-in check
  */
@@ -95,6 +96,7 @@ function formatTurnOff(check: CheckDeclaration, suppressions: Map<string, Suppre
 
 /**
  * Build the reference page of one check: where it runs, why it matters, what to do, and how to turn it off.
+ *
  * @param check the record from the manifest
  * @param manifest the parsed configuration that declares it
  * @param suppressions the suppression form of each tool
@@ -121,6 +123,7 @@ export function buildCheckPage(
 
 /**
  * Build the check index: one table per group, each check linked to its page.
+ *
  * @param checks every declaration, with the configuration that owns it
  * @param groups the title of each folder of configurations
  * @returns the index page
@@ -153,6 +156,7 @@ export function buildCheckIndex(
 
 /**
  * Read the suppression form of every shipped tool that has one.
+ *
  * @param configurations every shipped manifest
  * @returns the form of each tool, by tool name
  */
@@ -170,6 +174,7 @@ export function listSuppressions(configurations: Manifest[]): Map<string, Suppre
 
 /**
  * List the checks of some configurations for a guide page, in the order their manifests declare them.
+ *
  * @param configurations the configuration names
  * @returns one row per check
  */

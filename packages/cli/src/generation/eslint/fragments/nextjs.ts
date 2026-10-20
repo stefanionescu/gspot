@@ -19,6 +19,7 @@ function addExtraHocs(entry: unknown): unknown {
 
 /**
  * Apply the Next.js presets and the pages and JSX settings.
+ *
  * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */

@@ -5,6 +5,7 @@ import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/con
 
 /**
  * Apply the NestJS lint rules and the TypeScript parsing mode of the scope.
+ *
  * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */

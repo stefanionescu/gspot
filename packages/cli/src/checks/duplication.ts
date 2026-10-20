@@ -45,6 +45,7 @@ const cloneReportSchema = z.object({
 
 /**
  * Runs jscpd over the scope and reports the clones.
+ *
  * @param input the scope whose source files to compare.
  * @returns the findings.
  */

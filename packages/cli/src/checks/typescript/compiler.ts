@@ -50,6 +50,7 @@ const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
 
 /**
  * Maps absolute paths inside the repository to the scratch copy.
+ *
  * @param value the compiler path or paths to map.
  * @param input the source and scratch roots.
  * @returns the mapped paths.
@@ -62,6 +63,7 @@ function convertToScratchPath(value: unknown, input: TypeScriptReferenceCopy): u
 
 /**
  * Builds a tsconfig that keeps compiler inputs and sends reference output into the scratch copy.
+ *
  * @param input the parsed tsconfig, and the source and scratch roots.
  * @returns the tsconfig for the scratch copy.
  */
@@ -105,6 +107,7 @@ function buildReferenceTsconfig(
 
 /**
  * Points incremental build metadata into the scratch folder.
+ *
  * @param command the tsc arguments to extend.
  * @param options the parsed compiler flags.
  * @param scratch the folder for metadata.
@@ -122,6 +125,7 @@ function appendBuildMetadata(
 
 /**
  * Replaces scratch copy paths in the command with repository paths.
+ *
  * @param result the compiler run, which may have no command.
  * @param scratch the root of the copy.
  * @param sourceRoot the repository root.
@@ -137,6 +141,7 @@ function restoreCommandPaths(result: CheckResult, scratch: string, sourceRoot: s
 
 /**
  * Shares a project compile across scopes, but never skips a second run in the same scope.
+ *
  * @param reads the run cache.
  * @param projectCheck what identifies the compile.
  * @param projectCheck.check the ID of the planned tsc run.
@@ -164,6 +169,7 @@ function isProjectChecked(
 
 /**
  * Runs tsc on a project and keeps build metadata in metadataRoot.
+ *
  * @param session the repository or its scratch copy.
  * @param planned the tsc check for one scope.
  * @param metadataRoot the folder for build metadata.
@@ -207,6 +213,7 @@ async function runTsc(
 
 /**
  * Writes a tsconfig for the scope.
+ *
  * @param input the scope and target path.
  * @returns the absolute path.
  */
@@ -219,6 +226,7 @@ function writeTsconfig(input: TsconfigInput): string {
 
 /**
  * Rewrites each copied tsconfig so reference builds write their output into the scratch copy.
+ *
  * @param input the referenced projects and the scratch copy.
  */
 function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
@@ -242,6 +250,7 @@ function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
 
 /**
  * Builds a tsconfig that extends the authored one, or a standalone one when the scope has none.
+ *
  * @param input the scope and target path.
  * @returns the compiler settings to write as JSON.
  */
@@ -303,6 +312,7 @@ function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
 
 /**
  * Selects the compiler flags that the level and configurations require.
+ *
  * @param level recommended or all.
  * @param selected the scope manifests.
  * @returns the flags, by name.
@@ -316,6 +326,7 @@ function selectRequiredTsconfigOptions(level: Level, selected: Manifest[]): Reco
 
 /**
  * Drops the compiler flags that the scope turns off.
+ *
  * @param level recommended or all.
  * @param selection the scope and its settings.
  * @returns the enabled compiler flags.
@@ -330,6 +341,7 @@ function selectCheckedTsconfigOptions(level: Level, selection: ScopeSelection): 
 
 /**
  * Writes the tsconfig for a scope, extending its authored tsconfig.
+ *
  * @param session the repository and read cache.
  * @param selection where tsc runs, with its settings.
  * @param target where to write the tsconfig.

@@ -92,6 +92,7 @@ function addEnumCases(sink: ExtractSink, root: Node): void {
 
 /**
  * Lists the names that a TypeScript or JavaScript file declares.
+ *
  * @param syntaxRoot the parsed program.
  * @param file the repository path of the source.
  * @param language `typescript` or `javascript`.

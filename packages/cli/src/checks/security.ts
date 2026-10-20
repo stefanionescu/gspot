@@ -8,6 +8,7 @@ import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 
 /**
  * List the Semgrep rule files that the configurations and settings of a scope name.
+ *
  * @param session the level and tool files.
  * @param planned the check for one scope.
  * @returns the repository-relative paths.
@@ -25,6 +26,7 @@ function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[]
 
 /**
  * Runs Semgrep with the rule files of the scope.
+ *
  * @param session the repository and installed tools.
  * @param planned the check for one scope.
  * @returns the check result.

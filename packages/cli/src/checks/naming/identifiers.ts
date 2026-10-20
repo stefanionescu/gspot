@@ -24,6 +24,7 @@ function parseSegmentName(
 
 /**
  * Builds the identifier of a file name: the stem, or the whole base name for a SQL migration.
+ *
  * @param path the file, relative to the repository root.
  * @param language the configuration that covers the file.
  * @param containers the bracket pairs that wrap path segments.
@@ -41,6 +42,7 @@ export function buildFileIdentifier(path: string, language: string, containers: 
 
 /**
  * Builds an identifier for each folder above a file, from the top down, except dot folders.
+ *
  * @param path the file, relative to the repository root.
  * @param language the configuration that covers the file.
  * @param containers the bracket pairs that wrap path segments.
@@ -60,6 +62,7 @@ export function buildFolderIdentifiers(path: string, language: string, container
 
 /**
  * Lists the identifiers a file declares, or none when no extractor reads its language.
+ *
  * @param file the repository path of the source.
  * @param text the source to parse.
  * @param language the configuration that covers the file.

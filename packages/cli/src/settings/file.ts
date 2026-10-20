@@ -15,6 +15,7 @@ import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
 
 /**
  * Parse written settings or a template, and keep TOML date kinds and source locations.
+ *
  * @param text the written TOML.
  * @param path the source file or URL.
  * @param kind the document to name in the error.
@@ -34,6 +35,7 @@ function parseTomlText(text: string, path: string, kind: 'settings' | 'template'
 
 /**
  * Read settings text through the repository file boundary.
+ *
  * @param repositoryRoot the folder that contains gspot.toml.
  * @returns the UTF-8 text and captured file identity.
  */
@@ -49,6 +51,7 @@ function readSettingsFile(repositoryRoot: string): SettingsFileContents {
 
 /**
  * Write gspot.toml only while the file on disk still matches the one that the edit read.
+ *
  * @param writer the file writer for settings.
  * @param text the new gspot.toml contents.
  * @param original the captured file bytes and mode.

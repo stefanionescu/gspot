@@ -45,6 +45,7 @@ function refuseRequirements(configurations: string[], kept: string[], manifests:
 
 /**
  * Remove configurations from the root list or from the list of one scope.
+ *
  * @param options the parsed flags.
  * @returns the command result.
  */
@@ -73,6 +74,7 @@ async function runRemoveCommand(options: ConfigurationsOptions): Promise<Command
 
 /**
  * Register the remove command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
@@ -96,6 +98,7 @@ function registerRemove(program: Command, onResult: CommandCompletion): void {
 
 /**
  * Find the chain of requirements from one configuration to another, and visit each one once.
+ *
  * @param target the required configuration.
  * @param from the configuration where the chain starts.
  * @param manifests every configuration manifest.

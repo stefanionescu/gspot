@@ -24,6 +24,7 @@ function printJson(record: unknown): void {
 
 /**
  * Read the palette for the configured command output.
+ *
  * @returns the enabled or disabled color functions.
  */
 function getColors(): ReturnType<typeof pc.createColors> {
@@ -32,6 +33,7 @@ function getColors(): ReturnType<typeof pc.createColors> {
 
 /**
  * Check whether both streams go to terminals and NO_COLOR leaves color on.
+ *
  * @returns whether to use color.
  */
 function isColorAllowed(): boolean {
@@ -42,6 +44,7 @@ function isColorAllowed(): boolean {
 
 /**
  * Set the output mode for the process.
+ *
  * @param next the JSON and color choices.
  */
 function setOutputOptions(next: OutputOptions): void {
@@ -50,6 +53,7 @@ function setOutputOptions(next: OutputOptions): void {
 
 /**
  * Print a warning about the run to stderr.
+ *
  * @param text the warning to print.
  */
 function warn(text: string): void {
@@ -58,6 +62,7 @@ function warn(text: string): void {
 
 /**
  * Print an error message to stderr, or a structured failure to stdout under --json.
+ *
  * @param failure the message, or the structured error.
  */
 function printError(failure: string | CommandFailureJson): void {
@@ -71,6 +76,7 @@ function printError(failure: string | CommandFailureJson): void {
 
 /**
  * Print the command result in the chosen format.
+ *
  * @param result the command output.
  */
 function printResult(result: CommandResult): void {
@@ -80,6 +86,7 @@ function printResult(result: CommandResult): void {
 
 /**
  * Print readable text on stdout, unless --json asks for structured output.
+ *
  * @param text the output, which gets a final newline if it lacks one.
  */
 function print(text: string): void {
@@ -89,6 +96,7 @@ function print(text: string): void {
 
 /**
  * Format the command notes in order, each with its line prefix.
+ *
  * @param notes the messages of the command result.
  * @returns the note lines, or empty text without notes.
  */
@@ -98,6 +106,7 @@ function formatNotes(notes: string[]): string {
 
 /**
  * Format Commander argument errors with the command suggestions.
+ *
  * @param error the refused command arguments.
  * @param programHelp the help that gspot prints when the arguments name no command.
  * @returns the message and any available correction.
@@ -120,6 +129,7 @@ function formatArgumentError(error: CommanderError, programHelp: string): string
 
 /**
  * Print a command failure, and choose the exit status.
+ *
  * @param error what the command threw.
  * @param output whether to print JSON.
  * @param programHelp the help that gspot prints when the arguments name no command.
@@ -143,6 +153,7 @@ function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>, progr
 
 /**
  * Name the root scope, or return the path of a child scope, for command output.
+ *
  * @param path the repository-relative scope.
  * @returns the root label or the child path.
  */
@@ -152,6 +163,7 @@ function formatScopeLabel(path: string): string {
 
 /**
  * Run a command that termination signals can stop, and remove each listener when it finishes.
+ *
  * @param run the command, which gets the shared abort signal.
  * @param canceledMessage the message when a cancellation stops the command before it has a result.
  * @returns the command result, with the signal status after an interruption.

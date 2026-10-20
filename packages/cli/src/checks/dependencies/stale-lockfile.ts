@@ -38,6 +38,7 @@ function compareSpecifiers(declared: Map<string, string>, locked: Map<string, st
 
 /**
  * Reports a package.json whose dependencies differ from what its lockfile records, which a frozen install refuses.
+ *
  * @param input the scope and the run cache.
  * @returns one finding per dependency out of step with the lockfile.
  */

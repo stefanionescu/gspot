@@ -81,6 +81,7 @@ function readToolIgnore(session: Session, check: PlannedCheck): ToolIgnore | und
 
 /**
  * Check for an inactive setting, including a table with empty lists.
+ *
  * @param value the resolved setting.
  * @returns whether the setting leaves its consumer inactive.
  */
@@ -113,6 +114,7 @@ export function findSystemSkip(check: CheckDeclaration, tool: ToolDeclaration | 
 
 /**
  * Find the reason that the settings turn a check off.
+ *
  * @param settings the validated gspot.toml.
  * @param scope the settings of the project folder.
  * @param check the declaration and project prerequisites.

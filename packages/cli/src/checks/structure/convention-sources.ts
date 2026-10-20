@@ -30,6 +30,7 @@ function captureSource(source: ConventionSource): void {
 
 /**
  * Parses Bash, Python, and Swift sources and collects their convention captures.
+ *
  * @param input the scope files to parse.
  * @returns the convention sources, with live syntax trees.
  */
@@ -55,6 +56,7 @@ async function readConventionSources(
 
 /**
  * Frees the syntax trees after every convention check finishes.
+ *
  * @param sources the parsed files to free.
  */
 function releaseConventionSources(sources: ConventionSource[]): void {

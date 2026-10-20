@@ -5,6 +5,7 @@ import { type RunnableCheck, type CheckImplementation } from '#cli/types/runs/ch
 /**
  * Build the run of one check. A built-in check runs its own code. A tool check runs its command, with the arguments
  * and tool files of its check implementation on every run.
+ *
  * @param implementation the check implementation, or undefined for a tool check that runs only its command.
  * @returns the run function.
  */

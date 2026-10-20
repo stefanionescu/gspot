@@ -20,6 +20,7 @@ function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
 
 /**
  * Extracts the grouping prefix: the stem up to its first dash or dot.
+ *
  * @param stem the file name without its extension.
  * @returns the part before the first dash or dot, or all of it.
  */
@@ -30,6 +31,7 @@ function extractPrefix(stem: string): string {
 
 /**
  * Reports each prefix that at least `limits.shared_prefix_files` siblings in a folder share.
+ *
  * @param input the scope files and limit.
  * @returns the findings.
  */

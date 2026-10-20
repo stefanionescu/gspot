@@ -20,6 +20,7 @@ import {
 
 /**
  * Serve one example manifest with these tool file tables, beside the shipped Semgrep assets.
+ *
  * @param toolFiles the `[[tool_file]]` tables after the configuration table
  * @returns the asset spies, restored when disposed
  */

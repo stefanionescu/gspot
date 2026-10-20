@@ -6,6 +6,7 @@ const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
 
 /**
  * Build a reference page with escaped markup and no edit link.
+ *
  * @param title the visible heading
  * @param description the one-line summary
  * @param body the Markdown text
@@ -22,6 +23,7 @@ export function buildReferencePage(title: string, description: string, body: str
 }
 /**
  * Format a level-two section, or nothing for empty text.
+ *
  * @param title the heading
  * @param body the Markdown text
  * @returns the heading and its text, or an empty string
@@ -32,6 +34,7 @@ export function formatSection(title: string, body: string): string {
 
 /**
  * Format a Markdown table.
+ *
  * @param header the column titles
  * @param rows the cells, as one list per table line
  * @returns the table, with a separator line under the header, or nothing without rows
@@ -43,6 +46,7 @@ export function formatTable(header: string[], rows: string[][]): string {
 
 /**
  * Escape pipes and flatten line breaks so the content fits in one table cell.
+ *
  * @param text the cell content
  * @returns the escaped text
  */
@@ -52,6 +56,7 @@ export function escapeCell(text: string): string {
 
 /**
  * Join names the way a sentence lists them.
+ *
  * @param names the names, already formatted
  * @returns the names as one phrase, such as a, b, and c
  */

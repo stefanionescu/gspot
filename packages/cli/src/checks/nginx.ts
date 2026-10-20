@@ -117,6 +117,7 @@ async function testNginxFile(
 
 /**
  * Builds the Docker arguments that run nginx -t on one nginx configuration.
+ *
  * @param text the nginx configuration, with its includes.
  * @param mounts the host paths to mount.
  * @param mounts.configs the copied nginx files and their container paths.
@@ -156,6 +157,7 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
 
 /**
  * Tests every tracked nginx.conf with the server's own parser.
+ *
  * @param input the scope files and nginx image.
  * @returns one finding for each file nginx refuses.
  */

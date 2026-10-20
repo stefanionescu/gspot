@@ -83,6 +83,7 @@ async function createPythonSandbox(
 
 /**
  * Serve a wheel with the installed Ruff executable and a relocatable console entry point.
+ *
  * @param work the temporary folder receiving the wheel.
  * @returns an authenticated registry serving the wheel.
  */

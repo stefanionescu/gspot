@@ -41,6 +41,7 @@ function parseSettings(text: string, repositoryRoot: string | undefined, reads: 
 /**
  * Read gspot.toml from a repository root. When the repository last ran another gspot version, a refusal names both
  * versions.
+ *
  * @param repositoryRoot the folder that contains gspot.toml.
  * @param reads the run cache.
  * @returns the settings and the file text.
@@ -120,6 +121,7 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
 
 /**
  * Build the settings values from the parsed document.
+ *
  * @param parsed the validated document.
  * @param written the raw authored table.
  * @returns normalized tables that keep the defaults and the authored scope values.

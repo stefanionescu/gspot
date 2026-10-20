@@ -90,6 +90,7 @@ let sourceMetadata: { metadata: string[]; source?: GitLookup } | undefined;
 /**
  * Build the environment for one Git command. Git names the local variables and worktree metadata;
  * the caller overrides apply last.
+ *
  * @param workingFolder the repository folder.
  * @param commandArguments everything after `git`, literally.
  * @param explicit the environment overrides for this command.
@@ -133,6 +134,7 @@ export function buildGitEnvironment(
 
 /**
  * Run Git without a time limit and wait for its result.
+ *
  * @param workingFolder where Git runs.
  * @param commandArguments the arguments after git.
  * @param options the other spawn settings, such as the environment.
@@ -150,6 +152,7 @@ export function runGitBlocking(
 
 /**
  * Run Git with cancellation.
+ *
  * @param workingFolder where Git runs.
  * @param commandArguments the arguments after git.
  * @param options spawn settings for standard input and optional cancellation.
@@ -171,6 +174,7 @@ export async function runGit(
 
 /**
  * Run Git with cancellation, and keep the output bytes for paths and objects.
+ *
  * @param workingFolder where Git runs.
  * @param commandArguments the arguments after git.
  * @param options spawn settings for standard input and optional cancellation.
@@ -190,6 +194,7 @@ export async function runGitForBytes(
 
 /**
  * Read a Git setting, and tell an unset key from a failed command.
+ *
  * @param workingFolder where Git runs.
  * @param key the Git setting name.
  * @returns the exact value, or undefined for an unset key.
@@ -205,6 +210,7 @@ export function readGitSetting(workingFolder: string, key: string): string | und
 
 /**
  * Find the folder that Git runs hooks from: core.hooksPath when set, else the hooks folder of the Git folder.
+ *
  * @param workingFolder the repository root.
  * @returns the absolute path.
  */
@@ -216,6 +222,7 @@ export function readHooksFolder(workingFolder: string): string {
 
 /**
  * Read what a Git command prints, or the selection error that it failed with.
+ *
  * @param workingFolder the repository root.
  * @param commandArguments the arguments after git.
  * @param options cancellation and input.
@@ -237,6 +244,7 @@ export async function readGitText(
 
 /**
  * Read the non-empty output lines of a Git command.
+ *
  * @param workingFolder the repository root.
  * @param commandArguments the arguments after git.
  * @param options cancellation and input.
@@ -253,6 +261,7 @@ export async function readGitLines(
 
 /**
  * Read the paths that a null-separated Git listing names.
+ *
  * @param workingFolder the repository root.
  * @param commandArguments the arguments after git, which must include -z.
  * @param options cancellation and input.
@@ -269,6 +278,7 @@ export async function readGitPaths(
 
 /**
  * Check whether a shallow clone cuts the repository history.
+ *
  * @param workingFolder the repository root.
  * @param options cancellation and input.
  * @returns true for a shallow repository.
@@ -280,6 +290,7 @@ export async function isShallow(workingFolder: string, options: GitOptions): Pro
 
 /**
  * Read the path from the Git top level to the project root, with a trailing slash.
+ *
  * @param workingFolder the repository folder.
  * @returns the repository-relative prefix for this folder.
  */
@@ -291,6 +302,7 @@ export function readGitPrefix(workingFolder: string): string {
 
 /**
  * Remove the final newline from a Git result, and keep the other bytes.
+ *
  * @param text the value that Git printed.
  * @returns the value without its final newline.
  */
@@ -300,6 +312,7 @@ export function trimGitLine(text: string): string {
 
 /**
  * Check whether a Git work tree contains the folder.
+ *
  * @param workingFolder the folder to test.
  * @returns whether Git confirms a work tree.
  * @throws when Git cannot establish the repository state.
@@ -315,6 +328,7 @@ export function isGitRepository(workingFolder: string): boolean {
 
 /**
  * Tell an absent work tree from broken Git metadata after a failed command.
+ *
  * @param inspection the work-tree probe result.
  * @returns true when Git reports that no repository exists.
  */

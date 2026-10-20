@@ -80,6 +80,7 @@ function buildCommandReference(command: ReturnType<typeof buildProgram>['command
 
 /**
  * Read the CLI facts once for the documentation build.
+ *
  * @returns the data for the reference pages.
  */
 export function readReferenceData(): ReferenceData {

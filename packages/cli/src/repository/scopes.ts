@@ -18,6 +18,7 @@ function isLintFolder(path: string): boolean {
 
 /**
  * Test scope containment. The empty root path matches every file.
+ *
  * @param path the file to test.
  * @param scope the folder that may contain the file.
  * @returns whether the scope contains the file.
@@ -28,6 +29,7 @@ export function isInScope(path: string, scope: string): boolean {
 
 /**
  * Lists the scopes inside another scope, excluding that scope itself.
+ *
  * @param paths every scope path.
  * @param scope the parent folder, empty for the repository root.
  * @returns the nested paths in their original order.
@@ -38,6 +40,7 @@ export function listNestedScopes(paths: readonly string[], scope: string): strin
 
 /**
  * Orders scope paths from outermost to innermost, then by name.
+ *
  * @param left the first scope path.
  * @param right the second scope path.
  * @returns the comparison result.
@@ -50,6 +53,7 @@ export function compareScopeDepth(left: string, right: string): number {
 
 /**
  * Check whether literal include selectors cover a whole project scope.
+ *
  * @param paths the root-relative inclusion and exclusion selectors.
  * @param scope the project folder, empty for the root.
  * @returns true only when no exclusion or partial selector leaves scope content active.
@@ -67,6 +71,7 @@ export function isScopeCovered(paths: string[], scope: string): boolean {
 
 /**
  * Check whether a path sits outside every nested project scope.
+ *
  * @param path the repository-relative source file or deleted trigger.
  * @param children the nested project scope paths.
  * @returns whether the parent scope owns this path.
@@ -77,6 +82,7 @@ export function isOutsideChildren(path: string, children: string[]): boolean {
 
 /**
  * Resolve a scope-relative path within its repository.
+ *
  * @param scope the repository-relative folder.
  * @param path the scope-relative file.
  * @returns the repository-relative path.
@@ -87,6 +93,7 @@ export function joinScope(scope: string, path: string): string {
 
 /**
  * Find the repository-relative path of the tool file for a scope.
+ *
  * @param scope the folder, empty for the root.
  * @param toolFile the declaration from the manifest.
  * @param targets the generated paths by scope and file stem.
@@ -102,6 +109,7 @@ export function buildScopeTarget(
 
 /**
  * Find the project scopes for init and for runs. Leave out the root and tool-only packages.
+ *
  * @param files the repository inventory.
  * @param dependencyFiles the parsed package declarations.
  * @param manifests the configurations with project files and npm tools.
@@ -136,6 +144,7 @@ export function findScopes(
 
 /**
  * Find the folder that a project file marks: the path before the segments that the pattern names.
+ *
  * @param path the tracked file, root-relative.
  * @param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`.
  * @returns the project folder, '' for the root, or undefined for other files.
@@ -161,6 +170,7 @@ export function findProjectFolder(path: string, pattern: string): string | undef
 
 /**
  * Find the scope of a file: the deepest scope that contains it, else the root.
+ *
  * @param path the file to place.
  * @param scopes the candidates to search.
  * @returns the deepest matching scope, or the root.

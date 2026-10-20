@@ -10,6 +10,7 @@ export const createRule = ESLintUtils.RuleCreator<RuleDocs>((name) =>
 
 /**
  * Build an options schema that allows only the listed keys.
+ *
  * @param properties the schema of each allowed option
  * @returns a JSON schema that rejects any other key
  */

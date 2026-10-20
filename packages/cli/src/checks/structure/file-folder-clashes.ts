@@ -5,6 +5,7 @@ import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tre
 
 /**
  * Reports each file whose stem matches the name of a sibling folder.
+ *
  * @param input the scope files.
  * @returns the findings.
  */

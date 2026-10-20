@@ -69,6 +69,7 @@ function addCases(sink: ExtractSink, root: Node): void {
 
 /**
  * Lists the names that a Swift file declares.
+ *
  * @param syntaxRoot the parsed file.
  * @param file the repository path of the source.
  * @returns the declared names.

@@ -128,6 +128,7 @@ function isSubstantial(node: Node, language: CountedLanguage, limit: number): bo
 
 /**
  * Counts executable statements, without nested function bodies or type-only declarations.
+ *
  * @param nodes the body to count.
  * @param language the grammar of the file.
  * @returns the count; each nested function counts as one.
@@ -147,6 +148,7 @@ function countExecutableStatements(nodes: Node[], language: CountedLanguage): nu
 
 /**
  * Checks whether a file holds only imports, aliases, forwarding statements, or trivial functions.
+ *
  * @param syntaxRoot the parsed file.
  * @param language the grammar of the file.
  * @param limit the most statements a trivial function holds.
@@ -175,6 +177,7 @@ function formatAccessorName(node: Node, label: string): string {
 
 /**
  * Names a Swift function, or an accessor or observer with its declaration.
+ *
  * @param node the Swift function or accessor.
  * @returns the label for the finding.
  */
@@ -188,6 +191,7 @@ function formatSwiftFunctionName(node: Node): string {
 
 /**
  * Reports trivial functions and files, and leaves anonymous functions alone.
+ *
  * @param input the scope files and statement limits.
  * @returns the findings.
  */
@@ -229,6 +233,7 @@ async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Formats the message for a function at or under the statement limit.
+ *
  * @param name what to call the function.
  * @param count the executable statements it holds.
  * @param limit the most statements that still count as trivial.

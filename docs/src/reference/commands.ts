@@ -52,6 +52,7 @@ function formatCommand(command: Command): string {
 
 /**
  * Build the one Commands page from the CLI help data, with a section per command in program order.
+ *
  * @param data the CLI reference data
  * @param data.commands the help data the CLI registers
  * @param data.exitCodes the exit codes of every command

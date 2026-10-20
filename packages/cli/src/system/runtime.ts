@@ -3,6 +3,7 @@ import { RUNTIME_NAMES } from '#cli/config/system/runtime.ts';
 
 /**
  * Compare the running Node.js, or Bun when it runs gspot, with the engines floor of the package.
+ *
  * @param versions the versions of the running process.
  * @param versions.node the Node.js version, which Bun also reports.
  * @param versions.bun the Bun version, when Bun runs gspot.

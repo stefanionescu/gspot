@@ -13,6 +13,7 @@ const miseTaskAliasSchema = z.object({
 
 /**
  * Read task names and aliases from a mise document.
+ *
  * @param text the mise TOML contents.
  * @returns task names and the aliases explicitly declared for them.
  */

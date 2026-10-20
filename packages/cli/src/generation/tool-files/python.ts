@@ -71,6 +71,7 @@ function selectPythonFormat(view: ToolFileContext['selection']['view']): FormatS
 
 /**
  * Build the Ruff file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Ruff lint rules, import settings, and source exclusions.
  */
@@ -119,6 +120,7 @@ function buildRuffFile(context: ToolFileContext): string {
 }
 /**
  * Build the Basedpyright file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Python environment and source paths used by Basedpyright.
  */

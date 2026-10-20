@@ -8,6 +8,7 @@ import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 /**
  * Reports each foreign key column that no index, primary key, or unique key leads with.
+ *
  * @param input the scope whose migrations to read.
  * @returns the findings.
  */

@@ -4,6 +4,7 @@ import { FROZEN_ALL, FROZEN_NONE, MIGRATION_NUMBER, MIGRATION_VERSION } from '#c
 
 /**
  * Select migration paths at or below the written version.
+ *
  * @param paths the candidate migration files.
  * @param through the written freeze version.
  * @returns the frozen paths.

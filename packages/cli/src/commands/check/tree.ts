@@ -72,6 +72,7 @@ function listMatchingFiles(session: Session, options: CheckOptions, path: string
 
 /**
  * Select the files that the path arguments name.
+ *
  * @param session the repository files.
  * @param options the parsed flags.
  * @param changed the staged or modified paths, which can name deleted files.
@@ -86,6 +87,7 @@ function selectArgumentPaths(session: Session, options: CheckOptions, changed: s
 
 /**
  * Refuse an --only check that no configuration here runs.
+ *
  * @param session the configurations that run here.
  * @param only the check IDs that the flag names.
  */
@@ -153,6 +155,7 @@ async function readRunFilters(
 
 /**
  * Run check and return what to print.
+ *
  * @param treeFolder the working tree or scratch copy to check.
  * @param options the parsed flags.
  * @param signal stops the run.

@@ -17,6 +17,7 @@ function listVersions(locked: Set<string> | undefined, declared: Map<string, str
 
 /**
  * Reports a project whose react and react-dom resolve to different versions.
+ *
  * @param input the scope and the run cache.
  * @returns a finding when the versions differ.
  */

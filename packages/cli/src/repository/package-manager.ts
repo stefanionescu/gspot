@@ -32,6 +32,7 @@ const exactVersionSchema = z
 
 /**
  * Split a packageManager field such as `npm@11.17.0+sha512.abc` into a name and a version.
+ *
  * @param value the text of the field in package.json.
  * @returns the name and the version, without the hash.
  */
@@ -67,6 +68,7 @@ const packageManagerSchema = packageManagerDeclarationSchema.extend({
 
 /**
  * Check whether the package manager runs Yarn Berry, which has its own settings and install arguments.
+ *
  * @param packageManager the validated name and version range.
  * @returns whether the package manager uses Yarn Berry.
  */
@@ -77,6 +79,7 @@ function isYarnBerry(packageManager: PackageManager): boolean {
 
 /**
  * Read the package manager declaration, before its version gets validated.
+ *
  * @param packageJson the validated package.json.
  * @returns packageManager first, then the first devEngines declaration, or no declaration.
  */

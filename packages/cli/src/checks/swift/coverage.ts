@@ -66,6 +66,7 @@ async function measureXcodeCoverage(input: CheckInput, plan: SwiftBuildPlan, cwd
 
 /**
  * Measures the coverage of source targets in the Swift package or Xcode project.
+ *
  * @param input the scope to test.
  * @returns coverage for source targets.
  */
@@ -120,6 +121,7 @@ const swiftCoverageSchema = z.object({
 
 /**
  * Lists the targets under their coverage limit.
+ *
  * @param report what xccov printed.
  * @param settings the line limit and per-target limits.
  * @returns one message per short or missing target.
@@ -153,6 +155,7 @@ function listCoverageShortfalls(
 
 /**
  * Runs the tests with coverage and compares each target with the line limit or its own override.
+ *
  * @param input the scope and coverage limits.
  * @returns the findings.
  */
@@ -176,6 +179,7 @@ async function checkSwiftCoverage(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Sums the covered lines of each source target that Swift Package Manager declares.
+ *
  * @param text the coverage JSON from the compiler.
  * @param packageText the package description, including custom target paths.
  * @param folder the package path in the source copy.

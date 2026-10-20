@@ -43,6 +43,7 @@ function checkStatements(
 
 /**
  * Reports each table in a client schema with row security off.
+ *
  * @param input the scope whose migrations to read.
  * @returns the findings.
  */
@@ -67,6 +68,7 @@ export async function checkRowLevelSecurity(input: CheckInput): Promise<Finding[
 
 /**
  * Reports each grant of every privilege in a migration after the frozen ones.
+ *
  * @param input the scope whose migrations to read.
  * @returns the findings.
  */
@@ -96,6 +98,7 @@ export async function checkPostgresGrants(input: CheckInput): Promise<Finding[]>
 
 /**
  * Reports each SECURITY DEFINER function that sets no search_path.
+ *
  * @param input the scope whose migrations to read.
  * @returns the findings.
  */

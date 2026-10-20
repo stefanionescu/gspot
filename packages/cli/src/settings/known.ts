@@ -126,6 +126,7 @@ const toolDeclarations: MemoKey<Map<string, SettingDeclaration[]>> = {
 /**
  * Build the known settings in selection order. Framework, platform, library, and database configurations override
  * single-value defaults.
+ *
  * @param selected the manifests of the selection, in order.
  * @param level picks the recommended or all defaults.
  * @param reads the run cache.
@@ -151,6 +152,7 @@ function buildKnownSettings(selected: Manifest[], level: Level, reads: ReadCache
 
 /**
  * Read the declarations and defaults from their field schemas.
+ *
  * @param configuration the name whose fields to read.
  * @returns the settings of this configuration.
  */

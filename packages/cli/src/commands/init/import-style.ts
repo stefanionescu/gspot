@@ -36,6 +36,7 @@ function detectImportStyle(
 
 /**
  * Choose the import suffix style of each JavaScript scope that no framework configuration chooses.
+ *
  * @param selections each scope with its selected configurations.
  * @param repository the tracked files and dependency declarations.
  * @returns the settings table to write for each scope that needs a style other than the default.

@@ -68,6 +68,7 @@ function findMissingEnvironmentKeys(
 
 /**
  * Scans each pushed commit with Gitleaks, so a secret removed before the last commit still shows.
+ *
  * @param session the repository and its tools.
  * @param planned the Gitleaks check and commit range.
  * @returns the check result.
@@ -85,6 +86,7 @@ export async function checkSecretsGitleaksPushed(session: Session, planned: Plan
 
 /**
  * Scans the pushed commits with TruffleHog.
+ *
  * @param session the repository and its tools.
  * @param planned the TruffleHog check and commit range.
  * @returns the check result.
@@ -106,6 +108,7 @@ export async function checkSecretsTrufflehogPushed(session: Session, planned: Pl
 
 /**
  * Reports environment reads that no env example lists, or skips the check without an env example.
+ *
  * @param input the scope to check.
  * @returns the findings.
  */

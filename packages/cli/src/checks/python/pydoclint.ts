@@ -86,6 +86,7 @@ const docstringStyleSchema = z.object({
 }>);
 /**
  * Builds the pydoclint command: keeps written options, takes the Ruff style, and stops docstrings from repeating signature types.
+ *
  * @param text the pyproject.toml of the scope.
  * @param convention the Ruff docstring style from the settings.
  * @returns the command, and the style when known.
@@ -104,6 +105,7 @@ function parsePydoclintOptions(text: string, convention: unknown): PydoclintOpti
 
 /**
  * Runs pydoclint with the declared docstring style, or with the style each file uses.
+ *
  * @param session the repository and installed tools.
  * @param planned the docstring check for one scope.
  * @returns the check result, with earlier findings kept when a later batch fails.

@@ -96,6 +96,7 @@ test.each([
 
 /**
  * Read the shipped default of a Bash size limit.
+ *
  * @param name the Bash size setting.
  * @returns its declared numeric default.
  */
@@ -107,6 +108,7 @@ function getDefaultLimit(name: string): number {
 }
 /**
  * Produce exactly this many nested Bash blocks.
+ *
  * @param depth the count of nested conditions.
  * @returns the function body.
  */

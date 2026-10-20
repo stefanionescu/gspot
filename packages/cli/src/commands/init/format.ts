@@ -113,6 +113,7 @@ function parseFormattingWidth(value: string | undefined): number | undefined {
 
 /**
  * Read the matching EditorConfig options, and run no project code.
+ *
  * @param file the path of the project package.json.
  * @returns the formatting options, or null when the project has no EditorConfig.
  */
@@ -145,6 +146,7 @@ function readFormattingFields(file: string): InitFormatOptions | null {
 
 /**
  * Read JSON Prettier settings or the matching EditorConfig section, and run no authored code.
+ *
  * @param file the path of the project package.json.
  * @param dependencies what the project package.json declares.
  * @param prettierFiles the Prettier settings that init found.
@@ -212,6 +214,7 @@ function readScopeFormat(
 
 /**
  * Read the formatting options for each scope that init sets up.
+ *
  * @param draft the configurations and the template.
  * @param repository the root and the tracked files.
  * @param manifests every configuration.

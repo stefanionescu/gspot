@@ -31,6 +31,7 @@ function summarizeFailure(text: string): string {
 
 /**
  * Generates Next.js route types and runs the TypeScript check in the same scratch copy.
+ *
  * @param session the repository and its tools.
  * @param planned the Next.js compiler check.
  * @returns the compiler findings and status.

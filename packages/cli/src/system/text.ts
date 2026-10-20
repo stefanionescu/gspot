@@ -52,6 +52,7 @@ export function formatCodeList(items: readonly string[]): string {
 
 /**
  * Name an unknown check or configuration, and suggest close names.
+ *
  * @param noun what the name stands for.
  * @param name the requested name.
  * @param known the declared names.
@@ -112,6 +113,7 @@ export function convertToSpaces(text: string): string {
 
 /**
  * Print a count with its singular or plural noun.
+ *
  * @param value the quantity that selects the noun ending.
  * @param noun the singular word.
  * @returns the count and the noun with the matching ending.

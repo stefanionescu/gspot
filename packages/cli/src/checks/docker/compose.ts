@@ -46,6 +46,7 @@ function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {
 
 /**
  * Reads Compose services and resolves their local build contexts.
+ *
  * @param input the scope files to read.
  * @returns the services and their build contexts.
  */
@@ -124,6 +125,7 @@ const composeSchema = z.object({
 
 /**
  * Validates each Compose project with its overrides.
+ *
  * @param session the repository and its tools.
  * @param planned the Compose check and its files.
  * @returns the check result.

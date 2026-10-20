@@ -190,6 +190,7 @@ const CHECK_IMPLEMENTATIONS = {
 
 /**
  * Find the check implementation of one check: the stale-output check, or the implementation under its check ID.
+ *
  * @param check the check to run.
  * @returns the implementation, or undefined for a tool check that runs only its command.
  */

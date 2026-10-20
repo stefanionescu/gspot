@@ -106,6 +106,7 @@ function addAssignments(sink: ExtractSink, root: Node): void {
 
 /**
  * Lists the names that a Python module declares.
+ *
  * @param syntaxRoot the parsed module.
  * @param file the repository path of the module.
  * @returns the declared names.

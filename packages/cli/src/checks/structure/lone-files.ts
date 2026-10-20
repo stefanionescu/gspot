@@ -13,6 +13,7 @@ function isLoneCode(name: string, extensions: string[], isRouteFile: (name: stri
 
 /**
  * Reports each leaf folder that holds only one code file.
+ *
  * @param input the scope files.
  * @returns the findings.
  */

@@ -18,6 +18,7 @@ function listPluginRecords(scopes: ScopeSelection[]) {
 
 /**
  * List the import of each plugin module, keyed by its rule prefix, as the generated file imports it.
+ *
  * @param scopes every project and its settings.
  * @param targetPath the generated ESLint file, which imports each module by a path relative to it.
  * @param shipped the plugins that gspot loads, whose prefixes your plugins may not take.
@@ -44,6 +45,7 @@ export function listLocalPlugins(scopes: ScopeSelection[], targetPath: string, s
 
 /**
  * Build one block per plugin record that turns its rules on as errors for the code files of its scope.
+ *
  * @param scopes every project and its settings.
  * @param codeFiles the code file patterns of the ESLint file.
  * @returns the rule blocks of your plugins.

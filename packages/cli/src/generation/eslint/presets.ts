@@ -51,6 +51,7 @@ function readPresets(manifest: Manifest): EslintPresets {
 
 /**
  * Build the blocks of one pinned preset with a rule and parser transform.
+ *
  * @param preset the pinned export and its blocks.
  * @param importName the JavaScript binding of the preset package.
  * @param transform changes each block, and keeps its runtime source expression.
@@ -71,6 +72,7 @@ function buildPresetBlocks(
 
 /**
  * Keep the runtime spread of each array preset block, and apply its component fields.
+ *
  * @param preset the pinned array export.
  * @param importName the JavaScript binding of the plugin.
  * @param transform changes the rules or file fields of a block.
@@ -90,6 +92,7 @@ function buildArrayPresetBlocks(
 
 /**
  * Keep component preset fields and raise warning rules to errors.
+ *
  * @param block one captured component preset.
  * @returns its fields, with warnings turned into errors.
  */

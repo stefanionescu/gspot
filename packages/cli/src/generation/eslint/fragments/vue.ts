@@ -6,6 +6,7 @@ import { pickPresetFields, promotePresetRules, buildArrayPresetBlocks } from '#c
 
 /**
  * Apply the Vue presets, accessibility lint rules, and component parsing.
+ *
  * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */

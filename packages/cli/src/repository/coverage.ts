@@ -23,6 +23,7 @@ function addPluginExtensions(owners: FileMatch, selected: Manifest[]): FileMatch
 
 /**
  * Build one matcher for the extensions, filenames, tags, and paths of a files table.
+ *
  * @param table the file patterns.
  * @returns the predicate for one tracked file.
  */
@@ -38,6 +39,7 @@ export function buildFileMatcher(table: FileMatch): (file: TrackedFile) => boole
 
 /**
  * List the files that the patterns match in one scope, within its `kinds` and `languages` limits.
+ *
  * @param table the file patterns.
  * @param files the tracked inventory.
  * @param options the scope to match in.
@@ -93,6 +95,7 @@ export function listCoveredFiles(
 
 /**
  * Select the manifests of the root and each parent scope, each once, in order.
+ *
  * @param settings the written selections.
  * @param settings.configurations the root choices.
  * @param settings.scopes each folder with its written choices.
@@ -133,6 +136,7 @@ export function selectForScope(
 
 /**
  * Select source paths by extension or whole file name.
+ *
  * @param files the classified inventory.
  * @param endings the file extensions to select.
  * @returns the matching source paths.

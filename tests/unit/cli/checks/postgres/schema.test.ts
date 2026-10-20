@@ -76,6 +76,7 @@ test('an unnamed foreign key gets the PostgreSQL default name and does not count
 
 /**
  * A migration under migrations/, parsed.
+ *
  * @param name file under migrations/.
  * @param text the SQL.
  * @param version defaults to the first character of the name.

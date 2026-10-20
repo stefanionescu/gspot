@@ -225,6 +225,7 @@ function buildPointerFieldEdits(
 /**
  * Build the declared pointers for one generated tool file.
  * Root and folder pointers use their body or the generated formatter settings.
+ *
  * @param context the repository and the scope.
  * @param toolFile the shipped declaration.
  * @param target the tool file path.

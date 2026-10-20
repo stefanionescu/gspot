@@ -18,6 +18,7 @@ function splitKey(key: string): SettingKey {
 
 /**
  * Validate a captured settings change.
+ *
  * @param repositoryRoot the folder against which the edited scope paths resolve.
  * @param input the settings read before the edit.
  * @param mutate the change applied once.
@@ -35,6 +36,7 @@ function updateSettings(repositoryRoot: string, input: SettingsEdit, mutate: Mut
 
 /**
  * Set a dotted key to a value, and create tables on the way.
+ *
  * @param written the table to edit.
  * @param key the dotted setting name.
  * @param value what to write.
@@ -48,6 +50,7 @@ function setKey(written: TomlTable, key: string, value: unknown): void {
 
 /**
  * Deletes a dotted key and the empty tables it leaves behind.
+ *
  * @param written the table to edit
  * @param key the dotted setting name.
  */
@@ -72,6 +75,7 @@ function deleteKey(written: TomlTable, key: string): void {
 
 /**
  * Append items to a list key, each once, and create the list.
+ *
  * @param document the table to edit.
  * @param key the dotted name of the list.
  * @param entries the items to append.
@@ -99,6 +103,7 @@ function addToList(document: TomlTable, key: string, entries: unknown[]): void {
 
 /**
  * Remove list items by value or name, and remove single paths from structured items.
+ *
  * @param document the table to edit.
  * @param key the dotted name of the list.
  * @param entries the items to remove.
@@ -131,6 +136,7 @@ function removeFromList(document: TomlTable, key: string, entries: unknown[]): v
 
 /**
  * Find the table that a command writes into: the document, or the scope table with that path.
+ *
  * @param written the parsed document.
  * @param scope the folder of a nested table, if any.
  * @returns the document or the matching scope table.
@@ -156,6 +162,7 @@ function findScopeTable(written: TomlTable, scope: string | undefined): TomlTabl
 
 /**
  * Read the bytes and mode of gspot.toml before an edit.
+ *
  * @param repositoryRoot the folder that holds gspot.toml.
  * @returns the edit input, with the original file contents.
  */
@@ -167,6 +174,7 @@ function readSettingsEdit(repositoryRoot: string): SettingsEdit {
 
 /**
  * Read a written setting value from its reasoned value or its plain value.
+ *
  * @param written the authored setting.
  * @returns the value that a settings edit changes.
  */
@@ -177,6 +185,7 @@ function getWrittenValue(written: unknown): unknown {
 
 /**
  * Replace a written value, and keep the reason of its reasoned value.
+ *
  * @param written the original setting.
  * @param value the new setting.
  * @returns the replacement in the same written form.

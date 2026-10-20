@@ -57,6 +57,7 @@ function checkForeignLockfiles(input: CheckInput): Finding[] {
 
 /**
  * Checks the registry hosts in tracked npm, pnpm, Yarn, and text Bun lockfiles.
+ *
  * @param input the scope files and allowed registries.
  * @returns the findings.
  */

@@ -21,6 +21,7 @@ import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/type
 
 /**
  * Parses the Vale JSON output into alerts.
+ *
  * @param stdout what Vale printed.
  * @returns the alerts of every file.
  */
@@ -110,6 +111,7 @@ async function runValeOnStdin(input: CheckInput, route: ProseRoute): Promise<Val
 
 /**
  * Selects how Vale reads a file, or undefined when Vale has nothing to read in it.
+ *
  * @param file a tracked source.
  * @returns the grammar and input mode, or undefined.
  */
@@ -123,6 +125,7 @@ function selectRoute(file: TrackedFile): ProseRoute | undefined {
 
 /**
  * Groups routes by shared arguments: path-read files by extension, and each stdin file alone.
+ *
  * @param files the scope sources.
  * @returns the groups, path-read first.
  */
@@ -143,6 +146,7 @@ function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
 
 /**
  * Runs Vale on the scope files, by path where Vale has a grammar and through stdin elsewhere.
+ *
  * @param input the scope to check.
  * @returns the findings.
  */

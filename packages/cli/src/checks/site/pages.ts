@@ -96,6 +96,7 @@ const purgecssReportSchema = z.array(
 
 /**
  * Reports broken links between built pages, stylesheets, and fragments.
+ *
  * @param input the scope whose site to check.
  * @returns one finding for each broken link.
  */
@@ -140,6 +141,7 @@ export async function checkSiteLinkinator(input: CheckInput): Promise<Finding[]>
 
 /**
  * Runs html-validate on every built page with the tool file for built output.
+ *
  * @param input the scope whose site to check.
  * @returns the findings.
  */
@@ -180,6 +182,7 @@ export async function checkSiteHtmlValidate(input: CheckInput): Promise<Finding[
 
 /**
  * Reports selectors in built stylesheets that no built page or script uses.
+ *
  * @param input the scope whose site to check.
  * @returns one finding for each unused selector.
  */
@@ -215,6 +218,7 @@ export async function checkSitePurgecss(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Compares the compressed size of built files with each size limit.
+ *
  * @param input the scope with the size limits.
  * @returns one finding per exceeded limit.
  */
@@ -243,6 +247,7 @@ export async function checkSiteSize(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Reports sitemap URLs with no built page, and built pages the sitemap leaves out unless the settings allow them.
+ *
  * @param input the scope whose site to check.
  * @returns the findings.
  */

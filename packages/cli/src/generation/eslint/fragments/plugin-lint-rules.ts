@@ -3,6 +3,7 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
 
 /**
  * Build the declared plugin imports and lint rule blocks.
+ *
  * @param context the ESLint inputs of the scope.
  * @param configuration the name with the pinned lint rule list.
  * @returns the imports and ESLint blocks for this configuration.

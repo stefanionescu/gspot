@@ -129,6 +129,7 @@ function describeCheck(
 
 /**
  * Explain a shipped check or a command check.
+ *
  * @param session the repository, or undefined outside one.
  * @param checkName the check ID to explain.
  * @param reads the file cache for this run.
@@ -179,6 +180,7 @@ export function explainCheck(
 
 /**
  * Explain one lint rule: its page, and how to turn it off or change its options.
+ *
  * @param tool the command or plugin prefix.
  * @param rule the ID without its prefix, such as no-console.
  * @param reads the file cache for this run.

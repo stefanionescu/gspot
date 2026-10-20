@@ -20,6 +20,7 @@ import { INSTALL_FAILURES, TOOL_REQUIREMENTS } from '#tests/data/install/npm-too
 
 /**
  * Fake bun 1.4.2, and fail every other bun run.
+ *
  * @param failure what a failed run prints, or that it ran out of time.
  * @returns the mock, which restores bun when disposed.
  */

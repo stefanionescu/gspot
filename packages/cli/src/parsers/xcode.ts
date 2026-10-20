@@ -202,6 +202,7 @@ const pbxprojSchema = z.object({
 
 /**
  * Find the Swift sources and managed folders that belong to project targets.
+ *
  * @param text the project.pbxproj contents.
  * @param folder where the project file sits, relative to the repository root.
  * @returns the source paths and managed folders of the project, and the same for each target.
@@ -237,6 +238,7 @@ export function parsePbxproj(text: string, folder: string): ProjectSources {
 
 /**
  * Find compiler and SDK settings without reading project source paths.
+ *
  * @param text the project file.
  * @returns the first declared SDK and Swift version.
  */

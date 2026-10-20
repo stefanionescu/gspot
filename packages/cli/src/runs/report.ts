@@ -19,6 +19,7 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
 
 /**
  * Starts a passed check result with the check ID, scope, and file count.
+ *
  * @param planned the check to run.
  * @param session the scopes of the run.
  * @returns a passed result with no findings.
@@ -36,6 +37,7 @@ export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 's
 
 /**
  * Builds the report of a finished run, which check --json prints.
+ *
  * @param input the plan and what ran.
  * @returns the checks, skips, and exit code.
  */
@@ -83,6 +85,7 @@ export function buildRunReport(input: ReportInput): RunReport {
 
 /**
  * Formats the command that runs one check alone.
+ *
  * @param checkName the ID to run.
  * @param scope the folder path, '' for the root.
  * @param options the message file or the exact push input.

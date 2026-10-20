@@ -5,6 +5,7 @@ import { entryToSimpleMarkdown } from 'starlight-llms-txt/markdown';
 
 /**
  * List a Markdown copy for each docs page, at the page address plus index.md.
+ *
  * @returns one path per page
  */
 export const getStaticPaths = (async () => {
@@ -17,6 +18,7 @@ export const getStaticPaths = (async () => {
 
 /**
  * Write the Markdown copy of one docs page: its title, its description, and its content.
+ *
  * @param context - the endpoint context with the page
  * @returns the Markdown
  */

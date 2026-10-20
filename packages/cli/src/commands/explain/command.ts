@@ -204,6 +204,7 @@ function explainNamed(session: Session | undefined, subject: string, reads: Read
 
 /**
  * Explain what the subject names.
+ *
  * @param session the repository, or undefined outside one.
  * @param subject a check ID, a tool/rule pair, a configuration name, a setting key, or a file path.
  * @param reads the file cache for every lookup.
@@ -224,6 +225,7 @@ function explain(session: Session | undefined, subject: string, reads: ReadCache
 
 /**
  * Register the explain command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
@@ -240,6 +242,7 @@ function registerExplain(program: Command, onResult: CommandCompletion): void {
 
 /**
  * Run the explain command and return its output.
+ *
  * @param cwd the folder where the command starts.
  * @param subject the check, rule, configuration, setting, or path to explain.
  * @returns the explanation and its command exit code.

@@ -167,6 +167,7 @@ async function runFixer(
 
 /**
  * Reads the bytes of each path, with undefined for a missing file.
+ *
  * @param sourceRoot the folder the paths start from.
  * @param paths the repository-relative files to read.
  * @returns the bytes of each file, or undefined.
@@ -186,6 +187,7 @@ function readContents(sourceRoot: string, paths: string[]): Map<string, Buffer |
 
 /**
  * Lists the paths whose bytes changed, appeared, or disappeared.
+ *
  * @param before the earlier bytes.
  * @param after the later bytes.
  * @returns each path whose bytes differ.
@@ -203,6 +205,7 @@ function listChangedPaths(before: Map<string, Buffer | undefined>, after: Map<st
 
 /**
  * Runs the fixers again on changed files, so a formatter handles the changes of a later codemod.
+ *
  * @param session the repository and its tools.
  * @param checks the fixers to run.
  * @param sourceRoot the folder that the fixers change.
@@ -274,6 +277,7 @@ async function listBrokenSyntax(
 
 /**
  * Runs fixes in passes and collects their results. A dry run always removes its scratch copy.
+ *
  * @param session the repository and its tools.
  * @param planned the checks to fix.
  * @param options whether to run in a scratch copy and report diffs.

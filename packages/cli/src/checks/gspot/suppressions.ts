@@ -113,6 +113,7 @@ function checkSuppressionComment(
 
 /**
  * Reports forbidden suppressions and suppressions without a valid reason.
+ *
  * @param input the files to scan, by scope.
  * @returns the findings.
  */

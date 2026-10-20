@@ -57,6 +57,7 @@ function listPathIdentifiers(input: CheckInput): Identifier[] {
 
 /**
  * Reads the declared names and path names of each source file, by its language.
+ *
  * @param input the files and scopes to read.
  * @returns the names of each file, and syntax findings.
  */
@@ -103,6 +104,7 @@ async function readDeclaredNames(input: CheckInput): Promise<{ files: FileNames[
 
 /**
  * Reports allowed names in root naming overrides that match no code or path name.
+ *
  * @param input the settings and tracked files.
  * @returns the findings.
  */
@@ -150,6 +152,7 @@ export async function checkNamingAllowedNames(input: CheckInput): Promise<Findin
 
 /**
  * Checks the names that source files declare.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */
@@ -168,6 +171,7 @@ export async function checkNamingIdentifiers(input: CheckInput): Promise<Finding
 
 /**
  * Checks file and folder names against the naming settings.
+ *
  * @param input the scope files to check.
  * @returns the findings.
  */

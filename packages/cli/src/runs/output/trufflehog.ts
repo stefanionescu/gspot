@@ -21,6 +21,7 @@ const trufflehogResultSchema = z.object({
 } satisfies SchemaShape<TrufflehogResult>);
 /**
  * Read the verified TruffleHog results as findings, one per credential, without the secret.
+ *
  * @param input the tool output to read.
  * @returns credential locations and detector names without credential text.
  */

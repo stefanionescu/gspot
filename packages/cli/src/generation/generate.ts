@@ -156,6 +156,7 @@ function assertDistinctPaths(generated: GenerationResult): void {
 
 /**
  * Build the managed .gitignore block for tool projects and generated files.
+ *
  * @returns the paths that Git must leave untracked.
  */
 function buildGitignoreBlock(): string {

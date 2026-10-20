@@ -35,6 +35,7 @@ function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, k
 
 /**
  * Change the declared path leaves with the schemas that validation uses.
+ *
  * @param schema the validator of the field.
  * @param value the validated written setting.
  * @param visit changes one path.
@@ -51,6 +52,7 @@ function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, 
 
 /**
  * Join a shipped default selector to its scope, and keep a leading exclusion mark.
+ *
  * @param path the shipped default selector.
  * @param scope the repository-relative folder that owns the default.
  * @returns the repository-relative selector.
@@ -62,6 +64,7 @@ function joinScopeSelector(path: string, scope: string): string {
 
 /**
  * Resolve the path leaves of a shipped default against its project scope.
+ *
  * @param key the dotted setting name.
  * @param value the validated default.
  * @param scope the owning folder, empty for repository-root values.

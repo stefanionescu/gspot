@@ -4,6 +4,7 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
 
 /**
  * Apply the Jest lint rules with the test files and globals of the scope.
+ *
  * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */

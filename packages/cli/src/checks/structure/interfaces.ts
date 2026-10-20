@@ -39,6 +39,7 @@ function isStub(node: Node): boolean {
 /**
  * Check whether a Python class declares an interface: it derives from Protocol or an abstract base class (ABC), or
  * the ABCMeta metaclass builds it.
+ *
  * @param node the class definition.
  * @returns whether the class declares an interface.
  */
@@ -54,6 +55,7 @@ export function isInterfaceClass(node: Node): boolean {
 /**
  * Check whether a Python function exists for its signature: an overload, an override, an abstract method, an
  * accessor, a method of an interface class, or a method stub.
+ *
  * @param node the function definition.
  * @returns whether the function declares an interface rather than forwarding a call.
  */

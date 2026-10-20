@@ -11,6 +11,7 @@ import { isProjectChecked, selectRequiredTsconfigOptions } from '#cli/checks/typ
 
 /**
  * Reports each required compiler option that a scope tsconfig leaves off.
+ *
  * @param input the scope to check.
  * @returns the findings.
  */

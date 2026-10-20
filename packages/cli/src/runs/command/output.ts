@@ -107,6 +107,7 @@ function failBrokenTool(planned: OutputCheck, result: SpawnResult): never {
 
 /**
  * Checks whether a command crashed: it exited nonzero, its format names files, it runs on many files, and no finding names a real file.
+ *
  * @param check the output format and command.
  * @param result what the command returned.
  * @param parsed the findings read from its output.
@@ -122,6 +123,7 @@ function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Find
 
 /**
  * Parses findings, fails on a crash, and withholds secret-scanner output.
+ *
  * @param planned the check that ran.
  * @param result what the command printed.
  * @param paths the working folder and repository root.
@@ -143,6 +145,7 @@ function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths:
 
 /**
  * Builds the check result from the run state.
+ *
  * @param check the declaration that ran.
  * @param completion what the run collected.
  * @param completion.base the initial check result.
@@ -169,6 +172,7 @@ export function buildCheckResult(
 
 /**
  * Parses the command output, or returns why gspot refused it.
+ *
  * @param planned the check that ran.
  * @param result what the process returned.
  * @param paths the repository root and working folder.
@@ -185,6 +189,7 @@ export function parseCommandFindings(planned: OutputCheck, result: SpawnResult, 
 
 /**
  * Records a process result and assigns its findings to their file and scope.
+ *
  * @param planned the check that ran.
  * @param tool the declaration with its version pin.
  * @param output what one run printed and parsed.
@@ -210,6 +215,7 @@ export function recordInvocation(
 
 /**
  * Classifies a process failure for command checks and built-in checks.
+ *
  * @param result what the process returned.
  * @param name the tool that the note mentions.
  * @param view the scope settings.
@@ -237,6 +243,7 @@ export function findExecutionFailure(
 
 /**
  * Checks whether a run exited with an undeclared code or printed a crash pattern.
+ *
  * @param check the declared exit codes and crash pattern.
  * @param tool the declaration with the shared crash pattern.
  * @param result what the process returned.
@@ -250,6 +257,7 @@ export function hasToolError(check: CheckDeclaration, tool: ToolDeclaration | un
 
 /**
  * Formats the last lines of tool output that needs no redaction.
+ *
  * @param result what the tool printed.
  * @param placeholder the text when both streams stay empty.
  * @returns the last lines of output.
@@ -268,6 +276,7 @@ export function formatOutputTail(
 
 /**
  * Returns the findings, or fails when the tool exited nonzero with none.
+ *
  * @param result the exit code and output.
  * @param findings what the parser read.
  * @param toolName the program that ran.

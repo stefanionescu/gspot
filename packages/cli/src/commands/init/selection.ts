@@ -100,6 +100,7 @@ function getSelectionReason(id: string, sets: ConfigurationChoices): Configurati
 
 /**
  * Select configurations for init from the files, the named configurations, and the project scopes.
+ *
  * @param inputs what init detected, with the flags.
  * @returns the scopes and the configurations of each.
  */

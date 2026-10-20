@@ -43,6 +43,7 @@ function planApply(session: Session): CommandResult {
 
 /**
  * Register the apply command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
@@ -64,6 +65,7 @@ function registerApply(program: Command, onResult: CommandCompletion): void {
 
 /**
  * Write the generated files, or show the planned changes and write nothing.
+ *
  * @param options the parsed flags.
  * @returns the command result.
  */

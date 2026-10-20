@@ -5,6 +5,7 @@ import type { ToolFileContext } from '#cli/types/generation/files.ts';
 
 /**
  * Build the jscpd file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the duplication scan settings and source exclusions.
  */

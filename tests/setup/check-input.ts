@@ -19,6 +19,7 @@ import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 
 
 /**
  * Keep compiler state in a temporary folder until the test ends.
+ *
  * @returns a stack that removes the folder and the spy.
  */
 async function createCompilerCache(): Promise<AsyncDisposableStack> {
@@ -30,6 +31,7 @@ async function createCompilerCache(): Promise<AsyncDisposableStack> {
 
 /**
  * Build the input of one check, with its files and the full file list of the repository.
+ *
  * @param session the sandbox the test opened.
  * @param checkId for example bash/shellcheck.
  * @param options which files to include and what to clean up.
@@ -63,6 +65,7 @@ function buildCheckInput(
 
 /**
  * Create a Swift sandbox and build the input of one check. The input uses fake tool versions and a temporary compiler cache.
+ *
  * @param sandbox folder that the test removes.
  * @param checkId for example swift/swiftlint.
  * @param files paths and text to add or replace.
@@ -125,6 +128,7 @@ async function openPinnedSession(
 
 /**
  * Find the code of a built-in check, as a function that resolves to its findings.
+ *
  * @param checkId a check with built-in code, such as `structure/lone-files`.
  * @returns a function that runs the check on an input and resolves to its findings.
  */
@@ -139,6 +143,7 @@ function findBuiltInCheck(checkId: string): (input: CheckInput) => Promise<Findi
 
 /**
  * Build the run of a check from its check implementation.
+ *
  * @param checkId a shipped check, such as `bash/shellcheck`.
  * @returns the run function.
  */

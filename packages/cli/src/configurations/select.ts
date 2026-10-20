@@ -25,6 +25,7 @@ function visit(walk: SelectionWalk, configurationName: string): void {
 
 /**
  * Resolve configuration names to manifests in order, and throw for unknown names.
+ *
  * @param configurationNames the names to resolve.
  * @param manifests every configuration manifest.
  * @returns the manifests, requirements first, in order of first mention.
@@ -38,6 +39,7 @@ function selectConfigurations(configurationNames: string[], manifests: Map<strin
 
 /**
  * Keep the language and framework configurations that add source files to shared checks.
+ *
  * @param selected the manifests in use.
  * @returns the configurations that own source settings.
  */
@@ -48,6 +50,7 @@ function filterSourceConfigurations(selected: Manifest[]): Manifest[] {
 
 /**
  * List each manifest of the scopes once, in first-seen order.
+ *
  * @param scopes scope selections that can share configurations.
  * @returns one manifest per configuration name.
  */
@@ -61,6 +64,7 @@ function listSelectedManifests(scopes: Pick<ScopeSelection, 'selected'>[]): Mani
 
 /**
  * Check whether any scope selects a configuration.
+ *
  * @param scopes the validated scope selections.
  * @param name the configuration to find.
  * @returns whether any scope includes the configuration.
@@ -76,6 +80,7 @@ function formatUnknownConfiguration(name: string, known: string[]): string {
 
 /**
  * Find the unknown configuration names, and keep their order and location.
+ *
  * @param declarations the requested names, with their original fields.
  * @param manifests the declared configurations.
  * @returns each unknown declaration with its error message.
@@ -95,6 +100,7 @@ function listUnknownConfigurations<Declaration extends Pick<ConfigurationDeclara
 
 /**
  * Refuse explicit edits to configurations that gspot selects itself.
+ *
  * @param names the configurations that the command edits.
  * @param manifests the configuration declarations
  */

@@ -18,6 +18,7 @@ import {
 
 /**
  * Assemble generated pages from one read of the CLI reference data.
+ *
  * @returns pages keyed by their Markdown path
  */
 function buildReferencePages(): Map<string, ReferencePage> {
@@ -37,6 +38,7 @@ function buildReferencePages(): Map<string, ReferencePage> {
 
 /**
  * Load the authored and generated pages into the Starlight content collection.
+ *
  * @returns the Astro loader
  */
 export function buildReferenceCollection(): Loader {

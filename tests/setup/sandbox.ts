@@ -24,6 +24,7 @@ import { rm, open, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readli
 
 /**
  * Name the installed npm in the root package.json, as a repository at level all must.
+ *
  * @param root the sandbox folder with a package.json.
  */
 async function pinSandboxNpm(root: string): Promise<void> {
@@ -121,6 +122,7 @@ function registerSharedSandbox(plan: InstalledSandboxPlan): () => Sandbox {
 
 /**
  * Resets the index entries of these paths to the last commit, which undoes what markExecutable staged on Windows.
+ *
  * @param cwd the sandbox.
  * @param paths the repository-relative files.
  */

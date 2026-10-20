@@ -34,6 +34,7 @@ function isNameMatch(record: IgnoreRecord, finding: Finding): boolean {
 
 /**
  * Checks whether an ignore record covers a finding.
+ *
  * @param record one `[[ignore]]` entry of gspot.toml.
  * @param finding what a check reported.
  * @returns whether the ignore covers this finding.
@@ -172,6 +173,7 @@ async function planAfterFixes(session: Session, options: RunOptions): Promise<Pl
 
 /**
  * Runs the checks and returns the report.
+ *
  * @param opened the repository and its tools.
  * @param options stage, skips, and fix flags.
  * @returns the report, the plan, and the fix report when --fix ran.

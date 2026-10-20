@@ -22,6 +22,7 @@ import {
 
 /**
  * Identify Swift imports, test declarations, and package targets without matching comment or string text.
+ *
  * @param path the repository-relative source file.
  * @param text the Swift source.
  * @returns the imported modules, test frameworks, and target kinds the source declares.
@@ -58,6 +59,7 @@ export async function detectSwiftTags(path: string, text: string): Promise<strin
 
 /**
  * Read Swift process environment access from navigation expressions.
+ *
  * @param syntaxRoot the parsed Swift source.
  * @returns the environment reads and their source positions.
  */

@@ -13,6 +13,7 @@ import type {
 
 /**
  * Build the check result, with its check ID and run time, from built-in findings.
+ *
  * @param planned the check that ran.
  * @param completion what the run returned.
  * @param completion.input the scope and check.
@@ -43,6 +44,7 @@ export function buildBuiltInResult(
 
 /**
  * Builds the input of a built-in check without the whole session.
+ *
  * @param session the repository and its tools.
  * @param planned the check to run.
  * @returns the files, settings, and reads that the check uses.
@@ -82,6 +84,7 @@ export function checkInput(session: Session, planned: Pick<PlannedCheck, 'select
 
 /**
  * Wraps a built-in check implementation as a run callback.
+ *
  * @param builtInCheck the implementation to wrap.
  * @returns the callback that runs a planned check.
  */

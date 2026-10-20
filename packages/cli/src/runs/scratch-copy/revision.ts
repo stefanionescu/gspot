@@ -113,6 +113,7 @@ async function assertDependencyFilesUnchanged(
 
 /**
  * Copies the installed Vale packages when the scratch copy keeps the Vale configuration they came from.
+ *
  * @param repositoryRoot the repository with the installed packages.
  * @param scratch where to copy the packages.
  * @param paths the files of the scratch copy.
@@ -131,6 +132,7 @@ function copyValePackages(repositoryRoot: string, scratch: string, paths: string
 
 /**
  * Selects installed dependencies to copy, after checking that the dependency files match.
+ *
  * @param repositoryRoot the working tree with installed dependencies.
  * @param scratch the private copy.
  * @param entries the tracked files of the revision.
@@ -254,6 +256,7 @@ async function writeRevisionFiles(
 
 /**
  * List every file under the styles folder: the Vale packages and the gspot style.
+ *
  * @param files the source root of the styles folder.
  * @param folder the styles path to walk.
  * @returns the files, relative to the root.
@@ -270,6 +273,7 @@ function listStyleFiles(files: Files, folder: string): string[] {
 
 /**
  * Writes a Git revision into a scratch copy without checkout filters, stashing, or working-tree writes.
+ *
  * @param repositoryRoot the checkout with the Git objects and installed dependencies.
  * @param source the revision to copy.
  * @param action what to run in the scratch copy.

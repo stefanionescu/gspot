@@ -8,6 +8,7 @@ import {
 
 /**
  * Build the SQLFluff file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the SQL dialect, formatting choices, and SQLFluff rule exclusions.
  */

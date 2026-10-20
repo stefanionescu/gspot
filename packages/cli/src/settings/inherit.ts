@@ -89,6 +89,7 @@ function mergeTable(
 
 /**
  * Merge two values: command arguments replace whole, other lists append, per-rule tables merge, and single values replace.
+ *
  * @param declaration the setting.
  * @param current the value so far.
  * @param found the value the next table writes.
@@ -115,6 +116,7 @@ function mergeValue(declaration: SettingDeclaration, current: unknown, found: un
 
 /**
  * List the root settings and every scope table, with their locations in the document.
+ *
  * @param settings the parsed gspot.toml.
  * @returns the tables in written order, root first.
  */
@@ -129,6 +131,7 @@ function listSettingsTables(settings: Settings): WrittenScopeTable[] {
 
 /**
  * List the root settings and the scope tables that apply, from outermost to innermost.
+ *
  * @param settings the parsed gspot.toml.
  * @param scope the folder, '' or undefined for the root alone.
  * @returns the tables with their scope paths and reported names.
@@ -156,6 +159,7 @@ function findDeclaration(known: KnownSettings, key: string): DeclarationMatch | 
 
 /**
  * Read the written value of a dotted key.
+ *
  * @param settings the root table or one scope.
  * @param key the dotted setting name.
  * @returns the value with its reason, or undefined when the key has no value.
@@ -173,6 +177,7 @@ function getWrittenSetting(settings: Pick<Settings, 'written'>, key: string): Wr
 
 /**
  * Resolve a written language or category key after its broader declaration.
+ *
  * @param match the declaration and the written selector.
  * @param key the dotted name as written.
  * @returns candidate keys from the broadest declaration to the named field.
@@ -191,6 +196,7 @@ function listCandidateKeys(match: DeclarationMatch, key: string): string[] {
 
 /**
  * Resolve one default against its language, scope, and site build folder.
+ *
  * @param known the declarations and defaults of the configurations in use.
  * @param match the declaration and its language, if any.
  * @param scope the project whose shipped paths apply.
@@ -292,6 +298,7 @@ function listSettings(known: KnownSettings, settings: Settings, scope?: string):
 
 /**
  * Read the table of a setting or of a tool.
+ *
  * @param key the full setting name.
  * @returns its table name.
  */

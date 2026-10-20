@@ -47,6 +47,7 @@ function readMatchedFinding(
 
 /**
  * Read a finding from each matching output line.
+ *
  * @param input the tool output to read.
  * @returns the findings from matched lines.
  */
@@ -68,6 +69,7 @@ export function parseRegexFindings(input: ReportInput): Finding[] {
 
 /**
  * Read findings grouped under output file headings.
+ *
  * @param input the tool output to read.
  * @returns the findings under each matched file heading.
  */

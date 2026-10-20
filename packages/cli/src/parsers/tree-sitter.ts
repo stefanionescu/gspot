@@ -34,6 +34,7 @@ async function buildParser(name: GrammarName): Promise<Parser> {
 
 /**
  * Get the parser for a grammar, and build it on first use.
+ *
  * @param name the grammar.
  * @returns the shared promise, which may still load the grammar.
  */
@@ -48,6 +49,7 @@ function getParser(name: GrammarName): Promise<Parser> {
 
 /**
  * Select the grammar of a code file by its extension alone.
+ *
  * @param path the file to parse.
  * @returns the grammar, or undefined for a file that no code grammar reads.
  */
@@ -62,6 +64,7 @@ export function findGrammarByExtension(path: string): GrammarName | undefined {
 
 /**
  * Share one parse per run, and give each reader its own tree handle to dispose.
+ *
  * @param name the grammar of the source.
  * @param text the exact source to parse.
  * @param cache source reads and tree cleanup for this run.
@@ -85,6 +88,7 @@ export async function parseSource(name: GrammarName, text: string, cache?: Parse
 
 /**
  * Read the files, lend each parsed tree to a visitor, then release its handle.
+ *
  * @param input the files to parse, each with its grammar.
  * @param visit reads one tree; syntax nodes must not leave this callback.
  * @returns a promise that settles after every file.
@@ -103,6 +107,7 @@ export async function visitParsedSources(input: ParsedSourceInput, visit: (sourc
 
 /**
  * Select the grammar of a language configuration, with TSX for .tsx files.
+ *
  * @param path the file to parse.
  * @param language the configuration that owns the file.
  * @returns the grammar, or undefined for declaration files, settings files, and languages without a grammar.

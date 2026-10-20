@@ -155,6 +155,7 @@ async function selectLine(context: PushSearch, result: PushSelection, line: Push
 
 /**
  * Resolve the exact objects that the Git pre-push input names, before source checks run.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param input the lines that Git writes to the pre-push hook.
  * @param remote the name or address that the hook gets.
@@ -187,6 +188,7 @@ export async function selectPush(
 
 /**
  * Compare a push with its upstream or remote default. Without either, start at the root commit.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param cancelSignal stops the Git commands.
  * @returns the commit the pushed range starts after.
@@ -200,6 +202,7 @@ export async function readPushBase(repositoryRoot: string, cancelSignal?: AbortS
 
 /**
  * Read the commits after the push base, unless the caller names the pushed commits.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param commits the pushed revisions, if known.
  * @param cancelSignal stops the Git commands.

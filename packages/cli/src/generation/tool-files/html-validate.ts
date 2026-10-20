@@ -18,6 +18,7 @@ function buildHtmlValidateFile(context: ToolFileContext, check: string, override
 
 /**
  * Build the HTML Validate rules for the pages in the repository.
+ *
  * @param context the tool file to build.
  * @returns the rules of html/html-validate.
  */
@@ -27,6 +28,7 @@ function buildSourceHtmlFile(context: ToolFileContext): string {
 
 /**
  * Build the HTML Validate rules for built site pages. They allow the markup that site generators add.
+ *
  * @param context the tool file to build.
  * @returns the rules of site/html-validate.
  */

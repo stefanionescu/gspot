@@ -39,6 +39,7 @@ function assertArgumentList(value: unknown, name: string): string[] {
 
 /**
  * Expands an each part, or returns undefined for another part kind.
+ *
  * @param planned the check, whose scope holds the settings.
  * @param part one argument of the manifest command.
  * @returns the expanded arguments.
@@ -54,6 +55,7 @@ function expandEachPlaceholder(planned: SubstitutionCheck, part: string): string
 
 /**
  * Expands {existing:<flag>:<path>}: the flag and the absolute path when the file exists, and nothing when it does not.
+ *
  * @param repositoryRoot the folder that manifest paths start from.
  * @param part one argument of the manifest command.
  * @returns the arguments, or undefined for another part kind.
@@ -107,6 +109,7 @@ function expandPlainPart(
 
 /**
  * Finds the whole-file tool file declaration that a check names.
+ *
  * @param session the repository and manifests.
  * @param planned the check that names it.
  * @param name the tool or setting it belongs to.
@@ -125,6 +128,7 @@ export function readToolFileDeclaration(
 
 /**
  * Resolves the tool file path for the scope of a check.
+ *
  * @param session the repository and tool file targets.
  * @param planned the check and its scope.
  * @param name the tool or setting it belongs to.
@@ -137,6 +141,7 @@ export function selectToolFilePath(session: CommandInputs, planned: Substitution
 
 /**
  * Lists the tool files that a check command or its environment names.
+ *
  * @param session the repository and manifests.
  * @param planned the check that runs.
  * @param command the arguments to scan.
@@ -169,6 +174,7 @@ export function listCommandToolFiles(
 
 /**
  * Lists the source and tool files that a scratch copy needs for a command.
+ *
  * @param session the repository and manifests.
  * @param planned the check and its files.
  * @param command the arguments, with tool file placeholders.
@@ -194,6 +200,7 @@ export function listScratchFiles(
 
 /**
  * Expands a scalar command argument or environment value from the check scope.
+ *
  * @param session the repository and settings.
  * @param planned the check and its scope.
  * @param part the value with placeholders.
@@ -231,6 +238,7 @@ export function replacePlaceholders(
 
 /**
  * Expands setting and scope placeholders, and keeps a marker for each file slot.
+ *
  * @param session the repository and settings.
  * @param planned the check and its scope.
  * @param command the authored arguments.
@@ -257,6 +265,7 @@ export function expandCommand(
 
 /**
  * Expand a command, then run the resolved executable in place of its first part.
+ *
  * @param session the repository and settings.
  * @param planned the check and its scope.
  * @param command the authored arguments.
@@ -276,6 +285,7 @@ export function expandToolCommand(
 
 /**
  * Replaces every file marker after variable-length arguments have expanded.
+ *
  * @param parts the expanded command.
  * @param files the paths relative to the working folder.
  * @returns one command per file, or one command when no file marker exists.

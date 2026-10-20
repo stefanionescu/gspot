@@ -15,6 +15,7 @@ import { NPM_TOOL_FOLDER } from '#tests/data/install/installation.ts';
 
 /**
  * Replace one child command and run the others normally.
+ *
  * @param name the executable to replace.
  * @param result function that returns the fake run.
  * @returns a spy whose disposal restores command execution.
@@ -28,6 +29,7 @@ export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typ
 
 /**
  * Fake the lookup and version output of these tools.
+ *
  * @param tools declarations whose pinned versions the fakes print.
  * @returns the disposable mocks.
  */
@@ -56,6 +58,7 @@ export function fakePinnedExecutables(tools: ToolDeclaration[]): DisposableStack
 
 /**
  * Write a child script and its launchers.
+ *
  * @param sandboxRoot folder that gets the script and launchers.
  * @param name the executable path without a Windows suffix.
  * @param script the Bun program, written unchanged.

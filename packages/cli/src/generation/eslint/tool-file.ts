@@ -19,6 +19,7 @@ import {
 
 /**
  * Build the ESLint file from the presets, lint rules, and fragment blocks.
+ *
  * @param context the tool file to build.
  * @returns the JavaScript text of the ESLint file.
  */

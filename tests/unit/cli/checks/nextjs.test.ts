@@ -26,6 +26,7 @@ import {
 
 /**
  * Fake executable lookup and both process functions until disposal. The fakes return the output and files that Next.js writes.
+ *
  * @param runCallback fake process result for tests that need another one.
  * @returns the recorded commands and a disposer that removes the fakes.
  */
@@ -165,6 +166,7 @@ test("a failed type generation removes the scratch copy and keeps the developer'
 
 /**
  * Create a Next.js project with tracked source and untracked build output, for the scratch build checks.
+ *
  * @param sandboxRoot folder for the project.
  * @param scope folder of the Next.js project.
  * @returns the session after apply and commit.

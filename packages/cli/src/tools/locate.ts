@@ -41,6 +41,7 @@ function isCandidatePresent(files: Files, root: string, path: string): boolean {
 
 /**
  * Locate executables on `PATH`, and replace each mise shim with the program that it runs.
+ *
  * @param workingFolder the repository root.
  * @param name the executable to find.
  * @param timeoutSeconds the limit for the mise query.

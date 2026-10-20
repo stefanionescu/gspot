@@ -13,6 +13,7 @@ const lintRuleNamesSchema = z.strictObject({
 
 /**
  * Read one shipped list of lint rule names.
+ *
  * @param path the asset path of the list.
  * @returns the package and version the list comes from, and its rule names.
  */

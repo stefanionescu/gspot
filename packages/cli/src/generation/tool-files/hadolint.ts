@@ -4,6 +4,7 @@ import { HADOLINT_RECOMMENDED_OFF, HADOLINT_FAILURE_THRESHOLD } from '#cli/confi
 
 /**
  * Build the Hadolint file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Hadolint exclusions and trusted registry settings.
  */

@@ -58,6 +58,7 @@ function readToolFileDeclarations(configurationFolder: string, toolFiles: unknow
 
 /**
  * Link each named tool to its full declaration.
+ *
  * @param manifests the parsed configuration declarations.
  * @returns the manifests by name, with full tool declarations.
  */
@@ -82,6 +83,7 @@ function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manife
 
 /**
  * Parse one manifest text into validated declarations; invalid input throws GspotError with code manifest.
+ *
  * @param text the `manifest.toml` content.
  * @param configurationFolder the asset path that gives the name and group.
  * @returns validated declarations with qualified check IDs and discovered tool files.
@@ -136,6 +138,7 @@ function readShippedNamingDefaults(): NamingDefaults {
 
 /**
  * Build the error for a manifest that fails validation.
+ *
  * @param configuration the name of the failing manifest.
  * @param errors the messages in plain English.
  * @returns the error to throw.
@@ -149,6 +152,7 @@ function buildManifestError(configuration: string, errors: string[]): GspotError
 
 /**
  * Read every manifest once per run.
+ *
  * @param reads the run cache.
  * @returns the manifests by configuration name.
  */
@@ -158,6 +162,7 @@ function readManifests(reads: ReadCache): Map<string, Manifest> {
 
 /**
  * List the shipped check IDs and the command check IDs of the repository.
+ *
  * @param checks the [[command_check]] records.
  * @param reads the run cache.
  * @returns the shipped IDs, then your command check IDs.
@@ -170,6 +175,7 @@ function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[], reads: 
 
 /**
  * Read the shipped naming settings once for a run.
+ *
  * @param reads the run cache
  * @returns the shipped naming choices
  */
@@ -179,6 +185,7 @@ function readNamingDefaults(reads: ReadCache): NamingDefaults {
 
 /**
  * List the files in the rules folder of a configuration.
+ *
  * @param manifest the configuration.
  * @returns each file with its path inside the rules folder.
  */
@@ -194,6 +201,7 @@ function listRuleFiles(manifest: Manifest): ShippedRule[] {
 
 /**
  * Index the declared checks by ID, with the configuration of each.
+ *
  * @param manifests the configurations to index.
  * @returns the declared checks by ID.
  */
@@ -209,6 +217,7 @@ function listChecksById(manifests: Iterable<Manifest>): Map<string, Configuratio
 
 /**
  * Index the tool declarations by name, and refuse two declarations of one tool.
+ *
  * @param manifests the parsed configuration declarations.
  * @returns the tools by name.
  */
@@ -226,6 +235,7 @@ function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string
 
 /**
  * Refuse a check ID that no configuration or command check declares.
+ *
  * @param name the requested check ID.
  * @param settings the command checks of gspot.toml.
  * @param reads the run cache.

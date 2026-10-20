@@ -8,6 +8,7 @@ import { GENERATED_FILE_HELP, GENERATED_FILE_MESSAGES } from '#cli/config/checks
 
 /**
  * Reports each generated file on disk that does not match what the settings generate.
+ *
  * @param session the settings and repository.
  * @param planned the repository-wide drift check.
  * @returns the check result.

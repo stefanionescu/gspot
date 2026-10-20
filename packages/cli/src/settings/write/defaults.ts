@@ -98,6 +98,7 @@ function dropTableDefaults(
 
 /**
  * Drop written values that equal the default, but keep a scope override of its parent.
+ *
  * @param settings the ordered draft, whose declarations own the defaults.
  * @returns the draft without values that equal the default.
  */

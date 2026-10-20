@@ -84,6 +84,7 @@ const imageReportSchema = z.object({
 
 /**
  * Scans each literal service image once and reports its findings in every Compose file that names it.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */

@@ -150,6 +150,7 @@ function stopProcessTree(child: ChildProcess, state: ProcessTermination): void {
 
 /**
  * Watch a spawned process tree until its output and descendants finish.
+ *
  * @param child the spawned process.
  * @param options the cancellation and timeout controls.
  * @returns completion state and the cleanup operation.
@@ -247,6 +248,7 @@ async function readProcessOutput(
 
 /**
  * Run a supervised process tree and capture its text.
+ *
  * @param command executable and literal arguments.
  * @param options where and how the process runs.
  * @returns captured output and termination status.
@@ -266,6 +268,7 @@ export async function spawnProcess(command: readonly string[], options: AsyncSpa
 
 /**
  * Run a supervised process tree and read its output bytes.
+ *
  * @param command executable and literal arguments.
  * @param options where and how the process runs.
  * @param readStdout reads the output bytes.
@@ -293,6 +296,7 @@ export async function streamProcess(
 
 /**
  * Run a process and wait. Git plumbing and version checks use it.
+ *
  * @param command executable and literal arguments.
  * @param options where and how the process runs.
  * @returns captured output and termination status.

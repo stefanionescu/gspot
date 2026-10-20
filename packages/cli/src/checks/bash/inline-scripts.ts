@@ -5,6 +5,7 @@ import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 /**
  * Reports each line that embeds another runtime.
+ *
  * @param input the scope scripts to read.
  * @returns the findings.
  */

@@ -140,6 +140,7 @@ function listUnownedToolFiles(
 
 /**
  * List setup suggestions for the repository.
+ *
  * @param session the repository to compare with the generated files.
  * @returns the suggested changes.
  */

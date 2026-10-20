@@ -23,6 +23,7 @@ function anchorLine(folder: string, line: string): string {
 
 /**
  * List the patterns of the tracked .gitignore files as lines of one root ignore file, without negations.
+ *
  * @param reads the run cache.
  * @param trackedPaths the tracked files of the repository.
  * @returns the patterns, each anchored at the folder of its .gitignore.
@@ -40,6 +41,7 @@ export function listGitignorePatterns(reads: ReadCache, trackedPaths: string[]):
 
 /**
  * Build a test for paths that a tracked .gitignore ignores, or that sit inside an ignored folder.
+ *
  * @param reads the run cache.
  * @param trackedPaths the tracked files of the repository.
  * @returns whether Git ignores the repository-relative path.

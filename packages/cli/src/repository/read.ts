@@ -30,6 +30,7 @@ import {
 
 /**
  * Read the attribute rules once per repository read.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param paths the tracked .gitattributes files.
  * @returns the parsed rules, or none when the optional file does not exist.
@@ -45,6 +46,7 @@ function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Re
 
 /**
  * Read the tracked files, dependency files, and the written and discovered scopes.
+ *
  * @param reads the run cache.
  * @param options what the read needs.
  * @param options.declarations the generated and vendored path rules.
@@ -106,6 +108,7 @@ export async function readRepository(
 
 /**
  * Read generated and vendored selectors from each tracked attribute file.
+ *
  * @param reads the run cache.
  * @param paths the tracked root-relative files.
  * @returns the selectors declared by Git attributes.
@@ -136,6 +139,7 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
 /**
  * Find the nearest folder at or above start that holds gspot.toml, up to the Git top level.
  * Without settings, return the Git top level, or start outside Git.
+ *
  * @param start where the search begins.
  * @returns the settings folder, Git top level, or starting folder outside Git.
  */

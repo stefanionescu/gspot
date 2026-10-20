@@ -44,6 +44,7 @@ const semgrepReportSchema = z.object({
 
 /**
  * Read Semgrep rule findings and source parsing errors, and refuse scanner or rule failures.
+ *
  * @param input the tool output to read.
  * @returns positioned findings from a validated report.
  */

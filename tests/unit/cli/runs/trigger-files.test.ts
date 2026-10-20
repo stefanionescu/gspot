@@ -21,6 +21,7 @@ import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/cha
 
 /**
  * Put fake project and file checks into the child scopes of the session.
+ *
  * @param session sandbox whose checks to replace.
  */
 async function fakeProjectChecks(session: Session): Promise<void> {

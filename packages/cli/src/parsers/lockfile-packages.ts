@@ -9,8 +9,7 @@ import { readCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { normalizePythonPackage } from '#cli/parsers/dependency-files.ts';
-import type { LOCKED_PACKAGE_LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { PNPM_PEER_START, NPM_PACKAGE_FOLDER } from '#cli/config/parsers/lockfiles.ts';
+import { PNPM_PEER_START, NPM_PACKAGE_FOLDER, type LOCKED_PACKAGE_LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 
 const npmLockSchema = z.looseObject({
     packages: z.record(z.string(), z.looseObject({ version: z.string().optional() })).default({}),
@@ -32,6 +31,7 @@ const uvLockSchema = z.looseObject({
 
 /**
  * Split a package identity into its name and version. The separator follows the name; a scoped name starts with @.
+ *
  * @param identity the package as `name@version`.
  * @returns the name and the version, or undefined without a version.
  */
@@ -89,6 +89,7 @@ const READERS: Readonly<Record<(typeof LOCKED_PACKAGE_LOCKFILES)[number], (text:
 
 /**
  * Find the nearest lockfile of a project, from its folder up to the repository root, and list what it holds.
+ *
  * @param reads the run cache, rooted at the repository.
  * @param folder the project folder, relative to the repository root.
  * @param lockfiles the lockfile names of the project's package manager family, in the order to try.

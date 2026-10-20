@@ -6,6 +6,7 @@ import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 
 /**
  * Build the environment for tool processes. Merge Windows names that differ only in case, and keep their spelling.
+ *
  * @param overrides tool variables that replace or remove inherited values.
  * @returns the variables as strings.
  */
@@ -23,6 +24,7 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
 
 /**
  * Read one value from the process environment.
+ *
  * @param name the exact process environment key to read.
  * @returns the value when present.
  */
@@ -32,6 +34,7 @@ export function readEnvironmentVariable(name: string): string | undefined {
 
 /**
  * Build the comparison key of an environment variable name for this system.
+ *
  * @param name the environment variable to key.
  * @returns its comparison key.
  */
@@ -41,6 +44,7 @@ export function normalizeEnvironmentKey(name: string): string {
 
 /**
  * Find how an environment spells the key of the executable search path. Windows matches names in any case.
+ *
  * @param env the environment variables.
  * @returns the key, or undefined when the environment has none.
  */
@@ -50,6 +54,7 @@ export function findPathKey(env: Readonly<Record<string, unknown>>): string | un
 
 /**
  * Read the gspot cache folder of this system. Refuse a relative cache path from the environment.
+ *
  * @returns the absolute cache folder.
  */
 export function readCacheFolder(): string {
@@ -63,6 +68,7 @@ export function readCacheFolder(): string {
 
 /**
  * Translate the system name from Node for planning, doctor, and tests.
+ *
  * @returns the gspot name, or the Node name for another system.
  */
 export function getOperatingSystem(): string {

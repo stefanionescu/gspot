@@ -21,6 +21,7 @@ import {
 
 /**
  * List every function of a module, nested ones too.
+ *
  * @param module the parsed Python file.
  * @returns declarations and lambdas with source nodes and executable body statements.
  */
@@ -41,6 +42,7 @@ function listFunctions(module: PythonModule): PythonFunction[] {
 
 /**
  * Check whether a Python string expression comes first, after any comments.
+ *
  * @param node the candidate statement.
  * @param siblings the statements in the same file or function body.
  * @returns true when the string holds a docstring.
@@ -55,6 +57,7 @@ function isDocstring(node: Node, siblings: Node[]): boolean {
 
 /**
  * Read the Python sources and their function declarations.
+ *
  * @param input the files to read.
  * @returns parsed modules with trees to dispose of after use.
  */
@@ -75,6 +78,7 @@ async function readPython(input: SourceInput): Promise<PythonFiles> {
 
 /**
  * Parse one Python module, with the grammar cache of the run, if any.
+ *
  * @param path the repository-relative source file.
  * @param text the exact source content.
  * @param cache the source reads and tree cleanup for this run.
@@ -95,6 +99,7 @@ async function parsePythonModule(path: string, text: string, cache?: ParseCache)
 
 /**
  * Find the docstring text of a function.
+ *
  * @param definition the function node.
  * @returns the text inside the quotes, or undefined.
  */
@@ -108,6 +113,7 @@ function findDocstring(definition: Node): string | undefined {
 
 /**
  * Release the trees held by parsed Python modules.
+ *
  * @param parsed the modules whose readers have finished.
  */
 function deletePythonTrees(parsed: PythonFiles): void {
@@ -247,6 +253,7 @@ function readEnvironmentLiteral(node: Node): Node | null | undefined {
 
 /**
  * Read Python environment access and calls to the environment functions, through import aliases.
+ *
  * @param syntaxRoot the parsed Python source.
  * @param readers the environment functions.
  * @returns the environment reads and their source positions.

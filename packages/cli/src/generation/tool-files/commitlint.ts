@@ -4,6 +4,7 @@ import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generat
 
 /**
  * Build the commitlint file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Commitlint rules with the allowed types and scopes of the repository.
  */

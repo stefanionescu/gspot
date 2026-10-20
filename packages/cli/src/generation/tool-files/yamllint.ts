@@ -4,6 +4,7 @@ import { YAMLLINT_RULES, YAMLLINT_YAML_OPTIONS, YAMLLINT_RULE_OPTIONS } from '#c
 
 /**
  * Build the yamllint file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the YAML lint rules with the configured indentation and disabled checks.
  */

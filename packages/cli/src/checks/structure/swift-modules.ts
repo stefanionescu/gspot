@@ -63,6 +63,7 @@ function listXcodeModules(input: CheckInput, path: string, swiftFiles: string[])
 
 /**
  * List the Swift modules that the repository builds, each with its Swift files.
+ *
  * @param input the repository files and the read cache.
  * @returns the modules of every Package.swift target and every Xcode native target.
  */

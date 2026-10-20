@@ -15,6 +15,7 @@ import {
 
 /**
  * Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param source index or commit to inspect.
  * @param cancelSignal stops the command.
@@ -37,6 +38,7 @@ export async function listRevisionEntries(
 
 /**
  * Read each raw blob once, and visit it before the next blob loads.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param requested full blob object IDs.
  * @param visit reads one validated object.
@@ -67,6 +69,7 @@ export async function visitGitBlobs(
 
 /**
  * Collect the validated blobs for a caller that compares several objects.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param requested full blob object IDs.
  * @param cancelSignal stops the command.
@@ -91,6 +94,7 @@ export async function readBlobs(
 
 /**
  * Read the current commit, distinguishing an unborn branch from failed Git reads.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param cancelSignal stops the command.
  * @returns current commit hash, or undefined for an unborn branch.
@@ -108,6 +112,7 @@ export async function readHead(repositoryRoot: string, cancelSignal?: AbortSigna
 
 /**
  * Resolve committed entries, distinguishing an unborn branch from failed Git reads.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param cancelSignal stops the command.
  * @returns current commit entries, or an empty list for an unborn branch.

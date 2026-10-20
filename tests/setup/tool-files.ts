@@ -42,6 +42,7 @@ async function collectLintFindings(
 
 /**
  * Links the test packages, runs apply, and loads the generated ESLint tool file.
+ *
  * @param sandboxRoot folder with a gspot.toml.
  * @returns ESLint set up with the generated tool file.
  */
@@ -66,6 +67,7 @@ async function createEslint(sandboxRoot: string, options?: ESLint.Options): Prom
 
 /**
  * Creates a repository with the settings and files, and returns the content of one generated file.
+ *
  * @param settings the gspot.toml text.
  * @param path generated file to read.
  * @param files other content for the repository.

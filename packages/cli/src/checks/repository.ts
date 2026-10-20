@@ -8,6 +8,7 @@ import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
 
 /**
  * Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
+ *
  * @param input the tracked files and size limit.
  * @returns the findings.
  */
@@ -33,6 +34,7 @@ export function checkLargeFiles(input: CheckInput): Finding[] {
 
 /**
  * Reports indexed files that the scope configurations mark as untracked.
+ *
  * @param input the Git index and each scope.
  * @returns the findings.
  */

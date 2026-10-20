@@ -35,6 +35,7 @@ async function readCommittedMigrations(input: CheckInput, paths: string[]): Prom
 
 /**
  * Reports a version that two files share, a file with no version, and a new file that sorts before a committed one.
+ *
  * @param input the scope whose migrations to compare with the last commit.
  * @returns the findings.
  */
@@ -94,6 +95,7 @@ export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Fi
 
 /**
  * Reports each migration at or before postgres.frozen_through whose text differs from the committed text.
+ *
  * @param input the scope whose migrations to compare with the last commit.
  * @returns the findings.
  */

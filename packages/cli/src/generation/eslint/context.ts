@@ -141,6 +141,7 @@ function buildProjectOptions(session: ToolFileContext['session'], context: Eslin
 
 /**
  * Build the ESLint context of one scope.
+ *
  * @param input the tool file to build.
  * @returns the context that the ESLint file needs.
  */

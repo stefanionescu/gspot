@@ -5,6 +5,7 @@ import * as systemEnvironment from 'std-env';
 
 /**
  * Sets or clears one environment variable for this process and the tools it spawns.
+ *
  * @param name the key in process.env to set or remove.
  * @param value text to set, or undefined to clear.
  */
@@ -15,6 +16,7 @@ function setEnvironmentVariable(name: string, value: string | undefined): void {
 
 /**
  * Set environment variables for a test and restore them when the scope ends, even after a failure.
+ *
  * @param variables values to set or clear for this scope.
  * @returns a resource that restores the old values.
  */

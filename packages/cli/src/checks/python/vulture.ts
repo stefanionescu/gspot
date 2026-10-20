@@ -24,6 +24,7 @@ function readVultureFinding(input: CheckInput, line: string, selected: ReadonlyS
 /**
  * Runs vulture over every Python file of the scope, so that a use in any file counts, and reports the findings in the
  * files of this run.
+ *
  * @param input the scope, its files, and the repository files.
  * @returns each unused definition and each line of unreachable code.
  */

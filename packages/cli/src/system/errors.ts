@@ -8,6 +8,7 @@ export class GspotError extends Error {
 
     /**
      * Keep a failure category and one message.
+     *
      * @param code the failure category.
      * @param message the failure in plain English.
      * @param options the underlying cause, when one exists.
@@ -21,6 +22,7 @@ export class GspotError extends Error {
 
 /**
  * Format a Zod issue and its union branches as field paths and messages.
+ *
  * @param issue one Zod failure.
  * @returns the message lines, with the full path of each nested field.
  */
@@ -39,6 +41,7 @@ export function formatZodIssue(issue: z.core.$ZodIssue): string[] {
 
 /**
  * Check whether a file operation failed because the path does not exist.
+ *
  * @param error the caught value.
  * @returns whether the error says the file does not exist.
  */

@@ -26,7 +26,9 @@ async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promis
         return isHead ? [[name, target] as [string, string]] : [];
     });
 }
-/** Read the upstream or remote default branch.
+/**
+ * Read the upstream or remote default branch.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param cancelSignal stops the Git reads.
  * @returns the branch, or an empty string without one.
@@ -42,7 +44,9 @@ export async function readDefaultRef(repositoryRoot: string, cancelSignal?: Abor
     const preferred = heads.find(([name]) => name === ORIGIN_HEAD) ?? (heads.length === 1 ? heads[0] : undefined);
     return preferred?.[1] ?? '';
 }
-/** Read the merge base between a comparison branch and `HEAD`.
+/**
+ * Read the merge base between a comparison branch and `HEAD`.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param compared the comparison branch.
  * @param cancelSignal stops the Git reads.
@@ -65,6 +69,7 @@ export async function readMergeBase(
 
 /**
  * Read the staged paths, with deletions and both sides of renames, and count paths with unstaged changes.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param cancelSignal stops the Git commands.
  * @returns the staged paths, sorted, and the unstaged count.
@@ -80,6 +85,7 @@ export async function readStagedPaths(repositoryRoot: string, cancelSignal?: Abo
 
 /**
  * Read the files and commits that changed after a ref, for the pull-request form.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param reference the git ref to compare against.
  * @param cancelSignal stops the Git commands.

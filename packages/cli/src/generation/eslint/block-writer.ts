@@ -67,6 +67,7 @@ function formatBlocks(
 
 /**
  * Create the writer for the ESLint blocks of one level and scope.
+ *
  * @param input what the blocks cover, with your own options.
  * @returns the functions that format each ESLint block.
  */

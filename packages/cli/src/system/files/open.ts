@@ -17,6 +17,7 @@ import {
 
 /**
  * Open a reader and writer confined to one root, with paths checked for this system.
+ *
  * @param baseFolder the folder containing every relative path.
  * @returns the disposable file handle.
  */
@@ -82,6 +83,7 @@ export function openFiles(baseFolder: string): Files {
 
 /**
  * Remove empty parent folders left by a removed file, stopping at the root.
+ *
  * @param files the file handle of the root.
  * @param path the removed file.
  */
@@ -94,6 +96,7 @@ export function removeEmptyFolders(files: Files, path: string): void {
 
 /**
  * Visit every entry under a folder, and walk into each one that the visitor picks.
+ *
  * @param files the root.
  * @param start the folder, with forward slashes, or '' for the root itself.
  * @param visit called with the path of each entry; returns whether to walk into it.

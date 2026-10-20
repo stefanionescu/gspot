@@ -212,6 +212,7 @@ async function runCheck(paths: string[], flags: CheckFlags): Promise<CommandResu
 
 /**
  * Register the check command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */

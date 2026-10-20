@@ -12,6 +12,7 @@ import { GROUP_HINT, NEGATED_PATTERN, UNESCAPED_GROUP } from '#cli/config/checks
 
 /**
  * Reports setting paths that match no tracked file or folder.
+ *
  * @param input the settings and tracked files.
  * @returns the findings.
  */

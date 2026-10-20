@@ -144,6 +144,7 @@ const formatSchema = formatFields.extend({
 
 /**
  * Accept a setting value, or a reasoned value with the same value schema.
+ *
  * @param schema the value validator.
  * @param defaultValue the value of an absent key.
  * @param metadata the description of the setting and the change that needs a reason.
@@ -162,6 +163,7 @@ function allowReasonedValue<Output, Input>(
 
 /**
  * Read one value with its required reason.
+ *
  * @param schema the validator of the value.
  * @param metadata the description of the setting and the change that needs a reason.
  * @returns the value read from its strict reasoned value.
@@ -180,6 +182,7 @@ function buildReasonedValueSchema<Output, Input>(
 
 /**
  * Remove optional and default wrappers to inspect the shape of a setting.
+ *
  * @param schema the validator to inspect.
  * @returns the inner validator.
  */

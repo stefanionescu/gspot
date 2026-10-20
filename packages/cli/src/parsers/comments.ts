@@ -181,6 +181,7 @@ async function parseSyntaxComments(grammar: GrammarName, source: string, text: s
 
 /**
  * Read comments in one explicit grammar.
+ *
  * @param grammar the tree-sitter language to use.
  * @param text the source contents.
  * @returns comments in source order.
@@ -193,6 +194,7 @@ export async function parseGrammarComments(grammar: GrammarName, text: string): 
 
 /**
  * Skip a quoted span before looking for comment openers outside it.
+ *
  * @param line the source to scan.
  * @param start the first source offset.
  * @returns the offset after the quoted value.
@@ -208,6 +210,7 @@ export function findQuotedEnd(line: string, start: number): number {
 
 /**
  * Remove only the closing delimiter that matches the comment syntax.
+ *
  * @param text the original comment.
  * @returns comment text with its opener and without its terminator or trailing whitespace.
  */
@@ -219,6 +222,7 @@ export function stripCommentEnd(text: string): string {
 
 /**
  * Read comment text and line locations for suppression discovery.
+ *
  * @param path the file, whose name selects the syntax.
  * @param text the source contents.
  * @returns comments in source order, with whether each occupies its line alone.

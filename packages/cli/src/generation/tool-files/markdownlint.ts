@@ -4,6 +4,7 @@ import { MARKDOWNLINT_RULES } from '#cli/config/generation/tool-files.ts';
 
 /**
  * Build the markdownlint file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Markdown lint rules with the chosen level, indentation, and your own rule options.
  */

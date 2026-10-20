@@ -45,6 +45,7 @@ function formatRuleConfigs(configs: string[]): string {
 
 /**
  * List the plugin rules for the plugin page: the rule, the configs that turn it on, and what it finds.
+ *
  * @returns one row per rule, sorted by name
  */
 export function listPluginRules(): PluginRule[] {
@@ -61,6 +62,7 @@ export function listPluginRules(): PluginRule[] {
 
 /**
  * Build the page of each plugin rule: which configs turn it on, why, what to do, an example, and its options.
+ *
  * @returns the pages, keyed by path inside the reference
  */
 export function buildPluginPages(): Map<string, ReferencePage> {

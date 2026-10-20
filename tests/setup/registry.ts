@@ -17,6 +17,7 @@ import {
 
 /**
  * Pick the publish time that the registry reports for a packed package.
+ *
  * @param name the package name.
  * @returns now for a gspot package, as on release day, so the hold must let it through; an older time for the rest.
  */

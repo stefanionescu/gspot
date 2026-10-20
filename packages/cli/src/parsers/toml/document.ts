@@ -42,6 +42,7 @@ function findTomlTable(
 /**
  * Patch managed tool values, and keep comments on their syntax entries.
  * Text edits keep the order and formatting.
+ *
  * @param original indexed source before edits.
  * @param values the table after the edits.
  * @returns the edited document with its comments.
@@ -101,6 +102,7 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
 
 /**
  * Parses TOML and names the file on invalid syntax.
+ *
  * @param input the file path and TOML text.
  * @returns the parsed table.
  * @throws a file-specific error with the parser failure as its cause.
@@ -115,6 +117,7 @@ function parseTomlFile(input: TomlInput): Record<string, unknown> {
 
 /**
  * Open a TOML file for key edits, and keep its comments and layout.
+ *
  * @param input the file path and TOML text.
  * @returns the editable document.
  */

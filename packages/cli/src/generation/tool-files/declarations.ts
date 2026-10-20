@@ -53,6 +53,7 @@ function listScopeDeclarations(
 
 /**
  * List the tool file declarations that this run writes, with the scope that owns each.
+ *
  * @param session the repository to build for.
  * @returns each needed declaration and its owner.
  */

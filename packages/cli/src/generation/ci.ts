@@ -1,6 +1,4 @@
 // Build readable GitHub workflows and GitLab includes from the checks.
-import type { Node, YAMLMap, YAMLSeq } from 'yaml';
-import { Scalar, Document, stringify } from 'yaml';
 import { quoteArgument } from '#cli/system/text.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { formatHeader } from '#cli/generation/header.ts';
@@ -13,6 +11,7 @@ import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 import { findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
+import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
 
 import {
     CI_PINS,

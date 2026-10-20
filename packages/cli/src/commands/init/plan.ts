@@ -140,6 +140,7 @@ function formatTemplateSection(template: InitPlan['template']): string[] {
 
 /**
  * Build the file writes and integrations that init shows before it asks you to accept.
+ *
  * @param planning the repository facts, answers, and configurations.
  * @param settings the validated gspot.toml and its generated files.
  * @param settings.settings the parsed gspot.toml for file generation.
@@ -203,6 +204,7 @@ function buildInitPlan(
 
 /**
  * Format the plan that init prints before it writes anything.
+ *
  * @param plan the configurations and file changes to preview.
  * @returns the text.
  */
@@ -266,6 +268,7 @@ function formatReplacedFiles(summary: DetectionSummary): string[] {
 
 /**
  * Format the detection header: tracked files, the evidence for each group, scopes, and existing tools.
+ *
  * @param summary what init detected.
  * @returns the text, with a final blank line when the repository has existing tools.
  */

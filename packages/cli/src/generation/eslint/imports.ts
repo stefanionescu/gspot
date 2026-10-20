@@ -74,6 +74,7 @@ function buildImportStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[]): 
 /**
  * Build one relative-import boundary rule from the project folders and aliases.
  * The root and nested rules share the boundary folders and the aliases of their project.
+ *
  * @param scopes the projects and their settings.
  * @param aliases the repository-relative alias targets.
  * @returns the relative-import rule setting with its folders and aliases.
@@ -96,6 +97,7 @@ function buildImportBoundariesRule(
 
 /**
  * Resolve nested project boundaries against the aliases of each project.
+ *
  * @param context the scopes and Node.js script paths to cover.
  * @returns the boundary-rule blocks with the aliases of each project.
  */
@@ -123,6 +125,7 @@ function buildScopeImportBlocks(
 /**
  * Keep the imports of Node scripts runnable: Node needs full file names, and resolves only package.json imports.
  * These blocks come after the style and project blocks, so they win for .mjs, .cjs, and Node shebang files.
+ *
  * @param context the scopes and the Node scripts without a code extension.
  * @returns one block for each project.
  */
@@ -153,6 +156,7 @@ function buildNodeScriptBlocks(context: Pick<EslintContext, 'root' | 'scopes' | 
 /**
  * Turn the ignored folder globs into the patterns that import-x/ignore matches against resolved module paths, so the
  * import rules never parse a gitignored bundle or build output.
+ *
  * @param globs the ignore globs of the ESLint file.
  * @returns a pattern for each ignored folder without other wildcards.
  */

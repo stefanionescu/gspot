@@ -17,6 +17,7 @@ function recordReplacedFile(entry: FoundToolFile, replaced: ReplacedFiles): void
 
 /**
  * Read the tool files of the chosen tools, and sort them into the files init deletes and the files it keeps.
+ *
  * @param repositoryRoot the folder where init reads the originals before it replaces them.
  * @param existingTools the tool files that init found.
  * @param tools what the checks at this level run.

@@ -141,6 +141,7 @@ function readMessageFiles(
 /**
  * Checks the message files in `translations.messages_folder` against the base locale. Each folder of message files, and each
  * namespace of a locale-folder layout, compares with its own base-locale file.
+ *
  * @param input the scope files and translation settings.
  * @returns the findings.
  */

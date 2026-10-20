@@ -2,6 +2,7 @@ import type { readReferenceData } from '#cli/reference.ts';
 
 /**
  * Explain how to raise a limit, with a command, the written TOML, and the finding it accepts.
+ *
  * @param data settings variants from the CLI
  * @returns the opening text of the limits page
  */
@@ -23,6 +24,7 @@ export function formatLimitsGuide(data: ReturnType<typeof readReferenceData>): s
 
 /**
  * Explain the banned naming groups and how to accept one exact name.
+ *
  * @param data settings variants from the CLI
  * @returns the opening text of the naming page
  */

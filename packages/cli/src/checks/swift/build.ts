@@ -103,6 +103,7 @@ function stripMacosPrivatePrefix(path: string): string {
 
 /**
  * Builds the scope and reports the compiler errors.
+ *
  * @param input the scope to build.
  * @returns the findings.
  */
@@ -116,6 +117,7 @@ export async function checkSwiftBuild(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Runs the SwiftLint analyzer rules over the compiler log of the build.
+ *
  * @param input the scope to analyze.
  * @returns the findings.
  */
@@ -140,6 +142,7 @@ export async function checkSwiftlintAnalyze(input: CheckInput): Promise<Finding[
 
 /**
  * Runs Periphery over the project and reports every declaration nothing uses.
+ *
  * @param input the scope to scan.
  * @returns the findings.
  */
@@ -158,6 +161,7 @@ export async function checkSwiftPeriphery(input: CheckInput): Promise<Finding[]>
 
 /**
  * Lists the SwiftLint files a scratch copy keeps: the scope pointer, the tool file, and SwiftLint files in parent folders.
+ *
  * @param input the scope files and tool files.
  * @returns the repository-relative paths, sorted.
  */

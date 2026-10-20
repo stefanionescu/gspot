@@ -3,6 +3,7 @@ import { expect } from 'bun:test';
 
 /**
  * Awaits a promise that must reject with an error.
+ *
  * @param promise what must reject.
  * @returns the message of the error it rejected with.
  */
@@ -18,6 +19,7 @@ export async function captureRejection(promise: Promise<unknown>): Promise<strin
 
 /**
  * An object that must hold these properties, typed as the compared value.
+ *
  * @param shape the properties the compared object must hold.
  * @returns the matcher.
  */
@@ -27,6 +29,7 @@ export function matchFields<T>(shape: NoInfer<Partial<T>>): T {
 
 /**
  * An array that must hold these items, typed as the compared value.
+ *
  * @param items what the compared array must hold.
  * @returns the matcher.
  */
@@ -36,6 +39,7 @@ export function matchItems<T>(items: NoInfer<T[]>): T[] {
 
 /**
  * Text that must hold this part, typed as a string.
+ *
  * @param part the text the compared string must hold.
  * @returns the matcher.
  */

@@ -67,6 +67,7 @@ async function findTreeSyntaxError(
 
 /**
  * Lists the language-tagged code fences of a Markdown file, with line numbers.
+ *
  * @param text the Markdown source.
  * @returns the parsed code fences.
  */
@@ -85,6 +86,7 @@ function parseCodeFences(text: string): FencedBlock[] {
 
 /**
  * Parses language-tagged code fences and reports syntax errors at their Markdown lines.
+ *
  * @param text the Markdown source.
  * @param cache the parsed grammars of the run.
  * @returns one syntax error per invalid code fence.
@@ -124,6 +126,7 @@ async function validateCodeFences(text: string, cache: ParseCache): Promise<Fenc
 
 /**
  * Reports invalid code fences at their error lines.
+ *
  * @param input the scope Markdown files.
  * @returns one finding per invalid code fence.
  */
@@ -148,6 +151,7 @@ export async function checkMarkdownFences(input: CheckInput): Promise<Finding[]>
 
 /**
  * Builds markdownlint-cli2 arguments that keep Markdown file names literal.
+ *
  * @param input the scope Markdown files.
  * @returns the file arguments.
  */

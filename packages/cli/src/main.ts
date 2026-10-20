@@ -32,6 +32,7 @@ function formatArgumentTerm(argument: Argument): string {
 
 /**
  * Build the help of gspot from its commands: their groups, arguments, and summaries, then the fixed footer.
+ *
  * @param program the CLI with every command.
  * @returns the help text.
  */
@@ -55,6 +56,7 @@ function formatProgramHelp(program: Command): string {
 
 /**
  * Build the CLI with every command. Runs and the command reference both use it.
+ *
  * @param onResult writes the command result.
  * @returns the Commander program.
  */
@@ -97,6 +99,7 @@ function buildProgram(onResult: CommandCompletion): Command {
 
 /**
  * Run the CLI with the arguments.
+ *
  * @param commandArguments the arguments after the program name.
  * @returns the exit code.
  */

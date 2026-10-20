@@ -9,6 +9,7 @@ import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/python.ts';
 
 /**
  * Reports hand-kept requirements files and unmanaged pip installs, so pyproject.toml owns every dependency.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */

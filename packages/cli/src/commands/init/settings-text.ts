@@ -50,6 +50,7 @@ function buildOpenapiTables(
 
 /**
  * Choose the CI provider from the existing files and the origin host.
+ *
  * @param repositoryRoot the folder whose origin remote gives the host when no CI files exist.
  * @param existingTools the tool and CI files that init found.
  * @returns the provider to propose, or none when the repository needs no workflow.
@@ -122,6 +123,7 @@ function buildHeadTables(
 
 /**
  * Build the gspot.toml text for a settings draft.
+ *
  * @param draft the settings choices.
  * @param repository the tracked source files.
  * @param manifests the configurations to choose from.
@@ -154,6 +156,7 @@ function buildInitSettings(
 
 /**
  * Draft the settings from the configuration choices and the init answers.
+ *
  * @param selection the configurations and scopes.
  * @param answers the integration choices.
  * @returns the root and scope choices: the answers and the inferred commit scopes.
@@ -172,6 +175,7 @@ function buildSettingsDraft(selection: InitSelection, answers: InitAnswers): Set
 
 /**
  * Read the configuration choices from the draft.
+ *
  * @param draft the choices and the template.
  * @returns the configuration choices for the root and each scope.
  */

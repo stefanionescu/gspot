@@ -50,6 +50,7 @@ function replaceReference(text: string, reference: Scalar): string {
 
 /**
  * Converts self-repository references to local paths for the pinned actionlint parser, preserving offsets.
+ *
  * @param text a workflow or action file.
  * @returns the text with local paths, at the same offsets.
  */
@@ -67,6 +68,7 @@ function prepareActionlintText(text: string): string {
 
 /**
  * Runs actionlint. If a workflow or action uses a $/ reference, checks a scratch copy with that reference changed to ./.
+ *
  * @param session the repository and its tools.
  * @param planned the actionlint check and its files.
  * @returns the check result.

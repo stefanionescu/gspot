@@ -19,6 +19,7 @@ function assertInsideFolder(pattern: string): void {
 /**
  * Makes an empty folder under the system temporary folder that removes itself, with everything in it, when disposed.
  * Use the real system path, which on Windows expands short folder names, as the paths tools report do.
+ *
  * @returns the folder, which the caller disposes, as `using` does.
  */
 export function createScratchFolder(): ScratchFolder {
@@ -33,6 +34,7 @@ export function createScratchFolder(): ScratchFolder {
 
 /**
  * Find the files under the fixed folder of each pattern. Include dot files, and do not open folder links.
+ *
  * @param cwd the folder to scan.
  * @param patterns one glob or several; a leading ! excludes matches.
  * @returns matching paths relative to cwd, each once in scan order.

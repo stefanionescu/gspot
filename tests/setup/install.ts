@@ -116,6 +116,7 @@ async function readToolProjectFiles(
 
 /**
  * Build the install state for a sandbox.
+ *
  * @param session the open sandbox.
  * @param writer holds the repository lock and saves files.
  * @returns the install state.

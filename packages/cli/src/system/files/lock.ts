@@ -61,6 +61,7 @@ function removeStaleLock(bounds: FilesState, path: string, target: string): void
 
 /**
  * Release every lock claimed through this safe folder.
+ *
  * @param bounds the root and its held locks.
  * @returns the paths of released locks for parent-folder cleanup.
  */
@@ -77,6 +78,7 @@ export function releaseLocks(bounds: FilesState): string[] {
 
 /**
  * Take the writer lock at a path. Clear a lock whose holder has exited, and refuse one whose holder still runs.
+ *
  * @param bounds the root, which records the lock it now holds.
  * @param path the root-relative lock file.
  */

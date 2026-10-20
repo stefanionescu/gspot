@@ -23,6 +23,7 @@ import {
 
 /**
  * Read and validate the settings once before a command edits them.
+ *
  * @param cwd the folder where the command starts.
  * @returns the starting state of one edit.
  */
@@ -41,6 +42,7 @@ export function startSettingsEdit(cwd: string): {
 
 /**
  * Validate the configuration names and the scope for add and remove before either command edits a list.
+ *
  * @param options where the command starts, the configurations, and the scope.
  * @returns the validated edit, the lists of that scope, and the shipped manifests.
  */
@@ -71,6 +73,7 @@ export function startConfigurationEdit(options: ConfigurationsOptions): {
 /**
  * Look up a setting in one scope with the configurations that the session selects, including the ones that the
  * files of the repository select.
+ *
  * @param edit the state from before the edit.
  * @param edit.root the repository root.
  * @param edit.input the settings text and table before the edit.

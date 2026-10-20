@@ -45,6 +45,7 @@ function splitPackageManager(field: string | undefined): { tool: string; version
 
 /**
  * Reports a packageManager field that names another version than the mise pin of the same package manager.
+ *
  * @param input the scope and the run cache.
  * @returns a finding when the two versions differ.
  */

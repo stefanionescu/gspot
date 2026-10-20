@@ -11,6 +11,7 @@ import { CONVENTION_SOURCES } from '#cli/checks/structure/convention-sources.ts'
 
 /**
  * Reports environment reads outside the environment readers.
+ *
  * @param input the scope sources and roles.
  * @returns one finding per reading line.
  */

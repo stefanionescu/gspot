@@ -172,6 +172,7 @@ export function selectCheckFiles(
 
 /**
  * Get the name that a tool-file placeholder uses for a tool file.
+ *
  * @param file the path that the manifest names.
  * @returns the path without its extensions.
  */

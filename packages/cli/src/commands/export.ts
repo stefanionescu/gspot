@@ -19,6 +19,7 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 
 /**
  * Write a template from the settings of this repository.
+ *
  * @param options where to write the template.
  * @param options.cwd the folder where the command runs.
  * @param options.file the template path, relative to cwd.
@@ -65,6 +66,7 @@ async function runExportCommand(options: ExportOptions): Promise<CommandResult<E
 
 /**
  * Register the export command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */

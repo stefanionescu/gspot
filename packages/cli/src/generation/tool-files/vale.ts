@@ -34,6 +34,7 @@ function listExceptions(prose: ProseInputs): string[] {
 }
 /**
  * Build the heading or title capitalization style declared by this file.
+ *
  * @param context the tool file to build.
  * @returns the Vale heading capitalization rule.
  */
@@ -54,6 +55,7 @@ function buildCapitalizationStyle(context: ToolFileContext): string {
 
 /**
  * Build the Vale acronyms style from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Vale acronym rule with the allowed acronyms.
  */
@@ -72,6 +74,7 @@ function buildAcronymsStyle(context: ToolFileContext): string {
 }
 /**
  * Name the release archive of one upstream style, so Vale installs that release and not the latest.
+ *
  * @param name the style.
  * @returns the archive address.
  */
@@ -82,6 +85,7 @@ function formatPackageUrl(name: (typeof VALE_PACKAGES)[number]): string {
 
 /**
  * Build the Vale INI file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Vale style locations and rule levels for the prose checks.
  */
@@ -120,6 +124,7 @@ function buildValeIniFile(context: ToolFileContext): string {
 }
 /**
  * Build the Vale alt text style from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Vale alternative-text rule.
  */
@@ -137,6 +142,7 @@ function buildAltTextStyle(context: ToolFileContext): string {
 }
 /**
  * Build the Vale banned headings style from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Vale rule for the banned headings.
  */
@@ -156,6 +162,7 @@ function buildBannedHeadingsStyle(context: ToolFileContext): string {
 }
 /**
  * Build the Vale list item style from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Vale list-item punctuation rule.
  */
@@ -170,6 +177,7 @@ function buildListItemStyle(context: ToolFileContext): string {
 }
 /**
  * Build the Vale paragraph length style from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Vale paragraph length rule with the configured ceiling.
  */
@@ -184,6 +192,7 @@ function buildParagraphLengthStyle(context: ToolFileContext): string {
 }
 /**
  * Build the Vale sentence length style from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Vale sentence length rule with the configured ceiling.
  */
@@ -198,6 +207,7 @@ function buildSentenceLengthStyle(context: ToolFileContext): string {
 }
 /**
  * Build the Vale possessives style from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Vale possessive-form rule.
  */
@@ -214,6 +224,7 @@ function buildPossessivesStyle(context: ToolFileContext): string {
 }
 /**
  * Build the Vale accepted words file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the accepted product names and your own allowed words, one per line.
  */
@@ -242,6 +253,7 @@ function buildProseInputs(session: Session, manifests: Manifest[]): ProseInputs 
 
 /**
  * List the product names of the tools and configurations.
+ *
  * @param session the repository and its tools.
  * @returns each tool name and allowed product word once, for the Vale vocabulary.
  */

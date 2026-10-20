@@ -12,6 +12,7 @@ import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/packed-san
 
 /**
  * Run the installed CLI on one sample and parse its report.
+ *
  * @param installation the packed CLI to run.
  * @param options the sandbox folder and environment.
  * @param check the sample, its fix, and the findings to expect.

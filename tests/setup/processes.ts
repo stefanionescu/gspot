@@ -17,6 +17,7 @@ let timeoutAt: number | undefined;
 
 /**
  * Limit a child command to the time the test has left, and build the text a timeout error shows.
+ *
  * @param command the child executable and arguments.
  * @param options how to run it, including its own time limit.
  * @returns the limited options and text that names the command.
@@ -39,6 +40,7 @@ function prepareCommand(
 
 /**
  * Open one test's timeout.
+ *
  * @returns a disposable that restores the previous timeout.
  */
 function startTestTimeout(): Disposable {
@@ -68,6 +70,7 @@ function buildTimeoutError(
 
 /**
  * Run a command within its requested limit and the remaining test timeout.
+ *
  * @param command the executable and its arguments.
  * @param options the subprocess environment and working directory.
  * @returns the captured subprocess result.
@@ -82,6 +85,7 @@ async function runCommand(command: readonly string[], options: AsyncSpawnOptions
 
 /**
  * Run a synchronous command within the remaining test timeout.
+ *
  * @param command the executable and its arguments.
  * @param options the working directory and environment.
  * @returns captured output and process status.
@@ -96,6 +100,7 @@ function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptio
 
 /**
  * Wait within the remaining test time, then kill a child that remains alive.
+ *
  * @param pid child that the test started.
  */
 async function waitForExit(pid: number): Promise<void> {
@@ -170,6 +175,7 @@ export {
 
 /**
  * Make executable lookup return one path, or the path a function picks for each name.
+ *
  * @param path the path, or a function of the name; when the function gives undefined, the real lookup runs.
  * @returns the mock.
  */

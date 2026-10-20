@@ -18,6 +18,7 @@ function formatUncheckedKind(file: TrackedFile): string | undefined {
 
 /**
  * Explain one file.
+ *
  * @param session the configurations, files, and ignores of this run.
  * @param file the tracked path to explain.
  * @returns the configurations, checks, and ignores for the file.
@@ -70,6 +71,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
 
 /**
  * Format the file report as text.
+ *
  * @param report the kind, checks, and ignores of the file.
  * @returns the text for stdout.
  */
@@ -97,6 +99,7 @@ function formatPathReport(report: PathExplanation): string {
 
 /**
  * Explain a repository file or a path that the subject names.
+ *
  * @param session the repository, or undefined outside a configured one.
  * @param subject the file path, or what else the user typed.
  * @returns the file explanation, or undefined for another subject.

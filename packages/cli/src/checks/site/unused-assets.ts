@@ -9,6 +9,7 @@ import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 
 /**
  * Reports each asset that no text file in the scope or the index names.
+ *
  * @param input the scope files and the tracked files.
  * @returns the findings.
  */

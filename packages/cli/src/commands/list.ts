@@ -84,6 +84,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
 
 /**
  * List every setting for each scope, and each extra tool options table that you wrote.
+ *
  * @param settings the parsed gspot.toml.
  * @param scopes the settings that apply in each scope.
  * @returns the rows and the extra tables.
@@ -129,6 +130,7 @@ function formatCheckStatus(check: PlannedCheck | undefined): string {
 
 /**
  * Register the list command. It runs no checks and changes no files.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
@@ -148,6 +150,7 @@ function registerList(program: Command, onResult: CommandCompletion): void {
 
 /**
  * Run the list command and return its output.
+ *
  * @param cwd the folder where the command starts.
  * @param kind whether to list configurations or settings.
  * @returns the list and its exit code.

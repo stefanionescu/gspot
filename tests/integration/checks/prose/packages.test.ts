@@ -12,6 +12,7 @@ const installedSandbox = shareProseSandbox();
 
 /**
  * Add a file of your own and an authored file inside the Google style to the installed sandbox.
+ *
  * @param sandbox the installed sandbox
  * @returns the change, undone when disposed
  */

@@ -46,6 +46,7 @@ function listUnexplainedSkips(root: Node, lines: string[]): Node[] {
 
 /**
  * Reports each skipped test without a reason, and each unavailable declaration without an explanation.
+ *
  * @param input the scope Swift test files.
  * @returns the findings.
  */

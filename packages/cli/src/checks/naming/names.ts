@@ -218,6 +218,7 @@ function checkCallbackVerb(context: NamingContext, parts: string[]) {
 
 /**
  * Finds the first part that appears twice.
+ *
  * @param parts ordered words and digit groups from one declared name.
  * @returns the repeated part, or undefined.
  */
@@ -232,6 +233,7 @@ function findRepeatedPart(parts: string[]): string | undefined {
 
 /**
  * Selects the path overrides that apply to an identifier.
+ *
  * @param settings what the scope allows and bans.
  * @param identifier the name to match.
  * @returns the overrides, in settings order.
@@ -248,6 +250,7 @@ function selectOverrides(settings: NamingSettings, identifier: Identifier): Comp
 
 /**
  * Computes the limits and cases for an identifier after its path overrides.
+ *
  * @param settings what the scope allows and bans.
  * @param identifier the name to check.
  * @param overrides the matching `[[naming.override]]` records.
@@ -274,6 +277,7 @@ function listCaseNames(base: CategoryLimits, identifier: Identifier, overrides: 
 
 /**
  * Checks an identifier against the naming settings, unless a path override allows it.
+ *
  * @param identifier the name to check.
  * @param inputs the check and its naming settings.
  * @returns the findings, empty when the name passes.

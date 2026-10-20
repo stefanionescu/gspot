@@ -11,6 +11,7 @@ import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 
 /**
  * Finds the folder that holds the project bundle.
+ *
  * @param projectFile the path of the project.pbxproj file.
  * @returns the folder with a trailing slash, or '' at the root.
  */
@@ -21,6 +22,7 @@ function getProjectFolder(projectFile: string): string {
 
 /**
  * Reports Swift sources that no Xcode target holds.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */

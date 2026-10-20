@@ -104,6 +104,7 @@ function classifyManagedDocument(root: string, entry: ListedFile, prefix: Buffer
 
 /**
  * Classify from declarations, attributes, binary content, managed paths, banners, then vendored folders.
+ *
  * @param file what to classify.
  * @param file.root the repository folder.
  * @param file.entry the tracked listing item.
@@ -166,6 +167,7 @@ function stripTrailingVersion(word: string): string {
 
 /**
  * Resolve the pointer paths that tool files generate outside the tool project.
+ *
  * @param path the scope folder.
  * @param files the tool file declarations.
  * @returns the pointer paths and declared folder patterns.
@@ -181,6 +183,7 @@ function listPointerDeclarations(path: string, files: ToolFileDeclaration[]): st
 
 /**
  * Detect the generated gspot marker in the opening comment lines.
+ *
  * @param text the start of a file.
  * @returns whether the text carries the generated marker.
  */
@@ -191,6 +194,7 @@ function hasGeneratedHeader(text: string): boolean {
 
 /**
  * Read the first executable, skipping env and its -S argument when present.
+ *
  * @param firstLine the shebang candidate.
  * @returns the executable basename, or undefined without an executable shebang.
  */
@@ -206,6 +210,7 @@ function parseShebang(firstLine: string): string | undefined {
 
 /**
  * Read the declared consumers of one repository lockfile.
+ *
  * @param path the repository-relative file.
  * @returns its metadata, or undefined for an unsupported filename.
  */
@@ -215,6 +220,7 @@ function findLockfile(path: string): Lockfile | undefined {
 
 /**
  * Find the kind of a tracked file and where the kind comes from.
+ *
  * @param repositoryRoot the base folder for resolving tracked entries.
  * @param entry the tracked listing item.
  * @param prefix the first bytes of the file.
@@ -241,6 +247,7 @@ function classifyFile(
 
 /**
  * Tag one file. A binary file keeps its path tags and gets no content tags.
+ *
  * @param entry the tracked listing item.
  * @param prefix the captured first bytes.
  * @returns the path and content tags, and whether the file contains binary bytes.
@@ -268,6 +275,7 @@ function tagFile(entry: ListedFile, prefix: Buffer): Tagged {
 
 /**
  * List the extensions whose inventory tags include any of the tags.
+ *
  * @param tags the language or content labels to find.
  * @returns extensions in inventory order.
  */
@@ -279,6 +287,7 @@ function listTaggedExtensions(...tags: string[]): string[] {
 
 /**
  * Resolve generated paths of the configurations each scope selects.
+ *
  * @param selected the manifests of each written scope.
  * @returns file declarations, with the configuration that declares each.
  */
@@ -307,6 +316,7 @@ function listFileDeclarations(selected: Map<string, Manifest[]>): FileDeclaratio
 
 /**
  * Check whether a path sits in a gspot tool project.
+ *
  * @param path the repository-relative file.
  * @returns whether a .gspot folder contains the file.
  */
@@ -316,6 +326,7 @@ function isInGspotFolder(path: string): boolean {
 
 /**
  * Check whether a path sits in a tool project or in installed npm dependencies.
+ *
  * @param path the repository-relative file.
  * @returns whether project discovery must leave out the path.
  */
@@ -325,6 +336,7 @@ function isInstalledToolPath(path: string): boolean {
 
 /**
  * Check whether a path lies inside an installed dependency folder, such as node_modules.
+ *
  * @param path the repository-relative path.
  * @returns whether a dependency folder holds it.
  */

@@ -5,6 +5,7 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
 
 /**
  * Apply the typed presets and the project files.
+ *
  * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */

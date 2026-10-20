@@ -52,6 +52,7 @@ const READERS: Readonly<Record<(typeof IMPORTER_LOCKFILES)[number], (text: strin
 
 /**
  * Read the dependency specifiers that a lockfile records for each workspace.
+ *
  * @param lockfile the lockfile name, which selects its format.
  * @param text the lockfile contents.
  * @returns the specifiers by dependency name, for each workspace folder relative to the lockfile, '' for its own.

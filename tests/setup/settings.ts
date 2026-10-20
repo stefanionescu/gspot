@@ -8,6 +8,7 @@ import type { WrittenSettings } from '#cli/types/settings/file.ts';
 
 /**
  * Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
+ *
  * @param configurations what the sandbox turns on.
  * @param options extra settings to write.
  * @param options.level `recommended` or `all`.
@@ -46,6 +47,7 @@ export function buildSettingsText(
 
 /**
  * Parses settings text and returns its errors, or none when it parses.
+ *
  * @param text gspot.toml content to parse.
  * @param repositoryRoot folder the settings describe, for errors that depend on its files.
  * @returns the error messages.
@@ -62,6 +64,7 @@ export function validateSettingsText(text: string, repositoryRoot?: string): str
 
 /**
  * Build a command check that prints each path it gets and fails.
+ *
  * @param options which files and stage the check covers.
  * @returns the command check record.
  */

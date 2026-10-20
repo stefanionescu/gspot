@@ -36,6 +36,7 @@ function normalizeOverrides(entries: ExtraOverride<Record<string, unknown>>[]): 
 
 /**
  * Collect the root and nested formatting settings with their selectors.
+ *
  * @param settings the parsed gspot.toml.
  * @returns the root and nested formatting overrides with their file selectors.
  */
@@ -124,6 +125,7 @@ function buildPrettierOptions(input: PrettierInput): Record<string, unknown> {
 
 /**
  * Build the Prettier tool file that the root pointer loads.
+ *
  * @param context the tool file to build.
  * @returns the formatter options, plugins, and scope overrides.
  */

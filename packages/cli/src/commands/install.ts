@@ -14,6 +14,7 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 
 /**
  * Install the tools, and set the Git hooks as the settings ask.
+ *
  * @param cwd the folder where the command starts.
  * @param cancelSignal stops the install processes.
  * @returns the install result.
@@ -36,6 +37,7 @@ async function runInstallCommand(cwd: string, cancelSignal?: AbortSignal): Promi
 
 /**
  * Register the install command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */

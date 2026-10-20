@@ -138,6 +138,7 @@ function isRootPointerShared(selected: ToolFileSelection, declarations: ToolFile
 
 /**
  * Build the tool files. Scopes with the same text share one file, and every pointer resolves to its path.
+ *
  * @param session the repository to build for.
  * @returns the tool files, and the path that each scope uses.
  */
@@ -152,6 +153,7 @@ function buildToolFiles(session: Session): ToolFileGeneration {
 /**
  * Name the path of a tool file that a scope writes with its own text: a root file in the scope folder, and any other
  * tool file in scopes/<scope>/ of the folder of its configuration.
+ *
  * @param toolFile the declaration.
  * @param scope the folder of the scope.
  * @returns the repository-relative path.

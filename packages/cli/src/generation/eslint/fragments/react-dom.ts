@@ -4,6 +4,7 @@ import { type EslintContext, type EslintFragment, type FragmentPresets } from '#
 
 /**
  * Let a scrollable region take tabIndex={0}, so that a keyboard can scroll it; the preset allows only tab panels.
+ *
  * @param rules the rules of a jsx-a11y preset block.
  * @returns the rules, with the region role allowed in each tabIndex rule.
  */
@@ -19,6 +20,7 @@ function allowFocusableRegions(rules: Record<string, unknown>): Record<string, u
 
 /**
  * Apply the accessibility lint rules to the React DOM files.
+ *
  * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */

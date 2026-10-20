@@ -37,6 +37,7 @@ const WORKSPACE_FILES_MEMO = { create: () => new Map<string, string[]>() };
 
 /**
  * Select the declared workspace sources from the inventory of this run.
+ *
  * @param source the base folder for resolving inventoried package and compiler files.
  * @param scope the owning project.
  * @param files the source inventory.
@@ -105,6 +106,7 @@ function listWorkspaceDependencyFiles(source: string, scope: string, files: Trac
 
 /**
  * List the folders of the npm workspaces that the repository declares, without the root.
+ *
  * @param repositoryRoot the boundary that declared workspace packages must remain inside.
  * @returns the root-relative folders.
  */
@@ -118,6 +120,7 @@ export function listWorkspaceFolders(repositoryRoot: string): string[] {
 
 /**
  * Select the existing files that package.json files declare for publication.
+ *
  * @param repositoryRoot the base folder for the package.json files and their patterns.
  * @param packageJsonPaths the repository-relative package.json files to read.
  * @returns the repository-relative package files.
@@ -137,6 +140,7 @@ export function listPackageFiles(repositoryRoot: string, packageJsonPaths: strin
 
 /**
  * Read and validate a package.json outside the tool project, without its boundary.
+ *
  * @param path the absolute package.json file.
  * @returns the package metadata, or undefined when the file does not exist.
  */
@@ -153,6 +157,7 @@ export function readHostPackage(path: string): PackageJson | undefined {
 
 /**
  * Read and validate installed metadata through the tool-project boundary.
+ *
  * @param files the confined file handle of the tool project.
  * @param repositoryRoot the boundary for resolving and validating installed package.json paths.
  * @param path the absolute package.json file.
@@ -173,6 +178,7 @@ export function readToolProjectPackage(files: Files, repositoryRoot: string, pat
 
 /**
  * Read the path and version of an installed package, hoisted or not, as its dependency file resolves it.
+ *
  * @param repositoryRoot the base folder for resolving the dependency file.
  * @param packageJsonPath the repository-relative package.json used as the module-resolution base.
  * @param name the package to resolve through the dependency file.

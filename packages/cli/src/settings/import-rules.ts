@@ -3,6 +3,7 @@ import type { ImportRule } from '#cli/types/settings/imports.ts';
 /**
  * List the import rules whose files the files of one rule may import: the rule itself, and either its can_import list
  * or every rule above it with its can_also_import list.
+ *
  * @param rules every [[import_rule]] record, in order.
  * @param index the position of the importing rule.
  * @returns the allowed rule names, the importing rule first.
@@ -15,6 +16,7 @@ export function listAllowedRules(rules: ImportRule[], index: number): string[] {
 
 /**
  * Explain an import that an import rule refuses.
+ *
  * @param allowed the names from listAllowedRules, the importing rule first.
  * @param imported the import as written.
  * @param owner the import rule of the imported file, as its category, such as import-rule:core.

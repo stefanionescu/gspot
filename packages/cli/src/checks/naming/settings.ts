@@ -79,6 +79,7 @@ function buildLimitsFor(shipped: NamingDefaults, view: Pick<ScopeView, 'options'
 
 /**
  * Splits banned words into parts.
+ *
  * @param terms the banned words as written.
  * @param origin the setting and group that the words come from.
  * @returns the split words, without empty ones.
@@ -94,6 +95,7 @@ function compileBannedWords(
 
 /**
  * Reads the naming settings of a scope: the shipped lists plus the repository additions, exemptions, and limits.
+ *
  * @param input the scope and settings file.
  * @returns the word lists, exemptions, and limits.
  */
@@ -152,6 +154,7 @@ export function readNamingSettings(
 
 /**
  * Splits a name into lowercase parts: `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
+ *
  * @param name the identifier.
  * @returns the lowercase words and digit groups.
  */

@@ -47,6 +47,7 @@ function findHighestParameter(node: Node): number {
 
 /**
  * Read the syntax of each function, without nested function bodies.
+ *
  * @param syntaxRoot the parsed Bash root.
  * @param codeText source with comments masked at their original positions.
  * @returns function metrics and source spans.
@@ -268,6 +269,7 @@ async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCac
 
 /**
  * Parse comments, function ranges, calls, parameter reads, and file content through one Bash syntax tree.
+ *
  * @param text the exact source.
  * @param cache the parser state for this run.
  * @returns syntax data that stays valid after the tree goes away.
@@ -299,6 +301,7 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
 
 /**
  * Select non-blank code lines after the parser has masked comments.
+ *
  * @param lines the masked code, split by row.
  * @returns trimmed code and one-based positions.
  */
@@ -311,6 +314,7 @@ export function listCodeLines(lines: string[]): NumberedLine[] {
 
 /**
  * Read expansions of the environment names that the environment readers declare.
+ *
  * @param syntaxRoot the parsed Bash source.
  * @param readerVariables the variables declared by environment readers.
  * @returns the environment reads and their source positions.
@@ -329,6 +333,7 @@ export function readBashEnvironment(syntaxRoot: Node, readerVariables: ReadonlyS
 
 /**
  * Find the function that contains a Bash syntax node.
+ *
  * @param node the syntax point to start from.
  * @returns the containing function, or undefined outside a function.
  */

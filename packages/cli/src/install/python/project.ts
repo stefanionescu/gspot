@@ -243,6 +243,7 @@ function buildUvRunCommand(selection: ScopeSelection, scopeRoot: string, command
 
 /**
  * Check whether an error comes from the TOML parser with a syntax location.
+ *
  * @param error the failed lockfile parse.
  * @returns whether the failure reports a TOML syntax location.
  */

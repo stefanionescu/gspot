@@ -55,6 +55,7 @@ function buildPushReport(selected: PushSelection, revisions: PushReport['revisio
 
 /**
  * Check each revision that the pre-push input names, each in a scratch copy.
+ *
  * @param repositoryRoot the working tree that gives the settings and gets the push report.
  * @param options the parsed flags, with the pre-push input.
  * @param signal stops the run.

@@ -3,6 +3,7 @@ import { LEVEL_DESCRIPTIONS } from '../config/reference.ts';
 
 /**
  * Describe each level, count its shipped checks, and list the tools it adds.
+ *
  * @returns one row for each level
  */
 export function buildLevelRows(): { level: string; description: string; count: number; tools: string }[] {

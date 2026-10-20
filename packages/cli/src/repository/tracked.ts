@@ -126,6 +126,7 @@ async function listGitFiles(
 
 /**
  * Read a Git index once for paths, executable bits, and gitlinks.
+ *
  * @param repositoryRoot the folder where Git runs.
  * @param cancelSignal stops the command.
  * @returns validated entries, retaining stages of conflicted working files.
@@ -137,6 +138,7 @@ export async function readIndexEntries(repositoryRoot: string, cancelSignal?: Ab
 
 /**
  * Find gitlinks without opening submodule folders or reading their settings.
+ *
  * @param entries the shared index listing.
  * @returns sorted, unique submodule paths.
  */

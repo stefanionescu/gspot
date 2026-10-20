@@ -14,6 +14,7 @@ import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/command
 
 /**
  * Edit settings, check them, and write them and their generated files. Installs nothing.
+ *
  * @param repositoryRoot the folder where gspot writes settings and generated files.
  * @param options the settings edit and its summary
  * @returns the apply report and whether the written settings changed
@@ -49,6 +50,7 @@ async function saveSettings(repositoryRoot: string, options: SaveSettingsOptions
 
 /**
  * Say that the generated files need no change.
+ *
  * @param count how many files gspot generates.
  * @returns the sentence, with the verb agreeing with the count.
  */
@@ -58,6 +60,7 @@ function formatUpToDate(count: number): string {
 
 /**
  * Format generated file changes and notes for command output.
+ *
  * @param report the applied file changes and notes.
  * @returns the report text.
  */

@@ -156,6 +156,7 @@ function findTagEvidence(detect: Manifest['detect'], contents: ScopeContents): D
 
 /**
  * Propose configurations from the files and the dependencies, with the evidence for each.
+ *
  * @param repositoryRoot the folder to read.
  * @param files the tracked inventory.
  * @param manifests every configuration manifest.
@@ -185,6 +186,7 @@ export function detectConfigurations(
 
 /**
  * Select the conditions that the file and dependency evidence meets.
+ *
  * @param conditions the detection rules of the manifests.
  * @param files the repository source inventory.
  * @param dependencyFiles the parsed package declarations.

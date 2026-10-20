@@ -6,6 +6,7 @@ import { type SemgrepDocument, type ToolFileContext } from '#cli/types/generatio
 
 /**
  * Build the Semgrep pack with its dependency and scope paths.
+ *
  * @param context the tool file to build.
  * @returns the Semgrep rules with paths relative to the tool file.
  */

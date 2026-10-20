@@ -11,6 +11,7 @@ import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/edit-sett
 
 /**
  * Register the unignore command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
@@ -69,6 +70,7 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
 
 /**
  * Remove the matching ignores or paths, and keep the other records.
+ *
  * @param options the check, the lint rule, and the paths to match.
  * @returns the edit result, and any ignore that still covers every path.
  */

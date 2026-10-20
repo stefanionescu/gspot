@@ -40,6 +40,7 @@ function checkTool(
 
 /**
  * Runs a check tool with the tool time limit and classifies its process failure.
+ *
  * @param commandArguments the executable and expanded arguments.
  * @param options how to start the process.
  * @param view the scope settings.
@@ -58,6 +59,7 @@ export async function runPlannedTool(
 
 /**
  * Finds the executable of a declared tool, or why it cannot run.
+ *
  * @param session the repository and tool paths.
  * @param cwd the working folder.
  * @param tool the declaration with its version pin.
@@ -75,6 +77,7 @@ export function findTool(
 
 /**
  * Add the folders of installed companion tools to the process `PATH`, also in a scratch copy.
+ *
  * @param input the repository and manifests.
  * @param names the companion tools to add.
  * @param env variables for the tool process.
@@ -98,6 +101,7 @@ export function buildCompanionEnvironment(
 
 /**
  * Runs the tool of a check with the tool time limit and failure handling.
+ *
  * @param input the check and scope.
  * @param command the executable name and arguments.
  * @param options how to start the process.

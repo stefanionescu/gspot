@@ -17,6 +17,7 @@ function computeArgumentSize(argument: string, platform: NodeJS.Platform): numbe
 
 /**
  * Splits a command into runs that fit the system argument limit.
+ *
  * @param planned the check to run.
  * @param invocation what to run.
  * @param invocation.session the repository and its tools.
@@ -49,6 +50,7 @@ export function buildInvocations(
 
 /**
  * Splits file arguments while reserving space for the executable and fixed arguments.
+ *
  * @param files the paths to split.
  * @param fixed the executable and arguments outside the file list.
  * @param platform the system that runs the command.

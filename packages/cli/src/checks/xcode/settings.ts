@@ -7,6 +7,7 @@ import { PLIST_KEY, PLIST_SUFFIX, ARBITRARY_LOADS, ENTITLEMENTS_SUFFIX } from '#
 
 /**
  * Reports each entitlement outside xcode.allowed_entitlements, which planning requires.
+ *
  * @param input the scope files and allowed entitlements.
  * @returns the findings.
  */
@@ -32,6 +33,7 @@ export function checkXcodeEntitlements(input: CheckInput): Finding[] {
 
 /**
  * Reports each plist that turns App Transport Security off for every host.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */

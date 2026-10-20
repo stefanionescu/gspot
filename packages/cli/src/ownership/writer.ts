@@ -7,6 +7,7 @@ import { openFiles, removeEmptyFolders } from '#cli/system/files/open.ts';
 
 /**
  * Explain which files need review before gspot replaces them.
+ *
  * @param paths the files with content that gspot did not write.
  * @returns the refusal.
  */
@@ -30,6 +31,7 @@ function writeBatch(writer: Writer, plans: WritePlan[]): void {
 
 /**
  * Take the repository writer lock until disposal.
+ *
  * @param repositoryRoot the boundary for confined writes and the writer lock.
  * @returns the locked file writer.
  */
@@ -43,6 +45,7 @@ export function openWriter(repositoryRoot: string): Writer {
 
 /**
  * Validate all destinations and write the changed plans under one lock.
+ *
  * @param writer the locked repository handle.
  * @param plans one write or removal for each file.
  */

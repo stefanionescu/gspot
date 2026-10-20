@@ -4,6 +4,7 @@ import { NPMRC_LIST_SUFFIX, NPMRC_COMMENT_MARKS } from '#cli/config/parsers/npmr
 
 /**
  * Split one .npmrc line into its key and value.
+ *
  * @param line the text to split.
  * @returns the key and value, or undefined for a comment or a line without `=`.
  */
@@ -20,6 +21,7 @@ function readLine(line: string): { key: string; value: string } | undefined {
 
 /**
  * Read the one key that a flat .npmrc key path names.
+ *
  * @param path where the file sits, for the error message.
  * @param keys the requested key path.
  * @returns the single key name.
@@ -32,6 +34,7 @@ function readFlatKey(path: string, keys: KeyPath): string {
 
 /**
  * Open an .npmrc file for key edits. Lines with other keys, comments, and tokens stay as written.
+ *
  * @param path where the file sits, for the error message.
  * @param source the .npmrc text.
  * @returns the editable file. A key on several lines reads as a list.

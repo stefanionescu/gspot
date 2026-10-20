@@ -136,6 +136,7 @@ function checkBeforeRun(
 
 /**
  * Runs the declared generator in a scratch copy and reports missing or changed generator output.
+ *
  * @param input the generator check and its scope.
  * @returns one finding per missing or stale file.
  */

@@ -27,6 +27,7 @@ const installedSandbox = registerSharedSandbox({
 
 /**
  * Apply the settings in the shared sandbox, then run Stylelint, which must fail.
+ *
  * @param sandboxRoot the folder of the shared sandbox.
  * @returns the report of the failed run.
  */

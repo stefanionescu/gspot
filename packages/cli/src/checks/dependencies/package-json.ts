@@ -15,6 +15,7 @@ const packageJsonSchema = z.looseObject({
 
 /**
  * Read a package.json of the repository.
+ *
  * @param input the run cache.
  * @param path the repository-relative path of the package.json.
  * @returns the declared fields, or undefined when the file does not exist.
@@ -26,6 +27,7 @@ export function readPackageFields(input: Pick<CheckInput, 'reads'>, path: string
 
 /**
  * Read the specifier of each dependency that a package.json declares for an install.
+ *
  * @param input the run cache.
  * @param path the repository-relative path of the package.json.
  * @returns the specifiers by name, or undefined when the file does not exist.

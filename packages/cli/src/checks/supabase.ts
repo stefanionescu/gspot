@@ -59,6 +59,7 @@ function parseDenoCheckError(input: CheckInput, folder: string, stderr: string):
 
 /**
  * Parses the Supabase config.toml of a scope.
+ *
  * @param input the scope to read.
  * @returns the parsed file, its parse error, or undefined without a file.
  */
@@ -104,6 +105,7 @@ const denoLintReportSchema = z.object({
 /**
  * Lists the entry file of each edge function: the first index file in each folder right under the functions folder,
  * except shared folders.
+ *
  * @param input the scope files and settings.
  * @returns the entry file paths, repository-relative.
  */
@@ -126,6 +128,7 @@ function listFunctionEntries(input: CheckInput): string[] {
 
 /**
  * Reports each storage bucket that no migration policy on storage.objects names.
+ *
  * @param input the scope with config.toml and migrations.
  * @returns the findings.
  */
@@ -166,6 +169,7 @@ export async function checkSupabaseStoragePolicies(input: CheckInput): Promise<F
 
 /**
  * Runs deno lint on each edge function.
+ *
  * @param input the scope files to lint.
  * @returns the findings.
  */
@@ -212,6 +216,7 @@ export async function checkSupabaseDenoLint(input: CheckInput): Promise<Finding[
 
 /**
  * Reports the first type error of each edge function, from deno check on its entry file.
+ *
  * @param input the scope files to check.
  * @returns the findings.
  */
@@ -234,6 +239,7 @@ export async function checkSupabaseDeno(input: CheckInput): Promise<Finding[]> {
 
 /**
  * Reports privileged Supabase keys outside edge functions and test files.
+ *
  * @param input the scope files and allowed paths.
  * @returns the findings.
  */

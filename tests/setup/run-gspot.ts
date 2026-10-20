@@ -24,6 +24,7 @@ export const CLI_MAIN = join(CLI_SOURCE_PATH, 'main.ts');
 
 /**
  * Run a command through the CLI program and return its result before any terminal output.
+ *
  * @param cwd the sandbox in which the command starts.
  * @param commandArguments everything after gspot.
  * @returns the command result.
@@ -46,6 +47,7 @@ export async function runRegisteredCommand(cwd: string, commandArguments: readon
 
 /**
  * Runs gspot in this process over a folder with color off and CI set, capturing what it writes.
+ *
  * @param cwd the sandbox.
  * @param commandArguments everything after gspot.
  * @param environment extra variables, restored afterwards.
@@ -97,6 +99,7 @@ export async function runGspot(
 
 /**
  * Run a check in this process and parse its JSON report. The result keeps the exit code and both streams.
+ *
  * @param cwd the sandbox.
  * @param commandArguments a full check call, with --json.
  * @param environment extra variables.
@@ -113,6 +116,7 @@ export async function checkReport(
 
 /**
  * Run gspot as a child process in a folder with color off and CI set.
+ *
  * @param cwd the sandbox.
  * @param commandArguments everything after gspot.
  * @param environment extra variables for the child.

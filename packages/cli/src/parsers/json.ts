@@ -12,6 +12,7 @@ export function parseJsonFile(path: string, source: string): Record<string, unkn
 export function parseJsonFile<Value>(path: string, source: string, schema: z.ZodType<Value>): Value;
 /**
  * Read a JSON object, and validate it against the schema, if any.
+ *
  * @param path the repository-relative file.
  * @param source the file text.
  * @param schema the shape to check.
@@ -29,6 +30,7 @@ export function parseJsonFile(path: string, source: string, schema?: z.ZodType):
 
 /**
  * Parse and validate a source JSON document before a check reads its fields.
+ *
  * @param text the JSON source.
  * @param schema the fields and constraints to validate.
  * @returns the validated value, or a parse error.
@@ -47,6 +49,7 @@ export function parseJsonResult<T>(text: string, schema: z.ZodType<T>): Parsed<T
 
 /**
  * Open a JSON file to edit shared fields, and leave other content as written.
+ *
  * @param path the file that syntax and edit errors name.
  * @param source the complete JSON or JSON-with-comments text.
  * @returns the editable document.
@@ -69,6 +72,7 @@ export function openJsonFile(path: string, source: string): EditableFile {
 
 /**
  * Parse JSON with comments and trailing commas, and refuse partial results.
+ *
  * @param text the source to parse.
  * @returns the parsed value.
  * @throws when the text does not parse.

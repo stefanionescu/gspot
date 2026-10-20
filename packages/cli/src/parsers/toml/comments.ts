@@ -55,6 +55,7 @@ function listNestedNodes(node: TomlValue, path: KeyPath): TomlSyntax['pathNodes'
 
 /**
  * Find the key, header, or item that an inline or adjacent leading comment describes.
+ *
  * @param syntax the indexed document.
  * @param comment a concrete `#` token.
  * @returns its syntax entry, or no entry for a separate comment.
@@ -79,6 +80,7 @@ function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPa
 
 /**
  * Narrow a parsed TOML node by the syntax kind of the library.
+ *
  * @param node the parsed item to test.
  * @param node.type its library enum value.
  * @param kind the type name to match.
@@ -93,6 +95,7 @@ function isTomlKind<Kind extends string>(
 
 /**
  * Index concrete keys, headers, and array items without changing layout.
+ *
  * @param source TOML text.
  * @param value what the TOML parser returned.
  * @returns syntax entries and source-ordered comments.
@@ -135,6 +138,7 @@ function parseTomlSyntax(source: string, value: Record<string, unknown>): TomlSy
 
 /**
  * Place comments just before their own key, header, or array item, without column alignment.
+ *
  * @param comments the original syntax entries.
  * @param kind the type of the entry.
  * @param path the keys and array indexes of the entry.
@@ -163,6 +167,7 @@ function insertTomlComments(comments: TomlComments, kind: string, path: KeyPath,
 
 /**
  * Keep each comment tied to its entry through document edits.
+ *
  * @param syntax the indexed entries.
  * @returns comments with their original anchors and stable path identities.
  */
@@ -176,6 +181,7 @@ function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
 
 /**
  * Read the extent of a parsed syntax token.
+ *
  * @param node parsed syntax.
  * @returns the start and end offsets.
  */
@@ -186,6 +192,7 @@ function getTomlRange(node: SourceRange): readonly [number, number] {
 
 /**
  * Add a source comment to its retained TOML entry.
+ *
  * @param comments the collected comment blocks.
  * @param entry what to add, and where.
  */

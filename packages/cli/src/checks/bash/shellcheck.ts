@@ -7,6 +7,7 @@ import { BATS_TAG, SHELLCHECK_DIALECT_FLAG } from '#cli/config/checks/bash.ts';
 
 /**
  * Runs ShellCheck, and passes a dialect only for scripts without a shebang.
+ *
  * @param session the repository and its tools.
  * @param planned the ShellCheck check and its files.
  * @returns the check result.

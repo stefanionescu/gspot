@@ -12,6 +12,7 @@ import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/c
 
 /**
  * Checks every pushed commit message, including empty commits that change no files.
+ *
  * @param session the repository and its tools.
  * @param planned the commitlint check and commit range.
  * @returns the check result.

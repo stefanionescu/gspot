@@ -120,6 +120,7 @@ export function buildPythonProject(manifests: Manifest[], days: number): Generat
 
 /**
  * Build a generated lockfile with the file contents that it replaces.
+ *
  * @param path the repository-relative destination for the replacement bytes.
  * @param content the credential-free lockfile.
  * @param original the file contents on disk, if any.

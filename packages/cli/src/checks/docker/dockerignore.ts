@@ -10,6 +10,7 @@ import { DOCKERIGNORE, EDGE_SLASHES, DOCKERIGNORE_ENTRIES, IGNORE_PATTERN_FORMS 
 
 /**
  * Reports each Dockerfile with no ignore file, or with one that misses a required pattern.
+ *
  * @param input the scope files to read.
  * @returns the findings.
  */

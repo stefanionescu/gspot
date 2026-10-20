@@ -36,6 +36,7 @@ function writeScratchFile(files: Files, scratch: string, file: ScratchFile): voi
 
 /**
  * Writes files and Git blobs into a scratch copy.
+ *
  * @param input what to write, and where.
  */
 export async function writeScratchFiles(input: ScratchCopyPlan): Promise<void> {
@@ -53,6 +54,7 @@ export async function writeScratchFiles(input: ScratchCopyPlan): Promise<void> {
 
 /**
  * Lists the paths and dependency trees that a scratch copy of the check needs.
+ *
  * @param input the check and its files.
  * @param extra more paths to copy.
  * @returns the paths and dependencies to copy.
@@ -70,6 +72,7 @@ export function checkCopyInputs(input: CheckInput, extra: string[] = []): Scratc
 
 /**
  * Copies source files and dependency trees into a new scratch copy.
+ *
  * @param source the paths and dependency trees to copy.
  * @returns the new folder, deleted on dispose.
  */
@@ -92,6 +95,7 @@ export async function copyIntoScratch(source: ScratchCopyPaths): Promise<Scratch
 
 /**
  * Selects the paths and installed dependency trees for a scratch copy of the working tree.
+ *
  * @param repositoryRoot the repository folder.
  * @param paths the authored files to copy.
  * @param scopes the folders that hold installed dependencies.

@@ -20,6 +20,7 @@ import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/syste
 
 /**
  * Remove only the marked block and its separating blank line.
+ *
  * @param path the block file.
  * @param current its bytes on disk.
  * @returns the remaining file contents, or undefined when nothing remains.
@@ -38,6 +39,7 @@ function removeBlock(path: string, current: FileContents): FileContents | undefi
 
 /**
  * Determine ownership from the gspot folder, file notice, or managed Git attributes.
+ *
  * @param path the repository-relative file.
  * @param disk the repository reader.
  * @returns whether gspot owns the whole file.
@@ -57,6 +59,7 @@ export function isOwned(path: string, disk: Files): boolean {
 
 /**
  * Find owned files and managed blocks outside the generation plan.
+ *
  * @param session the repository files.
  * @param expected the generated destinations that remain.
  * @returns the obsolete generated paths.
@@ -98,6 +101,7 @@ export function listStrayPaths(
 
 /**
  * Replace owned or reviewed bytes, and keep other authored files.
+ *
  * @param writer the locked repository handle.
  * @param request the new bytes and any reviewed file contents.
  * @returns the write plan, with an unchanged, changed, or preserved status.
@@ -122,6 +126,7 @@ export function planReplacement(writer: Writer, request: ReplacementRequest): Wr
 
 /**
  * Replace or append the marked block, and keep the text outside it.
+ *
  * @param writer the locked repository handle.
  * @param path the file.
  * @param body the block text.
@@ -142,6 +147,7 @@ export function planBlock(writer: Writer, path: string, body: string, style: Blo
 
 /**
  * Merge the managed keys into a shared file.
+ *
  * @param writer the locked repository handle.
  * @param path the destination.
  * @param changes the keys and requested values.
@@ -155,6 +161,7 @@ export function planManagedKeys(writer: Writer, path: string, changes: FileEdit[
 
 /**
  * Remove an owned file or its managed block, and keep the authored text.
+ *
  * @param writer the locked repository handle.
  * @param path the stale generated file.
  * @returns the old bytes, and any authored text left after the managed block goes.

@@ -35,6 +35,7 @@ async function checkFile(input: CheckInput, path: string, limit: number): Promis
 
 /**
  * Checks each Python function against limits.function_lines, counting code lines only.
+ *
  * @param input the scope files and limits.
  * @returns one finding per function over the limit.
  */

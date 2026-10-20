@@ -63,6 +63,7 @@ function isComposedCall(node: TSESTree.CallExpression): boolean {
 
 /**
  * Count the executable statements under a node, nested functions included. An expression body counts as one.
+ *
  * @param node the function body, or anything inside it
  * @param visitorKeys the child keys of each node type, from the parser
  * @returns the statement count
@@ -79,6 +80,7 @@ export function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Recor
 
 /**
  * Check whether a constructor sets instance state through parameter properties or `this` assignments.
+ *
  * @param node the function to check
  * @returns whether the constructor sets instance state
  */
@@ -97,6 +99,7 @@ export function hasConstructorState(node: ImplementedFunction): boolean {
 
 /**
  * Strip the wrappers that keep the runtime value: type assertions and optional chains.
+ *
  * @param node the expression, or null
  * @returns the inner expression
  */
@@ -110,6 +113,7 @@ export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
 /**
  * Check whether an expression builds data, selects a value, or composes calls. Constants and plain forwarding do
  * not count.
+ *
  * @param node the function body or returned expression
  * @param visitorKeys the child keys of each node type, from the parser
  * @returns whether the expression calculates something
@@ -122,6 +126,7 @@ export function hasCalculation(node: TSESTree.Node, visitorKeys: Readonly<Record
 
 /**
  * List the variables through which callers reach a function: its own name, or the variable that holds it.
+ *
  * @param node the function implementation
  * @param source the parsed file, with its scopes
  * @returns the declared variables of the function
@@ -143,6 +148,7 @@ export function listCallableVariables(
 /**
  * Check whether the module exports a function: in its declaration, in an export list, or as the default export.
  * Callers in other modules can use it.
+ *
  * @param node the function implementation
  * @param source the parsed file, with its scopes
  * @returns whether the module exports the function
@@ -163,6 +169,7 @@ export function isExportedFunction(node: ImplementedFunction, source: TSESLint.S
 
 /**
  * Check whether a function declares a type predicate as its return type, such as `value is string`.
+ *
  * @param node the function implementation
  * @returns whether the function narrows the type of an argument
  */

@@ -23,6 +23,7 @@ const TSCONFIG_MEMO = { create: () => new Map<string, TypeScriptConfiguration | 
 
 /**
  * Read a project and every project it references, with the run cache.
+ *
  * @param repositoryRoot the base folder of the cached readers.
  * @param path the absolute tsconfig file.
  * @param reads the run cache.
@@ -49,6 +50,7 @@ function readReferencedProjects(
 
 /**
  * Parse compiler options and inherited settings with the TypeScript compiler.
+ *
  * @param path the absolute tsconfig file.
  * @param text the tsconfig contents.
  * @param host finds and reads files for the compiler.
@@ -91,6 +93,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
 
 /**
  * Read compiler inputs through the repository cache, and keep the installed library paths.
+ *
  * @param repositoryRoot the base folder of the cached readers.
  * @param scope the folder relative to the repository.
  * @param reads the run cache.
@@ -138,6 +141,7 @@ function buildCompilerHost(
 
 /**
  * Read a file for the TypeScript compiler, following links into node_modules.
+ *
  * @param repositoryRoot the base folder of the cached readers.
  * @param path the absolute input file.
  * @param reads the run cache.
@@ -164,6 +168,7 @@ function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache
 
 /**
  * Resolve compiler options and inherited paths with the TypeScript compiler.
+ *
  * @param repositoryRoot the base folder of the cached readers.
  * @param path the absolute tsconfig file.
  * @param reads the run cache.
@@ -192,6 +197,7 @@ function readTsconfig(repositoryRoot: string, path: string, reads: ReadCache): T
 
 /**
  * Find the nearest TypeScript project that includes every source of a scope.
+ *
  * @param repositoryRoot the base folder of the cached readers.
  * @param scope the repository-relative folder.
  * @param files the source paths of the scope.
@@ -225,6 +231,7 @@ function readTsconfigProject(
 
 /**
  * Resolve the source inputs through the tsconfig of the project.
+ *
  * @param repositoryRoot the base folder of the cached readers.
  * @param scope the importing project folder.
  * @param reads the run cache.

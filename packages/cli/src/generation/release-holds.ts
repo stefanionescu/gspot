@@ -6,6 +6,7 @@ import { HOLD_FACTORS, RELEASE_AGE_SETTING } from '#cli/config/generation/file-e
 
 /**
  * Write a hold of some days in the unit that the installer reads.
+ *
  * @param unit what the installer counts in.
  * @param days how long a new release waits.
  * @returns the value for the settings file.
@@ -16,6 +17,7 @@ function formatHold(unit: HoldUnit, days: number): number | string {
 
 /**
  * Read the hold that the root gspot.toml asks for. The tool installs in .gspot use it.
+ *
  * @param scopes every scope.
  * @returns the days that a new release waits.
  */

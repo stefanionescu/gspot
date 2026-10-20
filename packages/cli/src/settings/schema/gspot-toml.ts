@@ -245,6 +245,7 @@ const settingsSchema = z
 
 /**
  * Build the editor schema for this gspot version.
+ *
  * @returns the JSON Schema document.
  */
 function buildJsonSchema(): Record<string, unknown> {
@@ -268,6 +269,7 @@ function buildJsonSchema(): Record<string, unknown> {
 
 /**
  * Locate one setting in the root, configuration, and tool schemas.
+ *
  * @param key the dotted setting name.
  * @returns its schema, or undefined when the key names no setting.
  */
@@ -302,6 +304,7 @@ function buildDateJsonSchema(): z.core.JSONSchema.JSONSchema {
 
 /**
  * Convert a settings schema to JSON Schema, and keep written defaults and declaration metadata.
+ *
  * @param schema the runtime validator.
  * @returns the JSON Schema, with TOML dates as calendar strings.
  */

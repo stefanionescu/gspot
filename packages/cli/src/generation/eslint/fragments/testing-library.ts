@@ -11,6 +11,7 @@ import {
 
 /**
  * Apply the Testing Library presets of the frameworks in use.
+ *
  * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */

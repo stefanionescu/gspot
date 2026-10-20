@@ -247,6 +247,7 @@ function listStaleRecords(input: CheckInput, inventories: ProjectLicenses[], ski
 
 /**
  * Reports disallowed licenses of locked packages, and allowed_package records that match no package.
+ *
  * @param input the scopes whose dependencies to scan.
  * @returns the findings.
  */

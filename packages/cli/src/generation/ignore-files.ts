@@ -47,6 +47,7 @@ function collectToolExclusions(session: Session): string[] {
 
 /**
  * Group the exclusions by source, before the ignores of a check.
+ *
  * @param session the repository to read.
  * @returns the exclusion groups in order.
  */
@@ -111,6 +112,7 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
 
 /**
  * Keep the reason with each check-wide path ignore.
+ *
  * @param view the settings of this scope.
  * @param check the ID whose ignores to keep.
  * @returns the check-wide path exclusions with their reasons.
@@ -124,6 +126,7 @@ function buildSettingsSections(view: ScopeView, check: string): IgnoreSection[] 
 
 /**
  * Write ignore sections for a tool that reads them from the root.
+ *
  * @param options what to write.
  * @param options.sections the ordered exclusion groups and their reasons.
  * @param options.purpose the explanation at the start of the ignore file.
@@ -158,6 +161,7 @@ function formatIgnoreFile(options: { sections: IgnoreSection[]; purpose: string 
 
 /**
  * Convert the sections to the globs that tool files use.
+ *
  * @param sections the ordered exclusion groups and their written reasons.
  * @returns the globs, each once.
  */
@@ -181,6 +185,7 @@ function buildGlobSections(sections: IgnoreSection[]): string[] {
 
 /**
  * Build the Prettier ignore file with the shared section order and the written reasons.
+ *
  * @param context the tool file to build.
  * @returns the ignore file text.
  */
@@ -196,6 +201,7 @@ function buildPrettierignore(context: ToolFileContext): string {
 
 /**
  * List the globs that a tool leaves out: the shared ignore sections, then the path ignores of one check.
+ *
  * @param session the repository to read.
  * @param view the settings of the scope.
  * @param check the ID whose path ignores to add.

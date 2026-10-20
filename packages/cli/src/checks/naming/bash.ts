@@ -24,6 +24,7 @@ function addDeclarations(sink: ExtractSink, root: Node): void {
 
 /**
  * Lists the functions and variables that a shell script declares.
+ *
  * @param syntaxRoot the parsed script.
  * @param file the repository path of the script.
  * @returns the declared names.

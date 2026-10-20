@@ -21,6 +21,7 @@ function isLimitLoosening(direction: 'raising' | 'lowering', value: unknown, shi
 
 /**
  * Describe a missing or invalid reason for commands and saved settings.
+ *
  * @param where the setting or command that needs a reason.
  * @param reason the written text, if any.
  * @returns the error, or undefined when the reason meets the requirements.
@@ -43,6 +44,7 @@ function validateExtraReason(entry: Record<string, unknown>, path: KeyPath): Set
 
 /**
  * Find missing or invalid reasons on ignores, declarations, naming exceptions, and extra tool options.
+ *
  * @param settings the normalized gspot.toml.
  * @returns the errors in plain English.
  */
@@ -87,6 +89,7 @@ function validateSettingReasons(settings: Settings): SettingsError[] {
 
 /**
  * Check whether the reason meets the minimum word count.
+ *
  * @param reason the written text, if any.
  * @returns whether the reason meets the requirements.
  */
@@ -98,6 +101,7 @@ function isReasonAccepted(reason: string | undefined): boolean {
 
 /**
  * Check whether setting `value` for `declaration` loosens `shipped`, so the value needs a reason.
+ *
  * @param declaration the setting.
  * @param value what gspot.toml sets.
  * @param shipped the default of the configuration.

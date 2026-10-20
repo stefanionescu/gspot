@@ -57,6 +57,7 @@ function buildInitAnswers(root: string, options: InitOptions, existingTools: Exi
 
 /**
  * Detect configurations, show the plan, and write the files after you accept it.
+ *
  * @param options the flags and the settings edit choices.
  * @returns the command result.
  */
@@ -97,6 +98,7 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
 
 /**
  * Register the init command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
@@ -134,6 +136,7 @@ function registerInit(program: Command, onResult: CommandCompletion): void {
 
 /**
  * Read the repository and build the plan that init shows before it writes.
+ *
  * @param repositoryRoot the folder whose files decide detection and tool replacement.
  * @param options the flags, with the answers of a template folded in.
  * @returns the plan, the settings text, and the files it read.
@@ -226,6 +229,7 @@ function deleteReplacedFiles(
 
 /**
  * Write the settings and generated files, and delete the replaced tool files.
+ *
  * @param repositoryRoot the folder where init writes the accepted changes.
  * @param prepared the plan and file reads from planInit.
  * @returns the lines to print.

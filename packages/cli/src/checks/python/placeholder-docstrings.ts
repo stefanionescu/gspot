@@ -6,6 +6,7 @@ import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/python.ts';
 
 /**
  * Reports Python docstrings that only repeat a name or placeholder.
+ *
  * @param input the scope Python files.
  * @returns the findings.
  */

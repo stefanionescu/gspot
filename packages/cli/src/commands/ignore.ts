@@ -52,6 +52,7 @@ function escapeExistingPaths(root: string, paths: string[] | undefined): string[
 
 /**
  * Write an ignore with its reason.
+ *
  * @param options the parsed flags.
  * @returns the command result.
  */
@@ -88,6 +89,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
 
 /**
  * Register the ignore command.
+ *
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
@@ -121,6 +123,7 @@ function registerIgnore(program: Command, onResult: CommandCompletion): void {
 
 /**
  * Validate the --until date before writing it.
+ *
  * @param text the date from --until.
  * @returns the same calendar date as a TOML value.
  */

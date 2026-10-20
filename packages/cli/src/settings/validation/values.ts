@@ -49,6 +49,7 @@ function validateToolRules(
 
 /**
  * Report rules turned off outside the ignore settings.
+ *
  * @param settings the normalized gspot.toml.
  * @param manifests the shipped configuration declarations indexed by name.
  * @returns the refused changes, at both levels.
@@ -79,6 +80,7 @@ function validateDisabledRules(settings: Settings, manifests: Map<string, Manife
 
 /**
  * Refuse scope paths that name a file or repeat, and keep written scopes whose folder does not exist yet.
+ *
  * @param repositoryRoot the base folder for each written scope path.
  * @param settings the normalized gspot.toml.
  * @returns the errors in plain English.
@@ -106,6 +108,7 @@ function validateScopePaths(repositoryRoot: string, settings: Settings): Setting
 
 /**
  * Check that each of your own ESLint plugins names a module file in the repository.
+ *
  * @param repositoryRoot the folder the paths start from.
  * @param settings the parsed gspot.toml.
  * @returns an error for each plugin path that names no file.
@@ -128,6 +131,7 @@ function validatePluginPaths(repositoryRoot: string, settings: Settings): Settin
 
 /**
  * Check tool option constraints declared by tools, including inactive scopes.
+ *
  * @param table the written root or scope values.
  * @param tools the declarations with option limits.
  * @returns each refused tool option at its written path.
@@ -150,6 +154,7 @@ function validateExtraOptions(table: SettingsTable, tools: ToolDeclaration[]): S
 
 /**
  * Find the errors in [rules] exclude: an item that matches no rule, and an item that hides a file that the reader opens first.
+ *
  * @param exclude the written items, relative to the rules folder.
  * @param manifests the shipped configuration declarations indexed by name.
  * @returns each error with its position in the exclusion list.

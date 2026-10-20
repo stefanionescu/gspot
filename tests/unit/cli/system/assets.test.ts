@@ -7,6 +7,7 @@ import { BASH_MANIFEST, PACKAGE_FOLDER, ASSET_READER_SCRIPT, PACKAGE_FOLDER_FILE
 
 /**
  * Writes a copy of the checkout whose asset reader both tests run.
+ *
  * @param folder where the copy goes.
  * @returns the copied checkout folder.
  */

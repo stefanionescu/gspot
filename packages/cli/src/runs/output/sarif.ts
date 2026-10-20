@@ -46,6 +46,7 @@ function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, sour
 
 /**
  * Resolve a validated SARIF physical location into a source path and coordinates.
+ *
  * @param location the first physical place of the result.
  * @param run its source metadata.
  * @param source the folder that the report paths start from.
@@ -151,6 +152,7 @@ const sarifLogSchema = z.object({
 
 /**
  * Read a SARIF report and validate its source locations.
+ *
  * @param input the tool output to read.
  * @returns the report findings.
  */

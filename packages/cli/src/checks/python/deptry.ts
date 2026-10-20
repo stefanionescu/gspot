@@ -40,6 +40,7 @@ function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
 
 /**
  * Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
+ *
  * @param session the repository and installed tools.
  * @param planned the dependency check and its scope.
  * @returns the check result.

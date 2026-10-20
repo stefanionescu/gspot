@@ -48,6 +48,7 @@ const VALUE_HOLDERS: [AST_NODE_TYPES, (parent: TSESTree.Node, value: TSESTree.No
 
 /**
  * Walk up through type assertions and conditional or logical expressions to the outermost value.
+ *
  * @param node the expression or declaration
  * @returns the outermost expression that wraps it
  */
@@ -63,6 +64,7 @@ function findOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
 /**
  * Check whether a function fills a slot that takes a callback: an argument, a return value, an array element,
  * a property, an assigned member, or JSX.
+ *
  * @param node the function implementation
  * @returns whether the slot needs an inline function
  */
@@ -76,6 +78,7 @@ function isInlineValue(node: ImplementedFunction): boolean {
 
 /**
  * Check whether a function calls itself. Callers cannot inline such a body, because it names the function.
+ *
  * @param node the function implementation
  * @param source the parsed file, with its scopes
  * @returns whether a reference to the function sits inside its own body

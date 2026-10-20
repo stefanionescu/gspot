@@ -5,6 +5,7 @@ import { SAFETY_PATTERNS, ALL_LEVEL_SAFETY_PATTERNS } from '#cli/config/checks/b
 
 /**
  * Reports each unsafe process kill or removal, and at level `all`, each discarded failure.
+ *
  * @param input the scope scripts and level.
  * @returns the findings.
  */

@@ -29,6 +29,7 @@ import { NAMING_TEST_LIMITS, NAMING_TEST_SETTINGS } from '#tests/data/checks/nam
 
 /**
  * List the shipped configurations that gspot selects in every repository.
+ *
  * @returns their names.
  */
 export function listAlwaysSelected(): string[] {
@@ -54,6 +55,7 @@ export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnR
 
 /**
  * A program pin, with an npm installer when npm names a package.
+ *
  * @param name executable to pin.
  * @param version release to pin.
  * @param npm package that ships the program.
@@ -70,6 +72,7 @@ export function buildProgramPin(name: string, version: string, npm?: string): To
 
 /**
  * Parse a configuration manifest for one test.
+ *
  * @param name what to call the configuration.
  * @param project extra manifest tables and fields.
  * @param project.requires configurations that it needs.
@@ -100,6 +103,7 @@ export function buildManifest(
 
 /**
  * Options for an in-process run of every stage, with no fixes.
+ *
  * @param overrides what the test changes.
  * @returns the defaults with the overrides applied.
  */
@@ -109,6 +113,7 @@ export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
 
 /**
  * One tracked source file of one byte with no captured prefix.
+ *
  * @param path location from the repository root.
  * @param tags labels that the file extension gives.
  * @returns a one-byte source file for the inventory.
@@ -119,6 +124,7 @@ export function buildTrackedFile(path: string, tags: string[] = ['text']): Track
 
 /**
  * The planned fixer of the sandbox with its command replaced by a script.
+ *
  * @param session the open sandbox.
  * @param script JavaScript for the fixer to run.
  * @returns the planned check.
@@ -131,6 +137,7 @@ export function planFixer(session: Session, script: string): PlannedCheck {
 
 /**
  * Build fixer settings that run the executable of this test process.
+ *
  * @param paths files the fixer covers.
  * @returns the gspot.toml text.
  */

@@ -18,6 +18,7 @@ import type { OutputSpec, OutputPaths, ParsingCheck, OutputDescriptor } from '#c
 
 /**
  * Resolve a path the way tools print it after they follow links.
+ *
  * @param path the file or folder.
  * @returns the resolved path with POSIX separators, or undefined when nothing exists at the path.
  */
@@ -44,6 +45,7 @@ function stripRoot(root: string, file: string): string {
 /**
  * List the forms of the root that a tool can print in a message.
  * The longest form comes first, so that a shorter form never cuts a longer one.
+ *
  * @param root the repository folder with POSIX separators.
  * @returns the root and its resolved form in POSIX and in system separators.
  */
@@ -90,6 +92,7 @@ export const outputFormats = {
 
 /**
  * Read the findings in the tool output, with every path relative to the root.
+ *
  * @param check how to read the output.
  * @param stdout the standard output of the tool.
  * @param stderr the standard error of the tool.

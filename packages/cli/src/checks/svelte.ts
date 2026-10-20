@@ -39,6 +39,7 @@ const findingSchema = z.object({
 }>);
 /**
  * Parses the machine-verbose output of svelte-check.
+ *
  * @param input the scope that ran the check.
  * @param stdout what svelte-check printed.
  * @returns one finding for each error and warning.
@@ -72,6 +73,7 @@ function parseSvelteCheckFindings(input: CheckInput, stdout: string): Finding[] 
 
 /**
  * Runs svelte-check on the scope for compiler warnings, accessibility warnings, and type errors.
+ *
  * @param input the scope to check.
  * @returns one finding for each error and warning.
  */

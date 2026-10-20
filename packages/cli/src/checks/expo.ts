@@ -34,6 +34,7 @@ function isBlockEnd(line: string): boolean {
 
 /**
  * Parses the Expo Doctor output.
+ *
  * @param stdout what Doctor printed.
  * @returns one message per failed Doctor check, with its details.
  */
@@ -53,6 +54,7 @@ function parseExpoDoctor(stdout: string): string[] {
 
 /**
  * Runs Expo Doctor in a scope that depends on expo.
+ *
  * @param input the scope to check.
  * @returns one finding per failed Doctor check.
  */
