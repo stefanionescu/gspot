@@ -1,4 +1,5 @@
 import { AGENTS_FILE } from '#cli/config/rules.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { listScopeFormats } from '#cli/generation/tool-files/prettier.ts';
@@ -8,12 +9,14 @@ import { UNREPRESENTABLE_SELECTOR, EDITORCONFIG_FIXED_SECTIONS } from '#cli/conf
 // Convert a Prettier selector to an EditorConfig section path, under its scope when it has one.
 function buildSectionPath(pattern: string, scope: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))
-        throw new Error(
+        throw new GspotError(
+            'settings',
             `EditorConfig cannot represent selector ${JSON.stringify(pattern)}. Keep this override in tools.prettier.extra.value.overrides or an EditorConfig section.`,
         );
     if (scope === '' || pattern.startsWith(`${scope}/`)) return pattern;
     if (!pattern.startsWith('**/') || pattern.slice('**/'.length).includes('/'))
-        throw new Error(
+        throw new GspotError(
+            'settings',
             `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scope}. Use a root-relative selector within that scope.`,
         );
     return `${escapeGlob(scope)}/${pattern}`;

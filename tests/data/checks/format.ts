@@ -43,6 +43,20 @@ export const FORMAT_SETTINGS = `configurations = ["format"]
 enabled = false
 `;
 
+/** Selectors that EditorConfig cannot express in a section. */
+export const EDITORCONFIG_SELECTOR_ERRORS = [
+    {
+        pattern: 'src/*.+(ts|js)',
+        message:
+            'EditorConfig cannot represent selector "src/*.+(ts|js)". Keep this override in tools.prettier.extra.value.overrides or an EditorConfig section.',
+    },
+    {
+        pattern: '!src/*.js',
+        message:
+            'EditorConfig cannot represent selector "!src/*.js". Keep this override in tools.prettier.extra.value.overrides or an EditorConfig section.',
+    },
+] as const;
+
 export const PRETTIER_PATH_IGNORE = `
 [[ignore]]
 check = "format/prettier"

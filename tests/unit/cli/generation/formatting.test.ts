@@ -9,11 +9,36 @@ import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
-import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/data/checks/format.ts';
+
+import {
+    PRETTIER_OPTIONS_BY_FILE,
+    FORMAT_OVERRIDES_SETTINGS,
+    EDITORCONFIG_SELECTOR_ERRORS,
+} from '#tests/data/checks/format.ts';
+
+test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
+    'a format override selector that EditorConfig cannot express is a settings error ($pattern)',
+    async ({ pattern, message }) => {
+        const format = { override: [{ paths: [pattern], indent_width: 2 }] };
+        await using sandbox = await testdir({
+            'gspot.toml': stringify({
+                configurations: ['javascript'],
+                format,
+            }),
+            'app/source.js': 'export {};\n',
+        });
+        const session = await openSession(sandbox.path);
+        expect(() => generate(session)).toThrow(
+            matchFields<GspotError>({ name: 'GspotError', code: 'settings', message }),
+        );
+    },
+);
 
 test('format.indent_width reaches EditorConfig, Prettier and each tool file', async () => {
     const width = 6;
