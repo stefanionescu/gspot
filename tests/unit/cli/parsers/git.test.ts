@@ -1,7 +1,29 @@
 import { test, expect } from 'bun:test';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { parseGitBlobs, parseTreeEntries, stripIndexStages, parseIndexEntries } from '#cli/parsers/git.ts';
-import { SHA1, SHA256, ENTRY_PATH, BINARY_BLOB, INVALID_BLOBS, INVALID_ENTRIES } from '#tests/data/parsers/git.ts';
+
+import {
+    parseGitBlobs,
+    parseTreeEntries,
+    stripIndexStages,
+    parseIndexEntries,
+    parseAttributePatterns,
+} from '#cli/parsers/git.ts';
+import {
+    SHA1,
+    SHA256,
+    ENTRY_PATH,
+    BINARY_BLOB,
+    INVALID_BLOBS,
+    INVALID_ENTRIES,
+    ATTRIBUTE_LINES,
+} from '#tests/data/parsers/git.ts';
+
+test.each([...ATTRIBUTE_LINES])(
+    'a .gitattributes line in C quoting decodes its octal bytes, and an [attr] macro line gives no pattern: $line',
+    ({ line, expected }) => {
+        expect(parseAttributePatterns(line, '.')).toStrictEqual(expected);
+    },
+);
 
 test('tree entries keep full object IDs, modes and unquoted paths', () => {
     const output =

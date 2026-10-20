@@ -43,6 +43,19 @@ const PUSH_CHECK_ARGUMENTS = ['check', '--hook', 'pre-push', '--only', 'project/
 
 const TOOL_PROJECT_BYTE_ATTRIBUTES = '\n.gspot/* -text\n';
 
+const ATTRIBUTE_LINES = [
+    { line: String.raw`"na\303\257ve.txt" binary`, expected: [{ pattern: '**/naïve.txt', attributes: ['binary'] }] },
+    { line: '[attr]gen linguist-generated', expected: [] },
+    {
+        line: String.raw`"a\ab\bc\fd\ne\rf\tg\vh\\i\"j.txt" text`,
+        expected: [{ pattern: '**/a\u0007b\bc\fd\ne\rf\tg\vh\\i"j.txt', attributes: ['text'] }],
+    },
+    { line: '"日本語 naïve.txt" text', expected: [{ pattern: '**/日本語 naïve.txt', attributes: ['text'] }] },
+    { line: String.raw`"bad\q.txt" text`, expected: [] },
+    { line: String.raw`"bad\12.txt" text`, expected: [] },
+    { line: String.raw`"bad\400.txt" text`, expected: [] },
+];
+
 export {
     SHA1,
     SHA256,
@@ -50,6 +63,7 @@ export {
     BINARY_BLOB,
     INVALID_BLOBS,
     INVALID_ENTRIES,
+    ATTRIBUTE_LINES,
     PUSH_CHECK_ARGUMENTS,
     TOOL_PROJECT_BYTE_ATTRIBUTES,
 };

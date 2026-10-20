@@ -21,6 +21,22 @@ const TREE_ENTRY = new RegExp(
 const ATTRIBUTE_FIELDS = 3;
 
 const ATTRIBUTE_LINE = /^("(?:[^"\\]|\\.)*"|\S+)(?:\s+|$)/u;
+const IGNORED_ATTRIBUTE_LINE = /^(?:#|\[attr\])/u;
+const IGNORED_ATTRIBUTE_PATTERN = /^!|\/$/u;
+const QUOTED_ATTRIBUTE_PATTERN = /^"(?:[^"\\]|\\.)*"$/u;
+const QUOTED_PATH_PARTS = /\\(?:[0-3][0-7]{2}|[\s\S])|[^\\]+/gu;
+const OCTAL_PATH_BYTE = /^\\[0-3][0-7]{2}$/u;
+const PATH_ESCAPES: Readonly<Record<string, string>> = {
+    a: '\u0007',
+    b: '\b',
+    f: '\f',
+    n: '\n',
+    r: '\r',
+    t: '\t',
+    v: '\v',
+    '\\': '\\',
+    '"': '"',
+};
 const LEADING_SLASH = /^\//u;
 const BINARY_ATTRIBUTES = { diff: 'unset', merge: 'unset', text: 'unset' } as const;
 const BINARY_MACRO = 'binary';
@@ -33,10 +49,16 @@ export {
     INDEX_ENTRY,
     HASH_PATTERN,
     BINARY_MACRO,
+    PATH_ESCAPES,
     LEADING_SLASH,
     ATTRIBUTE_LINE,
+    OCTAL_PATH_BYTE,
     ATTRIBUTE_FIELDS,
+    QUOTED_PATH_PARTS,
     UNSUPPORTED_ENTRY,
     BINARY_ATTRIBUTES,
+    IGNORED_ATTRIBUTE_LINE,
+    QUOTED_ATTRIBUTE_PATTERN,
+    IGNORED_ATTRIBUTE_PATTERN,
     INVALID_GIT_STREAM_MESSAGE,
 };

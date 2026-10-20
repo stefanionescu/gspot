@@ -14,11 +14,17 @@ import {
     BLOB_HEADER,
     INDEX_ENTRY,
     BINARY_MACRO,
+    PATH_ESCAPES,
     LEADING_SLASH,
     ATTRIBUTE_LINE,
+    OCTAL_PATH_BYTE,
     ATTRIBUTE_FIELDS,
+    QUOTED_PATH_PARTS,
     BINARY_ATTRIBUTES,
     UNSUPPORTED_ENTRY,
+    IGNORED_ATTRIBUTE_LINE,
+    QUOTED_ATTRIBUTE_PATTERN,
+    IGNORED_ATTRIBUTE_PATTERN,
     INVALID_GIT_STREAM_MESSAGE,
 } from '#cli/config/parsers/git.ts';
 
@@ -81,8 +87,28 @@ function parseBlobSize(header: string, hash: string): number {
     return size;
 }
 
+// Octal escapes name bytes, so decode UTF-8 only after joining them with the literal text.
+function decodeQuotedPattern(pattern: string): string | undefined {
+    if (!QUOTED_ATTRIBUTE_PATTERN.test(pattern)) return undefined;
+    const bytes: Buffer[] = [];
+    for (const [part] of pattern.slice(1, -1).matchAll(QUOTED_PATH_PARTS)) {
+        if (!part.startsWith('\\')) {
+            bytes.push(Buffer.from(part));
+            continue;
+        }
+        if (OCTAL_PATH_BYTE.test(part)) {
+            bytes.push(Buffer.from([Number.parseInt(part.slice(1), 8)]));
+            continue;
+        }
+        const decoded = PATH_ESCAPES[part.slice(1)];
+        if (decoded === undefined) return undefined;
+        bytes.push(Buffer.from(decoded));
+    }
+    return Buffer.concat(bytes).toString('utf8');
+}
+
 /**
- * Read attribute declarations in their file order, preserving quoted paths.
+ * Read attribute declarations in their file order. Decode quoted paths and skip macro definitions.
  *
  * @param text the gitattributes source.
  * @param folder the repository-relative place of the .gitattributes file.
@@ -91,12 +117,12 @@ function parseBlobSize(header: string, hash: string): number {
 export function parseAttributePatterns(text: string, folder: string): AttributePattern[] {
     return text.split('\n').flatMap((line) => {
         const trimmed = line.trim();
-        if (trimmed.startsWith('#')) return [];
+        if (IGNORED_ATTRIBUTE_LINE.test(trimmed)) return [];
         const match = ATTRIBUTE_LINE.exec(trimmed);
         if (match === null) return [];
         const raw = match[1] as string;
-        const pattern = raw.startsWith('"') ? (JSON.parse(raw) as string) : raw;
-        if (pattern.endsWith('/') || pattern.startsWith('!')) return [];
+        const pattern = raw.startsWith('"') ? decodeQuotedPattern(raw) : raw;
+        if (pattern === undefined || IGNORED_ATTRIBUTE_PATTERN.test(pattern)) return [];
         const bare = pattern.replace(LEADING_SLASH, '');
         const local = LEADING_SLASH.test(pattern) || bare.includes('/') ? bare : `${ANY_FOLDER_PREFIX}${bare}`;
         return [
