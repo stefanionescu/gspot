@@ -21,16 +21,27 @@ import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/
 import { type PackageJson, type InstalledDependency } from '#cli/types/parsers/dependency-files.ts';
 
 function listWorkspacePackages(root: string): Package[] {
-    const packageJson = readPackageJson(root, PACKAGE_JSON);
-    for (const tool of [PnpmTool, LernaTool, RushTool]) {
-        if (!tool.isMonorepoRootSync(root)) continue;
-        return tool.getPackagesSync(root).packages;
+    let file = PACKAGE_JSON;
+    try {
+        const packageJson = readPackageJson(root, PACKAGE_JSON);
+        for (const [tool, path] of [
+            [PnpmTool, 'pnpm-workspace.yaml'],
+            [LernaTool, 'lerna.json'],
+            [RushTool, 'rush.json'],
+        ] as const) {
+            file = path;
+            if (!tool.isMonorepoRootSync(root)) continue;
+            return tool.getPackagesSync(root).packages;
+        }
+        if (packageJson?.workspaces === undefined) return [];
+        file = PACKAGE_JSON;
+        return YarnTool.getPackagesSync(root).packages;
+    } catch (error) {
+        if (!(error instanceof Error) || error instanceof GspotError) throw error;
+        throw new GspotError('filesystem', `${file} is not a valid workspace file: ${error.message}. Fix the file.`, {
+            cause: error,
+        });
     }
-    if (packageJson === undefined) return [];
-    const { workspaces: declaration = [] } = packageJson;
-    const workspaces = Array.isArray(declaration) ? declaration : declaration.packages;
-    if (workspaces.length === 0) return [];
-    return YarnTool.getPackagesSync(root).packages;
 }
 
 const WORKSPACE_FILES_MEMO = { create: () => new Map<string, string[]>() };

@@ -1,10 +1,17 @@
-/** Each workspace file with the parse error that its parser gives. */
+/** Each workspace file with the file error that gspot reports. */
 export const INVALID_WORKSPACE_FILES = [
-    { path: 'pnpm-workspace.yaml', parseError: 'Flow map must end with a }' },
-    { path: 'lerna.json', parseError: "JSON Parse error: Expected '}'" },
+    {
+        path: 'pnpm-workspace.yaml',
+        parseError:
+            'pnpm-workspace.yaml is not a valid workspace file: Flow map must end with a } at line 1, column 2:\n\n{\n ^\n. Fix the file.',
+    },
+    {
+        path: 'lerna.json',
+        parseError: "lerna.json is not a valid workspace file: JSON Parse error: Expected '}'. Fix the file.",
+    },
     {
         path: 'rush.json',
-        parseError: 'Unexpected end of input at 1:2',
+        parseError: 'rush.json is not a valid workspace file: Unexpected end of input at 1:2\n{\n ^. Fix the file.',
     },
 ] as const;
 

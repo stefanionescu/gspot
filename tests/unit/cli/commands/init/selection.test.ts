@@ -255,7 +255,14 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     const before = await readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stdout + refused.stderr).toContain('end with a ]');
+    const message =
+        'pnpm-workspace.yaml is not a valid workspace file: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 12:\n\npackages: [\n           ^\n. Fix the file.';
+    expect(refused.stdout).toBe('');
+    expect(refused.stderr).toBe(`${message}\n`);
+    const structured = await runGspot(sandbox.path, [...command, '--json']);
+    expect(structured.code).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'filesystem', message });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

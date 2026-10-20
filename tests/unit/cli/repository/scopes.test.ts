@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { readTestRepository } from '#tests/setup/builders.ts';
@@ -86,14 +88,28 @@ test('workspace detection stays inside the given folder', async () => {
 });
 
 test.each([...INVALID_WORKSPACE_FILES])(
-    'an invalid or unreadable $path is an error, not an empty workspace',
+    'an invalid or unreadable $path is a GspotError that names the file',
     async ({ path, parseError }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'package.json': '{}', [path]: '{' });
-        expect(() => listWorkspaceFolders(sandbox.path)).toThrow(parseError);
+        expect(() => listWorkspaceFolders(sandbox.path)).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: parseError,
+                cause: expect.any(Error),
+            }),
+        );
         await Bun.file(join(sandbox.path, path)).delete();
         await mkdir(join(sandbox.path, path));
-        expect(() => listWorkspaceFolders(sandbox.path)).toThrow('EISDIR: illegal operation on a directory, read');
+        expect(() => listWorkspaceFolders(sandbox.path)).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: `${path} is not a valid workspace file: EISDIR: illegal operation on a directory, read. Fix the file.`,
+                cause: expect.any(Error),
+            }),
+        );
     },
 );
 
