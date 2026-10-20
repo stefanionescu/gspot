@@ -2,6 +2,11 @@
 ignoreErrors: true
 customCatalog:
   schemas:
+    - name: gspot
+      description: The gspot settings file
+      fileMatch:
+        - gspot.toml
+      location: .gspot/configurations/general/files/gspot-toml.schema.json
     - name: mise
       description: The mise configuration file
       fileMatch:

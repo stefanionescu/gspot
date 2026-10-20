@@ -4,7 +4,7 @@
 
 level = "all"
 configurations = ["typescript", "markdown", "github-actions", "bash"]
-allowed_words = { value = ["capitalisation", "IIF", "LICENCE", "next-intl", "udid", "NGINX", "Stylelint", "markdownlint", "React", "Native", "Simple", "Icons"], reason = "SQLFluff uses capitalisation; ESLint uses IIFEs; tests use LICENCE and Apple’s udid; next-intl is a package; NGINX, Stylelint, markdownlint, React Native, and Simple Icons are official product names used in the documentation." }
+allowed_words = { capitalisation = "SQLFluff spells its rule capitalisation.", IIF = "ESLint names immediately invoked functions IIFEs.", LICENCE = "Tests use the British LICENCE file name.", next-intl = "The next-intl package name.", udid = "Apple names the device identifier udid.", NGINX = "Official product name.", Stylelint = "Official product name.", markdownlint = "Official product name.", React = "Official product name.", Native = "Part of the React Native product name.", Simple = "Part of the Simple Icons product name.", Icons = "Part of the Simple Icons product name." }
 
 [hooks]
 enabled = true
@@ -146,18 +146,8 @@ allowed_names = ["ARBITRARY_LOADS"]
 reason = "Apple names the key NSAllowsArbitraryLoads."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/dependencies/lockfiles.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
 paths = ["packages/cli/src/config/tools/npm.ts"]
 allowed_names = ["MISSING_PACKAGE_MANAGER_MESSAGE"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/generation/ci.ts"]
-allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
@@ -261,22 +251,12 @@ allowed_names = ["PackageManagerSandbox"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
-paths = ["tests/unit/cli/checks/python/conventions.test.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
 paths = ["tests/unit/cli/generation/ci.test.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
 [[naming.override]]
 paths = ["tests/unit/cli/generation/hooks.test.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/unit/cli/generation/npm-tool-project.test.ts"]
 allowed_names = ["packageManager"]
 reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
 
@@ -354,6 +334,10 @@ removed_configurations = ["astro", "jest", "nestjs", "nextjs", "react", "react-d
 tools.knip.ignore_dependencies = { value = ["@darraghor/eslint-plugin-nestjs-typed", "@next/eslint-plugin-next", "@react-native/eslint-plugin", "@vitest/eslint-plugin", "bats", "eslint-plugin-drizzle", "eslint-plugin-expo", "eslint-plugin-i18next", "eslint-plugin-jest", "eslint-plugin-react", "eslint-plugin-react-hooks", "eslint-plugin-react-native", "eslint-plugin-react-refresh", "eslint-plugin-svelte", "eslint-plugin-testing-library", "eslint-plugin-vue", "eslint-plugin-vuejs-accessibility", "pnpm", "supabase", "svelte-eslint-parser", "vue-eslint-parser", "yarn", "@nestjs/common", "@nestjs/core", "@tanstack/eslint-plugin-query", "eslint-plugin-jsx-a11y", "reflect-metadata", "rxjs", "vue"], reason = "Native sandbox commands load these packages from the linked tests installation." }
 
 # Code may import its own files and the files of every import rule above it; can_also_import names rules below.
+[[import_rule]]
+name = "tool-files"
+paths = ["packages/cli/configurations/**/tool-files/**"]
+
 [[import_rule]]
 name = "cli-config"
 paths = ["packages/cli/src/config/**"]
@@ -453,7 +437,7 @@ paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts"]
 
 [[import_rule]]
 name = "plugin"
-paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**"]
+paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/plugin.d.ts"]
 
 [[import_rule]]
 name = "reference"
@@ -480,18 +464,13 @@ reason = "As checked on 2026-10-09, braces 3.0.3 has no patched release and is u
 until = 2026-11-08
 
 [[ignore]]
-check = "docs/lychee"
-paths = ["docs/src/content/docs/**"]
-reason = "Starlight builds these source links into site routes; site/linkinator checks their targets in the built site."
-
-[[ignore]]
 check = "docs/missing-paths"
 paths = ["packages/cli/configurations/*/*/rules/**"]
 reason = "Paths in shipped rules are examples for user projects."
 
 [[ignore]]
 check = "javascript/eslint"
-rule = "@typescript-eslint/no-magic-numbers"
+rule = "gspot/no-magic-numbers"
 paths = ["tests/data/**"]
 reason = "These declarations hold fixed test data; giving each literal another constant would duplicate the same data."
 

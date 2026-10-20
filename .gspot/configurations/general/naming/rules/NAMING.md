@@ -119,7 +119,8 @@ Each act has one verb. Use the table verb for each act, never a synonym:
 
 When no table verb fits, pick another plain one that names the act. Plain verbs include `count`, `compare`,
 `merge`, `split`, `sort`, `filter`, `group`, `match`, `replace`, `normalize`, `convert`, `extract`, `strip`, `copy`,
-`move`, `stop`, and `wait`. Never use `load`, `fetch`, or `resolve` for retrieval; pick `get`, `read`, or `find`.
+`move`, `stop`, and `wait`. Name your own retrieval functions `get`, `read`, or `find`; `load`, `fetch`, and `resolve`
+stay for platform APIs such as `fetch`.
 
 The noun and the return type carry multiplicity and optionality, such as `getSession` and `getSessions`. Add a
 qualifier only to tell two operations apart at one use site. Give an operation that combines create, read,

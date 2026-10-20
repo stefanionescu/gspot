@@ -19,6 +19,7 @@ Read this rule when you write code that raises, catches, or reports an error.
 - Preserve the cause when wrapping: `new Error(message, { cause })`, `raise ... from error`, or `Error` conformance with an underlying error.
 - Do not swallow failures. Handle, record, or re-raise each caught error.
 - Run required cleanup in `finally` or the language's equivalent.
+- Check the `error` field of an SDK that returns `{ data, error }`, such as Supabase, before using `data`.
 
 ## Async work
 

@@ -8,6 +8,8 @@ Read this rule when code reads, stores, or logs a secret.
 - Never pass a secret in a command-line flag; other processes can read the process arguments.
 - Builds copy public build-time variables such as `NEXT_PUBLIC_*` and `VITE_*` into the bundle. They hold
   nothing secret.
+- The `env` option of `next.config` inlines its values into the JavaScript bundle. Never put a secret there, and
+  revoke one that shipped.
 - Examples, documentation, templates, and sample files hold placeholders, never real secrets.
 - Keep local overrides in an ignored file.
 - Never log secrets, tokens, passwords, cookies, authorization headers, or connection strings.

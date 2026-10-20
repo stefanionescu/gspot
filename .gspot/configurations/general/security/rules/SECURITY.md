@@ -38,6 +38,9 @@ Read this rule when code handles input, authentication, redirects, or downloads.
   or tenant counts as data, never authority.
 - Authorize every operation that reads or changes data, through each HTTP, RPC, job,
   and webhook entry point. Recheck access to the resource even when a parent already checked it.
+- Model output never authorizes a tool call.
+- Treat a signed URL as a bearer token: anyone who holds it has access until it expires.
+- A service worker never caches a signed-in response.
 - Compare secrets, signatures, and tokens in constant time.
 - Generate tokens, nonces, and reset codes with the system's cryptographic random source.
 - Hash passwords with a current, slow, salted algorithm through a maintained library. Use one

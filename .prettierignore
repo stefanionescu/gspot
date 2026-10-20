@@ -5,6 +5,25 @@
 # Build output
 build/
 
+# Ignored by Git
+.DS_Store
+.env
+.env.*
+.idea/
+.vscode/
+*.log
+*.swp
+*~
+/.wrangler/
+/docs/.astro/
+/docs/.wrangler/
+/docs/dist/
+/findings/
+/packages/*/dist/
+/packages/cli/grammars/
+node_modules/
+Thumbs.db
+
 # Files that gspot generates
 .editorconfig
 .gspot/**
@@ -18,11 +37,11 @@ packages/eslint-plugin/.markdownlint.jsonc
 prettier.config.mjs
 
 # Generator outputs
+docs/cloudflare-env.d.ts
 docs/worker-configuration.d.ts
 
 # Dependencies
 bower_components/
-node_modules/
 
 # Lockfiles
 bun.lock
