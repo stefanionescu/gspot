@@ -168,7 +168,10 @@ export const REASON_DESCRIPTIONS = {
 
 export const INTERNAL_SCHEMA_METADATA = [
     'configurations',
+    'languages',
+    'categories',
     'reason_needed',
+    'reason_values',
     'language_defaults',
     'pathRole',
     'default_all',

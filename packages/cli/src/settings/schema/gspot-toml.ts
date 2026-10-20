@@ -314,6 +314,7 @@ function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
         reused: 'ref',
         unrepresentable: ({ zodSchema }) => (zodSchema === localDateSchema ? buildDateJsonSchema() : 'throw'),
         override: ({ zodSchema, jsonSchema }) => {
+            if (zodSchema instanceof z.ZodArray && jsonSchema.$ref !== undefined) jsonSchema.type = 'array';
             for (const key of INTERNAL_SCHEMA_METADATA) Reflect.deleteProperty(jsonSchema, key);
             if (zodSchema instanceof z.ZodDefault && zodSchema.def.innerType instanceof z.ZodUnion)
                 jsonSchema.default = zodSchema.def.defaultValue;

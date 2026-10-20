@@ -22,6 +22,22 @@ export const UNTIL_DATE_CASES = [
 /** Inputs with refinements that the published schema must keep. */
 export const PUBLISHED_SCHEMA_CASES = [
     {
+        name: 'GitHub CI with systems',
+        input: { ci: { provider: 'github', operating_systems: ['linux'] } },
+        valid: true,
+    },
+    { name: 'GitLab CI without systems', input: { ci: { provider: 'gitlab' } }, valid: true },
+    {
+        name: 'GitLab CI with systems',
+        input: { ci: { provider: 'gitlab', operating_systems: ['linux'] } },
+        valid: false,
+    },
+    {
+        name: 'GitLab CI with an empty systems list',
+        input: { ci: { provider: 'gitlab', operating_systems: [] } },
+        valid: false,
+    },
+    {
         name: 'an empty command',
         input: { command_check: [{ name: 'project/lint', command: [], paths: ['src/**'], stage: 'commit' }] },
         valid: false,
@@ -97,3 +113,5 @@ export const PUBLISHED_SCHEMA_CASES = [
 ] as const;
 
 export const BASH_TEMPLATE_SETTINGS = 'configurations = ["bash"]\n';
+
+export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;

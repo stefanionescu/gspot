@@ -3,14 +3,22 @@ import { Ajv2020 } from 'ajv/dist/2020.js';
 import { stringify } from '@decimalturn/toml-patch';
 import { validateSettingsText } from '#tests/setup/settings.ts';
 import { buildJsonSchema } from '#cli/settings/schema/gspot-toml.ts';
-import { PUBLISHED_SCHEMA_CASES } from '#tests/data/settings/schema.ts';
+import { ISO_DATE, PUBLISHED_SCHEMA_CASES } from '#tests/data/settings/schema.ts';
+
+const publishedSettingsValidator = new Ajv2020({
+    strict: true,
+    // Commands require one program name and accept any number of arguments.
+    strictTuples: false,
+    formats: {
+        uri: (value: string) => URL.canParse(value),
+        date: (value: string) => ISO_DATE.test(value) && !Number.isNaN(Date.parse(value)),
+    },
+}).compile(buildJsonSchema());
 
 test.each([...PUBLISHED_SCHEMA_CASES])('runtime and published schemas agree on $name', ({ input, valid }) => {
-    const validate = buildPublishedValidator();
-
     const errors = validateSettingsText(stringify(input));
     expect(errors.length === 0).toBe(valid);
-    expect(validate(input)).toBe(valid);
+    expect(publishedSettingsValidator(input)).toBe(valid);
 });
 
 // The docs build reads the schema in memory, so a key that JSON drops must not hide a description there.
@@ -21,13 +29,11 @@ test('the schema in memory matches its published JSON', () => {
     expect(schema).toStrictEqual(JSON.parse(published) as typeof schema);
 });
 
-function buildPublishedValidator() {
-    const validator = new Ajv2020({
-        strict: false,
-        formats: {
-            uri: (value: string) => URL.canParse(value),
-            date: (value: string) => /^\d{4}-\d{2}-\d{2}$/u.test(value) && !Number.isNaN(Date.parse(value)),
-        },
-    });
-    return validator.compile(buildJsonSchema());
-}
+test('published definitions omit internal metadata', () => {
+    const definitions = buildJsonSchema()['$defs'] as Record<string, Record<string, unknown>>;
+    for (const definition of Object.values(definitions)) {
+        expect(definition).not.toHaveProperty('languages');
+        expect(definition).not.toHaveProperty('categories');
+        expect(definition).not.toHaveProperty('reason_values');
+    }
+});

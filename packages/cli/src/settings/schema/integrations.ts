@@ -62,9 +62,9 @@ const ciSchema = z
     .meta({
         allOf: [
             {
-                if: { properties: { provider: { const: 'gitlab' } }, required: ['provider'] },
+                if: { type: 'object', properties: { provider: { const: 'gitlab' } }, required: ['provider'] },
                 // eslint-disable-next-line unicorn/no-thenable -- reason: JSON Schema defines this conditional keyword.
-                then: { not: { required: ['operating_systems'] } },
+                then: { type: 'object', properties: { operating_systems: false } },
             },
         ],
     }) satisfies z.ZodType<NonNullable<Settings['ci']>, NonNullable<WrittenSettings['ci']>>;
