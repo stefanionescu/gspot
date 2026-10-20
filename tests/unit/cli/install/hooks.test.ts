@@ -13,10 +13,10 @@ import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { installHooks, readHookStatus } from '#cli/install/hooks.ts';
 import { matchItems, matchSubstring } from '#tests/setup/matchers.ts';
 import { readGitOutput, createLfsRepository } from '#tests/setup/git.ts';
-import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH } from '#tests/data/hooks.ts';
+import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/data/hooks.ts';
 
 test.each([...HOOK_REPOSITORIES])(
-    'a repository with $name keeps its hooks and gets the lines to add',
+    'a repository with $name keeps its hooks, gets the lines to add, and is ready only after both lines',
     async (provider) => {
         const { startProgram } = provider;
         await using sandbox = await testdir();
@@ -57,7 +57,29 @@ test.each([...HOOK_REPOSITORIES])(
         const first = authored.find(({ path }) => path !== 'package.json');
         await Bun.write(join(sandbox.path, first!.path), `${first!.content}\n${command} check --hook pre-commit\n`);
         expect(readHookStatus(await readHookContext(sandbox.path))).toMatchObject({
-            ready: provider.name !== 'a Lefthook configuration',
+            ready: false,
+        });
+        await Bun.write(
+            join(sandbox.path, first!.path),
+            `${first!.content}\n${command} check --hook pre-commit\n${command} check --hook pre-push\n`,
+        );
+        expect(readHookStatus(await readHookContext(sandbox.path))).toMatchObject({ ready: true });
+    },
+);
+
+test.each([...HOOK_CONFIGURATION_CASES])(
+    'hooks in $path are ready only after both commands',
+    async ({ path, oneHook, bothHooks }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSettingsText([], { tables: '[hooks]\nenabled = true\n' }),
+            [path]: oneHook,
+        });
+        readGitOutput(sandbox.path, ['init', '-q']);
+        expect(readHookStatus(await readHookContext(sandbox.path)).ready).toBe(false);
+        await Bun.write(join(sandbox.path, path), bothHooks);
+        expect(readHookStatus(await readHookContext(sandbox.path))).toStrictEqual({
+            ready: true,
+            text: `run from ${path}`,
         });
     },
 );
@@ -110,7 +132,7 @@ test.each(['', 'app/'])(
     },
 );
 
-test('a nested gspot.toml reads other hooks from the repository Git hooks folder', async () => {
+test('a nested gspot.toml reads other hooks from the repository Git hooks folder and is ready only with every hook line', async () => {
     await using sandbox = await testdir();
     const root = join(sandbox.path, 'app');
     const hook = join(sandbox.path, '.githooks/pre-commit');
@@ -121,6 +143,8 @@ test('a nested gspot.toml reads other hooks from the repository Git hooks folder
     readGitOutput(sandbox.path, ['init', '-q']);
     readGitOutput(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
     const context = await readHookContext(root);
+    expect(readHookStatus(context).ready).toBe(false);
+    await Bun.write(join(sandbox.path, '.githooks/pre-push'), '#!/bin/sh\ngspot check --hook pre-push\n');
     expect(readHookStatus(context).ready).toBe(true);
     await Bun.write(hook, '#!/bin/sh\nexit 0\n');
     const absent = readHookStatus(context);

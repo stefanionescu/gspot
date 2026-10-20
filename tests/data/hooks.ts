@@ -78,6 +78,23 @@ export const HOOK_LEVEL_CASES = [
     { level: 'all', hooks: ['commit-msg', 'pre-commit', 'pre-push'] },
 ] as const;
 
+/** Hook managers whose configuration file holds the hook commands. */
+export const HOOK_CONFIGURATION_CASES = [
+    {
+        path: '.pre-commit-config.yaml',
+        oneHook:
+            'repos:\n  - repo: local\n    hooks:\n      - id: gspot-commit\n        name: gspot commit\n        language: system\n        entry: gspot check --hook pre-commit\n',
+        bothHooks:
+            'repos:\n  - repo: local\n    hooks:\n      - id: gspot-commit\n        name: gspot commit\n        language: system\n        entry: gspot check --hook pre-commit\n      - id: gspot-push\n        name: gspot push\n        language: system\n        entry: gspot check --hook pre-push\n        stages: [pre-push]\n',
+    },
+    {
+        path: 'package.json',
+        oneHook: '{"simple-git-hooks":{"pre-commit":"gspot check --hook pre-commit"}}',
+        bothHooks:
+            '{"simple-git-hooks":{"pre-commit":"gspot check --hook pre-commit","pre-push":"gspot check --hook pre-push"}}',
+    },
+] as const;
+
 export const HOOK_CASES = [
     ['pre-commit', []],
     ['pre-push', ['origin', 'https://example.com/repository.git']],

@@ -11,7 +11,6 @@ import {
 export const SAMPLE_HOOK_SUFFIX = '.sample';
 export const SET_HOOKS_PATH = ['git', 'config', HOOKS_PATH_SETTING] as const;
 export const UNSET_HOOKS_PATH = ['git', 'config', '--unset', HOOKS_PATH_SETTING] as const;
-export const HOOK_COMMAND = 'gspot check --hook';
 export const VALE_INSTALL_ARGUMENTS = ['sync'] as const;
 export const VALE_INSTALL_PREFIX = 'vale-';
 export const VALE_STYLES_PATH_PATTERN = /^StylesPath[\t ]*=([^\r\n]*)$/gmu;

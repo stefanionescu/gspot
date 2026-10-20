@@ -7,8 +7,8 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/hooks.ts';
 import type { ExistingTools } from '#cli/types/repository/inventory.ts';
 import type { HookPlan, HookStatus, HookContext } from '#cli/types/install.ts';
+import { SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install.ts';
 import { readGitPrefix, readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
-import { HOOK_COMMAND, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install.ts';
 
 import {
     LFS_HOOKS,
@@ -119,12 +119,13 @@ export function readHookStatus(context: HookContext): HookStatus {
     const foreign = readForeignHooks(repository.root, path);
     if (foreign.length > 0) {
         const paths = foreign.flatMap((hook) => {
-            if (hook.files.length === 0) return [];
+            if (hook.files.length === 0) return [resolve(repository.root, hook.path)];
             const folder =
                 hook.kind === 'hooksPath' ? readHooksFolder(repository.root) : resolve(repository.root, hook.path);
             return hook.files.map((file) => resolve(folder, file));
         });
-        const ready = paths.some((file) => readFileSync(file, 'utf8').includes(HOOK_COMMAND));
+        const texts = paths.map((file) => readFileSync(file, 'utf8'));
+        const ready = context.hooks.every((name) => texts.some((text) => text.includes(`check --hook ${name}`)));
         return {
             ready,
             text: ready
