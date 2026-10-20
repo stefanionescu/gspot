@@ -23,6 +23,20 @@ Read CLAUDE.md and AGENTS.md before RGBA colors.
     },
     {
         rule: 'acronyms',
+        path: 'fences.md',
+        source: `# Guide
+
+BUN.md holds the Bun rules.
+
+\`\`\`bash
+file_list="$(mktemp)" || exit 1
+trap 'rm -f -- "\${file_list}"' EXIT
+\`\`\`
+`,
+        lines: [],
+    },
+    {
+        rule: 'acronyms',
         path: 'tags.ts',
         source: `/**
  * Holds the reply colors.
