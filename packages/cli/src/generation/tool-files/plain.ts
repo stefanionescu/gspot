@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import { stringify as stringifyYaml } from 'yaml';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
 import { PERIPHERY_RETAIN } from '#cli/config/generation/swift.ts';
@@ -7,6 +8,7 @@ import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import {
     MISE_SCHEMA,
     TOML_FORMAT,
+    GSPOT_SCHEMA,
     TOOL_FILE_NOTES,
     TAPLO_FORMATTING,
     LYCHEE_ROOT_LINKS,
@@ -14,6 +16,7 @@ import {
     PURGECSS_EXTRACTOR,
     PURGECSS_TOKEN_END,
     ALWAYS_SKIPPED_TAGS,
+    LYCHEE_MDX_EXPRESSION,
     TRIVY_SKIPPED_FOLDERS,
     LYCHEE_REPOSITORY_LINKS,
     SPECTRAL_RECOMMENDED_OFF,
@@ -22,6 +25,7 @@ import {
 
 /**
  * Build the Ansible Lint file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Ansible Lint exclusions as YAML.
  */
@@ -32,6 +36,7 @@ function buildAnsibleLintFile(context: ToolFileContext): string {
 }
 /**
  * Build the Gixy file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Gixy rule exclusions, or empty text when every rule stays enabled.
  */
@@ -43,24 +48,23 @@ function buildGixyFile(context: ToolFileContext): string {
 }
 /**
  * Build the Lychee file from the settings.
+ *
  * @param context the tool file to build.
  * @returns a note on why the file exists, and the lychee link exclusions as TOML.
  */
 function buildLycheeFile(context: ToolFileContext): string {
     const { selected, view } = context.selection;
 
-    const allowed = view.options('docs').allowed_urls;
+    const exclude = [...view.options('docs').allowed_urls, LYCHEE_MDX_EXPRESSION];
     // site/linkinator checks the routes in the built site, so lychee skips them.
     const document = selected.some(({ configuration }) => configuration.name === SITE_CONFIGURATION)
-        ? { exclude: [...allowed, LYCHEE_ROOT_LINKS] }
-        : {
-              ...(allowed.length === 0 ? {} : { exclude: allowed }),
-              remap: [`${LYCHEE_ROOT_LINKS} ${LYCHEE_REPOSITORY_LINKS}`],
-          };
+        ? { exclude: [...exclude, LYCHEE_ROOT_LINKS] }
+        : { exclude, remap: [`${LYCHEE_ROOT_LINKS} ${LYCHEE_REPOSITORY_LINKS}`] };
     return [...TOOL_FILE_NOTES.lychee, stringifyToml(document, TOML_FORMAT)].join('\n');
 }
 /**
  * Build the `osv-scanner` tool file from the settings.
+ *
  * @param context the tool file to build.
  * @returns a note on why the file exists, and the package ignores, reasons, and expiration dates.
  */
@@ -82,6 +86,7 @@ function buildOsvScannerFile(context: ToolFileContext): string {
 }
 /**
  * Build the Periphery file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Xcode project, schemes, and retained Periphery declarations as YAML.
  */
@@ -98,6 +103,7 @@ function buildPeripheryFile(context: ToolFileContext): string {
 }
 /**
  * Build the PurgeCSS file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the JavaScript token extractor and safelist used by PurgeCSS.
  */
@@ -112,6 +118,7 @@ function buildPurgecssFile(context: ToolFileContext): string {
 }
 /**
  * Build the Spectral file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the OpenAPI preset and the Spectral rules at this level.
  */
@@ -125,6 +132,7 @@ function buildSpectralFile(context: ToolFileContext): string {
 }
 /**
  * Build the Taplo file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Taplo formatting settings with automatic schema lookup disabled.
  */
@@ -146,6 +154,7 @@ function buildTaploFile(context: ToolFileContext): string {
 }
 /**
  * Build the Trivy file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the Trivy severity, timeout, and skipped folders as YAML.
  */
@@ -160,6 +169,7 @@ function buildTrivyFile(context: ToolFileContext): string {
 }
 /**
  * Build the v8r file from the settings.
+ *
  * @param context the tool file to build.
  * @returns the v8r schema catalog, including the configured file selectors.
  */
@@ -171,9 +181,14 @@ function buildV8rFile(context: ToolFileContext): string {
         fileMatch: paths,
         location: url,
     }));
+    const { file, ...gspotSchema } = GSPOT_SCHEMA;
+    const settingsSchema = { ...gspotSchema, location: posix.join(posix.dirname(context.targetPath), file) };
     return (
         '# Files without a known schema are checked by their other selected tools.\n' +
-        stringifyYaml({ ignoreErrors: true, customCatalog: { schemas: [MISE_SCHEMA, ...schemas] } }).trimEnd()
+        stringifyYaml({
+            ignoreErrors: true,
+            customCatalog: { schemas: [settingsSchema, MISE_SCHEMA, ...schemas] },
+        }).trimEnd()
     );
 }
 

@@ -197,5 +197,6 @@ build_command = ["node", "build.mjs"]
 `,
     'root.md': '# Links\n\nRead [the setup guide](/guides/setup.md#setup).\n',
     'guides/setup.md': '# Setup\n',
+    'guides/shop.mdx': '# Shop\n\n<a href={link}>Open the shop</a>\n',
     'web/index.md': '# Shop\n\nRead [the install page](/start/install/).\n',
 } as const;

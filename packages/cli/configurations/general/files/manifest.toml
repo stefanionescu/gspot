@@ -61,6 +61,10 @@ tool = "yamllint"
 target = "v8r.yml"
 tool = "v8r"
 
+[[tool_file]]
+target = "gspot-toml.schema.json"
+tool = "v8r"
+
 [[check]]
 command = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
 example = "The TOML line `enabled=true` differs from the taplo output. Run `gspot check --fix` to get `enabled = true`."

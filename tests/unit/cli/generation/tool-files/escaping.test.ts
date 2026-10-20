@@ -8,6 +8,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { formatSettingsText } from '#cli/settings/write/text.ts';
+import { LYCHEE_MDX_EXPRESSION } from '#cli/config/generation/tool-files.ts';
 import { stringify, LocalDate, parse as parseToml } from '@decimalturn/toml-patch';
 
 import {
@@ -111,7 +112,9 @@ test('TOML tool files keep odd strings and option keys', async () => {
     expect(parsed.get('.gspot/configurations/general/files/taplo.toml')).toMatchObject({
         formatting: { [option]: text, column_width: 88, indent_string: '\t' },
     });
-    expect(parsed.get('.gspot/configurations/general/docs/lychee.toml')).toMatchObject({ exclude: [text] });
+    expect(parsed.get('.gspot/configurations/general/docs/lychee.toml')).toMatchObject({
+        exclude: [text, LYCHEE_MDX_EXPRESSION],
+    });
     expect(parsed.get('.gspot/configurations/language/python/ruff.toml')).toMatchObject({
         lint: { 'per-file-ignores': { [`../../../../${path}`]: ['F401'] } },
     });

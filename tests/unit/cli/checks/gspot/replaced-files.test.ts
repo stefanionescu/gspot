@@ -33,3 +33,16 @@ test.each([
         ).toStrictEqual([...expected]);
     },
 );
+
+test('gspot/replaced-files reports a settings file at a project root, and no source file that shares its name', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'knip.json': '{}\n',
+        'main.js': 'export const value = 1;\n',
+        'src/tools/knip.js': 'export const knip = 1;\n',
+    });
+    readGitOutput(sandbox.path, ['init', '-q']);
+    const { report } = await checkReport(sandbox.path, ['check', '--only', 'gspot/replaced-files', '--json']);
+    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual(['knip.json']);
+});

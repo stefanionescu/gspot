@@ -207,3 +207,18 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
     await Bun.write(join(root, 'app/settings/project.yaml'), YAML_SCOPE_FILES['app/settings/project.yaml']);
     await assertYamlFiles(root);
 });
+
+test('v8r leaves gspot.toml and its TOML dates to gspot', async () => {
+    const { root, environment } = installedSandbox();
+    await using _change = await updateSandbox(installedSandbox(), { check: 'files/v8r', files: {} });
+    const settingsPath = join(root, 'gspot.toml');
+    const settings = await Bun.file(settingsPath).text();
+    await Bun.write(
+        settingsPath,
+        `${settings}\n[[ignore]]\ncheck = "files/yamllint"\nreason = "The sample holds no YAML."\nuntil = 2099-01-01\n`,
+    );
+    const applied = await spawnGspot(root, ['apply'], environment);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const checked = await spawnGspot(root, ['check', 'gspot.toml', '--only', 'files/v8r', '--json'], environment);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+});

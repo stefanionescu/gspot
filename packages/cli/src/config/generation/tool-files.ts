@@ -94,6 +94,14 @@ export const SHELLCHECK_ALL_LEVEL_CHECKS = [
 ] as const;
 
 /** The mise file patterns accepted by v8r. */
+/** v8r reads TOML dates as objects, so it leaves gspot.toml to gspot, which reads it on every run. */
+export const GSPOT_SCHEMA = {
+    name: 'gspot',
+    description: 'The gspot settings file',
+    fileMatch: ['gspot.toml'],
+    file: 'gspot-toml.schema.json',
+} as const;
+
 export const MISE_SCHEMA = {
     name: 'mise',
     description: 'The mise configuration file',
@@ -231,6 +239,9 @@ export const KNIP_IGNORED_DEPENDENCIES = ['@gspothq/cli'] as const;
 export const KNIP_ENTRY_SETTING = 'entry';
 
 export const SITE_CONFIGURATION = 'site';
+
+/** An attribute of an .mdx page that holds an expression in braces holds code, which lychee reads as a file name. */
+export const LYCHEE_MDX_EXPRESSION = '%7B[^/]*%7D';
 
 /**
  * The file links that lychee builds from root-relative links: docs/lychee passes the repository root plus

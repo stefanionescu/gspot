@@ -114,7 +114,8 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
 
 /**
  * Skip task metadata, URLs, documentation-tag syntax, snake_case identifiers, and upper-case file names; check tag
- * descriptions and suppression reasons as prose.
+ * descriptions and suppression reasons as prose. A name starts after a space, because Vale breaks a code span that a
+ * match falls inside.
  */
 export const TOKEN_IGNORES = [
     String.raw`(?m)(^MISE[ \t]+[a-z_][a-z0-9_-]*[ \t]*=[^\r\n]*)`,
@@ -122,8 +123,8 @@ export const TOKEN_IGNORES = [
     String.raw`(https?://[^\s)]+)`,
     String.raw`(@(?:param|template|typedef|property|prop|arg|argument|callback)\s+(?:\{[^\n]*\}\s+)?(?:\[[^\]\n]*\]|\S+))`,
     String.raw`(@(?:returns?|throws|type|see|example|deprecated|yields|enum|this|satisfies)\b(?:\s+\{[^\n]*\})?)`,
-    String.raw`(\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b)`,
-    String.raw`(\b[A-Z][A-Z0-9_-]*\.(?:md|txt|json|toml|ya?ml)\b)`,
+    String.raw`((?:^|\s)[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b)`,
+    String.raw`((?:^|\s)[A-Z][A-Z0-9_-]*\.(?:md|txt|json|toml|ya?ml)\b)`,
 ] as const;
 
 /** Skip front matter. */
