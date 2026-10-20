@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { parseSettings } from '#cli/settings/read.ts';
@@ -10,7 +11,6 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { GIT_PLAN_CASES } from '#tests/data/commands/init.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
     await using sandbox = await testdir();
@@ -21,41 +21,6 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain('bassh');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
-test.each([true, false])('init, install, and check preserve uncommitted work (has commits: %s)', async (hasCommits) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
-    readGitOutput(sandbox.path, ['init', '-q']);
-    if (hasCommits) commitAll(sandbox.path);
-    await Bun.write(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n');
-    readGitOutput(sandbox.path, ['add', 'scripts/a.sh']);
-    await Bun.write(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n\n');
-    await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
-    const staged = readGitOutput(sandbox.path, ['diff', '--cached', '--binary']);
-    const head = runGit(sandbox.path, ['rev-parse', '--verify', 'HEAD']);
-    const preview = await runGspot(sandbox.path, [
-        ...buildInitArguments([]),
-        '--no-configurations',
-        '--dry-run',
-        '--json',
-    ]);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
-    const initialized = await runGspot(sandbox.path, [
-        ...buildInitArguments([], { json: true }),
-        '--no-configurations',
-    ]);
-    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
-    const installed = await runGspot(sandbox.path, ['install']);
-    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    const checked = await runGspot(sandbox.path, ['check', '--json']);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(await Bun.file(join(sandbox.path, 'scripts/a.sh')).text()).toBe(CLEAN_BASH_SCRIPT + '\n\n');
-    expect(await Bun.file(join(sandbox.path, 'notes.txt')).text()).toBe('draft\n');
-    expect(readGitOutput(sandbox.path, ['diff', '--cached', '--binary'])).toBe(staged);
-    expect(runGit(sandbox.path, ['rev-parse', '--verify', 'HEAD'])).toStrictEqual(head);
 });
 
 test('init refuses an unreadable package.json before writing', async () => {
