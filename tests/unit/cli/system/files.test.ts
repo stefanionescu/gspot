@@ -5,6 +5,8 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { STATE_PATH } from '#cli/config/system/locations.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
@@ -64,7 +66,13 @@ test('a live lock written during the dead-holder check survives', async () => {
         );
         expect(() => {
             files.createLock(`${STATE_PATH}/writer.lock`);
-        }).toThrow('Another gspot command');
+        }).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: `Another gspot command, process ${String(process.pid)}, holds ${STATE_PATH}/writer.lock. Retry after it finishes, or delete ${STATE_PATH}/writer.lock when no gspot command is running.`,
+            }),
+        );
         expect(await readFile(target, 'utf8')).toBe(live);
         expect(await isOnDisk(`${target}.reclaim`)).toBe(false);
     }
@@ -84,7 +92,14 @@ test('the recovery folder refuses a second recovery until the first one ends', a
         using files = openFiles(sandbox.path);
         expect(() => {
             files.createLock(`${STATE_PATH}/writer.lock`);
-        }).toThrow('Another process is recovering');
+        }).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: `Another process is recovering ${STATE_PATH}/writer.lock. Retry after it finishes. If no gspot command is running, remove ${STATE_PATH}/writer.lock.reclaim.`,
+                cause: expect.any(Error),
+            }),
+        );
         expect(await readFile(target, 'utf8')).toBe(stale);
         const attributes = await stat(`${target}.reclaim`);
         expect(attributes.isDirectory()).toBe(true);
@@ -110,7 +125,13 @@ test('a second writer is refused until the first releases the lock', async () =>
             expect(firstToken).toStartWith(`${String(process.pid)}:`);
             expect(() => {
                 second.createLock(path);
-            }).toThrow('Another gspot command');
+            }).toThrow(
+                matchFields<GspotError>({
+                    name: 'GspotError',
+                    code: 'filesystem',
+                    message: `Another gspot command, process ${String(process.pid)}, holds ${path}. Retry after it finishes, or delete ${path} when no gspot command is running.`,
+                }),
+            );
             expect(second.read(path)?.bytes.toString('utf8')).toBe(firstToken);
         }
         expect(second.read(path)).toBeUndefined();
@@ -246,5 +267,26 @@ test.skipIf(isWindows).each([...OUTSIDE_LINKS])(
         root.createFolder('.gspot/state/private', 0o700);
         const attributes = await stat(join(project, '.gspot/state/private'));
         expect(attributes.mode & 0o777).toBe(0o700);
+    },
+);
+
+test.each(['garbage', '0'])(
+    'a lock whose holder field is not a process ID is refused with the live-holder message (%s)',
+    async (holder) => {
+        await using sandbox = await testdir();
+        const path = `${STATE_PATH}/writer.lock`;
+        await createFileTree(sandbox.path, { [path]: holder, source: 'kept' });
+        using files = openFiles(sandbox.path);
+        expect(() => {
+            files.createLock(path);
+        }).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: `${path} names no gspot process. Delete ${path} when no gspot command is running.`,
+            }),
+        );
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(holder);
+        expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('kept');
     },
 );

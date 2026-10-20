@@ -1,5 +1,6 @@
 // Lock managed writes and release their locks.
 import { randomUUID } from 'node:crypto';
+import { GspotError } from '#cli/system/errors.ts';
 import { PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system/modes.ts';
 import type { FilesState, FileContents } from '#cli/types/system/files.ts';
 import { readEntry, verifyPath, preparePath } from '#cli/system/files/entries.ts';
@@ -21,9 +22,14 @@ function writeLockFile(target: string, token: string): boolean {
     }
 }
 
-// Refuses an incomplete lock or one whose process still runs; retire only abandoned locks.
+// Refuse a lock unless its holder has exited.
 function assertAbandonedLock(current: FileContents, path: string): void {
     const pid = Number(current.bytes.toString('utf8').split(LOCK_TOKEN_SEPARATOR, 1)[0]);
+    if (!Number.isSafeInteger(pid) || pid <= 0)
+        throw new GspotError(
+            'filesystem',
+            `${path} names no gspot process. Delete ${path} when no gspot command is running.`,
+        );
     try {
         process.kill(pid, 0);
     } catch (error) {
@@ -31,7 +37,8 @@ function assertAbandonedLock(current: FileContents, path: string): void {
         if (code === 'ESRCH') return;
         if (code !== 'EPERM') throw error;
     }
-    throw new Error(
+    throw new GspotError(
+        'filesystem',
         `Another gspot command, process ${String(pid)}, holds ${path}. Retry after it finishes, or delete ${path} when no gspot command is running.`,
     );
 }
@@ -43,7 +50,8 @@ function removeStaleLock(bounds: FilesState, path: string, target: string): void
         mkdirSync(reclaim, { mode: PRIVATE_FOLDER });
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-        throw new Error(
+        throw new GspotError(
+            'filesystem',
             `Another process is recovering ${path}. Retry after it finishes. If no gspot command is running, remove ${path}${LOCK_RECOVERY_SUFFIX}.`,
             { cause: error },
         );
