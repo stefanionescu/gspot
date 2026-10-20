@@ -4,12 +4,13 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
-import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
+import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { selectPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
 
 import {
@@ -44,12 +45,14 @@ test.each([...PACKAGE_MANAGER_DECLARATIONS])(
 
 test.each([...NON_EXACT_PNPM_VERSIONS])(
     'a pnpm version that is not exact is refused with the version to write: %s',
-    async (manifest) => {
+    async (manifest, message) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'package.json': manifest,
         });
-        expect(await captureRejection(selectPackageManager(sandbox.path, []))).toContain('needs an exact pnpm version');
+        expect(selectPackageManager(sandbox.path, [])).rejects.toThrow(
+            matchFields<GspotError>({ name: 'GspotError', code: 'installation', message }),
+        );
     },
 );
 

@@ -23,6 +23,8 @@ import {
     PACKAGE_MANAGER_HASH_SUFFIX,
 } from '#cli/config/parsers/dependency-files.ts';
 
+type PackageManagerField = PackageManagerDeclaration & { declared: string; field: string };
+
 const exactVersionSchema = z
     .string()
     .refine(
@@ -44,14 +46,17 @@ function parsePackageManagerField(value: string): PackageManagerDeclaration {
 }
 
 // Read the package manager from repository declarations and lockfiles.
-async function detectPackageManager(root: string, candidates: string[]): Promise<PackageManagerDeclaration> {
+async function detectPackageManager(
+    root: string,
+    candidates: string[],
+): Promise<PackageManagerField | { name: PackageManagerDeclaration['name']; version?: undefined }> {
     for (const path of candidates) {
         const packageJson = readPackageJson(root, path);
         const declared = packageJson === undefined ? undefined : readPackageManagerDeclaration(packageJson);
         if (declared !== undefined) return declared;
         const detected = await detectNypmPackageManager(join(root, dirname(path)), NYPM_DETECTION_OPTIONS);
         if (detected !== undefined)
-            return packageManagerDeclarationSchema.parse({ name: detected.name, version: detected.version });
+            return { name: packageManagerDeclarationSchema.parse({ name: detected.name }).name };
     }
     return { name: NPM_PROGRAM, version: undefined };
 }
@@ -83,11 +88,22 @@ function isYarnBerry(packageManager: PackageManager): boolean {
  * @param packageJson the validated package.json.
  * @returns packageManager first, then the first devEngines declaration, or no declaration.
  */
-function readPackageManagerDeclaration(packageJson: PackageJson): PackageManagerDeclaration | undefined {
-    if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
+function readPackageManagerDeclaration(packageJson: PackageJson): PackageManagerField | undefined {
+    if (packageJson.packageManager !== undefined)
+        return {
+            ...parsePackageManagerField(packageJson.packageManager),
+            declared: packageJson.packageManager,
+            field: 'packageManager',
+        };
     const engines = packageJson.devEngines?.packageManager;
     const entry = Array.isArray(engines) ? engines[0] : engines;
-    return entry?.name === undefined ? undefined : packageManagerDeclarationSchema.parse(entry);
+    return entry?.name === undefined
+        ? undefined
+        : {
+              ...packageManagerDeclarationSchema.parse(entry),
+              declared: entry.version ?? entry.name,
+              field: 'devEngines.packageManager',
+          };
 }
 
 /**
@@ -110,16 +126,17 @@ async function selectPackageManager(
             .toSorted((left, right) => left.localeCompare(right))
             .slice(0, 1),
     ];
-    const { name, version } = await detectPackageManager(repositoryRoot, candidates);
-    if (version !== undefined) {
+    const selected = await detectPackageManager(repositoryRoot, candidates);
+    if (selected.version !== undefined) {
+        const { name, version, declared, field } = selected;
         if (semver.valid(version) === null)
             throw new GspotError(
                 'installation',
-                `The tool project needs an exact ${name} version, such as ${name}@1.2.3, and package.json declares ${version}. Write an exact packageManager version.`,
+                `The tool project needs an exact ${name} version, such as ${name}@1.2.3; package.json declares "${declared}" in ${field}. Write an exact version there.`,
             );
         return { name, version };
     }
-    return { name };
+    return { name: selected.name };
 }
 
 /**

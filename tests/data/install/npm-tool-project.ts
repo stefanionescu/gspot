@@ -139,9 +139,18 @@ const PACKAGE_MANAGER_DECLARATIONS = [
 ] as const;
 
 const NON_EXACT_PNPM_VERSIONS = [
-    '{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}',
-    '{"packageManager":"pnpm@^9.1.0"}',
-    '{"packageManager":"pnpm"}',
+    [
+        '{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}',
+        'The tool project needs an exact pnpm version, such as pnpm@1.2.3; package.json declares "^9.1.0" in devEngines.packageManager. Write an exact version there.',
+    ],
+    [
+        '{"packageManager":"pnpm@^9.1.0"}',
+        'The tool project needs an exact pnpm version, such as pnpm@1.2.3; package.json declares "pnpm@^9.1.0" in packageManager. Write an exact version there.',
+    ],
+    [
+        '{"packageManager":"pnpm"}',
+        'The tool project needs an exact pnpm version, such as pnpm@1.2.3; package.json declares "pnpm" in packageManager. Write an exact version there.',
+    ],
 ] as const;
 
 const INSTALL_FAILURES = [
