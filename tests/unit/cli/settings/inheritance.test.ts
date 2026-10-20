@@ -10,8 +10,26 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
+import { CSS_HTML_NAMING_SETTINGS } from '#tests/data/settings/scopes.ts';
 import { findDeclaration, getSettingValue } from '#cli/settings/inherit.ts';
 import { buildSettingsText, validateSettingsText } from '#tests/setup/settings.ts';
+
+test('[naming.css] and [naming.html.folders] accept max_words, max_characters, and cases', () => {
+    const reads = createReadCache(process.cwd());
+    const settings = parseSettings(CSS_HTML_NAMING_SETTINGS, undefined, reads);
+    const known = buildKnownSettings(
+        selectConfigurations(['css', 'html', 'naming'], readManifests(reads)),
+        'recommended',
+        reads,
+    );
+    for (const table of ['naming.css', 'naming.css.files', 'naming.html.folders']) {
+        for (const [name, value] of Object.entries({ max_words: 3, max_characters: 20, cases: ['kebab'] })) {
+            expect(getSettingValue(known, settings, `${table}.${name}`)?.value).toStrictEqual(value);
+        }
+    }
+    expect(findDeclaration(known, 'naming.css.functions.max_words')).toBeUndefined();
+    expect(findDeclaration(known, 'naming.html.types.max_characters')).toBeUndefined();
+});
 
 test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {
     await using sandbox = await testdir();

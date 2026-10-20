@@ -6,6 +6,7 @@ import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
 import { ALL_LANGUAGES, CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/values.ts';
 
@@ -57,7 +58,8 @@ function findCategoryDeclaration(
 ): DeclarationMatch | undefined {
     const base = known.declarations.get(`naming.${language}.${name}`) ?? known.declarations.get(`naming.${name}`);
     if (!base) return undefined;
-    const isCovered = (base.languages ?? []).includes(language) && (base.categories ?? []).includes(category);
+    const categories: Readonly<Record<string, readonly string[]>> = NAMING_LANGUAGE_CATEGORIES;
+    const isCovered = (base.languages ?? []).includes(language) && categories[language]?.includes(category) === true;
     return isCovered ? { declaration: base, language, category } : undefined;
 }
 

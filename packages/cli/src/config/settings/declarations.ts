@@ -1,4 +1,4 @@
-import { NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
+import { SETTING_LANGUAGES } from '#cli/config/settings/schema.ts';
 import { TOOLS_DECLARATIONS } from '#cli/config/settings/tools-declarations.ts';
 import { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declarations.ts';
 import { RECORD_DECLARATIONS } from '#cli/config/settings/record-declarations.ts';
@@ -278,16 +278,14 @@ export const SETTING_DECLARATIONS = {
         configurations: ['naming'],
         description: 'The most characters one identifier may have.',
         reason_needed: 'raising',
-        languages: ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql'],
-        categories: NAMING_TABLE_CATEGORIES,
+        languages: SETTING_LANGUAGES,
         language_defaults: { swift: 40, sql: 55 },
     },
     'naming.max_words': {
         configurations: ['naming'],
         description: 'The most words one identifier may have.',
         reason_needed: 'raising',
-        languages: ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql'],
-        categories: NAMING_TABLE_CATEGORIES,
+        languages: SETTING_LANGUAGES,
         language_defaults: { swift: 5, sql: 7 },
     },
     'naming.cases': {
@@ -295,7 +293,6 @@ export const SETTING_DECLARATIONS = {
         description:
             'The case patterns that one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift), or timestamp-snake (20260103120000_create_users.sql). Ruff checks the case of Python classes, functions, and parameters, and SwiftLint checks Swift types, variables, parameters, and enum cases; this setting covers the rest.',
         reason_needed: 'adding',
-        languages: ['typescript', 'javascript', 'python', 'swift', 'bash', 'sql'],
-        categories: NAMING_TABLE_CATEGORIES,
+        languages: SETTING_LANGUAGES,
     },
 } as const;
