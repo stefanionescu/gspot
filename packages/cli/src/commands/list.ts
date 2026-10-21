@@ -26,7 +26,7 @@ function buildSettingsResult(session: Session): CommandResult {
     const lines = displayed.map((row) => {
         const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
         const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
-        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${row.reason_needed ?? ''}  ${row.source}${formatScopeTag(row.scope)}`;
+        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reason_needed ?? '').padEnd('reason needed when'.length)}  ${row.source}${formatScopeTag(row.scope)}`;
     });
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} reason needed when  source`);
     if (extras.length > 0) {

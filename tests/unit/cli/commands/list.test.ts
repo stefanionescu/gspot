@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
-import { LAYERED_SCOPE_SETTINGS } from '#tests/data/settings/scopes.ts';
+import { LIST_SCOPE_ROWS, LIST_SCOPE_SETTINGS } from '#tests/data/commands/list.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 test('list shows selected settings and available configurations', async () => {
@@ -107,7 +107,7 @@ path = "api/worker"
 test('the text settings list shows scope values while JSON keeps inherited values', async () => {
     await using folder = await testdir();
     await createFileTree(folder.path, {
-        'gspot.toml': LAYERED_SCOPE_SETTINGS.replace('["format"]', '["bash", "format"]'),
+        'gspot.toml': LIST_SCOPE_SETTINGS,
         'api/entry.sh': 'echo api\n',
         'api/worker/query.sql': 'SELECT 1;\n',
     });
@@ -115,13 +115,11 @@ test('the text settings list shows scope values while JSON keeps inherited value
     const human = await runGspot(folder.path, ['list', 'settings']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    const limits = human.stdout.split('\n').filter((line) => line.startsWith('limits.file_lines '));
-    expect(limits).toHaveLength(2);
-    expect(limits[0]).toContain('250');
-    expect(limits[0]).toContain('gspot.toml');
-    expect(limits[1]).toContain('200');
-    expect(limits[1]).toContain('[scope "api"]  [scope api]');
-    expect(limits.join('\n')).not.toContain('[scope api/worker]');
+    const lines = human.stdout.split('\n');
+    const selected = lines.filter((line) =>
+        /^(?:limits\.file_lines|test_files|dependencies\.(?:min_release_age_days|allowed_registries)) /u.test(line),
+    );
+    expect(selected).toStrictEqual([...LIST_SCOPE_ROWS]);
     const structured = await runGspot(folder.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
