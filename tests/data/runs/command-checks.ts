@@ -80,3 +80,16 @@ export const REAL_PATH = 'source.txt: located defect\n';
 
 export const HEADER_FAILURE =
     "console.error('Banner: scanner 1'); console.error('Native input failed.'); process.exitCode = 1;";
+
+export const SCOPE_PATH_CHECK = {
+    files: {
+        'gspot.toml': 'configurations = ["swift"]\n[rules]\nenabled = false\n[[scope]]\npath = "app"\n',
+        'app/src/a.swift': 'let value = 1\n',
+        'lib/x.ts': 'export const value = 1;\n',
+    },
+    program: String.raw`console.log("../lib/x.ts:1: outside\nsrc/a.swift:2: inside");`,
+    output: {
+        ...LOCATED_CHECK.output,
+        pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`,
+    },
+} as const;

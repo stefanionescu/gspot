@@ -26,6 +26,7 @@ import {
     LOCATED_CHECK,
     HEADER_FAILURE,
     FILELESS_CHECKS,
+    SCOPE_PATH_CHECK,
 } from '#tests/data/runs/command-checks.ts';
 
 test('bounded failure output retains the final diagnostic from both streams', () => {
@@ -295,4 +296,19 @@ test('a tool that runs out of memory gets a cause instead of the garbage collect
     expect(formatOutputTail({ stdout: '', stderr: dump })).toBe(
         'The tool ran out of memory. It most likely read build output or a bundle: keep that folder in .gitignore, or add an [[ignore]] with its paths.',
     );
+});
+
+test('a finding in a folder outside the scope keeps its repository path when the check runs in the scope folder', async () => {
+    await using sandbox = await testdir(SCOPE_PATH_CHECK.files);
+    const session = await openSession(sandbox.path);
+    const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] }).find(
+        (check) => check.selection.scope.path === 'app',
+    )!;
+    planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
+    planned.check.command = [process.execPath, '-e', SCOPE_PATH_CHECK.program];
+    planned.check.output = SCOPE_PATH_CHECK.output;
+
+    const checked = await runCheckCommand(session, planned);
+
+    expect(checked.findings.map(({ file }) => file)).toStrictEqual(['lib/x.ts', 'app/src/a.swift']);
 });

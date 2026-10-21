@@ -1,11 +1,9 @@
 import { statSync } from 'node:fs';
-import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+import { join, relative, isAbsolute } from 'node:path';
 import { TAIL_LINES } from '#cli/config/runs/command.ts';
 import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import { OUT_OF_MEMORY } from '#cli/config/runs/output.ts';
-import { normalizeOutputPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { OutputPaths } from '#cli/types/runs/output.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
@@ -14,6 +12,7 @@ import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import { parseOutput, outputFormats } from '#cli/runs/output/formats.ts';
+import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 import type {
@@ -23,12 +22,6 @@ import type {
     InvocationOutput,
     CommandInvocation,
 } from '#cli/types/runs/command.ts';
-
-function joinScopePaths(findings: Finding[], scopePath: string): void {
-    for (const finding of findings)
-        if (finding.file !== '' && !isAbsolute(finding.file) && !finding.file.startsWith(`${scopePath}/`))
-            finding.file = joinScope(scopePath, finding.file);
-}
 
 function buildUnexplainedFailure(
     check: CheckDeclaration,
@@ -69,11 +62,17 @@ function markFailure(
     if (parsed.length === 0) state.findings.push(buildUnexplainedFailure(check, tool, result, undefined));
 }
 
-function setFindingFiles(parsed: Finding[], invocation: CommandInvocation, check: CheckDeclaration): void {
+function setFindingFiles(
+    parsed: Finding[],
+    invocation: CommandInvocation,
+    check: CheckDeclaration,
+    paths: OutputPaths,
+): void {
     if (invocation.file === undefined) return;
     // Regex file groups can name a rule or another identifier instead of a path.
     if (check.output.format === 'regex' && check.output.file_type !== 'path') return;
-    for (const finding of parsed) if (finding.file === '') finding.file = invocation.file;
+    const file = convertToPosixPath(relative(paths.root, join(paths.cwd, invocation.file)));
+    for (const finding of parsed) if (finding.file === '') finding.file = file;
 }
 
 function isOnDisk(file: string, roots: string[]): boolean {
@@ -202,13 +201,16 @@ export function recordInvocation(
     state: CommandRunState,
 ): void {
     const { invocation, result, findings } = output;
-    const { check, selection } = planned;
+    const { check } = planned;
+    const file =
+        invocation.file === undefined
+            ? undefined
+            : convertToPosixPath(relative(state.root, join(state.cwd, invocation.file)));
     const parsed =
         findings.length === 0 && result.code !== 0 && invocation.file !== undefined
-            ? [buildUnexplainedFailure(check, tool, result, invocation.file)]
+            ? [buildUnexplainedFailure(check, tool, result, file)]
             : findings.map((finding) => ({ ...finding }));
-    setFindingFiles(parsed, invocation, check);
-    if (selection.scope.path !== '' && state.cwd !== state.root) joinScopePaths(parsed, selection.scope.path);
+    setFindingFiles(parsed, invocation, check, state);
     state.findings.push(...parsed);
     markFailure(check, { tool, result, parsed, state });
 }
