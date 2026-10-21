@@ -13,7 +13,7 @@ import type { EslintFiles, EslintFileInputs, EslintSettingsBlock } from '#cli/ty
  * @returns code patterns and intersections that leave out non-code files.
  */
 export function buildFilePatterns(input: EslintFileInputs): EslintFiles {
-    const { tests, scripts, nodeFiles } = input;
+    const { scopes, nodeFiles } = input;
     const source = buildSourcePattern(...CODE_LANGUAGES);
     const matchesSource = buildPathMatcher([source]);
     const selected = input.components.flatMap(({ configuration, tools }) =>
@@ -43,8 +43,12 @@ export function buildFilePatterns(input: EslintFileInputs): EslintFiles {
             ),
         ],
         javascript: [javascript, ...node],
-        tests: tests.flatMap((test) => code.map((pattern) => [test, pattern])),
-        scripts: scripts.flatMap((script) => code.map((pattern) => [script, pattern])),
+        tests: scopes.flatMap(({ scope, tests }) =>
+            tests.flatMap((test) => code.map((pattern) => [test, joinScope(escapeGlob(scope), '**/*'), pattern])),
+        ),
+        scripts: scopes.flatMap(({ scope, scripts }) =>
+            scripts.flatMap((script) => code.map((pattern) => [script, joinScope(escapeGlob(scope), '**/*'), pattern])),
+        ),
     };
 }
 

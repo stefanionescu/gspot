@@ -94,8 +94,6 @@ function buildProjectOptions(session: ToolFileContext['session'], context: Eslin
     return {
         projects: repository.files.filter((file) => basename(file.path) === TSCONFIG_FILE).map((file) => file.path),
         nodeFiles,
-        testFiles: view.test_files,
-        scriptFiles: listScriptPaths(context),
         restrictedImports: tool.restricted_imports,
         allLevelRules: {
             [IMPORT_BOUNDARIES_RULE]: buildImportBoundariesRule(context.scopes, aliases),
@@ -157,8 +155,11 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
     const eslintFiles = buildFilePatterns({
         components: listFragmentConfigurations(scopes, selection, toolFile),
         nodeFiles,
-        tests: view.test_files,
-        scripts: listScriptPaths({ selection }),
+        scopes: scopes.map((selection) => ({
+            scope: selection.scope.path,
+            tests: selection.view.test_files,
+            scripts: listScriptPaths({ selection }),
+        })),
     });
     return {
         ...context,

@@ -77,8 +77,6 @@ export type EslintBoundaryContext = {
 export type EslintParts = {
     projects: string[];
     nodeFiles: string[];
-    testFiles: string[];
-    scriptFiles: string[];
     allLevelRules: Record<string, unknown>;
     javascriptAllLevelRules: Record<string, unknown>;
     importStyleBlocks: EslintBlock[];
@@ -123,8 +121,7 @@ export type BlockWriter = {
 /** Component patterns, detected Node files, and your test or script patterns. */
 export type EslintFileInputs = {
     components: Manifest[];
-    tests: string[];
-    scripts: string[];
+    scopes: { scope: string; tests: string[]; scripts: string[] }[];
     nodeFiles: string[];
 };
 

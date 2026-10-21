@@ -1,7 +1,9 @@
 import { stripUndefined } from '#cli/system/values.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
+import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { buildScopeFiles } from '#cli/generation/eslint/files.ts';
+import { listScriptPaths } from '#cli/generation/eslint/runtimes.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { pickPresetFields, buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
 import { buildLevelRules, buildRestrictedImportBlocks } from '#cli/generation/eslint/lint-rules.ts';
@@ -25,6 +27,8 @@ import {
     type SelectorGroup,
     type EslintContext,
     type EslintPresets,
+    type EslintLevelRules,
+    type EslintSettingsBlock,
 } from '#cli/types/generation/eslint.ts';
 
 /**
@@ -133,7 +137,7 @@ function buildBlocksAfterFragments(
                 },
             ],
         ),
-        [{ files: eslintFiles.code, ignores: [...parts.testFiles, ...parts.scriptFiles], rules: rules.console }],
+        ...buildConsoleBlocks(base, rules.console).map((block): Parameters<BlockWriter['block']> => [block]),
         [{ files: eslintFiles.scripts, rules: SCRIPT_RULES }],
         [{ files: eslintFiles.tests, rules: TEST_RULES }],
         ...buildBasePresetBlocks(base.eslintPresets.get('javascript') as EslintPresets, FILE_PRESETS, eslintFiles.code),
@@ -146,6 +150,32 @@ function buildBlocksAfterFragments(
         ...rootPackage,
         [{ files: eslintFiles.javascript, rules: { ...rules.javascript, ...parts.javascriptAllLevelRules } }],
     ];
+}
+
+/**
+ * Keep test and script console exemptions inside their project scope.
+ *
+ * @param input every scope and the generated code selectors.
+ * @param rules the console restrictions at the selected level.
+ * @returns one console block per JavaScript scope.
+ */
+function buildConsoleBlocks(
+    input: Pick<EslintContext, 'scopes' | 'eslintFiles'>,
+    rules: EslintLevelRules['console'],
+): EslintSettingsBlock[] {
+    const scopes = input.scopes.filter(({ view }) => view.configurations.includes('javascript'));
+    return scopes.map((selection) => ({
+        files: buildScopeFiles(input.eslintFiles.code, selection.scope.path, ['**/*']),
+        ignores: [
+            ...listNestedScopes(
+                scopes.map(({ scope }) => scope.path),
+                selection.scope.path,
+            ).map((path) => `${escapeGlob(path)}/**`),
+            ...selection.view.test_files,
+            ...listScriptPaths({ selection }),
+        ],
+        rules,
+    }));
 }
 
 /**

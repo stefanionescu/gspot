@@ -143,7 +143,7 @@ test.each(SELECTOR_GROUP_CASES)('blocks > generated selector blocks: $name', asy
 
 test('files > Node file patterns match a filename with a backslash and not its neighbor', () => {
     const file = String.raw`scripts/run\name`;
-    const patterns = buildFilePatterns({ components: [], tests: [], scripts: [], nodeFiles: [file] }).code;
+    const patterns = buildFilePatterns({ components: [], scopes: [], nodeFiles: [file] }).code;
     const matches = picomatch(patterns, { dot: true, windows: false });
     expect(matches(file)).toBe(true);
     expect(matches('scripts/runname')).toBe(false);
