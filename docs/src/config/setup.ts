@@ -49,7 +49,6 @@ export const PLUGIN_REQUIREMENTS = {
     node: pluginPackage.engines.node.replace(RANGE_OPERATOR, ''),
     eslint: pluginPackage.peerDependencies.eslint.replace(RANGE_OPERATOR, ''),
     typescriptEslint: pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin'].replace(RANGE_OPERATOR, ''),
-    typescript: pluginPackage.peerDependencies.typescript.split(' ').map((bound) => bound.replace(RANGE_OPERATOR, '')),
 } as const;
 
 /** The package managers that hold back new releases, and the setting that exempts the gspot packages. */

@@ -61,12 +61,12 @@ why = "A long file hides independent responsibilities from the reader."
 [[check]]
 example = "A Bash function that only calls another reports a finding. Inline the call at each caller, and delete the wrapper."
 files = { extensions = [".py", ".swift"], tags = ["shell"], kinds = ["source"] }
-help = "Inline a forwarding function at its calls and delete it. Split independent statements into the files that use them."
+help = "Inline the function at its calls and delete it, or import from the module that defines the code and delete the forwarding file. When a function must stay, list its name under `names` in an `[[ignore]]` record with the reason."
 level = "all"
 name = "trivial-functions"
 runs = "scope"
 stage = "commit"
-summary = "Finds functions with too few statements and files that only forward to other code."
+summary = "Finds named Python, Swift, and Bash functions at or under `limits.trivial_function_statements`, methods and accessors included, and files whose statements are only imports, re-exports, and aliases."
 why = "A function of one statement makes the reader jump for nothing."
 
 [[check]]

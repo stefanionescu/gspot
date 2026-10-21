@@ -1,13 +1,11 @@
-import type { TypeServices, NamedFunction, ImplementedFunction } from './types/syntax.ts';
+import type { ImplementedFunction } from './types/syntax.ts';
 import { ZOD_MODULES, ZOD_SCHEMA_FACTORIES, ZOD_SCHEMA_NAMESPACES } from './config/schemas.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     TYPE_ONLY,
     FUNCTION_TYPES,
-    EXPORT_REFERENCES,
     UNWRAPPABLE_NODES,
-    COMPARISON_OPERATORS,
     IMPORT_SPECIFIER_NODES,
     EXECUTABLE_DECLARATIONS,
     TRANSPARENT_EXPRESSIONS,
@@ -28,34 +26,6 @@ function listChildNodes(
         if (Array.isArray(child)) return child.filter((item: unknown) => item !== null) as TSESTree.Node[];
         return child !== null && typeof child === 'object' ? [child as TSESTree.Node] : [];
     });
-}
-
-// Only values that depend on an expression count as calculations; literal and identity returns stay trivial.
-function isDynamicValue(node: TSESTree.Node): boolean {
-    switch (node.type) {
-        case AST_NODE_TYPES.ConditionalExpression:
-        case AST_NODE_TYPES.LogicalExpression: {
-            return true;
-        }
-        case AST_NODE_TYPES.BinaryExpression: {
-            return COMPARISON_OPERATORS.has(node.operator);
-        }
-        case AST_NODE_TYPES.TemplateLiteral: {
-            return node.expressions.length > 0;
-        }
-        case AST_NODE_TYPES.ObjectExpression: {
-            return node.properties.some(
-                (property) =>
-                    property.type === AST_NODE_TYPES.SpreadElement || property.value.type !== AST_NODE_TYPES.Literal,
-            );
-        }
-        case AST_NODE_TYPES.ArrayExpression: {
-            return node.elements.some((element) => element !== null && element.type !== AST_NODE_TYPES.Literal);
-        }
-        default: {
-            return false;
-        }
-    }
 }
 
 function isTypeImportReference(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
@@ -116,83 +86,6 @@ export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
 }
 
 /**
- * Check whether an expression builds data, selects a value, or composes calls. Constants and plain forwarding do
- * not count.
- *
- * @param node the function body or returned expression
- * @param visitorKeys the child keys of each node type, from the parser
- * @returns whether the expression calculates something
- */
-export function hasCalculation(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): boolean {
-    if (isDynamicValue(node)) return true;
-    if (
-        node.type === AST_NODE_TYPES.CallExpression &&
-        ((node.callee.type === AST_NODE_TYPES.MemberExpression &&
-            node.callee.object.type === AST_NODE_TYPES.CallExpression &&
-            node.callee.object.callee.type === AST_NODE_TYPES.MemberExpression) ||
-            node.arguments.some((argument) => unwrap(argument)?.type === AST_NODE_TYPES.CallExpression))
-    )
-        return true;
-    return listChildNodes(node, visitorKeys).some((child) => hasCalculation(child, visitorKeys));
-}
-
-/**
- * List the variables through which callers reach a function: its own name, or the variable that holds it.
- *
- * @param node the function implementation
- * @param source the parsed file, with its scopes
- * @returns the declared variables of the function
- */
-export function listCallableVariables(
-    node: ImplementedFunction,
-    source: TSESLint.SourceCode,
-): TSESLint.Scope.Variable[] {
-    const owners: NamedFunction[] = [];
-    if (node.type !== AST_NODE_TYPES.ArrowFunctionExpression && node.id !== null) owners.push({ node, id: node.id });
-    const value = node.type === AST_NODE_TYPES.FunctionDeclaration ? node : findOutermostValue(node);
-    if (value.parent.type === AST_NODE_TYPES.VariableDeclarator)
-        owners.push({ node: value.parent, id: value.parent.id });
-    return owners.flatMap(({ node: owner, id }) =>
-        source
-            .getDeclaredVariables(owner)
-            .filter((variable) => variable.identifiers.some((entry) => entry.range[0] === id?.range[0])),
-    );
-}
-
-/**
- * Check whether the module exports a function: in its declaration, in an export list, or as the default export.
- * Callers in other modules can use it.
- *
- * @param node the function implementation
- * @param source the parsed file, with its scopes
- * @returns whether the module exports the function
- */
-export function isExportedFunction(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
-    let value: TSESTree.Node = node.type === AST_NODE_TYPES.FunctionDeclaration ? node : findOutermostValue(node);
-    let variables: readonly TSESLint.Scope.Variable[] = listCallableVariables(node, source);
-    if (
-        value.parent.type === AST_NODE_TYPES.MethodDefinition ||
-        value.parent.type === AST_NODE_TYPES.PropertyDefinition
-    ) {
-        value = value.parent.parent.parent;
-        variables = source.getDeclaredVariables(
-            value.parent.type === AST_NODE_TYPES.VariableDeclarator ? value.parent : value,
-        );
-    }
-    const owner = value.parent.type === AST_NODE_TYPES.VariableDeclarator ? value.parent.parent : value;
-    if (
-        owner.parent.type === AST_NODE_TYPES.ExportNamedDeclaration ||
-        owner.parent.type === AST_NODE_TYPES.ExportDefaultDeclaration
-    )
-        return true;
-    return variables.some((variable) =>
-        variable.references.some(
-            (reference) => reference.isRead() && EXPORT_REFERENCES.has(reference.identifier.parent.type),
-        ),
-    );
-}
-
-/**
  * Find schema factory calls through their Zod imports, including aliased bindings.
  *
  * @param source the parsed module and its scopes
@@ -219,17 +112,4 @@ export function findZodSchemaConstructors(source: TSESLint.SourceCode): TSESTree
     return [...tracker.iterateEsmReferences(imports)]
         .filter((reference) => !isTypeImportReference(reference.node, source))
         .map((reference) => reference.node);
-}
-
-/**
- * Get the checker and node mapping when the parser supplies a TypeScript program.
- *
- * @param source the parsed file and its parser services
- * @returns the type services, or undefined without a program
- */
-export function getTypeServices(source: TSESLint.SourceCode): TypeServices | undefined {
-    const services = source.parserServices;
-    if (services?.program === undefined || services.program === null || services.esTreeNodeToTSNodeMap === undefined)
-        return undefined;
-    return { checker: services.program.getTypeChecker(), mapping: services.esTreeNodeToTSNodeMap };
 }

@@ -9,15 +9,11 @@ createRuleTester().run<
 >('no-trivial-functions', plugin.rules['no-trivial-functions'], {
     valid: [
         'export function sort(items, compare = (a, b) => a - b) { items.sort(compare); return items; }',
-        "export class NotFound extends Error { constructor() { super('Not found'); } }",
-        'class A { constructor() { setup(); } } new A(); new A();',
         // A consumer that takes a function value needs the function declaration.
         'consume({ onValue: value => write(value) });',
-        'const options = { nested: { onValue(value) { write(value); } } }; consume(options);',
         'handlers.onValue = value => write(value);',
         'items.map((item) => item.value);',
         'items.filter(function (item) { return item.active; });',
-        'items.filter(function named(item) { return item.active; });',
         'items.map(((item) => item.value) as (item: Item) => unknown);',
         'items.map(((item) => item.value)!);',
         'items.map(((item) => item.value) satisfies (item: Item) => unknown);',
@@ -37,27 +33,13 @@ createRuleTester().run<
         'function process(items) { function visit(item) { inspect(item); validate(item); return item; } return items.map(visit); }',
         'const process = (items) => items.map(item => { inspect(item); validate(item); return item; });',
 
-        // Recursion names the binding inside the body.
-        '(function count(n) { return n === 0 ? 0 : count(n - 1); })(2);',
-        'function count(n) { return n === 0 ? 0 : count(n - 1); } count(2);',
-        'const count = (n) => n === 0 ? 0 : count(n - 1); count(2);',
-        'const count = function recurse(n) { return n === 0 ? 0 : recurse(n - 1); }; count(2);',
-
         // Over the limit.
         'function work() { first(); second(); third(); }',
         'function work() { if (ready) { first(); second(); } }',
         { code: 'function work() { first(); second(); }', options: [{ trivialFunctionStatements: 1 }] },
 
-        // Declared signatures the language owns.
+        // A declaration without a body has nothing to inline.
         'declare function required(): void;',
-        'class A { constructor(public value: number) {} }',
-        'class A { constructor(value: number) { this.value = value; } }',
-        'class Failure extends Error { constructor(message: string) { super(message); this.name = "Failure"; } }',
-        'class A { get value() { return 1; } }',
-        'class A { set value(value) { store(value); } }',
-        'class A { @decorate method() { return 1; } }',
-        'class A extends B { override method() { return 1; } }',
-        'const object = { get value() { return 1; }, set value(value) { store(value); } };',
     ],
     invalid: [
         {
@@ -86,7 +68,10 @@ createRuleTester().run<
         },
         {
             code: 'function count(n) { return n === 0 ? 0 : count(n - 1); }\nfunction local() { return 1; }',
-            errors: [{ messageId: 'trivial', line: 2, column: 1 }],
+            errors: [
+                { messageId: 'trivial', line: 1, column: 1 },
+                { messageId: 'trivial', line: 2, column: 1 },
+            ],
         },
         {
             code: 'items.map((item) => item.value); function local() { return 1; }',
@@ -150,6 +135,28 @@ createRuleTester().run<
             'const callback = (value) => value.active; items.filter(callback);',
             'function callback(a, b) { return a; } consume(callback.length);',
         ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }] })),
+        // Methods, accessors, constructors, and recursive functions have names too.
+        ...[
+            'items.filter(function named(item) { return item.active; });',
+            "export class NotFound extends Error { constructor() { super('Not found'); } }",
+            'class A { constructor() { setup(); } } new A(); new A();',
+            'const options = { nested: { onValue(value) { write(value); } } }; consume(options);',
+            '(function count(n) { return n === 0 ? 0 : count(n - 1); })(2);',
+            'function count(n) { return n === 0 ? 0 : count(n - 1); } count(2);',
+            'const count = (n) => n === 0 ? 0 : count(n - 1); count(2);',
+            'const count = function recurse(n) { return n === 0 ? 0 : recurse(n - 1); }; count(2);',
+            'class A { constructor(public value: number) {} }',
+            'class A { constructor(value: number) { this.value = value; } }',
+            'class Failure extends Error { constructor(message: string) { super(message); this.name = "Failure"; } }',
+            'class A { get value() { return 1; } }',
+            'class A { set value(value) { store(value); } }',
+            'class A { @decorate method() { return 1; } }',
+            'class A extends B { override method() { return 1; } }',
+        ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }] })),
+        {
+            code: 'const object = { get value() { return 1; }, set value(value) { store(value); } };',
+            errors: [{ messageId: 'trivial' }, { messageId: 'trivial' }],
+        },
         {
             code: 'function outer() { function inner() {} }',
             errors: [{ messageId: 'trivial' }, { messageId: 'trivial' }],
@@ -162,7 +169,7 @@ createRuleTester().run<
     ],
 });
 
-// Typed linting resolves the interfaces and base methods that an implementation must retain.
+// The rule reports a method that an interface or a base class declares like any other method.
 createRuleTester({
     languageOptions: {
         parserOptions: {
@@ -189,6 +196,8 @@ createRuleTester({
                     '}',
                 ].join('\n'),
                 errors: [
+                    { messageId: 'trivial', line: 4 },
+                    { messageId: 'trivial', line: 5 },
                     { messageId: 'trivial', line: 6 },
                     { messageId: 'trivial', line: 7 },
                 ],

@@ -84,8 +84,7 @@ Each rule page gives the options, defaults, and an example.
 
 ## TypeScript
 
-Install `@typescript-eslint/parser` and TypeScript {`${PLUGIN_REQUIREMENTS.typescript[0]} or newer`} and older than
-{PLUGIN_REQUIREMENTS.typescript[1]}, then select your TypeScript files:
+Install `@typescript-eslint/parser` with the TypeScript version it supports, then select your TypeScript files:
 
 ```javascript
 import gspot from '@gspothq/eslint-plugin';
@@ -95,13 +94,10 @@ export default [
     {
         ...gspot.configs.all,
         files: ['**/*.ts', '**/*.tsx'],
-        languageOptions: { parser: tsParser, parserOptions: { projectService: true } },
+        languageOptions: { parser: tsParser },
     },
 ];
 ```
-
-`gspot/no-trivial-functions` uses the type information from `projectService` to skip a method that an interface or a
-base class declares.
 
 ## Magic numbers
 

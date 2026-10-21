@@ -6,15 +6,14 @@ import { parseCached } from '#cli/system/files/cache.ts';
 import { getLimit } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildFinding, getNodePlace } from '#cli/runs/finding.ts';
+import type { ParsedLanguage } from '#cli/types/checks/structure.ts';
 import { PARSED_SOURCES } from '#cli/checks/structure/parsed-sources.ts';
-import type { IsNontrivial, ParsedLanguage } from '#cli/types/checks/structure.ts';
-import { isInterfaceClass, isPythonInterface } from '#cli/checks/structure/interfaces.ts';
 
 import {
     BARE_NAME_NODES,
-    CONTAINER_NODES,
-    CONTAINER_NOISE,
+    FORWARDING_NODES,
     TYPE_ALIAS_NODES,
+    PYTHON_EXPORT_LIST,
     BASH_COMMAND_NODES,
     BASH_SOURCE_COMMANDS,
     SWIFT_ACCESSOR_NODES,
@@ -53,79 +52,32 @@ const STATEMENT_COUNTS: Record<ParsedLanguage, (node: Node) => number> = {
     bash: (node) => (isBashStatement(node) ? 1 : 0),
 };
 
-function isNontrivialFunction(node: Node, language: ParsedLanguage, limit: number): boolean {
-    if (node.type === 'lambda') return false;
-    if (node.type === 'computed_property' && !node.namedChildren.some((child) => child.type === 'statements'))
-        return node.namedChildren.some((child) => isNontrivial(child, language, limit));
-    const body = node.childForFieldName('body') ?? node;
-    const siblings = body.namedChildren;
-    const children = siblings.filter((child) => !(language === 'python' && isDocstring(child, siblings)));
-    return countExecutableStatements(children, language) > limit;
+// A Python alias assigns a bare name or attribute, and `__all__` lists the names that the module re-exports.
+function isPythonAlias(node: Node): boolean {
+    const assignment = node.namedChildren[0];
+    if (node.type !== 'expression_statement' || assignment?.type !== 'assignment') return false;
+    if (assignment.childForFieldName('type') !== null) return false;
+    const value = assignment.childForFieldName('right');
+    return (
+        assignment.childForFieldName('left')?.text === PYTHON_EXPORT_LIST ||
+        (value !== null && BARE_NAME_NODES.has(value.type))
+    );
 }
 
-// Whether an assignment does more than forward a name: it declares a type, or it holds a substantial value.
-function isNontrivialAssignment(node: Node, language: ParsedLanguage, limit: number): boolean {
-    if (node.childForFieldName('left')?.text === '__all__') return false;
-    const value = node.childForFieldName('right');
-    return node.childForFieldName('type') !== null || (value !== null && isNontrivial(value, language, limit));
-}
-
-// An alias counts as substantial when its value does more than name an existing type.
-function isNonReferenceAlias(node: Node): boolean {
-    const value = node.childForFieldName('value') ?? node.namedChildren.at(-1);
-    return value !== undefined && !TYPE_REFERENCE_NODES.has(value.type);
-}
-
-// What each node type must hold to count as substantial.
-const NONTRIVIAL_NODES: Record<string, IsNontrivial> = {
-    expression_statement: (node, language, limit) => {
-        const child = node.namedChildren[0];
-        return child !== undefined && child.type !== 'string' && isNontrivial(child, language, limit);
-    },
-    assignment: isNontrivialAssignment,
-    property_declaration: (node, language, limit) => {
-        const computed = node.childForFieldName('computed_value');
-        return computed === null || isNontrivial(computed, language, limit);
-    },
-    type_alias_statement: isNonReferenceAlias,
-    typealias_declaration: isNonReferenceAlias,
+// The statements that forward code in one language: a Python alias, or a Bash command that sources another script.
+const LANGUAGE_FORWARDING: Record<ParsedLanguage, (node: Node) => boolean> = {
+    python: isPythonAlias,
+    swift: () => false,
+    bash: (node) => node.type === 'command' && BASH_SOURCE_COMMANDS.has(node.childForFieldName('name')?.text ?? ''),
 };
 
-// The node kinds one language reads differently from the others.
-const LANGUAGE_NONTRIVIAL_NODES: Record<ParsedLanguage, Record<string, IsNontrivial>> = {
-    bash: {
-        command: (node: Node): boolean => {
-            const name = node.childForFieldName('name')?.text;
-            return !BASH_SOURCE_COMMANDS.has(name ?? '');
-        },
-    },
-    python: {
-        class_definition: (node, language, limit) =>
-            isInterfaceClass(node) || isNontrivialContainer(node, language, limit),
-    },
-    swift: {},
-};
-
-function isInert(node: Node): boolean {
-    if (node.type.includes('comment') || node.type.startsWith('import')) return true;
-    return node.type === 'hash_bang_line' || BARE_NAME_NODES.has(node.type);
-}
-
-function isNontrivialContainer(node: Node, language: ParsedLanguage, limit: number): boolean {
-    const body = node.childForFieldName('body');
-    return (body?.namedChildren ?? node.namedChildren)
-        .filter((child) => !CONTAINER_NOISE.has(child.type))
-        .some((child) => isNontrivial(child, language, limit));
-}
-
-function isNontrivial(node: Node, language: ParsedLanguage, limit: number): boolean {
-    if (isInert(node)) return false;
-    const languageCheck = LANGUAGE_NONTRIVIAL_NODES[language][node.type];
-    if (languageCheck !== undefined) return languageCheck(node, language, limit);
-    if (COUNTED_FUNCTION_NODES.has(node.type)) return isNontrivialFunction(node, language, limit);
-    if (CONTAINER_NODES.has(node.type)) return isNontrivialContainer(node, language, limit);
-    const check = NONTRIVIAL_NODES[node.type];
-    return check === undefined ? true : check(node, language, limit);
+// Imports, re-exports, and aliases forward code that another module owns.
+function isForwarding(node: Node, language: ParsedLanguage): boolean {
+    if (FORWARDING_NODES.has(node.type) || node.type.startsWith('import')) return true;
+    // A type alias forwards when it names an existing type and declares nothing of its own.
+    if (TYPE_ALIAS_NODES.has(node.type))
+        return TYPE_REFERENCE_NODES.has((node.childForFieldName('value') ?? node.namedChildren.at(-1))?.type ?? '');
+    return LANGUAGE_FORWARDING[language](node);
 }
 
 /**
@@ -150,19 +102,18 @@ function countExecutableStatements(nodes: Node[], language: ParsedLanguage): num
 }
 
 /**
- * Checks whether a file holds only imports, aliases, forwarding statements, or trivial functions.
+ * Checks whether a file only forwards code: each statement imports, re-exports, or renames.
  *
  * @param syntaxRoot the parsed file.
  * @param language the grammar of the file.
- * @param limit the most statements a trivial function holds.
- * @returns whether the file holds nothing substantial.
+ * @returns whether the file holds nothing but forwarding statements.
  */
-function isTrivialFile(syntaxRoot: Node, language: ParsedLanguage, limit: number): boolean {
+function isTrivialFile(syntaxRoot: Node, language: ParsedLanguage): boolean {
     const siblings = syntaxRoot.namedChildren;
     const statements = siblings.filter(
         (node) => !node.type.includes('comment') && !(language === 'python' && isDocstring(node, siblings)),
     );
-    return statements.length > 0 && !statements.some((child) => isNontrivial(child, language, limit));
+    return statements.length > 0 && statements.every((node) => isForwarding(node, language));
 }
 
 function formatAccessorName(node: Node, label: string): string {
@@ -190,7 +141,8 @@ function formatSwiftFunctionName(node: Node): string {
 }
 
 /**
- * Reports trivial functions and files, and leaves anonymous functions alone.
+ * Reports each named function at or under the statement limit, and each file that only forwards code. Anonymous
+ * functions have no name, so the check leaves them out.
  *
  * @param session the repository and its tools.
  * @param planned the scope files and statement limits.
@@ -204,7 +156,7 @@ export async function checkStructureTrivialFunctions(session: Session, planned: 
         const findings = (source.captures.get('function') ?? []).flatMap((node) => {
             const body = extractFunctionBody(node, source.language);
             const count = countExecutableStatements(body, source.language);
-            if (count > limit || (source.language === 'python' && isPythonInterface(node))) return [];
+            if (count > limit) return [];
             const name =
                 source.language === 'swift'
                     ? formatSwiftFunctionName(node)
@@ -213,7 +165,7 @@ export async function checkStructureTrivialFunctions(session: Session, planned: 
             const message = `${name} has ${statements}. Functions with ${String(limit)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;
             return [{ ...buildFinding(planned, getNodePlace(source.path, node), 'trivial-function', message), name }];
         });
-        if (isTrivialFile(source.tree.rootNode, source.language, limit)) {
+        if (isTrivialFile(source.tree.rootNode, source.language)) {
             const line =
                 source.language === 'bash'
                     ? 1
@@ -224,7 +176,7 @@ export async function checkStructureTrivialFunctions(session: Session, planned: 
                     planned,
                     { file: source.path, line },
                     'trivial-file',
-                    'This file contains only imports, aliases, forwarding, or trivial functions. Move them to the code that uses them.',
+                    'This file only imports, re-exports, or renames code. Import from the module that defines it, and delete this file.',
                 ),
             );
         }

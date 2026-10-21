@@ -39,17 +39,17 @@ src/orders.js
 
 ## Rules
 
-| Rule                           | In          | What it finds                                                                        |
-| ------------------------------ | ----------- | ------------------------------------------------------------------------------------ |
-| `gspot/no-client-env`          | recommended | Private environment reads in client modules.                                         |
-| `gspot/no-comments-in-imports` | all         | Comments inside or right after the import block.                                     |
-| `gspot/import-boundaries`      | all         | Relative imports that leave the nearest boundary folder.                             |
-| `gspot/no-renamed-exports`     | all         | Exported constants that only rename another value.                                   |
-| `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.       |
-| `gspot/no-trivial-files`       | all         | Files with only forwarding code, aliases, re-exports, or small unexported functions. |
-| `gspot/no-trivial-functions`   | all         | Named functions of two statements or fewer, exported or not.                         |
-| `gspot/no-magic-numbers`       | none        | Numbers without a name, outside the initializers of module-level constants.          |
-| `gspot/require-server-only`    | none        | Selected server modules that do not import `server-only` or declare `use server`.    |
+| Rule                           | In          | What it finds                                                                     |
+| ------------------------------ | ----------- | --------------------------------------------------------------------------------- |
+| `gspot/no-client-env`          | recommended | Private environment reads in client modules.                                      |
+| `gspot/no-comments-in-imports` | all         | Comments inside or right after the import block.                                  |
+| `gspot/import-boundaries`      | all         | Relative imports that leave the nearest boundary folder.                          |
+| `gspot/no-renamed-exports`     | all         | Exported constants that only rename another value.                                |
+| `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.    |
+| `gspot/no-trivial-files`       | all         | Files whose top-level statements are only imports, re-exports, and aliases.       |
+| `gspot/no-trivial-functions`   | all         | Named functions of two statements or fewer, exported or not.                      |
+| `gspot/no-magic-numbers`       | none        | Numbers without a name, outside the initializers of module-level constants.       |
+| `gspot/require-server-only`    | none        | Selected server modules that do not import `server-only` or declare `use server`. |
 
 The [rule reference](https://generativespotting.com/reference/eslint-plugin/) gives the options, defaults,
 and examples of each lint rule.
@@ -67,8 +67,7 @@ export default [{ files: ['src/server/**/*.js'], plugins: { gspot }, rules: { 'g
 
 ## TypeScript
 
-Install `@typescript-eslint/parser` and TypeScript 4.8.4 or newer and older than 6.1.0, then select your
-TypeScript files:
+Install `@typescript-eslint/parser` with the TypeScript version it supports, then select your TypeScript files:
 
 ```javascript
 import gspot from '@gspothq/eslint-plugin';
@@ -78,13 +77,10 @@ export default [
     {
         ...gspot.configs.all,
         files: ['**/*.ts', '**/*.tsx'],
-        languageOptions: { parser: tsParser, parserOptions: { projectService: true } },
+        languageOptions: { parser: tsParser },
     },
 ];
 ```
-
-`gspot/no-trivial-functions` uses the type information from `projectService` to skip a method that an
-interface or a base class declares.
 
 ## Magic numbers
 

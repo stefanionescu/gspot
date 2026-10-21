@@ -30,41 +30,11 @@ export const COUNTED_FUNCTION_NODES = new Set([
 
 export const TYPE_ALIAS_NODES = new Set(['type_alias_statement', 'typealias_declaration']);
 
-export const CONTAINER_NODES = new Set([
-    'decorated_definition',
-    'class_definition',
-    'class_declaration',
-    'class_body',
-    'block',
-    'source_file',
-    'module',
-    'program',
-    'computed_property',
-]);
+/** The statements that only forward code, besides imports: a Python future import and a shebang line. */
+export const FORWARDING_NODES: ReadonlySet<string> = new Set(['future_import_statement', 'hash_bang_line']);
 
-export const CONTAINER_NOISE = new Set([
-    'identifier',
-    'type_identifier',
-    'modifiers',
-    'decorator',
-    'inheritance_specifier',
-]);
-
-export const PYTHON_INTERFACE_DECORATORS: ReadonlySet<string> = new Set([
-    'overload',
-    'override',
-    'property',
-    'abstractmethod',
-    'abstractproperty',
-    'abstractclassmethod',
-    'abstractstaticmethod',
-]);
-
-export const PYTHON_ACCESSOR_DECORATOR = /\.(?:setter|getter|deleter)$/u;
-
-export const PYTHON_INTERFACE_BASES: ReadonlySet<string> = new Set(['Protocol', 'ABC']);
-
-export const PYTHON_ABSTRACT_METACLASS = 'ABCMeta';
+/** The Python list of the names that a module re-exports. */
+export const PYTHON_EXPORT_LIST = '__all__';
 
 export const BARE_NAME_NODES = new Set(['identifier', 'simple_identifier', 'attribute', 'navigation_expression']);
 

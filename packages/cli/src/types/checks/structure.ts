@@ -3,8 +3,6 @@ import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 
 export type ParsedLanguage = 'python' | 'swift' | 'bash';
 
-export type IsNontrivial = (node: Node, language: ParsedLanguage, limit: number) => boolean;
-
 /** A tracked folder entry. */
 export type FolderEntry = { name: string; kind: 'file' | 'folder' };
 

@@ -239,7 +239,7 @@ export function buildEnvironmentRuleBlocks(
  *
  * @param planned what the limits cover.
  *
- * @returns the lint rules that detect needless forwarding functions.
+ * @returns the lint rules that detect trivial functions and files that only forward code.
  */
 export function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
@@ -268,7 +268,7 @@ export function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session
                 scope: scope.folder.path,
                 ...splitGlobs(patterns),
                 rules: {
-                    [TRIVIAL_FILES_RULE]: ['error', { trivialFunctionStatements, allowIndex }],
+                    [TRIVIAL_FILES_RULE]: ['error', { allowIndex }],
                     [TRIVIAL_FUNCTIONS_RULE]: ['error', { trivialFunctionStatements }],
                 },
             });

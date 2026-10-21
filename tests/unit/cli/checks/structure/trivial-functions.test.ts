@@ -48,12 +48,11 @@ test('Swift reports constructors, accessors, decorated methods, and nested funct
 
 test.each([...TRIVIAL_FUNCTION_CASES])(
     'Swift $name reports the trivial functions at lines $lines',
-    async ({ source, lines, trivialFile }) => {
+    async ({ source, lines }) => {
         const result = await checkTrivialFile('swift', 'Source.swift', source);
-        expect(result.map((finding) => ({ line: finding.line, rule: finding.rule }))).toStrictEqual([
-            ...lines.map((line) => ({ line, rule: 'trivial-function' })),
-            ...(trivialFile ? [{ line: 1, rule: 'trivial-file' }] : []),
-        ]);
+        expect(result.map((finding) => ({ line: finding.line, rule: finding.rule }))).toStrictEqual(
+            lines.map((line) => ({ line, rule: 'trivial-function' })),
+        );
     },
 );
 
@@ -70,14 +69,16 @@ test('Python counts the statements of nested functions, lambdas, and control flo
     ]);
 });
 
-test('Python overloads, abstract and protocol methods, accessors, and method stubs are not trivial functions', async () => {
+test('Python reports overloads, abstract and protocol methods, properties, setters, and stubs', async () => {
     const findings = await checkTrivialFile('python', 'interfaces.py', PYTHON_INTERFACES);
-    expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'trivial-function', line: 25 }]);
+    expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
+        [5, 9, 14, 17, 19, 22, 24, 25].map((line) => ({ rule: 'trivial-function', line })),
+    );
 });
 
 test('an ignore with names keeps those functions out of the findings, and only that check takes names', async () => {
     const ignore =
-        '[[ignore]]\ncheck = "structure/trivial-functions"\nnames = ["parse"]\npaths = ["interfaces.py"]\nreason = "The framework calls parse by name."\n';
+        '[[ignore]]\ncheck = "structure/trivial-functions"\nnames = ["read", "save", "size", "hook", "parse"]\npaths = ["interfaces.py"]\nreason = "The framework calls these by name."\n';
     await using sandbox = await testdir({
         'interfaces.py': PYTHON_INTERFACES,
         'gspot.toml': buildSandboxSettings(['python'], {
@@ -109,7 +110,6 @@ test.each([...STATEMENT_COUNT_CASES])(
         const findings = await checkTrivialFile(language, `example.${extension}`, source);
         expect(findings).toMatchObject([
             { rule: 'trivial-function', message: expect.stringContaining('has 2 statements.') as string },
-            { rule: 'trivial-file' },
         ]);
     },
 );

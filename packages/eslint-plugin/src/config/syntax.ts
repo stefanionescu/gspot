@@ -21,47 +21,23 @@ export const EXECUTABLE_DECLARATIONS = new Set(['VariableDeclaration', 'TSEnumDe
 /** Block containers and empty statements have no executable statement of their own. */
 export const NON_EXECUTABLE_STATEMENTS = new Set(['BlockStatement', 'EmptyStatement']);
 
-/** Object and array literals count as content, because they build a structure. */
-export const STRUCTURED_EXPRESSIONS = new Set<string>(['ObjectExpression', 'ArrayExpression']);
-
-/** Nodes that introduce no implementation or owned schema. */
-export const FORWARDED_VALUES = new Set(['Literal', 'Identifier', 'MemberExpression']);
-
-export const FORWARDING_NODES = new Set([
-    ...FUNCTION_TYPES,
-    'ImportDeclaration',
-    'ExportAllDeclaration',
-    'EmptyStatement',
-    'Identifier',
-    'MemberExpression',
-    'TSDeclareFunction',
-]);
-
-export const EXPORT_REFERENCES = new Set(['ExportSpecifier', 'ExportDefaultDeclaration', 'TSExportAssignment']);
+/** The values that an alias names: another value or one of its members. */
+export const ALIASED_VALUES = new Set<string>(['Identifier', 'MemberExpression']);
 
 export const TRANSPARENT_EXPRESSIONS = ['ConditionalExpression', 'LogicalExpression', ...TYPE_ASSERTION_NODES] as const;
+
+/** The parents that hold a function as a value: an array element, a returned value, JSX, an arrow body, or a default. */
+export const INLINE_VALUE_PARENTS = new Set<string>([
+    'ArrayExpression',
+    'ReturnStatement',
+    'JSXExpressionContainer',
+    'ArrowFunctionExpression',
+    'AssignmentPattern',
+]);
 
 export const FUNCTION_SELECTOR = ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)';
 
 export const IMPORT_SELECTOR = 'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression';
-export const SHEBANG = '#!';
-
-/** Operators that produce a boolean, unlike plain arithmetic. */
-export const COMPARISON_OPERATORS = new Set<string>([
-    '===',
-    '!==',
-    '==',
-    '!=',
-    '<',
-    '<=',
-    '>',
-    '>=',
-    'in',
-    'instanceof',
-]);
-
-export const MODULE_CALL_SELECTOR =
-    'Program > ExpressionStatement > CallExpression, Program > ExpressionStatement > AwaitExpression > CallExpression';
 
 export const IMPORT_SPECIFIER_NODES = new Set<string>([
     'ImportSpecifier',

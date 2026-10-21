@@ -87,19 +87,20 @@ test('an ignore with a rule and paths turns the rule off in its scope and the sc
 
 test('the deepest scope sets a limit and a scalar setting, and a scope list adds to the lists above it', async () => {
     const scopes = await readNestedScopes();
-    const byScope = new Map(scopes.map((scope) => [scope.folder.path, scope.settings]));
-    const read = (path: string): unknown[] => {
-        const settings = byScope.get(path)!;
-        return [
+    const values = scopes.map(({ folder, settings }) => [
+        folder.path,
+        [
             getLimit(settings, 'file_lines', 'bash'),
             getTable(settings, 'swift').xcode_scheme,
             getTable(settings, 'tools.swiftlint').always_keep_imports,
-        ];
-    };
-    expect(read('')).toStrictEqual([100, '5.0', ['Foundation']]);
-    expect(read('api')).toStrictEqual([80, '6.0', ['Foundation', 'UIKit']]);
-    expect(read('api/v1')).toStrictEqual([60, '5.0', ['Foundation', 'UIKit', 'SwiftUI']]);
-    expect(read('web')).toStrictEqual([100, '5.0', ['Foundation']]);
+        ],
+    ]);
+    expect(Object.fromEntries(values)).toStrictEqual({
+        '': [100, '5.0', ['Foundation']],
+        api: [80, '6.0', ['Foundation', 'UIKit']],
+        'api/v1': [60, '5.0', ['Foundation', 'UIKit', 'SwiftUI']],
+        web: [100, '5.0', ['Foundation']],
+    });
 });
 
 test('a per-scope limit overrides a root language limit in the scope view', async () => {

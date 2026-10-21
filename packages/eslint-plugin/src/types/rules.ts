@@ -15,7 +15,7 @@ export type ImportBoundariesOptions = [
 ];
 export type TrivialFunctionsOptions = [{ trivialFunctionStatements: number }];
 
-export type TrivialFilesOptions = [{ trivialFunctionStatements: number; allowIndex: boolean }];
+export type TrivialFilesOptions = [{ allowIndex: boolean }];
 
 export type MagicNumbersOptions = [Record<string, unknown>];
 export type RuleContext = Readonly<TSESLint.RuleContext<string, unknown[]>>;

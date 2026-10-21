@@ -73,17 +73,13 @@ test.each([...LEVELS])(
             join(sandbox.path, 'src/main.js'),
             "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
         );
-        // An exported function counts as trivial too.
-        const mainFindings =
-            level === 'all'
-                ? [
-                      { file: 'src/main.js', rule: 'gspot/no-trivial-files' },
-                      { file: 'src/main.js', rule: 'gspot/no-trivial-functions' },
-                  ]
-                : [];
+        // A file with a function does more than forward. The function rule reports the function, even when exported.
+        const mainFindings = level === 'all' ? [{ file: 'src/main.js', rule: 'gspot/no-trivial-functions' }] : [];
         const findings = await listTrivialFindings(sandbox.path, settings);
         expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
-        expect(listTrivialFiles(findings)).toStrictEqual(level === 'all' ? [...TRIVIAL_ENTRY_FILES] : []);
+        expect(listTrivialFiles(findings)).toStrictEqual(
+            level === 'all' ? TRIVIAL_ENTRY_FILES.filter((file) => file !== 'src/main.js') : [],
+        );
         await writeFile(
             join(sandbox.path, 'src/main.js'),
             "import { start } from './start.js';\nexport function boot() { start(); }\n",
@@ -151,14 +147,9 @@ test.each([...LEVELS])(
 
         const eslint = await createEslint(sandbox.path);
         for (const filePath of ['main.js', 'app/main.js']) {
-            await createFileTree(sandbox.path, { [filePath]: 'export function start() { return launch(); }' });
+            await createFileTree(sandbox.path, { [filePath]: "export { launch as start } from './launch.js';" });
             expect(await listLintFindings(eslint, sandbox.path, [filePath], TRIVIAL_RULES)).toStrictEqual(
-                level === 'all'
-                    ? [
-                          { file: filePath, rule: 'gspot/no-trivial-files', line: 1 },
-                          { file: filePath, rule: 'gspot/no-trivial-functions', line: 1 },
-                      ]
-                    : [],
+                level === 'all' ? [{ file: filePath, rule: 'gspot/no-trivial-files', line: 1 }] : [],
             );
             await createFileTree(sandbox.path, {
                 [filePath]: 'function start() { return launch(); } export const app = start();',

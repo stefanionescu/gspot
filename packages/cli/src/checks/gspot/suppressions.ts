@@ -45,6 +45,7 @@ function listSuppressionSyntaxes(scope: Scope): SuppressionSyntax[] {
     );
     return [...definitions].map(([tool, definition]) => {
         const readers = checks.filter(({ check }) => getToolName(check) === tool);
+        const reason = new RegExp(definition.reason, 'u');
         return {
             tool,
             covers: (file: TrackedFile) =>
@@ -58,7 +59,7 @@ function listSuppressionSyntaxes(scope: Scope): SuppressionSyntax[] {
                 ),
             marker: new RegExp(definition.marker, 'u'),
             inlineMarker: new RegExp(definition.inline_marker ?? definition.marker, 'u'),
-            reason: new RegExp(definition.reason, 'u'),
+            readReason: (text: string) => reason.exec(text)?.groups?.['reason']?.trim(),
             forbidden: definition.forbidden === true,
             separator: definition.separator === undefined ? undefined : new RegExp(definition.separator, 'u'),
             allRules: definition.all_rules === undefined ? undefined : new RegExp(definition.all_rules, 'u'),
@@ -75,20 +76,18 @@ function parseSuppressionRules(form: SuppressionSyntax, text: string): string | 
     return (suppression.groups?.['rules'] ?? '').split(form.separator)[0];
 }
 
-// A suppression that turns off every rule, or one that lifts a size or complexity limit.
+// A suppression that turns off every rule, lifts a size or complexity limit, or gives no reason of its own or above it.
 function classifySuppression(
     form: SuppressionSyntax,
     text: string,
-): keyof typeof SUPPRESSION_KIND_MESSAGES | undefined {
+    preceding: string | undefined,
+): keyof typeof SUPPRESSION_KIND_MESSAGES | 'no-reason' | undefined {
     const rules = parseSuppressionRules(form, text);
-    if (rules === undefined) return undefined;
-    if (form.allRules?.test(rules.trim()) === true) return 'all';
-    return form.limitRules?.test(rules) === true ? 'limit' : undefined;
-}
-
-function hasAcceptedReason(form: SuppressionSyntax, text: string, preceding: string | undefined): boolean {
-    const reason = form.reason.exec(text)?.groups?.['reason']?.trim() ?? preceding;
-    return isReasonAccepted(reason);
+    if (rules !== undefined) {
+        if (form.allRules?.test(rules.trim()) === true) return 'all';
+        if (form.limitRules?.test(rules) === true) return 'limit';
+    }
+    return isReasonAccepted(form.readReason(text) ?? preceding) ? undefined : 'no-reason';
 }
 
 function checkSuppressionComment(
@@ -110,17 +109,13 @@ function checkSuppressionComment(
                 `${form.tool} suppression is not allowed; fix the finding or configure an explicit ignore.`,
             ),
         ];
-    const kind = classifySuppression(form, text);
-    if (kind !== undefined) return [buildFinding(planned, at, `${form.tool}-${kind}`, SUPPRESSION_KIND_MESSAGES[kind])];
-    if (hasAcceptedReason(form, text, preceding)) return [];
-    return [
-        buildFinding(
-            planned,
-            at,
-            `${form.tool}-no-reason`,
-            `This ${form.tool} suppression has no reason of two or more words.`,
-        ),
-    ];
+    const kind = classifySuppression(form, text, preceding);
+    if (kind === undefined) return [];
+    const message =
+        kind === 'no-reason'
+            ? `This ${form.tool} suppression has no reason of two or more words.`
+            : SUPPRESSION_KIND_MESSAGES[kind];
+    return [buildFinding(planned, at, `${form.tool}-${kind}`, message)];
 }
 
 function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] {

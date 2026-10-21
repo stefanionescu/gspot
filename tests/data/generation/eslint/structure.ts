@@ -56,7 +56,7 @@ configurations = ["javascript"]
 tools.knip.entry = ["api/src/main.js"]
 `;
 
-export const ENTRY_SOURCE = "import { start } from './start.js';\nstart();\n";
+export const ENTRY_SOURCE = "export { start } from './start.js';\n";
 
 export const STARTER_SOURCE =
     'export function start() { const target = document.querySelector("#app"); if (!target) throw new Error("Missing application target"); target.textContent = "Started"; }\n';

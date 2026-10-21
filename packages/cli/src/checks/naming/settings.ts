@@ -11,16 +11,15 @@ import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY, CATEGORY_PARENTS } from '#cli/config/checks/naming.ts';
 import type { BannedWord, NamingOverride, NamingSettings, CompiledOverride } from '#cli/types/checks/naming.ts';
 
-function buildNameSet(names: string[] | undefined): Set<string> | undefined {
-    return names === undefined || names.length === 0 ? undefined : new Set(names);
-}
-
 function compileOverride(rule: NamingOverride): CompiledOverride {
+    const [languages, categories, allowedNames] = [rule.languages, rule.categories, rule.allowed_names].map((names) =>
+        names === undefined || names.length === 0 ? undefined : new Set(names),
+    );
     return {
         matches: buildPathMatcher(rule.paths ?? ['**']),
-        languages: buildNameSet(rule.languages),
-        categories: buildNameSet(rule.categories),
-        allowedNames: buildNameSet(rule.allowed_names),
+        languages,
+        categories,
+        allowedNames,
         isDigitsAllowed: rule.allow_digits === true,
         isRepeatAllowed: rule.allow_repeated_words === true,
         ignoredPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),

@@ -65,7 +65,6 @@ func pairLabel() -> String {
 }
 `,
         lines: [15],
-        trivialFile: false,
     },
     {
         name: 'negated call',
@@ -77,18 +76,16 @@ func isNew(_ name: String) -> Bool {
 }
 `,
         lines: [4],
-        trivialFile: true,
     },
     {
         name: 'implicit getters, property readers, and subscript accessors',
         source: PROPERTY_READERS,
         lines: [2, 4, 5, 8, 9],
-        trivialFile: false,
     },
-    { name: 'substantial function bodies', source: CLEAN_SWIFT, lines: [], trivialFile: false },
+    { name: 'substantial function bodies', source: CLEAN_SWIFT, lines: [] },
 ] as const;
 
-/** Interface code at a two-statement limit: only the parse implementation on line 25 forwards its argument. */
+/** Interface code at a two-statement limit: the check reports each of its eight named functions, stubs included. */
 export const PYTHON_INTERFACES = `from abc import ABC, abstractmethod
 from typing import Protocol, overload
 
@@ -119,52 +116,51 @@ def parse(value):
 
 export const TRIVIAL_FILES = [
     {
-        name: 'a Python forwarding wrapper',
+        name: 'a Python file of imports and aliases',
+        language: 'python',
+        file: 'example.py',
+        source: `from other import value
+alias = value
+__all__ = ["alias"]
+`,
+        expected: true,
+    },
+    {
+        name: 'a Python file with a wrapper function',
         language: 'python',
         file: 'example.py',
         source: `from other import alias
 def wrapper():
     return alias()
 `,
-        expected: true,
-    },
-    {
-        name: 'a Python implementation with three statements',
-        language: 'python',
-        file: 'example.py',
-        source: `def owner():
-    one()
-    two()
-    three()
-`,
         expected: false,
     },
     {
-        name: 'a Swift forwarding wrapper',
+        name: 'a Swift file of an import and a type alias',
+        language: 'swift',
+        file: 'example.swift',
+        source: 'import Foundation\ntypealias Name = String\n',
+        expected: true,
+    },
+    {
+        name: 'a Swift file with a wrapper function',
         language: 'swift',
         file: 'example.swift',
         source: 'struct Wrapper { func value() { return original() } }',
-        expected: true,
-    },
-    {
-        name: 'a Swift implementation with three statements',
-        language: 'swift',
-        file: 'example.swift',
-        source: 'struct Owner { func value() { one(); two(); three() } }',
         expected: false,
     },
     {
-        name: 'a Bash forwarding wrapper',
+        name: 'a Bash file that only sources another script',
         language: 'bash',
         file: 'example.sh',
-        source: 'source ./other.sh\nwrapper() { original; }',
+        source: 'source ./other.sh\n',
         expected: true,
     },
     {
-        name: 'a Bash implementation with three statements',
+        name: 'a Bash file with a wrapper function',
         language: 'bash',
         file: 'example.sh',
-        source: 'owner() { one; two; three; }',
+        source: 'source ./other.sh\nwrapper() { original; }',
         expected: false,
     },
     {
@@ -193,16 +189,6 @@ def wrapper():
         language: 'python',
         file: '__init__.py',
         source: '"""Package documentation."""\nfrom other import alias\n',
-        expected: true,
-    },
-    {
-        name: 'a Python package docstring before a forwarding wrapper',
-        language: 'python',
-        file: '__init__.py',
-        source: `"""Package documentation."""
-def wrapper():
-    return original()
-`,
         expected: true,
     },
 ] as const;
