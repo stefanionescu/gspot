@@ -15,5 +15,3 @@ export const PATH_SEPARATORS = /[\\/]/u;
 export const TASKKILL_PROGRAM = 'taskkill';
 
 export const TASKKILL_OPTIONS = ['/T', '/F'] as const;
-
-export const PROCESS_ARGUMENTS_START = 2;

@@ -38,7 +38,7 @@ export const PROJECT_FILE_FOLDERS = [
     ['requirements.txt.bak', 'requirements*.txt', undefined],
 ] as const;
 
-export const WORKSPACE_DECLARATIONS = [
+export const WORKSPACE_FILE_CASES = [
     { 'package.json': '{"workspaces":["packages/*"]}' },
     { 'package.json': '{"workspaces":{"packages":["packages/*"]}}' },
     { 'package.json': '{}', 'pnpm-workspace.yaml': 'packages: ["packages/*"]' },

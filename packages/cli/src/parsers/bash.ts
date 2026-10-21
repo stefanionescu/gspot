@@ -1,11 +1,9 @@
-// Parses Bash scripts and counts their functions and control flow.
 import type { Node } from 'web-tree-sitter';
 import { convertToSpaces } from '#cli/system/text.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import type { ParseCache } from '#cli/types/parsers/grammars.ts';
-import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
-import type { ScriptSyntax, TemporaryPath, CleanupContext, TemporaryTargets } from '#cli/types/parsers/bash.ts';
+import type { TrapCleanup, ScriptSyntax, TemporaryPath, TemporaryTargets } from '#cli/types/parsers/bash.ts';
 
 import {
     TRAP_COMMAND,
@@ -154,7 +152,7 @@ function listLocalNames(root: Node): Set<string> {
 }
 
 // Reassigning the same variable in its function makes a deferred cleanup target ambiguous.
-function collectTemporaryTargets(root: Node): TemporaryTargets {
+function buildScriptTemporaryPaths(root: Node): TemporaryTargets {
     const assignments = root.descendantsOfType('variable_assignment');
     const locals = listLocalNames(root);
     const counts = new Map<string, number>();
@@ -198,8 +196,8 @@ function findTemporaryTarget(
 }
 
 // All removals on a source line must target known temporaries before that line receives an exemption.
-function recordRemovals(removals: Node[], context: CleanupContext): void {
-    const { lineOffset, owner, registry, lines } = context;
+function recordRemovals(removals: Node[], cleanup: TrapCleanup): void {
+    const { lineOffset, owner, registry, lines } = cleanup;
     for (const removal of removals) {
         const targets = listRemovalTargets(removal);
         const line = lineOffset + removal.startPosition.row;
@@ -225,7 +223,7 @@ function listRemovalTargets(command: Node): Node[] {
 
 // Parse deferred trap bodies with the same grammar before treating any recursive removal as cleanup.
 async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCache): Promise<TemporaryPath[]> {
-    const registry = collectTemporaryTargets(root);
+    const registry = buildScriptTemporaryPaths(root);
     const lines = new Map<number, Array<TemporaryPath | undefined>>(
         commands
             .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND)
@@ -322,25 +320,6 @@ export function listCodeLines(lines: string[]): NumberedLine[] {
         const code = line.trim();
         return code === '' ? [] : [{ number: index + 1, text: code }];
     });
-}
-
-/**
- * Read expansions of the environment names that the environment readers declare.
- *
- * @param syntaxRoot the parsed Bash source.
- * @param readerVariables the variables declared by environment readers.
- * @returns the environment reads and their source positions.
- */
-export function readBashEnvironment(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
-    return syntaxRoot.descendantsOfType([...EXPANSION_NODES]).flatMap((expansion) =>
-        expansion.namedChildren
-            .filter((node) => node.type === 'variable_name' && readerVariables.has(node.text))
-            .map((node) => ({
-                key: node.text,
-                line: node.startPosition.row + 1,
-                column: node.startPosition.column + 1,
-            })),
-    );
 }
 
 /**

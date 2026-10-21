@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { type ReportedTypo } from '#cli/types/runs/output.ts';
+import { type ReportedTypo } from '#cli/types/runs/tool-reports.ts';
 
 export const reportedTypoSchema = z.object({
     type: z.literal('typo'),

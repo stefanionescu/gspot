@@ -8,11 +8,12 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
+import { HOOKS_SETTINGS } from '#tests/data/test-setup.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { selectRunner } from '#cli/repository/package-manager.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { readGitOutput, createLfsRepository } from '#tests/setup/git.ts';
+import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
 import { chmod, mkdir, realpath, readFile, writeFile } from 'node:fs/promises';
 
 import {
@@ -26,14 +27,14 @@ import {
 
 /** Build new settings with hooks on, for each script run. */
 function buildHookSettings(): Settings {
-    return parseSettings(buildSandboxSettings([], { rules: true, tables: '[hooks]\nenabled = true\n' }), undefined);
+    return parseSettings(buildSandboxSettings([], { rules: true, tables: HOOKS_SETTINGS }), undefined);
 }
 
 test.each([...HOOK_LEVEL_CASES])(
     'at level $level, gspot writes a hook only for a stage with a check',
     async ({ level, hooks }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([], { level, tables: '[hooks]\nenabled = true\n' }),
+            'gspot.toml': buildSandboxSettings([], { level, tables: HOOKS_SETTINGS }),
         });
         readGitOutput(sandbox.path, ['init', '-q']);
         const written = generate(await openSession(sandbox.path)).files.filter((file) =>
@@ -59,7 +60,7 @@ test.each(START_COMMANDS)(
                 }),
             );
         const settings = buildHookSettings();
-        const files = buildHookFiles(settings, await selectRunner(root), {
+        const files = buildHookFiles(settings, await selectStartRunner(root), {
             names: HOOK_CASES.map(([name]) => name),
             usesLfs: false,
         });
@@ -97,7 +98,7 @@ test('a hook says how to install mise when mise is missing', async () => {
     await using sandbox = await testdir();
     readGitOutput(sandbox.path, ['init', '-q']);
     const settings = buildHookSettings();
-    const hook = buildHookFiles(settings, await selectRunner(sandbox.path), {
+    const hook = buildHookFiles(settings, await selectStartRunner(sandbox.path), {
         names: HOOK_CASES.map(([name]) => name),
         usesLfs: false,
     }).find((file) => file.path.endsWith('pre-push'))!;

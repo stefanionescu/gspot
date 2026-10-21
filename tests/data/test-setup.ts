@@ -1,3 +1,4 @@
+export const HOOKS_SETTINGS = '[hooks]\nenabled = true\n';
 export const RULE_TESTER_ROOT = '/repo';
 
 export const RULE_TESTER_PARSER_OPTIONS = {
@@ -17,17 +18,12 @@ export const SANDBOX_PACKAGE_JSON = {
 export const SANDBOX_GITIGNORE = 'node_modules\n';
 
 // Poll child exit and readiness markers within the shared test deadline.
-export const EXIT_POLL_MILLISECONDS = 10;
-
-export const READY_POLL_MILLISECONDS = 5;
+export const POLL_MILLISECONDS = 10;
 
 // One deadline bounds each test and its child processes.
 export const TEST_TIMEOUT_MILLISECONDS = 900_000;
 
 export const GSPOT_ENVIRONMENT = { NO_COLOR: '1', CI: '1' } as const;
-
-/** Seconds at process boundaries and milliseconds in the test deadline. */
-export const MILLISECONDS_PER_SECOND = 1000;
 
 /** The folder for the npm packages packed before the test workers start. */
 export const TEST_RUN_FOLDER_NAME = 'gspot-test-run';
@@ -41,13 +37,7 @@ export const TOOL_PATHS_FILE = 'tool-paths.txt';
 
 export const GSPOT_LAUNCHER_PATH = 'bin/gspot';
 
-export const PREPARED_SUITES = ['integration', 'e2e'] as const;
-
 export const PACKED_PACKAGES_FILE = 'packages.json';
-
-export const INTERRUPTED_EXIT = 130;
-
-export const TERMINATED_EXIT = 143;
 
 export const NPM_PACK_FLAGS = ['--ignore-scripts', '--json'] as const;
 
@@ -60,10 +50,6 @@ export const GSPOT_PACKAGE_SCOPE = '@gspothq/';
 export const PINNED_TOOLS_FILE = 'mise.toml';
 
 export const MISE_TRUST = ['mise', 'trust'] as const;
-
-export const MISE_INSTALL = ['mise', 'install'] as const;
-
-export const MISE_BIN_PATHS = ['mise', 'bin-paths'] as const;
 
 export const OFFLINE_ENVIRONMENT = {
     HTTP_PROXY: 'http://127.0.0.1:1',
@@ -101,8 +87,6 @@ export const PNPM_WORKSPACE = 'packages:\n  - "**"\n';
 
 export const YARN_VERSION_THRESHOLD = 2;
 
-export const JSON_INDENT = 4;
-
 /** Prints each path it gets, then fails. */
 export const REPORT_PROGRAM = 'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;';
 
@@ -130,15 +114,7 @@ export const GIT_TEST_ARGUMENTS = [
 
 export const GIT_TEST_ENVIRONMENT = { GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '' } as const;
 
-export const SANDBOX_COMMIT_STEPS = [
-    ['init', '-q'],
-    ['add', '-A'],
-    ['commit', '-qm', 'init'],
-] as const;
-
 export const EXECUTABLE_MODE = 0o755;
-
-export const EXECUTABLE_BITS = 0o111;
 
 /** The archive fields for the Python wheel. */
 export const ZIP_LAYOUT = {

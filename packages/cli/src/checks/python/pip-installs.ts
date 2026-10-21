@@ -1,11 +1,12 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/parsers/dependencies.ts';
-import { PIP_INSTALL, INSTALL_EXTENSIONS } from '#cli/config/checks/python.ts';
+import { PIP_INSTALL, INSTALL_FILE_SUFFIXES } from '#cli/config/checks/python.ts';
 
 /**
  * Reports hand-kept requirements files and unmanaged pip installs, so pyproject.toml owns every dependency.
@@ -33,7 +34,7 @@ export function checkPythonPipInstalls(session: Session, planned: PlannedCheck):
             ),
         );
     const installs = files
-        .filter((file) => INSTALL_EXTENSIONS.some((ending) => file.path.endsWith(ending)))
+        .filter((file) => INSTALL_FILE_SUFFIXES.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
             readCachedText(session.reads, file.path)
                 .split('\n')

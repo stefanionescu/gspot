@@ -1,1 +1,1 @@
-export const GROUP_CHARACTERS = /[()[\]]/u;
+export const GLOB_BRACKETS = /[()[\]]/u;

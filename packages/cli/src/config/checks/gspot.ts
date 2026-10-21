@@ -1,5 +1,4 @@
-import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
+import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/repository/tracked.ts';
 
 const APPLY_HELP =
     'Change settings in gspot.toml, then run gspot apply. gspot replaces the generated files that it owns.';
@@ -26,7 +25,7 @@ export const SUPPRESSION_KIND_MESSAGES = {
 } as const;
 
 /** Leave installed dependencies out of generator output snapshots. */
-export const GENERATOR_SCAN_EXCLUSIONS = [NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER] as const;
+export const GENERATOR_IGNORED_FOLDERS = [NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER] as const;
 
 export const UNESCAPED_GROUP = /(?<!\\)[()[\]]/u;
 export const GROUP_HINT = String.raw` If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`;

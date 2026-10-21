@@ -1,5 +1,5 @@
 /** External inputs stop at the settings or file access check. */
-export const EXTERNAL_INPUT_CASES = [
+export const LINKED_FILE_CASES = [
     {
         path: 'gspot.toml',
         outside: 'configurations = []\n',
@@ -34,11 +34,11 @@ export const BLOCK_FORMATS = [
 ] as const;
 
 export const MALFORMED_BLOCKS = [
-    { path: 'AGENTS.md', style: 'markdown' as const, source: '<!-- >>> gspot managed >>> -->\nbody\n' },
-    { path: 'AGENTS.md', style: 'markdown' as const, source: 'body\n<!-- <<< gspot managed <<< -->\n' },
+    { path: 'AGENTS.md', style: 'markdown', source: '<!-- >>> gspot managed >>> -->\nbody\n' },
+    { path: 'AGENTS.md', style: 'markdown', source: 'body\n<!-- <<< gspot managed <<< -->\n' },
     {
         path: 'AGENTS.md',
-        style: 'markdown' as const,
+        style: 'markdown',
         source: `<!-- <<< gspot managed <<< -->
 body
 <!-- >>> gspot managed >>> -->
@@ -46,7 +46,7 @@ body
     },
     {
         path: 'AGENTS.md',
-        style: 'markdown' as const,
+        style: 'markdown',
         source: `<!-- >>> gspot managed >>> -->
 <!-- >>> gspot managed >>> -->
 body
@@ -55,7 +55,7 @@ body
     },
     {
         path: 'AGENTS.md',
-        style: 'markdown' as const,
+        style: 'markdown',
         source: `<!-- >>> gspot managed >>> -->
 body
 <!-- <<< gspot managed <<< -->

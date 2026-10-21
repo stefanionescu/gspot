@@ -13,7 +13,7 @@ const WEB_TSCONFIG = {
 } as const;
 
 /** The packages of a test React web repository. */
-const WEB_PACKAGES = ['react', 'react-dom'] as const;
+export const WEB_PACKAGES = ['react', 'react-dom'] as const;
 
 /** A component accepted by the configured React rules. */
 const CLEAN_COMPONENT =
@@ -33,7 +33,7 @@ export function Greeting({ name }: Readonly<{ name: string }>): ReactNode {
 }
 `;
 
-const REACT_SANDBOX = {
+export const REACT_SANDBOX = {
     configurations: ['typescript', 'react-dom'],
     tsconfig: WEB_TSCONFIG,
     files: { 'src/Greeting.tsx': CLEAN_COMPONENT },
@@ -59,52 +59,30 @@ export function Counter({ isOn }: Readonly<{ isOn: boolean }>): ReactNode {
 }
 `;
 
-const REACT_CASES = [
+export const REACT_CASES = [
     {
         check: 'javascript/eslint',
         files: { 'src/Counter.tsx': COUNTER },
         expected: { file: 'src/Counter.tsx', rule: 'react-hooks/rules-of-hooks', line: 14 },
         corrected: {
             files: {
-                'src/Counter.tsx': `// A test component.
-import type { ReactNode } from 'react';
-
-/**
- * Greets one person.
- *
- * @param props display text for the visitor
- * @param props.name text shown inside the paragraph
- * @returns a paragraph addressed to the visitor
- */
-export function Counter({ name }: Readonly<{ name: string }>): ReactNode {
-    return <p>{name}</p>;
-}
-`,
+                'src/Counter.tsx': CLEAN_COMPONENT.replace('function Greeting', 'function Counter'),
             },
         },
     },
 ] as const;
 
 /** The packages of a test Expo repository. */
-const EXPO_DEPENDENCIES = {
+export const EXPO_DEPENDENCIES = {
     expo: '54.0.0',
     'react-native': '0.81.4',
 } as const;
 
 /** The packages of a bare React Native repository. */
-const REACT_NATIVE_DEPENDENCIES = { 'react-native': '0.81.4' } as const;
+export const REACT_NATIVE_DEPENDENCIES = { 'react-native': '0.81.4' } as const;
 
 /** The compiler options of a test React Native repository. */
-const REACT_NATIVE_TSCONFIG = {
+export const REACT_NATIVE_TSCONFIG = {
     compilerOptions: { ...STRICT_COMPILER_OPTIONS, module: 'ESNext', moduleResolution: 'Bundler', jsx: 'react-jsx' },
     include: ['src'],
 } as const;
-
-export {
-    REACT_CASES,
-    WEB_PACKAGES,
-    REACT_SANDBOX,
-    EXPO_DEPENDENCIES,
-    REACT_NATIVE_TSCONFIG,
-    REACT_NATIVE_DEPENDENCIES,
-};

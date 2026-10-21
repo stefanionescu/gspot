@@ -184,3 +184,22 @@
     font-size: 0.875rem;
     line-height: 1.5;
 }
+
+@media (width >= 50rem) {
+    .code {
+        font-size: 0.8125rem;
+    }
+
+    .line {
+        grid-template-columns: 20px 1ch minmax(0, 1fr);
+        column-gap: 10px;
+        padding-inline: 10px 16px;
+    }
+}
+
+@media (width >= 72rem) {
+    .example-grid {
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        align-items: stretch;
+    }
+}

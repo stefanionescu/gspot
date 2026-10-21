@@ -1,40 +1,39 @@
-import ignore from 'ignore';
-import { findCachedText } from '#cli/system/files/reads.ts';
-import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning.ts';
-import { findMissingBuild } from '#cli/configurations/tools.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
+import type { Tool, Check } from '#cli/types/configurations.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import { listIgnores, isFileIgnore } from '#cli/settings/scope-view.ts';
-import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
+import { findMissingBuild } from '#cli/configurations/declared-tools.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
-import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
-import type { Skip, System, Session, ToolIgnore, PlanInputs, PlannedCheck, SettingsSkip } from '#cli/types/planning.ts';
+import type { Skip, Host, PlannedScope, PlannedCheck, SettingsSkip } from '#cli/types/planning.ts';
 
 // A check that needs a dependency skips a scope whose projects declare none of them.
 function findDependencySkip(
     dependencies: string[] | undefined,
-    scope: string,
+    scopePath: string,
     dependencyFiles: Repository['dependencyFiles'],
 ): Skip | undefined {
     if (dependencies === undefined) return undefined;
-    const declared = listProjectDependencyNames(dependencyFiles, scope);
+    const declared = listProjectDependencyNames(dependencyFiles, scopePath);
     return dependencies.some((name) => declared.includes(name))
         ? undefined
         : { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
 }
 
 // A check that needs marked files skips a scope that holds none, as configuration detection does.
-function findTagSkip(tags: string[] | undefined, scope: string, files: Repository['files']): Skip | undefined {
+function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repository['files']): Skip | undefined {
     if (tags === undefined) return undefined;
     const marked = files.some(
-        (file) => file.kind === 'source' && isInScope(file.path, scope) && file.tags.some((tag) => tags.includes(tag)),
+        (file) =>
+            file.kind === 'source' && isInScope(file.path, scopePath) && file.tags.some((tag) => tags.includes(tag)),
     );
     return marked ? undefined : { cause: 'condition', note: `Needs files marked ${tags.join(' or ')} in this scope.` };
 }
 
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
 function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | undefined {
-    const { configuration, git, dependencies, tags } = { ...check.manifest?.configuration.when, ...check.check.when };
+    const { configuration, git, dependencies, tags } = { ...check.configuration?.when, ...check.check.when };
     const scope = check.selection.scope.path;
     if (configuration !== undefined && !check.selection.view.configurations.includes(configuration))
         return {
@@ -52,7 +51,7 @@ function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | 
 }
 
 // Find the skip that an ignore record without a rule or paths causes: the whole check turns off.
-function findIgnoreSkip(selection: ScopeSelection, check: CheckDeclaration): SettingsSkip | undefined {
+function findIgnoreSkip(selection: Scope, check: Check): SettingsSkip | undefined {
     const ignored = listIgnores(selection.view, check.name).find(
         (entry) =>
             isFileIgnore(entry) && (entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path)),
@@ -61,19 +60,10 @@ function findIgnoreSkip(selection: ScopeSelection, check: CheckDeclaration): Set
     return { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };
 }
 
-function findEmptySetting(scope: ScopeSelection, check: CheckDeclaration): string | undefined {
+function findEmptySetting(scope: Scope, check: Check): string | undefined {
     const setting = check.when?.setting;
     if (setting === undefined) return undefined;
     return isSettingEmpty(scope.view.settings[setting]) ? setting : undefined;
-}
-
-// Read the ignore syntax from the authored or generated ignore file of the check.
-function readToolIgnore(session: Session, check: PlannedCheck): ToolIgnore | undefined {
-    const argument = check.check.command?.indexOf(TOOL_IGNORE_ARGUMENT) ?? -1;
-    const file = argument < 0 ? undefined : check.check.command?.[argument + 1];
-    if (file === undefined) return undefined;
-    const matcher = ignore().add(findCachedText(session.reads, file) ?? '');
-    return { file, matches: matcher.ignores.bind(matcher) };
 }
 
 /**
@@ -97,11 +87,7 @@ export function isSettingEmpty(value: unknown): boolean {
  *
  * @returns the system skip, or undefined when this system can run the check.
  */
-export function findSystemSkip(
-    check: CheckDeclaration,
-    tool: ToolDeclaration | undefined,
-    host: System,
-): Skip | undefined {
+export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host): Skip | undefined {
     if (check.operating_systems && !(check.operating_systems as readonly string[]).includes(host.platform))
         return {
             cause: 'system',
@@ -121,11 +107,7 @@ export function findSystemSkip(
  * @param check the declaration and project prerequisites.
  * @returns the skip reason, or undefined for an active check.
  */
-export function findSettingsSkip(
-    settings: Settings,
-    scope: ScopeSelection,
-    check: CheckDeclaration,
-): SettingsSkip | undefined {
+export function findSettingsSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
     if (settings.level !== 'all' && check.level !== 'recommended')
         return { cause: 'level', note: 'disabled at level recommended' };
     const ignored = findIgnoreSkip(scope, check);
@@ -138,37 +120,19 @@ export function findSettingsSkip(
  * Find the first reason that a planned check cannot run.
  *
  * @param check the plan to test.
- * @param inputs what planning reads.
- * @param inputs.session the repository.
- * @param inputs.options the parsed flags.
- * @param inputs.host the system name and architecture.
+ * @param planned what planning reads.
+ * @param planned.session the repository.
+ * @param planned.options the parsed flags.
+ * @param planned.host the system name and architecture.
  *
  * @returns the first skip, or undefined when the check can run.
  */
-export function findFirstSkip(check: PlannedCheck, inputs: PlanInputs): Skip | undefined {
-    const { session, options, host } = inputs;
+export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip | undefined {
+    const { session, options, host } = planned;
     const settings = session.settingsFile.settings;
     const selected = findSettingsSkip(settings, check.selection, check.check);
     if (selected !== undefined) return selected;
     const condition = findConditionSkip(check, session.repository);
     if (condition !== undefined) return condition;
     return options.forConfiguration === true ? undefined : findSystemSkip(check.check, check.tool, host);
-}
-
-/**
- * Restrict file checks through their declared ignore files.
- *
- * @param session the repository with its file cache.
- * @param check the plan to narrow.
- *
- * @returns the check with its files restricted.
- */
-export function stripToolIgnoredFiles(session: Session, check: PlannedCheck): PlannedCheck {
-    if (check.skip !== undefined || check.check.runs !== 'files' || check.files.length === 0) return check;
-    const toolIgnore = readToolIgnore(session, check);
-    if (toolIgnore === undefined) return check;
-    const files = check.files.filter((file) => !toolIgnore.matches(file.path));
-    return files.length === 0
-        ? { ...check, skip: { cause: 'ignore', note: `all selected paths are disabled by ${toolIgnore.file}` } }
-        : { ...check, files };
 }

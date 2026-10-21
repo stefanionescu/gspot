@@ -4,17 +4,19 @@ import { testdir } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import * as assets from '#cli/system/assets.ts';
+import { type Session } from '#cli/types/session.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { generate } from '#cli/generation/generate.ts';
-import { RUNNERS } from '#cli/config/generation/hooks.ts';
 import { type Level } from '#cli/types/configurations.ts';
+import { type RuleFile } from '#cli/types/generation/rules.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
-import { listSelectedManifests } from '#cli/configurations/select.ts';
-import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
+import { START_RUNNERS } from '#cli/config/repository/package-manager.ts';
+import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
-import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 
 import {
     JAVASCRIPT_IN_APP,
@@ -42,6 +44,15 @@ async function generateRuleFiles(level: Level, files: Record<string, string>): P
     );
 }
 
+/** Select rule files at one level without changing the session's saved settings. */
+function selectRulesAt(session: Session, level: Level, scopes: Session['scopes']): RuleFile[] {
+    return selectRuleFiles({
+        ...session,
+        scopes,
+        settingsFile: { ...session.settingsFile, settings: { ...session.settingsFile.settings, level } },
+    });
+}
+
 test('level filtering respects fenced examples, nested sections, and the next heading of the same depth', async () => {
     const before = '# Guide\n\n## Required\n\n```md\n## Example\n<!-- level: all -->\n```\n\n';
     const omitted =
@@ -53,38 +64,22 @@ test('level filtering respects fenced examples, nested sections, and the next he
         'rules/GUIDE.md': text,
     });
     const session = await openSession(sandbox.path);
-    const manifest = {
-        ...readManifests().get('bash')!,
+    const configuration = {
+        ...readConfigurations().get('bash')!,
         folder: sandbox.path.replaceAll('\\', '/'),
         rules: {},
     };
-    using _list = spyOn(assets, 'listAssets').mockReturnValue([`${manifest.folder}/rules/GUIDE.md`]);
+    using _list = spyOn(assets, 'listAssets').mockReturnValue([`${configuration.folder}/rules/GUIDE.md`]);
     using _read = spyOn(assets, 'readAsset').mockImplementation((path) => readFileSync(path, 'utf8'));
-    const recommended = selectRuleFiles({
-        ...session,
-        scopes: [{ ...session.scopes[0]!, selected: [manifest] }],
-        settingsFile: {
-            ...session.settingsFile,
-            settings: { ...session.settingsFile.settings, level: 'recommended' },
-        },
-    });
+    const recommended = selectRulesAt(session, 'recommended', [{ ...session.scopes[0]!, selected: [configuration] }]);
     expect(recommended.map(({ content }) => content)).toStrictEqual([before + after]);
-    const all = selectRuleFiles({
-        ...session,
-        scopes: [{ ...session.scopes[0]!, selected: [manifest] }],
-        settingsFile: { ...session.settingsFile, settings: { ...session.settingsFile.settings, level: 'all' } },
-    });
+    const all = selectRulesAt(session, 'all', [{ ...session.scopes[0]!, selected: [configuration] }]);
     expect(all.map(({ content }) => content)).toStrictEqual([text]);
     writeFileSync(join(sandbox.path, 'rules/GUIDE.md'), before + after);
     expect(
-        selectRuleFiles({
-            ...session,
-            scopes: [{ ...session.scopes[0]!, selected: [manifest] }],
-            settingsFile: {
-                ...session.settingsFile,
-                settings: { ...session.settingsFile.settings, level: 'recommended' },
-            },
-        }).map(({ content }) => content),
+        selectRulesAt(session, 'recommended', [{ ...session.scopes[0]!, selected: [configuration] }]).map(
+            ({ content }) => content,
+        ),
     ).toStrictEqual([before + after]);
 });
 
@@ -105,10 +100,7 @@ test.each(['', 'app'].flatMap((scope) => RUNTIME_RULE_CASES.map((row) => ({ ...r
             }),
         });
         const session = await openSession(sandbox.path);
-        const files = selectRuleFiles({
-            ...session,
-            settingsFile: { ...session.settingsFile, settings: { ...session.settingsFile.settings, level: 'all' } },
-        });
+        const files = selectRulesAt(session, 'all', session.scopes);
         const paths = files.map((file) => file.path);
         expect(paths.includes('language/javascript/rules/DENO.md')).toBe(runtime === 'deno');
         expect(paths.includes('language/javascript/rules/NODE.md')).toBe(hasNode);
@@ -132,46 +124,18 @@ test('the AGENTS.md block names the folders of a scoped rule without parentheses
 test('an always-selected configuration installs its rule file once', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([], { rules: true, level: 'all' }) });
     const session = await openSession(sandbox.path);
-    const engineering = listSelectedManifests(session.scopes).find(
-        (manifest) => manifest.configuration.name === 'engineering',
-    )!;
-    const manifests = listSelectedManifests(session.scopes);
-    for (const selected of [manifests, [...manifests, engineering]]) {
-        const files = selectRuleFiles({
-            ...session,
-            scopes: [{ ...session.scopes[0]!, selected: selected }],
-            settingsFile: { ...session.settingsFile, settings: { ...session.settingsFile.settings, level: 'all' } },
-        });
+    const configurations = listSelectedConfigurations(session.scopes);
+    const engineering = configurations.find((configuration) => configuration.name === 'engineering')!;
+    for (const selected of [configurations, [...configurations, engineering]]) {
+        const files = selectRulesAt(session, 'all', [{ ...session.scopes[0]!, selected: selected }]);
         expect(files.filter((file) => file.path === 'general/engineering/rules/TALKING.md')).toHaveLength(1);
     }
 });
 
-async function buildManagedBlock(root: string): Promise<string> {
-    const session = await openSession(root);
-    const { level } = session.settingsFile.settings;
-    const selected = listSelectedManifests(session.scopes);
-    const generated = generate(session);
-    return buildAgentsBlock({
-        hasOwnTitle: false,
-        generatedPaths: generated.files.map(({ path }) => path).filter((path) => !path.startsWith('.gspot/')),
-        fileSettings: generated.fileSettings.map(({ path, changes }) => ({
-            path,
-            keys: changes.map((change) => change.path.join('.')),
-        })),
-        files: selectRuleFiles({
-            ...session,
-            scopes: [{ ...session.scopes[0]!, selected: selected }],
-            settingsFile: { ...session.settingsFile, settings: { ...session.settingsFile.settings, level: level } },
-        }),
-        startCommand: session.startRunner.command,
-        hasChecks: listChecksById(selected).size > 0,
-    });
-}
-
 test('with no configurations the block still lists the general rules and the check command', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([], { rules: true }) });
 
-    const block = await buildManagedBlock(sandbox.path);
+    const block = generate(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.block;
     expect(block).toContain('engineering/rules/WORKING.md');
     expect(block).toContain('gspot check --staged');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
@@ -185,7 +149,7 @@ test('with a check selected the block names the command, and an excluded file le
         }),
     });
 
-    const block = await buildManagedBlock(sandbox.path);
+    const block = generate(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.block;
     expect(block).toContain('gspot check --staged');
     expect(block).not.toContain('ACCESSIBILITY.md');
     expect(block).toContain('engineering/rules/TESTING.md');
@@ -252,13 +216,15 @@ test('the AGENTS.md block moves its headings one level down in a file with its o
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
 });
 
-test.each(Object.values(RUNNERS).flatMap(({ command }) => [true, false].map((hasChecks) => ({ command, hasChecks }))))(
+test.each(
+    Object.values(START_RUNNERS).flatMap(({ command }) => [true, false].map((hasChecks) => ({ command, hasChecks }))),
+)(
     'the AGENTS.md block explains the short gspot command as $command with checks=$hasChecks',
     ({ command, hasChecks }) => {
         const block = buildAgentsBlock({
             files: [],
             generatedPaths: [],
-            fileSettings: [],
+            managedKeys: [],
             hasOwnTitle: false,
             hasChecks,
             startCommand: command,
@@ -277,10 +243,7 @@ test.each([...NAMING_RULE_LEVEL_CASES])(
         const recommended = selectRuleFiles(session).find((file) => file.path === path);
         expect(recommended).toBeDefined();
         expect(recommended?.content).not.toContain('## Naming');
-        const all = selectRuleFiles({
-            ...session,
-            settingsFile: { ...session.settingsFile, settings: { ...session.settingsFile.settings, level: 'all' } },
-        }).find((file) => file.path === path);
+        const all = selectRulesAt(session, 'all', session.scopes).find((file) => file.path === path);
         expect(all?.content).toContain('## Naming');
         expect(all?.content).toContain('### ');
     },

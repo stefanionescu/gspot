@@ -1,10 +1,9 @@
-// Reads findings from declared JSON fields.
-import { parseReport } from '#cli/parsers/json.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { getValueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/tables.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
 import { JSON_START } from '#cli/config/runs/output.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { type ReportInput } from '#cli/types/runs/output.ts';
+import type { ToolOutput } from '#cli/types/runs/output.ts';
 
 // The manifest names where the list of findings sits and the field of each value.
 function listAt(value: unknown, path: string | undefined): unknown[] {
@@ -27,11 +26,11 @@ function setPosition(finding: Finding, base: number, line: string | undefined, c
     if (column !== undefined && Number(column) >= base) finding.column = Number(column) - base + 1;
 }
 
-function readJsonFinding(input: ReportInput, sources: unknown[]): Finding {
-    const { check, help, output } = input;
+function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
+    const { check, help, output: format } = output;
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
         throw new GspotError('output', 'The JSON report contains an invalid finding object.');
-    const fields: Record<string, string | undefined> | undefined = output.fields;
+    const fields: Record<string, string | undefined> | undefined = format.fields;
     // A field may name several paths with spaces between them; the values join in that order.
     const getFieldValues = (name: string) =>
         (fields?.[name] ?? '')
@@ -63,7 +62,7 @@ function readJsonFinding(input: ReportInput, sources: unknown[]): Finding {
         help,
         fixable: getFieldValues('fixable').some((entries) => entries.some((value) => value !== undefined)),
     };
-    setPosition(finding, output.line_base ?? 1, getField('line'), getField('column'));
+    setPosition(finding, format.line_base ?? 1, getField('line'), getField('column'));
     const rule = getField('rule');
     if (rule !== undefined) finding.rule = rule;
     return finding;
@@ -73,16 +72,16 @@ function readJsonFinding(input: ReportInput, sources: unknown[]): Finding {
  * Read JSON findings from the dotted `items` path. Each `children` key goes one list deeper. A leaf without a field
  * takes it from its parent nodes.
  *
- * @param input the tool output to read.
+ * @param output the tool output to read.
  * @returns the findings from a valid report.
  */
-export function parseJsonFindings(input: ReportInput): Finding[] {
-    const { output, stdout } = input;
+export function parseJsonFindings(output: ToolOutput): Finding[] {
+    const { output: format, stdout } = output;
     const start = stdout.search(JSON_START);
     if (start === -1) throw new GspotError('output', 'JSON returned no structured findings.');
-    const parsed = parseReport('JSON', stdout.slice(start));
-    const keys = output.children === undefined ? [] : output.children.split('.');
-    return listAt(parsed, output.items).flatMap((item) =>
-        listChains([item], keys).map((chain) => readJsonFinding(input, chain)),
+    const parsed = parseToolReport('JSON', stdout.slice(start));
+    const keys = format.children === undefined ? [] : format.children.split('.');
+    return listAt(parsed, format.items).flatMap((item) =>
+        listChains([item], keys).map((chain) => buildJsonFinding(output, chain)),
     );
 }

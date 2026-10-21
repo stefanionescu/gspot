@@ -1,4 +1,6 @@
 // Runs one check on a bad sample, then on its fix, and puts the files back.
+import { join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { afterAll, beforeAll } from 'bun:test';
 import { markExecutable } from '#tests/setup/git.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
@@ -6,8 +8,8 @@ import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import type { Sandbox, SandboxPlan } from '#tests/types/sandbox.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
-import { createSandbox, changeSandbox } from '#tests/setup/sandbox.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { createSandbox, changeSandbox, applySandboxChanges } from '#tests/setup/sandbox.ts';
 
 import type {
     GspotCall,
@@ -17,6 +19,30 @@ import type {
     SampleChanges,
     SampleSummary,
 } from '#tests/types/samples.ts';
+
+/**
+ * Apply a check sample, run it before and after its fix, and restore its files when the caller leaves its scope.
+ *
+ * @param sandbox the installed repository and its command runner.
+ * @param changes the sample files and settings.
+ * @param options the check command and corrected files.
+ * @param options.commandArguments the check command and its flags.
+ * @param options.corrected the replacement file contents.
+ * @returns both captured reports with ownership of the sample's restoration.
+ */
+export async function runAppliedSample(
+    sandbox: Sandbox,
+    changes: SampleChanges,
+    options: { commandArguments: readonly string[]; corrected: SampleFix['files'] },
+): Promise<SampleResult & AsyncDisposable> {
+    await using resources = new AsyncDisposableStack();
+    resources.use(await applySandboxChanges(sandbox, changes));
+    const failed = parseCheckReport(await sandbox.run(sandbox.root, options.commandArguments, sandbox.environment));
+    for (const [path, source] of Object.entries(options.corrected)) await writeFile(join(sandbox.root, path), source);
+    const passed = parseCheckReport(await sandbox.run(sandbox.root, options.commandArguments, sandbox.environment));
+    const owned = resources.move();
+    return { failed, passed, [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned) };
+}
 
 /**
  * Write the sample, run its check, and restore the sandbox.
@@ -69,7 +95,7 @@ export async function runCheckSample(sandbox: Sandbox, entry: CheckSample, plan:
 }
 
 /** Reduce a sample result to exit codes and check results for assertions. */
-export function summarizeSample(result: SampleResult): SampleSummary {
+export function buildSampleSummary(result: SampleResult): SampleSummary {
     return {
         failed: { code: result.failed.code, checks: result.failed.report.checks },
         passed: { code: result.passed.code, checks: result.passed.report.checks },

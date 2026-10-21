@@ -105,4 +105,4 @@ export const BASH_OPTION_COMMANDS = [SET_COMMAND, 'shopt '] as const;
 
 export const SHELLCHECK_DIALECT_FLAG = '--shell=';
 
-export const BATS_TAG = 'bats';
+export const BATS_EXTENSION = '.bats';

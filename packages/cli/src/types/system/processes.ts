@@ -7,9 +7,9 @@ export type SpawnResult = {
     stderr: string;
     missing: boolean;
     duration: number;
-    isTimedOut?: boolean;
-    isCanceled?: boolean;
-    isErrored?: boolean;
+    timedOut: boolean;
+    canceled: boolean;
+    errored: boolean;
 };
 
 export type SpawnOptions = {
@@ -31,8 +31,6 @@ export type ProcessTermination = {
     drainTimer: ReturnType<typeof setTimeout> | undefined;
 };
 
-export type ByteSpawnResult = Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array };
-
 /** What Execa reports about a finished or unstarted process, before this package classifies it. */
 export type SpawnCompletion = Pick<
     Result<{ encoding: 'utf8'; reject: false }>,
@@ -43,7 +41,7 @@ export type StdoutReader = (chunks: AsyncIterable<Buffer>) => Promise<void>;
 
 /** The completion state of a process tree, and its stop and disposal operations. */
 export type ProcessTreeControl = {
-    state: { isTimedOut: boolean; isCanceled: boolean };
+    state: { timedOut: boolean; canceled: boolean };
     stop: () => void;
     release: (executionFailure: unknown) => Promise<void>;
 };

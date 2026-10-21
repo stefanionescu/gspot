@@ -1,5 +1,7 @@
-import type { ToolInspection } from '#cli/types/tools/find.ts';
-import type { ConfigurationSuggestion } from '#cli/types/repository/selection.ts';
+import type { ToolInspection } from '#cli/types/tools/inspection.ts';
+
+/** A detected configuration absent from the saved selection, with its install command. */
+type ConfigurationSuggestion = { configuration: string; evidence: string; command: string };
 
 export type SuggestionRow = { path: string; note: string; command: string };
 

@@ -5,7 +5,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { checkChanges } from '#tests/setup/sample-checks.ts';
 import { prepareInstalledSandbox } from '#tests/setup/sandbox.ts';
-import astroManifest from 'astro/package.json' with { type: 'json' };
+import astroPackage from 'astro/package.json' with { type: 'json' };
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { PAGE, ASTRO_PAGE, BUNDLED_ASTRO_PAGE } from '#tests/data/checks/astro.ts';
 import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/data/checks/component-samples.ts';
@@ -15,7 +15,7 @@ test('one Astro project reaches ESLint, astro check, and Prettier, and passes af
     const root = sandbox.path;
     const environment = await prepareInstalledSandbox(root, {
         configurations: ['typescript', 'astro', 'format'],
-        dependencies: { astro: astroManifest.version },
+        dependencies: { astro: astroPackage.version },
         tsconfig: COMPONENT_TSCONFIG,
         files: { 'src/answer.ts': ANSWER_MODULE, [PAGE]: ASTRO_PAGE },
     });

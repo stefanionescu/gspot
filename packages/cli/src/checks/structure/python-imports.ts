@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
-import type { ImportTarget, PythonSearch, LocatedImport } from '#cli/types/checks/import-rules.ts';
+import type { ImportTarget, PythonSearch, LocatedImport } from '#cli/types/checks/structure.ts';
 
 import {
     RELATIVE_IMPORT,
     PYTHON_FROM_STATEMENT,
     PYTHON_MODULE_SUFFIXES,
     PYTHON_IMPORT_STATEMENT,
-} from '#cli/config/checks/import-rules.ts';
+} from '#cli/config/checks/structure.ts';
 
 function findModuleFile(folder: string, dotted: string, files: ReadonlySet<string>): string | undefined {
     const base = posix.join(folder, ...dotted.split('.').filter((part) => part !== ''));
@@ -22,7 +22,7 @@ function findAbsoluteModule(dotted: string, search: PythonSearch): string | unde
     return undefined;
 }
 
-function readImportedName(node: Node): string {
+function getImportedName(node: Node): string {
     return node.type === 'aliased_import' ? (node.childForFieldName('name')?.text ?? '') : node.text;
 }
 
@@ -32,7 +32,7 @@ function findFirstModule(candidates: { module: string; target: string | undefine
 }
 
 function listImportedNames(node: Node): (string | undefined)[] {
-    const names = node.childrenForFieldName('name').map((item) => readImportedName(item));
+    const names = node.childrenForFieldName('name').map((item) => getImportedName(item));
     return names.length === 0 ? [undefined] : names;
 }
 
@@ -87,7 +87,7 @@ export function listPythonImports(root: Node, file: string, search: PythonSearch
     return root.descendantsOfType([PYTHON_IMPORT_STATEMENT, PYTHON_FROM_STATEMENT]).flatMap((node) => {
         if (node.type === PYTHON_IMPORT_STATEMENT)
             return node.childrenForFieldName('name').flatMap((item) => {
-                const module = readImportedName(item);
+                const module = getImportedName(item);
                 const target = search.externals.has(module.split('.', 1)[0] ?? '')
                     ? undefined
                     : findAbsoluteModule(module, search);

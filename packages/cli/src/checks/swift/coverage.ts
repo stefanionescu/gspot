@@ -1,22 +1,23 @@
 import { realpathSync } from 'node:fs';
-import { parseReport } from '#cli/parsers/json.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { join, resolve, relative } from 'node:path';
+import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { FULL_PERCENTAGE } from '#cli/config/units.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { type Finding } from '#cli/types/runs/check.ts';
-import { type Files } from '#cli/types/system/files.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
-import type { TableSettings } from '#cli/types/settings/tables.ts';
+import type { TableSettings } from '#cli/types/settings/file.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependencies.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/swift/cache.ts';
-import { type SwiftBuildPlan, type CoverageReport } from '#cli/types/checks/swift.ts';
-import { xccovSchema, swiftCoverageSchema, swiftPackageCoverageSchema } from '#cli/schemas/checks/swift.ts';
+import type { SwiftBuildPlan, CoverageReport } from '#cli/types/checks/swift.ts';
+import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/checks/swift.ts';
 
 import {
     XCCOV_COMMAND,
@@ -71,7 +72,7 @@ async function measureXcodeCoverage(
         throw new Error(
             `The test run wrote no coverage report: ${formatOutputTail(viewed, 'The coverage viewer printed no error output.')}`,
         );
-    return parseReport('xccov', viewed.stdout, xccovSchema);
+    return parseToolReport('xccov', viewed.stdout, xccovSchema);
 }
 
 /**
@@ -124,31 +125,6 @@ function listCoverageShortfalls(
 }
 
 /**
- * Runs the tests with coverage and compares each target with the line limit or its own override.
- *
- * @param session the repository and its tools.
- * @param planned the scope and coverage limits.
- * @returns the findings.
- */
-async function checkSwiftCoverage(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const settings = getTable(planned.selection.view, 'coverage');
-    const report = await measureCoverage(session, planned);
-    return listCoverageShortfalls(report, settings).map((text) =>
-        buildFinding(
-            planned,
-            {
-                file:
-                    getTable(planned.selection.view, 'swift').xcode_project ??
-                    joinScope(planned.selection.scope.path, PACKAGE_SWIFT),
-                line: 1,
-            },
-            'coverage',
-            text,
-        ),
-    );
-}
-
-/**
  * Sums the covered lines of each source target that Swift Package Manager declares.
  *
  * @param text the coverage JSON from the compiler.
@@ -157,8 +133,8 @@ async function checkSwiftCoverage(session: Session, planned: PlannedCheck): Prom
  * @returns the coverage of each source target.
  */
 function parseSwiftCoverage(text: string, packageText: string, folder: string): CoverageReport {
-    const report = parseReport('swift test', text, swiftCoverageSchema);
-    const description = parseReport('swift package', packageText, swiftPackageCoverageSchema);
+    const report = parseToolReport('swift test', text, swiftCoverageSchema);
+    const description = parseToolReport('swift package', packageText, packageDescriptionSchema);
     const root = realpathSync(folder);
     const measured = new Map(
         report.data.flatMap((data) => data.files).map((file) => [file.filename, file.summary.lines]),
@@ -180,4 +156,27 @@ function parseSwiftCoverage(text: string, packageText: string, folder: string): 
     };
 }
 
-export { checkSwiftCoverage };
+/**
+ * Runs the tests with coverage and compares each target with the line limit or its own override.
+ *
+ * @param session the repository and its tools.
+ * @param planned the scope and coverage limits.
+ * @returns the findings.
+ */
+export async function checkSwiftCoverage(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const settings = getTable(planned.selection.view, 'coverage');
+    const report = await measureCoverage(session, planned);
+    return listCoverageShortfalls(report, settings).map((text) =>
+        buildFinding(
+            planned,
+            {
+                file:
+                    getTable(planned.selection.view, 'swift').xcode_project ??
+                    joinScope(planned.selection.scope.path, PACKAGE_SWIFT),
+                line: 1,
+            },
+            'coverage',
+            text,
+        ),
+    );
+}

@@ -13,9 +13,9 @@ import {
     ENTRY_SOURCE,
     IMPORT_CASES,
     IMPORT_FILES,
+    ENTRY_TABLES,
     ENTRY_FOLDERS,
     TRIVIAL_RULES,
-    ENTRY_SETTINGS,
     REEXPORT_CASES,
     STARTER_SOURCE,
     TRIVIAL_ENTRY_FILES,
@@ -23,7 +23,7 @@ import {
 } from '#tests/data/generation/eslint/structure.ts';
 
 // The files and rules that the generated ESLint tool file reports for the two trivial-code rules.
-async function collectTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
+async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);
     const eslint = await createEslint(root);
     const findings = await collectLintFindings(eslint, root, ENTRY_FOLDERS, TRIVIAL_RULES);
@@ -34,6 +34,22 @@ async function collectTrivialFindings(root: string, settings: string): Promise<P
 function listTrivialFiles(findings: Pick<LintFinding, 'file' | 'rule'>[]): string[] {
     const files = findings.filter(({ rule }) => rule === 'gspot/no-trivial-files').map(({ file }) => file);
     return [...new Set(files)].toSorted((left, right) => left.localeCompare(right));
+}
+
+/** Check each rule case against these source files. */
+async function assertSourceRules(
+    eslint: ESLint,
+    root: string,
+    files: readonly string[],
+    cases: readonly SourceRuleCase[],
+): Promise<void> {
+    for (const file of files) {
+        for (const { name, source, rule, count } of cases) {
+            await createFileTree(root, { [file]: source });
+            const findings = await collectLintFindings(eslint, root, [file], [rule]);
+            expect(findings, name).toStrictEqual(Array.from({ length: count }, () => ({ file, rule, line: 1 })));
+        }
+    }
 }
 
 test.each([...LEVELS])(
@@ -49,15 +65,15 @@ test.each([...LEVELS])(
             'api/src/task.js': ENTRY_SOURCE,
         });
 
-        expect(listTrivialFiles(await collectTrivialFindings(sandbox.path, ENTRY_SETTINGS))).toStrictEqual([
-            ...TRIVIAL_ENTRY_FILES,
-        ]);
+        const settings = buildSandboxSettings(['javascript'], { level, tables: ENTRY_TABLES });
+        expect(listTrivialFiles(await listTrivialFindings(sandbox.path, settings))).toStrictEqual(
+            level === 'all' ? [...TRIVIAL_ENTRY_FILES] : [],
+        );
         await writeFile(
             join(sandbox.path, 'src/main.js'),
             "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
         );
-        const settings = ENTRY_SETTINGS.replace('level = "all"', `level = "${level}"`);
-        const findings = await collectTrivialFindings(sandbox.path, settings);
+        const findings = await listTrivialFindings(sandbox.path, settings);
         expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(
             level === 'all'
                 ? [
@@ -71,7 +87,7 @@ test.each([...LEVELS])(
             join(sandbox.path, 'src/main.js'),
             "import { start } from './start.js';\nexport function boot() { start(); }\n",
         );
-        const publicFindings = await collectTrivialFindings(sandbox.path, settings);
+        const publicFindings = await listTrivialFindings(sandbox.path, settings);
         expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(
             level === 'all' ? [{ file: 'src/main.js', rule: 'gspot/no-trivial-files' }] : [],
         );
@@ -92,10 +108,9 @@ test('structure > level all skips build output and files marked linguist-generat
     });
 
     const eslint = await createEslint(sandbox.path);
-    for (const filePath of ['tests/build/check.js', 'src/dist/check.js', 'coverage/check.js']) {
+    for (const filePath of ['tests/build/check.js', 'src/dist/check.js', 'coverage/check.js', 'emitted/check.js']) {
         expect(await eslint.isPathIgnored(filePath)).toBe(true);
     }
-    expect(await eslint.isPathIgnored('emitted/check.js')).toBe(true);
 });
 
 test.each([...LEVELS])('structure > size limits apply to test files only at level all (%s)', async (level) => {
@@ -178,7 +193,7 @@ test('structure > a JSON import attribute is accepted where your import extensio
     }
 });
 
-test.each(LEVEL_REEXPORT_CASES)(
+test.each([...LEVEL_REEXPORT_CASES])(
     'structure > %s %s: import, re-export and barrel rules in root and child scopes',
     async (level, reexports) => {
         await using sandbox = await testdir({
@@ -209,6 +224,14 @@ test.each(LEVEL_REEXPORT_CASES)(
             );
         }
         const barrels = level === 'all' && reexports === 'index-only';
+        if (barrels)
+            await assertSourceRules(
+                eslint,
+                sandbox.path,
+                ['src/index.ts', 'app/src/index.ts'],
+                REEXPORT_CASES.map(([source]) => ({ source, rule: 'gspot/no-trivial-files', count: 0 })),
+            );
+
         await assertSourceRules(
             eslint,
             sandbox.path,
@@ -222,19 +245,3 @@ test.each(LEVEL_REEXPORT_CASES)(
         );
     },
 );
-
-/** Check each rule case against these source files. */
-async function assertSourceRules(
-    eslint: ESLint,
-    root: string,
-    files: readonly string[],
-    cases: readonly SourceRuleCase[],
-): Promise<void> {
-    for (const file of files) {
-        for (const { name, source, rule, count } of cases) {
-            await createFileTree(root, { [file]: source });
-            const findings = await collectLintFindings(eslint, root, [file], [rule]);
-            expect(findings, name).toStrictEqual(Array.from({ length: count }, () => ({ file, rule, line: 1 })));
-        }
-    }
-}

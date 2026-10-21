@@ -1,15 +1,14 @@
+import { parse } from 'smol-toml';
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
-import { parse as parseSmolToml } from 'smol-toml';
 import { stringify } from '@decimalturn/toml-patch';
 import { parseTomlText } from '#cli/settings/file.ts';
-import { parseSettings } from '#cli/settings/read.ts';
+import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { listAllowedRules } from '#cli/settings/import-rules.ts';
-import { formatSettingsText } from '#cli/settings/write/text.ts';
 import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
-import { REFUSED_RULE_OPTIONS } from '#tests/data/settings/errors.ts';
 import { publishedSettingsValidator } from '#tests/schemas/settings.ts';
-import { buildSandboxSettings, validateSettingsText } from '#tests/setup/settings.ts';
+import { REVIEWED_REASON, REFUSED_RULE_OPTIONS } from '#tests/data/settings/errors.ts';
+import { parseSettingsText, buildSandboxSettings, validateSettingsText } from '#tests/setup/settings.ts';
 
 import {
     UNSAFE_FOLDERS,
@@ -32,7 +31,7 @@ paths = ["app/**"]
 name = "entry"
 paths = ["entry/**"]
 `;
-        const settings = parseSettings(text, undefined);
+        const settings = parseSettingsText(text);
         expect(settings.import_rule).toStrictEqual([
             { name: 'storage', paths: ['storage/**'] },
             { name: 'app', paths: ['app/**'] },
@@ -40,7 +39,7 @@ paths = ["entry/**"]
         ]);
         expect(listAllowedRules(settings.import_rule, 1)).toStrictEqual(['app', 'storage']);
         expect(settings.written).not.toHaveProperty('import_rule.1.can_import');
-        expect(() => parseSettings(text.replace('paths = ["app/**"]', 'paths = [3]'), undefined)).toThrow(
+        expect(() => parseSettingsText(text.replace('paths = ["app/**"]', 'paths = [3]'))).toThrow(
             'import_rule.1.paths.0',
         );
     });
@@ -55,46 +54,46 @@ name = "app"
 paths = ["app/**"]
 can_import = ["storage"]
 `;
-        const settings = parseSettings(text, undefined);
+        const settings = parseSettingsText(text);
         expect(settings.import_rule[1]).toStrictEqual({
             name: 'app',
             paths: ['app/**'],
             can_import: ['storage'],
         });
-        expect(() =>
-            parseSettings(text.replace('can_import = ["storage"]', 'can_import = ["missing"]'), undefined),
-        ).toThrow('import_rule.1.can_import.0: There is no import rule named missing.');
+        expect(() => parseSettingsText(text.replace('can_import = ["storage"]', 'can_import = ["missing"]'))).toThrow(
+            'import_rule.1.can_import.0: There is no import rule named missing.',
+        );
     });
 });
 
 describe('global ignores', () => {
     test('an ignore without check needs paths and takes no rule', () => {
         const reason = 'Product photos and facts are data, not code.';
-        const settings = parseSettings(`[[ignore]]\npaths = ["assets/products/**"]\nreason = "${reason}"\n`, undefined);
+        const settings = parseSettingsText(`[[ignore]]\npaths = ["assets/products/**"]\nreason = "${reason}"\n`);
         expect(settings.ignore).toStrictEqual([{ paths: ['assets/products/**'], reason }]);
-        expect(() => parseSettings(`[[ignore]]\nreason = "${reason}"\n`, undefined)).toThrow(
+        expect(() => parseSettingsText(`[[ignore]]\nreason = "${reason}"\n`)).toThrow(
             'An ignore without check needs paths.',
         );
         expect(() =>
-            parseSettings(`[[ignore]]\nrule = "no-console"\npaths = ["a/**"]\nreason = "${reason}"\n`, undefined),
+            parseSettingsText(`[[ignore]]\nrule = "no-console"\npaths = ["a/**"]\nreason = "${reason}"\n`),
         ).toThrow('An ignore without check cannot name a rule.');
     });
 });
 describe('parts', () => {
     test.each([...UNTIL_DATE_CASES])('$name: the until date of an ignore must be a TOML date', (row) => {
-        const source = `configurations = ["bash"]\n[[ignore]]\ncheck="bash/shellcheck"\nreason="Reviewed in tests."\nuntil=${row.literal}\n`;
+        const source = `configurations = ["bash"]\n[[ignore]]\ncheck="bash/shellcheck"\nreason="${REVIEWED_REASON}"\nuntil=${row.literal}\n`;
         const written = parseTomlText(source, 'dates.toml');
         expect(settingsSchema.safeParse(written).success).toBe(row.valid);
         if (!row.valid) return;
-        const settings = parseSettings(source, undefined);
+        const settings = parseSettingsText(source);
         expect(settings.ignore[0]?.until?.toISOString()).toBe(row.date);
-        const output = formatSettingsText(source, written);
+        const output = buildSettingsText(source, written);
         expect(output).toContain(`until = ${row.date}`);
-        expect(formatSettingsText(output, parseTomlText(output, 'dates.toml'))).toBe(output);
+        expect(buildSettingsText(output, parseTomlText(output, 'dates.toml'))).toBe(output);
     });
 
     test.each([...UNSAFE_FOLDERS])('scope refuses the path %s', (path) => {
-        expect(() => parseSettings(stringify({ scope: [{ path }] }), undefined)).toThrow(
+        expect(() => parseSettingsText(stringify({ scope: [{ path }] }))).toThrow(
             'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
         );
     });
@@ -103,17 +102,18 @@ describe('parts', () => {
         const path = 'apps/café 100%';
         await using sandbox = await testdir({ [`${path}/source.ts`]: 'export const count = 1;\n' });
 
-        expect(Object.keys(parseSettings(stringify({ scope: [{ path }] }), sandbox.path).scopes)).toStrictEqual([path]);
+        expect(Object.keys(parseSettingsText(stringify({ scope: [{ path }] }), sandbox.path).scopes)).toStrictEqual([
+            path,
+        ]);
     });
 });
 describe('tools', () => {
     test('zero and false tool options are kept as values', () => {
-        const settings = parseSettings(
+        const settings = parseSettingsText(
             stringify({
                 configurations: ['javascript'],
                 tools: { eslint: { rules: { 'id-length': [{ min: 0, properties: false }] } } },
             }),
-            undefined,
         );
         expect(settings.tools).toMatchObject({ eslint: { rules: { 'id-length': [{ min: 0, properties: false }] } } });
     });
@@ -122,10 +122,7 @@ describe('tools', () => {
         'rule keys named like object properties are checked like any other key (%j)',
         (key) => {
             expect(() =>
-                parseSettings(
-                    `configurations = ["commits"]\n[tools.commitlint.rules]\n"${key}" = ["invalid"]\n`,
-                    undefined,
-                ),
+                parseSettingsText(`configurations = ["commits"]\n[tools.commitlint.rules]\n"${key}" = ["invalid"]\n`),
             ).toThrow(`tools.commitlint.rules.${key}: Unknown commitlint rule. Accepted rules:`);
         },
     );
@@ -141,16 +138,15 @@ describe('tools', () => {
 });
 
 test('the published schema accepts an until date read by a TOML parser', () => {
-    const text =
-        'configurations = ["bash"]\n[[ignore]]\ncheck = "bash/shellcheck"\nreason = "Reviewed in tests."\nuntil = 2026-11-08\n';
-    const parsed = parseSmolToml(text);
+    const text = `configurations = ["bash"]\n[[ignore]]\ncheck = "bash/shellcheck"\nreason = "${REVIEWED_REASON}"\nuntil = 2026-11-08\n`;
+    const parsed: unknown = parse(text);
     expect(publishedSettingsValidator(parsed), JSON.stringify(publishedSettingsValidator.errors)).toBe(true);
-    expect(publishedSettingsValidator({ ...parsed, level: 'invalid' })).toBe(false);
+    expect(publishedSettingsValidator({ ...(parsed as Record<string, unknown>), level: 'invalid' })).toBe(false);
 });
 
 test('options for a rule that a setting writes are refused with that setting: complexity, max-lines in an override, MD007', () => {
     for (const { tables, path, rule, setting } of SETTING_RULE_OPTIONS) {
-        expect(() => parseSettings('configurations = ["javascript", "markdown"]\n' + tables, undefined)).toThrow(
+        expect(() => parseSettingsText('configurations = ["javascript", "markdown"]\n' + tables)).toThrow(
             `gspot.toml: ${path}: gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`,
         );
     }
@@ -158,10 +154,7 @@ test('options for a rule that a setting writes are refused with that setting: co
 
 test('options for import boundaries direct the reader to import_rule records', () => {
     expect(() =>
-        parseSettings(
-            'configurations = ["javascript"]\n[tools.eslint.rules]\n"gspot/import-boundaries" = [{}]\n',
-            undefined,
-        ),
+        parseSettingsText('configurations = ["javascript"]\n[tools.eslint.rules]\n"gspot/import-boundaries" = [{}]\n'),
     ).toThrow(
         'gspot.toml: tools.eslint.rules.gspot/import-boundaries: gspot writes the options of gspot/import-boundaries from the [[import_rule]] records. Change those records instead.',
     );
@@ -171,7 +164,7 @@ test.each(['constructor', 'toString', 'prototype'])(
     'a rule named %s is not mistaken for a setting-owned rule',
     (rule) => {
         expect(() =>
-            parseSettings(`configurations = ["javascript"]\n[tools.eslint.rules]\n"${rule}" = [{}]\n`, undefined),
+            parseSettingsText(`configurations = ["javascript"]\n[tools.eslint.rules]\n"${rule}" = [{}]\n`),
         ).not.toThrow();
     },
 );

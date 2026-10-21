@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
@@ -7,20 +6,20 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
-import { hasToolBuild } from '#tests/setup/system.ts';
-import { checkSemgrep } from '#cli/checks/security.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { checkSecuritySemgrep } from '#cli/checks/security.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { buildRunOptions, listAlwaysSelected } from '#tests/setup/builders.ts';
-import { planRun, isActive, stripCoverageArguments } from '#cli/planning/checks.ts';
 import { HISTORY_TABLES, TOOL_FILE_PLANNING_CASES } from '#tests/data/runs/plan.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/data/checks/format.ts';
+import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
+import { buildRunOptions, listAlwaysSelected, buildProcessResult } from '#tests/setup/builders.ts';
 
 test('coverage arguments leave other commands, your own checks, and given arguments unchanged', async () => {
     await using sandbox = await testdir();
@@ -35,11 +34,11 @@ test('coverage arguments leave other commands, your own checks, and given argume
         'sample.test.cjs': 'const authored = true;\n',
     });
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'push', only: ['project/tests'] })[0]!;
+    const planned = planChecks(session, { stage: 'push', only: ['project/tests'] })[0]!;
     using run = spyOn(processes, 'spawnProcess');
     run.mockImplementation((commandArguments) => {
         expect(commandArguments).toStrictEqual(command);
-        return Promise.resolve({ code: 0, missing: false, stdout: '', stderr: '', duration: 1 });
+        return Promise.resolve(buildProcessResult({ code: 0, missing: false, stdout: '', stderr: '', duration: 1 }));
     });
     const authored = await runCheckCommand(session, planned);
     const supplied = await runCheckCommand(session, planned, { command });
@@ -60,7 +59,7 @@ test('a project check without its own inputs is inactive even when its scope hol
 
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({ only: ['python/ruff'] });
-    const planned = planRun(session, options);
+    const planned = planChecks(session, options);
     expect(planned.every((entry) => entry.files.length === 0)).toBe(true);
     const result = await runChecks(session, options);
     expect(result.report.exitCode).toBe(0);
@@ -96,7 +95,7 @@ reason = "The API check is provided by its own native build pipeline."
         });
 
         const session = await openSession(sandbox.path);
-        const planned = planRun(session, { stage: 'all', only: ['nextjs/tsc', 'typescript/tsc'] });
+        const planned = planChecks(session, { stage: 'all', only: ['nextjs/tsc', 'typescript/tsc'] });
         const scopes = planned.filter((check) => ['api', 'web'].includes(check.selection.scope.path));
         const results = new Map(
             scopes.map((check) => [`${check.selection.scope.path}:${check.check.name}`, check.skip?.cause]),
@@ -129,23 +128,18 @@ Release on 03/04/2026.
         commitAll(sandbox.path);
         const session = await openSession(sandbox.path);
         expect(session.settingsFile.settings.configurations).toStrictEqual([]);
-        const selected = session.scopes.flatMap((scope) =>
-            scope.selected.map((manifest) => manifest.configuration.name),
-        );
+        const selected = session.scopes.flatMap((scope) => scope.selected.map((configuration) => configuration.name));
         for (const configuration of [...listAlwaysSelected(), 'licenses']) expect(selected).toContain(configuration);
         expect(selected).not.toContain('javascript');
         expect(selected).not.toContain('markdown');
-        const checks = planRun(session, {
+        const checks = planChecks(session, {
             stage: 'all',
             only: ['security/semgrep', 'prose/vale', 'duplication/jscpd', 'licenses/allowed'],
         });
         const security = checks.find((check) => check.check.name === 'security/semgrep');
         expect(security).toBeDefined();
         expect(security?.files).toStrictEqual([]);
-        expect(security?.skip).toStrictEqual(
-            hasToolBuild('semgrep') ? undefined : { cause: 'system', note: 'semgrep has no Windows build' },
-        );
-        expect(await checkSemgrep(session, security!)).toMatchObject({
+        expect(await checkSecuritySemgrep(session, security!)).toMatchObject({
             status: 'skipped',
             note: matchSubstring('tools.semgrep.rule_files'),
         });
@@ -167,12 +161,12 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/format/prettier.json'))).toBe(true);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     const excluded = await openSession(sandbox.path);
-    const plans = planRun(excluded, { stage: 'commit', only: ['format/prettier'] });
+    const plans = planChecks(excluded, { stage: 'commit', only: ['format/prettier'] });
     expect(plans[0]?.skip?.cause).toBe('ignore');
     expect(excluded.configuredChecks.map((check) => check.check.name)).not.toContain('format/prettier');
-    expect(excluded.neededToolManifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name))).not.toContain(
-        'prettier',
-    );
+    expect(
+        excluded.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
+    ).not.toContain('prettier');
     const generated = generate(excluded);
     expect(generated.files.map((file) => file.path)).not.toContain(
         '.gspot/configurations/general/format/prettier.json',
@@ -207,7 +201,7 @@ stage = "push"
     readGitOutput(sandbox.path, ['init']);
     const session = await openSession(sandbox.path);
     const names = [...(level === 'all' ? ['commits/commitlint-pushed'] : []), 'secrets/gitleaks-pushed'];
-    const planned = planRun(session, {
+    const planned = planChecks(session, {
         stage: 'push',
         only: [...names, 'sandbox/once'],
         staged: [],
@@ -219,12 +213,12 @@ stage = "push"
     expect(planned.map((check) => check.selection.scope.path)).toStrictEqual([...names.map(() => ''), '']);
     expect(planned.map((check) => isActive(check))).toStrictEqual([...names.map(() => true), false]);
     expect(
-        planRun(session, { stage: 'push', only: names, staged: [], commits: [] }).map((check) => isActive(check)),
+        planChecks(session, { stage: 'push', only: names, staged: [], commits: [] }).map((check) => isActive(check)),
     ).toStrictEqual(names.map(() => false));
     expect(() =>
-        planRun(session, { stage: 'push', only: ['secrets/gitleaks-pushed'], historyComplete: false }),
+        planChecks(session, { stage: 'push', only: ['secrets/gitleaks-pushed'], historyComplete: false }),
     ).toThrow('Pushed history is incomplete for secrets/gitleaks-pushed');
-    expect(planRun(session, { stage: 'push', only: ['sandbox/once'], historyComplete: false })).toHaveLength(1);
+    expect(planChecks(session, { stage: 'push', only: ['sandbox/once'], historyComplete: false })).toHaveLength(1);
 });
 
 test('Xcode plutil and general xmllint checks select their Apple and XML files', async () => {
@@ -241,7 +235,7 @@ test('Xcode plutil and general xmllint checks select their Apple and XML files',
     });
 
     const session = await openSession(sandbox.path);
-    const checks = planRun(session, {
+    const checks = planChecks(session, {
         stage: 'all',
         only: ['xcode/plutil', 'files/xmllint'],
     });

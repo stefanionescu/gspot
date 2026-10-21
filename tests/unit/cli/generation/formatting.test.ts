@@ -7,12 +7,11 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
-import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandbox.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 
@@ -89,10 +88,7 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
         'sample.yaml': 'parent:\n child: value\n',
     });
 
-    const session = await openSession(folder.path);
-    const generated = generate(session);
-    using log = openWriter(folder.path);
-    writeGeneratedFiles(session, generated, log);
+    await applyGeneratedFiles(folder.path);
     const path = join(folder.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     const configuration = await prettier.resolveConfig(path, {
@@ -112,9 +108,7 @@ test('Prettier overrides agree in the root pointer and editor lookup', async () 
         'package.json': '{"private":true}\n',
         ...Object.fromEntries(PRETTIER_OPTIONS_BY_FILE.map(({ file }) => [file, 'const greeting="hello";'])),
     });
-    using log = openWriter(root);
-    const session = await openSession(root);
-    writeGeneratedFiles(session, generate(session), log);
+    await applyGeneratedFiles(root);
     for (const { file, ...expected } of PRETTIER_OPTIONS_BY_FILE) {
         const computed = await prettier.resolveConfig(join(root, file), {
             config: join(root, 'prettier.config.mjs'),

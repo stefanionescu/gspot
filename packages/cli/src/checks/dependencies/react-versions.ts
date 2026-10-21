@@ -1,8 +1,9 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { readDeclaredSpecifiers } from '#cli/repository/dependency-files.ts';
 import { splitIdentity, readLockedPackages } from '#cli/parsers/lockfiles.ts';
@@ -28,8 +29,8 @@ function listVersions(locked: Set<string> | undefined, declared: Map<string, str
  */
 export function checkReactVersions(session: Session, planned: PlannedCheck): Finding[] {
     const folder = planned.selection.scope.path;
-    const manifest = posix.join(folder, PACKAGE_JSON);
-    const declared = readDeclaredSpecifiers(session.reads, manifest);
+    const packageJsonPath = posix.join(folder, PACKAGE_JSON);
+    const declared = readDeclaredSpecifiers(session.reads, packageJsonPath);
     if (declared === undefined || !declared.has(REACT_PACKAGE) || !declared.has(REACT_DOM_PACKAGE)) return [];
     const locked = readLockedPackages(session.reads, folder, JAVASCRIPT_LOCKFILES);
     const react = listVersions(locked, declared, REACT_PACKAGE);
@@ -38,7 +39,7 @@ export function checkReactVersions(session: Session, planned: PlannedCheck): Fin
     return [
         buildFinding(
             planned,
-            { file: manifest, line: 1 },
+            { file: packageJsonPath, line: 1 },
             'react-versions',
             `react ${react.join(', ')} and react-dom ${reactDom.join(', ')} differ, and React stops at run time when they do. Install the same version of both.`,
         ),

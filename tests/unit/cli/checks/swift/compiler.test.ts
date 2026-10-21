@@ -1,14 +1,15 @@
 import { join } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/swift/cache.ts';
+import { SWIFT_LANGUAGE_PACKAGE } from '#tests/data/checks/swift/projects.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { matchFields, matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 
@@ -16,7 +17,7 @@ import {
     checkFindings,
     planSandboxCheck,
     findBuiltInCheck,
-    prepareSwiftInput,
+    prepareSwiftCheck,
     createCompilerCache,
 } from '#tests/setup/check-input.ts';
 
@@ -32,7 +33,7 @@ test.each([
     async ({ buildCode, analyzerCode, message }) => {
         await using sandbox = await testdir();
         await using resources = new AsyncDisposableStack();
-        await using prepared = await prepareSwiftInput(sandbox, 'swift/swiftlint-analyze');
+        await using prepared = await prepareSwiftCheck(sandbox, 'swift/swiftlint-analyze');
         resources.use(
             spyOn(processes, 'spawnProcess')
                 .mockResolvedValueOnce(buildProcessResult({ code: buildCode }))
@@ -49,7 +50,7 @@ test('analyzer: manual analysis clears its own compiler state without consuming 
 
     await using sandbox = await testdir();
 
-    await using prepared = await prepareSwiftInput(sandbox, 'swift/swiftlint-analyze');
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/swiftlint-analyze');
 
     const input = prepared.planned;
     const compile = buildPlan(prepared.session, input);
@@ -80,10 +81,9 @@ test('compiler: a failed Swift build without source diagnostics returns executio
 
     await using sandbox = await testdir();
 
-    await using prepared = await prepareSwiftInput(sandbox, 'swift/build', {
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', {
         'Main.swift': 'let value = 1\n',
-        'Package.swift':
-            '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
+        'Package.swift': SWIFT_LANGUAGE_PACKAGE,
     });
 
     const options = buildRunOptions({ only: ['swift/build'] });
@@ -115,7 +115,7 @@ test('compiler: a later Swift session reads a failed build after an earlier succ
 
     await using sandbox = await testdir();
 
-    await using prepared = await prepareSwiftInput(sandbox, 'swift/build');
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/build');
 
     const first = prepared.planned;
 
@@ -148,7 +148,7 @@ test('compiler: canceled Swift compilation refuses to launch the compiler', asyn
 
     await using sandbox = await testdir();
 
-    await using prepared = await prepareSwiftInput(sandbox, 'swift/build');
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/build');
 
     const input = prepared.planned;
     prepared.session.cancelSignal = AbortSignal.abort();
@@ -171,7 +171,7 @@ test('compiler: Swift response files stay inside the compiler cache before log p
 
     await using sandbox = await testdir();
 
-    await using prepared = await prepareSwiftInput(sandbox, 'swift/build', {
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', {
         'external-response': 'external bytes must not enter a compiler log',
     });
 
@@ -224,7 +224,7 @@ test('compiler: a failed Swift source preparation releases its build claim befor
 
 test('compiler: Swift compiler diagnostics drop the macOS /private prefix from source paths', async () => {
     await using sandbox = await testdir();
-    await using prepared = await prepareSwiftInput(sandbox, 'swift/build', { 'Main.swift': 'let value = 1\n' });
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', { 'Main.swift': 'let value = 1\n' });
 
     const input = prepared.planned;
     using resources = new DisposableStack();

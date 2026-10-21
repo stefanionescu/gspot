@@ -1,16 +1,16 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { SQL_CHECK } from '#tests/data/checks/sql.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { type RunOptions } from '#cli/types/runs/check.ts';
+import { type RunOptions } from '#cli/types/runs/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { DECLARATION_FILES } from '#tests/data/repository/file-classification.ts';
@@ -28,7 +28,7 @@ test('fix preserves discovered project scopes when checking each project task', 
         'app/main.js': 'export const ready = true;\n',
     });
     const session = await openSession(sandbox.path);
-    expect(session.repository.scopes.map(({ path }) => path)).toContain('app');
+    expect(session.repository.scopeFolders.map(({ path }) => path)).toContain('app');
     const options = buildRunOptions({ only: ['docs/missing-paths'] });
     const plain = await runChecks(session, options);
     const fixed = await runChecks(await openSession(session.root), { ...options, fix: true });
@@ -43,7 +43,7 @@ test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
     async (entry) => {
         await using sandbox = await testdir();
-        const check = readManifests()
+        const check = readConfigurations()
             .get(entry.configuration)!
             .checks.find((check) => check.name === `${entry.configuration}/${entry.tool}`)!;
         const executable = join(

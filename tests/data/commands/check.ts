@@ -1,9 +1,9 @@
 import { stringify } from '@decimalturn/toml-patch';
-import { FINDINGS_SHOWN } from '#cli/config/terminal.ts';
+import { FINDINGS_SHOWN } from '#cli/config/commands/check.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { PUSH_CHECK_ARGUMENTS } from '#tests/data/parsers/git.ts';
 
-const FAILED_CHECK_REPORT = {
+export const FAILED_CHECK_REPORT = {
     version: '0.1.0',
     stage: 'all' as const,
     started: '2026-09-18T00:00:00.000Z',
@@ -48,13 +48,13 @@ const FAILED_CHECK_REPORT = {
     exitCode: 1,
 } as const;
 
-const CHECK_REPORT_COMPARISONS = [
+export const CHECK_REPORT_COMPARISONS = [
     { content: 'working-tree', header: 'Checked the files changed since main.\n' },
     { content: 'index', header: 'Checked the staged files.\n' },
     { content: 'commit', header: 'Checked commit main.\n' },
 ] as const;
 
-const NO_COLOR_SETTINGS = `configurations = []
+export const NO_COLOR_SETTINGS = `configurations = []
 [[ignore]]
 check = "gspot/generated-files"
 paths = ["absent/**"]
@@ -62,7 +62,7 @@ reason = "This path belongs to an external generated project."
 `;
 
 /** The fix message uses a singular noun for one changed file. */
-const FIXER_FEEDBACK_CASES = [
+export const FIXER_FEEDBACK_CASES = [
     { name: 'no changes', paths: [], preview: 'No fixer changes anything.', applied: 'No fixer changed anything.' },
     {
         name: 'one changed file',
@@ -79,7 +79,7 @@ const FIXER_FEEDBACK_CASES = [
 ] as const;
 
 // Options that the check command refuses, with each error; the working tree must stay unchanged.
-const FIX_REFUSALS = [
+export const FIX_REFUSALS = [
     [['--staged', '--fix'], '--fix cannot run with --staged'],
     [['--hook', 'pre-push', '--fix'], '--fix cannot run with --hook pre-push'],
 ] as const;
@@ -88,7 +88,7 @@ const INVALID_UTF8_BYTE = 0xff;
 const UTF16_MARKER_BYTE = 0xfe;
 const LINE_FEED_BYTE = 0x0a;
 
-const PUSH_INPUT_REFUSALS = [
+export const PUSH_INPUT_REFUSALS = [
     {
         name: 'text that is no ref update',
         stdin: 'not a ref update\n',
@@ -101,7 +101,7 @@ const PUSH_INPUT_REFUSALS = [
     },
 ] as const;
 
-const ARGUMENT_REFUSALS = [
+export const ARGUMENT_REFUSALS = [
     ['a path outside the repository', ['check', '../elsewhere.txt'], 'is outside this repository'],
     ['a path that matches nothing', ['check', 'missing'], 'matches no repository files'],
     [
@@ -112,21 +112,15 @@ const ARGUMENT_REFUSALS = [
 ] as const;
 
 /** Arguments that run only the failing and the passing check of the output sandbox. */
-const VERBOSITY_ARGUMENTS = ['check', '--only', 'example/findings,example/passing', '--changed', 'HEAD'] as const;
+export const VERBOSITY_ARGUMENTS = [
+    'check',
+    '--only',
+    'example/findings,example/passing',
+    '--changed',
+    'HEAD',
+] as const;
 
-const PUSH_CHECK_COMMAND = [...PUSH_CHECK_ARGUMENTS, 'origin', 'unused'] as const;
-
-export {
-    FIX_REFUSALS,
-    ARGUMENT_REFUSALS,
-    NO_COLOR_SETTINGS,
-    PUSH_CHECK_COMMAND,
-    FAILED_CHECK_REPORT,
-    PUSH_INPUT_REFUSALS,
-    VERBOSITY_ARGUMENTS,
-    FIXER_FEEDBACK_CASES,
-    CHECK_REPORT_COMPARISONS,
-};
+export const PUSH_CHECK_COMMAND = [...PUSH_CHECK_ARGUMENTS, 'origin', 'unused'] as const;
 
 export const VERBOSITY_FILES = {
     'gspot.toml': buildSandboxSettings([], {

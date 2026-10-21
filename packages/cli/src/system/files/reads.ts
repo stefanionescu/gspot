@@ -54,12 +54,12 @@ export function readCachedPrefix(reads: ReadCache, path: string, limit: number):
 /**
  * Read file bytes from disk inside the folder.
  *
- * @param sourceFolder the boundary for resolving the relative file path.
+ * @param root the boundary for resolving the relative file path.
  * @param path the root-relative file.
  * @returns the file bytes.
  */
-export function readBytes(sourceFolder: string, path: string): Buffer {
-    return readFileSync(readContainedPath(realpathSync(sourceFolder), path));
+export function readBytes(root: string, path: string): Buffer {
+    return readFileSync(readContainedPath(realpathSync(root), path));
 }
 
 /**
@@ -80,12 +80,12 @@ export function readCachedBytes(reads: ReadCache, path: string): Buffer {
 /**
  * Read UTF-8 text from disk, or return undefined for a missing file.
  *
- * @param sourceFolder the boundary for resolving the relative file path.
+ * @param root the boundary for resolving the relative file path.
  * @param path the root-relative file.
  * @returns the file text.
  */
-export function findText(sourceFolder: string, path: string): string | undefined {
-    return readUtf8(path, () => readBytes(sourceFolder, path));
+export function findText(root: string, path: string): string | undefined {
+    return readUtf8(path, () => readBytes(root, path));
 }
 
 /**
@@ -130,13 +130,13 @@ export function readCachedText(reads: ReadCache, path: string): string {
 /**
  * Resolve a source path, and refuse links outside the root.
  *
- * @param sourceFolder the canonical folder for checking symbolic link destinations.
+ * @param root the canonical folder for checking symbolic link destinations.
  * @param path the root-relative file.
  * @returns the resolved file location after the boundary check.
  */
-export function readContainedPath(sourceFolder: string, path: string): string {
-    const target = realpathSync(join(sourceFolder, ...splitSystemPath(path)));
-    if (!isInside(relative(sourceFolder, target))) throw new Error(`Source link leaves the repository: ${path}`);
+export function readContainedPath(root: string, path: string): string {
+    const target = realpathSync(join(root, ...splitSystemPath(path)));
+    if (!isInside(relative(root, target))) throw new Error(`Source link leaves the repository: ${path}`);
     return target;
 }
 

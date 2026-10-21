@@ -1,24 +1,16 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { importRulesSchema } from '#cli/schemas/settings/imports.ts';
 import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
-import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
-import { SCHEMA_URL, NAMED_FINDING_CHECKS } from '#cli/config/settings/file.ts';
+import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/parts.ts';
 import { ciSchema, rulesSchema, hooksSchema } from '#cli/schemas/settings/integrations.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
-import {
-    ALLOWED_WORD,
-    SETTINGS_EXAMPLES,
-    TABLE_DESCRIPTIONS,
-    JSON_SCHEMA_DIALECT,
-    INTERNAL_SCHEMA_METADATA,
-} from '#cli/config/settings/schema.ts';
 import {
     formatSchema,
     relativePath,
@@ -28,17 +20,26 @@ import {
     allowReasonedValue,
     unwrapSettingSchema,
 } from '#cli/schemas/settings/parts.ts';
+import {
+    SCHEMA_URL,
+    ALLOWED_WORD,
+    SETTINGS_EXAMPLES,
+    TABLE_DESCRIPTIONS,
+    INTERNAL_FACT_KEYS,
+    JSON_SCHEMA_DIALECT,
+    NAMED_FINDING_CHECKS,
+} from '#cli/config/settings/schema.ts';
 
 const ignoreSchema = z
     .strictObject({
-        check: z.string().optional().describe(SETTING_DECLARATIONS['ignore.check'].description),
-        rule: z.string().optional().describe(SETTING_DECLARATIONS['ignore.rule'].description),
-        names: z.array(z.string().min(1)).min(1).optional().describe(SETTING_DECLARATIONS['ignore.names'].description),
-        paths: relativePaths.optional().describe(SETTING_DECLARATIONS['ignore.paths'].description),
+        check: z.string().optional().describe(SETTING_FACTS['ignore.check'].description),
+        rule: z.string().optional().describe(SETTING_FACTS['ignore.rule'].description),
+        names: z.array(z.string().min(1)).min(1).optional().describe(SETTING_FACTS['ignore.names'].description),
+        paths: relativePaths.optional().describe(SETTING_FACTS['ignore.paths'].description),
         reason: z
             .string({ error: 'needs a reason. Add `reason = "..."` to this entry.' })
-            .describe(SETTING_DECLARATIONS['ignore.reason'].description),
-        until: localDateSchema.optional().meta(SETTING_DECLARATIONS['ignore.until']),
+            .describe(SETTING_FACTS['ignore.reason'].description),
+        until: localDateSchema.optional().meta(SETTING_FACTS['ignore.until']),
     } satisfies SchemaShape<
         NonNullable<ParsedSettings['ignore']>[number],
         NonNullable<WrittenSettings['ignore']>[number]
@@ -62,16 +63,16 @@ const ignoreSchema = z
     });
 
 const commandCheckSchema = z.strictObject({
-    name: z.string().min(1).describe(SETTING_DECLARATIONS['command_check.name'].description),
-    command: commandCheckFields.command.unwrap().meta(SETTING_DECLARATIONS['command_check.command']),
-    paths: nonemptyPaths.meta(SETTING_DECLARATIONS['command_check.paths']),
-    outputs: relativePaths.optional().describe(SETTING_DECLARATIONS['command_check.outputs'].description),
-    stage: commandCheckFields.stage.exclude(['message']).meta(SETTING_DECLARATIONS['command_check.stage']),
-    summary: commandCheckFields.summary.meta(SETTING_DECLARATIONS['command_check.summary']),
-    help: commandCheckFields.help.meta(SETTING_DECLARATIONS['command_check.help']),
-    fix: commandCheckFields.fix.meta(SETTING_DECLARATIONS['command_check.fix']),
-    exit_codes: commandCheckFields.exit_codes.meta(SETTING_DECLARATIONS['command_check.exit_codes']),
-    output: commandCheckFields.output.meta(SETTING_DECLARATIONS['command_check.output']),
+    name: z.string().min(1).describe(SETTING_FACTS['command_check.name'].description),
+    command: commandCheckFields.command.unwrap().meta(SETTING_FACTS['command_check.command']),
+    paths: nonemptyPaths.meta(SETTING_FACTS['command_check.paths']),
+    outputs: relativePaths.optional().describe(SETTING_FACTS['command_check.outputs'].description),
+    stage: commandCheckFields.stage.exclude(['message']).meta(SETTING_FACTS['command_check.stage']),
+    summary: commandCheckFields.summary.meta(SETTING_FACTS['command_check.summary']),
+    help: commandCheckFields.help.meta(SETTING_FACTS['command_check.help']),
+    fix: commandCheckFields.fix.meta(SETTING_FACTS['command_check.fix']),
+    exit_codes: commandCheckFields.exit_codes.meta(SETTING_FACTS['command_check.exit_codes']),
+    output: commandCheckFields.output.meta(SETTING_FACTS['command_check.output']),
 } satisfies SchemaShape<
     NonNullable<ParsedSettings['command_check']>[number],
     NonNullable<WrittenSettings['command_check']>[number]
@@ -143,47 +144,41 @@ const scopeBody = {
 };
 
 /** One scope record: its path, configuration choices, and settings tables. */
-const scopeSchema = z.strictObject({
-    path: relativePath.describe(SETTING_DECLARATIONS['scope.path'].description),
+export const scopeSchema = z.strictObject({
+    path: relativePath.describe(SETTING_FACTS['scope.path'].description),
     configurations: z
         .array(z.string())
-        .default(SETTING_DECLARATIONS['scope.configurations'].default)
-        .describe(SETTING_DECLARATIONS['scope.configurations'].description),
-    removed_configurations: allowReasonedValue(
-        z.array(z.string()),
-        SETTING_DECLARATIONS['scope.removed_configurations'],
-    ),
-    test_files: z.array(relativePath).optional().describe(SETTING_DECLARATIONS['scope.test_files'].description),
+        .default(SETTING_FACTS['scope.configurations'].default)
+        .describe(SETTING_FACTS['scope.configurations'].description),
+    removed_configurations: allowReasonedValue(z.array(z.string()), SETTING_FACTS['scope.removed_configurations']),
+    test_files: z.array(relativePath).optional().describe(SETTING_FACTS['scope.test_files'].description),
     ...scopeBody,
 }) satisfies z.ZodType<NonNullable<ParsedSettings['scope']>[number], WrittenScope>;
 
 /** Top-level gspot.toml keys shown by gspot list settings and the settings reference. */
-const rootSettingSchemas = {
-    level: levelSchema.default(SETTING_DECLARATIONS['level'].default).meta(SETTING_DECLARATIONS['level']),
+export const rootSettingSchemas = {
+    level: levelSchema.default(SETTING_FACTS['level'].default).meta(SETTING_FACTS['level']),
     allowed_words: z
         .record(z.string().regex(ALLOWED_WORD, 'Use a plain word, without a regular expression pattern.'), z.string())
-        .default(SETTING_DECLARATIONS['allowed_words'].default)
-        .meta(SETTING_DECLARATIONS['allowed_words']),
+        .default(SETTING_FACTS['allowed_words'].default)
+        .meta(SETTING_FACTS['allowed_words']),
     tool_timeout_seconds: z
         .number()
         .int()
         .positive()
-        .default(SETTING_DECLARATIONS['tool_timeout_seconds'].default)
-        .meta(SETTING_DECLARATIONS['tool_timeout_seconds']),
-    test_files: z
-        .array(relativePath)
-        .default(SETTING_DECLARATIONS['test_files'].default)
-        .meta(SETTING_DECLARATIONS['test_files']),
+        .default(SETTING_FACTS['tool_timeout_seconds'].default)
+        .meta(SETTING_FACTS['tool_timeout_seconds']),
+    test_files: z.array(relativePath).default(SETTING_FACTS['test_files'].default).meta(SETTING_FACTS['test_files']),
 };
 
-const settingsSchema = z
+export const settingsSchema = z
     .strictObject({
         ...rootSettingSchemas,
         configurations: z
             .array(z.string())
-            .default(SETTING_DECLARATIONS['configurations'].default)
-            .describe(SETTING_DECLARATIONS['configurations'].description),
-        removed_configurations: allowReasonedValue(z.array(z.string()), SETTING_DECLARATIONS['removed_configurations']),
+            .default(SETTING_FACTS['configurations'].default)
+            .describe(SETTING_FACTS['configurations'].description),
+        removed_configurations: allowReasonedValue(z.array(z.string()), SETTING_FACTS['removed_configurations']),
         scope: z.array(scopeSchema).optional(),
         ...rootBody,
         import_rule: importRulesSchema,
@@ -227,7 +222,7 @@ const settingsSchema = z
  *
  * @returns record paths and their ordered field names; scopes retain their leading fields only.
  */
-function listRecordFields(): Record<string, string[]> {
+export function listRecordFields(): Record<string, string[]> {
     return Object.fromEntries(
         Object.entries({
             scope: scopeSchema.pick({
@@ -257,7 +252,7 @@ function listRecordFields(): Record<string, string[]> {
  *
  * @returns the JSON Schema document.
  */
-function buildJsonSchema(): Record<string, unknown> {
+export function buildJsonSchema(): Record<string, unknown> {
     const converted = convertToJsonSchema(settingsSchema);
     // The tables carry no description of their own; editors show this one on hover.
     const properties = Object.entries(converted.properties as Record<string, z.core.JSONSchema.JSONSchema>).map(
@@ -282,7 +277,7 @@ function buildJsonSchema(): Record<string, unknown> {
  * @param key the dotted setting name.
  * @returns its schema, or undefined when the key names no setting.
  */
-function findSettingSchema(key: string): z.ZodType | undefined {
+export function findSettingSchema(key: string): z.ZodType | undefined {
     const direct = Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).find(([name]) => name === key);
     if (direct !== undefined) return direct[1];
     const parts = key.split('.');
@@ -316,14 +311,11 @@ function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
                 : 'throw',
         override: ({ zodSchema, jsonSchema }) => {
             if (zodSchema instanceof z.ZodArray && jsonSchema.$ref !== undefined) jsonSchema.type = 'array';
-            for (const key of INTERNAL_SCHEMA_METADATA) Reflect.deleteProperty(jsonSchema, key);
+            for (const key of INTERNAL_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);
             if (zodSchema instanceof z.ZodDefault && zodSchema.def.innerType instanceof z.ZodUnion)
                 jsonSchema.default = zodSchema.def.defaultValue;
-            const metadata = z.globalRegistry.get(zodSchema);
-            if (metadata && Object.hasOwn(metadata, 'examples'))
-                Object.assign(jsonSchema, { examples: metadata['examples'] });
+            const facts = z.globalRegistry.get(zodSchema);
+            if (facts && Object.hasOwn(facts, 'examples')) Object.assign(jsonSchema, { examples: facts['examples'] });
         },
     });
 }
-
-export { scopeSchema, settingsSchema, buildJsonSchema, listRecordFields, findSettingSchema, rootSettingSchemas };

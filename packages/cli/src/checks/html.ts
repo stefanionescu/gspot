@@ -1,20 +1,42 @@
+import type { Node } from 'web-tree-sitter';
 import { decodeHTMLAttribute } from 'entities';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { listElementAttributes } from '#cli/parsers/html.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { visitParsedSources } from '#cli/parsers/grammars.ts';
-import { locateNode, buildFinding } from '#cli/runs/finding.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import type { SourceTree, MarkupAttribute } from '#cli/types/parsers/grammars.ts';
+import type { MarkupAttribute } from '#cli/types/checks/html.ts';
+import type { SourceTree } from '#cli/types/parsers/grammars.ts';
+import { getNodePlace, buildFinding } from '#cli/runs/finding.ts';
 
 import {
     SCRIPT_SCHEMES,
     URL_ATTRIBUTES,
     EVENT_ATTRIBUTE,
     RELATIVE_URL_BASE,
+    SURROUNDING_QUOTES,
     INERT_SCRIPT_TYPES,
     ACTIVE_DOCUMENT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
 } from '#cli/config/checks/html.ts';
+
+/**
+ * Read the tag attributes while the source tree still exists.
+ *
+ * @param element the parsed tag.
+ * @returns the attributes, with their source nodes.
+ */
+function listElementAttributes(element: Node): MarkupAttribute[] {
+    const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');
+    const name = tag?.namedChildren.find((child) => child.type === 'tag_name')?.text.toLowerCase() ?? '';
+    return (tag?.namedChildren ?? [])
+        .filter((child) => child.type === 'attribute')
+        .map((node) => ({
+            node,
+            element: name,
+            name: node.namedChildren[0]?.text.toLowerCase() ?? '',
+            value: (node.namedChildren[1]?.text ?? '').replaceAll(SURROUNDING_QUOTES, ''),
+        }));
+}
 
 // Script and active-document contexts can execute data URLs. Image and text resources remain inert.
 function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: string): boolean {
@@ -51,7 +73,7 @@ function checkInlineScripts(planned: PlannedCheck, source: SourceTree): Finding[
             return [
                 buildFinding(
                     planned,
-                    locateNode(source.path, element),
+                    getNodePlace(source.path, element),
                     'inline-script',
                     'Move executable inline script to a script file.',
                 ),
@@ -64,7 +86,7 @@ function checkScriptAttributes(planned: PlannedCheck, source: SourceTree): Findi
         const attributes = listElementAttributes(element);
         const scriptType = readScriptType(attributes);
         return attributes.flatMap((attribute) => {
-            const position = locateNode(source.path, attribute.node);
+            const position = getNodePlace(source.path, attribute.node);
             if (EVENT_ATTRIBUTE.test(attribute.name))
                 return [
                     buildFinding(

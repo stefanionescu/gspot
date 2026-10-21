@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
@@ -10,10 +9,9 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
-import { parseToolProject } from '#cli/install/npm/tool-project.ts';
+import { type ToolPackageJson } from '#cli/types/install/npm.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { assertPackageManager } from '#cli/repository/package-manager.ts';
-import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/data/checks/python/project.ts';
+import { GOOGLE_PYPROJECT } from '#tests/data/checks/python/project.ts';
 import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
 import {
@@ -22,6 +20,13 @@ import {
     INACTIVE_CONFIGURATIONS,
     REPLACED_PYPROJECT_TABLES,
 } from '#tests/data/commands/init.ts';
+
+async function assertRetainedFile(root: string, path: string, original: string, initialized: InitJson): Promise<void> {
+    expect(initialized.plan.retained).toContainEqual({ path, note: matchSubstring('Delete the section when ready') });
+    expect(await readFile(join(root, path), 'utf8')).toBe(original);
+    const attributes = await stat(join(root, path));
+    expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
+}
 
 test.each(['', 'hooks', '.husky'])(
     'the init plan tells hook scripts in the source apart from the hooks folder Git uses (%s)',
@@ -170,9 +175,7 @@ test.each([...REPLACED_PYPROJECT_TABLES])(
         await using sandbox = await testdir();
         const path = 'pyproject.toml';
         const original =
-            PYPROJECT +
-            '\n' +
-            PYDOCLINT_GOOGLE +
+            GOOGLE_PYPROJECT +
             `[tool.unrelated]
 keep = true
 
@@ -219,18 +222,10 @@ test('at level recommended, init keeps the tool files of checks that are off', a
     expect(written.code, written.stdout + written.stderr).toBe(0);
     for (const [path, source] of Object.entries(INACTIVE_CONFIGURATIONS))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
-    const session = await openSession(sandbox.path);
-    const project = parseToolProject(
-        await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'),
-        assertPackageManager(session.packageManager).name,
+    const dependencies = Object.keys(
+        (JSON.parse(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')) as ToolPackageJson)
+            .devDependencies,
     );
-    expect(project.dependencies).not.toHaveProperty('@commitlint/cli');
-    expect(project.dependencies).not.toHaveProperty('syncpack');
+    expect(dependencies).not.toContain('@commitlint/cli');
+    expect(dependencies).not.toContain('syncpack');
 });
-
-async function assertRetainedFile(root: string, path: string, original: string, initialized: InitJson): Promise<void> {
-    expect(initialized.plan.retained).toContainEqual({ path, note: matchSubstring('Delete the section when ready') });
-    expect(await readFile(join(root, path), 'utf8')).toBe(original);
-    const attributes = await stat(join(root, path));
-    expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
-}

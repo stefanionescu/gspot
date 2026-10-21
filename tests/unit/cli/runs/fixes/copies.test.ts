@@ -2,14 +2,13 @@ import * as os from 'node:os';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { openSession } from '#cli/session.ts';
-import { runFixers } from '#cli/runs/fixes.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { SCRATCH_FAILURES } from '#tests/data/runs/copies.ts';
+import { runFixers } from '#cli/commands/check/fixes.ts';
+import { COPY_FAILURES } from '#tests/data/runs/copies.ts';
 import { waitForExit, waitForFile } from '#tests/setup/processes.ts';
 import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
 import { planFixer, buildFixerSettings } from '#tests/setup/builders.ts';
-import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 
 test("a fixer's {root} environment paths point into the scratch copy during a dry run", async () => {
@@ -28,7 +27,6 @@ test("a fixer's {root} environment paths point into the scratch copy during a dr
     planned.check.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
     const result = await runFixers(session, [planned], {
         isDryRun: true,
-        selectImplementation: selectCheckImplementation,
     });
     expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
     expect(result.diffs).toStrictEqual([matchSubstring('+scratch corrected')]);
@@ -63,7 +61,6 @@ test.each([false, true])(
         planned.check.exit_codes = [3];
         const result = await runFixers(session, [planned], {
             isDryRun: preview,
-            selectImplementation: selectCheckImplementation,
         });
         expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
@@ -95,11 +92,7 @@ test('a fix in a scratch copy refuses to overwrite a file changed while it ran, 
     );
     planned.check.run_in_copy = true;
     expect(
-        await captureRejection(
-            runFixers(session, [planned], { isDryRun: false, selectImplementation: selectCheckImplementation }).then(
-                ({ results }) => results[0]!,
-            ),
-        ),
+        await captureRejection(runFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!)),
     ).toContain('Destination changed during the operation: z-last.txt');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('isolated correction');
     expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
@@ -109,7 +102,6 @@ test('a fix in a scratch copy refuses to overwrite a file changed while it ran, 
     expect(
         await runFixers(session, [corrected], {
             isDryRun: false,
-            selectImplementation: selectCheckImplementation,
         }).then(({ results }) => results[0]!),
     ).toMatchObject({
         status: 'changed',
@@ -130,7 +122,6 @@ test('a failed fix removes its scratch folder and keeps the source bytes', async
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
     const report = await runFixers(session, [planned], {
         isDryRun: true,
-        selectImplementation: selectCheckImplementation,
     });
     expect(report.results).toMatchObject([{ status: 'failed' }]);
     expect(await readdir(temporary)).toStrictEqual([]);
@@ -139,36 +130,29 @@ test('a failed fix removes its scratch folder and keeps the source bytes', async
     expect(report.diffs.join('\n')).toContain('+partial');
 });
 
-test.each([...SCRATCH_FAILURES])(
-    'cleans the scratch folder after a failed $operation',
-    async ({ operation, message }) => {
-        await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+test.each([...COPY_FAILURES])('cleans the scratch folder after a failed $operation', async ({ operation, message }) => {
+    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
-        const session = await openSession(sandbox.path);
-        const planned = planFixer(
-            session,
-            "const fs = require('node:fs'); fs.unlinkSync('source.txt'); fs.mkdirSync('source.txt');",
-        );
-        if (operation === 'copy') {
-            await rm(join(sandbox.path, 'source.txt'));
-            await mkdir(join(sandbox.path, 'source.txt'));
-        }
-        const temporary = join(sandbox.path, 'scratch');
-        await mkdir(temporary);
-        using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-        expect(
-            await captureRejection(
-                runFixers(session, [planned], { isDryRun: true, selectImplementation: selectCheckImplementation }),
-            ),
-        ).toContain(message);
-        expect(await readdir(temporary)).toStrictEqual([]);
-        // The copy row replaces the source with a folder before the run.
-        if (operation === 'copy') {
-            const attributes = await stat(join(sandbox.path, 'source.txt'));
-            expect(attributes.isDirectory()).toBe(true);
-        } else expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
-    },
-);
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(
+        session,
+        "const fs = require('node:fs'); fs.unlinkSync('source.txt'); fs.mkdirSync('source.txt');",
+    );
+    if (operation === 'copy') {
+        await rm(join(sandbox.path, 'source.txt'));
+        await mkdir(join(sandbox.path, 'source.txt'));
+    }
+    const temporary = join(sandbox.path, 'scratch');
+    await mkdir(temporary);
+    using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
+    expect(await captureRejection(runFixers(session, [planned], { isDryRun: true }))).toContain(message);
+    expect(await readdir(temporary)).toStrictEqual([]);
+    // The copy row replaces the source with a folder before the run.
+    if (operation === 'copy') {
+        const attributes = await stat(join(sandbox.path, 'source.txt'));
+        expect(attributes.isDirectory()).toBe(true);
+    } else expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+});
 
 test.each([false, true])(
     'a canceled fix keeps its partial changes and reports the process failure (scratch copy %p)',
@@ -189,7 +173,6 @@ test.each([false, true])(
         session.cancelSignal = controller.signal;
         const execution = runFixers(session, [planned], {
             isDryRun: false,
-            selectImplementation: selectCheckImplementation,
         }).then(({ results }) => results[0]!);
         try {
             expect(await waitForFile(ready)).toBe(true);
@@ -210,7 +193,6 @@ test.each([false, true])(
         delete session.cancelSignal;
         const corrected = await runFixers(session, [planFixer(session, "await Bun.write('source.txt', 'corrected')")], {
             isDryRun: false,
-            selectImplementation: selectCheckImplementation,
         }).then(({ results }) => results[0]!);
         expect(corrected.status).toBe('changed');
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');

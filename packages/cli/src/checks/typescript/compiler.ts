@@ -1,48 +1,34 @@
 import ts from 'typescript';
 import assert from 'node:assert/strict';
-import { findScope } from '#cli/repository/scopes.ts';
+import { chmodSync, writeFileSync } from 'node:fs';
+import type { Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
-import { type CheckResult } from '#cli/types/runs/check.ts';
-import { type ReadCache } from '#cli/types/system/files.ts';
+import type { CheckResult } from '#cli/types/runs/check.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import { listIgnoredRules } from '#cli/settings/scope-view.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { NESTJS_CONFIGURATION } from '#cli/config/configurations.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { type Level, type Manifest } from '#cli/types/configurations.ts';
-import { type TsconfigInput } from '#cli/types/generation/typescript.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
-import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
+import { join, resolve, relative, isAbsolute } from 'node:path';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { readTsconfig, listSourceFiles } from '#cli/parsers/tsconfig.ts';
 import type { TypeScriptReferenceCopy } from '#cli/types/checks/typescript.ts';
-import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
+import { writeScopeTsconfig, selectCheckedTsconfigOptions } from '#cli/checks/typescript/scope-tsconfig.ts';
 
 import {
-    COMPILER_OPTIONS,
-    RECOMMENDED_OPTIONS,
-    TYPESCRIPT_DEFAULTS,
-    NESTJS_COMPILER_OPTIONS,
-} from '#cli/config/generation/typescript.ts';
-import {
-    TSCONFIG_FILE,
     TSC_PLAIN_OUTPUT,
+    TSBUILDINFO_FLAG,
     TSC_BUILD_COMMAND,
     TSC_PROJECT_COMMAND,
     TSCONFIG_TSBUILDINFO,
-} from '#cli/config/parsers/tsconfig.ts';
-import {
-    TSBUILDINFO_FLAG,
     TSC_REFERENCE_BUNDLE,
+    TSCONFIG_COPY_FOLDER,
     TSC_CONFIG_INPUT_PATHS,
-    TSCONFIG_SCRATCH_FOLDER,
     TSC_PATHS_BASE_REQUIRED,
     TSC_COMPILER_INPUT_PATHS,
-    TYPESCRIPT_TSCONFIG_CHECK,
     TSC_CONFIGURATION_REQUIRED,
     TSC_REFERENCE_OUTPUT_FOLDER,
 } from '#cli/config/checks/typescript.ts';
@@ -50,29 +36,29 @@ import {
 const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
 
 /**
- * Maps absolute paths inside the repository to the scratch copy.
+ * Maps absolute paths inside the repository to the copy.
  *
  * @param value the compiler path or paths to map.
- * @param input the source and scratch roots.
+ * @param copy the source and copy roots.
  * @returns the mapped paths.
  */
-function convertToScratchPath(value: unknown, input: TypeScriptReferenceCopy): unknown {
-    if (Array.isArray(value)) return value.map((path: unknown) => convertToScratchPath(path, input));
-    if (typeof value !== 'string' || !isAbsolute(value) || !isInside(relative(input.root, value))) return value;
-    return join(input.scratchRoot, relative(input.root, value));
+function convertToCopyPath(value: unknown, copy: TypeScriptReferenceCopy): unknown {
+    if (Array.isArray(value)) return value.map((path: unknown) => convertToCopyPath(path, copy));
+    if (typeof value !== 'string' || !isAbsolute(value) || !isInside(relative(copy.root, value))) return value;
+    return join(copy.copyRoot, relative(copy.root, value));
 }
 
 /**
- * Builds a tsconfig that keeps compiler inputs and sends reference output into the scratch copy.
+ * Builds a tsconfig that keeps compiler inputs and sends reference output into the copy.
  *
- * @param input the parsed tsconfig, and the source and scratch roots.
- * @returns the tsconfig for the scratch copy.
+ * @param copy the parsed tsconfig, and the source and copy roots.
+ * @returns the tsconfig for the copy.
  */
 function buildReferenceTsconfig(
-    input: TypeScriptReferenceCopy & { path: string; config: TypeScriptConfiguration },
+    copy: TypeScriptReferenceCopy & { path: string; config: TypeScriptConfiguration },
 ): Record<string, unknown> {
-    const { root, scratchRoot, path, config } = input;
-    const output = join(scratchRoot, DOT_GSPOT, TSC_REFERENCE_OUTPUT_FOLDER, relative(root, path));
+    const { root, copyRoot, path, config } = copy;
+    const output = join(copyRoot, DOT_GSPOT, TSC_REFERENCE_OUTPUT_FOLDER, relative(root, path));
     const paths =
         config.options.paths === undefined
             ? undefined
@@ -80,22 +66,20 @@ function buildReferenceTsconfig(
                   Object.entries(config.options.paths).map(([name, aliases]) => {
                       const base = config.options.baseUrl ?? config.options['pathsBasePath'];
                       assert.ok(typeof base === 'string', TSC_PATHS_BASE_REQUIRED);
-                      return [name, aliases.map((alias) => convertToScratchPath(resolve(base, alias), input))];
+                      return [name, aliases.map((alias) => convertToCopyPath(resolve(base, alias), copy))];
                   }),
               );
     return {
         ...config.raw,
-        ...Object.fromEntries(
-            TSC_CONFIG_INPUT_PATHS.map((name) => [name, convertToScratchPath(config.raw[name], input)]),
-        ),
+        ...Object.fromEntries(TSC_CONFIG_INPUT_PATHS.map((name) => [name, convertToCopyPath(config.raw[name], copy)])),
         references: config.projectReferences?.map((reference) => ({
             ...reference,
-            path: join(scratchRoot, relative(root, ts.resolveProjectReferencePath(reference))),
+            path: join(copyRoot, relative(root, ts.resolveProjectReferencePath(reference))),
         })),
         compilerOptions: {
             ...config.raw.compilerOptions,
             ...Object.fromEntries(
-                TSC_COMPILER_INPUT_PATHS.map((name) => [name, convertToScratchPath(config.options[name], input)]),
+                TSC_COMPILER_INPUT_PATHS.map((name) => [name, convertToCopyPath(config.options[name], copy)]),
             ),
             ...(paths === undefined ? {} : { paths }),
             outDir: output,
@@ -107,36 +91,36 @@ function buildReferenceTsconfig(
 }
 
 /**
- * Points incremental build metadata into the scratch folder.
+ * Points incremental build metadata into the temporary folder.
  *
  * @param command the tsc arguments to extend.
  * @param options the parsed compiler flags.
- * @param scratch the folder for metadata.
+ * @param folder the folder for metadata.
  * @param name the basename to look for.
  */
-function appendBuildMetadata(
+export function appendTsbuildinfoFlag(
     command: string[],
     options: ts.CompilerOptions | undefined,
-    scratch: string,
+    folder: string,
     name: string,
 ): void {
     if (options?.incremental !== true && options?.composite !== true) return;
-    command.push(TSBUILDINFO_FLAG, join(scratch, DOT_GSPOT, name));
+    command.push(TSBUILDINFO_FLAG, join(folder, DOT_GSPOT, name));
 }
 
 /**
- * Replaces scratch copy paths in the command with repository paths.
+ * Replaces copy paths in the command with repository paths.
  *
  * @param result the compiler run, which may have no command.
- * @param scratch the root of the copy.
+ * @param copyRoot the temporary folder where the compiler ran.
  * @param sourceRoot the repository root.
  * @returns the run with repository paths.
  */
-function restoreCommandPaths(result: CheckResult, scratch: string, sourceRoot: string): CheckResult {
+export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourceRoot: string): CheckResult {
     if (result.command === undefined) return result;
     return {
         ...result,
-        command: result.command.map((part) => part.replaceAll(scratch, () => sourceRoot)),
+        command: result.command.map((part) => part.replaceAll(copyRoot, () => sourceRoot)),
     };
 }
 
@@ -151,7 +135,7 @@ function restoreCommandPaths(result: CheckResult, scratch: string, sourceRoot: s
  * @param projectCheck.required the compiler flags for one scope.
  * @returns whether another scope already checks this project with these flags.
  */
-function isProjectChecked(
+export function isProjectChecked(
     reads: ReadCache,
     projectCheck: { check: string; path: string; scope: string; required: Record<string, boolean> },
 ): boolean {
@@ -171,16 +155,16 @@ function isProjectChecked(
 /**
  * Runs tsc on a project and keeps build metadata in metadataRoot.
  *
- * @param session the repository or its scratch copy.
+ * @param session the repository or its copy.
  * @param planned the tsc check for one scope.
- * @param metadataRoot the folder for build metadata.
+ * @param tsbuildinfoFolder the folder for build metadata.
  * @param project the parsed tsconfig, if any.
  * @returns the check result.
  */
-async function runTsc(
+export async function runTsc(
     session: Session,
     planned: PlannedCheck,
-    metadataRoot: string,
+    tsbuildinfoFolder: string,
     project: TypeScriptProject | undefined,
 ): Promise<CheckResult> {
     const required = selectCheckedTsconfigOptions(session.settingsFile.settings.level, planned.selection);
@@ -204,35 +188,27 @@ async function runTsc(
     if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {
         command.push(...TSC_BUILD_COMMAND, project.path);
     } else {
-        const generatedPath = join(metadataRoot, TSCONFIG_SCRATCH_FOLDER, planned.selection.scope.path, TSCONFIG_FILE);
+        const generatedPath = join(
+            tsbuildinfoFolder,
+            TSCONFIG_COPY_FOLDER,
+            planned.selection.scope.path,
+            TSCONFIG_FILE,
+        );
         writeScopeTsconfig(session, planned.selection, generatedPath);
         command.push(...TSC_PROJECT_COMMAND, generatedPath);
-        appendBuildMetadata(command, project?.config.options, metadataRoot, TSCONFIG_TSBUILDINFO);
+        appendTsbuildinfoFlag(command, project?.config.options, tsbuildinfoFolder, TSCONFIG_TSBUILDINFO);
     }
     command.push(...TSC_PLAIN_OUTPUT);
-    return runCheckCommand(session, planned, { command, scratchRoot: session.root });
+    return runCheckCommand(session, planned, { command, copyRoot: session.root });
 }
 
 /**
- * Writes a tsconfig for the scope.
+ * Rewrites each copied tsconfig so reference builds write their output into the copy.
  *
- * @param input the scope and target path.
- * @returns the absolute path.
+ * @param copy the referenced projects and the copy.
  */
-function writeTsconfig(input: TsconfigInput): string {
-    const target = join(input.root, input.target);
-    mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, JSON.stringify(buildTsconfig(input)));
-    return target;
-}
-
-/**
- * Rewrites each copied tsconfig so reference builds write their output into the scratch copy.
- *
- * @param input the referenced projects and the scratch copy.
- */
-function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
-    const { root, scratchRoot, projects, reads } = input;
+export function writeReferenceProjects(copy: TypeScriptReferenceCopy): void {
+    const { root, copyRoot, projects, reads } = copy;
     const configurations = new Map([
         ...projects,
         ...[...projects.values()].flatMap((config) =>
@@ -244,136 +220,28 @@ function writeReferenceProjects(input: TypeScriptReferenceCopy): void {
         ),
     ]);
     for (const [path, config] of configurations) {
-        const target = join(scratchRoot, relative(root, path));
+        const target = join(copyRoot, relative(root, path));
         chmodSync(target, PRIVATE_FILE);
-        writeFileSync(target, JSON.stringify(buildReferenceTsconfig({ ...input, path, config })));
+        writeFileSync(target, JSON.stringify(buildReferenceTsconfig({ ...copy, path, config })));
     }
 }
 
 /**
- * Builds a tsconfig that extends the authored one, or a standalone one when the scope has none.
- *
- * @param input the scope and target path.
- * @returns the compiler settings to write as JSON.
- */
-function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
-    const { root, typeRootsFolder, reads, target, scope, files, scopes, options } = input;
-    const authored = readTsconfigProject(
-        root,
-        scope,
-        files
-            .filter(
-                (file) =>
-                    (file.tags.includes('typescript') ||
-                        DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
-                    findScope(file.path, scopes).path === scope,
-            )
-            .map((file) => file.path),
-        reads,
-    );
-    const projectRoots =
-        ts.getEffectiveTypeRoots(
-            {},
-            {
-                getCurrentDirectory: () =>
-                    join(typeRootsFolder, authored === undefined ? scope : relative(root, dirname(authored.path))),
-            },
-        ) ?? [];
-    const folder = dirname(resolve(root, target));
-    const typeRoots = projectRoots.map((path) => convertToPosixPath(relative(folder, path)));
-    if (authored !== undefined)
-        return {
-            extends: convertToPosixPath(relative(folder, authored.path)),
-            files: authored.config.fileNames.map((path) => convertToPosixPath(relative(folder, path))),
-            compilerOptions: {
-                ...(authored.config.options.typeRoots === undefined ? { typeRoots } : {}),
-            },
-        };
-    const sources = files.filter(
-        (file) =>
-            file.kind === 'source' &&
-            (file.tags.includes('typescript') || DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
-            findScope(file.path, scopes).path === scope,
-    );
-    // Svelte reads these extra extensions through include; tsc ignores them as unsupported sources.
-    const components = files.filter(
-        (file) => file.kind === 'source' && file.tags.includes('svelte') && findScope(file.path, scopes).path === scope,
-    );
-    return {
-        compilerOptions: {
-            ...TYPESCRIPT_DEFAULTS,
-            ...options,
-            typeRoots,
-        },
-        files: sources.map((file) => convertToPosixPath(relative(folder, join(root, file.path)))),
-        ...(components.length === 0
-            ? {}
-            : { include: components.map((file) => convertToPosixPath(relative(folder, join(root, file.path)))) }),
-    };
-}
-
-/**
- * Selects the compiler flags that the level and configurations require.
- *
- * @param level recommended or all.
- * @param selected the scope manifests.
- * @returns the flags, by name.
- */
-function selectRequiredTsconfigOptions(level: Level, selected: Manifest[]): Record<string, boolean> {
-    const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS) };
-    if (selected.some((manifest) => manifest.configuration.name === NESTJS_CONFIGURATION))
-        Object.assign(options, NESTJS_COMPILER_OPTIONS);
-    return options;
-}
-
-/**
- * Drops the compiler flags that the scope turns off.
- *
- * @param level recommended or all.
- * @param selection the scope and its settings.
- * @returns the enabled compiler flags.
- */
-function selectCheckedTsconfigOptions(level: Level, selection: ScopeSelection): Record<string, boolean> {
-    return Object.fromEntries(
-        Object.entries(selectRequiredTsconfigOptions(level, selection.selected)).filter(
-            ([name]) => !listIgnoredRules(selection, TYPESCRIPT_TSCONFIG_CHECK).includes(name),
-        ),
-    );
-}
-
-/**
- * Writes the tsconfig for a scope, extending its authored tsconfig.
+ * Lists the tsconfig files and sources of each project, for the copy.
  *
  * @param session the repository and read cache.
- * @param selection where tsc runs, with its settings.
- * @param target where to write the tsconfig.
- * @returns the absolute path.
+ * @param projects each scope path with its parsed tsconfig.
+ * @returns the repository-relative paths.
  */
-function writeScopeTsconfig(
-    session: Pick<Session, 'root' | 'installedRoot' | 'reads' | 'settingsFile'> & {
-        repository: Pick<Session['repository'], 'files' | 'scopes'>;
-    },
-    selection: ScopeSelection,
-    target: string,
-): string {
-    return writeTsconfig({
-        root: session.root,
-        typeRootsFolder: session.installedRoot,
-        reads: session.reads,
-        target: convertToPosixPath(relative(session.root, target)),
-        scope: selection.scope.path,
-        files: session.repository.files,
-        scopes: session.repository.scopes,
-        options: selectCheckedTsconfigOptions(session.settingsFile.settings.level, selection),
-    });
+export function listCompilerFiles(
+    session: Session,
+    projects: Iterable<readonly [string, TypeScriptConfiguration]>,
+): string[] {
+    return [...projects]
+        .flatMap(([scope, config]) => [
+            ...config.tsconfigFiles,
+            ...listSourceFiles(session.root, scope, session.reads, config).map((source) => source.fileName),
+        ])
+        .map((path) => convertToPosixPath(relative(session.root, path)))
+        .filter(isInside);
 }
-
-export {
-    runTsc,
-    isProjectChecked,
-    writeScopeTsconfig,
-    appendBuildMetadata,
-    restoreCommandPaths,
-    writeReferenceProjects,
-    selectRequiredTsconfigOptions,
-};

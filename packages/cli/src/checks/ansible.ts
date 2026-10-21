@@ -1,14 +1,15 @@
 import { join } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { listSourcePaths } from '#cli/repository/coverage.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { isInstalledToolPath } from '#cli/repository/classify.ts';
 import { expandCommand } from '#cli/runs/command/placeholders.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { listSourcePaths } from '#cli/repository/covered-files.ts';
+import { isInToolFolder } from '#cli/repository/files/tool-folders.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
-import { LINT_LINE, ANSIBLE_CFG, ANSIBLE_CONFIG_SUFFIX } from '#cli/config/checks/ansible.ts';
+import { LINT_LINE, ANSIBLE_CONFIG_FILE, ANSIBLE_CONFIG_EXTENSION } from '#cli/config/checks/ansible.ts';
 
 import {
     joinScope,
@@ -29,8 +30,8 @@ async function lintProject(
         ({ path }) =>
             isInScope(path, folder) &&
             isOutsideChildren(path, children) &&
-            !isInstalledToolPath(path) &&
-            !path.endsWith(ANSIBLE_CONFIG_SUFFIX),
+            !isInToolFolder(path) &&
+            !path.endsWith(ANSIBLE_CONFIG_EXTENSION),
     );
     if (files.length === 0) return [];
     const cwd = join(session.root, folder);
@@ -64,8 +65,8 @@ async function lintProject(
  * @returns the findings.
  */
 export async function checkAnsibleLint(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const folders = listSourcePaths(planned.files, [ANSIBLE_CFG])
-        .map((path) => findProjectFolder(path, ANSIBLE_CFG))
+    const folders = listSourcePaths(planned.files, [ANSIBLE_CONFIG_FILE])
+        .map((path) => findProjectFolder(path, ANSIBLE_CONFIG_FILE))
         .filter((folder) => folder !== undefined);
     const projects = folders.length > 0 ? folders : [planned.selection.scope.path];
     const findings: Finding[] = [];

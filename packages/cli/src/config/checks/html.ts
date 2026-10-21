@@ -1,3 +1,5 @@
+export const SURROUNDING_QUOTES = /^["']|["']$/gu;
+
 export const INERT_SCRIPT_TYPES = new Set(['application/ld+json', 'application/json', 'importmap', 'speculationrules']);
 
 export const URL_ATTRIBUTES = new Set(['href', 'xlink:href', 'src', 'action', 'formaction', 'data', 'background']);

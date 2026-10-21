@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { readGeneratedFiles } from '#tests/setup/tool-files.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
@@ -16,6 +16,30 @@ import {
     SCOPE_JSCONFIG_PATHS,
     IMPORTED_AMBIENT_FILES,
 } from '#tests/data/checks/javascript/tsc.ts';
+
+/** Write compiler inputs for each scope. Include inherited options and a broken child scope. */
+async function prepareJsconfigScopes(root: string): Promise<{ config: string; corrected: string }> {
+    const settings = buildSandboxSettings(['javascript'], {
+        scopes: [{ path: 'app' }, { path: 'app/child' }, { path: 'sibling' }],
+    });
+    const bad = '/** @type {string} */\nexport const name = 42;\n';
+    const corrected = bad.replace('42', '"name"');
+    const config = '{"extends":"./base.json"}\n';
+    await createFileTree(root, {
+        'gspot.toml': settings,
+        'source.js': corrected,
+        'app/source.js': 'export const value = localValue;\n',
+        'app/node_modules/@types/domain/index.d.ts': 'declare const localValue: string;\n',
+        'app/jsconfig.json': config,
+        'app/base.json':
+            '{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"Bundler","types":["domain"],"incremental":true,"tsBuildInfoFile":"authored.cache"},"include":["**/*.js"],"exclude":["excluded"]}',
+        'app/excluded/ignored.js': 'unknownValue();\n',
+        'app/authored.cache': 'Preserve this cache.\n',
+        'app/child/source.js': bad,
+        'sibling/source.js': corrected,
+    });
+    return { config, corrected };
+}
 
 test('javascript/tsc at level all also checks your build and dist folders', async () => {
     await using sandbox = await testdir();
@@ -96,14 +120,7 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
     await using sandbox = await testdir();
     const { config, corrected } = await prepareJsconfigScopes(sandbox.path);
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
-    const outputs = await Promise.all(
-        [...new Bun.Glob('.gspot/configurations/**/jsconfig.json').scanSync({ cwd: sandbox.path, dot: true })].map(
-            async (path) => ({
-                path: convertToPosixPath(path),
-                content: await readFile(join(sandbox.path, path), 'utf8'),
-            }),
-        ),
-    );
+    const outputs = await readGeneratedFiles(sandbox.path, '.gspot/configurations/**/jsconfig.json');
     expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         ...SCOPE_JSCONFIG_PATHS,
     ]);
@@ -161,27 +178,3 @@ test('javascript/tsc copies imported ambient types and keeps other scopes apart'
     for (const [path, original] of Object.entries(IMPORTED_AMBIENT_FILES))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
 });
-
-/** Write compiler inputs for each scope. Include inherited options and a broken child scope. */
-async function prepareJsconfigScopes(root: string): Promise<{ config: string; corrected: string }> {
-    const settings = buildSandboxSettings(['javascript'], {
-        scopes: [{ path: 'app' }, { path: 'app/child' }, { path: 'sibling' }],
-    });
-    const bad = '/** @type {string} */\nexport const name = 42;\n';
-    const corrected = bad.replace('42', '"name"');
-    const config = '{"extends":"./base.json"}\n';
-    await createFileTree(root, {
-        'gspot.toml': settings,
-        'source.js': corrected,
-        'app/source.js': 'export const value = localValue;\n',
-        'app/node_modules/@types/domain/index.d.ts': 'declare const localValue: string;\n',
-        'app/jsconfig.json': config,
-        'app/base.json':
-            '{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"Bundler","types":["domain"],"incremental":true,"tsBuildInfoFile":"authored.cache"},"include":["**/*.js"],"exclude":["excluded"]}',
-        'app/excluded/ignored.js': 'unknownValue();\n',
-        'app/authored.cache': 'Preserve this cache.\n',
-        'app/child/source.js': bad,
-        'sibling/source.js': corrected,
-    });
-    return { config, corrected };
-}

@@ -5,10 +5,9 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/system/git.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
-import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { HOOKS_SETTINGS } from '#tests/data/test-setup.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandbox.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { installHooks, readHookStatus } from '#cli/install/hooks.ts';
 import { matchItems, matchSubstring } from '#tests/setup/matchers.ts';
@@ -23,7 +22,7 @@ test.each([...HOOK_REPOSITORIES])(
         const { files, setting, gitHook } = provider;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([], {
-                tables: '[hooks]\nenabled = true\n',
+                tables: HOOKS_SETTINGS,
             }),
             ...files,
         });
@@ -35,7 +34,7 @@ test.each([...HOOK_REPOSITORIES])(
         const authored = await Promise.all(
             authoredPaths.map(async (path) => ({ path, content: await readFile(join(sandbox.path, path), 'utf8') })),
         );
-        await writeGenerated(sandbox.path);
+        await applyGeneratedFiles(sandbox.path);
 
         const steps: (readonly string[])[] = [];
         const session = await openSession(sandbox.path);
@@ -73,7 +72,7 @@ test.each([...HOOK_CONFIGURATION_CASES])(
     'hooks in $path are ready only after both commands',
     async ({ path, oneHook, bothHooks }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = true\n' }),
+            'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
             [path]: oneHook,
         });
         readGitOutput(sandbox.path, ['init', '-q']);
@@ -102,7 +101,7 @@ test('a gspot.toml without hooks installs none', async () => {
 test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath to install', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
-    const settings = buildSandboxSettings([], { tables: '[hooks]\nenabled = true\n' });
+    const settings = buildSandboxSettings([], { tables: HOOKS_SETTINGS });
     await createFileTree(root, { 'gspot.toml': settings });
     readGitOutput(sandbox.path, ['init', '-q']);
     expect(await runGspot(root, ['apply'])).toHaveProperty('code', 0);
@@ -141,7 +140,7 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
         join(sandbox.path, '.git/hooks/post-merge'),
         STOCK_LFS_PRE_PUSH.replaceAll('pre-push', 'post-merge'),
     );
-    await writeGenerated(sandbox.path);
+    await applyGeneratedFiles(sandbox.path);
     const steps: (readonly string[])[] = [];
     const session = await openSession(sandbox.path);
     expect(installHooks(session, steps)).toBe('set core.hooksPath to .gspot/hooks');
@@ -151,9 +150,3 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
     readGitOutput(sandbox.path, ['config', '--unset', 'core.hooksPath']);
     expect(installHooks(session, [])).toContain('hooks already run from .git/hooks');
 });
-
-async function writeGenerated(root: string): Promise<void> {
-    using log = openWriter(root);
-    const session = await openSession(root);
-    writeGeneratedFiles(session, generate(session), log);
-}

@@ -1,9 +1,14 @@
-import { listTaggedExtensions } from '#cli/repository/classify.ts';
-import type { PathExpressions } from '#cli/types/repository/inventory.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { CODE_LANGUAGES, COMPONENT_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
+import { CODE_LANGUAGES, COMPONENT_CONFIGURATIONS } from '#cli/config/generation/eslint/files.ts';
 import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
-import type { EslintFiles, EslintFileInputs, EslintSettingsBlock } from '#cli/types/generation/eslint.ts';
+
+import {
+    type EslintFiles,
+    type PathExpressions,
+    type EslintFileGroups,
+    type EslintBlockFields,
+} from '#cli/types/generation/eslint.ts';
 
 // Component selectors carry the parser discriminator for the declared component configurations.
 function isComponentConfiguration(name: string): name is (typeof COMPONENT_CONFIGURATIONS)[number] {
@@ -14,19 +19,19 @@ function isComponentConfiguration(name: string): name is (typeof COMPONENT_CONFI
 /**
  * Calculate the exact file sets that base blocks and every framework fragment share.
  *
- * @param input the file sets to combine.
+ * @param groups the file sets to combine.
  *
  * @returns code patterns and intersections that leave out non-code files.
  */
-export function buildFilePatterns(input: EslintFileInputs): EslintFiles {
-    const { scopes, nodeFiles } = input;
+export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
+    const { scopes, nodeFiles } = groups;
     const source = buildSourcePattern(...CODE_LANGUAGES);
     const codeExtensions = listTaggedExtensions(...CODE_LANGUAGES);
-    const selected = input.components.flatMap(({ configuration, tools }) =>
+    const selected = groups.components.flatMap(({ name, tools }) =>
         tools
             .flatMap(({ eslint }) => eslint?.extensions ?? [])
             .filter((extension) => !codeExtensions.includes(extension))
-            .map((extension) => ({ pattern: `**/*${extension}`, configuration: configuration.name })),
+            .map((extension) => ({ pattern: `**/*${extension}`, configuration: name })),
     );
     const components = selected.map(({ pattern }) => pattern);
     const covered = buildPathMatcher([source, ...components]);
@@ -39,10 +44,10 @@ export function buildFilePatterns(input: EslintFileInputs): EslintFiles {
     const javascript = buildSourcePattern('javascript');
     return {
         code,
-        typescriptSource: [typescript],
-        typescript: [
+        typescript: [typescript],
+        typed: [
             typescript,
-            ...selected.map(({ pattern, configuration }): EslintFiles['typescript'][number] =>
+            ...selected.map(({ pattern, configuration }): EslintFiles['typed'][number] =>
                 isComponentConfiguration(configuration) ? [pattern, { component: configuration }] : pattern,
             ),
         ],
@@ -88,7 +93,7 @@ export function buildNodePatterns(paths: string[], scope: string): string[] {
  *
  * @returns the expanded include and exclude globs.
  */
-export function splitGlobSelectors(patterns: string[]): PathExpressions {
+export function splitGlobs(patterns: string[]): PathExpressions {
     const expanded = includeFolderContents(patterns);
     return {
         includes: expanded.filter((pattern) => !pattern.startsWith('!')),
@@ -106,10 +111,10 @@ export function splitGlobSelectors(patterns: string[]): PathExpressions {
  * @returns the intersections of code, project, and authored path selectors.
  */
 export function buildScopeFiles(
-    files: NonNullable<EslintSettingsBlock['files']>,
+    files: NonNullable<EslintBlockFields['files']>,
     scope: string,
     paths: (string | string[])[],
-): NonNullable<EslintSettingsBlock['files']> {
+): NonNullable<EslintBlockFields['files']> {
     return files.flatMap((file) =>
         paths.map((path) => [
             ...(Array.isArray(file) ? file : [file]),

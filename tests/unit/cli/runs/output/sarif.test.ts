@@ -6,13 +6,14 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
+import { type SarifLog } from '#cli/types/runs/tool-reports.ts';
 import { outputSchema } from '#cli/schemas/configurations/output.ts';
 
 import {
     CODEQL_REPORT,
     CYCLIC_REPORT,
     ENCODED_REPORT,
-    FAILED_INVOCATIONS,
+    FAILED_ANALYSES,
     POSITIONLESS_RESULTS,
 } from '#tests/data/runs/output.ts';
 
@@ -31,8 +32,8 @@ function parseSarifReport(report: unknown, root: string): Finding[] {
     );
 }
 
-// A report with one result at the given artifact location.
-function buildLocationReport(artifactLocation: Record<string, unknown>) {
+/** A report with one result at the given artifact location. */
+function buildLocationReport(artifactLocation: Record<string, unknown>): SarifLog {
     return { version: '2.1.0', runs: [{ results: [{ locations: [{ physicalLocation: { artifactLocation } }] }] }] };
 }
 
@@ -46,7 +47,7 @@ test('sarifFindings maps every result to its file and line', () => {
     ]);
 });
 
-test.each([...FAILED_INVOCATIONS])(
+test.each([...FAILED_ANALYSES])(
     'a failed CodeQL run in the report is an error, not a clean result: %j',
     (invocation) => {
         const sourceRoot = resolve('selected-source');

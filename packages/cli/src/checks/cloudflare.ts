@@ -1,10 +1,11 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { listSourcePaths } from '#cli/repository/coverage.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import type { HeaderBlock, HeaderBlocks } from '#cli/types/checks/cloudflare.ts';
+import { listSourcePaths } from '#cli/repository/covered-files.ts';
+import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/checks/cloudflare.ts';
 
 import {
     HEADERS_FILE,
@@ -31,9 +32,9 @@ function splitContentLines(text: string): NumberedLine[] {
  * @param text the _headers file.
  * @returns the blocks and syntax errors.
  */
-function parseHeadersFile(text: string): HeaderBlocks {
+function parseHeadersFile(text: string): ParsedHeadersFile {
     const blocks: HeaderBlock[] = [];
-    const findings = splitContentLines(text).flatMap((line): NumberedLine[] => {
+    const errors = splitContentLines(text).flatMap((line): NumberedLine[] => {
         if (!/^\s/u.test(line.text)) {
             blocks.push({ path: line.text.trim(), headers: [] });
             return PATH_PREFIXES.some((prefix) => line.text.startsWith(prefix))
@@ -57,7 +58,7 @@ function parseHeadersFile(text: string): HeaderBlocks {
         });
         return [];
     });
-    return { blocks, findings };
+    return { blocks, errors };
 }
 
 // The required security headers that the block for every path does not set.
@@ -86,7 +87,7 @@ function validateRedirects(text: string): NumberedLine[] {
     return entries.flatMap((line) => {
         const parts = line.text.trim().split(/\s+/u);
         const [source = '', , status] = parts;
-        if (parts.length < REDIRECT_PARTS.least || parts.length > REDIRECT_PARTS.most)
+        if (parts.length < REDIRECT_PARTS.minimum || parts.length > REDIRECT_PARTS.maximum)
             return [{ number: line.number, text: 'A redirect is a source, a destination, and an optional status.' }];
         if (!PATH_PREFIXES.some((prefix) => source.startsWith(prefix)))
             return [{ number: line.number, text: 'Start the redirect source with / or https://.' }];
@@ -122,9 +123,9 @@ export function checkCloudflareRedirects(session: Session, planned: PlannedCheck
  */
 export function checkCloudflareHeaders(session: Session, planned: PlannedCheck): Finding[] {
     return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
-        const { blocks, findings } = parseHeadersFile(readCachedText(session.reads, path));
+        const { blocks, errors } = parseHeadersFile(readCachedText(session.reads, path));
         return [
-            ...findings.map((entry) => buildFinding(planned, { file: path, line: entry.number }, 'syntax', entry.text)),
+            ...errors.map((entry) => buildFinding(planned, { file: path, line: entry.number }, 'syntax', entry.text)),
             ...listMissingHeaders(blocks).map((name) =>
                 buildFinding(
                     planned,

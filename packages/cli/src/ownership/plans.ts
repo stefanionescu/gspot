@@ -1,21 +1,22 @@
 import { join } from 'node:path';
 import { lstatSync } from 'node:fs';
 import { isInside } from '#cli/system/paths.ts';
-import { AGENTS_FILE } from '#cli/config/rules.ts';
-import type { Session } from '#cli/types/planning.ts';
+import type { Session } from '#cli/types/session.ts';
 import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
+import { AGENTS_FILE } from '#cli/config/generation/rules.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
-import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
-import { isInGspotFolder, hasGeneratedHeader } from '#cli/repository/classify.ts';
+import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
+import type { BlockStyle } from '#cli/types/parsers/managed-blocks.ts';
+import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import type { Writer, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
-import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-blocks.ts';
-import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
+import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-paths.ts';
+import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/managed-blocks.ts';
 
 // Markdown comments keep block markers out of the displayed document.
 function selectBlockStyle(path: string): BlockStyle {
@@ -54,7 +55,8 @@ function isOwned(path: string, disk: Files): boolean {
     if (file !== undefined && file.isLink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;
     const attributesFile = disk.read(GITATTRIBUTES_FILE);
     if (attributesFile === undefined) return false;
-    const block = readBlock(attributesFile.bytes.toString('utf8'), { path: GITATTRIBUTES_FILE, style: 'hash' }) ?? '';
+    const block =
+        findBlockBody(attributesFile.bytes.toString('utf8'), { path: GITATTRIBUTES_FILE, style: 'hash' }) ?? '';
     return parseAttributePatterns(block, '.').some(
         ({ pattern, attributes }) => attributes.includes('linguist-generated') && buildPathMatcher([pattern])(path),
     );

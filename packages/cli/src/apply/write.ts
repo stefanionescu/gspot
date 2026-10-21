@@ -1,14 +1,16 @@
+import { formatCount } from '#cli/system/text.ts';
+import type { Session } from '#cli/types/session.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
-import type { Session } from '#cli/types/planning.ts';
+import { formatNotes } from '#cli/system/terminal.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { listExpectedPaths } from '#cli/apply/stale.ts';
-import { listStaleLockfiles } from '#cli/install/lockfiles.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
+import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
 import { planSettingsWrite } from '#cli/ownership/file-settings.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import { FILE_EDITS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
+import { MANAGED_KEYS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
 import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/ownership/plans.ts';
 
 import {
@@ -17,7 +19,33 @@ import {
     NPM_TOOL_PROJECT_FILE,
     INSTALLED_TOOL_FOLDERS,
     PYTHON_TOOL_PROJECT_FILE,
-} from '#cli/config/system/locations.ts';
+} from '#cli/config/gspot-paths.ts';
+
+/**
+ * Say that the generated files need no change.
+ *
+ * @param count how many files gspot generates.
+ * @returns the sentence, with the verb agreeing with the count.
+ */
+export function formatUpToDate(count: number): string {
+    return `No change: the ${formatCount(count, 'generated file')} ${count === 1 ? 'is' : 'are'} up to date.`;
+}
+
+/**
+ * Format generated file changes and notes for command output.
+ *
+ * @param report the applied file changes and notes.
+ * @returns the report text.
+ */
+export function formatApplyReport(report: ApplyReport): string {
+    const lines = [
+        ...report.written.map((path) => `wrote    ${path}`),
+        ...report.updated.map((path) => `updated  ${path}`),
+        ...report.removed.map((path) => `removed  ${path}`),
+    ];
+    if (lines.length === 0 && report.notes.length === 0) lines.push(formatUpToDate(report.unchanged.length));
+    return `${lines.length === 0 ? '' : lines.join('\n') + '\n'}${formatNotes(report.notes)}`;
+}
 
 function removeUnusedToolFolders(writer: Writer, paths: ReadonlySet<string>): void {
     for (const [path, keep] of [
@@ -85,15 +113,15 @@ export function writeGeneratedFiles(
         notes: [],
     };
     const paths = listExpectedPaths(session, generated);
-    const fileEditPlans = generated.fileSettings.map((output) => {
-        const plan = planSettingsWrite(writer, output.path, output.changes);
+    const managedKeyPlans = generated.managedKeys.map((output) => {
+        const plan = planSettingsWrite(writer, output.path, output.keys);
         return reviewedOriginals?.has(output.path) === true
             ? { ...plan, before: reviewedOriginals.get(output.path) }
             : plan;
     });
     const replacements = buildReplacementPlans(generated, writer, reviewedOriginals);
     const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.block, block.style));
-    const generatedPlans = [...replacements, ...blocks, ...fileEditPlans];
+    const generatedPlans = [...replacements, ...blocks, ...managedKeyPlans];
     // Remove generated files that no configuration needs.
     const pruning = listStrayPaths(session, paths).map((path) => planRemoval(writer, path));
     const plans = [...generatedPlans, ...pruning];
@@ -102,12 +130,12 @@ export function writeGeneratedFiles(
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
     report.updated.push(
-        ...[...blocks, ...fileEditPlans].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
+        ...[...blocks, ...managedKeyPlans].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
     );
     report.removed.push(...pruning.map(({ path }) => path));
     if ([...report.removed, ...report.written].some((path) => path.startsWith(`${HOOKS_PATH}/`)))
         report.notes.push(HOOKS_CHANGED_NOTE);
     addInstallationNote(session, generated, report);
-    if (generated.fileSettings.length > 0) report.notes.push(FILE_EDITS_NOTE);
+    if (generated.managedKeys.length > 0) report.notes.push(MANAGED_KEYS_NOTE);
     return report;
 }

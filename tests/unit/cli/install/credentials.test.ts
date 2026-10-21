@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { INSTALL_OUTPUT_LIMIT } from '#cli/config/tools/credentials.ts';
+import { INSTALL_OUTPUT_LIMIT } from '#cli/config/install/credentials.ts';
 import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS } from '#tests/data/install/installation.ts';
 import { extractUrlPasswords, redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 
@@ -7,7 +7,7 @@ test.each(REGISTRY_PASSWORDS)('registry passwords are read in both encodings fro
     expect(extractUrlPasswords(url)).toStrictEqual([...expected]);
 });
 
-test.each(LEAKED_LOCKFILES)('a lockfile that holds %s is refused', (lockfile) => {
+test.each([...LEAKED_LOCKFILES])('a lockfile that holds %s is refused', (lockfile) => {
     const failure = 'Existing files were preserved.';
     expect(() => {
         assertCredentialFreeLockfile(lockfile, ['synthetic/password+with spaces'], failure);

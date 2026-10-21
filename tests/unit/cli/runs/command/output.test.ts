@@ -2,29 +2,29 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { planChecks } from '#cli/planning/checks.ts';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { TYPO_REPORT } from '#tests/data/runs/output.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { hasToolError, formatOutputTail, parseCommandFindings } from '#cli/runs/command/output.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { isReportedCrash, formatOutputTail, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import {
     REAL_PATH,
     BASE_CHECK,
     FAILED_RUN,
     FALSE_PATH,
-    ESLINT_TOOL,
     ESLINT_CRASH,
     LOCATED_CHECK,
     HEADER_FAILURE,
     FILELESS_CHECKS,
     SCOPE_PATH_CHECK,
+    ESLINT_MANIFEST_TOOL,
 } from '#tests/data/runs/command-checks.ts';
 
 test('bounded failure output retains the final diagnostic from both streams', () => {
@@ -43,27 +43,15 @@ test('bounded failure output retains the final diagnostic from both streams', ()
 });
 
 test("a tool's crash pattern detects crashes for every check that runs it", () => {
+    expect(isReportedCrash(BASE_CHECK, ESLINT_MANIFEST_TOOL, buildProcessResult(ESLINT_CRASH))).toBe(true);
     expect(
-        hasToolError(
-            { ...BASE_CHECK, output: { format: 'lines' }, command: [...BASE_CHECK.command] },
-            ESLINT_TOOL,
-            buildProcessResult(ESLINT_CRASH),
-        ),
-    ).toBe(true);
-    expect(
-        hasToolError(
-            { ...BASE_CHECK, output: { format: 'lines' }, command: [...BASE_CHECK.command] },
-            ESLINT_TOOL,
+        isReportedCrash(
+            BASE_CHECK,
+            ESLINT_MANIFEST_TOOL,
             buildProcessResult({ ...ESLINT_CRASH, stderr: '1 problem\n' }),
         ),
     ).toBe(false);
-    expect(
-        hasToolError(
-            { ...BASE_CHECK, output: { format: 'lines' }, command: [...BASE_CHECK.command] },
-            undefined,
-            buildProcessResult(ESLINT_CRASH),
-        ),
-    ).toBe(false);
+    expect(isReportedCrash(BASE_CHECK, undefined, buildProcessResult(ESLINT_CRASH))).toBe(false);
 });
 
 test('located output rejects false paths and empty failures while keeping mixed real findings', async () => {
@@ -73,15 +61,17 @@ test('located output rejects false paths and empty failures while keeping mixed 
 
     // Any manifest turns on the real-file check.
     const planned = {
-        check: { ...LOCATED_CHECK, command: [...LOCATED_CHECK.command] },
-        manifest: readManifests().get('files')!,
+        check: LOCATED_CHECK,
+        configuration: readConfigurations().get('files')!,
         tool: { name: 'tool', installers: {}, kind: 'program' as const },
     };
     const paths = { cwd: sandbox.path, root: sandbox.path };
     expect(
         parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: FALSE_PATH }), paths).note,
-    ).toContain('tool broke: exit 1');
-    expect(parseCommandFindings(planned, buildProcessResult(FAILED_RUN), paths).note).toContain('tool broke: exit 1');
+    ).toContain('tool crashed with exit 1.');
+    expect(parseCommandFindings(planned, buildProcessResult(FAILED_RUN), paths).note).toContain(
+        'tool crashed with exit 1.',
+    );
     expect(
         parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: FALSE_PATH + REAL_PATH }), paths)
             .findings,
@@ -96,8 +86,8 @@ test.each([...FILELESS_CHECKS])('$name accepts a fileless result without classif
     await using sandbox = await testdir();
     // Any manifest turns on the real-file check.
     const planned = {
-        check: { ...check, command: [...check.command] },
-        manifest: readManifests().get('files')!,
+        check: check,
+        configuration: readConfigurations().get('files')!,
     };
     expect(
         parseCommandFindings(planned, buildProcessResult(FAILED_RUN), { cwd: sandbox.path, root: sandbox.path })
@@ -112,10 +102,10 @@ test('spelling tells typos findings from fatal exits', async () => {
     });
 
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', only: ['spelling/typos'] });
+    const plans = planChecks(session, { stage: 'all', only: ['spelling/typos'] });
     const planned = plans[0]!;
     const stdout = JSON.stringify(TYPO_REPORT);
-    const result = { stdout, stderr: '', code: 2, missing: false, duration: 1 };
+    const result = buildProcessResult({ stdout, stderr: '', code: 2, missing: false, duration: 1 });
     expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }).findings).toMatchObject([
         { file: 'sample.txt' },
     ]);
@@ -143,7 +133,7 @@ test('source text naming module errors stays an ESLint finding', async () => {
         [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
     });
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', only: ['javascript/eslint'] });
+    const plans = planChecks(session, { stage: 'all', only: ['javascript/eslint'] });
     const planned = plans[0]!;
     const stdout = JSON.stringify([
         {
@@ -152,7 +142,7 @@ test('source text naming module errors stays an ESLint finding', async () => {
             messages: [{ ruleId: 'no-unused-vars', severity: 2, message: 'Unused message.', line: 1, column: 7 }],
         },
     ]);
-    const result = { stdout, stderr: '', code: 1, missing: false, duration: 1 };
+    const result = buildProcessResult({ stdout, stderr: '', code: 1, missing: false, duration: 1 });
     expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }).findings).toMatchObject([
         { file: path, rule: 'no-unused-vars', line: 1, column: 7 },
     ]);
@@ -201,7 +191,7 @@ test.each(['{file}', '{files}'])(
                 'const fs = require("node:fs"); const file = process.argv[2]; const status = Number(fs.readFileSync(file, "utf8")); if (status !== 0) console.log(`${file}:1: Located defect before exit`); process.exitCode = status;',
         });
         const session = await openSession(sandbox.path);
-        const plans = planRun(session, { stage: 'all', only: ['project/exit-contract'] });
+        const plans = planChecks(session, { stage: 'all', only: ['project/exit-contract'] });
         const planned = plans[0]!;
         planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
         const finding = await runCheckCommand(session, planned);
@@ -226,7 +216,7 @@ test('per-file failures drop only the header lines the tool declares', async () 
     });
 
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'commit', only: ['project/native'] })[0]!;
+    const planned = planChecks(session, { stage: 'commit', only: ['project/native'] })[0]!;
     const unfiltered = await runCheckCommand(session, planned);
     expect(unfiltered.status).toBe('failed');
     expect(unfiltered.findings).toMatchObject([{ file: 'source.txt', message: 'Banner: scanner 1' }]);
@@ -256,12 +246,18 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
         'notes/selected.txt': source,
     });
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'all', only: ['notes/regex'] })[0]!;
-    const configured = { ...planned, manifest: readManifests().get('files')! };
-    const result = { code: 1, stdout: 'notes/reported.txt:1:A defect.', stderr: '', missing: false, duration: 1 };
+    const planned = planChecks(session, { stage: 'all', only: ['notes/regex'] })[0]!;
+    const configured = { ...planned, configuration: readConfigurations().get('files')! };
+    const result = buildProcessResult({
+        code: 1,
+        stdout: 'notes/reported.txt:1:A defect.',
+        stderr: '',
+        missing: false,
+        duration: 1,
+    });
     const paths = { root: sandbox.path, cwd: sandbox.path };
     const expected = [{ check: 'notes/regex', file: 'notes/reported.txt', line: 1, message: 'A defect.' }];
-    expect(planned.manifest).toBeUndefined();
+    expect(planned.configuration).toBeUndefined();
     expect(parseCommandFindings(planned, result, paths).note).toBeDefined();
     expect(parseCommandFindings(configured, result, paths).note).toBeDefined();
     await writeFile(join(sandbox.path, 'notes/reported.txt'), source);
@@ -283,7 +279,7 @@ test('a tool that runs out of memory gets a cause instead of the garbage collect
 test('a finding in a folder outside the scope keeps its repository path when the check runs in the scope folder', async () => {
     await using sandbox = await testdir(SCOPE_PATH_CHECK.files);
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] }).find(
+    const planned = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] }).find(
         (check) => check.selection.scope.path === 'app',
     )!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'program' };

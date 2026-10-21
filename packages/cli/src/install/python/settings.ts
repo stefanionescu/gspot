@@ -4,12 +4,12 @@ import { join, resolve } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import { findText } from '#cli/system/files/reads.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { HTTP_URL } from '#cli/config/tools/credentials.ts';
+import { HTTP_URL } from '#cli/config/install/credentials.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { extractUrlPasswords } from '#cli/install/credentials.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
-import type { PythonIndexSettings } from '#cli/types/tools/project.ts';
-import { URL_SCHEME, INDEX_SETTINGS, UV_SETTINGS_FILE } from '#cli/config/tools/python.ts';
+import type { PythonIndexSettings } from '#cli/types/install/python.ts';
+import { URL_SCHEME, INDEX_SETTINGS, UV_SETTINGS_FILE } from '#cli/config/install/python.ts';
 
 import {
     uvIndexesSchema,
@@ -25,16 +25,16 @@ function normalizeIndexLocation(root: string, value: string): string {
 }
 
 /**
- * Copy repository uv index settings into the scratch folder, make relative paths absolute, and collect registry credentials.
+ * Copy repository uv index settings into the temporary folder, make relative paths absolute, and collect registry credentials.
  *
  * @param repositoryRoot the base folder for reading uv settings and resolving local index paths.
- * @param work the folder where the resolution runs.
+ * @param settingsFolder the folder where the resolution runs.
  *
  * @returns index credentials that must stay out of generated lockfiles.
  */
-export function writePythonSettings(repositoryRoot: string, work: string): string[] {
+export function writePythonSettings(repositoryRoot: string, settingsFolder: string): string[] {
     const { settings, credentials } = readPythonSettings(repositoryRoot);
-    writeFileSync(join(work, UV_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
+    writeFileSync(join(settingsFolder, UV_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return credentials;
 }
 

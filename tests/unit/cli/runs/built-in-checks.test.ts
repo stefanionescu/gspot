@@ -1,13 +1,15 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { planChecks } from '#cli/planning/checks.ts';
+import type { Session } from '#cli/types/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { runCheckImplementation } from '#cli/runs/check-run.ts';
+import { runCheckCode } from '#cli/commands/check/run.ts';
+import { listCheckedFiles } from '#cli/planning/files.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { planRun, listCoveredInputs } from '#cli/planning/checks.ts';
+import type { Finding, CheckCode } from '#cli/types/runs/check.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import type { Finding, CheckImplementation } from '#cli/types/runs/check.ts';
 import { HEADERS_FILE, SCOPE_FINDINGS } from '#tests/data/runs/built-in-checks.ts';
 
 test("a built-in check sees its scope's files, and a once-per-repository check also sees every file", async () => {
@@ -24,7 +26,7 @@ test("a built-in check sees its scope's files, and a once-per-repository check a
     });
 
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, {
+    const planned = planChecks(session, {
         stage: 'all',
         only: ['jest/coverage', 'docs/missing-paths'],
     });
@@ -33,19 +35,19 @@ test("a built-in check sees its scope's files, and a once-per-repository check a
     )!;
     const rootCheck = planned.find((entry) => entry.check.name === 'docs/missing-paths')!;
     const inputs: { session: Session; planned: PlannedCheck }[] = [];
-    const implementation: CheckImplementation = {
+    const implementation: CheckCode = {
         check: (opened, check) => {
             inputs.push({ session: opened, planned: check });
             return [];
         },
     };
-    await runCheckImplementation(session, project, implementation);
-    await runCheckImplementation(session, rootCheck, implementation);
+    await runCheckCode(session, project, implementation);
+    await runCheckCode(session, rootCheck, implementation);
     const [scopeInput, repositoryInput] = inputs;
     expect(repositoryInput!.session.repository.files).toStrictEqual(session.repository.files);
     for (const input of inputs) expect(input.session.scopes).toStrictEqual(session.scopes);
     expect(repositoryInput!.session.repository.files.map((file) => file.path)).toContain('unrelated/private.txt');
-    expect(listCoveredInputs(session.scopes, project).map((file) => file.path)).toStrictEqual([
+    expect(listCheckedFiles(session.scopes, project).map((file) => file.path)).toStrictEqual([
         'apps/web/value.test.js',
     ]);
     expect(

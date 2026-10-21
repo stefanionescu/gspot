@@ -70,7 +70,7 @@ xcode_scheme = "Example"
     },
     {
         failure: 'malformed',
-        note: 'xccov returned invalid structured findings.',
+        note: 'xccov printed output that gspot cannot read.',
         settings: XCTEST_SETTINGS,
         build: '',
         coverage: undefined,
@@ -136,12 +136,50 @@ export const SKIP_REASON_CASES = [
     { body: 'let example = "XCTSkip()"\n/* XCTSkip() */\n// XCTSkip()', missing: false },
 ] as const;
 
-export const SWIFTLINT_COMMAND = ['check', '--only', 'swift/swiftlint', '--json'];
-
 /** One coverage report for the app and library targets, checked against different limits. */
-export const SWIFT_TARGET_COVERAGE_REPORT = {
+const SWIFT_TARGET_COVERAGE_REPORT = {
     targets: [
         { name: 'App', lineCoverage: 0.6 },
         { name: 'Library', lineCoverage: 0.75 },
     ],
 } as const;
+
+/** Shared and per-target coverage limits, written as the TOML each run reads. */
+export const COVERAGE_LIMIT_CASES = [
+    {
+        name: 'a named target passes its limit',
+        report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
+        tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "App"\nlines = 61\nreason = "Required target coverage."\n',
+        expected: [],
+    },
+    {
+        name: 'a named target misses its limit',
+        report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
+        tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "App"\nlines = 62\nreason = "Required target coverage."\n',
+        expected: ['App covers 61% of its lines, under the limit of 62%.'],
+    },
+    {
+        name: 'a named target is absent',
+        report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
+        tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "Widget"\nlines = 10\nreason = "Required target coverage."\n',
+        expected: ['The coverage report has no target named Widget.'],
+    },
+    {
+        name: 'a target misses the shared limit',
+        report: SWIFT_TARGET_COVERAGE_REPORT,
+        tables: '[coverage]\nlines = 70\nswift_target = []\n',
+        expected: ['App covers 60% of its lines, under the limit of 70%.'],
+    },
+    {
+        name: 'a named target overrides the shared limit',
+        report: SWIFT_TARGET_COVERAGE_REPORT,
+        tables: '[coverage]\nlines = 70\n[[coverage.swift_target]]\nname = "App"\nlines = 60\nreason = "Required target coverage."\n',
+        expected: [],
+    },
+    {
+        name: 'no coverage limit is enabled',
+        report: SWIFT_TARGET_COVERAGE_REPORT,
+        tables: '[coverage]\nlines = 0\nswift_target = []\n',
+        expected: [],
+    },
+] as const;

@@ -1,30 +1,31 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { join, relative, normalize } from 'node:path';
 import { getTable } from '#cli/settings/scope-view.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { type SiteBuild } from '#cli/types/checks/site.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
-import { copyCheckIntoScratch } from '#cli/runs/copy/files.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
-const SITE_BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
+const SITE_BUILDS = { create: () => new Map<string, Promise<SiteBuild>>() };
 
-async function runSiteBuild(session: Session, planned: PlannedCheck, scratch: string): Promise<SiteBuild> {
+async function runSiteBuild(session: Session, planned: PlannedCheck, copyRoot: string): Promise<SiteBuild> {
     const site = getTable(planned.selection.view, 'site');
     const folderPath = site['build_folder'];
-    const cwd = join(scratch, planned.selection.scope.path);
+    const cwd = join(copyRoot, planned.selection.scope.path);
     const command = site['build_command'];
     const result = await runCheckTool(session, planned, command, { cwd });
-    const folder = join(scratch, folderPath);
+    const folder = join(copyRoot, folderPath);
     const built = result.code === 0 ? lstatSync(folder, { throwIfNoEntry: false }) : undefined;
     if (built?.isSymbolicLink() === true)
-        throw new Error(`The build output folder is a link: ${convertToPosixPath(relative(scratch, folder))}`);
+        throw new Error(`The build output folder is a link: ${convertToPosixPath(relative(copyRoot, folder))}`);
     const isBuilt = built?.isDirectory() === true;
     const outputTail = formatOutputTail(result).replaceAll('\n', ' | ');
     return { cwd, command, folder, isBuilt, outputTail };
@@ -39,13 +40,13 @@ async function runSiteBuild(session: Session, planned: PlannedCheck, scratch: st
  */
 function getSiteBuild(session: Session, planned: PlannedCheck): Promise<SiteBuild> {
     const key = join(session.root, planned.selection.scope.path);
-    const scopeBuilds = getCachedValue(session.reads, SITE_BUILD_MEMO);
+    const scopeBuilds = getCachedValue(session.reads, SITE_BUILDS);
     const held = scopeBuilds.get(key);
     if (held !== undefined) return held;
     const running = (async () => {
         const resources = session.resources;
         resources.defer(() => scopeBuilds.delete(key));
-        const folder = await copyCheckIntoScratch(session, planned);
+        const folder = await createCheckCopy(session, planned);
         return runSiteBuild(session, planned, resources.use(folder).path);
     })();
     scopeBuilds.set(key, running);
@@ -82,7 +83,7 @@ export function listBuiltFiles(folder: string): string[] {
  * @param path the file path inside the build folder.
  * @returns the repository-relative path.
  */
-export function deriveBuiltFilePath(planned: Pick<PlannedCheck, 'selection'>, path: string): string {
+export function buildRepositoryPath(planned: Pick<PlannedCheck, 'selection'>, path: string): string {
     return `${getTable(planned.selection.view, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
 }
 

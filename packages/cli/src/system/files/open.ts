@@ -2,41 +2,41 @@
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { Files, FilesState } from '#cli/types/system/files.ts';
-import { releaseLocks, lockForWriting } from '#cli/system/files/lock.ts';
+import { createLock, releaseLocks } from '#cli/system/files/lock.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
     readEntry,
-    verifyPath,
     preparePath,
     replaceEntry,
     isSameContents,
+    buildContainedPath,
     readEntryKeepingLinks,
 } from '#cli/system/files/entries.ts';
 
 /**
  * Open a reader and writer confined to one root, with paths checked for this system.
  *
- * @param baseFolder the folder containing every relative path.
+ * @param root the folder containing every relative path.
  * @returns the disposable file handle.
  */
-export function openFiles(baseFolder: string): Files {
-    const bounds: FilesState = { root: realpathSync(baseFolder), locks: new Map() };
+export function openFiles(root: string): Files {
+    const state: FilesState = { root: realpathSync(root), locks: new Map() };
     const files: Files = {
         deleteFolder(path) {
-            rmdirSync(verifyPath(bounds, path));
+            rmdirSync(buildContainedPath(state, path));
         },
         deleteTree(path) {
             const stat = files.readStats(path);
             if (stat?.isDirectory() === false)
                 throw new GspotError('filesystem', `${path} is not a directory. Choose a directory.`);
-            if (stat !== undefined) rmSync(verifyPath(bounds, path), { recursive: true, force: true });
+            if (stat !== undefined) rmSync(buildContainedPath(state, path), { recursive: true, force: true });
         },
-        readRealPath: (path) => readContainedPath(bounds.root, path),
+        readRealPath: (path) => readContainedPath(state.root, path),
         list(path) {
             try {
-                const target = path === '' ? bounds.root : verifyPath(bounds, path);
+                const target = path === '' ? state.root : buildContainedPath(state, path);
                 if (!lstatSync(target).isDirectory())
                     throw new GspotError('filesystem', `${path || '.'} is not a directory. Choose a directory.`);
                 return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
@@ -47,7 +47,7 @@ export function openFiles(baseFolder: string): Files {
         },
         readStats(path) {
             try {
-                const stat = lstatSync(verifyPath(bounds, path));
+                const stat = lstatSync(buildContainedPath(state, path));
                 if (stat.isSymbolicLink()) throw new Error(`${path} is a link. gspot does not write through links.`);
                 return stat;
             } catch (error) {
@@ -55,16 +55,16 @@ export function openFiles(baseFolder: string): Files {
                 throw error;
             }
         },
-        read: (path) => readEntry(bounds, path),
-        readKeepingLinks: (path) => readEntryKeepingLinks(bounds, path),
-        write: replaceEntry.bind(undefined, bounds),
+        read: (path) => readEntry(state, path),
+        readKeepingLinks: (path) => readEntryKeepingLinks(state, path),
+        write: replaceEntry.bind(undefined, state),
         deleteFile(path, expected) {
-            if (!isSameContents(readEntryKeepingLinks(bounds, path), expected))
+            if (!isSameContents(readEntryKeepingLinks(state, path), expected))
                 throw new GspotError('filesystem', `${path} changed before removal. Run the command again.`);
-            unlinkSync(verifyPath(bounds, path));
+            unlinkSync(buildContainedPath(state, path));
         },
         createFolder(path, mode) {
-            const target = preparePath(bounds, path);
+            const target = preparePath(state, path);
             try {
                 mkdirSync(target, { mode });
             } catch (error) {
@@ -74,9 +74,9 @@ export function openFiles(baseFolder: string): Files {
                 throw new GspotError('filesystem', `${path} is not a directory. Choose a directory.`);
             chmodSync(target, mode);
         },
-        createLock: lockForWriting.bind(undefined, bounds),
+        createLock: createLock.bind(undefined, state),
         [Symbol.dispose]() {
-            for (const path of releaseLocks(bounds)) removeEmptyFolders(files, path);
+            for (const path of releaseLocks(state)) removeEmptyFolders(files, path);
         },
     };
     return files;

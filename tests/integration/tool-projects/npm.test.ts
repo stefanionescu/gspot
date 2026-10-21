@@ -5,20 +5,75 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { NPM_REGISTRY_TOKEN } from '#tests/data/test-setup.ts';
+import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
+import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
-import type { DryRunJson } from '#cli/types/commands/settings.ts';
 import { selectLockfileName } from '#cli/install/npm/tool-project.ts';
 import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { TOOL_PROJECT_BYTE_ATTRIBUTES } from '#tests/data/parsers/git.ts';
-import prettierManifest from 'prettier/package.json' with { type: 'json' };
-import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
+import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import { PACKAGE_MANAGER_ROWS } from '#tests/data/install/npm-tool-project.ts';
 import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
 import { createPackageManagerSandbox } from '#tests/setup/package-manager-sandboxes.ts';
 import type { ToolProjectFiles, PackageManagerSandbox } from '#tests/types/packages.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
+import { REGISTRY_HOST, PNPM_WORKSPACE, NPM_REGISTRY_TOKEN } from '#tests/data/test-setup.ts';
+
+/** A clean clone installs its committed lockfile twice without changing tracked files. */
+async function assertCloneInstallation(project: PackageManagerSandbox, files: ToolProjectFiles): Promise<void> {
+    const { root, artifacts } = project;
+    const { projectFile, lockfile } = files;
+    const clone = join(artifacts, 'clone');
+    // Keep the line endings of the package manager through Git, so the install test can compare bytes.
+    await appendFile(join(root, '.gitattributes'), TOOL_PROJECT_BYTE_ATTRIBUTES);
+    commitAll(root);
+    readGitOutput(root, ['clone', '--quiet', '--no-local', root, clone]);
+    expect(await isOnDisk(join(clone, '.gspot/node_modules'))).toBe(false);
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const cloneInstall = await spawnGspot(clone, ['install']);
+        expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);
+        expect(cloneInstall.stdout).toContain('.gspot/node_modules');
+        const status = runGit(clone, ['status', '--porcelain']);
+        expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
+        expect(await readFile(join(clone, '.gspot', basename(files.lockfilePath)))).toStrictEqual(
+            Buffer.from(lockfile),
+        );
+        expect(await readFile(join(clone, '.gspot/package.json'))).toStrictEqual(Buffer.from(projectFile));
+    }
+    const diagnosed = await spawnGspot(clone, ['doctor', '--json']);
+    expect((JSON.parse(diagnosed.stdout) as DoctorReport).tools.find((tool) => tool.name === 'prettier')?.state).toBe(
+        'ok',
+    );
+}
+
+// Serves an authenticated registry for a real package manager and counts its requests.
+function createAuthenticatedRegistry(token: string) {
+    const requests = { rejected: 0, authenticated: 0 };
+    const server = Bun.serve({
+        hostname: REGISTRY_HOST,
+        port: 0,
+        fetch(request) {
+            if (request.headers.get('authorization') !== `Bearer ${token}`) {
+                requests.rejected++;
+                return Response.json({ error: 'Authentication required' }, { status: 401 });
+            }
+            requests.authenticated++;
+            return Response.json({
+                name: 'private-check-tool',
+                'dist-tags': { latest: '1.0.0' },
+                versions: { '1.0.0': { name: 'private-check-tool', version: '1.0.0' } },
+            });
+        },
+    });
+    return {
+        url: `http://${REGISTRY_HOST}:${String(server.port)}/`,
+        requests,
+        async [Symbol.asyncDispose]() {
+            await server.stop(true);
+        },
+    };
+}
 
 test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
     '%s from %s: apply keeps a stale lockfile and install repairs it',
@@ -35,7 +90,7 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
         }
         // Yarn 1 writes resolved package addresses into its lockfile; these must exclude the private registry.
         if (packageManager === 'yarn') expect(Buffer.from(lockfile).toString('utf8')).not.toContain(registry.url);
-        const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierManifest.version, '0.0.0');
+        const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierPackage.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
         await writeFile(lockfilePath, stale);
         const staleApply = await spawnGspot(root, ['apply', '--json']);
@@ -66,7 +121,7 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
         const { root, rootPackage } = sandbox;
         await installToolProjects(root);
         const { lockfilePath, lockfile } = await readToolProjectFiles(root, packageManager);
-        const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierManifest.version, '0.0.0');
+        const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierPackage.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
         const conflict = `<<<<<<< edited\n${stale}\n=======\n${Buffer.from(lockfile).toString('utf8')}\n>>>>>>> generated\n`;
         await writeFile(lockfilePath, conflict);
@@ -76,12 +131,12 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
         );
         const pinned = await spawnGspot(root, ['apply', '--json']);
         expect(pinned.code, pinned.stdout + pinned.stderr).toBe(0);
-        const pinnedManifest = await readFile(join(root, '.gspot/package.json'));
+        const pinnedPackageJson = await readFile(join(root, '.gspot/package.json'));
         const refused = await spawnGspot(root, ['install', '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(refused.stdout).toContain('Install that package manager version first');
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
-        expect(await readFile(join(root, '.gspot/package.json'))).toStrictEqual(pinnedManifest);
+        expect(await readFile(join(root, '.gspot/package.json'))).toStrictEqual(pinnedPackageJson);
         await writeFile(join(root, projectPath), rootPackage);
         const applied = await spawnGspot(root, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -97,33 +152,6 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
     },
 );
 
-/** A clean clone installs its committed lockfile twice without changing tracked files. */
-async function assertCloneInstallation(project: PackageManagerSandbox, inputs: ToolProjectFiles): Promise<void> {
-    const { root, artifacts } = project;
-    const { manifest, lockfile } = inputs;
-    const clone = join(artifacts, 'clone');
-    // Keep the line endings of the package manager through Git, so the install test can compare bytes.
-    await appendFile(join(root, '.gitattributes'), TOOL_PROJECT_BYTE_ATTRIBUTES);
-    commitAll(root);
-    readGitOutput(root, ['clone', '--quiet', '--no-local', root, clone]);
-    expect(await isOnDisk(join(clone, '.gspot/node_modules'))).toBe(false);
-    for (let attempt = 0; attempt < 2; attempt++) {
-        const cloneInstall = await spawnGspot(clone, ['install']);
-        expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);
-        expect(cloneInstall.stdout).toContain('.gspot/node_modules');
-        const status = runGit(clone, ['status', '--porcelain']);
-        expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
-        expect(await readFile(join(clone, '.gspot', basename(inputs.lockfilePath)))).toStrictEqual(
-            Buffer.from(lockfile),
-        );
-        expect(await readFile(join(clone, '.gspot/package.json'))).toStrictEqual(Buffer.from(manifest));
-    }
-    const diagnosed = await spawnGspot(clone, ['doctor', '--json']);
-    expect((JSON.parse(diagnosed.stdout) as DoctorReport).tools.find((tool) => tool.name === 'prettier')?.state).toBe(
-        'ok',
-    );
-}
-
 test.each([...PACKAGE_MANAGER_ROWS])(
     '%s from %s preserves authored and locked inputs and restores edited tool files',
     async (packageManager, projectPath) => {
@@ -131,7 +159,7 @@ test.each([...PACKAGE_MANAGER_ROWS])(
         const { root, rootPackage, yarnConfiguration } = sandbox;
         await installToolProjects(root);
         const inputs = await readToolProjectFiles(root, packageManager);
-        const { manifest, lockfilePath, lockfile, mode } = inputs;
+        const { projectFile, lockfilePath, lockfile, mode } = inputs;
         const installed = await spawnGspot(root, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         expect(installed.stdout).toContain('.gspot/node_modules');
@@ -145,15 +173,15 @@ test.each([...PACKAGE_MANAGER_ROWS])(
             dependencies: await readFile(join(root, 'node_modules/authored.txt'), 'utf8'),
             lockfile: await readFile(lockfilePath),
             mode: attributes.mode,
-            manifest: await readFile(join(root, '.gspot/package.json')),
+            projectFile: await readFile(join(root, '.gspot/package.json')),
         }).toStrictEqual({
             authored: rootPackage,
-            workspace: projectPath === 'package.json' ? 'packages:\n  - "**"\n' : undefined,
+            workspace: projectPath === 'package.json' ? PNPM_WORKSPACE : undefined,
             yarnrc: yarnConfiguration,
             dependencies: 'keep project dependencies',
             lockfile: Buffer.from(lockfile),
             mode,
-            manifest: Buffer.from(manifest),
+            projectFile: Buffer.from(projectFile),
         });
         // A reinstall replaces an edited installed file with the locked one, and the tool stays ready.
         const readmePath = join(root, '.gspot/node_modules/prettier/README.md');
@@ -180,34 +208,6 @@ test.each([...PACKAGE_MANAGER_ROWS])(
     },
 );
 
-// Serves an authenticated registry for a real package manager and counts its requests.
-function createAuthenticatedRegistry(token: string) {
-    const requests = { rejected: 0, authenticated: 0 };
-    const server = Bun.serve({
-        hostname: '127.0.0.1',
-        port: 0,
-        fetch(request) {
-            if (request.headers.get('authorization') !== `Bearer ${token}`) {
-                requests.rejected++;
-                return Response.json({ error: 'Authentication required' }, { status: 401 });
-            }
-            requests.authenticated++;
-            return Response.json({
-                name: 'private-check-tool',
-                'dist-tags': { latest: '1.0.0' },
-                versions: { '1.0.0': { name: 'private-check-tool', version: '1.0.0' } },
-            });
-        },
-    });
-    return {
-        url: `http://127.0.0.1:${String(server.port)}/`,
-        requests,
-        async [Symbol.asyncDispose]() {
-            await server.stop(true);
-        },
-    };
-}
-
 test('registry settings from the repository .npmrc authenticate an isolated project and leave the .npmrc unchanged', async () => {
     await using repository = await testdir();
     await using isolated = await testdir();
@@ -222,7 +222,7 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     await createFileTree(isolated.path, { 'package.json': '{"private":true}\n' });
     const command = ['npm', 'view', 'private-check-tool', 'version', '--json', '--cache', join(isolated.path, 'cache')];
     const missing = await runTool(command, {
-        timeoutSeconds: SETTING_DECLARATIONS['tool_timeout_seconds'].default,
+        timeoutSeconds: SETTING_FACTS['tool_timeout_seconds'].default,
         cwd: isolated.path,
         env: await readRegistryEnvironment(repository.path),
     });
@@ -232,7 +232,7 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     await writeFile(join(repository.path, '.npmrc'), source, { mode: 0o600 });
     const { mode } = await stat(join(repository.path, '.npmrc'));
     const corrected = await runTool(command, {
-        timeoutSeconds: SETTING_DECLARATIONS['tool_timeout_seconds'].default,
+        timeoutSeconds: SETTING_FACTS['tool_timeout_seconds'].default,
         cwd: isolated.path,
         env: await readRegistryEnvironment(repository.path),
     });

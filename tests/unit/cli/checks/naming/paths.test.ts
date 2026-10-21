@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rename, writeFile } from 'node:fs/promises';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -26,7 +26,6 @@ test('[slug] path brackets are allowed in every scope and banned file names are 
 
     const findings = result.report.checks.flatMap(({ findings }) => findings);
     expect(findings.map(({ file }) => file)).toStrictEqual(['handler.ts']);
-    expect(findings.filter(({ file }) => file.startsWith('app/'))).toStrictEqual([]);
 });
 
 test.each([...FILE_NAME_CASES])('naming/paths: $name', async ({ configurations, files, invalid, renamed }) => {

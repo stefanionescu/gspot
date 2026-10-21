@@ -3,8 +3,8 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
+import type { RunReport } from '#cli/types/runs/run.ts';
 import { installSandbox } from '#tests/setup/install.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
@@ -42,7 +42,7 @@ test('a block copied between two files is a finding on the file that holds it', 
     );
     await checkDuplication(sandbox.path, environment, 0);
     await writeFile(
-        `${sandbox.path}/scripts/second.sh`,
+        join(sandbox.path, 'scripts/second.sh'),
         `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_second() {\n    local total=0\n${steps}\n    printf '%s\\n' "$total"\n}\n\ncount_second\n`,
     );
     const report = await checkDuplication(sandbox.path, environment, 1);

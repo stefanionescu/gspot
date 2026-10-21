@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
 
 test.each(['deno.json', 'deno.jsonc'].flatMap((file) => ['', 'apps/api'].map((scope) => ({ file, scope }))))(
     'a Supabase layout with $file in scope $scope installs the Deno rule named by SUPABASE.md',

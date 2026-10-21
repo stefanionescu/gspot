@@ -11,6 +11,12 @@ import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { installSandbox, installToolProjects } from '#tests/setup/install.ts';
 import { COMPOSITE_ACTION, CHECKOUT_WORKFLOW } from '#tests/data/checks/github-actions.ts';
 
+// Runs the actionlint check over the workflows in the repository.
+async function runActionlint(root: string) {
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'github-actions/actionlint', '--json']));
+    return result.report.checks[0]!;
+}
+
 test('the generated GitHub workflow passes actionlint', async () => {
     await using sandbox = await testdir({ 'README.md': '# Workflow test\n' });
 
@@ -52,11 +58,6 @@ test('the generated GitHub workflow passes actionlint', async () => {
         { check: 'github-actions/actionlint', status: 'passed', findings: [] },
     ]);
 });
-// Runs the actionlint check over the workflows in the repository.
-async function runActionlint(root: string) {
-    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'github-actions/actionlint', '--json']));
-    return result.report.checks[0]!;
-}
 
 // GitHub self-repository references use $/. The pinned Actionlint needs their local spelling.
 test('actionlint reports a missing required input of a same-repository reusable workflow and keeps your files', async () => {

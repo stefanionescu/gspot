@@ -7,11 +7,11 @@ import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { buildScopeTarget } from '#cli/repository/scopes.ts';
-import { buildPointerFiles } from '#cli/generation/pointers.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import type { WholeToolFile } from '#cli/types/generation/files.ts';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { buildPointerFiles } from '#cli/generation/settings/pointers.ts';
 import { MODULE_VALUE, MODULE_TARGETS, MARKDOWNLINT_SCOPE_TABLES } from '#tests/data/generation/settings.ts';
 
 test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
@@ -54,7 +54,7 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
         expect(files.some((file) => file.path === 'omitted/AppTests/.swiftlint.yml')).toBe(false);
         const childConfig = buildScopeTarget(
             child,
-            session.manifests.get('swift')!.toolFiles.find(({ tool }) => tool.includes('swiftlint'))!,
+            session.configurations.get('swift')!.toolFiles.find(({ tool }) => tool.includes('swiftlint'))!,
             getToolFiles(session).targets,
         );
         const childPointer =
@@ -72,14 +72,14 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
 
 test.each(['javascript'])(
     `%s pointers import modules from folders with URI characters and Unicode`,
-    async (configuration) => {
+    async (configurationName) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([...new Set([configuration, 'javascript'])]),
+            'gspot.toml': buildSandboxSettings([...new Set([configurationName, 'javascript'])]),
         });
 
         const session = await openSession(sandbox.path);
-        const manifest = session.manifests.get(configuration)!;
-        const toolFile = manifest.toolFiles
+        const configuration = session.configurations.get(configurationName)!;
+        const toolFile = configuration.toolFiles
             .filter((file): file is WholeToolFile => file.source !== undefined)
             .find((file) => file.pointer?.body.includes('{target_module}') === true)!;
         // Windows file names cannot contain a question mark.
@@ -90,7 +90,7 @@ test.each(['javascript'])(
             const [output] = buildPointerFiles(
                 {
                     session,
-                    manifest,
+                    configuration,
                     selection: session.scopes[0]!,
                 },
                 { ...toolFile, pointer: { ...toolFile.pointer!, path: `entry-${String(index)}.mjs` } },

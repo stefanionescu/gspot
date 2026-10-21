@@ -6,16 +6,17 @@ import { testdir, createFileTree } from 'testdirs';
 import { fakeCommand } from '#tests/setup/fakes.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { buildToolInstall } from '#tests/setup/install.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildInstallContext } from '#tests/setup/install.ts';
+import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
-import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependencies.ts';
+import { NPM_TOOL_PROJECT } from '#cli/config/generation/projects.ts';
 import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
-import { INSTALL_FAILURES, TOOL_REQUIREMENTS } from '#tests/data/install/npm-tool-project.ts';
+import { parseToolPackageJson } from '#cli/install/npm/tool-project.ts';
+import { TOOL_REQUIREMENTS } from '#tests/data/install/npm-tool-project.ts';
 import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from '#cli/install/npm/project.ts';
 
 /**
@@ -24,12 +25,14 @@ import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from
  * @param failure what a failed run prints, or that it ran out of time.
  * @returns the mock, which restores bun when disposed.
  */
-function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' | 'isTimedOut'>>): Disposable {
+function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' | 'timedOut'>>): Disposable {
     return fakeCommand('bun', (command) =>
         Promise.resolve(
-            command[1] === '--version'
-                ? { code: 0, missing: false, duration: 0, stdout: '1.4.2\n', stderr: '' }
-                : { code: 1, missing: false, duration: 0, stdout: '', stderr: '', ...failure },
+            buildProcessResult(
+                command[1] === '--version'
+                    ? { code: 0, missing: false, duration: 0, stdout: '1.4.2\n', stderr: '' }
+                    : { code: 1, missing: false, duration: 0, stdout: '', stderr: '', ...failure },
+            ),
         ),
     );
 }
@@ -47,73 +50,73 @@ test.each([...TOOL_REQUIREMENTS])(
             devDependencies: { [dependency]: version },
         });
         if (accepted)
-            expect(parseToolProject(source, 'bun').dependencies).toStrictEqual({
+            expect(parseToolPackageJson(source, 'bun').dependencies).toStrictEqual({
                 [dependency]: version,
             });
-        else expect(() => parseToolProject(source, 'bun')).toThrow(dependency);
+        else expect(() => parseToolPackageJson(source, 'bun')).toThrow(dependency);
     },
 );
 
-test.each([...INSTALL_FAILURES])(
-    'a failed package install keeps the files and hides credentials, frozen=$frozen',
-    async ({ frozen, refusal }) => {
-        await using repository = await testdir();
-        const token = 'synthetic-registry-failure-token';
-        const password = 'synthetic-registry-password/with spaces';
-        const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
-        const source = `registry=${registry}\n//registry.example.com/:_authToken=${token}\n`;
-        const manifest = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
-        const original = frozen ? manifest : JSON.stringify({ private: true, devDependencies: { prettier: '3.8.0' } });
-        const lockfile = JSON.stringify({
-            workspaces: { '': { devDependencies: { prettier: frozen ? '3.8.1' : '3.8.0' } } },
-        });
-        await createFileTree(repository.path, {
-            '.npmrc': source,
-            'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-            '.gspot/package.json': original,
-            '.gspot/bun.lock': lockfile,
-        });
-        await createFileTree(repository.path, { 'gspot.toml': buildSandboxSettings([]) });
-        const session = await openSession(repository.path);
-        using owner = openWriter(repository.path);
-        using resources = new DisposableStack();
-        resources.use(
-            fakeFailingBun({
-                stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}`,
-                stderr: `${refusal} from ${registry}private-check-tool`,
-            }),
-        );
-        const installError = await (
-            frozen
-                ? installNpmTools(buildInstallContext(session, owner))
-                : prepareNpmLockfile(buildInstallContext(session, owner), buildNpmToolFile(manifest), undefined)
-        ).catch((error: unknown) => error);
-        expect(installError).toMatchObject({ name: 'GspotError', code: 'installation' });
-        const message = installError instanceof Error ? installError.message : String(installError);
-        expect(message).toContain(`bun ${frozen ? 'installation' : 'lockfile resolution'} failed (exit 1)`);
-        expect(message).toContain(refusal);
-        expect(message).toContain('Run: gspot apply, then gspot install');
-        for (const credential of [token, password, encodeURIComponent(password)])
-            expect(message).not.toContain(credential);
-        expect(await readFile(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
-        expect(await readFile(join(repository.path, '.gspot/package.json'), 'utf8')).toBe(original);
-        expect(await readFile(join(repository.path, '.gspot/bun.lock'), 'utf8')).toBe(lockfile);
-    },
-);
+test.each([
+    { operation: 'installation', frozen: true },
+    { operation: 'lockfile resolution', frozen: false },
+])('a failed $operation keeps the files and hides credentials', async ({ frozen, operation }) => {
+    const refusal = 'HTTP 403 Forbidden';
+    await using repository = await testdir();
+    const token = 'synthetic-registry-failure-token';
+    const password = 'synthetic-registry-password/with spaces';
+    const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
+    const source = `registry=${registry}\n//registry.example.com/:_authToken=${token}\n`;
+    const packageJson = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
+    const original = frozen ? packageJson : JSON.stringify({ private: true, devDependencies: { prettier: '3.8.0' } });
+    const lockfile = JSON.stringify({
+        workspaces: { '': { devDependencies: { prettier: frozen ? '3.8.1' : '3.8.0' } } },
+    });
+    await createFileTree(repository.path, {
+        '.npmrc': source,
+        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
+        '.gspot/package.json': original,
+        '.gspot/bun.lock': lockfile,
+    });
+    await createFileTree(repository.path, { 'gspot.toml': buildSandboxSettings([]) });
+    const session = await openSession(repository.path);
+    using owner = openWriter(repository.path);
+    using resources = new DisposableStack();
+    resources.use(
+        fakeFailingBun({
+            stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}`,
+            stderr: `${refusal} from ${registry}private-check-tool`,
+        }),
+    );
+    const installationError = await (
+        frozen
+            ? installNpmTools(buildToolInstall(session, owner))
+            : prepareNpmLockfile(buildToolInstall(session, owner), buildNpmToolFile(packageJson), undefined)
+    ).catch((error: unknown) => error);
+    expect(installationError).toBeInstanceOf(Error);
+    expect(installationError).toMatchObject({
+        name: 'GspotError',
+        code: 'installation',
+        message: `bun ${operation} failed (exit 1). Run: gspot apply, then gspot install.\nDownloading https://[redacted]@registry.example.com/private-check-tool\n[redacted]\n[redacted]\n${refusal} from https://[redacted]@registry.example.com/private-check-tool`,
+    });
+    expect(await readFile(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
+    expect(await readFile(join(repository.path, '.gspot/package.json'), 'utf8')).toBe(original);
+    expect(await readFile(join(repository.path, '.gspot/bun.lock'), 'utf8')).toBe(lockfile);
+});
 
 test('an npm install that runs past the time limit names the limit', async () => {
     await using repository = await testdir();
-    const manifest = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
+    const packageJson = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
     await createFileTree(repository.path, {
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-        '.gspot/package.json': manifest,
+        '.gspot/package.json': packageJson,
         '.gspot/bun.lock': JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.1' } } } }),
     });
     const session = await openSession(repository.path);
     using owner = openWriter(repository.path);
-    using _bun = fakeFailingBun({ isTimedOut: true });
-    expect(await captureRejection(installNpmTools(buildInstallContext(session, owner)))).toBe(
+    using _bun = fakeFailingBun({ timedOut: true });
+    expect(await captureRejection(installNpmTools(buildToolInstall(session, owner)))).toBe(
         `The command bun install --frozen-lockfile --linker hoisted ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,
     );
 });
@@ -124,12 +127,14 @@ test.each([false, true])(
         await using repository = await testdir();
         const token = 'synthetic-generated-lockfile-token';
         const source = `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${token}\n`;
-        const manifest = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
+        const packageJson = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
         const credentialLockfile = JSON.stringify({
             workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
             packages: { prettier: ['prettier@3.8.1', `https://registry.example.com/${token}`, {}, 'integrity'] },
         });
-        const original = frozen ? manifest : JSON.stringify({ private: true, devDependencies: { prettier: '3.8.0' } });
+        const original = frozen
+            ? packageJson
+            : JSON.stringify({ private: true, devDependencies: { prettier: '3.8.0' } });
         const lockfile = frozen
             ? credentialLockfile
             : JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.0' } } } });
@@ -146,16 +151,16 @@ test.each([false, true])(
         using boundary = fakeCommand('bun', async (command, options) => {
             if (!frozen && command[1] !== '--version')
                 await writeFile(join(options.cwd, 'bun.lock'), credentialLockfile);
-            return {
+            return buildProcessResult({
                 code: 0,
                 missing: false,
                 duration: 0,
                 stdout: command[1] === '--version' ? '1.4.2\n' : '',
                 stderr: '',
-            };
+            });
         });
         const message = await captureRejection(
-            prepareNpmLockfile(buildInstallContext(session, owner), buildNpmToolFile(manifest), undefined),
+            prepareNpmLockfile(buildToolInstall(session, owner), buildNpmToolFile(packageJson), undefined),
         );
         expect(message).toBe(
             frozen
@@ -175,7 +180,7 @@ test.each([false, true])(
 );
 
 test('a missing Node stops npm before it writes a lockfile and keeps a cached lockfile', async () => {
-    const manifest = JSON.stringify({
+    const packageJson = JSON.stringify({
         ...NPM_TOOL_PROJECT,
         devDependencies: { prettier: '3.8.1' },
     });
@@ -192,15 +197,15 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     });
     using owner = openWriter(sandbox.path);
     const message = await captureRejection(
-        prepareNpmLockfile(buildInstallContext(session, owner), buildNpmToolFile(manifest), undefined),
+        prepareNpmLockfile(buildToolInstall(session, owner), buildNpmToolFile(packageJson), undefined),
     );
     expect(message).toBe('node is required by the npm tool project. Install it before it creates its lockfile.');
     expect(await isOnDisk(join(sandbox.path, '.gspot/package.json'))).toBe(false);
-    await createFileTree(sandbox.path, { ['.gspot/package.json']: manifest, '.gspot/bun.lock': lockfile });
-    const cached = await prepareNpmLockfile(buildInstallContext(session, owner), buildNpmToolFile(manifest), undefined);
+    await createFileTree(sandbox.path, { ['.gspot/package.json']: packageJson, '.gspot/bun.lock': lockfile });
+    const cached = await prepareNpmLockfile(buildToolInstall(session, owner), buildNpmToolFile(packageJson), undefined);
     expect(cached.content).toBe(lockfile);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('kept\n');
-    expect(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe(manifest);
+    expect(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe(packageJson);
     expect(await readFile(join(sandbox.path, '.gspot/bun.lock'), 'utf8')).toBe(lockfile);
 });
 
@@ -221,16 +226,18 @@ test('a package manager version timeout names the install command and configured
     });
     const session = await openSession(repository.path);
     using owner = openWriter(repository.path);
-    const context = buildInstallContext(session, owner);
+    const context = buildToolInstall(session, owner);
     using _bun = fakeCommand('bun', () =>
-        Promise.resolve({
-            code: 1,
-            missing: false,
-            duration: 0,
-            stdout: '',
-            stderr: '',
-            isTimedOut: true,
-        }),
+        Promise.resolve(
+            buildProcessResult({
+                code: 1,
+                missing: false,
+                duration: 0,
+                stdout: '',
+                stderr: '',
+                timedOut: true,
+            }),
+        ),
     );
     expect(await captureRejection(assertPackageManagerVersion(context))).toBe(
         `The command bun --version ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,

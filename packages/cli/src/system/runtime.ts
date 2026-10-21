@@ -10,7 +10,7 @@ import { RUNTIME_NAMES } from '#cli/config/system/runtime.ts';
  * @param engines the version range of each runtime.
  * @returns the refusal, or undefined when the runtime meets the floor.
  */
-export function findRuntimeError(
+export function validateRuntimeVersion(
     versions: { node: string; bun?: string | undefined },
     engines: Record<keyof typeof RUNTIME_NAMES, string>,
 ): string | undefined {

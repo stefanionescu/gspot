@@ -1,39 +1,36 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { formatUnknownName } from '#cli/system/text.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { SOURCE_FILE_GROUPS } from '#cli/config/configurations.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
-
-import {
-    type Manifest,
-    type SelectionWalk,
-    type UnknownConfiguration,
-    type ConfigurationDeclaration,
-} from '#cli/types/configurations.ts';
+import { type Configuration, type SelectionWalk, type WrittenConfiguration } from '#cli/types/configurations.ts';
 
 function visit(walk: SelectionWalk, configurationName: string): void {
     if (walk.seen.has(configurationName)) return;
     walk.seen.add(configurationName);
-    const manifest = walk.manifests.get(configurationName);
-    if (!manifest) {
-        const known = walk.manifests.keys().toArray();
+    const configuration = walk.configurations.get(configurationName);
+    if (!configuration) {
+        const known = walk.configurations.keys().toArray();
         walk.errors.push(formatUnknownConfiguration(configurationName, known));
         return;
     }
-    for (const required of manifest.configuration.requires) visit(walk, required);
-    walk.order.push(manifest);
+    for (const required of configuration.requires) visit(walk, required);
+    walk.order.push(configuration);
 }
 
 /**
  * Resolve configuration names to manifests in order, and throw for unknown names.
  *
  * @param configurationNames the names to resolve.
- * @param manifests every configuration manifest.
+ * @param configurations every configuration manifest.
  * @returns the manifests, requirements first, in order of first mention.
  */
-function selectConfigurations(configurationNames: string[], manifests: Map<string, Manifest>): Manifest[] {
-    const walk: SelectionWalk = { manifests, errors: [], order: [], seen: new Set() };
+export function selectConfigurations(
+    configurationNames: string[],
+    configurations: Map<string, Configuration>,
+): Configuration[] {
+    const walk: SelectionWalk = { configurations, errors: [], order: [], seen: new Set() };
     for (const configurationName of configurationNames) visit(walk, configurationName);
     if (walk.errors.length > 0) throw new GspotError('arguments', walk.errors.join('\n'));
     return walk.order;
@@ -45,9 +42,9 @@ function selectConfigurations(configurationNames: string[], manifests: Map<strin
  * @param selected the manifests in use.
  * @returns the configurations that own source settings.
  */
-function filterSourceConfigurations(selected: Manifest[]): Manifest[] {
+export function filterSourceConfigurations(selected: Configuration[]): Configuration[] {
     const groups: readonly string[] = SOURCE_FILE_GROUPS;
-    return selected.filter((manifest) => groups.includes(manifest.configuration.group));
+    return selected.filter((configuration) => groups.includes(configuration.group));
 }
 
 /**
@@ -56,11 +53,11 @@ function filterSourceConfigurations(selected: Manifest[]): Manifest[] {
  * @param scopes scope selections that can share configurations.
  * @returns one manifest per configuration name.
  */
-function listSelectedManifests(scopes: Pick<ScopeSelection, 'selected'>[]): Manifest[] {
-    const seen = new Map<string, Manifest>();
+export function listSelectedConfigurations(scopes: Pick<Scope, 'selected'>[]): Configuration[] {
+    const seen = new Map<string, Configuration>();
     for (const scope of scopes)
-        for (const manifest of scope.selected)
-            if (!seen.has(manifest.configuration.name)) seen.set(manifest.configuration.name, manifest);
+        for (const configuration of scope.selected)
+            if (!seen.has(configuration.name)) seen.set(configuration.name, configuration);
     return seen.values().toArray();
 }
 
@@ -71,8 +68,8 @@ function listSelectedManifests(scopes: Pick<ScopeSelection, 'selected'>[]): Mani
  * @param name the configuration to find.
  * @returns whether any scope includes the configuration.
  */
-function isConfigurationSelected(scopes: Pick<ScopeSelection, 'selected'>[], name: string): boolean {
-    return scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === name));
+export function isConfigurationSelected(scopes: Pick<Scope, 'selected'>[], name: string): boolean {
+    return scopes.some((selection) => selection.selected.some((configuration) => configuration.name === name));
 }
 
 // Name an unknown configuration, and say where to find the available ones.
@@ -83,20 +80,20 @@ function formatUnknownConfiguration(name: string, known: string[]): string {
 /**
  * Find the unknown configuration names, and keep their order and location.
  *
- * @param declarations the requested names, with their original fields.
- * @param manifests the declared configurations.
+ * @param written the requested names, with their original fields.
+ * @param configurations the declared configurations.
  * @returns each unknown declaration with its error message.
  */
-function listUnknownConfigurations<Declaration extends Pick<ConfigurationDeclaration, 'name'>>(
-    declarations: readonly Declaration[],
-    manifests: ReadonlyMap<string, Manifest>,
-): UnknownConfiguration<Declaration>[] {
-    const known = [...manifests.keys()];
-    return declarations
-        .filter(({ name }) => !manifests.has(name))
-        .map((declaration) => ({
-            ...declaration,
-            message: formatUnknownConfiguration(declaration.name, known),
+export function listUnknownConfigurations<Written extends Pick<WrittenConfiguration, 'name'>>(
+    written: readonly Written[],
+    configurations: ReadonlyMap<string, Configuration>,
+): (Written & { message: string })[] {
+    const known = [...configurations.keys()];
+    return written
+        .filter(({ name }) => !configurations.has(name))
+        .map((entry) => ({
+            ...entry,
+            message: formatUnknownConfiguration(entry.name, known),
         }));
 }
 
@@ -104,10 +101,10 @@ function listUnknownConfigurations<Declaration extends Pick<ConfigurationDeclara
  * Refuse explicit edits to configurations that gspot selects itself.
  *
  * @param names the configurations that the command edits.
- * @param manifests the configuration declarations
+ * @param configurations the configuration declarations
  */
-function refuseAlwaysSelected(names: string[], manifests: Map<string, Manifest>): void {
-    const name = names.find((entry) => manifests.get(entry)?.configuration.always_selected === true);
+export function assertConfigurationsEditable(names: string[], configurations: Map<string, Configuration>): void {
+    const name = names.find((entry) => configurations.get(entry)?.always_selected === true);
     if (name !== undefined)
         throw new GspotError(
             'arguments',
@@ -115,38 +112,29 @@ function refuseAlwaysSelected(names: string[], manifests: Map<string, Manifest>)
         );
 }
 
-export {
-    selectConfigurations,
-    refuseAlwaysSelected,
-    listSelectedManifests,
-    isConfigurationSelected,
-    listUnknownConfigurations,
-    filterSourceConfigurations,
-};
-
 /**
  * List the general configurations that gspot adds without an explicit selection.
  *
- * @param manifests every shipped configuration
+ * @param configurations every shipped configuration
  * @param repository the available inventory, if any
  * @returns the automatic configurations, each once
  */
 export function listAutomaticConfigurations(
-    manifests: Map<string, Manifest>,
+    configurations: Map<string, Configuration>,
     repository?: Pick<Repository, 'root' | 'files' | 'hasGit'>,
 ): string[] {
-    const general = new Map([...manifests].filter(([, manifest]) => manifest.configuration.group === 'general'));
+    const general = new Map([...configurations].filter(([, configuration]) => configuration.group === 'general'));
     const automatic = new Set(
         general
             .values()
-            .filter(({ configuration }) => configuration.always_selected && configuration.when === undefined)
-            .map(({ configuration }) => configuration.name),
+            .filter((configuration) => configuration.always_selected && configuration.when === undefined)
+            .map((configuration) => configuration.name),
     );
     if (repository === undefined) return [...automatic];
     const detected = new Set(
         detectConfigurations({ ...repository, dependencyFiles: [] }, general).map(({ configuration }) => configuration),
     );
-    for (const { configuration } of general.values())
+    for (const configuration of general.values())
         if (detected.has(configuration.name) && (configuration.when?.git !== true || repository.hasGit))
             automatic.add(configuration.name);
     return general
@@ -159,12 +147,12 @@ export function listAutomaticConfigurations(
  * Refuse every unknown configuration named by a command.
  *
  * @param names the requested configuration names.
- * @param manifests every available configuration.
+ * @param configurations every available configuration.
  */
-export function assertKnownConfigurations(names: string[], manifests: Map<string, Manifest>): void {
+export function assertKnownConfigurations(names: string[], configurations: Map<string, Configuration>): void {
     const unknown = listUnknownConfigurations(
         names.map((name) => ({ name })),
-        manifests,
+        configurations,
     );
     if (unknown.length > 0) throw new GspotError('arguments', unknown.map(({ message }) => message).join('\n'));
 }

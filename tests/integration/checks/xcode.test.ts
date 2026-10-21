@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { planRun } from '#cli/planning/checks.ts';
+import { test, expect, describe } from 'bun:test';
 import { chmod, writeFile } from 'node:fs/promises';
+import { planChecks } from '#cli/planning/checks.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
@@ -11,17 +11,15 @@ import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { XCODE_CASES, XCODE_SANDBOX } from '#tests/data/checks/xcode.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 
-const sandbox = registerSharedSandbox(XCODE_SANDBOX);
-// This check needs the Xcode toolchain supplied by macOS.
-test.skipIf(!isMacos).each([...XCODE_CASES])(
-    '$check reports $expected.file and passes after the fix',
-    async (entry) => {
-        const result = await runCheckSample(sandbox(), entry, XCODE_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-    },
-);
+describe.skipIf(!isMacos)('Xcode samples', () => {
+    const installedSandbox = registerSharedSandbox(XCODE_SANDBOX);
+    test.each([...XCODE_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
+        const result = await runCheckSample(installedSandbox(), entry, XCODE_SANDBOX);
+        expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+    });
+});
 
 test.skipIf(!hasToolBuild('plutil'))(
     'xcode/plutil reports mixed parse and input failures as execution errors',
@@ -33,7 +31,7 @@ test.skipIf(!hasToolBuild('plutil'))(
         });
 
         const session = await openSession(sandbox.path);
-        const [planned] = planRun(session, { stage: 'commit', only: ['xcode/plutil'] });
+        const [planned] = planChecks(session, { stage: 'commit', only: ['xcode/plutil'] });
         const paths = { cwd: sandbox.path, root: sandbox.path };
         await chmod(join(sandbox.path, 'private.plist'), 0);
         try {

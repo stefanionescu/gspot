@@ -1,17 +1,17 @@
 import which from 'which';
 import { GspotError } from '#cli/system/errors.ts';
 import { installHooks } from '#cli/install/hooks.ts';
-import { VALE_TOOL } from '#cli/config/tools/vale.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Writer } from '#cli/types/ownership.ts';
-import type { Session } from '#cli/types/planning.ts';
+import { VALE_TOOL } from '#cli/config/checks/prose.ts';
 import { installMiseTools } from '#cli/install/mise.ts';
-import { MISE_PROGRAM } from '#cli/config/tools/find.ts';
 import { installValePackages } from '#cli/install/vale.ts';
-import { installToolProjects } from '#cli/install/projects.ts';
-import { listDistinctTools } from '#cli/configurations/tools.ts';
+import { MISE_TOOL } from '#cli/config/tools/inspection.ts';
+import { installToolProjects } from '#cli/install/tool-projects.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import { assertPackageManagerVersion } from '#cli/install/npm/project.ts';
-import type { InstallContext, InstallationResult } from '#cli/types/install.ts';
+import type { ToolInstall, InstallResult } from '#cli/types/install/tools.ts';
 
 /**
  * Install the tools in their tool projects and set the hooks of this clone.
@@ -25,28 +25,28 @@ export async function installTools(
     session: Session,
     writer: Writer,
     generated: GenerationResult,
-): Promise<InstallationResult> {
-    const manifests = session.neededToolManifests;
+): Promise<InstallResult> {
+    const configurations = session.neededToolConfigurations;
     const steps: (readonly string[])[] = [];
     const notes: string[] = [];
-    const tools = listDistinctTools(manifests);
-    const mise = which.sync(MISE_PROGRAM, { nothrow: true });
-    const context: InstallContext = {
+    const tools = listDistinctTools(configurations);
+    const misePath = which.sync(MISE_TOOL, { nothrow: true });
+    const context: ToolInstall = {
         session,
         writer,
         generated,
         tools,
-        mise,
+        misePath: misePath,
         steps,
     };
     try {
         await assertPackageManagerVersion(context);
-        const programNote = await installMiseTools(context);
+        const toolNote = await installMiseTools(context);
         notes.push(...(await installToolProjects(context)));
-        if (manifests.some((manifest) => manifest.tools.some((tool) => tool.name === VALE_TOOL))) {
+        if (configurations.some((configuration) => configuration.tools.some((tool) => tool.name === VALE_TOOL))) {
             notes.push(await installValePackages(context));
         }
-        notes.push(installHooks(session, steps), programNote);
+        notes.push(installHooks(session, steps), toolNote);
         return { note: notes.filter(Boolean).join('\n'), steps };
     } catch (error) {
         session.cancelSignal?.throwIfAborted();

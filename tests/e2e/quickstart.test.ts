@@ -1,15 +1,14 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
-import { parse } from '@decimalturn/toml-patch';
 import { testdir, createFileTree } from 'testdirs';
 import { hasToolBuild } from '#tests/setup/system.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { TEST_RUN_FOLDER } from '#tests/setup/install.ts';
-import { listMisePins } from '#cli/configurations/tools.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { readManifests } from '#cli/configurations/manifests.ts';
+import { listMisePins } from '#cli/configurations/declared-tools.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
+import { TEST_RUN_FOLDER, readRuntimePins } from '#tests/setup/install.ts';
 import { TUTORIALS, listQuickstartCommands } from '#tests/data/quickstart.ts';
 
 test.each(
@@ -28,12 +27,10 @@ test.each(
         MISE_CEILING_PATHS: dirname(root),
     };
 
-    const runtimePins = parse(await readFile(join(import.meta.dir, '../../mise.toml'), 'utf8')) as {
-        tools: Record<string, string>;
-    };
+    const runtimePins = await readRuntimePins();
     await linkQuickstartTools(root, environment);
     for (const command of [
-        ['mise', 'use', `node@${runtimePins.tools['node']!}`, `npm:@gspothq/cli@${packageManifest.version}`],
+        ['mise', 'use', `node@${runtimePins.node}`, `npm:@gspothq/cli@${cliPackage.version}`],
         ...row.projectCommands,
     ]) {
         const created = await runCommand([...command], { cwd: root, env: environment });
@@ -71,7 +68,7 @@ test.each(
  * @param environment mise folder variables for that repository.
  */
 async function linkQuickstartTools(tutorialRoot: string, environment: Record<string, string>): Promise<void> {
-    for (const pin of listMisePins([...readManifests().values()]).filter((pin) => hasToolBuild(pin.name))) {
+    for (const pin of listMisePins([...readConfigurations().values()]).filter((pin) => hasToolBuild(pin.name))) {
         const requirement = `${pin.name}@${pin.version}`;
 
         const installed = await runCommand(

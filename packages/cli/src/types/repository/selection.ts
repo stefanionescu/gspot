@@ -1,6 +1,16 @@
-import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { FileKind } from '#cli/types/repository/inventory.ts';
-import { type Group, type Manifest } from '#cli/types/configurations.ts';
+import type { ScopeView } from '#cli/types/settings/inheritance.ts';
+import type { Group, Configuration } from '#cli/types/configurations.ts';
+import type { FileKind, TrackedFile } from '#cli/types/repository/inventory.ts';
+
+/** What detection reads once from the tree of a scope, for every manifest to look at. */
+export type ScopeContents = {
+    candidates: TrackedFile[];
+    extensionCounts: Map<string, number>;
+    shebangs: Set<string>;
+    runtimes: Map<string, string>;
+    dependencies: Map<string, string>;
+    scope: string;
+};
 
 export type ConfigurationEvidence = {
     configuration: string;
@@ -20,22 +30,12 @@ export type FileMatch = {
     kinds: FileKind[];
 };
 
-/** Configuration choices declared at the root and in project scopes. */
-export type ConfigurationSelection = {
-    configurations: string[];
-    scopes: Record<string, { configurations: string[]; removed_configurations: string[] }>;
-    removed_configurations: string[];
-};
-
-/** A detected configuration absent from the saved selection, with its install command. */
-export type ConfigurationSuggestion = { configuration: string; evidence: string; command: string };
-
 /** Repository evidence with an optional count for extension matches. */
 export type DetectionEvidence = { evidence: string; count?: number };
 
 /** Configuration selection and scope values for repository file coverage. */
-export type FileCoverageOptions = {
-    selected: Manifest[];
+export type CoveredFilesOptions = {
+    selected: Configuration[];
     scope: string;
     view: Pick<ScopeView, 'test_files' | 'settings'>;
 };

@@ -1,34 +1,23 @@
 import { posix } from 'node:path';
-import { isRecord } from '#cli/system/values.ts';
-import type { ShippedRule } from '#cli/types/rules.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { formatUnknownName } from '#cli/system/text.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { readAsset, listAssets } from '#cli/system/assets.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
-import { type NamingDefaults } from '#cli/types/checks/naming.ts';
+import type { ShippedRule } from '#cli/types/generation/rules.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
-import { namingDefaultsSchema } from '#cli/schemas/configurations/naming.ts';
+import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/configurations.ts';
 
 import {
     RULES_FOLDER,
     MANIFEST_FILE,
-    NAMING_DEFAULTS_FILE,
     CONFIGURATIONS_FOLDER,
     SHIPPED_TOOL_FILES_FOLDER,
 } from '#cli/config/configurations.ts';
-import {
-    type Manifest,
-    type ToolDeclaration,
-    type CheckDeclaration,
-    type ConfigurationCheck,
-    type ManifestDeclaration,
-} from '#cli/types/configurations.ts';
 
 // Every run shares the immutable declarations shipped with the package.
-let MANIFESTS: Map<string, Manifest> | undefined;
-
-let NAMING_DEFAULTS: NamingDefaults | undefined;
+let CONFIGURATIONS: Map<string, Configuration> | undefined;
 
 // A configuration with exactly one tool gives that tool to each tool file that names no consumer.
 function findOnlyToolName(tools: unknown): string | undefined {
@@ -38,16 +27,16 @@ function findOnlyToolName(tools: unknown): string | undefined {
 }
 
 // Every tool-files asset has one canonical output; metadata adds consumers and generation settings.
-function readToolFileDeclarations(configurationFolder: string, toolFiles: unknown, tools: unknown): unknown {
+function readToolFiles(configurationFolder: string, toolFiles: unknown, tools: unknown): unknown {
     if (toolFiles !== undefined && !Array.isArray(toolFiles)) return toolFiles;
-    const declarations: unknown[] = toolFiles === undefined ? [] : toolFiles;
-    const declaredTargets = new Set(declarations.flatMap((entry) => (isRecord(entry) ? [entry['target']] : [])));
+    const entries: unknown[] = toolFiles === undefined ? [] : toolFiles;
+    const declaredTargets = new Set(entries.flatMap((entry) => (isRecord(entry) ? [entry['target']] : [])));
     const folder = `${configurationFolder}/${SHIPPED_TOOL_FILES_FOLDER}/`;
     const copied = listAssets(folder)
         .map((path) => ({ target: posix.relative(folder, path) }))
         .filter(({ target }) => !declaredTargets.has(target));
     const tool = findOnlyToolName(tools);
-    return [...declarations, ...copied].map((entry) =>
+    return [...entries, ...copied].map((entry) =>
         tool === undefined || !isRecord(entry) || entry['tool'] !== undefined || entry['check'] !== undefined
             ? entry
             : { ...entry, tool },
@@ -58,20 +47,21 @@ function readToolFileDeclarations(configurationFolder: string, toolFiles: unknow
  * Link each named tool to its full declaration.
  *
  * @param manifests the parsed configuration declarations.
- * @returns the manifests by name, with full tool declarations.
+ * @returns the configurations by name, with full tool declarations.
  */
-function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manifest> {
-    const tools = listDeclaredTools(manifests);
+function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
+    const entries = listDeclaredTools(manifests);
     return new Map(
-        manifests.map((manifest) => [
-            manifest.configuration.name,
+        manifests.map(({ configuration, tools, ...fields }) => [
+            configuration.name,
             {
-                ...manifest,
-                tools: manifest.tools.map((tool) => {
+                ...fields,
+                ...configuration,
+                tools: tools.map((tool) => {
                     if (typeof tool !== 'string') return tool;
-                    const declared = tools.get(tool);
+                    const declared = entries.get(tool);
                     if (declared === undefined)
-                        throw buildManifestError(manifest.configuration.name, [`tool ${tool} has no declaration.`]);
+                        throw buildManifestError(configuration.name, [`tool ${tool} has no declaration.`]);
                     return declared;
                 }),
             },
@@ -86,10 +76,10 @@ function linkManifestTools(manifests: ManifestDeclaration[]): Map<string, Manife
  * @param configurationFolder the asset path that gives the name and group.
  * @returns validated declarations with qualified check IDs and discovered tool files.
  */
-function parseManifest(text: string, configurationFolder: string): ManifestDeclaration {
+function parseManifest(text: string, configurationFolder: string): ParsedManifest {
     const parsed = parseToml(text) as Record<string, unknown>;
     const toolFiles = parsed['tool_file'];
-    const discoveredToolFiles = readToolFileDeclarations(configurationFolder, toolFiles, parsed['tool']);
+    const discoveredToolFiles = readToolFiles(configurationFolder, toolFiles, parsed['tool']);
     const result = manifestSchema.safeParse({
         ...parsed,
         tool_file: discoveredToolFiles,
@@ -108,23 +98,19 @@ function parseManifest(text: string, configurationFolder: string): ManifestDecla
 }
 
 // Parse shipped declarations only for the first manifest read in the process.
-function readShippedManifests(): Map<string, Manifest> {
-    const manifests = new Map<string, ManifestDeclaration>();
+function readShippedConfigurations(): Map<string, Configuration> {
+    const manifests = new Map<string, ParsedManifest>();
     const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));
     for (const path of paths) {
         const folder = path.slice(0, -`/${MANIFEST_FILE}`.length);
         const manifest = parseManifest(readAsset(path), folder);
         manifests.set(manifest.configuration.name, manifest);
     }
-    return linkManifestTools(
+    return buildConfigurations(
         [...manifests.values()].toSorted((first, second) =>
             first.configuration.name.localeCompare(second.configuration.name),
         ),
     );
-}
-
-function readShippedNamingDefaults(): NamingDefaults {
-    return namingDefaultsSchema.parse(JSON.parse(readAsset(NAMING_DEFAULTS_FILE)));
 }
 
 /**
@@ -134,7 +120,7 @@ function readShippedNamingDefaults(): NamingDefaults {
  * @param errors the messages in plain English.
  * @returns the error to throw.
  */
-function buildManifestError(configuration: string, errors: string[]): GspotError {
+export function buildManifestError(configuration: string, errors: string[]): GspotError {
     return new GspotError(
         'manifest',
         [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
@@ -142,13 +128,13 @@ function buildManifestError(configuration: string, errors: string[]): GspotError
 }
 
 /**
- * Read every manifest once per process.
+ * Read every configuration once per process.
  *
- * @returns the manifests by configuration name.
+ * @returns the configurations by name.
  */
-function readManifests(): Map<string, Manifest> {
-    MANIFESTS ??= readShippedManifests();
-    return MANIFESTS;
+export function readConfigurations(): Map<string, Configuration> {
+    CONFIGURATIONS ??= readShippedConfigurations();
+    return CONFIGURATIONS;
 }
 
 /**
@@ -157,31 +143,21 @@ function readManifests(): Map<string, Manifest> {
  * @param checks the [[command_check]] records.
  * @returns the shipped IDs, then your command check IDs.
  */
-function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[]): string[] {
-    const shipped = [...listChecksById(readManifests().values()).keys()];
+export function listCheckIds(checks: readonly Pick<Check, 'name'>[]): string[] {
+    const shipped = [...listChecksById(readConfigurations().values()).keys()];
     const authored = checks.map((check) => check.name);
     return [...new Set([...shipped, ...authored])];
 }
 
 /**
- * Read the shipped naming settings once per process.
- *
- * @returns the shipped naming choices
- */
-function readNamingDefaults(): NamingDefaults {
-    NAMING_DEFAULTS ??= readShippedNamingDefaults();
-    return NAMING_DEFAULTS;
-}
-
-/**
  * List the files in the rules folder of a configuration.
  *
- * @param manifest the configuration.
+ * @param configuration the shipped bundle that owns the rule assets.
  * @returns each file with its path inside the rules folder.
  */
-function listRuleFiles(manifest: Manifest): ShippedRule[] {
-    const { group } = manifest.configuration;
-    const sources = listAssets(`${manifest.folder}/${RULES_FOLDER}/`);
+export function listRuleFiles(configuration: Configuration): ShippedRule[] {
+    const { group } = configuration;
+    const sources = listAssets(`${configuration.folder}/${RULES_FOLDER}/`);
     return sources.map((source) => ({
         source,
         group,
@@ -192,14 +168,14 @@ function listRuleFiles(manifest: Manifest): ShippedRule[] {
 /**
  * Index the declared checks by ID, with the configuration of each.
  *
- * @param manifests the configurations to index.
+ * @param configurations the shipped bundles that own the declared checks.
  * @returns the declared checks by ID.
  */
-function listChecksById(manifests: Iterable<Manifest>): Map<string, ConfigurationCheck> {
+export function listChecksById(configurations: Iterable<Configuration>): Map<string, ConfigurationCheck> {
     const checks = new Map<string, ConfigurationCheck>();
-    for (const manifest of manifests) {
-        for (const check of manifest.checks) {
-            checks.set(check.name, { check, configuration: manifest });
+    for (const configuration of configurations) {
+        for (const check of configuration.checks) {
+            checks.set(check.name, { check, configuration: configuration });
         }
     }
     return checks;
@@ -211,8 +187,8 @@ function listChecksById(manifests: Iterable<Manifest>): Map<string, Configuratio
  * @param manifests the parsed configuration declarations.
  * @returns the tools by name.
  */
-function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string, ToolDeclaration> {
-    const tools = new Map<string, ToolDeclaration>();
+function listDeclaredTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
+    const tools = new Map<string, Tool>();
     for (const manifest of manifests)
         for (const tool of manifest.tools.filter((entry) => typeof entry !== 'string')) {
             const previous = tools.get(tool.name);
@@ -229,17 +205,7 @@ function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string
  * @param name the requested check ID.
  * @param settings the command checks of gspot.toml.
  */
-function assertKnownCheck(name: string, settings: Pick<Settings, 'commandChecks'>): void {
+export function assertKnownCheck(name: string, settings: Pick<Settings, 'commandChecks'>): void {
     const known = listCheckIds(Object.values(settings.commandChecks));
     if (!known.includes(name)) throw new GspotError('arguments', formatUnknownName('check', name, known));
 }
-
-export {
-    listCheckIds,
-    readManifests,
-    listRuleFiles,
-    listChecksById,
-    assertKnownCheck,
-    buildManifestError,
-    readNamingDefaults,
-};

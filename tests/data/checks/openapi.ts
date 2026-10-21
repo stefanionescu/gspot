@@ -22,7 +22,7 @@ paths:
                     description: The service is up.
 `;
 
-const OPENAPI_SANDBOX = {
+export const OPENAPI_SANDBOX = {
     configurations: ['openapi'],
     without: ['vitest'],
     files: {
@@ -31,7 +31,7 @@ const OPENAPI_SANDBOX = {
     },
 } as const;
 
-const OPENAPI_CASES = [
+export const OPENAPI_CASES = [
     {
         check: 'openapi/spectral',
         files: {
@@ -40,5 +40,3 @@ const OPENAPI_CASES = [
         expected: { file: 'openapi.yaml', rule: 'operation-operationId', line: 15 },
     },
 ] as const;
-
-export { OPENAPI_CASES, OPENAPI_SANDBOX };

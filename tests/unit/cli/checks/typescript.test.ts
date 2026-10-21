@@ -2,14 +2,14 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { findCheckCode } from '#cli/checks/code.ts';
+import { planChecks } from '#cli/planning/checks.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { runCheckImplementation } from '#cli/runs/check-run.ts';
+import { runCheckCode } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { checkFindings, planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 import {
@@ -37,13 +37,12 @@ test('tsc: a scope whose project lists no JavaScript file passes with nothing to
         writeGeneratedFiles(session, generate(session), writer);
     }
     const reopened = await openSession(sandbox.path);
-    const site = planRun(reopened, {
+    const site = planChecks(reopened, {
         stage: 'push',
-
         only: ['javascript/tsc'],
         staged: ['gspot.toml'],
     }).find((entry) => entry.selection.scope.path === 'site')!;
-    expect(await runCheckImplementation(reopened, site, selectCheckImplementation(site.check))).toMatchObject({
+    expect(await runCheckCode(reopened, site, findCheckCode(site.check))).toMatchObject({
         check: 'javascript/tsc',
         scope: 'site',
         status: 'passed',

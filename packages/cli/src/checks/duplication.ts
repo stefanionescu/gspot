@@ -1,16 +1,17 @@
 import { writeFileSync } from 'node:fs';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { type Finding } from '#cli/types/runs/check.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { listCoveredFiles } from '#cli/repository/coverage.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { parseReport, parseJsonFile } from '#cli/parsers/json.ts';
-import { createScratchFolder } from '#cli/system/files/folders.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { listCoveredFiles } from '#cli/repository/covered-files.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { parseJsonFile, parseToolReport } from '#cli/parsers/json.ts';
 import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { cloneReportSchema } from '#cli/schemas/checks/duplication.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
@@ -24,13 +25,13 @@ import { JSCPD, JSCPD_ARGUMENTS, JSCPD_TOOL_FILE, JSCPD_REPORT_FILE } from '#cli
  * @param planned the scope whose source files to compare.
  * @returns the findings.
  */
-export async function checkJscpd(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    using workFolder = createScratchFolder();
+export async function checkDuplicationJscpd(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    using workFolder = createTemporaryFolder();
     const work = workFolder.path;
     const owned = [
         ...new Set(
-            filterSourceConfigurations(planned.selection.selected).flatMap((manifest) =>
-                listCoveredFiles(manifest.files, planned.files, {
+            filterSourceConfigurations(planned.selection.selected).flatMap((configuration) =>
+                listCoveredFiles(configuration.files, planned.files, {
                     selected: planned.selection.selected,
                     scope: planned.selection.scope.path,
                     view: planned.selection.view,
@@ -60,7 +61,7 @@ export async function checkJscpd(session: Session, planned: PlannedCheck): Promi
             cause: error,
         });
     }
-    const report = parseReport(JSCPD, bytes.toString('utf8'), cloneReportSchema);
+    const report = parseToolReport(JSCPD, bytes.toString('utf8'), cloneReportSchema);
     const normalizeClonePath = (name: string): string =>
         convertToPosixPath(isAbsolute(name) ? relative(toNamespacedPath(session.root), toNamespacedPath(name)) : name);
     return report.duplicates.flatMap((clone): Finding[] => {

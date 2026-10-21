@@ -5,10 +5,11 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { spawnRootCheck } from '#tests/setup/run-gspot.ts';
 import { shareProseSandbox } from '#tests/setup/sandbox.ts';
+import { PROSE_GRAMMARS } from '#cli/config/checks/prose.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { TOKEN_IGNORES, PROSE_GRAMMARS } from '#cli/config/generation/vale.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { TOKEN_IGNORES } from '#cli/config/generation/settings/builders/vale.ts';
 import { VALE_INI, PROSE_CASES, CONCRETE_RULE, PROSE_SANDBOX } from '#tests/data/checks/prose.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 
 test('prose/vale reports a finding in a .sh file and passes after the fix', async () => {
     await using folder = await testdir();
@@ -108,5 +109,5 @@ const installedSandbox = shareProseSandbox();
 
 test.each([...PROSE_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
     const result = await runCheckSample(installedSandbox(), entry, PROSE_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });

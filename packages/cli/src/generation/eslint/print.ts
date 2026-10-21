@@ -2,24 +2,22 @@
 import ts from 'typescript';
 import { isDeepStrictEqual } from 'node:util';
 import type { Level } from '#cli/types/configurations.ts';
-import { JSON_INDENT } from '#cli/config/generation/files.ts';
-import { ESLINT_INDENT, COMPONENT_MATCHERS, ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint.ts';
+import { ESLINT_INDENT, COMPONENT_MATCHERS, ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint/print.ts';
 
 import type {
     EslintPlugins,
-    EslintRuntimeBlock,
-    EslintFileSelector,
-    EslintSettingsBlock,
+    EslintFileMatcher,
+    EslintBlockFields,
     EslintRuleExpression,
 } from '#cli/types/generation/eslint.ts';
 
-function serializeSelector(selector: EslintFileSelector): string {
-    if (typeof selector === 'string') return JSON.stringify(selector);
-    if ('component' in selector) return COMPONENT_MATCHERS[selector.component];
-    return `runtimeMatches(${String(selector.runtime)}, runtimeDeclarations)`;
+function serializeFileMatcher(matcher: EslintFileMatcher): string {
+    if (typeof matcher === 'string') return JSON.stringify(matcher);
+    if ('component' in matcher) return COMPONENT_MATCHERS[matcher.component];
+    return `runtimeMatches(${String(matcher.runtime)}, runtimeDeclarations)`;
 }
 
-function serializeRules(rules: EslintSettingsBlock['rules'], level: Level | undefined): string {
+function serializeRules(rules: EslintBlockFields['rules'], level: Level | undefined): string {
     const entries = rules === undefined ? [] : Object.entries(rules);
     return entries
         .map(([name, value]) => {
@@ -38,7 +36,7 @@ function serializeRules(rules: EslintSettingsBlock['rules'], level: Level | unde
 }
 
 function serializePresetRules(
-    rules: EslintSettingsBlock['rules'],
+    rules: EslintBlockFields['rules'],
     preset: EslintRuleExpression,
     level: Level | undefined,
 ): string {
@@ -61,8 +59,8 @@ function serializePresetRules(
  *
  * @returns a JavaScript configuration block.
  */
-function serializeBlock(
-    block: EslintSettingsBlock,
+export function serializeBlock(
+    block: EslintBlockFields,
     options: {
         properties?: string | undefined;
         preset?: EslintRuleExpression | undefined;
@@ -78,8 +76,8 @@ function serializeBlock(
         parts.push(`rules: { ${serializeRules(rules, level)} }`);
     if (files !== undefined) {
         const expressions = files.map((entry) => {
-            if (!Array.isArray(entry)) return serializeSelector(entry);
-            const sources = entry.map((selector) => serializeSelector(selector)).join(', ');
+            if (!Array.isArray(entry)) return serializeFileMatcher(entry);
+            const sources = entry.map((selector) => serializeFileMatcher(selector)).join(', ');
             return `[${sources}]`;
         });
         parts.push(`files: [${expressions.join(', ')}]`);
@@ -132,26 +130,16 @@ function printConfiguration(literal: string): string {
 }
 
 /**
- * Serialize the runtime declarations used by the shared file selectors.
- *
- * @param runtimes the ordered runtime declarations and their file selectors.
- * @returns the JavaScript declaration shared by runtime file matchers.
- */
-function serializeRuntimeSelectors(runtimes: EslintRuntimeBlock[]): string {
-    return `const runtimeDeclarations = ${JSON.stringify(runtimes, null, JSON_INDENT)};\n`;
-}
-
-/**
  * Serialize the expression that reads the preset export of the manifest.
  *
- * @param variable the import name of the preset package.
+ * @param importName the import name of the preset package.
  * @param source the dotted path of the export, or empty for the whole import.
  *
  * @returns the expression that reads the preset.
  */
-function serializePresetAccess(variable: string, source: string): string {
+export function serializePresetAccess(importName: string, source: string): string {
     return (
-        variable +
+        importName +
         (source === ''
             ? ''
             : source
@@ -165,13 +153,13 @@ function serializePresetAccess(variable: string, source: string): string {
  * Serialize the fixed imports and the plugins before the fragment imports.
  *
  * @param plugins the import names and packages to load.
- * @param fragments additional imported bindings and packages.
+ * @param configurationPlugins additional imported bindings and packages.
  *
  * @returns the imports of the generated file.
  */
-function serializeImports(plugins: EslintPlugins, fragments: EslintPlugins): string {
+export function serializeImports(plugins: EslintPlugins, configurationPlugins: EslintPlugins): string {
     const imports = new Map(
-        [...ESLINT_BASE_IMPORTS, ...Object.values(plugins), ...Object.values(fragments)].map((entry) => [
+        [...ESLINT_BASE_IMPORTS, ...Object.values(plugins), ...Object.values(configurationPlugins)].map((entry) => [
             JSON.stringify(entry),
             entry,
         ]),
@@ -189,11 +177,9 @@ function serializeImports(plugins: EslintPlugins, fragments: EslintPlugins): str
  * @param source a serialized block or comment.
  * @returns the indented text.
  */
-function indentEslintBlock(source: string): string {
+export function indentEslintBlock(source: string): string {
     return source
         .split('\n')
         .map((line) => ESLINT_INDENT + line)
         .join('\n');
 }
-
-export { serializeBlock, serializeImports, indentEslintBlock, serializePresetAccess, serializeRuntimeSelectors };

@@ -3,7 +3,7 @@ import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -12,9 +12,9 @@ import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
 import { typeScriptConfigSchema } from '#cli/schemas/parsers/tsconfig.ts';
 import { isInside, convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
-import { TSCONFIG_FILE, TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
+import { TSCONFIG_FILE, TSC_NO_FILES_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
 
-const TSCONFIG_MEMO = { create: () => new Map<string, TypeScriptConfiguration | undefined>() };
+const PARSED_TSCONFIGS = { create: () => new Map<string, TypeScriptConfiguration | undefined>() };
 
 /**
  * Read a project and every project it references, with the run cache.
@@ -74,7 +74,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
     );
     // The option and alias readers also read tsconfig files with no input files.
     const errors = parsed.errors.filter(
-        (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TS_NO_INPUTS_CODE,
+        (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TSC_NO_FILES_CODE,
     );
     if (errors.length > 0)
         throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));
@@ -95,7 +95,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
  * @param options the parsed compiler settings.
  * @returns a compiler host that reads through the cache.
  */
-function buildCompilerHost(
+export function buildCompilerHost(
     repositoryRoot: string,
     scope: string,
     reads: ReadCache,
@@ -168,8 +168,12 @@ function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache
  * @param reads the run cache.
  * @returns the parsed settings, or undefined when the file does not exist.
  */
-function readTsconfig(repositoryRoot: string, path: string, reads: ReadCache): TypeScriptConfiguration | undefined {
-    const configurations = getCachedValue(reads, TSCONFIG_MEMO);
+export function readTsconfig(
+    repositoryRoot: string,
+    path: string,
+    reads: ReadCache,
+): TypeScriptConfiguration | undefined {
+    const configurations = getCachedValue(reads, PARSED_TSCONFIGS);
     const key = JSON.stringify([repositoryRoot, resolve(path)]);
     if (configurations.has(key)) return configurations.get(key);
     try {
@@ -198,7 +202,7 @@ function readTsconfig(repositoryRoot: string, path: string, reads: ReadCache): T
  * @param reads the run cache.
  * @returns the project, or undefined for a standalone scope.
  */
-function readTsconfigProject(
+export function readTsconfigProject(
     repositoryRoot: string,
     scope: string,
     files: string[],
@@ -228,7 +232,7 @@ function readTsconfigProject(
  * @param config the parsed project.
  * @returns resolved source files without installed or compiler libraries.
  */
-function listSourceFiles(
+export function listSourceFiles(
     repositoryRoot: string,
     scope: string,
     reads: ReadCache,
@@ -246,5 +250,3 @@ function listSourceFiles(
             (source) => !program.isSourceFileDefaultLibrary(source) && !program.isSourceFileFromExternalLibrary(source),
         );
 }
-
-export { readTsconfig, listSourceFiles, buildCompilerHost, readTsconfigProject };

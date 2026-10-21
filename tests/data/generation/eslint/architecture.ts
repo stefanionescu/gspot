@@ -1,10 +1,12 @@
+const MODULE_TSCONFIG =
+    '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[]},"include":["app/**/*.ts","storage/**/*.ts"]}\n';
 export const MODULE_CASES = [
-    { level: 'recommended', declarations: 'none' } as const,
-    { level: 'recommended', declarations: 'root' } as const,
-    { level: 'recommended', declarations: 'scoped' } as const,
-    { level: 'all', declarations: 'none' } as const,
-    { level: 'all', declarations: 'root' } as const,
-    { level: 'all', declarations: 'scoped' } as const,
+    { level: 'recommended', declarations: 'none' },
+    { level: 'recommended', declarations: 'root' },
+    { level: 'recommended', declarations: 'scoped' },
+    { level: 'all', declarations: 'none' },
+    { level: 'all', declarations: 'root' },
+    { level: 'all', declarations: 'scoped' },
 ] as const;
 
 export const MODULE_TABLES = {
@@ -40,10 +42,8 @@ paths = [ "apps/api/storage/**" ]
 
 export const MODULE_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
-    'tsconfig.json':
-        '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[]},"include":["app/**/*.ts","storage/**/*.ts"]}\n',
-    'apps/api/tsconfig.json':
-        '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[]},"include":["app/**/*.ts","storage/**/*.ts"]}\n',
+    'tsconfig.json': MODULE_TSCONFIG,
+    'apps/api/tsconfig.json': MODULE_TSCONFIG,
     'app/source.ts': "import { value } from '../storage/value.js';\nexport const result = value;\n",
     'storage/value.ts': 'export const value = 1;\n',
     'app/value.ts': 'export const value = 2;\n',

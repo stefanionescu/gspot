@@ -1,17 +1,17 @@
 import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import { type Session } from '#cli/types/session.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { readPythonEnvironment } from '#cli/parsers/python.ts';
-import { listTaggedExtensions } from '#cli/repository/classify.ts';
-import { readJavascriptEnvironment } from '#cli/parsers/typescript.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/commits.ts';
+import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/environment.ts';
 
 import {
     ENV_KEY_LINE,
@@ -25,13 +25,13 @@ import {
 async function readEnvironmentReferences(
     session: Session,
     path: string,
-    readers: string[],
+    environmentFunctions: string[],
 ): Promise<EnvironmentRead[]> {
     const text = readCachedText(session.reads, path);
-    if (!path.endsWith('.py')) return readJavascriptEnvironment(path, text, readers);
+    if (!path.endsWith('.py')) return listJavascriptEnvironmentReads(path, text, environmentFunctions);
     const tree = await parseSource('python', text, session);
     try {
-        return readPythonEnvironment(tree.rootNode, readers);
+        return listPythonEnvironmentReads(tree.rootNode, environmentFunctions);
     } finally {
         tree.delete();
     }
@@ -88,7 +88,10 @@ export async function checkSecretsGitleaksPushed(session: Session, planned: Plan
  * @returns the findings.
  */
 export async function checkSecretsEnvExamples(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const { env_examples: names, environment_functions: readers } = getTable(planned.selection.view, 'secrets');
+    const { env_examples: names, environment_functions: environmentFunctions } = getTable(
+        planned.selection.view,
+        'secrets',
+    );
     const examples = planned.files.filter((file) => names.includes(posix.basename(file.path)));
     if (examples.length === 0)
         throw new GspotError(
@@ -110,7 +113,7 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
     );
     const findings: Finding[] = [];
     for (const file of candidates) {
-        const reads = await readEnvironmentReferences(session, file.path, readers);
+        const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
         findings.push(...findMissingEnvironmentKeys(planned, file.path, reads, known));
     }
     return findings;

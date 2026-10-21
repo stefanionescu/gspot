@@ -1,5 +1,5 @@
 export const SENSITIVE_FILES = {
-    'package.json': '{"private":true,"dependencies":{"jsonwebtoken":"9.0.2"}}',
+    'package.json': '{"private":true,"dependencies":{"jsonwebtoken":"0.0.0-test"}}',
     'javascript.js': `console.info(process.env.API_TOKEN);
 auditLogger.warn(process.env.API_SECRET);
 this.logger.error(process.env.PASSWORD);

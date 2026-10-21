@@ -11,7 +11,7 @@ import { shareProseSandbox, applySandboxChanges } from '#tests/setup/sandbox.ts'
 const installedSandbox = shareProseSandbox();
 
 test.each([...LEVELS])('prose/vale checks child files once at the root and reads the shared styles', async (level) => {
-    const sandbox = { path: installedSandbox().root };
+    const { root } = installedSandbox();
     const path = 'child/only.md';
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: '',
@@ -27,7 +27,7 @@ Read [here](only.md).
         },
     });
 
-    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', path, '--only', 'prose/vale', '--json']));
+    const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const checks = checked.report.checks.filter((check) => check.status !== 'skipped');
     expect(checks.map((check) => check.scope)).toStrictEqual(['']);
@@ -43,7 +43,7 @@ Read [here](only.md).
     ).toStrictEqual([{ file: path, line: 3 }]);
 });
 test('a Vale ignore with a lint rule and a path keeps findings in other files', async () => {
-    const folder = { path: installedSandbox().root };
+    const { root } = installedSandbox();
     const settings = buildSandboxSettings([]);
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: '',
@@ -56,7 +56,7 @@ test('a Vale ignore with a lint rule and a path keeps findings in other files', 
     const environment = {};
 
     const command = ['check', '--only', 'prose/vale', '--json'];
-    const before = parseCheckReport(await spawnGspot(folder.path, command, environment));
+    const before = parseCheckReport(await spawnGspot(root, command, environment));
     expect(before.code, before.stdout + before.stderr).toBe(1);
     expect(
         before.report.checks[0]?.findings.map(({ file, rule, line }) => ({
@@ -69,7 +69,7 @@ test('a Vale ignore with a lint rule and a path keeps findings in other files', 
         { file: 'guide.md', rule: 'gspot.dates', line: 3 },
     ]);
     const ignored = await spawnGspot(
-        folder.path,
+        root,
         [
             'ignore',
             'prose/vale',
@@ -83,22 +83,22 @@ test('a Vale ignore with a lint rule and a path keeps findings in other files', 
         environment,
     );
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const after = parseCheckReport(await spawnGspot(folder.path, command, environment));
+    const after = parseCheckReport(await spawnGspot(root, command, environment));
     expect(after.code, after.stdout + after.stderr).toBe(1);
     const report = after.report;
     expect(report.checks[0]?.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'guide.md', rule: 'gspot.dates' },
     ]);
     expect(report.ignores).toContainEqual(matchFields({ check: 'prose/vale', rule: 'gspot.dates' }));
-    await writeFile(join(folder.path, 'guide.md'), '# Schedule\n\nRelease on March 4, 2026.\n');
-    const corrected = await spawnGspot(folder.path, command, environment);
+    await writeFile(join(root, 'guide.md'), '# Schedule\n\nRelease on March 4, 2026.\n');
+    const corrected = await spawnGspot(root, command, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
 test.each([...LEVELS])(
     'prose/vale at level %s runs the gspot package rules without the Microsoft and Red Hat packages',
     async (level) => {
-        const sandbox = { path: installedSandbox().root };
+        const { root } = installedSandbox();
         const sample = PACKAGE_STYLE_CASES.map(({ sample }) => sample).join('\n\n') + '\n';
         const path = 'sample.md';
         const scope = '';
@@ -108,10 +108,8 @@ test.each([...LEVELS])(
             files: { 'gspot.toml': settings, [path]: sample },
         });
 
-        const appliedSettings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-        const checked = parseCheckReport(
-            await spawnGspot(sandbox.path, ['check', path, '--only', 'prose/vale', '--json']),
-        );
+        const appliedSettings = await readFile(join(root, 'gspot.toml'), 'utf8');
+        const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
         expect(checked.code, checked.stdout + checked.stderr).toBe(level === 'all' ? 1 : 0);
         const result = checked.report.checks.find((check) => check.scope === scope)!;
         const rules = result.findings.map(({ rule }) => rule);
@@ -121,17 +119,17 @@ test.each([...LEVELS])(
         expect(
             rules.some((rule) => rule?.startsWith('Microsoft.') === true || rule?.startsWith('RedHat.') === true),
         ).toBe(false);
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(sample);
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(appliedSettings);
+        expect(await readFile(join(root, path), 'utf8')).toBe(sample);
+        expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(appliedSettings);
         await writeFile(
-            join(sandbox.path, path),
+            join(root, path),
             `# Guide
 
 Read the guide.
 `,
         );
         const correctedCommand = parseCheckReport(
-            await spawnGspot(sandbox.path, ['check', path, '--only', 'prose/vale', '--json']),
+            await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']),
         );
         expect(correctedCommand.code, correctedCommand.stdout + correctedCommand.stderr).toBe(0);
         const corrected = correctedCommand.report.checks.find((check) => check.scope === scope)!;

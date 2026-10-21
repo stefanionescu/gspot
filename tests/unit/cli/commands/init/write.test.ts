@@ -7,8 +7,8 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/init.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
 import { EDITED_STYLELINT_PACKAGE } from '#tests/data/commands/init.ts';
 import { simulateInteractiveTerminal } from '#tests/setup/environment.ts';
@@ -65,7 +65,7 @@ test('a failed init keeps the ordinary generated files already written', async (
     expect(refused.stderr).toBe(
         'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
     );
-    expect(await readFile(join(folder.path, '.gspot/version'), 'utf8')).toBe(`${packageManifest.version}\n`);
+    expect(await readFile(join(folder.path, '.gspot/version'), 'utf8')).toBe(`${cliPackage.version}\n`);
 });
 
 test('init keeps the old tool file when the generated one cannot be written', async () => {

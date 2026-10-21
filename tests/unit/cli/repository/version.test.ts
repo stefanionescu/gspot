@@ -4,8 +4,8 @@ import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { readVersionPin, assertVersionPin } from '#cli/repository/version.ts';
 
@@ -32,14 +32,14 @@ test('the version pin is written, read, and refused when it differs', async () =
     expect(readVersionPin(sandbox.path)).toBeUndefined();
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(readVersionPin(sandbox.path)).toBe(packageManifest.version);
+    expect(readVersionPin(sandbox.path)).toBe(cliPackage.version);
     await assertVersionPin(sandbox.path);
     await writeFile(join(sandbox.path, '.gspot/version'), '9.9.9\n');
     const refused: unknown = await assertVersionPin(sandbox.path).catch((error: unknown) => error);
     expect(refused).toHaveProperty(
         'message',
         [
-            `This repository pins gspot 9.9.9, and you are running gspot ${packageManifest.version}.`,
+            `This repository pins gspot 9.9.9, and you are running gspot ${cliPackage.version}.`,
             'Install the pinned version: mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@9.9.9',
             'To upgrade the repository pin to this version: gspot apply',
         ].join('\n'),
@@ -65,5 +65,5 @@ test('a different saved version permits checks and blocks fixes until apply upda
     expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(readVersionPin(sandbox.path)).toBe(packageManifest.version);
+    expect(readVersionPin(sandbox.path)).toBe(cliPackage.version);
 });

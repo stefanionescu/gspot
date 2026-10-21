@@ -1,8 +1,9 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 import {
     WORD,
@@ -13,7 +14,7 @@ import {
     SHELLCHECK_TOOL_COMMENT,
 } from '#cli/config/checks/bash.ts';
 
-function collectCommentBlock(lines: string[], start: number): string[] {
+function findCommentBlock(lines: string[], start: number): string[] {
     const block: string[] = [];
     let index = start - 1;
     while (index > 0) {
@@ -74,7 +75,7 @@ export async function checkBashDocComments(session: Session, planned: PlannedChe
     return scripts.flatMap((file) => {
         return file.functions.flatMap((entry) => {
             if (entry.name === MAIN_FUNCTION) return [];
-            const found = validateDocComment(entry, collectCommentBlock(file.lines, entry.start));
+            const found = validateDocComment(entry, findCommentBlock(file.lines, entry.start));
             return found === undefined
                 ? []
                 : [buildFinding(planned, { file: file.path, line: entry.start }, found.rule, found.message)];

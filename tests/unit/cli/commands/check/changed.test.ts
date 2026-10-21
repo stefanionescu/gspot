@@ -9,6 +9,15 @@ import { buildReportingCheck } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
+async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {
+    const gspotToml = stringify({
+        configurations: [],
+        command_check: [buildReportingCheck({ name: 'sandbox/paths', paths: ['api/**', 'web/**'], stage: 'commit' })],
+    });
+
+    await createFileTree(root, { 'gspot.toml': gspotToml, ...files });
+}
+
 test('--changed compares with the merge base, names its base, and a folder argument stays a path', async () => {
     await using sandbox = await testdir();
     await prepareChangedRepository(sandbox.path, {
@@ -81,14 +90,3 @@ test('a shallow clone explains how to fetch the missing history', async () => {
     expect(result.code).toBe(2);
     expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain('git fetch --unshallow');
 });
-
-async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {
-    const gspotToml = stringify({
-        configurations: [],
-        command_check: [
-            { ...buildReportingCheck({ name: 'sandbox/paths', paths: ['api/**', 'web/**'], stage: 'commit' }) },
-        ],
-    });
-
-    await createFileTree(root, { 'gspot.toml': gspotToml, ...files });
-}

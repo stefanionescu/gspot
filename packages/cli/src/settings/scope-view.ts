@@ -1,22 +1,69 @@
-import { isScopeCovered } from '#cli/repository/scopes.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
-import { getValueAt, createTable } from '#cli/system/values.ts';
-import type { IgnoreRecord } from '#cli/types/settings/file.ts';
+import { getValueAt, createTable } from '#cli/system/tables.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/parts.ts';
-import type { TableValues, TableSettings } from '#cli/types/settings/tables.ts';
-import { listSettings, getSettingValue, getSettingTable } from '#cli/settings/inherit.ts';
+import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { findSettingSchema, rootSettingSchemas } from '#cli/schemas/settings/gspot-toml.ts';
 import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
+import { selectConfigurations, listAutomaticConfigurations } from '#cli/configurations/select.ts';
+import { getSettingValue, getSettingTable, listEffectiveSettings } from '#cli/settings/inherit.ts';
+import type { Settings, TableValues, IgnoreRecord, TableSettings } from '#cli/types/settings/file.ts';
 
-import {
-    type Settings,
-    type ScopeView,
-    type KnownSettings,
-    type ScopeSettings,
-    type ScopeSelection,
-    type EffectiveSetting,
-} from '#cli/types/settings/values.ts';
+import type {
+    Scope,
+    ScopeView,
+    KnownSettings,
+    ScopeSettings,
+    EffectiveSetting,
+    ConfigurationSelection,
+} from '#cli/types/settings/inheritance.ts';
+
+/**
+ * Find the nearest scope that holds a path.
+ *
+ * @param scopes every project selection.
+ * @param path the repository-relative destination.
+ *
+ * @returns the scope, or undefined at the root.
+ */
+export function findParentSelection(scopes: Scope[], path: string): Scope | undefined {
+    return scopes
+        .filter(({ scope }) => scope.path !== path && isInScope(path, scope.path))
+        .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path))
+        .at(-1);
+}
+
+/**
+ * Select the manifests of the root and each parent scope, each once, in order.
+ *
+ * @param settings the written selections.
+ * @param settings.configurations the root choices.
+ * @param settings.scopes each folder with its written choices.
+ * @param settings.removed_configurations the names that you removed.
+ * @param scope the folder to select for.
+ * @param configurations every configuration manifest.
+ * @returns the manifests in order.
+ */
+export function selectForScope(
+    settings: ConfigurationSelection,
+    scope: string,
+    configurations: Map<string, Configuration>,
+): Configuration[] {
+    const automatic = listAutomaticConfigurations(configurations);
+    const choices = new Set<string>();
+    const tables = [
+        settings,
+        ...Object.entries(settings.scopes)
+            .filter(([ancestor]) => isInScope(scope, ancestor))
+            .toSorted(([left], [right]) => compareScopeDepth(left, right))
+            .map(([, entry]) => entry),
+    ];
+    for (const table of tables) {
+        for (const removed of table.removed_configurations) choices.delete(removed);
+        for (const configuration of table.configurations) choices.add(configuration);
+    }
+    return selectConfigurations([...choices, ...automatic], configurations);
+}
 
 function listNamingVariants(known: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
     return SETTING_LANGUAGES.flatMap((language) =>
@@ -25,20 +72,20 @@ function listNamingVariants(known: KnownSettings, settings: Settings, scope: str
             ...NAMING_LANGUAGE_CATEGORIES[language].map((category) => `naming.${language}.${category}.${field}`),
         ]),
     )
-        .filter((key) => !known.declarations.has(key))
+        .filter((key) => !known.settings.has(key))
         .map((key) => getSettingValue(known, settings, key, scope))
         .filter((row) => row !== undefined);
 }
 
 function listLimitVariants(known: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
-    return [...known.declarations.values()]
-        .filter((declaration) => declaration.name.startsWith('limits.') && declaration.type === 'number')
-        .flatMap((declaration) =>
-            (declaration.languages ?? []).map(
-                (language) => `limits.${language}.${declaration.name.slice(declaration.name.lastIndexOf('.') + 1)}`,
+    return [...known.settings.values()]
+        .filter((setting) => setting.name.startsWith('limits.') && setting.type === 'number')
+        .flatMap((setting) =>
+            (setting.languages ?? []).map(
+                (language) => `limits.${language}.${setting.name.slice(setting.name.lastIndexOf('.') + 1)}`,
             ),
         )
-        .filter((key) => !known.declarations.has(key))
+        .filter((key) => !known.settings.has(key))
         .map((key) => getSettingValue(known, settings, key, scope))
         .filter((row) => row !== undefined);
 }
@@ -52,11 +99,16 @@ function listLimitVariants(known: KnownSettings, settings: Settings, scope: stri
  * @param scope the folder, '' for the root.
  * @returns the view the templates read.
  */
-function buildScopeView(known: KnownSettings, settings: Settings, selected: Manifest[], scope: string): ScopeView {
+export function buildScopeView(
+    known: KnownSettings,
+    settings: Settings,
+    selected: Configuration[],
+    scope: string,
+): ScopeView {
     const { settings: entries, values, test_files: testFiles } = buildScopeSettings(known, settings, scope);
     const ignores = settings.ignore.map((entry) => ({ ...entry, paths: entry.paths ?? [] }));
     return {
-        configurations: selected.map((manifest) => manifest.configuration.name),
+        configurations: selected.map((configuration) => configuration.name),
         test_files: testFiles,
         settings: entries,
         values,
@@ -71,7 +123,7 @@ function buildScopeView(known: KnownSettings, settings: Settings, selected: Mani
  * @param name the table's dotted name.
  * @returns the requested table.
  */
-function getTable<Name extends keyof TableValues>(view: ScopeView, name: Name): TableSettings<Name> {
+export function getTable<Name extends keyof TableValues>(view: ScopeView, name: Name): TableSettings<Name> {
     const value = view.values[name];
     if (value === undefined) throw new Error(`The selected scope has no ${name} settings.`);
     return value;
@@ -85,7 +137,7 @@ function getTable<Name extends keyof TableValues>(view: ScopeView, name: Name): 
  * @param language the language, if the check reads a language-specific value.
  * @returns the numeric limit.
  */
-function getLimit(view: ScopeView, key: string, language?: string): number {
+export function getLimit(view: ScopeView, key: string, language?: string): number {
     const value = getValueAt(view.values.limits, [language ?? '', key]) ?? getValueAt(view.values.limits, [key]);
     if (typeof value !== 'number')
         throw new Error(
@@ -101,7 +153,7 @@ function getLimit(view: ScopeView, key: string, language?: string): number {
  * @param check the check name.
  * @returns the matching ignores with normalized paths.
  */
-function listIgnores(view: ScopeView, check: string): ScopeView['ignores'] {
+export function listIgnores(view: ScopeView, check: string): ScopeView['ignores'] {
     return view.ignores.filter((entry) => entry.check === check || entry.check === undefined);
 }
 
@@ -112,7 +164,7 @@ function listIgnores(view: ScopeView, check: string): ScopeView['ignores'] {
  * @param check the check name.
  * @returns the disabled rule names.
  */
-function listIgnoredRules(selection: ScopeSelection, check: string): string[] {
+export function listIgnoredRules(selection: Scope, check: string): string[] {
     return selection.view.ignores
         .filter((entry) => entry.check === check)
         .filter((entry) => entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path))
@@ -129,7 +181,7 @@ function listIgnoredRules(selection: ScopeSelection, check: string): string[] {
  * @returns typed execution values without adding defaults to written tables.
  */
 function buildScopeSettings(known: KnownSettings, settings: Settings, scope: string): ScopeSettings {
-    const listed = listSettings(known, settings, scope);
+    const listed = listEffectiveSettings(known, settings, scope);
     const entries = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
     fillTableValues(namespaces, listed);
@@ -146,10 +198,10 @@ function buildScopeSettings(known: KnownSettings, settings: Settings, scope: str
 /**
  * Fill settings tables from direct settings and their declared naming variants.
  *
- * @param namespaces the run tables of the scope.
+ * @param tables the run tables of the scope.
  * @param rows the values that the declarations already resolved.
  */
-function fillTableValues(namespaces: Record<string, unknown>, rows: EffectiveSetting[]): void {
+function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting[]): void {
     const entries = rows
         .filter(
             (row) =>
@@ -163,11 +215,11 @@ function fillTableValues(namespaces: Record<string, unknown>, rows: EffectiveSet
             return { row, name, path: path.slice(0, -1), field: path.slice(-1).join('') };
         });
     for (const { row, name } of entries.filter(({ row }) => row.value === undefined)) {
-        if (createTable(namespaces, [name]) === undefined)
+        if (createTable(tables, [name]) === undefined)
             throw new Error(`The setting ${row.key} runs through a non-table value.`);
     }
     for (const { row, name, path, field } of entries.filter(({ row }) => row.value !== undefined)) {
-        const table = createTable(namespaces, [name, ...path]);
+        const table = createTable(tables, [name, ...path]);
         if (table === undefined) throw new Error(`The setting ${row.key} runs through a non-table value.`);
         table[field] = row.reason === undefined ? row.value : { value: row.value, reason: row.reason };
     }
@@ -179,7 +231,7 @@ function fillTableValues(namespaces: Record<string, unknown>, rows: EffectiveSet
  * @param scopes the selection of each scope, the root among them.
  * @returns the selection of the scope with an empty path.
  */
-function findRootSelection(scopes: readonly ScopeSelection[]): ScopeSelection {
+export function findRootSelection(scopes: readonly Scope[]): Scope {
     const root = scopes.find((selection) => selection.scope.path === '');
     if (root === undefined) throw new Error('The scopes hold no repository root.');
     return root;
@@ -191,8 +243,6 @@ function findRootSelection(scopes: readonly ScopeSelection[]): ScopeSelection {
  * @param entry the ignore record.
  * @returns whether the ignore keeps its paths out of the check.
  */
-function isFileIgnore(entry: Pick<IgnoreRecord, 'rule' | 'names'>): boolean {
+export function isFileIgnore(entry: Pick<IgnoreRecord, 'rule' | 'names'>): boolean {
     return entry.rule === undefined && entry.names === undefined;
 }
-
-export { getTable, getLimit, listIgnores, isFileIgnore, buildScopeView, listIgnoredRules, findRootSelection };

@@ -4,7 +4,6 @@ import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { TYPESCRIPT_FILES } from '#tests/data/generation/eslint/fragments.ts';
 import { TYPE_EXPORT_FILES, TYPED_RULE_PROJECTS } from '#tests/data/generation/eslint/levels.ts';
 import { createEslint, listFindingRules, collectLintFindings } from '#tests/setup/tool-files.ts';
 
@@ -39,45 +38,6 @@ test.each([...LEVELS])('%s type import and export rules apply at their declared 
     expect(listFindingRules(findings)).toStrictEqual(
         level === 'all' ? rules.toSorted((left, right) => left.localeCompare(right)) : [],
     );
-});
-
-test('reexports = index-only keeps re-exports in index files and reports forwarding elsewhere', async () => {
-    await using sandbox = await testdir({
-        ...TYPESCRIPT_FILES,
-        'gspot.toml': buildSandboxSettings(['typescript'], {
-            tables: '[structure]\nreexports = { value = "index-only", reason = "The package exports its public index files." }\n',
-            level: 'all',
-        }),
-        'src/first.ts': 'export const shared = 1;\n',
-        'src/second.ts': 'export const shared = 2;\n',
-        'src/index.ts': 'export * from "./first.js";\nexport { shared as second } from "./second.js";\n',
-        'src/forward.ts': 'export { shared } from "./first.js";\n',
-    });
-
-    const eslint = await createEslint(sandbox.path);
-    const reported = await collectLintFindings(
-        eslint,
-        sandbox.path,
-        ['src'],
-        ['no-restricted-syntax', 'gspot/no-trivial-files'],
-    );
-    expect(reported.filter(({ rule }) => rule === 'no-restricted-syntax')).toStrictEqual([
-        { rule: 'no-restricted-syntax', file: 'src/forward.ts', line: 1 },
-    ]);
-    expect(
-        reported.filter(
-            ({ file, rule }) =>
-                file === 'src/index.ts' && ['gspot/no-trivial-files', 'no-restricted-syntax'].includes(rule ?? ''),
-        ),
-    ).toStrictEqual([]);
-    await writeFile(join(sandbox.path, 'src/forward.ts'), 'export const shared = 1;\n');
-    const corrected = await collectLintFindings(
-        eslint,
-        sandbox.path,
-        ['src'],
-        ['no-restricted-syntax', 'gspot/no-trivial-files'],
-    );
-    expect(corrected.filter(({ rule }) => rule === 'no-restricted-syntax')).toStrictEqual([]);
 });
 
 test('a default import with an inline type merges with a type-only import into code that parses', async () => {

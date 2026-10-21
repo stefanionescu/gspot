@@ -1,27 +1,19 @@
 import { testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { test, expect, describe } from 'bun:test';
 import { buildTrackedFile } from '#tests/setup/builders.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { selectForScope, buildFileMatcher, listCoveredFiles } from '#cli/repository/coverage.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { buildFileMatcher, listCoveredFiles } from '#cli/repository/covered-files.ts';
 import { DECLARATION_FILES, GENERATED_SELECTIONS } from '#tests/data/repository/file-classification.ts';
-
-import {
-    JEST_CASES,
-    JEST_PATHS,
-    MIGRATION_CASES,
-    MIGRATION_PATHS,
-    PROJECT_CHOICES,
-    PROJECT_SELECTIONS,
-} from '#tests/data/configurations/detection.ts';
+import { JEST_CASES, JEST_PATHS, MIGRATION_CASES, MIGRATION_PATHS } from '#tests/data/configurations/detection.ts';
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
-    const manifests = readManifests();
+    const configurations = readConfigurations();
 
-    const bash = manifests.get('bash')!;
+    const bash = configurations.get('bash')!;
     expect(buildFileMatcher(bash.files)(buildTrackedFile('scripts/build.sh'))).toBe(true);
     expect(buildFileMatcher(bash.files)(buildTrackedFile('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(
         true,
@@ -35,12 +27,12 @@ test('files are covered by extension, file name at any depth, tag and glob', () 
 });
 
 test('a configuration that covers the language files gets them', () => {
-    const manifests = readManifests();
+    const configurations = readConfigurations();
 
-    const selected = selectConfigurations(['bash'], manifests);
-    const structure = manifests.get('structure')!;
+    const selected = selectConfigurations(['bash'], configurations);
+    const structure = configurations.get('structure')!;
     const owned = listCoveredFiles(structure.files, [buildTrackedFile('a.sh'), buildTrackedFile('README.md')], {
-        selected: selected,
+        selected,
         scope: '',
         view: { test_files: [], settings: {} },
     });
@@ -57,8 +49,8 @@ test.each([
         ['format', 'typescript', 'svelte'],
         ['src/App.svelte', 'src/index.ts'],
     ],
-])('the Prettier plugin files follow the selected configurations %j', (configurations, expected) => {
-    const manifests = readManifests();
+])('the Prettier plugin files follow the selected configurations %j', (configurationNames, expected) => {
+    const configurations = readConfigurations();
 
     const files = [
         buildTrackedFile('src/Page.astro'),
@@ -66,8 +58,8 @@ test.each([
         buildTrackedFile('src/index.ts'),
     ];
     expect(
-        listCoveredFiles(manifests.get('format')!.files, files, {
-            selected: selectConfigurations(configurations, manifests),
+        listCoveredFiles(configurations.get('format')!.files, files, {
+            selected: selectConfigurations(configurationNames, configurations),
             scope: '',
             view: { test_files: [], settings: {} },
         }).map((entry) => entry.path),
@@ -77,69 +69,32 @@ test.each([
 test.each(MIGRATION_CASES)(
     'migration paths in scope "%s" are covered and other file kinds are not',
     (scope, expected) => {
-        const manifests = readManifests();
+        const configurations = readConfigurations();
 
-        const selected = selectConfigurations(['postgres'], manifests);
+        const selected = selectConfigurations(['postgres'], configurations);
         const files = MIGRATION_PATHS.map((path) => buildTrackedFile(path));
-        const table = manifests.get('postgres')!.files;
-        const owned = listCoveredFiles(table, files, {
-            selected: selected,
-            scope: scope,
-            view: { test_files: [], settings: {} },
-        });
+        const table = configurations.get('postgres')!.files;
+        const options = { selected, scope, view: { test_files: [], settings: {} } };
+        const owned = listCoveredFiles(table, files, options);
         expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
-        expect(
-            listCoveredFiles({ ...table, kinds: ['binary'] }, files, {
-                selected: selected,
-                scope: scope,
-                view: { test_files: [], settings: {} },
-            }),
-        ).toStrictEqual([]);
-        expect(
-            listCoveredFiles({ ...table, paths: [] }, files, {
-                selected: selected,
-                scope: scope,
-                view: { test_files: [], settings: {} },
-            }),
-        ).toStrictEqual([]);
+        expect(listCoveredFiles({ ...table, kinds: ['binary'] }, files, options)).toStrictEqual([]);
+        expect(listCoveredFiles({ ...table, paths: [] }, files, options)).toStrictEqual([]);
         expect(files.map((file) => file.path)).toStrictEqual([...MIGRATION_PATHS]);
     },
 );
 
 test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope"', ({ scope, tests, expected }) => {
-    const manifests = readManifests();
+    const configurations = readConfigurations();
 
-    const selected = selectConfigurations(['jest'], manifests);
+    const selected = selectConfigurations(['jest'], configurations);
     const files = JEST_PATHS.map((path) => buildTrackedFile(path));
-    const owned = listCoveredFiles(manifests.get('jest')!.files, files, {
-        selected: selected,
-        scope: scope,
+    const owned = listCoveredFiles(configurations.get('jest')!.files, files, {
+        selected,
+        scope,
         view: { test_files: [...tests], settings: {} },
     });
     expect(owned.map(({ path }) => path)).toStrictEqual([...expected]);
     expect(files.map(({ path }) => path)).toStrictEqual([...JEST_PATHS]);
-});
-
-test.each(PROJECT_SELECTIONS)('scope %s selects configuration %s: %s', (scope, name, selected) => {
-    const names = selectForScope(
-        {
-            configurations: [...PROJECT_CHOICES.configurations],
-            removed_configurations: [...PROJECT_CHOICES.removed_configurations],
-            scopes: Object.fromEntries(
-                PROJECT_CHOICES.scope.map((entry) => [
-                    entry.path,
-                    {
-                        configurations: [...entry.configurations],
-                        removed_configurations: [...entry.removed_configurations],
-                    },
-                ]),
-            ),
-        },
-        scope,
-        readManifests(),
-    ).map((manifest) => manifest.configuration.name);
-    expect(names.includes(name)).toBe(selected);
-    expect(names).toContain('gspot');
 });
 
 test.each([...GENERATED_SELECTIONS])(
@@ -163,12 +118,10 @@ test.each([...GENERATED_SELECTIONS])(
     },
 );
 
-describe('selectors', () => {
-    test('path selectors: ** crosses folders and ! negates', () => {
-        const matcher = buildPathMatcher(['scripts/**', '!scripts/vendor/**']);
-        expect(matcher('scripts/a/b.sh')).toBe(true);
-        expect(matcher('scripts/vendor/x.sh')).toBe(false);
-        expect(matcher('scripts/line\nbreak.sh')).toBe(true);
-        expect(matcher('scripts/vendor/line\nbreak.sh')).toBe(false);
-    });
+test('path selectors: ** crosses folders and ! negates', () => {
+    const matcher = buildPathMatcher(['scripts/**', '!scripts/vendor/**']);
+    expect(matcher('scripts/a/b.sh')).toBe(true);
+    expect(matcher('scripts/vendor/x.sh')).toBe(false);
+    expect(matcher('scripts/line\nbreak.sh')).toBe(true);
+    expect(matcher('scripts/vendor/line\nbreak.sh')).toBe(false);
 });

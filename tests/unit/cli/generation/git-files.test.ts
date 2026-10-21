@@ -4,12 +4,10 @@ import { openSession } from '#cli/session.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { spawnProcess } from '#cli/system/processes.ts';
-import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { runGit, readGitOutput } from '#tests/setup/git.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandbox.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 test.each(['absent', 'authored', 'managed'])(
@@ -75,29 +73,17 @@ test.each([true, false])(
             'gspot.toml': buildSandboxSettings([]),
             ...(authored ? { '.gitignore': original } : {}),
         });
-        {
-            using log = openWriter(repository.path);
-            const session = await openSession(repository.path);
-            writeGeneratedFiles(session, generate(session), log);
-        }
+        await applyGeneratedFiles(repository.path);
         const path = join(repository.path, '.gitignore');
         // Generation keeps any existing file outside Git. It creates no new file.
         expect((await isOnDisk(path)) ? await readFile(path, 'utf8') : undefined).toBe(authored ? original : undefined);
-        const initialized = await spawnProcess(['git', 'init', '--quiet'], { cwd: repository.path });
+        const initialized = runGit(repository.path, ['init', '--quiet']);
         expect(initialized.code, initialized.stderr).toBe(0);
-        {
-            using log = openWriter(repository.path);
-            const session = await openSession(repository.path);
-            writeGeneratedFiles(session, generate(session), log);
-        }
+        await applyGeneratedFiles(repository.path);
         const installed = await readFile(path, 'utf8');
         expect(installed.startsWith(original)).toBe(authored);
         expect(installed).toContain('.gspot/state/');
-        {
-            using log = openWriter(repository.path);
-            const session = await openSession(repository.path);
-            writeGeneratedFiles(session, generate(session), log);
-        }
+        await applyGeneratedFiles(repository.path);
         expect(await readFile(path, 'utf8')).toBe(installed);
     },
 );

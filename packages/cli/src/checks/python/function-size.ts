@@ -1,12 +1,18 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import { getLimit } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { COMMENT_MARKERS } from '#cli/config/checks/structure.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
-async function checkFile(session: Session, planned: PlannedCheck, path: string, limit: number): Promise<Finding[]> {
+async function listLongFunctions(
+    session: Session,
+    planned: PlannedCheck,
+    path: string,
+    limit: number,
+): Promise<Finding[]> {
     const text = readCachedText(session.reads, path);
     const lines = text.split('\n');
     const tree = await parseSource('python', text);
@@ -41,6 +47,6 @@ async function checkFile(session: Session, planned: PlannedCheck, path: string, 
 export async function checkPythonFunctionSize(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const limit = getLimit(planned.selection.view, 'function_lines', 'python');
     const files = planned.files.filter((file) => file.path.endsWith('.py'));
-    const findings = await Promise.all(files.map((file) => checkFile(session, planned, file.path, limit)));
+    const findings = await Promise.all(files.map((file) => listLongFunctions(session, planned, file.path, limit)));
     return findings.flat();
 }

@@ -1,9 +1,11 @@
 import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { extractSqlIdentifiers } from '#cli/checks/naming/sql.ts';
-import { readNamingDefaults } from '#cli/configurations/manifests.ts';
+import { type Identifier } from '#cli/types/checks/naming.ts';
+import { readNamingDefaults } from '#cli/configurations/naming.ts';
+import { parseIdentifiers } from '#cli/checks/naming/declared-names.ts';
+import { extractSqlIdentifiers } from '#cli/checks/naming/languages/sql.ts';
+import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/naming/paths.ts';
 import { SQL_DECLARATIONS, QUALIFIED_FUNCTION_DECLARATION } from '#tests/data/checks/sql.ts';
-import { parseIdentifiers, buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/naming/identifiers.ts';
 
 import {
     NAME_POSITION_CASES,
@@ -11,13 +13,20 @@ import {
     DECLARATION_ORDER_CASES,
 } from '#tests/data/checks/naming/sources.ts';
 
+/** Parse one source and dispose its parser resources. */
+async function listIdentifiers(file: string, source: string, language: string): Promise<Identifier[]> {
+    using resources = new DisposableStack();
+    const { identifiers } = await parseIdentifiers(file, source, language, {
+        reads: createReadCache(process.cwd()),
+        resources,
+    });
+    return identifiers;
+}
+
 test.each([...DECLARATION_SAMPLES])(
     'identifiers: $language declarations are collected by category',
     async ({ language, path, source, expected, absent }) => {
-        using resources = new DisposableStack();
-        const context = { reads: createReadCache(process.cwd()), resources };
-
-        const { identifiers: found } = await parseIdentifiers(path, source, language, context);
+        const found = await listIdentifiers(path, source, language);
         const byCategory: Readonly<Record<string, readonly string[]>> = expected;
         expect(
             Object.fromEntries(
@@ -34,28 +43,21 @@ test.each([...DECLARATION_SAMPLES])(
 );
 
 test('identifiers: a name bound from another module through require or await import is skipped, and nothing else', async () => {
-    using resources = new DisposableStack();
-    const context = { reads: createReadCache(process.cwd()), resources };
-
     const source = [
         "const { existsSync } = require('node:fs');",
         "const { default: lazyWidget } = await import('./widget.js');",
         'const loadedRecord = await loadRecord();',
         'const eagerTotal = computeTotal();',
     ].join('\n');
-    const { identifiers: found } = await parseIdentifiers('src/bind.ts', source, 'typescript', context);
+    const found = await listIdentifiers('src/bind.ts', source, 'typescript');
     expect(found.map((entry) => entry.name)).toStrictEqual(['loadedRecord', 'eagerTotal']);
 });
 
 test('identifiers: Bash functions and variables are collected', async () => {
-    using resources = new DisposableStack();
-    const context = { reads: createReadCache(process.cwd()), resources };
-
-    const { identifiers: found } = await parseIdentifiers(
+    const found = await listIdentifiers(
         'scripts/run.sh',
         'readonly ROOT=1\nlocal count\nbuild_all() {\n  TARGET=x\n}\n',
         'bash',
-        context,
     );
     expect(found.map((entry) => `${entry.category}:${entry.name}`)).toStrictEqual([
         'variables:ROOT',
@@ -68,24 +70,17 @@ test('identifiers: Bash functions and variables are collected', async () => {
 test.each([...DECLARATION_ORDER_CASES])(
     'identifiers: $language declarations arrive in document order, including names on the same line',
     async ({ file, source, language, expected }) => {
-        using resources = new DisposableStack();
-        const context = { reads: createReadCache(process.cwd()), resources };
-
-        const { identifiers: found } = await parseIdentifiers(file, source, language, context);
+        const found = await listIdentifiers(file, source, language);
         expect(found.map(({ name }) => name)).toStrictEqual([...expected]);
         expect(found.every((identifier) => identifier.file === file && identifier.language === language)).toBe(true);
     },
 );
 
 test('identifiers: JavaScript destructured and arrow parameters are declarations; object keys are not', async () => {
-    using resources = new DisposableStack();
-    const context = { reads: createReadCache(process.cwd()), resources };
-
-    const { identifiers: found } = await parseIdentifiers(
+    const found = await listIdentifiers(
         'source.js',
         'function loadValue({ account: localAccount }, [firstValue], ...remainingValues) {}\nconst readValue = inputValue => inputValue;\n',
         'javascript',
-        context,
     );
     expect(found.map(({ name, category }) => ({ name, category }))).toStrictEqual([
         { name: 'loadValue', category: 'functions' },
@@ -100,10 +95,7 @@ test('identifiers: JavaScript destructured and arrow parameters are declarations
 test.each([...NAME_POSITION_CASES])(
     'identifiers: $language names keep their line and column; discarded names such as _ are left out',
     async ({ file, language, source, expected }) => {
-        using resources = new DisposableStack();
-        const context = { reads: createReadCache(process.cwd()), resources };
-
-        const { identifiers: found } = await parseIdentifiers(file, source, language, context);
+        const found = await listIdentifiers(file, source, language);
         expect(found.map(({ name, category, line, column }) => ({ name, category, line, column }))).toStrictEqual([
             ...expected,
         ]);
@@ -211,9 +203,7 @@ test.each([
 ])(
     'identifiers: the settings file %s of the %s configuration holds no code identifiers',
     async (path, language, source) => {
-        using resources = new DisposableStack();
-        const context = { reads: createReadCache(process.cwd()), resources };
-        const { identifiers } = await parseIdentifiers(path, source, language, context);
+        const identifiers = await listIdentifiers(path, source, language);
         expect(identifiers).toStrictEqual([]);
     },
 );

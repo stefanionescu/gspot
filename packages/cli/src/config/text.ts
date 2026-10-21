@@ -6,16 +6,14 @@ export const TYPO_FRACTION = 3;
 
 /** How many names a message lists before it counts the rest. */
 export const LIST_LIMIT = 8;
+
 /** The ASCII line-feed byte shared by binary report and object readers. */
 export const LINE_FEED = 10;
 
 export const DIGEST_ALGORITHM = 'sha256';
+
 export const PLAIN_ARGUMENT = /^[\w@:./-]+$/u;
-export const TRAILING_NEWLINE = /\n$/u;
-export const LEADING_NEWLINE = /^\r?\n/u;
 
 export const NOT_LINE_BREAK = /[^\r\n]/gu;
-
-export const SURROUNDING_QUOTES = /^["']|["']$/gu;
 
 export const DIGITS_ONLY = /^\d+$/u;

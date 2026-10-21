@@ -1,15 +1,19 @@
 import { quoteArgument } from '#cli/system/text.ts';
-import { listCoveredInputs } from '#cli/planning/checks.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
+import type { Session } from '#cli/types/session.ts';
+import type { RunReport } from '#cli/types/runs/run.ts';
+import { listCheckedFiles } from '#cli/planning/files.ts';
+import type { FixReport } from '#cli/types/runs/fixes.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import type { CheckResult } from '#cli/types/runs/check.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { FAILED_STATUSES, INCOMPLETE_STATUSES } from '#cli/config/runs/run.ts';
-import type { FixReport, RunReport, CheckResult, ReportInput, ReproduceOptions } from '#cli/types/runs/check.ts';
+import type { FinishedRun, ReproduceOptions } from '#cli/types/runs/report.ts';
 
 function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
     const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);
-    const corrections = (fixes?.results ?? []).flatMap((result) => (result.status === 'failed' ? [result.check] : []));
-    return [...new Set([...checks, ...corrections])];
+    const failedFixers = (fixes?.results ?? []).flatMap((result) => (result.status === 'failed' ? [result.check] : []));
+    return [...new Set([...checks, ...failedFixers])];
 }
 
 function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport | undefined): boolean {
@@ -30,7 +34,7 @@ export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 's
         check: planned.check.name,
         scope: planned.selection.scope.path,
         status: 'passed',
-        fileCount: listCoveredInputs(session.scopes, planned).length,
+        fileCount: listCheckedFiles(session.scopes, planned).length,
         duration: 0,
         findings: [],
     };
@@ -58,12 +62,12 @@ export function mergeCheckResults(merged: CheckResult, next: CheckResult): Check
 /**
  * Builds the report of a finished run, which check --json prints.
  *
- * @param input the plan and what ran.
+ * @param run the plan and what ran.
  * @returns the checks and exit code.
  */
-export function buildRunReport(input: ReportInput): RunReport {
-    const { session, options, started, planned, ran, ignores, fixes } = input;
-    const results = new Map(input.active.map((check, index) => [check, ran[index] as CheckResult]));
+export function buildRunReport(run: FinishedRun): RunReport {
+    const { session, options, started, planned, ran, ignores, fixes } = run;
+    const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
     const checks = planned.map<CheckResult>(
         (check) =>
             results.get(check) ?? {
@@ -78,7 +82,7 @@ export function buildRunReport(input: ReportInput): RunReport {
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
     return {
         ...(options.comparison === undefined ? {} : { comparison: options.comparison }),
-        version: packageManifest.version,
+        version: cliPackage.version,
         stage: options.stage,
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),
@@ -111,15 +115,15 @@ export function buildRunReport(input: ReportInput): RunReport {
  * @returns the command line.
  */
 export function formatReproduceCommand(checkName: string, scope: string, options: ReproduceOptions): string {
-    const { push, messageFile: commitFile, staged } = options;
+    const { push, messageFile, staged } = options;
     if (push !== undefined) {
         const remote = push.remote === undefined ? '' : ` -- ${quoteArgument(push.remote)}`;
         return `printf '%s' ${quoteArgument(push.stdin)} | gspot check --hook pre-push --only ${quoteArgument(checkName)}${remote}`;
     }
     const parts = ['gspot check'];
-    if (scope !== '' && commitFile === undefined) parts.push(quoteArgument(scope));
+    if (scope !== '' && messageFile === undefined) parts.push(quoteArgument(scope));
     parts.push('--only', quoteArgument(checkName));
-    if (commitFile !== undefined) parts.push('--hook', 'commit-msg', '--', quoteArgument(commitFile));
+    if (messageFile !== undefined) parts.push('--hook', 'commit-msg', '--', quoteArgument(messageFile));
     if (staged) parts.push('--staged');
     return parts.join(' ');
 }

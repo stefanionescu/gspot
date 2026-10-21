@@ -63,9 +63,9 @@ function readRegularFile(target: string, stat: Stats, path: string): FileContent
 }
 
 // Check the same parent folders before a read or a prepared write.
-function walkParentFolders(bounds: FilesState, path: string, statParent: (path: string) => Stats): string {
+function walkParentFolders(state: FilesState, path: string, statParent: (path: string) => Stats): string {
     const parts = splitSystemPath(path);
-    let folder = bounds.root;
+    let folder = state.root;
     for (const part of parts.slice(0, -1)) {
         folder = join(folder, part);
         const stat = statParent(folder);
@@ -75,7 +75,7 @@ function walkParentFolders(bounds: FilesState, path: string, statParent: (path: 
                 `A parent of ${path} is a link or is not a directory. Choose a directory without links.`,
             );
     }
-    return join(bounds.root, ...parts);
+    return join(state.root, ...parts);
 }
 
 // A synchronous replacement must finish its flush before the caller continues.
@@ -130,35 +130,35 @@ export function isSameContents(found: FileContents | undefined, expected: FileCo
 /**
  * Build the absolute path of a file after a check that every parent names a real folder, not a link.
  *
- * @param bounds the root.
+ * @param state the root.
  * @param path the root-relative file.
  * @returns the absolute path.
  */
-export function verifyPath(bounds: FilesState, path: string): string {
-    return walkParentFolders(bounds, path, lstatSync);
+export function buildContainedPath(state: FilesState, path: string): string {
+    return walkParentFolders(state, path, lstatSync);
 }
 
 /**
  * Build the absolute path of a file, create missing parents, and refuse parents that link or name no folder.
  *
- * @param bounds the root.
+ * @param state the root.
  * @param path the root-relative file.
  * @returns the absolute path after preparing its parents.
  */
-export function preparePath(bounds: FilesState, path: string): string {
-    return walkParentFolders(bounds, path, prepareParentFolder);
+export function preparePath(state: FilesState, path: string): string {
+    return walkParentFolders(state, path, prepareParentFolder);
 }
 
 /**
  * Read a regular file with no other hard link, or return undefined when absent.
  *
- * @param bounds the root.
+ * @param state the root.
  * @param path the root-relative file.
  * @returns the file contents.
  */
-export function readEntry(bounds: FilesState, path: string): FileContents | undefined {
+export function readEntry(state: FilesState, path: string): FileContents | undefined {
     try {
-        const target = verifyPath(bounds, path);
+        const target = buildContainedPath(state, path);
         return readRegularFile(target, lstatSync(target), path);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
@@ -169,13 +169,13 @@ export function readEntry(bounds: FilesState, path: string): FileContents | unde
 /**
  * Read a file or symbolic link without following the link, or return undefined when absent.
  *
- * @param bounds the root.
+ * @param state the root.
  * @param path the root-relative file.
  * @returns the file contents.
  */
-export function readEntryKeepingLinks(bounds: FilesState, path: string): FileContents | undefined {
+export function readEntryKeepingLinks(state: FilesState, path: string): FileContents | undefined {
     try {
-        const target = verifyPath(bounds, path);
+        const target = buildContainedPath(state, path);
         const stat = lstatSync(target);
         return stat.isSymbolicLink() ? readSymbolicLink(target) : readRegularFile(target, stat, path);
     } catch (error) {
@@ -187,24 +187,24 @@ export function readEntryKeepingLinks(bounds: FilesState, path: string): FileCon
 /**
  * Replace the file at a path with new file contents, through a staged file that moves into place.
  *
- * @param bounds the root.
+ * @param state the root.
  * @param path the root-relative file.
  * @param value the file contents to write.
  * @param expected the file contents that the caller last saw, or undefined for a new file.
  */
 export function replaceEntry(
-    bounds: FilesState,
+    state: FilesState,
     path: string,
     value: FileContents,
     expected: FileContents | undefined,
 ): void {
-    const target = preparePath(bounds, path);
+    const target = preparePath(state, path);
     const temporary = join(dirname(target), `${TEMPORARY_FILE_PREFIX}${randomUUID()}${TEMPORARY_FILE_SUFFIX}`);
     let staged = false;
     try {
         writeStagedFile(temporary, value);
         staged = true;
-        if (!isSameContents(readEntry(bounds, path), expected))
+        if (!isSameContents(readEntry(state, path), expected))
             throw new Error(`Destination changed during the operation: ${path}`);
         if (isRenameBlocked(expected)) unlinkSync(target);
         renameSync(temporary, target);

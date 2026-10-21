@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { commitAll } from '#tests/setup/git.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { PREFIX_TREE, NEST_SUFFIX_FILES, PREFIX_CHECK_OPTIONS } from '#tests/data/checks/structure/folders.ts';

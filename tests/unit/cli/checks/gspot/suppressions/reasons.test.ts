@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { COMPILER_SOURCE } from '#tests/data/checks/typescript/projects.ts';
 
 import {
@@ -120,10 +120,7 @@ test('a nosemgrep comment is reported even with a reason', async () => {
 
 test("noqa in a SQL file is sqlfluff's; noqa in a Python file is ruff's", async () => {
     await using folder = await testdir({
-        'gspot.toml': buildSandboxSettings(['structure', 'sql', 'python'], {
-            level: 'all',
-            tables: '[rules]\nenabled = false\n',
-        }),
+        'gspot.toml': buildSandboxSettings(['structure', 'sql', 'python'], { level: 'all' }),
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
@@ -175,7 +172,7 @@ test.each(['swiftformat:disable blockComments', 'periphery:ignore'])(
 test.each(SUPPRESSION_REASONS)(
     'the %s suppression pattern of %s finds the comment and its reason',
     (configuration, tool, bare, explained, expected) => {
-        const definition = readManifests()
+        const definition = readConfigurations()
             .get(configuration)!
             .tools.find(({ name }) => name === tool)!.suppression!;
         const marker = new RegExp(definition.marker, 'u');

@@ -1,23 +1,27 @@
 export const PROSE_CHECK = {
-    only: 'prose/vale',
-    path: 'guide.md',
-    sample: `# Schedule
+    check: 'prose/vale',
+    files: {
+        'guide.md': `# Schedule
 
 NebulaConfiguration uses Python. Release on 03/04/2026.
 `,
-    corrected: `# Schedule
+    },
+    corrected: {
+        files: {
+            'guide.md': `# Schedule
 
 NebulaConfiguration uses Python. Release on March 4, 2026.
 `,
-    findings: [{ line: 3, rule: 'gspot.dates' }],
+        },
+    },
+    expected: { file: 'guide.md', line: 3, rule: 'gspot.dates' },
 } as const;
 
 export const SWIFT_CHECK = {
-    only: 'naming/identifiers',
-    path: 'Account.swift',
-    sample: 'let utils = 1\n',
-    corrected: 'let account = 1\n',
-    findings: [{ line: 1, rule: 'banned-word' }],
+    check: 'naming/identifiers',
+    files: { 'Account.swift': 'let utils = 1\n' },
+    corrected: { files: { 'Account.swift': 'let account = 1\n' } },
+    expected: { file: 'Account.swift', line: 1, rule: 'banned-word' },
 } as const;
 
 /** Starting files that the packed launcher test replaces or reads. */

@@ -9,7 +9,7 @@ export type ProjectLicenses = {
     packages: LicensedPackage[];
     locked: string[];
     ecosystem: 'npm' | 'python';
-    configuration: ConfigurationTables['licenses'];
+    settings: ConfigurationTables['licenses'];
 };
 
 export type PythonLicenseReport = {

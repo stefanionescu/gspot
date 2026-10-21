@@ -8,7 +8,7 @@ import { streamProcess } from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { CLI_SOURCE_PATH } from '#tests/setup/run-gspot.ts';
 import { isWindows, simulateOperatingSystem } from '#tests/setup/system.ts';
-import { waitForExit, waitForFile, captureProcess, prepareCommand } from '#tests/setup/processes.ts';
+import { waitForExit, waitForFile, startCommand, captureProcess, prepareCommand } from '#tests/setup/processes.ts';
 
 // What the supervisor leaves on a child it stopped: a signal on a POSIX host, an exit code on Windows.
 function isStopped(child: childProcess.ChildProcess | undefined): boolean {
@@ -36,8 +36,8 @@ test.each(['text', 'bytes'] as const)('a failed %s stream read stops the child',
             return;
         }
         const result = await running;
-        expect(result.isTimedOut).toBe(false);
-        expect(result.isCanceled).toBe(false);
+        expect(result.timedOut).toBe(false);
+        expect(result.canceled).toBe(false);
         expect(result.code).not.toBe(0);
         expect(result.missing).toBe(false);
         expect(result.stderr).toContain('Test stream failure');
@@ -71,8 +71,8 @@ test.each([
         else {
             const result = await running;
             expect(Buffer.from(result.stdout).toString('utf8')).toContain('descendant-ready');
-            expect(result.isTimedOut).toBe(termination === 'timeout');
-            expect(result.isCanceled).toBe(termination === 'canceled');
+            expect(result.timedOut).toBe(termination === 'timeout');
+            expect(result.canceled).toBe(termination === 'canceled');
         }
         const pid = Number(await readFile(marker, 'utf8'));
         expect(pid).toBeGreaterThan(0);
@@ -86,28 +86,12 @@ test('an exiting CLI stops its running process group', async () => {
     const sourceUrl = pathToFileURL(join(CLI_SOURCE_PATH, 'system/processes.ts')).href;
     const script = `import {spawnProcess} from ${JSON.stringify(sourceUrl)}; void spawnProcess([process.execPath,"-e",${JSON.stringify(descendant)}],{cwd:process.cwd(),onStdout(chunk){process.stdout.write(chunk);process.exit(19);}});`;
     const command = [process.execPath, '-e', script];
-    const prepared = prepareCommand(command, { cwd: sandbox.path });
-    const child = Bun.spawn(command, {
-        cwd: sandbox.path,
-        stdout: 'pipe',
-        stderr: 'pipe',
-        timeout: prepared.options.timeoutSeconds * 1000,
-        killSignal: 'SIGKILL',
-    });
-    const output = new Response(child.stdout).text();
-    const errors = new Response(child.stderr).text();
-    try {
-        expect(await child.exited, await errors).toBe(19);
-        const printed = await output;
-        const pid = Number(printed.trim());
-        expect(pid).toBeGreaterThan(0);
-        await waitForExit(pid);
-    } finally {
-        if (child.exitCode === null) child.kill('SIGKILL');
-        await child.exited;
-        await output;
-        await errors;
-    }
+    await using started = startCommand(command, { cwd: sandbox.path });
+    expect(await started.child.exited, await started.errors).toBe(19);
+    const output = await started.output;
+    const pid = Number(output.trim());
+    expect(pid).toBeGreaterThan(0);
+    await waitForExit(pid);
 });
 
 test('live output arrives before the process ends while capture keeps the output and exit code', async () => {
@@ -162,8 +146,8 @@ test.each(['text', 'bytes'] as const)(
         });
         expect(result.code).toBe(7);
         expect(Buffer.from(result.stdout).toString('utf8')).toContain('ready');
-        expect(result.isTimedOut).toBe(false);
-        expect(result.isCanceled).toBe(false);
+        expect(result.timedOut).toBe(false);
+        expect(result.canceled).toBe(false);
         const pid = Number(await readFile(marker, 'utf8'));
         expect(pid).toBeGreaterThan(0);
         await waitForExit(pid);
@@ -188,7 +172,7 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
         cwd: sandbox.path,
     });
     expect(result.code, result.stderr).toBe(0);
-    expect(result.isErrored).toBe(false);
+    expect(result.errored).toBe(false);
 });
 
 test('stream reading keeps raw bytes and the error output', async () => {

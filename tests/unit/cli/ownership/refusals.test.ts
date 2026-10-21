@@ -26,7 +26,7 @@ test.each(['replacement', 'block', 'keys'] as const)(
                         expected: log.files.read('config.toml'),
                     }),
                 block: () => planBlock(log, 'config.toml', 'managed content', 'hash'),
-                keys: () => planSettingsWrite(log, 'config.toml', [{ path: ['extends'], value: './managed.json' }]),
+                keys: () => planSettingsWrite(log, 'config.toml', [{ key: ['extends'], value: './managed.json' }]),
             };
             const plan = plans[kind]();
             expect(log.files.read('config.toml')).toStrictEqual({

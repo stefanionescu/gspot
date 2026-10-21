@@ -1,11 +1,24 @@
 import type { Node, Tree } from 'web-tree-sitter';
+import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 
-export type CountedLanguage = 'python' | 'swift' | 'bash';
+export type ParsedLanguage = 'python' | 'swift' | 'bash';
 
-export type IsSubstantial = (node: Node, language: CountedLanguage, limit: number) => boolean;
+export type IsSubstantial = (node: Node, language: ParsedLanguage, limit: number) => boolean;
 
 /** A tracked folder entry. */
 export type FolderEntry = { name: string; kind: 'file' | 'folder' };
 
 /** Parsed trees and their captures used by the convention checks. */
-export type ConventionSource = { path: string; language: CountedLanguage; tree: Tree; captures: Map<string, Node[]> };
+export type ParsedSource = { path: string; language: ParsedLanguage; tree: Tree; captures: Map<string, Node[]> };
+
+export type ImportTarget = { module: string; target: string };
+
+export type LocatedImport = ImportTarget & { node: Node };
+
+export type ImportOwners = { node: Node; module: string; owners: (number | undefined)[] };
+
+export type PythonSearch = { files: ReadonlySet<string>; roots: string[]; externals: ReadonlySet<string> };
+
+export type SwiftModule = { name: string; files: string[] };
+
+export type RuleLookup = { rules: ImportRule[]; ownerOf: (path: string) => number | undefined; allowed: string[][] };

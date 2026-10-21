@@ -5,12 +5,31 @@ import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { MILLISECONDS_PER_SECOND } from '#tests/data/test-setup.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/data/commands/check.ts';
+
+// A committed repository with a check whose fixer rewrites the source when it runs.
+async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
+    const fix = [process.execPath, '-e', String.raw`require('node:fs').writeFileSync('source.txt', 'fixed\n')`];
+    const check = `[[command_check]]
+name = "sandbox/fixable"
+command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
+fix = ${JSON.stringify(fix)}
+paths = ["source.txt"]
+stage = "commit"
+`;
+    const sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], { tables: check }),
+        'source.txt': 'original\n',
+    });
+
+    commitAll(sandbox.path);
+    return sandbox;
+}
 
 test('only refuses a commit message check outside the message stage', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['commits']) });
@@ -41,25 +60,6 @@ stage = "commit"
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     expect(await readFile(join(sandbox.path, 'api/source.txt'), 'utf8')).toBe('before');
 });
-
-// A committed repository with a check whose fixer rewrites the source when it runs.
-async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
-    const fix = [process.execPath, '-e', String.raw`require('node:fs').writeFileSync('source.txt', 'fixed\n')`];
-    const check = `[[command_check]]
-name = "sandbox/fixable"
-command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
-fix = ${JSON.stringify(fix)}
-paths = ["source.txt"]
-stage = "commit"
-`;
-    const sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: check }),
-        'source.txt': 'original\n',
-    });
-
-    commitAll(sandbox.path);
-    return sandbox;
-}
 
 test.each([...FIX_REFUSALS])('check %p exits 2 and leaves the working tree as it was', async (flags, expected) => {
     await using sandbox = await createFixableSandbox();

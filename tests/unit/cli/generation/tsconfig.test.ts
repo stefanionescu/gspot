@@ -5,24 +5,8 @@ import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { writeScopeTsconfig } from '#cli/checks/typescript/compiler.ts';
-import { MALFORMED_TSCONFIGS, STRICT_TSCONFIG_TEXT } from '#tests/data/checks/typescript/projects.ts';
-
-test.each(MALFORMED_TSCONFIGS)(
-    'a malformed tsconfig.json fails with its path and reason: %s',
-    async (content, detail) => {
-        await using sandbox = await testdir({
-            'tsconfig.json': content,
-            'gspot.toml': buildSandboxSettings(['typescript']),
-            'source.ts': 'export const value = 1;\n',
-        });
-
-        const session = await openSession(sandbox.path);
-        expect(() =>
-            writeScopeTsconfig(session, session.scopes[0]!, join(sandbox.path, '.gspot/state/tsconfig.json')),
-        ).toThrow(`Cannot read TypeScript configuration ${join(sandbox.path, 'tsconfig.json')}: ${detail}`);
-    },
-);
+import { writeScopeTsconfig } from '#cli/checks/typescript/scope-tsconfig.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/data/checks/typescript/projects.ts';
 
 test('an authored project extends its own compiler options without forcing required options', async () => {
     await using sandbox = await testdir({

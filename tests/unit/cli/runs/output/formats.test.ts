@@ -4,63 +4,57 @@ import { test, expect } from 'bun:test';
 import { join, win32 } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { isLinux } from '#tests/setup/system.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { planChecks } from '#cli/planning/checks.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { type Check } from '#cli/types/configurations.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { CommandRunState } from '#cli/types/runs/command.ts';
 import { outputSchema } from '#cli/schemas/configurations/output.ts';
-import { type CheckDeclaration } from '#cli/types/configurations.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { BASE_CHECK, FAILED_RUN } from '#tests/data/runs/command-checks.ts';
 import { getShippedCheck, buildProcessResult } from '#tests/setup/builders.ts';
-import { recordInvocation, parseCommandFindings } from '#cli/runs/command/output.ts';
+import { addCommandLine, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import {
-    OUTPUTS,
     EMPTY_ERRORS,
     JSON_FORMATS,
+    CHECK_OUTPUTS,
     LINE_FINDINGS,
     OTHER_TOOL_OUTPUT,
     EDITORCONFIG_REPORT,
 } from '#tests/data/runs/output.ts';
 
-test.each(OUTPUTS.flatMap((output) => ['empty', 'foreign'].map((input) => ({ format: output.format, output, input }))))(
-    'the $format format gives one result for $input output',
-    async ({ output, input }) => {
-        await using sandbox = await testdir();
-        const check: CheckDeclaration = {
-            ...BASE_CHECK,
-            command: [...BASE_CHECK.command],
-            name: 'sandbox/output',
-            summary: 'Reads the output of a sandbox tool.',
-            example: 'sandbox',
-            why: 'The output contract holds for every format.',
-            help: 'Correct the sandbox file.',
-            output: outputSchema.parse(output),
-        };
-        delete check.command;
-        const fails = (input === 'empty' ? EMPTY_ERRORS : JSON_FORMATS).has(output.format);
-        if (fails) {
-            expect(() =>
-                parseOutput(check, input === 'empty' ? '' : OTHER_TOOL_OUTPUT, '', {
-                    root: sandbox.path,
-                    cwd: sandbox.path,
-                }),
-            ).toThrow(GspotError);
-        } else {
-            expect(
-                parseOutput(check, input === 'empty' ? '' : OTHER_TOOL_OUTPUT, '', {
-                    root: sandbox.path,
-                    cwd: sandbox.path,
-                }),
-            ).toStrictEqual(input === 'foreign' && output.format === 'lines' ? [...LINE_FINDINGS] : []);
-        }
-    },
-);
+test.each(
+    CHECK_OUTPUTS.flatMap((output) => ['empty', 'foreign'].map((input) => ({ format: output.format, output, input }))),
+)('the $format format gives one result for $input output', async ({ output, input }) => {
+    await using sandbox = await testdir();
+    const check = {
+        name: 'sandbox/output',
+        runs: 'files' as const,
+        help: 'Correct the sandbox file.',
+        output: outputSchema.parse(output),
+    };
+    const fails = (input === 'empty' ? EMPTY_ERRORS : JSON_FORMATS).has(output.format);
+    if (fails) {
+        expect(() =>
+            parseOutput(check, input === 'empty' ? '' : OTHER_TOOL_OUTPUT, '', {
+                root: sandbox.path,
+                cwd: sandbox.path,
+            }),
+        ).toThrow(GspotError);
+    } else {
+        expect(
+            parseOutput(check, input === 'empty' ? '' : OTHER_TOOL_OUTPUT, '', {
+                root: sandbox.path,
+                cwd: sandbox.path,
+            }),
+        ).toStrictEqual(input === 'foreign' && output.format === 'lines' ? [...LINE_FINDINGS] : []);
+    }
+});
 
 test.each([
     ['LF', '\n'],
@@ -120,7 +114,7 @@ test('grouped output drops line endings and makes absolute paths relative', asyn
     await using sandbox = await testdir({ 'settings/café.toml': 'a=1\n' });
 
     const base = getShippedCheck('files/taplo-format');
-    const check: CheckDeclaration = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
+    const check: Check = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
     const output = `${join(sandbox.path, 'settings', 'café.toml')}:\r\n  1: Incorrect spacing\r\n`;
     const findings = parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path });
     expect(findings).toHaveLength(1);
@@ -143,9 +137,8 @@ test('EditorConfig output keeps file and line findings', async () => {
 
     const check = getShippedCheck('format/editorconfig-checker');
 
-    const output = EDITORCONFIG_REPORT;
-    const findings = parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path });
-    expect(findings.map(({ file, line, message }) => ({ file, line, message: message }))).toStrictEqual([
+    const findings = parseOutput(check, EDITORCONFIG_REPORT, '', { root: sandbox.path, cwd: sandbox.path });
+    expect(findings.map(({ file, line, message }) => ({ file, line, message }))).toStrictEqual([
         { file: 'source.js', line: undefined, message: 'Wrong line endings or no final newline' },
         { file: ' notes.txt', line: 1, message: 'Trailing whitespace' },
     ]);
@@ -156,7 +149,7 @@ test.skipIf(isLinux)('an absolute path that names the root in another case is st
     await using sandbox = await testdir({ 'example/math.py': 'answer = 1\n' });
 
     const base = getShippedCheck('files/taplo-format');
-    const check: CheckDeclaration = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
+    const check: Check = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
     const output = `${join(sandbox.path.toUpperCase(), 'example', 'math.py')}:\n  1: Incorrect spacing\n`;
     expect(parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
         { file: 'example/math.py', line: 1 },
@@ -263,21 +256,21 @@ test.each([false, true])(
             'source.js': 'export const ready = true;\n',
         });
         const session = await openSession(sandbox.path);
-        const planned = planRun(session, { stage: 'commit', only: ['format/prettier'] })[0]!;
-        const tool = getToolDeclaration(readManifests().values(), 'prettier');
+        const planned = planChecks(session, { stage: 'commit', only: ['format/prettier'] })[0]!;
+        const tool = getTool(readConfigurations().values(), 'prettier');
         const parsed: Finding[] = [];
-        const state: CommandRunState = { root: sandbox.path, cwd: sandbox.path, findings: [], isFailed: false };
-        recordInvocation(
+        const state: CommandRunState = { root: sandbox.path, cwd: sandbox.path, findings: [], failed: false };
+        addCommandLine(
             planned,
             tool,
             {
-                invocation: { commandArguments: ['prettier'], ...(perFile ? { file: 'source.js' } : {}) },
+                commandLine: { commandArguments: ['prettier'], ...(perFile ? { file: 'source.js' } : {}) },
                 result: buildProcessResult({ code: 1, stdout: 'Format failed\n' }),
                 findings: parsed,
             },
             state,
         );
-        expect(state.isFailed).toBe(true);
+        expect(state.failed).toBe(true);
         expect(parsed).toHaveLength(1);
         expect(state.findings).toStrictEqual(parsed);
         expect(state.findings[0]).toMatchObject({

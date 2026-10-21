@@ -1,21 +1,22 @@
 import { join, posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { createCheckCopy } from '#cli/runs/copy/files.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
-import { copyCheckIntoScratch } from '#cli/runs/copy/files.ts';
 import type { Substitutions } from '#cli/types/runs/command.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { type GeneratorOutput } from '#cli/types/configurations.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
 import { readBytes, findCachedText } from '#cli/system/files/reads.ts';
-import { GENERATOR_SCAN_EXCLUSIONS } from '#cli/config/checks/gspot.ts';
+import { GENERATOR_IGNORED_FOLDERS } from '#cli/config/checks/gspot.ts';
 import type { GeneratorRun } from '#cli/types/checks/generator-outputs.ts';
-import { expandCommand, replacePlaceholders, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
+import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
 
 function listMissingOutputs(
     session: Session,
@@ -105,7 +106,7 @@ function listDeclaredOutputs(
     return { declared, named };
 }
 
-function buildGeneratorInputs(session: Session, planned: PlannedCheck): GeneratorRun | undefined {
+function listGeneratorSources(session: Session, planned: PlannedCheck): GeneratorRun | undefined {
     const values = buildCommandSubstitutions(session, planned, join(session.root, planned.selection.scope.path));
     const declaration = planned.check.command ?? [];
     const command = expandCommand(session, planned, declaration, values);
@@ -125,23 +126,23 @@ function buildGeneratorInputs(session: Session, planned: PlannedCheck): Generato
 }
 
 /**
- * Runs the declared generator in a scratch copy and reports missing or changed generator output.
+ * Runs the declared generator in a copy and reports missing or changed generator output.
  *
  * @param session the repository and its tools.
  * @param planned the generator check and its scope.
  * @returns one finding per missing or stale file.
  */
-export async function checkStaleGeneratorOutputs(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const inputs = buildGeneratorInputs(session, planned);
+export async function checkGeneratorOutputs(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const inputs = listGeneratorSources(session, planned);
     if (inputs === undefined) return [];
     const { values, commandText, declaration, patterns, targets, selected } = inputs;
-    const excluded = [...GENERATOR_SCAN_EXCLUSIONS, DOT_GSPOT].map((name) => `!**/${name}/**`);
+    const excluded = [...GENERATOR_IGNORED_FOLDERS, DOT_GSPOT].map((name) => `!**/${name}/**`);
     const untracked = listUntrackedOutputs(session, planned, inputs.named, excluded);
     if (untracked.length > 0) return untracked;
     if (targets.length + selected.length === 0) return [];
     const missing = listMissingOutputs(session, planned, targets, commandText);
     if (missing.length > 0) return missing;
-    using folder = await copyCheckIntoScratch(
+    using folder = await createCheckCopy(
         session,
         planned,
         targets.map((entry) => entry.path),
@@ -153,10 +154,10 @@ export async function checkStaleGeneratorOutputs(session: Session, planned: Plan
         ...values,
         root: folder.path,
     });
-    const commands = buildFileInvocations(commandArguments, selected);
+    const commands = buildFileCommandLines(commandArguments, selected);
     let stdout = '';
-    for (const invocation of commands) {
-        const result = await runCheckTool(session, planned, invocation.commandArguments, { cwd });
+    for (const commandLine of commands) {
+        const result = await runCheckTool(session, planned, commandLine.commandArguments, { cwd });
         if (result.code !== 0) throw new Error(`The generator command failed: ${formatOutputTail(result)}`);
         stdout = result.stdout;
     }

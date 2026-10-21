@@ -18,7 +18,7 @@ describe('toml-file-edits', () => {
 
         {
             using log = openWriter(folder.path);
-            const changes = [{ path: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }];
+            const changes = [{ key: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }];
             expect(() => planSettingsWrite(log, 'broken.toml', changes)).toThrow('broken.toml');
             expect(await readFile(join(folder.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
             writePlans(log, [planSettingsWrite(log, 'mise.toml', changes)]);
@@ -39,13 +39,13 @@ describe('toml-file-edits', () => {
         {
             using log = openWriter(folder.path);
             writePlans(log, [
-                planSettingsWrite(log, 'compiler.toml', [{ path: ['extends'], value: './.gspot/first.json' }]),
+                planSettingsWrite(log, 'compiler.toml', [{ key: ['extends'], value: './.gspot/first.json' }]),
             ]);
             const installed = log.files.read('compiler.toml')!.bytes.toString('utf8');
             const edited = installed.replace('strict = false', 'strict = true');
             await writeFile(join(folder.path, 'compiler.toml'), edited);
             writePlans(log, [
-                planSettingsWrite(log, 'compiler.toml', [{ path: ['extends'], value: './.gspot/second.json' }]),
+                planSettingsWrite(log, 'compiler.toml', [{ key: ['extends'], value: './.gspot/second.json' }]),
             ]);
             expect(log.files.read('compiler.toml')!.bytes.toString('utf8')).toBe(
                 edited.replace('./.gspot/first.json', './.gspot/second.json'),
@@ -67,7 +67,7 @@ describe('toml-file-edits', () => {
         {
             using log = openWriter(folder.path);
             writePlans(log, [
-                planSettingsWrite(log, 'package.toml', [{ path: ['scripts', 'check'], value: 'gspot check' }]),
+                planSettingsWrite(log, 'package.toml', [{ key: ['scripts', 'check'], value: 'gspot check' }]),
             ]);
             writePlans(log, [planRemoval(log, 'package.toml')]);
             expect(await readFile(join(folder.path, 'package.toml'), 'utf8')).toBe(content);
@@ -89,9 +89,9 @@ describe('toml-file-edits', () => {
             'bunfig.toml': original,
         });
         const session = await openSession(repository.path);
-        const generated = generate(session).fileSettings.find((entry) => entry.path === 'bunfig.toml')!;
-        const log = openWriter(repository.path);
-        writePlans(log, [planSettingsWrite(log, generated.path, generated.changes)]);
+        const generated = generate(session).managedKeys.find((entry) => entry.path === 'bunfig.toml')!;
+        using log = openWriter(repository.path);
+        writePlans(log, [planSettingsWrite(log, generated.path, generated.keys)]);
         const installed = await readFile(join(repository.path, 'bunfig.toml'), 'utf8');
         expect(Bun.TOML.parse(installed)).toStrictEqual({
             install: {
@@ -101,9 +101,8 @@ describe('toml-file-edits', () => {
             },
         });
         expect(installed).toContain('# Authored installation choices');
-        writePlans(log, [planSettingsWrite(log, generated.path, generated.changes)]);
+        writePlans(log, [planSettingsWrite(log, generated.path, generated.keys)]);
         writePlans(log, [planRemoval(log, 'bunfig.toml')]);
-        log[Symbol.dispose]();
         expect(await readFile(join(repository.path, 'bunfig.toml'), 'utf8')).toBe(installed);
     });
 });

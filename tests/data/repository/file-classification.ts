@@ -171,3 +171,49 @@ export const CLASSIFICATION_FILES = {
     'assets/a.bin': 'x',
     'src/a.ts': 'export const a = 1;\n',
 } as const;
+
+/** Swift test imports and package targets outside comments and strings. */
+export const SWIFT_TAG_CASES = [
+    {
+        name: 'XCTest import',
+        path: 'Examples/Checks.swift',
+        source: 'import XCTest\n',
+        tag: 'swift-test',
+        tagged: true,
+    },
+    {
+        name: 'qualified Testing attribute',
+        path: 'Examples/Checks.swift',
+        source: '@Testing.Test func checks() {}\n',
+        tag: 'swift-test',
+        tagged: true,
+    },
+    {
+        name: 'comment and string examples',
+        path: 'Examples/Checks.swift',
+        source: '// import Testing\nlet example = "@Test"\n',
+        tag: 'swift-test',
+        tagged: false,
+    },
+    {
+        name: 'TestingSupport import',
+        path: 'Examples/Checks.swift',
+        source: 'import TestingSupport\n',
+        tag: 'swift-test',
+        tagged: false,
+    },
+    {
+        name: 'an executable test target',
+        path: 'Package.swift',
+        source: 'import PackageDescription\nlet package = Package(name: "App", targets: [.testTarget(name: "Checks")])\n',
+        tag: 'swift-test-target',
+        tagged: true,
+    },
+    {
+        name: 'a comment and a string',
+        path: 'Package.swift',
+        source: '// .testTarget(name: "Checks")\nlet example = ".testTarget"\n',
+        tag: 'swift-test-target',
+        tagged: false,
+    },
+] as const;

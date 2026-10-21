@@ -1,69 +1,74 @@
 // Build the ESLint tool file from the settings and the scope.
 import { GspotError } from '#cli/system/errors.ts';
 import { getPreset } from '#cli/generation/eslint/presets.ts';
-import { listIgnoredGlobs } from '#cli/generation/ignore-files.ts';
-import { type ToolFileContext } from '#cli/types/generation/files.ts';
-import { buildEslintContext } from '#cli/generation/eslint/context.ts';
-import { buildRuntimeBlocks } from '#cli/generation/eslint/runtimes.ts';
+import { JSON_INDENT } from '#cli/config/generation/generate.ts';
+import { buildRuntimes } from '#cli/generation/eslint/runtimes.ts';
+import { type PlannedToolFile } from '#cli/types/generation/files.ts';
+import { buildPlannedEslintFile } from '#cli/generation/eslint/plan.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { buildBoundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
-import { buildSelectedBlocks } from '#cli/generation/eslint/lint-rules.ts';
-import { collectFragments } from '#cli/generation/eslint/fragments/build.ts';
+import { listIgnoredGlobs } from '#cli/generation/settings/ignore-files.ts';
+import { ESLINT_CHECK } from '#cli/config/generation/eslint/settings-blocks.ts';
+import { buildSelectedBlocks } from '#cli/generation/eslint/settings-blocks.ts';
+import { listConfigurationBlocks } from '#cli/generation/eslint/configurations/build.ts';
 import { serializeBlocks, listUnappliedRules } from '#cli/generation/eslint/block-writer.ts';
 import { listLocalPlugins, buildLocalPluginBlocks } from '#cli/generation/eslint/local-plugins.ts';
-import { CODE_PRESETS, FILE_PRESETS, ESLINT_CHECK, ESLINT_BASE_LABEL } from '#cli/config/generation/eslint.ts';
-import { selectPlugins, buildBlocksAfterFragments, buildBlocksBeforeFragments } from '#cli/generation/eslint/base.ts';
+import { serializeBlock, serializeImports, indentEslintBlock } from '#cli/generation/eslint/print.ts';
+import { selectPlugins, buildClosingBlocks, buildOpeningBlocks } from '#cli/generation/eslint/base.ts';
 
 import {
-    serializeBlock,
-    serializeImports,
-    indentEslintBlock,
-    serializeRuntimeSelectors,
-} from '#cli/generation/eslint/print.ts';
+    ESLINT_BASE_LABEL,
+    PRESETS_AFTER_CONFIGURATIONS,
+    PRESETS_BEFORE_CONFIGURATIONS,
+} from '#cli/config/generation/eslint/base.ts';
 
 /**
  * Build the ESLint file from the presets, lint rules, and fragment blocks.
  *
- * @param context the tool file to build.
+ * @param planned the tool file to build.
  * @returns the JavaScript text of the ESLint file.
  */
-function buildEslintFile(context: ToolFileContext): string {
-    const { session } = context;
+export function buildEslintFile(planned: PlannedToolFile): string {
+    const { session } = planned;
 
-    const base = buildEslintContext(context);
-    const { blockInput } = base;
-    const runtimes = buildRuntimeBlocks(session.scopes);
-    const boundaryBlocks = buildBoundaryBlocks(base);
-    const ignoredPaths = listIgnoredGlobs(session, context.selection.view, ESLINT_CHECK);
-    const { fragmentParts, fragmentImports, fragmentSelectors } = collectFragments(session, base);
-    const shipped = selectPlugins(base, boundaryBlocks);
-    const plugins = { ...shipped, ...listLocalPlugins(session.scopes, context.targetPath, shipped) };
-    const presets = base.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
+    const eslintContext = buildPlannedEslintFile(planned);
+    const { blockInput } = eslintContext;
+    const runtimes = buildRuntimes(session.scopes);
+    const boundaryBlocks = buildBoundaryBlocks(eslintContext);
+    const ignoredGlobs = listIgnoredGlobs(session, planned.selection.view, ESLINT_CHECK);
+    const { configurationBlocks, configurationImports, configurationSelectors } = listConfigurationBlocks(
+        session,
+        eslintContext,
+    );
+    const shipped = selectPlugins(eslintContext, boundaryBlocks);
+    const plugins = { ...shipped, ...listLocalPlugins(session.scopes, planned.targetPath, shipped) };
+    const presets = eslintContext.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
     const capturedImports = Object.fromEntries<readonly [string, string]>(
-        [...CODE_PRESETS, ...FILE_PRESETS].map(([name, importName]) => [
+        [...PRESETS_BEFORE_CONFIGURATIONS, ...PRESETS_AFTER_CONFIGURATIONS].map(([name, importName]) => [
             importName,
             [importName, getPreset(presets, name).package],
         ]),
     );
     const output: string[] = [
-        serializeImports({ ...capturedImports, ...plugins }, fragmentImports),
-        serializeRuntimeSelectors(runtimes),
+        serializeImports({ ...capturedImports, ...plugins }, configurationImports),
+        `const runtimeDeclarations = ${JSON.stringify(runtimes, null, JSON_INDENT)};\n`,
         'export default [',
         '    // Shared ignore sections.',
-        indentEslintBlock(serializeBlock({ ignores: ignoredPaths })) + ',',
+        indentEslintBlock(serializeBlock({ ignores: ignoredGlobs })) + ',',
         serializeBlocks(blockInput, [
-            ...buildBlocksBeforeFragments(base, plugins, boundaryBlocks, ignoredPaths).map((block) => ({
+            ...buildOpeningBlocks(eslintContext, plugins, boundaryBlocks, ignoredGlobs).map((block) => ({
                 ...block,
                 label: ESLINT_BASE_LABEL,
             })),
-            ...fragmentParts,
-            ...buildBlocksAfterFragments(base, fragmentSelectors, runtimes).map((block) => ({
+            ...configurationBlocks,
+            ...buildClosingBlocks(eslintContext, configurationSelectors, runtimes).map((block) => ({
                 ...block,
                 label: ESLINT_BASE_LABEL,
             })),
-            ...[...buildSelectedBlocks(base), ...buildLocalPluginBlocks(session.scopes, base.eslintFiles.code)].map(
-                (data) => ({ data, label: ESLINT_BASE_LABEL }),
-            ),
+            ...[
+                ...buildSelectedBlocks(eslintContext),
+                ...buildLocalPluginBlocks(session.scopes, eslintContext.eslintFiles.code),
+            ].map((data) => ({ data, label: ESLINT_BASE_LABEL })),
         ]) + ',',
         '];',
         '',
@@ -83,5 +88,3 @@ function buildEslintFile(context: ToolFileContext): string {
     }
     return output.join('\n');
 }
-
-export { buildEslintFile };

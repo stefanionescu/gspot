@@ -1,22 +1,20 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
-import { stripUndefined } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
-import { mergeIgnore } from '#cli/settings/write/text.ts';
+import { mergeIgnore } from '#cli/settings/text/build.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { saveSettings } from '#cli/apply/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { type TomlTable } from '#cli/types/settings/file.ts';
-import { startSettingsEdit } from '#cli/commands/settings.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
 import { stringify, LocalDate } from '@decimalturn/toml-patch';
-import { GROUP_CHARACTERS } from '#cli/config/commands/ignore.ts';
+import { GLOB_BRACKETS } from '#cli/config/commands/ignore.ts';
+import { type IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import { calendarDateSchema } from '#cli/schemas/settings/parts.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { type IgnoreOptions } from '#cli/types/commands/settings.ts';
+import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
 
 function assertIgnoreTarget(options: IgnoreOptions, settings: Settings): void {
     if (options.check !== undefined) {
@@ -42,7 +40,7 @@ function escapeExistingPaths(root: string, paths: string[] | undefined): string[
         const parts = path.split('/');
         for (let index = parts.length; index > 0; index -= 1) {
             const prefix = parts.slice(0, index).join('/');
-            if (!GROUP_CHARACTERS.test(prefix)) return path;
+            if (!GLOB_BRACKETS.test(prefix)) return path;
             if (statSync(join(root, prefix), { throwIfNoEntry: false }) !== undefined)
                 return [escapeGlob(prefix), ...parts.slice(index)].join('/');
         }
@@ -57,7 +55,7 @@ function escapeExistingPaths(root: string, paths: string[] | undefined): string[
  * @returns the command result.
  */
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
-    const { root, input, settings } = startSettingsEdit(options.cwd);
+    const { root, input, settings } = prepareSettingsEdit(options.cwd);
     assertIgnoreTarget(options, settings);
     const paths = escapeExistingPaths(root, options.paths);
     const target = options.check ?? 'every check';
@@ -76,12 +74,24 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
         }),
     );
     input.table['ignore'] = list;
-    const result = await saveSettings(root, {
-        input,
+    const result = await applySettingsEdit(root, {
+        edit: input,
         summary: `Ignored ${target}${paths === undefined ? '' : ' for ' + paths.join(' and ')}.`,
     });
     const record = stringify({ ignore: [saved] }).trimEnd();
     return result.json.changed ? { ...result, text: `${record}\n${result.text}` } : result;
+}
+
+/**
+ * Validate the --until date before writing it.
+ *
+ * @param text the date from --until.
+ * @returns the same calendar date as a TOML value.
+ */
+function parseExpiryDate(text: string): LocalDate {
+    const result = calendarDateSchema.safeParse(text);
+    if (!result.success) throw new GspotError('arguments', '--until must be a valid calendar date in YYYY-MM-DD form.');
+    return new LocalDate(result.data);
 }
 
 /**
@@ -90,7 +100,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
-function registerIgnore(program: Command, onResult: CommandCompletion): void {
+export function registerIgnore(program: Command, onResult: CommandCompletion): void {
     program
         .command('ignore')
         .argument('[check]', COMMAND_HELP.ignore.arguments['check'])
@@ -117,17 +127,3 @@ function registerIgnore(program: Command, onResult: CommandCompletion): void {
             );
         });
 }
-
-/**
- * Validate the --until date before writing it.
- *
- * @param text the date from --until.
- * @returns the same calendar date as a TOML value.
- */
-function parseExpiryDate(text: string): LocalDate {
-    const result = calendarDateSchema.safeParse(text);
-    if (!result.success) throw new GspotError('arguments', '--until must be a valid calendar date in YYYY-MM-DD form.');
-    return new LocalDate(result.data);
-}
-
-export { registerIgnore };

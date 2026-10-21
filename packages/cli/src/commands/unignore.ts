@@ -1,37 +1,13 @@
 import { formatCount } from '#cli/system/text.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { saveSettings } from '#cli/apply/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { startSettingsEdit } from '#cli/commands/settings.ts';
-import { isRecord, stripUndefined } from '#cli/system/values.ts';
+import { isRecord, stripUndefined } from '#cli/system/tables.ts';
+import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
+import type { IgnoreRemoval } from '#cli/types/commands/unignore.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
-import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-
-/**
- * Register the unignore command.
- *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
- */
-function registerUnignore(program: Command, onResult: CommandCompletion): void {
-    program
-        .command('unignore')
-        .argument('[check]', COMMAND_HELP.unignore.arguments['check'])
-        .summary(COMMAND_HELP.unignore.summary)
-        .description(COMMAND_HELP.unignore.description)
-        .option('--rule <rule>', COMMAND_HELP.unignore.options['--rule <rule>'])
-        .option('--paths <path...>', COMMAND_HELP.unignore.options['--paths <path...>'])
-        .action(async (check, flags) => {
-            onResult(
-                await runUnignoreCommand({
-                    cwd: process.cwd(),
-                    ...stripUndefined({ check, rule: flags.rule, paths: flags.paths }),
-                }),
-            );
-        });
-}
+import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
 
 // Find the records and paths to remove, and leave the read settings unchanged.
 function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
@@ -81,7 +57,7 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
 async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
-    const { root, input, settings } = startSettingsEdit(options.cwd);
+    const { root, input, settings } = prepareSettingsEdit(options.cwd);
     if (options.check !== undefined) assertKnownCheck(options.check, settings);
     const target = options.check ?? 'every check';
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
@@ -110,8 +86,30 @@ async function runUnignoreCommand(
         .join('\n');
     if (kept.length === 0) Reflect.deleteProperty(input.table, 'ignore');
     else input.table['ignore'] = kept;
-    const result = await saveSettings(root, { input, summary });
+    const result = await applySettingsEdit(root, { edit: input, summary });
     return { ...result, text: result.text + warning, json: { ...result.json, ...warningFields } };
 }
 
-export { registerUnignore };
+/**
+ * Register the unignore command.
+ *
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
+ */
+export function registerUnignore(program: Command, onResult: CommandCompletion): void {
+    program
+        .command('unignore')
+        .argument('[check]', COMMAND_HELP.unignore.arguments['check'])
+        .summary(COMMAND_HELP.unignore.summary)
+        .description(COMMAND_HELP.unignore.description)
+        .option('--rule <rule>', COMMAND_HELP.unignore.options['--rule <rule>'])
+        .option('--paths <path...>', COMMAND_HELP.unignore.options['--paths <path...>'])
+        .action(async (check, flags) => {
+            onResult(
+                await runUnignoreCommand({
+                    cwd: process.cwd(),
+                    ...stripUndefined({ check, rule: flags.rule, paths: flags.paths }),
+                }),
+            );
+        });
+}

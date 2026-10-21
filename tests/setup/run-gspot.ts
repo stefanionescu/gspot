@@ -4,25 +4,28 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { runProgram } from '#cli/main.ts';
 import { runCommand } from '#tests/setup/processes.ts';
+import type { RunReport } from '#cli/types/runs/run.ts';
+import type { FixReport } from '#cli/types/runs/fixes.ts';
+import type { CheckResult } from '#cli/types/runs/check.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/data/test-setup.ts';
 import type { FindingRow } from '#tests/types/tool-output.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import type { StdinOptions, ProcessOutput } from '#tests/types/processes.ts';
-import type { FixReport, RunReport, CheckResult } from '#cli/types/runs/check.ts';
 
 /** The gspot source folder in this checkout. */
 export const CLI_SOURCE_PATH = join(import.meta.dir, '../../packages/cli/src');
-
-export function listFindingRows(report: RunReport): FindingRow[] {
-    return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
-}
 
 /** The CLI entry file in this checkout. */
 export const CLI_MAIN = join(CLI_SOURCE_PATH, 'main.ts');
 
 /** The shipped CLI entry file, including its runtime check. */
 export const CLI_BIN = join(CLI_SOURCE_PATH, 'bin.ts');
+
+/** List the file, line, and rule of every finding in the report. */
+export function listFindingRows(report: RunReport): FindingRow[] {
+    return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
+}
 
 /**
  * Runs gspot in this process over a folder with color off and CI set, capturing what it writes.
@@ -106,5 +109,7 @@ export async function spawnGspot(
 /** Run one check as a child process and return its result for the root scope. */
 export async function spawnRootCheck(root: string, check: string): Promise<CheckResult> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json']));
-    return result.report.checks.find((entry) => entry.scope === '') as CheckResult;
+    const found = result.report.checks.find((entry) => entry.scope === '');
+    if (found === undefined) throw new Error(`The report has no root result for ${check}.`);
+    return found;
 }

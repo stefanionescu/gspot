@@ -1,7 +1,7 @@
 import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
 
 /** The paths that each spelling exclusion leaves checked. Both generated tool files must report them. */
-export const SPELLING_EXCLUSIONS = [
+export const SPELLING_IGNORE_CASES = [
     {
         patterns: ['nested/src/**'],
         expected: ['nested/bad.txt', 'nested/child/bad.txt', 'nested/child/src/bad.txt', 'nested/trc/bad.txt'],

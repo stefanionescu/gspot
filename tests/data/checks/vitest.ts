@@ -1,4 +1,4 @@
-const VITEST_SOURCE = `// Arithmetic the test tests call.
+export const VITEST_SOURCE = `// Arithmetic the test tests call.
 
 /**
  * Adds positive values.
@@ -14,9 +14,9 @@ export function positiveTotal(values: number[]): number {
 }
 `;
 
-const VITEST_PACKAGE = { name: 'example', version: '1.0.0', private: true, type: 'module' } as const;
+export const VITEST_PACKAGE = { name: 'example', version: '1.0.0', private: true, type: 'module' } as const;
 
-const UNTESTED_SOURCE = `${VITEST_SOURCE}
+export const UNTESTED_SOURCE = `${VITEST_SOURCE}
 /**
  * Triples a number.
  * @param value the number.
@@ -37,11 +37,9 @@ test('adds only positive values', () => {
 });
 `;
 
-const VITEST_PROJECT_FILES = {
+export const VITEST_PROJECT_FILES = {
     '.gitignore': 'node_modules\ncoverage\n',
     'vitest.config.mjs': "export default { test: { include: ['src/*.test.ts'] } };\n",
     'src/public.ts': VITEST_SOURCE,
     'src/math.test.ts': VITEST_MATH_TEST,
 } as const;
-
-export { VITEST_SOURCE, VITEST_PACKAGE, UNTESTED_SOURCE, VITEST_PROJECT_FILES };

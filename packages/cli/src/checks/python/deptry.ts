@@ -1,16 +1,17 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { listChildScopes } from '#cli/planning/files.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { buildUvRunCommand } from '#cli/tools/python.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
-import { buildUvRunCommand } from '#cli/install/python/project.ts';
 import { deptrySchema } from '#cli/schemas/checks/python/deptry.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { DEPTRY_COMMAND, DEPTRY_EXCLUDE_FLAG, DEPTRY_FIRST_PARTY_FLAG } from '#cli/config/checks/python.ts';
 
 // The modules of python.externals count as first party, beside the project's own known_first_party list, which the
@@ -28,7 +29,7 @@ function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
  * @param planned the dependency check and its scope.
  * @returns the check result.
  */
-export async function checkDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkPythonDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const text = findCachedText(session.reads, joinScope(planned.selection.scope.path, PYPROJECT_TOML));
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(

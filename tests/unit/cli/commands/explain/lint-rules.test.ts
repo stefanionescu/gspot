@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
+import { RULE_PAGES } from '#tests/data/commands/explain.ts';
 
 test('a rule is explained with the page its manifest declares', async () => {
     await using sandbox = await testdir();
@@ -16,46 +17,20 @@ test('a rule is explained with the page its manifest declares', async () => {
     });
     expect(shellcheckText.stdout).toContain('gspot ignore bash/shellcheck --rule SC2086');
     expect(shellcheckText.stdout).not.toContain('tools.shellcheck.rules');
-    const undefinedNames = await runGspot(sandbox.path, ['explain', 'no-undef', '--json']);
-    expect(JSON.parse(undefinedNames.stdout)).toMatchObject({
-        kind: 'lint-rule',
-        subject: 'eslint/no-undef',
-        page: 'https://eslint.org/docs/latest/rules/no-undef',
-    });
-    const variableDeclarations = await runGspot(sandbox.path, ['explain', 'no-var', '--json']);
-    expect(JSON.parse(variableDeclarations.stdout)).toMatchObject({
-        kind: 'lint-rule',
-        subject: 'eslint/no-var',
-        page: 'https://eslint.org/docs/latest/rules/no-var',
-    });
-    const explicitVariableDeclarations = await runGspot(sandbox.path, ['explain', 'eslint/no-var', '--json']);
-    expect(JSON.parse(explicitVariableDeclarations.stdout)).toMatchObject({
-        page: 'https://eslint.org/docs/latest/rules/no-var',
-    });
 });
 
-test.each([
-    ['gspot/no-trivial-functions', 'https://generativespotting.com/reference/eslint-plugin/no-trivial-functions/'],
-    ['@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
-    [
-        'unicorn/prefer-set-has',
-        'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
-    ],
-    [
-        'eslint/unicorn/prefer-set-has',
-        'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
-    ],
-    ['eslint/@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
-    ['eslint/sonarjs/no-identical-functions', null],
-])('a plugin rule, with or without the eslint/ prefix, finds the page of its plugin: %s', async (subject, page) => {
-    await using sandbox = await testdir();
-    const subjectExplanation = await runGspot(sandbox.path, ['explain', subject, '--json']);
-    expect(JSON.parse(subjectExplanation.stdout)).toMatchObject({
-        kind: 'lint-rule',
-        tool: 'eslint',
-        page,
-    });
-});
+test.each([...RULE_PAGES])(
+    'a plugin rule, with or without the eslint/ prefix, finds the page of its plugin: %s',
+    async (subject, page) => {
+        await using sandbox = await testdir();
+        const subjectExplanation = await runGspot(sandbox.path, ['explain', subject, '--json']);
+        expect(JSON.parse(subjectExplanation.stdout)).toMatchObject({
+            kind: 'lint-rule',
+            tool: 'eslint',
+            page,
+        });
+    },
+);
 
 test('a check explains the minimum version its declaring tool needs', async () => {
     await using sandbox = await testdir();

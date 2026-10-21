@@ -71,13 +71,6 @@ await rm('dist', { recursive: true, force: true });
 await cp('pages', 'dist', { recursive: true });
 `;
 
-/** Settings that select the site build checks at level all. */
-export const SITE_SETTINGS = `level = "all"
-configurations = ["site"]
-[site]
-build_command = ["bun", "build.js"]
-`;
-
 export const WORKSPACE_SITE_FILES = {
     'gspot.toml': buildSandboxSettings([], {
         scopes: [{ path: 'web', configurations: ['site', 'javascript'] }],

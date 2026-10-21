@@ -6,47 +6,45 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { listExecutableNames } from '#cli/system/paths.ts';
+import { buildToolInstall } from '#tests/setup/install.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { VALE_PACKAGE_FOLDERS } from '#cli/config/install/vale.ts';
 import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
 import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, FIXED_VALE_INSTALL_SCRIPT } from '#tests/data/checks/prose.ts';
 
 test.each([...VALE_INSTALL_FAILURES])(
-    'a failed Vale package install reports %s, and the next install succeeds after the fix',
-    async (_failure, script, expected, limit) => {
+    'a failed Vale package install reports $name, and the next install succeeds after the fix',
+    async ({ script, message, settings }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: limit }),
+            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: settings }),
             '.gspot/configurations/general/prose/vale.ini': VALE_PACKAGES_INI,
             '.gspot/vale/Google/terms.yml': 'previous bytes\n',
             'guide.md': 'Authored text.\n',
         });
 
         const session = await openSession(sandbox.path);
-        const tool = getToolDeclaration(session.manifests.values(), 'vale');
+        const tool = getTool(session.configurations.values(), 'vale');
         const executable = join(sandbox.path, 'node_modules/.bin', listExecutableNames('vale')[0]!);
-        const launcher = `#!${process.execPath}\nif(process.argv.includes('--version')) console.log(${JSON.stringify(tool.version)}); else {${script}\n}\n`;
+        const launcher = `if(process.argv.includes('--version')) console.log(${JSON.stringify(tool.version)}); else {${script}\n}\n`;
         await fakeTool(sandbox.path, 'node_modules/.bin/vale', launcher);
         using writer = openWriter(sandbox.path);
-        const failedSteps: (readonly string[])[] = [];
-        const request = { session, writer, generated: generate(session), tools: [], mise: null, steps: failedSteps };
-        expect(await captureRejection(installValePackages(request))).toContain(expected);
+        const request = buildToolInstall(session, writer);
+        expect(await captureRejection(installValePackages(request))).toContain(message);
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('previous bytes\n');
-        expect(failedSteps).toStrictEqual([[executable, '--config', matchSubstring('vale-'), 'sync']]);
+        expect(request.steps).toStrictEqual([[executable, '--config', matchSubstring('vale-'), 'sync']]);
         expect(await readFile(join(sandbox.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
         await writeFile(
             join(sandbox.path, 'node_modules/.bin/vale.js'),
             launcher.replace(script, FIXED_VALE_INSTALL_SCRIPT),
         );
         await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
-        const steps: (readonly string[])[] = [];
-        const fixed = { ...request, session: await openSession(sandbox.path), steps };
+        const fixed = buildToolInstall(await openSession(sandbox.path), writer);
         expect(await installValePackages(fixed)).toBe('installed Vale packages in .gspot/vale');
-        expect(steps).toStrictEqual([[executable, '--config', matchSubstring('vale-'), 'sync']]);
+        expect(fixed.steps).toStrictEqual([[executable, '--config', matchSubstring('vale-'), 'sync']]);
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('corrected bytes\n');
         expect(hasValePackages(sandbox.path, 'all')).toBe(true);
     },
@@ -80,11 +78,9 @@ test('at level recommended install installs no Vale packages', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['prose'], { level: 'recommended' }) });
 
     const session = await openSession(sandbox.path);
-    const steps: (readonly string[])[] = [];
     using writer = openWriter(sandbox.path);
-    expect(
-        await installValePackages({ session, writer, generated: generate(session), tools: [], mise: null, steps }),
-    ).toBe('');
-    expect(steps).toStrictEqual([]);
+    const context = buildToolInstall(session, writer);
+    expect(await installValePackages(context)).toBe('');
+    expect(context.steps).toStrictEqual([]);
     expect(await isOnDisk(join(sandbox.path, '.gspot/vale'))).toBe(false);
 });

@@ -1,9 +1,10 @@
-// Format check findings, fixes, progress, and the final run summary.
 import { formatCount } from '#cli/system/text.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { warn, getColors } from '#cli/system/terminal.ts';
+import type { FixReport } from '#cli/types/runs/fixes.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import type { Finding, RunReport, FixReport, CheckResult, CheckProgress } from '#cli/types/runs/check.ts';
+import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
+import type { RunReport, CheckProgress } from '#cli/types/runs/run.ts';
 
 import {
     NOTE_STATUSES,
@@ -12,7 +13,7 @@ import {
     CHECK_STATUS_COLORS,
     FIXER_ERROR_MESSAGE,
     COMMIT_PREFIX_LENGTH,
-} from '#cli/config/terminal.ts';
+} from '#cli/config/commands/check.ts';
 
 function formatFixerFailure(note: string): string {
     return (
@@ -21,31 +22,6 @@ function formatFixerFailure(note: string): string {
             .find((line) => FIXER_ERROR_MESSAGE.test(line))
             ?.replace(FIXER_ERROR_MESSAGE, '') ?? note.split('\n').slice(0, 1).join('')
     );
-}
-
-/**
- * Print failed fixer warnings, with the full diagnostics when requested.
- *
- * @param fixes the fixer results.
- * @param options the diagnostic verbosity.
- * @param options.verbose whether to include the full fixer output.
- */
-function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
-    for (const result of fixes.results) {
-        if (result.status !== 'failed') continue;
-        const note = stripVTControlCharacters(result.note);
-        const detail = formatFixerFailure(note);
-        warn(
-            `The ${result.check} fixer failed: ${detail.endsWith('.') ? detail.slice(0, -1) : detail}. Run gspot check --only ${result.check} --fix --verbose.`,
-        );
-        if (verbose)
-            process.stderr.write(
-                note
-                    .split('\n')
-                    .map((line) => '  ' + line)
-                    .join('\n') + '\n',
-            );
-    }
 }
 
 function formatCheckedContent(comparison: CheckProgress['comparison']): string {
@@ -147,6 +123,31 @@ function formatComparison(comparison: RunReport['comparison']): string {
 }
 
 /**
+ * Print failed fixer warnings, with the full diagnostics when requested.
+ *
+ * @param fixes the fixer results.
+ * @param options the diagnostic verbosity.
+ * @param options.verbose whether to include the full fixer output.
+ */
+export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
+    for (const result of fixes.results) {
+        if (result.status !== 'failed') continue;
+        const note = stripVTControlCharacters(result.note);
+        const detail = formatFixerFailure(note);
+        warn(
+            `The ${result.check} fixer failed: ${detail.endsWith('.') ? detail.slice(0, -1) : detail}. Run gspot check --only ${result.check} --fix --verbose.`,
+        );
+        if (verbose)
+            process.stderr.write(
+                note
+                    .split('\n')
+                    .map((line) => '  ' + line)
+                    .join('\n') + '\n',
+            );
+    }
+}
+
+/**
  * Format the report and its summary from one result list.
  *
  * @param report the check results and totals.
@@ -213,5 +214,3 @@ export function formatFixes(fixes: FixReport, options: { isDryRun: boolean }): s
         ),
     ];
 }
-
-export { printFailedFixers };

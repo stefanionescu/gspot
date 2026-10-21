@@ -1,28 +1,22 @@
 import { join } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { runCheckSample } from '#tests/setup/sample-checks.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { SITE_SANDBOX } from '#tests/data/checks/site/project.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
-import { BUILT_PAGE_CASES } from '#tests/data/checks/site/built-pages.ts';
 import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/site/build.ts';
+import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 import { planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
-
-import {
-    SITE_SETTINGS,
-    SITE_BUILD_SCRIPT,
-    BUILD_OUTPUT_CHECKS,
-    WORKSPACE_SITE_FILES,
-} from '#tests/data/checks/site/build.ts';
+import { SITE_SETTINGS, BUILT_PAGE_CASES } from '#tests/data/checks/site/built-pages.ts';
+import { SITE_BUILD_SCRIPT, BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/data/checks/site/build.ts';
 
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
     await using sandbox = await testdir({
@@ -78,13 +72,13 @@ test.each([0, 7])("build: a run deletes the build's scratch copy after exit %i",
             cwd = options.cwd!;
             await mkdir(join(cwd, 'dist'), { recursive: true });
             await writeFile(join(cwd, 'dist/index.html'), 'isolated output');
-            return {
+            return buildProcessResult({
                 code,
                 stdout: '',
                 stderr: code === 0 ? '' : 'Test build failure',
                 missing: false,
                 duration: 1,
-            };
+            });
         }),
     );
     {

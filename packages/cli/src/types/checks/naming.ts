@@ -1,18 +1,17 @@
 import type { SqlFile } from '#cli/types/parsers/sql.ts';
+import type { Check } from '#cli/types/configurations.ts';
 import type { FindingPlace } from '#cli/types/runs/check.ts';
-import type { NamingCase } from '#cli/types/settings/tables.ts';
-import type { NAMED_CATEGORIES } from '#cli/config/checks/naming.ts';
-import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { NamingCase, NamedCategory } from '#cli/types/settings/tables.ts';
 
 /** A banned word split into parts, with where it came from. */
 export type BannedWord = { word: string; parts: string[]; setting: string; group?: string; categories?: string[] };
 
 /** The naming settings and the test-file status. */
-export type NamingInputs = { check: CheckDeclaration; settings: NamingSettings; isTestFile: boolean };
+export type FileNaming = { check: Check; settings: NamingSettings; isTestFile: boolean };
 
 /** The input and finding location that the checks of one identifier share. */
-export type NamingContext = NamingInputs & { identifier: Identifier; place: FindingPlace; prefix: string };
+export type CheckedIdentifier = FileNaming & { identifier: Identifier; place: FindingPlace; prefix: string };
 
 /** A path-scoped rule, compiled. */
 export type CompiledOverride = {
@@ -98,16 +97,11 @@ export type Identifier = {
     extraCases?: NamingCase[];
 };
 
-/** A declaration before attaching its file, language, and display label. */
-export type IdentifierDeclaration = Omit<Identifier, 'file' | 'language' | 'label'>;
-
 /** One name a statement declares, with its naming category. */
 export type SqlNamed = { category: NamedCategory; name: string; location?: number; offset?: number };
 
 /** Where an extractor puts what it finds. */
 export type ExtractSink = { file: string; language: string; out: Identifier[] };
-
-export type NamedCategory = (typeof NAMED_CATEGORIES)[number];
 
 /** Declarations or the located SQL syntax failure that prevented extraction. */
 export type IdentifierRead = { identifiers: Identifier[]; error: SqlFile['error'] };

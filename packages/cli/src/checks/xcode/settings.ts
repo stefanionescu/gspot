@@ -1,11 +1,12 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { listSourcePaths } from '#cli/repository/coverage.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { PLIST_KEY, PLIST_SUFFIX, ARBITRARY_LOADS, ENTITLEMENTS_SUFFIX } from '#cli/config/checks/xcode.ts';
+import { listSourcePaths } from '#cli/repository/covered-files.ts';
+import { PLIST_KEY, PLIST_SUFFIX, ENTITLEMENTS_SUFFIX, INSECURE_TRANSPORT_SETTING } from '#cli/config/checks/xcode.ts';
 
 /**
  * Reports each entitlement outside xcode.allowed_entitlements, which planning requires.
@@ -44,7 +45,7 @@ export function checkXcodeEntitlements(session: Session, planned: PlannedCheck):
 export function checkAppTransportSecurity(session: Session, planned: PlannedCheck): Finding[] {
     return listSourcePaths(planned.files, [PLIST_SUFFIX]).flatMap((path): Finding[] => {
         const text = readCachedText(session.reads, path);
-        const found = ARBITRARY_LOADS.exec(text);
+        const found = INSECURE_TRANSPORT_SETTING.exec(text);
         if (found === null) return [];
         const line = computePosition(text, found.index).line;
         return [

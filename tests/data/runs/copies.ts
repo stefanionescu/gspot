@@ -22,7 +22,7 @@ export const WORKSPACE_SOURCE_FILES = {
 } as const;
 
 /** Copy and read failures name their operation after cleanup removes the scratch copy. */
-export const SCRATCH_FAILURES = [
+export const COPY_FAILURES = [
     { operation: 'copy', message: 'copyfile' },
     { operation: 'read', message: 'EISDIR' },
 ] as const;
@@ -69,7 +69,7 @@ for (const source of [{ kind: 'index' }, { kind: 'commit', hash }]) {
         paths: Buffer.from(bytes.stdout).toString('utf8').split('\0').filter(Boolean),
         configuration: configured.stdout.trim(),
         explicit: intentional.stdout.trim(),
-        cancelled: cancelled.isCanceled === true && cancelled.code !== 0,
+        cancelled: cancelled.canceled === true && cancelled.code !== 0,
     });
 }
 writeFileSync(process.argv[6], JSON.stringify({

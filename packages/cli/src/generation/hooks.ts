@@ -1,9 +1,10 @@
+import { HOOKS_PATH } from '#cli/config/gspot-paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { HOOKS_PATH } from '#cli/config/system/locations.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
+import type { StartRunner } from '#cli/types/repository/package-manager.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/inventory.ts';
-import type { HookName, StartRunner, LfsHookName, GeneratedFile } from '#cli/types/generation/files.ts';
+import type { HookName, LfsHookName, GeneratedFile } from '#cli/types/generation/files.ts';
 
 import {
     LFS_HOOKS,
@@ -22,7 +23,7 @@ import {
 // runs git lfs first, and the pre-push hook saves its input so that both commands read it.
 function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { usesLfs: boolean }): string {
     const program = runner.name;
-    const { missing, pin } = runner;
+    const { missing, installCommand } = runner;
     const absolutePath = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
     const lfs = usesLfs && isLfsHookName(name);
     const replay = lfs ? PUSH_INPUT_REPLAY : '';
@@ -34,7 +35,7 @@ function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { use
               ]
             : []),
         ...absolutePath,
-        `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${missing} Install gspot with: ${pin}' >&2; exit 2; }`,
+        `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${missing} Install gspot with: ${installCommand}' >&2; exit 2; }`,
         `${lfs ? replay : 'exec '}${runner.command} ${HOOK_ARGUMENTS[name]}`,
         '',
     ].join('\n');
@@ -62,7 +63,7 @@ export function isLfsHookName(name: string): name is LfsHookName {
  *
  * @returns whether a tracked file has the LFS filter.
  */
-export function usesGitLfs(attributes: Repository['attributes']): boolean {
+export function hasLfsFiles(attributes: Repository['attributes']): boolean {
     return attributes.values().some((values) => values[FILTER_ATTRIBUTE] === LFS_FILTER);
 }
 

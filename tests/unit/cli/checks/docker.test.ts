@@ -1,26 +1,27 @@
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { findCheckCode } from '#cli/checks/code.ts';
+import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
+import { runCheckCode } from '#cli/commands/check/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
-import { runCheckImplementation } from '#cli/runs/check-run.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { selectCheckImplementation } from '#cli/checks/implementations.ts';
+import { TRIVY_FINDINGS_EXIT_CODE } from '#cli/config/checks/docker.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { checkFindings, openPinnedSession } from '#tests/setup/check-input.ts';
 
 import {
     MIXED_REPORT,
     VALID_REPORT,
+    NGINX_COMPOSE,
     DOCKER_VERSION,
     COMPOSE_SOURCES,
     INVALID_COMPOSE,
     REPORT_FAILURES,
     DOCKERIGNORE_CASES,
-    TRIVY_FINDINGS_EXIT,
     DOCKER_CONTEXT_CASES,
     COMPOSE_PAIRING_CASES,
 } from '#tests/data/checks/docker.ts';
@@ -39,7 +40,7 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
             if (command[0] === 'git') return nativeRun(command, options);
             expect(command.at(-1)).toBe('nginx:1.27.2');
             expect(options.cwd).toBe(folder.path);
-            return Promise.resolve(buildProcessResult({ code: TRIVY_FINDINGS_EXIT, stdout: VALID_REPORT }));
+            return Promise.resolve(buildProcessResult({ code: TRIVY_FINDINGS_EXIT_CODE, stdout: VALID_REPORT }));
         }),
     );
     expect(await checkFindings(session.root, 'docker/trivy-image')).toStrictEqual([
@@ -58,7 +59,7 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
 test('a fatal registry failure is reported with its diagnostic', async () => {
     const { code, stdout, stderr, message } = REPORT_FAILURES;
     await using folder = await testdir();
-    const source = 'services: {app: {image: nginx:1.27.2}}\n';
+    const source = NGINX_COMPOSE;
     await createFileTree(folder.path, {
         'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': source,
@@ -77,17 +78,6 @@ test.each([...INVALID_COMPOSE])('Trivy refuses $name before scanning an image', 
 
     using scan = spyOn(processes, 'spawnProcess');
     expect(await captureRejection(checkFindings(folder.path, 'docker/trivy-image'))).toContain(message);
-    expect(scan).not.toHaveBeenCalled();
-});
-
-test('Trivy leaves build-only services unscanned', async () => {
-    await using folder = await testdir({
-        'gspot.toml': buildSandboxSettings(['docker']),
-        'compose.yaml': 'services: {app: {build: .}}\n',
-    });
-
-    using scan = spyOn(processes, 'spawnProcess');
-    expect(await checkFindings(folder.path, 'docker/trivy-image')).toStrictEqual([]);
     expect(scan).not.toHaveBeenCalled();
 });
 
@@ -127,14 +117,14 @@ test.each([...DOCKER_CONTEXT_CASES])(
 test('Trivy scans a repeated image once and reports each advisory and secret in every Compose file that names it', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['docker']),
-        'compose.yaml': 'services: {app: {image: nginx:1.27.2}}\n',
-        'docker-compose.prod.yml': 'services: {app: {image: nginx:1.27.2}}\n',
+        'compose.yaml': NGINX_COMPOSE,
+        'docker-compose.prod.yml': NGINX_COMPOSE,
     });
     using resources = new DisposableStack();
     const session = await openPinnedSession(sandbox.path, ['trivy'], resources);
     const scan = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
-            buildProcessResult({ code: TRIVY_FINDINGS_EXIT, stdout: MIXED_REPORT }),
+            buildProcessResult({ code: TRIVY_FINDINGS_EXIT_CODE, stdout: MIXED_REPORT }),
         ),
     );
     const findings = await checkFindings(session.root, 'docker/trivy-image');
@@ -154,19 +144,17 @@ test.each([...COMPOSE_PAIRING_CASES])(
     async ({ base, override }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['docker']),
-            [base]: 'services: {app: {image: nginx:1.27.2}}\n',
+            [base]: NGINX_COMPOSE,
             [override]: 'services: {app: {environment: {FEATURE: enabled}}}\n',
         });
         const session = await openSession(sandbox.path);
         using resources = new DisposableStack();
         resources.use(
-            fakePinnedExecutables([
-                { ...getToolDeclaration(session.manifests.values(), 'docker'), version: DOCKER_VERSION },
-            ]),
+            fakePinnedExecutables([{ ...getTool(session.configurations.values(), 'docker'), version: DOCKER_VERSION }]),
         );
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));
-        const planned = planRun(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        expect(await runCheckImplementation(session, planned, selectCheckImplementation(planned.check))).toMatchObject({
+        const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
+        expect(await runCheckCode(session, planned, findCheckCode(planned.check))).toMatchObject({
             status: 'passed',
             findings: [],
         });

@@ -3,23 +3,20 @@ import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
-import { generate } from '#cli/generation/generate.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
-import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
-import { GSPOT_NODE_MODULES_PATH, GSPOT_PYTHON_ENVIRONMENT_PATH } from '#cli/config/system/locations.ts';
-import { listDistinctTools, getToolDeclaration, findToolProjectPackage } from '#cli/configurations/tools.ts';
+import { getShippedTool, buildProcessResult } from '#tests/setup/builders.ts';
+import { listDistinctTools, findToolProjectPackage } from '#cli/configurations/declared-tools.ts';
+import { GSPOT_NODE_MODULES_PATH, GSPOT_PYTHON_ENVIRONMENT_PATH } from '#cli/config/gspot-paths.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
@@ -27,11 +24,8 @@ test('doctor reports no unowned gspot files in a fresh clone', async () => {
     const checkout = join(sandbox.path, 'checkout');
     await createFileTree(source, { 'gspot.toml': buildSandboxSettings([]) });
     readGitOutput(source, ['init', '-q']);
-    {
-        using writer = openWriter(source);
-        const session = await openSession(source);
-        writeGeneratedFiles(session, generate(session), writer);
-    }
+    const applied = await runGspot(source, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     commitAll(source);
     readGitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
     const result = await runGspot(checkout, ['doctor', '--json']);
@@ -43,7 +37,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
     'doctor exit code follows the library state %s: an outdated tool exits 1',
     async (state) => {
         await using sandbox = await testdir();
-        const pin = getToolDeclaration(readManifests().values(), 'eslint-plugin-zod');
+        const pin = getShippedTool('eslint-plugin-zod');
         const floor = semver.parse(pin.min_version ?? pin.version!)!;
         let earlierVersion = `${String(floor.major - 1)}.0.0`;
         if (floor.minor > 0) earlierVersion = `${String(floor.major)}.${String(floor.minor - 1)}.0`;
@@ -56,7 +50,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
             'source.js': 'export const value = 1;\n',
         });
         const session = await openSession(sandbox.path);
-        const tools = listDistinctTools(session.neededToolManifests);
+        const tools = listDistinctTools(session.neededToolConfigurations);
         await createFileTree(
             sandbox.path,
             Object.fromEntries(
@@ -92,23 +86,23 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     });
 
     const session = await openSession(sandbox.path);
-    const tools = listDistinctTools(session.neededToolManifests);
+    const tools = listDistinctTools(session.neededToolConfigurations);
     using _which = useExecutable(join(sandbox.path, 'tool-bin', 'pytest'));
     const nativeVersion = processes.spawnProcessBlocking;
     let present = false;
     using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
         if (command.slice(1).join(' ') === '--version --version')
-            return {
+            return buildProcessResult({
                 code: 0,
                 stdout: present ? 'pytest-cov-7.1.0' : 'pytest 9.1.1',
                 stderr: '',
                 missing: false,
                 duration: 1,
-            };
+            });
         const pin = tools.find((tool) => tool.name === basename(command[0] ?? ''));
         const version = pin?.version ?? pin?.min_version;
         if (version === undefined) return nativeVersion(command, options);
-        return { code: 0, stdout: version, stderr: '', missing: false, duration: 1 };
+        return buildProcessResult({ code: 0, stdout: version, stderr: '', missing: false, duration: 1 });
     });
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
     const missingText = await runGspot(sandbox.path, ['doctor']);

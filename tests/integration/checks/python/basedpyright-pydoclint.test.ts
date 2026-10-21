@@ -6,7 +6,7 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { DOCSTRING_MODULES } from '#tests/data/checks/python/docstrings.ts';
 import { updateSandbox, applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { PYPROJECT, PYDOCLINT_GOOGLE, PYDOCLINT_CHECK_ARGUMENTS } from '#tests/data/checks/python/project.ts';
+import { PYPROJECT, GOOGLE_PYPROJECT, PYDOCLINT_CHECK_ARGUMENTS } from '#tests/data/checks/python/project.ts';
 import { PYTHON_SANDBOX, ARITHMETIC_MODULE, ARITHMETIC_MODULE_PATH } from '#tests/data/checks/python/tool-checks.ts';
 
 const installedSandbox = registerSharedSandbox(PYTHON_SANDBOX);
@@ -17,18 +17,15 @@ test('init replaces your pyrightconfig.json with a pointer, and basedpyright rep
 TOTAL: int = "three"
 `;
     const { root, environment } = installedSandbox();
-    await using _change = await updateSandbox(
-        { root, environment: {}, run: spawnGspot },
-        {
-            check: 'python/basedpyright',
-            files: { [ARITHMETIC_MODULE_PATH]: typed },
-        },
-    );
+    await using _change = await updateSandbox(installedSandbox(), {
+        check: 'python/basedpyright',
+        files: { [ARITHMETIC_MODULE_PATH]: typed },
+    });
     // The pointer replaces the file; gspot.toml keeps none of the old settings.
-    const pointer = await readFile(`${root}/pyrightconfig.json`, 'utf8');
+    const pointer = await readFile(join(root, 'pyrightconfig.json'), 'utf8');
     expect(pointer).toContain('"extends": "./.gspot/configurations/language/python/basedpyright.json"');
     expect(pointer).not.toContain('basic');
-    const settings = await readFile(`${root}/gspot.toml`, 'utf8');
+    const settings = await readFile(join(root, 'gspot.toml'), 'utf8');
     expect(settings).not.toContain('example/skipped.py');
     const command = ['check', '--only', 'python/basedpyright', '--json'];
     const refused = parseCheckReport(await spawnGspot(root, command, environment));
@@ -63,21 +60,18 @@ test('pydoclint finds the docstring style of each file and does not ask for type
     const files = Object.fromEntries(
         ['', 'app/'].flatMap((scope) => Object.entries(DOCSTRING_MODULES).map(([file, text]) => [scope + file, text])),
     );
-    await using _change = await applySandboxChanges(
-        { root, environment: {}, run: spawnGspot },
-        {
-            check: 'python/pydoclint',
-            files: {
-                'gspot.toml': buildSandboxSettings(['python'], {
-                    level: 'all',
-                    scopes: [{ path: 'app', configurations: ['python'] }],
-                }),
-                'pyproject.toml': PYPROJECT,
-                'app/pyproject.toml': PYPROJECT,
-                ...files,
-            },
+    await using _change = await applySandboxChanges(installedSandbox(), {
+        check: 'python/pydoclint',
+        files: {
+            'gspot.toml': buildSandboxSettings(['python'], {
+                level: 'all',
+                scopes: [{ path: 'app', configurations: ['python'] }],
+            }),
+            'pyproject.toml': PYPROJECT,
+            'app/pyproject.toml': PYPROJECT,
+            ...files,
         },
-    );
+    });
     const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const report = failed.report;
@@ -100,25 +94,20 @@ test('pydoclint finds the docstring style of each file and does not ask for type
 test('pydoclint keeps your settings that ask for types in docstrings', async () => {
     const { root, environment } = installedSandbox();
     const project =
-        PYPROJECT +
-        '\n' +
-        PYDOCLINT_GOOGLE +
+        GOOGLE_PYPROJECT +
         `arg-type-hints-in-docstring = true
 check_return_types = true
 check-yield-types = true
 `;
-    await using _change = await applySandboxChanges(
-        { root, environment: {}, run: spawnGspot },
-        {
-            check: 'python/pydoclint',
-            files: {
-                'gspot.toml': buildSandboxSettings(['python']),
-                'pyproject.toml': project,
-                'example/__init__.py': '',
-                [ARITHMETIC_MODULE_PATH]: ARITHMETIC_MODULE,
-            },
+    await using _change = await applySandboxChanges(installedSandbox(), {
+        check: 'python/pydoclint',
+        files: {
+            'gspot.toml': buildSandboxSettings(['python']),
+            'pyproject.toml': project,
+            'example/__init__.py': '',
+            [ARITHMETIC_MODULE_PATH]: ARITHMETIC_MODULE,
         },
-    );
+    });
     const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks[0]!.findings).toContainEqual(

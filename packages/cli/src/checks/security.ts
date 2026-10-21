@@ -1,12 +1,13 @@
 import { join } from 'node:path';
+import { type Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
-import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { SEMGREP_TOOL } from '#cli/config/checks/security.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
 
 /**
  * List the Semgrep rule files that the configurations and settings of a scope name.
@@ -17,8 +18,8 @@ import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
  */
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
     const { selected, scope, view } = planned.selection;
-    const declared = selected.flatMap((manifest) =>
-        manifest.toolFiles
+    const declared = selected.flatMap((configuration) =>
+        configuration.toolFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
             .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
             .map((file) => buildScopeTarget(scope.path, file, getToolFiles(session).targets)),
@@ -33,7 +34,7 @@ function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[]
  * @param planned the check for one scope.
  * @returns the check result.
  */
-export async function checkSemgrep(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkSecuritySemgrep(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const command = planned.check.command as string[];
     const rules = listSemgrepRuleFiles(session, planned);
     if (rules.length === 0)

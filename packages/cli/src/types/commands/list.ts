@@ -1,6 +1,5 @@
 import type { LIST_KINDS } from '#cli/config/commands/list.ts';
-import type { EffectiveSetting } from '#cli/types/settings/values.ts';
-import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
+import { type Setting, type EffectiveSetting } from '#cli/types/settings/inheritance.ts';
 
 type SettingRow = {
     key: string;
@@ -8,7 +7,7 @@ type SettingRow = {
     source: string;
     origin: EffectiveSetting['origin'];
     originScope?: string;
-    reason_needed: SettingDeclaration['reason_needed'];
+    reason_needed: Setting['reason_needed'];
     scope: string;
 };
 

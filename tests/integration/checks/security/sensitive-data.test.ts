@@ -25,11 +25,12 @@ test.skipIf(!hasToolBuild('semgrep'))(
         await installToolProjects(sandbox.path);
         const failed = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const findings = failed.report.checks.flatMap(({ findings: reports }) =>
+        const report = failed.report;
+        const findings = report.checks.flatMap(({ findings: reports }) =>
             reports.map(({ file, line, rule }) => ({ file, line, rule })),
         );
         expect(findings).toStrictEqual([...SENSITIVE_FINDINGS]);
-        const jwt = failed.report.checks
+        const jwt = report.checks
             .flatMap((check) => check.findings)
             .find((finding) => finding.rule === 'gspot.javascript.jwt-no-algorithm-none');
         expect(jwt?.message).toBe(

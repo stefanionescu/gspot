@@ -35,24 +35,24 @@ export type Files = {
     [Symbol.dispose](): void;
 };
 
-/** A stable producer binds a run-owned memo entry to its value type. */
-export type MemoKey<Value extends object> = Readonly<{ create: () => Value }>;
+/** A stable producer binds a run-owned cache entry to its value type. */
+export type CacheKey<Value extends object> = Readonly<{ create: () => Value }>;
 
 /** The source bytes and derived values of one run. */
 export type ReadCache = {
     root: string;
     sources: Map<string, Buffer>;
-    memo: Map<object, object>;
+    values: Map<object, object>;
 };
 
 /** A temporary folder that removes itself when disposed. */
-export type ScratchFolder = Disposable & { path: string };
+export type TemporaryFolder = Disposable & { path: string };
 
 /** Inputs whose parsed values belong to the run and its cleanup stack. */
-export type CachedParseInput = { reads: ReadCache; resources: DisposableStack; files: { path: string }[] };
+export type CachedSourceFiles = { reads: ReadCache; resources: DisposableStack; files: { path: string }[] };
 
 /** A stable key owns one reader, its result type, and its cleanup operation. */
-export type ParseKey<Input, Value extends object> = Readonly<{
-    read: (input: Input) => Promise<Value>;
+export type ParseKey<Sources, Value extends object> = Readonly<{
+    read: (sources: Sources) => Promise<Value>;
     dispose: (value: Value) => void;
 }>;

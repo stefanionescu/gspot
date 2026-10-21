@@ -25,18 +25,15 @@ test.each([false, true])(
             tables: '[tools.eslint.rules]\n"no-console" = [{allow = ["warn"]}]\n',
         });
         await createFileTree(folder.path, {
-            'gspot.toml': settings,
+            'gspot.toml':
+                settings +
+                (ignored
+                    ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\nreason = "This sandbox accepts the native console finding."\n'
+                    : ''),
             'package.json': '{"private":true,"type":"module"}\n',
             'source.js': 'console.log("example");\n',
         });
 
-        await writeFile(
-            join(folder.path, 'gspot.toml'),
-            settings +
-                (ignored
-                    ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\nreason = "This sandbox accepts the native console finding."\n'
-                    : ''),
-        );
         const eslint = await createEslint(folder.path);
         expect(await collectLintFindings(eslint, folder.path, ['source.js'], ['no-console'])).toStrictEqual(
             ignored ? [] : [{ file: 'source.js', rule: 'no-console', line: 1 }],
@@ -50,7 +47,11 @@ test.each([false, true])(
         await using folder = await testdir();
         const source = 'export const matches = (value) => value == null;\n';
         await createFileTree(folder.path, {
-            'gspot.toml': ESLINT_OVERRIDES_SETTINGS,
+            'gspot.toml':
+                ESLINT_OVERRIDES_SETTINGS +
+                (ignored
+                    ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "eqeqeq"\npaths = ["tests"]\nreason = "These authored tests intentionally exercise native equality."\n'
+                    : ''),
             'package.json': '{"private":true,"type":"module"}\n',
             'source.js': source,
             'tests/unit.js': source,
@@ -60,13 +61,6 @@ test.each([false, true])(
             'apps/web/admin/page.js': source,
         });
 
-        await writeFile(
-            join(folder.path, 'gspot.toml'),
-            ESLINT_OVERRIDES_SETTINGS +
-                (ignored
-                    ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "eqeqeq"\npaths = ["tests"]\nreason = "These authored tests intentionally exercise native equality."\n'
-                    : ''),
-        );
         const eslint = await createEslint(folder.path);
         await writeFile(join(folder.path, 'tests/future.js'), source);
         const files = ['source.js', 'tests', 'apps'];

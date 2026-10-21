@@ -1,7 +1,8 @@
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
-import { locateNode, buildFinding } from '#cli/runs/finding.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import { getNodePlace, buildFinding } from '#cli/runs/finding.ts';
 import { findDocstring, PYTHON_SOURCES } from '#cli/parsers/python.ts';
 import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/python.ts';
 
@@ -27,7 +28,7 @@ export async function checkPythonPlaceholderDocstrings(session: Session, planned
         return [
             buildFinding(
                 planned,
-                locateNode(definition.path, definition.node),
+                getNodePlace(definition.path, definition.node),
                 'placeholder-docstring',
                 `The docstring of ${definition.name} says nothing the name does not. Say what the function does, or for whom.`,
             ),

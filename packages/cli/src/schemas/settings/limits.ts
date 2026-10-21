@@ -1,17 +1,17 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
-import { type WrittenLimits } from '#cli/types/settings/file.ts';
-import type { LimitSchemas } from '#cli/types/settings/metadata.ts';
+import type { LimitSchemas } from '#cli/types/settings/facts.ts';
+import { LIMIT_FACTS } from '#cli/config/settings/limit-facts.ts';
 import { wholeNumber, allowReasonedValue } from '#cli/schemas/settings/parts.ts';
-import { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declarations.ts';
-import { type TableSettings, type LimitLanguage, type LanguageLimitField } from '#cli/types/settings/tables.ts';
+import { type WrittenLimits, type TableSettings } from '#cli/types/settings/file.ts';
+import { type LimitLanguage, type LanguageLimitField } from '#cli/types/settings/tables.ts';
 
 const limitFields = Object.fromEntries(
-    Object.entries(LIMITS_DECLARATIONS).map(([key, metadata]) => [
+    Object.entries(LIMIT_FACTS).map(([key, facts]) => [
         key.slice('limits.'.length),
         allowReasonedValue(
             key === 'limits.trivial_function_statements' ? z.number().int().positive() : wholeNumber,
-            metadata,
+            facts,
         ),
     ]),
 ) as LimitSchemas;
@@ -24,7 +24,7 @@ function buildLanguageMask<Language extends LimitLanguage>(
     language: Language,
 ): Record<LanguageLimitField<Language>, true> {
     return Object.fromEntries(
-        Object.entries(LIMITS_DECLARATIONS).flatMap(([key, declaration]) =>
+        Object.entries(LIMIT_FACTS).flatMap(([key, declaration]) =>
             'languages' in declaration && (declaration.languages as readonly string[]).includes(language)
                 ? [[key.slice(key.indexOf('.') + 1), true]]
                 : [],
@@ -32,7 +32,7 @@ function buildLanguageMask<Language extends LimitLanguage>(
     ) as Record<LanguageLimitField<Language>, true>;
 }
 
-const limitsSchema = z.strictObject({
+export const limitsSchema = z.strictObject({
     ...limitFields,
     typescript: languageLimitFields.pick(buildLanguageMask('typescript')).optional(),
     javascript: languageLimitFields.pick(buildLanguageMask('javascript')).optional(),
@@ -43,5 +43,3 @@ const limitsSchema = z.strictObject({
 } satisfies SchemaShape<TableSettings<'limits'>, WrittenLimits>);
 
 limitsSchema.register(z.globalRegistry, { id: 'limits' });
-
-export { limitsSchema };

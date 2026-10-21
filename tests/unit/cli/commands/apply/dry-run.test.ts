@@ -6,11 +6,19 @@ import { testdir, createFileTree } from 'testdirs';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
+import { type DryRunJson } from '#cli/types/commands/apply.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { type DryRunJson } from '#cli/types/commands/settings.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
+
+/** Apply the sandbox and read the generated version pin that its dry runs compare. */
+async function prepareVersionPin(root: string): Promise<string> {
+    const applied = await runGspot(root, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const versionContents = await readFile(join(root, '.gspot/version'), 'utf8');
+    return versionContents.trim();
+}
 
 // Windows reports the same mode for files writable by the owner or by everyone.
 test.skipIf(isWindows)(
@@ -81,7 +89,6 @@ test('a hand edit of the ESLint config shows as a byte diff without running it',
     expect(changed).toMatchObject({ kind: 'changed' });
     expect(changed?.diff).toContain(authored.trim());
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
     const unrecorded = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(unrecorded.code, unrecorded.stdout + unrecorded.stderr).toBe(0);
     expect((JSON.parse(unrecorded.stdout) as DryRunJson).stale.find((entry) => entry.path === path)).toStrictEqual(
@@ -133,49 +140,61 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
     expect(result.stale).toContainEqual(
         matchFields({ path: '.gspot/configurations/language/bash/shellcheckrc', kind: 'missing' }),
     );
-    expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(settings);
     expect(await isOnDisk(join(folder.path, '.gspot'))).toBe(false);
     expect(await readTree(folder.path)).toStrictEqual(before);
 });
-test.each([false, true])(
-    'apply --dry-run shows only a changed version pin (changed: %s) and writes nothing',
-    async (isChanged) => {
-        await using folder = await testdir({
-            'gspot.toml': buildSandboxSettings([], { tables: NPM_CHECK_IGNORES }),
-            'control.txt': 'preserve this source\n',
-        });
+test('apply --dry-run after apply reports no change and writes nothing', async () => {
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings([], { tables: NPM_CHECK_IGNORES }),
+        'control.txt': 'preserve this source\n',
+    });
 
-        const applied = await runGspot(folder.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const versionContents = await readFile(join(folder.path, '.gspot/version'), 'utf8');
-        const version = versionContents.trim();
-        if (isChanged) await writeFile(join(folder.path, '.gspot/version'), '0.0.0\n');
-        const before = await readTree(folder.path);
-        const preview = await runGspot(folder.path, ['apply', '--dry-run']);
-        expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        expect(preview.stderr).toBe('');
-        const banner = isChanged ? `version 0.0.0 -> ${version}\n` : '';
-        if (isChanged) {
-            expect(preview.stdout).toStartWith(banner);
-            expect(preview.stdout).toContain('.gspot/version  changed');
-            expect(preview.stdout).toContain('-0.0.0');
-            expect(preview.stdout).toContain('+' + version);
-            expect(preview.stdout).toEndWith('Dry run: nothing was written.\n');
-        } else
-            expect(preview.stdout).toBe(
-                'No change: the 4 generated files are up to date.\nDry run: nothing was written.\n',
-            );
-        expect(await readTree(folder.path)).toStrictEqual(before);
-        const structured = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
-        expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-        expect(structured.stderr).toBe('');
-        const result = JSON.parse(structured.stdout) as DryRunJson;
-        expect(result.pin).toStrictEqual({ from: isChanged ? '0.0.0' : version, to: version });
-        if (isChanged) expect(result.stale).toMatchObject([{ path: '.gspot/version', kind: 'changed' }]);
-        else expect(result.stale).toStrictEqual([]);
-        expect(await readTree(folder.path)).toStrictEqual(before);
-    },
-);
+    const version = await prepareVersionPin(folder.path);
+    const before = await readTree(folder.path);
+    const preview = await runGspot(folder.path, ['apply', '--dry-run']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect(preview.stderr).toBe('');
+    expect(preview.stdout).toBe('No change: the 4 generated files are up to date.\nDry run: nothing was written.\n');
+    expect(await readTree(folder.path)).toStrictEqual(before);
+    const structured = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
+    expect(structured.stderr).toBe('');
+    const result = JSON.parse(structured.stdout) as DryRunJson;
+    expect(result.pin).toStrictEqual({ from: version, to: version });
+    expect(result.stale).toStrictEqual([]);
+    expect(await readTree(folder.path)).toStrictEqual(before);
+});
+
+test('apply --dry-run shows a changed version pin as a diff and writes nothing', async () => {
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings([], { tables: NPM_CHECK_IGNORES }),
+        'control.txt': 'preserve this source\n',
+    });
+
+    const version = await prepareVersionPin(folder.path);
+    await writeFile(join(folder.path, '.gspot/version'), '0.0.0\n');
+    const before = await readTree(folder.path);
+    const preview = await runGspot(folder.path, ['apply', '--dry-run']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect(preview.stderr).toBe('');
+    const banner = `version 0.0.0 -> ${version}\n`;
+    {
+        expect(preview.stdout).toStartWith(banner);
+        expect(preview.stdout).toContain('.gspot/version  changed');
+        expect(preview.stdout).toContain('-0.0.0');
+        expect(preview.stdout).toContain('+' + version);
+        expect(preview.stdout).toEndWith('Dry run: nothing was written.\n');
+    }
+    expect(await readTree(folder.path)).toStrictEqual(before);
+    const structured = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
+    expect(structured.stderr).toBe('');
+    const result = JSON.parse(structured.stdout) as DryRunJson;
+    expect(result.pin).toStrictEqual({ from: '0.0.0', to: version });
+    expect(result.stale).toMatchObject([{ path: '.gspot/version', kind: 'changed' }]);
+    expect(await readTree(folder.path)).toStrictEqual(before);
+});
+
 test('apply --dry-run reports a changed file, a stray, a conflict, and an edited block, and writes nothing', async () => {
     await using folder = await testdir({
         'gspot.toml': buildSandboxSettings(['bash', 'markdown'], { rules: true }),

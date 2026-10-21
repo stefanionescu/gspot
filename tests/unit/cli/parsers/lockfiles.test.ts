@@ -7,9 +7,8 @@ import { PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/lock
 
 test.each([...LOCKED_PACKAGE_CASES])(
     'locked packages: $file lists each package as name@version',
-    async ({ file, text, expected }) => {
+    async ({ file, lockfiles, text, expected }) => {
         await using sandbox = await testdir({ [file]: text });
-        const lockfiles = file === 'uv.lock' ? PYTHON_LOCKFILES : JAVASCRIPT_LOCKFILES;
         const locked = readLockedPackages(createReadCache(sandbox.path), '', lockfiles);
         expect([...(locked ?? [])].toSorted((left, right) => left.localeCompare(right))).toStrictEqual([...expected]);
     },

@@ -1,41 +1,42 @@
 import { join, relative } from 'node:path';
+import { createCopy } from '#cli/runs/copy/files.ts';
+import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { RAN_STATUSES } from '#cli/config/runs/run.ts';
-import { copyIntoScratch } from '#cli/runs/copy/files.ts';
+import type { Tool } from '#cli/types/configurations.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
-import { isInGspotFolder } from '#cli/repository/classify.ts';
-import { buildInvocations } from '#cli/runs/command/batches.ts';
-import type { ScratchFolder } from '#cli/types/system/files.ts';
-import type { ExecutionFailure } from '#cli/types/tools/run.ts';
+import type { ProcessFailure } from '#cli/types/tools/run.ts';
+import { FILES_PLACEHOLDER } from '#cli/config/placeholders.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { stripCoverageArguments } from '#cli/planning/checks.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { buildCommandLines } from '#cli/runs/command/batches.ts';
+import type { TemporaryFolder } from '#cli/types/system/files.ts';
 import { listCompanionTools } from '#cli/planning/needed-tools.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
+import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/report.ts';
 import type { CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
-import { buildScratchPythonEnvironment } from '#cli/install/python/project.ts';
-import { INTERPRETER_FLAGS, PYTHON_EXECUTABLE } from '#cli/config/runs/command.ts';
-import { convertToPosixPath, buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { FILES_PLACEHOLDER, PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
+import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/python.ts';
 import { findTool, runToolProcess, buildCompanionEnvironment } from '#cli/runs/command/tool.ts';
-import { buildCheckResult, recordInvocation, parseCommandFindings } from '#cli/runs/command/output.ts';
+import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import type {
     CommandRun,
     CommandGroup,
+    CommandSetup,
     Substitutions,
     CommandRunState,
     PreparedCommand,
-    CommandEnvironment,
 } from '#cli/types/runs/command.ts';
 import {
     expandCommand,
-    listScratchFiles,
+    listCopyFiles,
     replacePlaceholders,
-    buildFileInvocations,
     listCommandToolFiles,
+    buildFileCommandLines,
 } from '#cli/runs/command/placeholders.ts';
 
 async function runCommands(
@@ -45,14 +46,14 @@ async function runCommands(
         tool,
         prepared,
         base,
-    }: { cancelSignal: AbortSignal | undefined; tool: ToolDeclaration; prepared: PreparedCommand; base: CheckResult },
+    }: { cancelSignal: AbortSignal | undefined; tool: Tool; prepared: PreparedCommand; base: CheckResult },
 ): Promise<CheckResult> {
     const { check } = planned;
     const { cwd, commandArguments } = prepared;
-    const state: CommandRunState = { root: prepared.root, cwd, findings: [], isFailed: false };
+    const state: CommandRunState = { root: prepared.root, cwd, findings: [], failed: false };
     const started = performance.now();
-    for (const invocation of prepared.commands) {
-        const { result, failure } = await runToolProcess(invocation.commandArguments, {
+    for (const commandLine of prepared.commandLines) {
+        const { result, failure } = await runToolProcess(commandLine.commandArguments, {
             ...prepared,
             cancelSignal,
             timeoutSeconds: getToolTimeoutSeconds(planned.selection.view),
@@ -69,7 +70,7 @@ async function runCommands(
                 note: parsed.note,
                 command: commandArguments,
             };
-        recordInvocation(planned, tool, { invocation, result, findings: parsed.findings }, state);
+        addCommandLine(planned, tool, { commandLine, result, findings: parsed.findings }, state);
     }
     return buildCheckResult(check, { base, state, commandArguments, started });
 }
@@ -83,7 +84,7 @@ function findMissingToolFile(
         options,
     }: { session: Session; command: string[]; base: CheckResult; options: CheckRunOptions },
 ): CheckResult | undefined {
-    const paths = options.toolFiles?.(session, planned) ?? [];
+    const paths = options.listToolFiles?.(session, planned) ?? [];
     using files = openFiles(session.root);
     const missing = [...paths, ...listCommandToolFiles(session, planned, command)].find((path) =>
         isInGspotFolder(path) ? files.read(path) === undefined : findCachedText(session.reads, path) === undefined,
@@ -96,17 +97,17 @@ function findMissingToolFile(
     };
 }
 
-// Reports the repository command, not the scratch copy command.
-async function runInScratch(run: CommandRun): Promise<CheckResult> {
-    const { session, planned, tool, command, toolPath, environment, base, options } = run;
+// Reports the repository command, not the copy command.
+async function runInCopy(run: CommandRun): Promise<CheckResult> {
+    const { session, planned, tool, command, toolPath, setup, base, options } = run;
     using copy =
-        options.scratchRoot === undefined && planned.check.run_in_copy === true
+        options.copyRoot === undefined && planned.check.run_in_copy === true
             ? await copyCheckFiles(planned, { session, command, options })
             : undefined;
-    const folder = options.scratchRoot ?? copy?.path;
+    const folder = options.copyRoot ?? copy?.path;
     const prepared =
         folder === undefined
-            ? prepareCommand(planned, { session, command, environment, toolPath })
+            ? prepareCommand(planned, { session, command, setup, toolPath })
             : prepareCommandIn(folder, planned, { session, command, toolPath, options });
     prepared.env = buildCompanionEnvironment(
         session,
@@ -115,7 +116,7 @@ async function runInScratch(run: CommandRun): Promise<CheckResult> {
     );
     const result = await runCommands(planned, { cancelSignal: session.cancelSignal, tool, prepared, base });
     if (folder === undefined) return result;
-    const reported = expandCommand(session, planned, command, environment.substitutions).with(0, toolPath);
+    const reported = expandCommand(session, planned, command, setup.substitutions).with(0, toolPath);
     return { ...result, command: reported.filter((part) => typeof part === 'string') };
 }
 
@@ -124,41 +125,32 @@ function findUnavailableCompanion(
     planned: PlannedCheck,
     command: string[],
     cwd: string,
-): ExecutionFailure | undefined {
+): ProcessFailure | undefined {
     for (const name of listCompanionTools(planned.selection, planned.check, command)) {
-        const required = getToolDeclaration(session.manifests.values(), name);
+        const required = getTool(session.configurations.values(), name);
         const availability = findTool(session, cwd, required);
         if ('status' in availability) return availability;
     }
     return undefined;
 }
 
-// A type checker that reads its environment from its settings file gets the interpreter of a scratch copy's project.
-function listInterpreterArguments(tool: ToolDeclaration, env: Record<string, string>): string[] {
-    const flag = Object.hasOwn(INTERPRETER_FLAGS, tool.name) ? INTERPRETER_FLAGS[tool.name] : undefined;
-    const environment = env['UV_PROJECT_ENVIRONMENT'];
-    return flag === undefined || environment === undefined
-        ? []
-        : [flag, buildVenvExecutablePath(environment, PYTHON_EXECUTABLE)];
-}
-
 /**
- * Copy a check's source, dependencies and tool files into a scratch folder.
+ * Copy a check's source, dependencies and tool files into a temporary folder.
  *
  * @param planned the check to run.
  * @param copy the repository, command, and implementation overrides.
  * @param copy.session the repository and its tools.
  * @param copy.command the executable and authored arguments.
  * @param copy.options the implementation overrides.
- * @returns the disposable scratch folder.
+ * @returns the disposable temporary folder.
  */
 export async function copyCheckFiles(
     planned: PlannedCheck,
     { session, command, options }: { session: Session; command: string[]; options: CheckRunOptions },
-): Promise<ScratchFolder> {
-    return copyIntoScratch({
+): Promise<TemporaryFolder> {
+    return createCopy({
         root: session.root,
-        paths: [...listScratchFiles(session, planned, command), ...(options.toolFiles?.(session, planned) ?? [])],
+        paths: [...listCopyFiles(session, planned, command), ...(options.listToolFiles?.(session, planned) ?? [])],
         dependencies: [],
         cancelSignal: session.cancelSignal,
     });
@@ -190,7 +182,7 @@ export function prepareCommandIn(
     return prepareCommand(planned, {
         session: selected,
         command,
-        environment: buildCommandEnvironment(selected, planned, options),
+        setup: buildCommandSetup(selected, planned, options),
         toolPath,
     });
 }
@@ -209,31 +201,27 @@ export function prepareToolEnvironment(
     planned: PlannedCheck,
     name: string,
     options: CheckRunOptions,
-): { tool: ToolDeclaration; environment: CommandEnvironment } {
-    const tool = planned.tool?.name === name ? planned.tool : getToolDeclaration(session.manifests.values(), name);
-    const environment = buildCommandEnvironment(session, { ...planned, tool }, options);
-    return { tool, environment };
+): { tool: Tool; setup: CommandSetup } {
+    const tool = planned.tool?.name === name ? planned.tool : getTool(session.configurations.values(), name);
+    const setup = buildCommandSetup(session, { ...planned, tool }, options);
+    return { tool, setup };
 }
 
 /**
  * Resolves the working folder and expands the tool environment values.
  *
- * @param session the repository or its scratch copy.
+ * @param session the repository or its copy.
  * @param planned the check and its files.
  * @param options the overrides from the check implementation.
  * @returns the paths and environment for the tool.
  */
-export function buildCommandEnvironment(
-    session: Session,
-    planned: PlannedCheck,
-    options: CheckRunOptions,
-): CommandEnvironment {
+export function buildCommandSetup(session: Session, planned: PlannedCheck, options: CheckRunOptions): CommandSetup {
     const { check, selection } = planned;
     const runsInScope = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
     const cwd = runsInScope ? join(session.root, selection.scope.path) : session.root;
     const substitutions = buildCommandSubstitutions(session, planned, cwd);
     const files = substitutions.files;
-    if (options.arguments !== undefined) substitutions.files = options.arguments(session, planned);
+    if (options.listFileArguments !== undefined) substitutions.files = options.listFileArguments(session, planned);
     const env =
         planned.check.env === undefined
             ? {}
@@ -244,8 +232,8 @@ export function buildCommandEnvironment(
                   ]),
               );
     const python =
-        planned.manifest?.configuration.name === PYTHON_CONFIGURATION
-            ? buildScratchPythonEnvironment(session, selection.scope.path)
+        planned.configuration?.name === PYTHON_CONFIGURATION
+            ? buildCopyPythonEnvironment(session, selection.scope.path)
             : {};
     return { root: session.root, cwd, files, substitutions, env: { ...env, ...python } };
 }
@@ -276,24 +264,30 @@ export function buildCommandSubstitutions(source: Session, planned: PlannedCheck
  * Expands a check or fix command into file batches that fit the command line.
  *
  * @param planned the check to run.
- * @param commandRun what to run.
- * @param commandRun.session the repository and its tools.
- * @param commandRun.command the executable and authored arguments.
- * @param commandRun.environment the working paths and tool variables.
- * @param commandRun.toolPath the resolved executable path.
+ * @param expansion what to run.
+ * @param expansion.session the repository and its tools.
+ * @param expansion.command the executable and authored arguments.
+ * @param expansion.setup the working paths and tool variables.
+ * @param expansion.toolPath the resolved executable path.
  * @returns the working folder and command batches.
  */
 export function prepareCommand(
     planned: PlannedCheck,
-    commandRun: { session: Session; command: string[]; environment: CommandEnvironment; toolPath: string },
+    expansion: { session: Session; command: string[]; setup: CommandSetup; toolPath: string },
 ): PreparedCommand {
-    const { session, command, environment, toolPath } = commandRun;
-    const { root, cwd, files, substitutions, env } = environment;
+    const { session, command, setup, toolPath } = expansion;
+    const { root, cwd, files, substitutions, env } = setup;
     const commandArguments = expandCommand(session, planned, command, substitutions).with(0, toolPath);
-    const commands = command.includes(FILES_PLACEHOLDER)
-        ? buildInvocations(planned, { session, command, substitutions, toolPath })
-        : buildFileInvocations(commandArguments, files);
-    return { root, cwd, commandArguments: commandArguments.filter((part) => typeof part === 'string'), commands, env };
+    const commandLines = command.includes(FILES_PLACEHOLDER)
+        ? buildCommandLines(planned, { session, command, substitutions, toolPath })
+        : buildFileCommandLines(commandArguments, files);
+    return {
+        root,
+        cwd,
+        commandArguments: commandArguments.filter((part) => typeof part === 'string'),
+        commandLines,
+        env,
+    };
 }
 
 /**
@@ -301,7 +295,7 @@ export function prepareCommand(
  *
  * @param session the repository and its tools.
  * @param planned the check to run.
- * @param options the command and scratch folder overrides.
+ * @param options the command and temporary folder overrides.
  * @returns the check result.
  */
 export async function runCheckCommand(
@@ -309,21 +303,21 @@ export async function runCheckCommand(
     planned: PlannedCheck,
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {
-    const tool = planned.tool as ToolDeclaration;
+    const tool = planned.tool as Tool;
     const base = buildBaseResult(planned, session);
-    const { environment } = prepareToolEnvironment(session, planned, tool.name, options);
+    const { setup } = prepareToolEnvironment(session, planned, tool.name, options);
     const command = [
         ...(stripCoverageArguments(planned, options) as string[]),
-        ...listInterpreterArguments(tool, environment.env),
+        ...listCopyPythonArguments(tool, setup.env),
     ];
-    const { cwd } = environment;
+    const { cwd } = setup;
     const missing = findMissingToolFile(planned, { session, command, base, options });
     if (missing !== undefined) return missing;
     const availability = findTool(session, cwd, tool);
     if ('status' in availability) return { ...base, ...availability };
     const companion = findUnavailableCompanion(session, planned, command, cwd);
     if (companion !== undefined) return { ...base, ...companion };
-    return runInScratch({ session, planned, tool, command, toolPath: availability.path, environment, base, options });
+    return runInCopy({ session, planned, tool, command, toolPath: availability.path, setup, base, options });
 }
 
 /**

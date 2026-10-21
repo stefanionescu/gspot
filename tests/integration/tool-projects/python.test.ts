@@ -6,10 +6,11 @@ import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { listMisePins } from '#cli/configurations/tools.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { PYTHON_VERSION } from '#cli/config/parsers/dependencies.ts';
+import { PYTHON_VERSION } from '#cli/config/generation/projects.ts';
+import { listMisePins } from '#cli/configurations/declared-tools.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { PYTHON_INDEX_CREDENTIALS } from '#tests/data/test-setup.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
 import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
@@ -22,9 +23,9 @@ test.each([...PYTHON_PROJECTS])(
         await using repository = await testdir();
         await using artifacts = await testdir();
         await using prepared = await createIndexedPythonSandbox(repository.path, artifacts.path, configuration);
-        const { manifest, lockfilePath, lockfile } = prepared.inputs;
+        const { projectFile, lockfilePath, lockfile } = prepared.inputs;
         const { rootProject, rootConfiguration } = prepared;
-        expect(lockfile.toString('utf8')).not.toContain('synthetic-uv-password');
+        expect(lockfile.toString('utf8')).not.toContain(PYTHON_INDEX_CREDENTIALS.password);
         const brokenUv = await fakeTool(artifacts.path, 'bin/uv', 'process.exitCode = 87;');
         const command = await spawnGspot(repository.path, ['install', '--json'], {
             PATH: [brokenUv, readEnvironmentVariable('PATH') ?? ''].join(delimiter),
@@ -33,7 +34,7 @@ test.each([...PYTHON_PROJECTS])(
         expect(command.code, command.stdout + command.stderr).toBe(0);
         const steps = (JSON.parse(command.stdout) as { steps: string[][] }).steps;
         const session = await openSession(repository.path);
-        const miseTools = listMisePins(session.neededToolManifests).map(({ name }) => name);
+        const miseTools = listMisePins(session.neededToolConfigurations).map(({ name }) => name);
         expect(
             steps.map((step) => (step[0] === 'mise' ? step : ['uv', ...step.slice(1, step.indexOf('--project'))])),
         ).toStrictEqual([
@@ -51,7 +52,7 @@ test.each([...PYTHON_PROJECTS])(
         expect(await readFile(join(repository.path, '.venv/authored.txt'), 'utf8')).toBe(
             'keep the project environment',
         );
-        expect(await readFile(join(repository.path, '.gspot/pyproject.toml'))).toStrictEqual(manifest);
+        expect(await readFile(join(repository.path, '.gspot/pyproject.toml'))).toStrictEqual(projectFile);
         expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
         expect(await readFile(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
     },
@@ -66,7 +67,7 @@ test.each([...PYTHON_PROJECTS])(
             indexFile: configuration,
         });
         await installToolProjects(repository.path);
-        const { manifest, lockfile } = await readToolProjectFiles(repository.path, 'uv');
+        const { projectFile, lockfile } = await readToolProjectFiles(repository.path, 'uv');
         const { rootConfiguration } = prepared;
         const clone = join(artifacts.path, 'clone');
         commitAll(repository.path);
@@ -81,10 +82,10 @@ test.each([...PYTHON_PROJECTS])(
             const status = runGit(clone, ['status', '--porcelain']);
             expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
             expect({
-                manifest: await readFile(join(clone, '.gspot/pyproject.toml')),
+                projectFile: await readFile(join(clone, '.gspot/pyproject.toml')),
                 lockfile: await readFile(join(clone, '.gspot/uv.lock')),
                 configuration: await readFile(join(clone, configuration)),
-            }).toStrictEqual({ manifest, lockfile, configuration: rootConfiguration });
+            }).toStrictEqual({ projectFile, lockfile, configuration: rootConfiguration });
         }
         const prefix = await runCommand(
             [buildVenvExecutablePath(join(clone, '.gspot/.venv'), 'python'), '-c', 'import sys; print(sys.prefix)'],

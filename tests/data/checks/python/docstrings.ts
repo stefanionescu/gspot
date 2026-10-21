@@ -35,7 +35,7 @@ skip-checking-raises = true
 ] as const;
 
 /** Google and NumPy docstrings with no project style; the check must apply the style of each file. */
-const DOCSTRING_MODULES = {
+export const DOCSTRING_MODULES = {
     'google.py': `def double(value: int) -> int:
     """Double a number.
 
@@ -67,7 +67,7 @@ def double(value: int) -> int:
 `,
 } as const;
 
-const GOOGLE_DOCSTRING_MODULE = `def double(value: int) -> int:
+export const GOOGLE_DOCSTRING_MODULE = `def double(value: int) -> int:
     """Double it.
 
     Args:
@@ -76,7 +76,7 @@ const GOOGLE_DOCSTRING_MODULE = `def double(value: int) -> int:
     return value * 2
 `;
 
-const NUMPY_DOCSTRING_MODULE = `def double(value: int) -> int:
+export const NUMPY_DOCSTRING_MODULE = `def double(value: int) -> int:
     """Double it.
 
     Parameters
@@ -101,7 +101,7 @@ const DEFAULT_PYDOCLINT_COMMAND = [
     'false',
 ] as const;
 
-const PYDOCLINT_PROJECT_CASES = [
+export const PYDOCLINT_PROJECT_CASES = [
     ...DOCSTRING_STYLES.map((row) => ({ ...row, command: DEFAULT_PYDOCLINT_COMMAND })),
     ...['', '[tool.ruff]\nline-length = 88\n', '[tool.ruff.lint.pydocstyle]\nconvention = "pep257"\n'].map(
         (project) => ({
@@ -121,5 +121,3 @@ const PYDOCLINT_PROJECT_CASES = [
         command: ['pydoclint', '--allow-init-docstring', 'true', '--quiet', '{files}'],
     },
 ];
-
-export { DOCSTRING_MODULES, NUMPY_DOCSTRING_MODULE, GOOGLE_DOCSTRING_MODULE, PYDOCLINT_PROJECT_CASES };

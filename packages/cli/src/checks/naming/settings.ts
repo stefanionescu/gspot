@@ -1,25 +1,26 @@
 import { splitByCase } from 'scule';
 import { getTable } from '#cli/settings/scope-view.ts';
-import { stripUndefined } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
+import { type Settings } from '#cli/types/settings/file.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
-import { readNamingDefaults } from '#cli/configurations/manifests.ts';
+import { readNamingDefaults } from '#cli/configurations/naming.ts';
+import { type Scope, type ScopeView } from '#cli/types/settings/inheritance.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/tables.ts';
-import { type Settings, type ScopeView, type ScopeSelection } from '#cli/types/settings/values.ts';
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY, CATEGORY_PARENTS } from '#cli/config/checks/naming.ts';
 import type { BannedWord, NamingOverride, NamingSettings, CompiledOverride } from '#cli/types/checks/naming.ts';
 
-function collectNames(names: string[] | undefined): Set<string> | undefined {
+function buildNameSet(names: string[] | undefined): Set<string> | undefined {
     return names === undefined || names.length === 0 ? undefined : new Set(names);
 }
 
 function compileOverride(rule: NamingOverride): CompiledOverride {
     return {
         matches: buildPathMatcher(rule.paths ?? ['**']),
-        languages: collectNames(rule.languages),
-        categories: collectNames(rule.categories),
-        allowedNames: collectNames(rule.allowed_names),
+        languages: buildNameSet(rule.languages),
+        categories: buildNameSet(rule.categories),
+        allowedNames: buildNameSet(rule.allowed_names),
         isDigitsAllowed: rule.allow_digits === true,
         isRepeatAllowed: rule.allow_repeated_words === true,
         ignoredPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),
@@ -82,10 +83,10 @@ function compileBannedWords(
  * @param selection the scope, selected configurations, and merged settings.
  * @returns the word lists, exemptions, and limits.
  */
-export function readNamingSettings(settings: Settings, selection: ScopeSelection): NamingSettings {
+export function readNamingSettings(settings: Settings, selection: Scope): NamingSettings {
     const {
         view,
-        selected: manifests,
+        selected: configurations,
         scope: { path: scope },
     } = selection;
     const shipped = readNamingDefaults();
@@ -104,8 +105,8 @@ export function readNamingSettings(settings: Settings, selection: ScopeSelection
     const overrides = [
         compileOverride({ allowed_names: shipped.allowed_names }),
         ...shipped.override.map((override) => compileOverride(override)),
-        ...manifests.flatMap((manifest) =>
-            (manifest.naming?.override ?? []).map((override) => compileOverride(stripUndefined(override))),
+        ...configurations.flatMap((configuration) =>
+            (configuration.naming?.override ?? []).map((override) => compileOverride(stripUndefined(override))),
         ),
         ...settings.naming.override.map((override) => compileOverride(override)),
     ];

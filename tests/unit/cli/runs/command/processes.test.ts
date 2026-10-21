@@ -1,20 +1,20 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { fakeTool } from '#tests/setup/fakes.ts';
-import { planRun } from '#cli/planning/checks.ts';
+import { chmod, symlink } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { planChecks } from '#cli/planning/checks.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
-import { chmod, symlink, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
-import { runCheckCommand, buildCommandEnvironment } from '#cli/runs/command/check.ts';
+import { runCheckCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
 
 test('a check command accepts a configuration input linked inside the repository', async () => {
     await using sandbox = await testdir({
@@ -53,20 +53,20 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
         [`${scope}/Sources/Main.swift`]: 'let value = 2\n',
     });
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] });
+    const planned = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
     expect(planned.map((check) => check.selection.scope.path)).toStrictEqual(['', scope]);
     for (const check of planned) {
-        const environment = buildCommandEnvironment(session, check, {});
-        expect(environment.cwd).toBe(join(sandbox.path, check.selection.scope.path));
-        expect(environment.files).toStrictEqual(['Sources/Main.swift']);
-        expect(environment.substitutions.files).toStrictEqual(['Sources/Main.swift']);
+        const setup = buildCommandSetup(session, check, {});
+        expect(setup.cwd).toBe(join(sandbox.path, check.selection.scope.path));
+        expect(setup.files).toStrictEqual(['Sources/Main.swift']);
+        expect(setup.substitutions.files).toStrictEqual(['Sources/Main.swift']);
     }
 });
 
 // Windows keeps no permission bits to read back.
 test.skipIf(isWindows)('a session that runs again uses a replaced program and reads its permissions', async () => {
-    const passingScript = `#!${process.execPath}\nprocess.exitCode = 0;\n`;
-    const failingScript = `#!${process.execPath}\nprocess.exitCode = 1;\n`;
+    const passingScript = `process.exitCode = 0;\n`;
+    const failingScript = `process.exitCode = 1;\n`;
 
     await using sandbox = await testdir();
     const executable = join(sandbox.path, 'checker');
@@ -76,16 +76,15 @@ test.skipIf(isWindows)('a session that runs again uses a replaced program and re
 name = "project/checker"\noutput = { format = "none" }\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
         }),
         'source.txt': 'input\n',
-        checker: passingScript,
     });
-    await chmod(executable, 0o755);
+    await fakeTool(sandbox.path, 'checker', passingScript);
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({ stage: 'commit', only: ['project/checker'] });
     const executed = await runChecks(session, options);
     expect(executed.report.exitCode).toBe(0);
     const repeated = await runChecks(await openSession(session.root), options);
     expect(repeated.report.checks[0]!.status).toBe('passed');
-    await writeFile(executable, failingScript);
+    await fakeTool(sandbox.path, 'checker', failingScript);
     const changed = await runChecks(await openSession(session.root), options);
     expect(changed.report.exitCode).toBe(1);
     expect(changed.report.checks[0]!.status).toBe('failed');
@@ -93,7 +92,7 @@ name = "project/checker"\noutput = { format = "none" }\nstage = "commit"\npaths 
     const unexecutable = await runChecks(await openSession(session.root), options);
     expect(unexecutable.report.exitCode).toBe(2);
     await chmod(executable, 0o755);
-    await writeFile(executable, passingScript);
+    await fakeTool(sandbox.path, 'checker', passingScript);
     const restored = await runChecks(await openSession(session.root), options);
     expect(restored.report.exitCode).toBe(0);
 });
@@ -127,7 +126,7 @@ test('per-file failures name the selected file when expanded arguments follow it
     });
 
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', only: ['project/file-result'] });
+    const plans = planChecks(session, { stage: 'all', only: ['project/file-result'] });
     const planned = plans[0]!;
     const failed = await runCheckCommand(session, planned);
     expect(failed.status).toBe('failed');
@@ -154,7 +153,7 @@ test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a
     });
 
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', only: ['project/termination'] });
+    const plans = planChecks(session, { stage: 'all', only: ['project/termination'] });
     const planned = plans[0]!;
     const failed = await runCheckCommand(session, planned);
     expect(failed.status).toBe('error');
@@ -188,11 +187,11 @@ test("a command run in a copy finds its chosen program's companion before an ina
     await fakeTool(sandbox.path, 'native/shellcheck', "console.log('ShellCheck version: 0.11.0');");
     await fakeTool(sandbox.path, 'inactive/shellcheck', 'process.exit(7);');
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'commit', only: ['project/companion'] })[0]!;
+    const planned = planChecks(session, { stage: 'commit', only: ['project/companion'] })[0]!;
     using _environment = overrideEnvironment({ PATH: join(sandbox.path, 'inactive') });
     using _which = useExecutable(join(sandbox.path, `native/shellcheck${isWindows ? '.cmd' : ''}`));
 
-    const result = await runCheckCommand(session, planned, { scratchRoot: join(sandbox.path, 'copy') });
+    const result = await runCheckCommand(session, planned, { copyRoot: join(sandbox.path, 'copy') });
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
 });
@@ -247,7 +246,7 @@ test('a command without an extra tool-file list refuses its missing declared too
         'source.js': 'export const ready = true;\n',
     });
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'commit', only: ['format/prettier'] })[0]!;
+    const planned = planChecks(session, { stage: 'commit', only: ['format/prettier'] })[0]!;
     const command = ['prettier', '--config', '{tool_file:prettier}', '{files}'];
     const result = await runCheckCommand(session, { ...planned, check: { ...planned.check, command } });
     expect(result).toMatchObject({

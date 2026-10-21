@@ -83,4 +83,4 @@ export const SWIFT_VALUE_SOURCE = 'public let value: Int = 1\n';
 
 export const SWIFT_VALUE_ERROR = 'public let value: Int = "wrong"\n';
 
-export const SWIFT_FORMAT_CHECK = ['check', '--only', 'swift/swiftformat', '--json'];
+export const SWIFT_PACKAGE_HEADER = '// swift-tools-version: 6.0\nimport PackageDescription\n';

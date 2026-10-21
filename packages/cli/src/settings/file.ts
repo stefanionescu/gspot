@@ -1,18 +1,19 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse } from '@decimalturn/toml-patch';
-import { isRecord } from '#cli/system/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
+import type { ReasonedValue } from '#cli/types/settings/tables.ts';
 import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
-import type { TomlTable, ReasonedValue } from '#cli/types/settings/file.ts';
 
 /**
  * Identify a written setting that carries both its value and its reason.
@@ -20,7 +21,7 @@ import type { TomlTable, ReasonedValue } from '#cli/types/settings/file.ts';
  * @param value the written setting.
  * @returns whether the setting has both reasoned-value fields.
  */
-function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
+export function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
     return isRecord(value) && Object.hasOwn(value, 'value') && Object.hasOwn(value, 'reason');
 }
 
@@ -31,7 +32,7 @@ function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
  * @param path the source file.
  * @returns the parsed table, without defaults.
  */
-function parseTomlText(text: string, path: string): TomlTable {
+export function parseTomlText(text: string, path: string): TomlTable {
     try {
         return parse(text) as TomlTable;
     } catch (error) {
@@ -49,7 +50,7 @@ function parseTomlText(text: string, path: string): TomlTable {
  * @param repositoryRoot the folder that contains gspot.toml.
  * @returns the UTF-8 text and captured file identity.
  */
-function readSettingsFile(repositoryRoot: string): SettingsFileContents {
+export function readSettingsFile(repositoryRoot: string): SettingsFileContents {
     using files = openFiles(repositoryRoot);
     const original = files.read(SETTINGS_FILE);
     if (original === undefined)
@@ -66,7 +67,7 @@ function readSettingsFile(repositoryRoot: string): SettingsFileContents {
  * @param text the new gspot.toml contents.
  * @param original the captured file bytes and mode.
  */
-function writeSettings(writer: Writer, text: string, original: FileContents | undefined): void {
+export function writeSettings(writer: Writer, text: string, original: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: original?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, original)) return;
     writePlans(writer, [
@@ -80,5 +81,3 @@ function writeSettings(writer: Writer, text: string, original: FileContents | un
         },
     ]);
 }
-
-export { parseTomlText, writeSettings, isReasonedValue, readSettingsFile };

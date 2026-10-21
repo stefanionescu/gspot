@@ -1,33 +1,38 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { getImportedModule } from '#cli/parsers/swift.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { locateNode, buildFinding } from '#cli/runs/finding.ts';
-import type { ImportRule } from '#cli/types/settings/imports.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { getImportedModule } from '#cli/repository/swift-tags.ts';
+import { getNodePlace, buildFinding } from '#cli/runs/finding.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { NODE_SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
+import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 import { listSwiftModules } from '#cli/checks/structure/swift-modules.ts';
 import { escapeGlob, buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listPythonImports } from '#cli/checks/structure/python-imports.ts';
-import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers/swift.ts';
+import { IMPORT_RULE_CATEGORY } from '#cli/config/settings/import-rules.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { SWIFT_CONFIGURATION, PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
-import { MISE_SCRIPT_PATH, IMPORT_RULE_CATEGORY } from '#cli/config/generation/eslint.ts';
-import type { RuleLookup, SwiftModule, PythonSearch, ImportOwners } from '#cli/types/checks/import-rules.ts';
+import type { RuleLookup, SwiftModule, PythonSearch, ImportOwners } from '#cli/types/checks/structure.ts';
 
+import {
+    SWIFT_EXTENSION,
+    NODE_SHEBANG_TAG,
+    MISE_SCRIPT_PATH,
+    SWIFT_IMPORT_NODE,
+} from '#cli/config/repository/inventory.ts';
 import {
     IMPORT_RULES_SKIP,
     PYTHON_EXTENSIONS,
     PYTHON_SOURCE_ROOTS,
-    TOOL_SETTINGS_FILES,
+    CONFIG_FILE_PATTERNS,
     IMPORT_RULE_EXTENSIONS,
     UNCOVERED_FILE_MESSAGE,
-} from '#cli/config/checks/import-rules.ts';
+} from '#cli/config/checks/structure.ts';
 
 function buildRuleLookup(rules: ImportRule[]): RuleLookup {
     const matchers = rules.map((rule) => buildPathMatcher(rule.paths));
@@ -45,7 +50,7 @@ function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
     const { view, scope } = planned.selection;
     const matches = buildPathMatcher([
         ...view.test_files,
-        ...TOOL_SETTINGS_FILES,
+        ...CONFIG_FILE_PATTERNS,
         ...(view.values.javascript?.script_files ?? []),
         joinScope(escapeGlob(scope.path), MISE_SCRIPT_PATH),
     ]);
@@ -89,7 +94,7 @@ async function checkFileImports(
             const owner = findRefusedOwner(lookup, from, owners);
             if (owner === undefined) return [];
             const message = formatRefusedImport(lookup.allowed[from] ?? [], module, owner);
-            return [buildFinding(planned, locateNode(source.path, node), 'refused-import', message)];
+            return [buildFinding(planned, getNodePlace(source.path, node), 'refused-import', message)];
         });
     } finally {
         tree.delete();
@@ -158,7 +163,7 @@ async function checkSwiftImports(session: Session, planned: PlannedCheck, lookup
  * @param planned the scope files, the repository files, and the settings.
  * @returns a finding for each refused import and each uncovered file.
  */
-export async function checkImportRules(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkStructureImportRules(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const rules = session.settingsFile.settings.import_rule;
     if (rules.length === 0) throw new GspotError('skip', IMPORT_RULES_SKIP);
     const lookup = buildRuleLookup(rules);

@@ -106,6 +106,8 @@ test('init without a terminal names --yes once and writes only after --yes', asy
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const accepted = await runGspot(sandbox.path, [...commandArguments, '--yes']);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+    const writtenVersion = await readFile(join(sandbox.path, '.gspot/version'), 'utf8');
+    expect(accepted.stdout.split('\n')).toContain(`gspot ${writtenVersion.trim()}`);
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
     expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe('preserve this source\n');
 });

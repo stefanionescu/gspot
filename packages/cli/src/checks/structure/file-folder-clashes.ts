@@ -1,6 +1,7 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { extractStem, extractParentFolder } from '#cli/system/paths.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
 

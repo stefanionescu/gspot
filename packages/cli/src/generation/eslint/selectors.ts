@@ -1,13 +1,14 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/repository/matchers.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
-import type { Level, Manifest } from '#cli/types/configurations.ts';
-import type { SelectorGroup } from '#cli/types/generation/eslint.ts';
-import type { SelectorPaths } from '#cli/types/generation/fragments.ts';
-import { REEXPORT_SELECTORS } from '#cli/config/generation/eslint-rules.ts';
-import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
-import { ENVIRONMENT_SELECTOR, ESLINT_SETTINGS_TABLE, ALIAS_IMPORT_SELECTORS } from '#cli/config/generation/eslint.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Level, Configuration } from '#cli/types/configurations.ts';
+import { REEXPORT_SELECTORS } from '#cli/config/generation/eslint/rules.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint/tool-settings.ts';
+import { type SelectorGroup, type SelectorPaths } from '#cli/types/generation/eslint.ts';
+import { ENVIRONMENT_SELECTOR, ALIAS_IMPORT_SELECTORS } from '#cli/config/generation/eslint/selectors.ts';
 
 // Keep each distinct path list once, in the order written.
 function filterDistinctLists(lists: string[][]): string[][] {
@@ -66,7 +67,7 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
 }
 
 // The selectors that settings turn on: environment reads outside the readers at level all, and alias suffixes.
-function listSettingSelectors(selection: ScopeSelection, level: Level): SelectorPaths[] {
+function listSettingSelectors(selection: Scope, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];
     const owners = selection.view.values.structure?.environment_readers ?? [];
     if (level === 'all' && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, except: owners });
@@ -77,7 +78,7 @@ function listSettingSelectors(selection: ScopeSelection, level: Level): Selector
 }
 
 // A selector covers the files that its setting lists in the scope, or every source file when it names no setting.
-function buildSelectorPaths(selection: ScopeSelection, entry: Manifest['eslint']['selectors'][number]): SelectorPaths {
+function buildSelectorPaths(selection: Scope, entry: Configuration['eslint']['selectors'][number]): SelectorPaths {
     const listed = entry.files_setting === undefined ? undefined : selection.view.settings[entry.files_setting];
     const files = entry.files_setting === undefined ? {} : { files: (listed as string[] | undefined) ?? [] };
     return { selector: entry.selector, message: entry.message, ...files, except: [] };
@@ -92,16 +93,16 @@ function buildSelectorPaths(selection: ScopeSelection, entry: Manifest['eslint']
  *
  * @returns selector groups with their owning scope and excluded child projects.
  */
-export function groupFragmentSelectors(
-    scopes: ScopeSelection[],
+export function buildSelectorGroups(
+    scopes: Scope[],
     level: Level,
     reexports: Settings['structure']['reexports'],
 ): SelectorGroup[] {
     const scopePaths = scopes.map((entry) => entry.scope.path);
     return scopes.flatMap((selection) => {
         const prefix = escapeGlob(selection.scope.path);
-        const declarations = selection.selected.flatMap((manifest) =>
-            level === 'all' ? manifest.eslint.selectors : [],
+        const declarations = selection.selected.flatMap((configuration) =>
+            level === 'all' ? configuration.eslint.selectors : [],
         );
         const applied: SelectorPaths[] = [
             ...new Map(declarations.map((entry) => [entry.selector, entry])).values(),

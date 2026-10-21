@@ -1,3 +1,5 @@
+import { PYTHON_VERSION } from '#cli/config/generation/projects.ts';
+
 export const PYTHON_PROJECTS = ['uv.toml', 'pyproject.toml'] as const;
 
 export const PYTHON_INSTALL_STEPS = [
@@ -63,7 +65,7 @@ dependencies = ["fastapi>=1"]
 } as const;
 
 export const UV_LOCKFILE_MISMATCHES = [
-    ['Python version', '=={python-version}', '==3.13.15'],
+    ['Python version', `==${PYTHON_VERSION}`, '==3.13.15'],
     ['pin', '==4.0.0', '==5.0.0'],
     ['virtual root', 'virtual = "."', 'virtual = "elsewhere"'],
 ] as const;

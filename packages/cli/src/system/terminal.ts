@@ -1,19 +1,7 @@
-// Prints command results, errors, and warnings as text or JSON, and stops a command on a signal.
 import pc from 'picocolors';
-import { GspotError } from '#cli/system/errors.ts';
-import { CommanderError } from '@commander-js/extra-typings';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { EXIT_ERROR, ROOT_SCOPE_LABEL, SIGNAL_EXIT_CODES, RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJson } from '#cli/types/terminal.ts';
-
-import {
-    EXIT_ERROR,
-    ROOT_SCOPE_LABEL,
-    SIGNAL_EXIT_CODES,
-    COMMAND_SUGGESTION,
-    RESULT_JSON_INDENT,
-    UNKNOWN_COMMAND_NAME,
-    COMMANDER_ERROR_PREFIX,
-} from '#cli/config/terminal.ts';
 
 let options: OutputOptions = { json: false, color: false };
 
@@ -27,7 +15,7 @@ function printJson(record: unknown): void {
  *
  * @returns the enabled or disabled color functions.
  */
-function getColors(): ReturnType<typeof pc.createColors> {
+export function getColors(): ReturnType<typeof pc.createColors> {
     return pc.createColors(options.color);
 }
 
@@ -36,7 +24,7 @@ function getColors(): ReturnType<typeof pc.createColors> {
  *
  * @returns whether to use color.
  */
-function isColorAllowed(): boolean {
+export function isColorAllowed(): boolean {
     const noColor = readEnvironmentVariable('NO_COLOR');
     if (noColor !== undefined && noColor !== '') return false;
     return process.stderr.isTTY && process.stdout.isTTY;
@@ -47,7 +35,7 @@ function isColorAllowed(): boolean {
  *
  * @param next the JSON and color choices.
  */
-function setOutputOptions(next: OutputOptions): void {
+export function setOutputOptions(next: OutputOptions): void {
     options = next;
 }
 
@@ -56,7 +44,7 @@ function setOutputOptions(next: OutputOptions): void {
  *
  * @param text the warning to print.
  */
-function warn(text: string): void {
+export function warn(text: string): void {
     process.stderr.write(`${getColors().yellow('[warn]')} ${text}\n`);
 }
 
@@ -65,7 +53,7 @@ function warn(text: string): void {
  *
  * @param failure the message, or the structured error.
  */
-function printError(failure: string | CommandFailureJson): void {
+export function printError(failure: string | CommandFailureJson): void {
     if (typeof failure !== 'string' && options.json) {
         printJson(failure);
         return;
@@ -79,7 +67,7 @@ function printError(failure: string | CommandFailureJson): void {
  *
  * @param result the command output.
  */
-function printResult(result: CommandResult): void {
+export function printResult(result: CommandResult): void {
     if (options.json) printJson(result.json);
     else if (result.text !== '') print(result.text);
 }
@@ -89,7 +77,7 @@ function printResult(result: CommandResult): void {
  *
  * @param text the output, which gets a final newline if it lacks one.
  */
-function print(text: string): void {
+export function print(text: string): void {
     if (options.json) return;
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }
@@ -100,55 +88,8 @@ function print(text: string): void {
  * @param notes the messages of the command result.
  * @returns the note lines, or empty text without notes.
  */
-function formatNotes(notes: string[]): string {
+export function formatNotes(notes: string[]): string {
     return notes.map((note) => `note     ${note}\n`).join('');
-}
-
-/**
- * Format Commander argument errors with the command suggestions.
- *
- * @param error the refused command arguments.
- * @param programHelp the help that gspot prints when the arguments name no command.
- * @returns the message and any available correction.
- */
-function formatArgumentError(error: CommanderError, programHelp: string): string {
-    const { message } = error;
-    // With no command, Commander raises a help error after writing the help to the silent error stream.
-    if (error.code === 'commander.help') return programHelp;
-    if (error.code === 'commander.unknownCommand') {
-        const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
-        const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
-        const correction = suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
-        return `Unknown command ${name}.${correction} Run gspot --help to see the commands.`;
-    }
-    const text = message.slice(COMMANDER_ERROR_PREFIX.length);
-    return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
-}
-
-/**
- * Print a command failure, and choose the exit status.
- *
- * @param error what the command threw.
- * @param programHelp the help that gspot prints when the arguments name no command.
- * @returns zero for Commander help, or the command error status.
- */
-function printFailure(error: unknown, programHelp: string): number {
-    if (error instanceof CommanderError) {
-        if (error.exitCode === 0) return 0;
-        printError({ error: 'arguments', message: formatArgumentError(error, programHelp) });
-        return EXIT_ERROR;
-    }
-    if (error instanceof GspotError) {
-        printError({ error: error.code, message: error.message });
-        return EXIT_ERROR;
-    }
-    const detail = (error instanceof Error ? error.message : String(error))
-        .replaceAll(/\s+/gu, ' ')
-        .trim()
-        .replace(/\.$/u, '');
-    const message = `gspot stopped because of an internal error: ${detail}. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.`;
-    printError({ error: 'failure', message });
-    return EXIT_ERROR;
 }
 
 /**
@@ -157,7 +98,7 @@ function printFailure(error: unknown, programHelp: string): number {
  * @param path the repository-relative scope.
  * @returns the root label or the child path.
  */
-function formatScopeLabel(path: string): string {
+export function formatScopeLabel(path: string): string {
     return path === '' ? ROOT_SCOPE_LABEL : path;
 }
 
@@ -168,8 +109,8 @@ function formatScopeLabel(path: string): string {
  * @param canceledMessage the message when a cancellation stops the command before it has a result.
  * @returns the command result, with the signal status after an interruption.
  */
-async function runCancelableCommand<Json extends object>(
-    run: (signal: AbortSignal) => Promise<CommandResult<Json>>,
+export async function runCancelableCommand<Json extends object>(
+    run: (cancelSignal: AbortSignal) => Promise<CommandResult<Json>>,
     canceledMessage: string,
 ): Promise<CommandResult<Json | CanceledCommandJson>> {
     const controller = new AbortController();
@@ -198,16 +139,3 @@ async function runCancelableCommand<Json extends object>(
     if (canceledCode === undefined) return result;
     return { ...result, exitCode: canceledCode, json: { ...result.json, exitCode: canceledCode } };
 }
-
-export {
-    warn,
-    print,
-    getColors,
-    printResult,
-    formatNotes,
-    printFailure,
-    isColorAllowed,
-    formatScopeLabel,
-    setOutputOptions,
-    runCancelableCommand,
-};

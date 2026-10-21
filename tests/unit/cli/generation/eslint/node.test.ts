@@ -153,15 +153,15 @@ test('package-json > every package.json gets the package-json rules and no code 
 
 test('package-json > an ignore of a package-json rule for one file keeps the finding in other files', async () => {
     await using sandbox = await testdir();
-    const manifest = { name: 'example', version: '0.0.0', type: 'module' };
+    const packageJson = { name: 'example', version: '0.0.0', type: 'module' };
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             tables: '[[ignore]]\ncheck = "javascript/eslint"\nrule = "package-json/require-exports"\npaths = ["cli/package.json"]\nreason = "The command package exposes no module API."\n[rules]\nenabled = false\n',
         }),
-        'package.json': JSON.stringify({ ...manifest, private: true }),
-        'cli/package.json': JSON.stringify(manifest),
-        'library/package.json': JSON.stringify(manifest),
+        'package.json': JSON.stringify({ ...packageJson, private: true }),
+        'cli/package.json': JSON.stringify(packageJson),
+        'library/package.json': JSON.stringify(packageJson),
     });
     const eslint = await createEslint(sandbox.path);
     expect(

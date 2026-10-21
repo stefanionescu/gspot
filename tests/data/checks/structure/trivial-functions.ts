@@ -221,8 +221,6 @@ export const ACCESSOR_DECLARATIONS = `class A {
     }
 }`;
 
-export const SWIFT_FUNCTION_LIMITS = '[limits.swift]\ntrivial_function_statements = 2\n';
-
 export const STATEMENT_COUNT_CASES = [
     [
         'python',

@@ -6,18 +6,18 @@ import { runGit, isShallow, readGitText, readGitLines, readGitPaths } from '#cli
 import {
     HEAD_SUFFIX,
     ORIGIN_HEAD,
-    UPSTREAM_ARGUMENTS,
-    HEAD_NAME_ARGUMENTS,
-    MERGE_BASE_ARGUMENTS,
-    DIFF_NAMES_ARGUMENTS,
-    STAGED_DIFF_ARGUMENTS,
-    REMOTE_HEADS_ARGUMENTS,
-    CHANGED_COMMITS_ARGUMENTS,
+    GIT_UPSTREAM_ARGUMENTS,
+    GIT_HEAD_NAME_ARGUMENTS,
+    GIT_MERGE_BASE_ARGUMENTS,
+    GIT_DIFF_NAMES_ARGUMENTS,
+    GIT_STAGED_DIFF_ARGUMENTS,
+    GIT_REMOTE_HEADS_ARGUMENTS,
+    GIT_CHANGED_COMMITS_ARGUMENTS,
 } from '#cli/config/repository/revisions.ts';
 
 // List the remote branch refs, as pairs of the ref name and the branch it points to.
 async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
-    const lines = await readGitLines(root, REMOTE_HEADS_ARGUMENTS, {
+    const lines = await readGitLines(root, GIT_REMOTE_HEADS_ARGUMENTS, {
         cancelSignal,
     });
     return lines.flatMap((line) => {
@@ -34,8 +34,8 @@ async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promis
  * @returns the branch, or an empty string without one.
  */
 export async function readDefaultRef(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
-    const head = await readGitText(repositoryRoot, HEAD_NAME_ARGUMENTS, { cancelSignal });
-    const upstreamText = await readGitText(repositoryRoot, [...UPSTREAM_ARGUMENTS, head.trim()], {
+    const head = await readGitText(repositoryRoot, GIT_HEAD_NAME_ARGUMENTS, { cancelSignal });
+    const upstreamText = await readGitText(repositoryRoot, [...GIT_UPSTREAM_ARGUMENTS, head.trim()], {
         cancelSignal,
     });
     const upstream = upstreamText.trim();
@@ -57,7 +57,7 @@ export async function readMergeBase(
     compared: string,
     cancelSignal?: AbortSignal,
 ): Promise<string> {
-    const base = await runGit(repositoryRoot, [...MERGE_BASE_ARGUMENTS, compared, 'HEAD'], {
+    const base = await runGit(repositoryRoot, [...GIT_MERGE_BASE_ARGUMENTS, compared, 'HEAD'], {
         cancelSignal,
     });
     if (base.code === 0) return base.stdout.trim();
@@ -75,11 +75,11 @@ export async function readMergeBase(
  * @returns the staged paths, sorted, and the unstaged count.
  */
 export async function readStagedPaths(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
-    const cached = await readGitPaths(repositoryRoot, STAGED_DIFF_ARGUMENTS, {
+    const cached = await readGitPaths(repositoryRoot, GIT_STAGED_DIFF_ARGUMENTS, {
         cancelSignal,
     });
     const staged = cached.toSorted((a, b) => a.localeCompare(b));
-    const dirty = new Set(await readGitPaths(repositoryRoot, DIFF_NAMES_ARGUMENTS, { cancelSignal }));
+    const dirty = new Set(await readGitPaths(repositoryRoot, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal }));
     return { staged, unstaged: staged.filter((path) => dirty.has(path)).length };
 }
 
@@ -101,9 +101,9 @@ export async function readChangedPaths(
         throw new GspotError('git', 'No upstream or default branch is available; use --changed <ref>.');
     }
     const merged = await readMergeBase(repositoryRoot, compared, cancelSignal);
-    const committed = await readGitPaths(repositoryRoot, [...DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });
-    const working = await readGitPaths(repositoryRoot, DIFF_NAMES_ARGUMENTS, { cancelSignal });
-    const commits = await readGitLines(repositoryRoot, [...CHANGED_COMMITS_ARGUMENTS, `${merged}..HEAD`, '--'], {
+    const committed = await readGitPaths(repositoryRoot, [...GIT_DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });
+    const working = await readGitPaths(repositoryRoot, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
+    const commits = await readGitLines(repositoryRoot, [...GIT_CHANGED_COMMITS_ARGUMENTS, `${merged}..HEAD`, '--'], {
         cancelSignal,
     });
     return {

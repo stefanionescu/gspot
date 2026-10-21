@@ -1,4 +1,4 @@
-import { NAMED_FINDING_CHECKS } from '#cli/config/settings/file.ts';
+import { NAMED_FINDING_CHECKS } from '#cli/config/settings/schema.ts';
 
 export const GLOBAL_OPTIONS = { '--version': 'Print the version', '-h, --help': 'Print help' } as const;
 
@@ -209,7 +209,7 @@ export const COMMAND_HELP = {
         description:
             'List the selected and the available configurations, with the state of each check in each scope.\ngspot list settings lists each setting, its value, and where the value comes from.\nlist changes nothing.',
         arguments: {
-            what: 'What to list',
+            kind: 'What to list',
         },
         options: {
             '--json': 'Print the result as JSON, with long values in full',

@@ -1,13 +1,11 @@
-// Discovers project scopes and resolves paths within them.
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
-import { isInstalledToolPath } from '#cli/repository/classify.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
+import { isInToolFolder } from '#cli/repository/files/tool-folders.ts';
 import { LINT_FOLDERS } from '#cli/config/repository/existing-tools.ts';
-import type { ToolFileGeneration } from '#cli/types/generation/files.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependencies.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
 import { escapeGlob, buildPathMatcher } from '#cli/repository/matchers.ts';
-import type { Scope, TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
+import type { ScopeFolder, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS, WHOLE_TREE_GLOBS } from '#cli/config/system/paths.ts';
 
 // An old lint setup in its own folder, such as quality/, holds a package.json, and gspot replaces it.
@@ -91,43 +89,27 @@ export function joinScope(scope: string, path: string): string {
 }
 
 /**
- * Find the repository-relative path of the tool file for a scope.
- *
- * @param scope the folder, empty for the root.
- * @param toolFile the declaration from the manifest.
- * @param targets the generated paths by scope and file stem.
- * @returns the file of the scope, or the root file as a fallback.
- */
-export function buildScopeTarget(
-    scope: string,
-    toolFile: ToolFileDeclaration,
-    targets: ToolFileGeneration['targets'],
-): string {
-    return toolFile.per_scope ? (targets.get(scope)?.get(toolFile.target) ?? toolFile.target) : toolFile.target;
-}
-
-/**
  * Find the project scopes for init and for runs. Leave out the root and tool-only packages.
  *
  * @param files the repository inventory.
  * @param dependencyFiles the parsed package declarations.
- * @param manifests the configurations with project files and npm tools.
+ * @param configurations the configurations with project files and npm tools.
  * @returns project scopes in path order.
  */
 export function findScopes(
     files: TrackedFile[],
     dependencyFiles: DependencyFile[],
-    manifests: Iterable<Manifest>,
-): Scope[] {
-    const configurations = [...manifests];
-    const patterns = configurations.flatMap((manifest) => manifest.detect.project_files);
-    const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, configurations);
+    configurations: Iterable<Configuration>,
+): ScopeFolder[] {
+    const selected = [...configurations];
+    const patterns = selected.flatMap((configuration) => configuration.detect.project_files);
+    const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, selected);
     const folders = new Set<string>();
     const sources = files.filter(
         (file) =>
             file.kind === 'source' &&
             !toolOnlyPackages.has(file.path) &&
-            !isInstalledToolPath(file.path) &&
+            !isInToolFolder(file.path) &&
             !isLintFolder(file.path),
     );
     for (const file of sources) {
@@ -138,7 +120,7 @@ export function findScopes(
     }
     return [...folders]
         .toSorted((left, right) => left.localeCompare(right))
-        .map((path): Scope => ({ path, configurations: [], origin: 'project' }));
+        .map((path): ScopeFolder => ({ path, configurations: [], origin: 'project' }));
 }
 
 /**
@@ -171,8 +153,8 @@ export function findProjectFolder(path: string, pattern: string): string | undef
  * @param scopes the candidates to search.
  * @returns the deepest matching scope, or the root.
  */
-export function findScope(path: string, scopes: Scope[]): Scope {
-    const root: Scope = scopes.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
+export function findScope(path: string, scopes: ScopeFolder[]): ScopeFolder {
+    const root: ScopeFolder = scopes.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
     return (
         scopes
             .filter((scope) => scope.path !== '' && isInScope(path, scope.path))

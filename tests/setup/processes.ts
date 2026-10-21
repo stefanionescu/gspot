@@ -3,16 +3,12 @@ import executables from 'which';
 import { stat } from 'node:fs/promises';
 import { spyOn, type Mock } from 'bun:test';
 import { hasErrorCode } from '#cli/system/errors.ts';
+import { SIGNAL_EXIT_CODES } from '#cli/config/terminal.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { POLL_MILLISECONDS, TEST_TIMEOUT_MILLISECONDS } from '#tests/data/test-setup.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { CapturedChild, ProcessBackend, CapturedProcess } from '#tests/types/processes.ts';
-
-import {
-    EXIT_POLL_MILLISECONDS,
-    MILLISECONDS_PER_SECOND,
-    READY_POLL_MILLISECONDS,
-    TEST_TIMEOUT_MILLISECONDS,
-} from '#tests/data/test-setup.ts';
 
 // Bun runs each file's tests serially; the preload opens and disposes one timeout for each test.
 let timeoutAt: number | undefined;
@@ -24,7 +20,7 @@ let timeoutAt: number | undefined;
  * @param options how to run it, including its own time limit.
  * @returns the limited options and text that names the command.
  */
-function prepareCommand(
+export function prepareCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
 ): { options: AsyncSpawnOptions & { timeoutSeconds: number }; context: string } {
@@ -32,25 +28,20 @@ function prepareCommand(
     const context = `Command: ${command.join(' ')}\nWorking directory: ${options.cwd}`;
     if (remaining <= 0)
         throw new Error(`The test timeout has elapsed.\n${context}\nOutput: the command was not started.`);
-    const timeoutSeconds =
-        Math.min(
-            (options.timeoutSeconds ?? TEST_TIMEOUT_MILLISECONDS / MILLISECONDS_PER_SECOND) * MILLISECONDS_PER_SECOND,
-            remaining,
-        ) / MILLISECONDS_PER_SECOND;
+    const timeoutSeconds = Math.min(options.timeoutSeconds ?? Infinity, remaining / MILLISECONDS_PER_SECOND);
     return { options: { ...options, timeoutSeconds }, context };
 }
 
 /**
  * Open one test's timeout.
  *
- * @returns a disposable that restores the previous timeout.
+ * @returns a disposable that clears the test deadline.
  */
-function startTestTimeout(): Disposable {
-    const previous = timeoutAt;
+export function startTestTimeout(): Disposable {
     timeoutAt = performance.now() + TEST_TIMEOUT_MILLISECONDS;
     return {
         [Symbol.dispose]() {
-            timeoutAt = previous;
+            timeoutAt = undefined;
         },
     };
 }
@@ -62,11 +53,11 @@ function computeTimeLeft(): number {
 
 function buildTimeoutError(
     timeoutMilliseconds: number,
-    context: string,
+    description: string,
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
 ): Error {
     return new Error(
-        `The test command timed out after ${String(timeoutMilliseconds)} ms.\n${context}\n${result.stdout}${result.stderr}`,
+        `The test command timed out after ${String(timeoutMilliseconds)} ms.\n${description}\n${result.stdout}${result.stderr}`,
     );
 }
 
@@ -77,10 +68,10 @@ function buildTimeoutError(
  * @param options the subprocess environment and working directory.
  * @returns the captured subprocess result.
  */
-async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
+export async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const prepared = prepareCommand(command, options);
     const result = await spawnProcess(command, prepared.options);
-    if (result.isTimedOut === true)
+    if (result.timedOut)
         throw buildTimeoutError(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND, prepared.context, result);
     return result;
 }
@@ -92,10 +83,10 @@ async function runCommand(command: readonly string[], options: AsyncSpawnOptions
  * @param options the working directory and environment.
  * @returns captured output and process status.
  */
-function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
+export function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
     const prepared = prepareCommand(command, options);
     const result = spawnProcessBlocking(command, prepared.options);
-    if (result.isTimedOut === true)
+    if (result.timedOut)
         throw buildTimeoutError(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND, prepared.context, result);
     return result;
 }
@@ -105,7 +96,7 @@ function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptio
  *
  * @param pid child that the test started.
  */
-async function waitForExit(pid: number): Promise<void> {
+export async function waitForExit(pid: number): Promise<void> {
     if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid child PID: ${String(pid)}.`);
     const deadline = performance.now() + computeTimeLeft();
     while (performance.now() < deadline) {
@@ -115,7 +106,7 @@ async function waitForExit(pid: number): Promise<void> {
             if ((error as NodeJS.ErrnoException).code === 'ESRCH') return;
             throw error;
         }
-        await Bun.sleep(EXIT_POLL_MILLISECONDS);
+        await Bun.sleep(POLL_MILLISECONDS);
     }
     process.kill(pid, 'SIGKILL');
     throw new Error(`Owned child ${String(pid)} remained alive after supervision ended.`);
@@ -125,7 +116,7 @@ async function waitForExit(pid: number): Promise<void> {
  * Wait until a child writes its ready file, or the test runs out of time.
  * A child creates the file before it writes the content, so the file counts as ready once it holds bytes.
  */
-async function waitForFile(path: string): Promise<boolean> {
+export async function waitForFile(path: string): Promise<boolean> {
     const deadline = performance.now() + computeTimeLeft();
     while (performance.now() < deadline) {
         try {
@@ -134,13 +125,13 @@ async function waitForFile(path: string): Promise<boolean> {
         } catch (error) {
             if (!hasErrorCode(error, 'ENOENT')) throw error;
         }
-        await Bun.sleep(READY_POLL_MILLISECONDS);
+        await Bun.sleep(POLL_MILLISECONDS);
     }
     return false;
 }
 
 /** Drains a child's output and guarantees termination when a test leaves its scope. */
-function captureChild(child: CapturedProcess): CapturedChild {
+export function captureChild(child: CapturedProcess): CapturedChild {
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();
     return {
@@ -156,7 +147,7 @@ function captureChild(child: CapturedProcess): CapturedChild {
 }
 
 /** Start and capture one test child within the current test deadline. */
-function startCommand(
+export function startCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
 ): CapturedChild & { child: CapturedProcess & Pick<Bun.Subprocess, 'pid'> } {
@@ -172,16 +163,26 @@ function startCommand(
     });
     return { child, ...captureChild(child) };
 }
-export {
-    runCommand,
-    waitForExit,
-    waitForFile,
-    captureChild,
-    startCommand,
-    prepareCommand,
-    startTestTimeout,
-    runCommandBlocking,
-};
+/**
+ * Stop a test runner for each supported termination signal.
+ *
+ * @param stop receives the signal's exit code.
+ * @returns a disposable that removes the registered handlers.
+ */
+export function stopOnSignals(stop: (code: number) => void): Disposable {
+    const subscriptions = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => {
+        const stopForSignal = (): void => {
+            stop(code);
+        };
+        process.once(signal, stopForSignal);
+        return [signal, stopForSignal] as const;
+    });
+    return {
+        [Symbol.dispose]() {
+            for (const [signal, stopForSignal] of subscriptions) process.removeListener(signal, stopForSignal);
+        },
+    };
+}
 
 /**
  * Make executable lookup return one path, or the path a function picks for each name.
@@ -233,4 +234,11 @@ export function buildProcessBackends(): ProcessBackend[] {
                 spawnProcessBlocking(command, prepareCommand(command, options).options),
         },
     ];
+}
+
+/** Read a child process ID after the child has exited. */
+export function readExitedProcessId(): string {
+    const child = runCommandBlocking([process.execPath, '-e', 'console.log(process.pid)'], { cwd: process.cwd() });
+    if (child.code !== 0) throw new Error(child.stderr);
+    return child.stdout.trim();
 }

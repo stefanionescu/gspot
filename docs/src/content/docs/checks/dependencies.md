@@ -66,7 +66,6 @@ These checks read the project files at push, without the network:
 | Check                              | Reports                                                                                        |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `dependencies/stale-lockfile`      | A `package.json` whose dependencies differ from what its npm, pnpm, or Bun lockfile records.   |
-| `dependencies/react-versions`      | A project that locks `react` and `react-dom` at two versions.                                  |
 | `dependencies/package-manager-pin` | A `packageManager` field that names another version than the mise pin of that package manager. |
 
 For a stale lockfile, run the install of your package manager, such as `bun install`, and commit the lockfile.

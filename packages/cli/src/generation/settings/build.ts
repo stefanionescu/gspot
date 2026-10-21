@@ -1,47 +1,46 @@
 import { readAsset } from '#cli/system/assets.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
-import { buildKnipFile } from '#cli/generation/settings/knip.ts';
-import { buildJscpdFile } from '#cli/generation/settings/jscpd.ts';
-import { buildTyposFile } from '#cli/generation/settings/typos.ts';
-import { buildHtmlSettings } from '#cli/generation/settings/html.ts';
-import { buildJsconfig } from '#cli/generation/settings/jsconfig.ts';
-import { buildSquawkFile } from '#cli/generation/settings/squawk.ts';
 import { buildEslintFile } from '#cli/generation/eslint/tool-file.ts';
-import { buildPrettierignore } from '#cli/generation/ignore-files.ts';
-import { buildSemgrepFile } from '#cli/generation/settings/semgrep.ts';
-import { buildHadolintFile } from '#cli/generation/settings/hadolint.ts';
-import { buildPrettierFile } from '#cli/generation/settings/prettier.ts';
-import { buildSqlfluffFile } from '#cli/generation/settings/sqlfluff.ts';
-import { buildYamllintFile } from '#cli/generation/settings/yamllint.ts';
-import { buildStylelintFile } from '#cli/generation/settings/stylelint.ts';
-import { buildSwiftlintFile } from '#cli/generation/settings/swiftlint.ts';
-import { buildCommitlintFile } from '#cli/generation/settings/commitlint.ts';
-import { buildShellcheckFile } from '#cli/generation/settings/shellcheck.ts';
-import { buildSwiftformatFile } from '#cli/generation/settings/swiftformat.ts';
-import { buildEditorconfigFile } from '#cli/generation/settings/editorconfig.ts';
-import { buildMarkdownlintFile } from '#cli/generation/settings/markdownlint.ts';
-import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/settings/python.ts';
-import { TOOL_FILE_REFERENCE, SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/files.ts';
+import { buildV8rFile } from '#cli/generation/settings/builders/v8r.ts';
+import { buildGixyFile } from '#cli/generation/settings/builders/gixy.ts';
+import { buildKnipFile } from '#cli/generation/settings/builders/knip.ts';
+import { buildRuffFile } from '#cli/generation/settings/builders/ruff.ts';
+import { buildJscpdFile } from '#cli/generation/settings/builders/jscpd.ts';
+import { buildTaploFile } from '#cli/generation/settings/builders/taplo.ts';
+import { buildTrivyFile } from '#cli/generation/settings/builders/trivy.ts';
+import { buildTyposFile } from '#cli/generation/settings/builders/typos.ts';
+import { buildHtmlSettings } from '#cli/generation/settings/builders/html.ts';
+import { buildLycheeFile } from '#cli/generation/settings/builders/lychee.ts';
+import { buildSquawkFile } from '#cli/generation/settings/builders/squawk.ts';
+import { buildSemgrepFile } from '#cli/generation/settings/builders/semgrep.ts';
+import { buildHadolintFile } from '#cli/generation/settings/builders/hadolint.ts';
+import { buildJsconfigFile } from '#cli/generation/settings/builders/jsconfig.ts';
+import { buildPrettierFile } from '#cli/generation/settings/builders/prettier.ts';
+import { buildPurgecssFile } from '#cli/generation/settings/builders/purgecss.ts';
+import { buildSpectralFile } from '#cli/generation/settings/builders/spectral.ts';
+import { buildSqlfluffFile } from '#cli/generation/settings/builders/sqlfluff.ts';
+import { buildYamllintFile } from '#cli/generation/settings/builders/yamllint.ts';
+import { buildPrettierignoreFile } from '#cli/generation/settings/ignore-files.ts';
+import { buildPeripheryFile } from '#cli/generation/settings/builders/periphery.ts';
+import { buildStylelintFile } from '#cli/generation/settings/builders/stylelint.ts';
+import { buildSwiftlintFile } from '#cli/generation/settings/builders/swiftlint.ts';
+import { buildCommitlintFile } from '#cli/generation/settings/builders/commitlint.ts';
+import { buildShellcheckFile } from '#cli/generation/settings/builders/shellcheck.ts';
+import { buildOsvScannerFile } from '#cli/generation/settings/builders/osv-scanner.ts';
+import { buildSwiftformatFile } from '#cli/generation/settings/builders/swiftformat.ts';
+import { buildAnsibleLintFile } from '#cli/generation/settings/builders/ansible-lint.ts';
+import { buildBasedpyrightFile } from '#cli/generation/settings/builders/basedpyright.ts';
+import { buildEditorconfigFile } from '#cli/generation/settings/builders/editorconfig.ts';
+import { buildMarkdownlintFile } from '#cli/generation/settings/builders/markdownlint.ts';
+import { TOOL_FILE_REFERENCE, SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/settings/build.ts';
 
 import {
     type GeneratedFile,
     type ToolFileBuilder,
-    type ToolFileContext,
+    type PlannedToolFile,
     type ToolFileGeneration,
 } from '#cli/types/generation/files.ts';
-import {
-    buildV8rFile,
-    buildGixyFile,
-    buildTaploFile,
-    buildTrivyFile,
-    buildLycheeFile,
-    buildPurgecssFile,
-    buildSpectralFile,
-    buildPeripheryFile,
-    buildOsvScannerFile,
-    buildAnsibleLintFile,
-} from '#cli/generation/settings/plain.ts';
 import {
     buildValeIniFile,
     buildAltTextStyle,
@@ -54,9 +53,9 @@ import {
     buildBannedHeadingsStyle,
     buildSentenceLengthStyle,
     buildParagraphLengthStyle,
-} from '#cli/generation/settings/vale.ts';
+} from '#cli/generation/settings/builders/vale.ts';
 
-const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
+const TOOL_FILE_BUILDERS: Readonly<Record<string, ToolFileBuilder | undefined>> = {
     'ansible/ansible-lint.yml': buildAnsibleLintFile,
     'prose/styles/gspot/acronyms.yml': buildAcronymsStyle,
     'nginx/gixy.cfg': buildGixyFile,
@@ -75,7 +74,7 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
     'dependencies/osv-scanner.toml': buildOsvScannerFile,
     'site/purgecss.mjs': buildPurgecssFile,
     'site/html-validate.json': buildHtmlSettings,
-    'format/.prettierignore': buildPrettierignore,
+    'format/.prettierignore': buildPrettierignoreFile,
     'format/.editorconfig': buildEditorconfigFile,
     'prose/styles/config/vocabularies/words/accept.txt': buildAcceptedWordsFile,
     'prose/vale.ini': buildValeIniFile,
@@ -98,28 +97,28 @@ const builders: Readonly<Record<string, ToolFileBuilder | undefined>> = {
     'javascript/knip.json': buildKnipFile,
     'sql/sqlfluff.cfg': buildSqlfluffFile,
     'javascript/eslint.mjs': buildEslintFile,
-    'javascript/jsconfig.json': buildJsconfig,
+    'javascript/jsconfig.json': buildJsconfigFile,
     'format/prettier.json': buildPrettierFile,
 };
 /**
  * Build one tool file and its pointers.
  *
- * @param context the tool file to build.
+ * @param planned the tool file to build.
  * @param targets the tool file path for each scope.
  * @returns the generated file, with paths relative to where it sits.
  */
-function buildToolFile(context: ToolFileContext, targets: ToolFileGeneration['targets']): GeneratedFile {
-    const { toolFile, targetPath } = context;
+export function buildToolFile(planned: PlannedToolFile, targets: ToolFileGeneration['targets']): GeneratedFile {
+    const { toolFile, targetPath } = planned;
     // Every Semgrep rule pack has the same builder; any other tool file has its own by configuration and file.
     const builder =
         toolFile.file === SEMGREP_RULE_PACK_FILE
             ? buildSemgrepFile
-            : builders[`${context.manifest.configuration.name}/${toolFile.file}`];
+            : TOOL_FILE_BUILDERS[`${planned.configuration.name}/${toolFile.file}`];
     const source = (
-        builder === undefined ? readAsset(`${context.manifest.folder}/${toolFile.source}`) : builder(context)
+        builder === undefined ? readAsset(`${planned.configuration.folder}/${toolFile.source}`) : builder(planned)
     ).replaceAll(TOOL_FILE_REFERENCE, (match: string, path: string) => {
         const declared = join(dirname(toolFile.target), path);
-        const chosen = targets.get(context.selection.scope.path)?.get(declared);
+        const chosen = targets.get(planned.selection.scope.path)?.get(declared);
         return chosen === undefined ? match : match.replace(path, relative(dirname(targetPath), chosen));
     });
     return {
@@ -127,5 +126,3 @@ function buildToolFile(context: ToolFileContext, targets: ToolFileGeneration['ta
         content: `${formatHeader(targetPath)}${source.trimEnd()}\n`,
     };
 }
-
-export { buildToolFile };

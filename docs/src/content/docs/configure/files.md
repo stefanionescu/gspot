@@ -29,12 +29,12 @@ src/api/schema.ts linguist-generated
 lib/upstream/** linguist-vendored
 ```
 
-## Leave a file out of one check
+## Leave files out of every check
 
-Ignore the check for those paths, with a reason:
+Leave out the check to keep paths out of every check and every generated tool file:
 
 ```shell
-gspot ignore javascript/eslint --paths "scripts/**" --reason "Scripts print their results."
+gspot ignore --paths "vendor/**" --reason "Vendored releases of upstream packages."
 ```
 
-See [Ignore findings](/use/ignore/).
+To leave a file out of one check, see [Ignore findings](/use/ignore/).

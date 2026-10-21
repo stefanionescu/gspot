@@ -2,8 +2,7 @@
 import envPaths from 'env-paths';
 import { isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { CACHE_FOLDER_NAME } from '#cli/config/system/environment.ts';
-import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
+import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 
 /**
  * Build the environment for tool processes. Merge Windows names that differ only in case, and keep their spelling.

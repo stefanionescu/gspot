@@ -39,6 +39,14 @@ async function assertDraftCheck(root: string, draft: string, rules: string[] = [
     expect(report.checks[0]?.findings.map(({ rule }) => rule)).toStrictEqual(rules);
 }
 
+/** Commit the installed hooks and tag the commit that each hook case starts from. */
+function prepareHookRepository(): void {
+    const { root } = installedSandbox();
+    readGitOutput(root, ['add', '-A']);
+    readGitOutput(root, ['commit', '-qm', 'chore: configure checks', '--no-verify']);
+    readGitOutput(root, ['tag', 'configured']);
+}
+
 test('commitlint accepts exact folder-name scopes or no scope, reports bad messages, and runs only at level all', async () => {
     await using sandbox = await testdir();
     const settingsPath = join(sandbox.path, 'gspot.toml');
@@ -155,46 +163,42 @@ test('a shallow push checks source content but refuses incomplete required histo
     const base = readGitOutput(source, ['rev-parse', 'HEAD']);
     await writeFile(join(source, 'source.sh'), 'echo selected\n');
     expect(runGit(source, ['commit', '-qam', 'feat: select source']).code).toBe(0);
-    const [selected, ZERO_SHA] = [readGitOutput(source, ['rev-parse', 'HEAD']), '0'.repeat(base.length)] as const;
+    const selected = readGitOutput(source, ['rev-parse', 'HEAD']);
     expect(runGit(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']).code).toBe(0);
-    const { checkout, command, env, remote, input } = {
-        checkout: join(sandbox.path, 'checkout'),
-        command: ['check', '--hook', 'pre-push', '--json', '--only'],
-        env: {},
-        remote: ['--', 'unseen', 'unused'],
-        input: { stdin: `refs/heads/main ${selected} refs/heads/main ${ZERO_SHA}\n` },
-    };
+    const checkout = join(sandbox.path, 'checkout');
+    const command = ['check', '--hook', 'pre-push', '--json', '--only'];
+    const remote = ['--', 'unseen', 'unused'];
+    const input = { stdin: `refs/heads/main ${selected} refs/heads/main ${'0'.repeat(selected.length)}\n` };
     expect(runGit(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]).code).toBe(0);
     await installToolProjects(checkout);
-    const content = await spawnGspot(checkout, [...command, 'project/bash-syntax', ...remote], env, input);
+    const content = await spawnGspot(checkout, [...command, 'project/bash-syntax', ...remote], {}, input);
     expect(content.code, content.stdout + content.stderr).toBe(0);
     expect((JSON.parse(content.stdout) as PushReport).revisions[0]).toMatchObject({
         historyComplete: false,
         report: { checks: [{ status: 'passed' }] },
     });
-    const refused = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], env, input);
+    const refused = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toMatch(
         /Pushed history is incomplete for commits\/commitlint-pushed[\s\S]*git fetch --unshallow/u,
     );
     expect(runGit(checkout, ['fetch', '--unshallow']).code).toBe(0);
-    const completed = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], env, input);
+    const completed = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
     expect(completed.code, completed.stdout + completed.stderr).toBe(0);
 
     const report = JSON.parse(completed.stdout) as PushReport;
-    expect(report.revisions[0]).toMatchObject({ historyComplete: true, report: { checks: [{ status: 'passed' }] } });
-    expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set([base, selected]));
+    expect({
+        historyComplete: report.revisions[0]?.historyComplete,
+        checks: report.revisions[0]?.report.checks.map(({ status }) => ({ status })),
+        commits: new Set(report.revisions[0]?.commits),
+    }).toStrictEqual({
+        historyComplete: true,
+        checks: [{ status: 'passed' }],
+        commits: new Set([base, selected]),
+    });
 
     expect({
         head: readGitOutput(checkout, ['rev-parse', 'HEAD']),
         source: await readFile(join(checkout, 'source.sh'), 'utf8'),
     }).toStrictEqual({ head: selected, source: 'echo selected\n' });
 });
-
-/** Commit the installed hooks and tag the commit that each hook case starts from. */
-function prepareHookRepository(): void {
-    const { root } = installedSandbox();
-    readGitOutput(root, ['add', '-A']);
-    readGitOutput(root, ['commit', '-qm', 'chore: configure checks', '--no-verify']);
-    readGitOutput(root, ['tag', 'configured']);
-}

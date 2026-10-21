@@ -1,11 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
-import { isRecord } from '#cli/system/values.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
-import type { SettingsError } from '#cli/types/settings/file.ts';
-import { REASON_WORDS_MIN } from '#cli/config/settings/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
+import type { ReasonNeeded } from '#cli/types/settings/facts.ts';
+import { REASON_WORDS_MIN } from '#cli/config/settings/schema.ts';
+import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { ReasonNeeded } from '#cli/types/settings/metadata.ts';
-import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
+import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 
 function buildErrorsAt(path: KeyPath, text: string | undefined): SettingsError[] {
     return text === undefined ? [] : [{ path, message: text }];
@@ -23,7 +22,7 @@ function isLimitLoosening(direction: Exclude<ReasonNeeded, 'adding'>, value: unk
  * @param reason the written text, if any.
  * @returns the error, or undefined when the reason meets the requirements.
  */
-function validateReason(where: string, reason: string | undefined): string | undefined {
+export function validateReason(where: string, reason: string | undefined): string | undefined {
     if (reason === undefined) return `${where} needs a reason. Add \`reason = "..."\` to this record.`;
     if (isReasonAccepted(reason)) return undefined;
     const refused = reason.trim() === '' ? 'an empty reason' : `"${reason}"`;
@@ -42,7 +41,7 @@ function validateRemovedConfigurations(value: unknown, path: KeyPath): SettingsE
  * @param settings the normalized gspot.toml.
  * @returns the errors in plain English.
  */
-function validateSettingReasons(settings: Settings): SettingsError[] {
+export function validateSettingReasons(settings: Settings): SettingsError[] {
     function visit(value: unknown, path: KeyPath): SettingsError[] {
         const [field, , table] = path.toReversed();
         if (table === 'tools' && field === 'rules') return [];
@@ -89,22 +88,22 @@ function validateSettingReasons(settings: Settings): SettingsError[] {
  * @param reason the written text, if any.
  * @returns whether the reason meets the requirements.
  */
-function isReasonAccepted(reason: string | undefined): boolean {
+export function isReasonAccepted(reason: string | undefined): boolean {
     if (reason === undefined) return false;
     const trimmed = reason.trim();
     return trimmed.split(/\s+/u).filter((word) => word !== '').length >= REASON_WORDS_MIN;
 }
 
 /**
- * Check whether setting `value` for `declaration` loosens `shipped`, so the value needs a reason.
+ * Check whether `value` for `setting` loosens `shipped`, so the value needs a reason.
  *
- * @param declaration the setting.
+ * @param setting the setting whose reason rule applies.
  * @param value what gspot.toml sets.
  * @param shipped the default of the configuration.
  * @returns whether the value needs a reason.
  */
-function isLoosening(declaration: SettingDeclaration, value: unknown, shipped: unknown): boolean {
-    if (declaration.reason_needed === 'adding') {
+export function isLoosening(setting: Setting, value: unknown, shipped: unknown): boolean {
+    if (setting.reason_needed === 'adding') {
         if (Array.isArray(value))
             return value.some(
                 (item) => !Array.isArray(shipped) || !shipped.some((entry) => isDeepStrictEqual(item, entry)),
@@ -115,9 +114,7 @@ function isLoosening(declaration: SettingDeclaration, value: unknown, shipped: u
             );
         return !isDeepStrictEqual(value, shipped);
     }
-    if (declaration.reason_needed === 'raising' || declaration.reason_needed === 'lowering')
-        return isLimitLoosening(declaration.reason_needed, value, shipped);
+    if (setting.reason_needed === 'raising' || setting.reason_needed === 'lowering')
+        return isLimitLoosening(setting.reason_needed, value, shipped);
     return false;
 }
-
-export { isLoosening, validateReason, isReasonAccepted, validateSettingReasons };

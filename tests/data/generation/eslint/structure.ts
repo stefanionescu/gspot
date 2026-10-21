@@ -46,13 +46,7 @@ export const LEVEL_REEXPORT_CASES = [
     ['all', 'index-only'],
 ] as const;
 
-export const ENTRY_SETTINGS = `level = "all"
-configurations = ["javascript"]
-
-[rules]
-enabled = false
-
-[tools.knip]
+export const ENTRY_TABLES = `[tools.knip]
 entry = ["src/main.js"]
 
 [[scope]]

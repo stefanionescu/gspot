@@ -1,6 +1,6 @@
 import type { RangeVar, Constraint } from '@pgsql/types';
-import type { SqlStatementReaders } from '#cli/types/parsers/sql.ts';
-import { getNodeFields, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
+import type { SqlStatementVisitors } from '#cli/types/parsers/sql.ts';
+import { getNodeFields, visitStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 import { PUBLIC_SCHEMA, SCHEMA_PART_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/postgres.ts';
 
 import type {
@@ -17,7 +17,7 @@ function buildRelationName(relation: RangeVar | undefined): string {
     return `${schema === '' ? PUBLIC_SCHEMA : schema}.${relation?.relname ?? ''}`;
 }
 
-function forgetTable(state: SchemaState, table: string): void {
+function removeTable(state: SchemaState, table: string): void {
     state.tables.delete(table);
     state.secured.delete(table);
     state.constraints.delete(table);
@@ -29,7 +29,7 @@ function joinNameParts(parts: string[]): string {
 }
 
 // The name Postgres gives an unnamed constraint: the table, the key columns except for a primary key, and a suffix.
-function deriveConstraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
+function buildConstraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
     const declared = node.conname ?? '';
     if (declared !== '') return declared;
     const tableName = table.slice(table.indexOf('.') + 1);
@@ -37,7 +37,7 @@ function deriveConstraintName(node: Constraint, table: string, kind: string, key
     return [tableName, ...(kind === 'CONSTR_PRIMARY' ? [] : keys), suffix].join('_');
 }
 
-function recordForeignKey(state: SchemaState, at: Location, name: string, columns: string[]): void {
+function addForeignKey(state: SchemaState, at: Location, name: string, columns: string[]): void {
     const constraints = state.constraints.get(at.table) ?? new Map<string, Schema['foreignKeys']>();
     const keys = columns.map((column) => ({
         table: at.table,
@@ -51,7 +51,7 @@ function recordForeignKey(state: SchemaState, at: Location, name: string, column
 }
 
 // A primary or unique key counts as an index on its first column.
-function recordConstraint(state: SchemaState, at: Location, node: Constraint, column?: string): void {
+function addConstraint(state: SchemaState, at: Location, node: Constraint, column?: string): void {
     const kind = node.contype ?? '';
     if (!(kind in CONSTRAINT_SUFFIXES)) return;
     const { keys, columns } =
@@ -62,26 +62,26 @@ function recordConstraint(state: SchemaState, at: Location, node: Constraint, co
               }
             : { keys: [column], columns: [column] };
     const isForeign = kind === 'CONSTR_FOREIGN';
-    const name = deriveConstraintName(node, at.table, kind, isForeign ? columns : keys);
+    const name = buildConstraintName(node, at.table, kind, isForeign ? columns : keys);
     const [first] = keys;
     if (!isForeign && first !== undefined)
         state.indexes.push({ table: at.table, name, column: first, constraint: name });
-    if (isForeign) recordForeignKey(state, at, name, columns);
+    if (isForeign) addForeignKey(state, at, name, columns);
 }
 
 const readCreateTable: StatementReader<'CreateStmt'> = (statement, state, migration) => {
     const table = buildRelationName(statement.fields.relation);
     if (state.tables.has(table) && statement.fields.if_not_exists === true) return;
-    forgetTable(state, table);
+    removeTable(state, table);
     const at = { migration, statement, table };
     state.tables.set(table, { path: migration.path, offset: statement.start, text: migration.text });
     const columns = listNodeFields(statement.fields.tableElts, 'ColumnDef');
     const inColumns = columns.flatMap((column) =>
         listNodeFields(column.constraints, 'Constraint').map((node) => ({ node, column: column.colname ?? '' })),
     );
-    for (const entry of inColumns) recordConstraint(state, at, entry.node, entry.column);
+    for (const entry of inColumns) addConstraint(state, at, entry.node, entry.column);
     const inTable = listNodeFields(statement.fields.tableElts, 'Constraint');
-    for (const node of inTable) recordConstraint(state, at, node);
+    for (const node of inTable) addConstraint(state, at, node);
 };
 
 const ALTERATIONS: SchemaAlterations = {
@@ -94,7 +94,7 @@ const ALTERATIONS: SchemaAlterations = {
     },
     AT_AddConstraint: (state, at, command) => {
         const node = getNodeFields(command.def, 'Constraint');
-        if (node !== undefined) recordConstraint(state, at, node);
+        if (node !== undefined) addConstraint(state, at, node);
     },
 };
 
@@ -110,7 +110,7 @@ const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
         const parts = listNodeFields(item.items, 'String').map((part) => part.sval ?? '');
         switch (statement.fields.removeType) {
             case 'OBJECT_TABLE': {
-                forgetTable(state, joinNameParts(parts));
+                removeTable(state, joinNameParts(parts));
                 break;
             }
             case 'OBJECT_INDEX': {
@@ -127,7 +127,7 @@ const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
     }
 };
 
-const READERS: SqlStatementReaders<void, [SchemaState, Migration]> = {
+const READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = {
     DropStmt: readDrop,
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
@@ -140,7 +140,7 @@ const READERS: SqlStatementReaders<void, [SchemaState, Migration]> = {
     },
 };
 
-function summarize(state: SchemaState): Schema {
+function buildDatabaseSchema(state: SchemaState): Schema {
     const foreignKeys = [...state.constraints.values()].flatMap((constraints) => [...constraints.values()].flat());
     const indexed = new Map<string, Set<string>>();
     for (const index of state.indexes) {
@@ -165,6 +165,6 @@ export function buildSchema(migrations: Migration[]): Schema {
         secured: new Set(),
     };
     for (const migration of migrations)
-        for (const statement of migration.statements) readStatement(statement, READERS, state, migration);
-    return summarize(state);
+        for (const statement of migration.statements) visitStatement(statement, READERS, state, migration);
+    return buildDatabaseSchema(state);
 }

@@ -14,19 +14,12 @@ rule = "SC2034"
 reason = "The variables are read by sourcing scripts."
 `;
 
-/** Removal still reports a result when it only deletes an empty authored list. */
-export const UNIGNORE_CASES = [
-    [
-        'an authored entry',
-        `[[ignore]]
+/** A reviewed ShellCheck ignore that the unignore command removes. */
+export const SHELLCHECK_IGNORE = `[[ignore]]
 check = "bash/shellcheck"
 rule = "SC2086"
 reason = "Word splitting is intentional in this sandbox."
-`,
-        'Removed 1 ignore for bash/shellcheck.',
-    ] as const,
-    ['an empty authored list', 'ignore = []\n', 'No change: bash/shellcheck has no matching ignore.'] as const,
-] as const;
+`;
 
 export const PATH_IGNORE_ARGUMENTS = [
     'ignore',

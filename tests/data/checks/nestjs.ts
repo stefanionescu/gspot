@@ -27,7 +27,7 @@ export class GreetingController {
 }
 `;
 
-const NESTJS_SANDBOX = {
+export const NESTJS_SANDBOX = {
     configurations: ['typescript', 'nestjs'],
     tsconfig: {
         compilerOptions: { ...STRICT_COMPILER_OPTIONS, experimentalDecorators: true, emitDecoratorMetadata: true },
@@ -67,36 +67,11 @@ export class GreetingModule {}
     },
 } as const;
 
-const NESTJS_CASES = [
+export const NESTJS_CASES = [
     {
         check: 'javascript/eslint',
         files: {
-            'src/greeting.controller.ts': `// The routes that greet.
-import { GreetingService } from './greeting.service.js';
-import { Get, Param, Controller } from '@nestjs/common';
-
-/** Answers greeting requests. */
-@Controller('greetings')
-export class GreetingController {
-    /**
-     * Takes the service that builds greetings.
-     *
-     * @param greetings dependency that formats the response
-     */
-    constructor(private readonly greetings: GreetingService) {}
-
-    /**
-     * Greets the person the route names.
-     *
-     * @param name route text to trim and include in the response
-     * @returns trimmed visitor text with a hello prefix
-     */
-    @Get(':name')
-    greet(@Param('other') name: string): string {
-        return this.greetings.greet(name);
-    }
-}
-`,
+            'src/greeting.controller.ts': NESTJS_CONTROLLER.replace("@Param('name')", "@Param('other')"),
         },
         corrected: { files: { 'src/greeting.controller.ts': NESTJS_CONTROLLER } },
         expected: {
@@ -106,5 +81,3 @@ export class GreetingController {
         },
     },
 ] as const;
-
-export { NESTJS_CASES, NESTJS_SANDBOX };

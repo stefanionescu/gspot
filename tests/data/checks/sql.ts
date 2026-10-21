@@ -1,6 +1,6 @@
-const SQL_DUCKDB_SOURCE = 'FROM records SELECT id;\n';
+export const SQL_DUCKDB_SOURCE = 'FROM records SELECT id;\n';
 
-const CHILD_POSTGRES_TABLES = `[[scope]]
+export const CHILD_POSTGRES_TABLES = `[[scope]]
 path = "app"
 
 configurations = ["postgres"]
@@ -8,7 +8,7 @@ configurations = ["postgres"]
 frozen_through = "2"
 `;
 
-const CHILD_MIGRATIONS = {
+export const CHILD_MIGRATIONS = {
     'migrations/V1_root.sql': 'SELECT 1;\n',
     'app/migrations/V2_first.sql': 'SELECT 2;\n',
     'app/migrations/V10_next.sql': 'SELECT 10;\n',
@@ -22,7 +22,7 @@ CREATE TABLE user_accounts (
 );
 `;
 
-const SQL_SANDBOX = {
+export const SQL_SANDBOX = {
     configurations: ['sql'],
     files: {
         'db/accounts.sql': SQL_CLEAN,
@@ -31,7 +31,7 @@ const SQL_SANDBOX = {
     },
 } as const;
 
-const SQL_CASES = [
+export const SQL_CASES = [
     {
         check: 'sql/sqlfluff',
         files: { 'db/lower.sql': 'select id from user_accounts;\n' },
@@ -40,11 +40,11 @@ const SQL_CASES = [
     },
 ] as const;
 
-const SQL_FUNCTION_SOURCE = `CREATE FUNCTION get_user_name() RETURNS TEXT AS $$ SELECT 'Alex'; $$ LANGUAGE sql;
+export const SQL_FUNCTION_SOURCE = `CREATE FUNCTION get_user_name() RETURNS TEXT AS $$ SELECT 'Alex'; $$ LANGUAGE sql;
 SELECT get_user_name();
 `;
 
-const SQL_DECLARATIONS = `-- Accounts.
+export const SQL_DECLARATIONS = `-- Accounts.
 CREATE SCHEMA app;
 
 CREATE TABLE app.user_accounts (
@@ -60,7 +60,7 @@ CREATE TRIGGER touch_on_write BEFORE UPDATE ON app.user_accounts FOR EACH ROW EX
 CREATE VIEW app.active_accounts AS SELECT id FROM app.user_accounts;
 `;
 
-const QUALIFIED_FUNCTION_DECLARATION = `CREATE FUNCTION same.same(integer, IN same integer DEFAULT same(1, 2), OUT "out" integer, VARIADIC "variadic" integer[])
+export const QUALIFIED_FUNCTION_DECLARATION = `CREATE FUNCTION same.same(integer, IN same integer DEFAULT same(1, 2), OUT "out" integer, VARIADIC "variadic" integer[])
 RETURNS integer LANGUAGE sql AS $$SELECT same$$;
 CREATE FUNCTION named.named() RETURNS TABLE (
     named integer,
@@ -71,21 +71,9 @@ CREATE FUNCTION named.named() RETURNS TABLE (
 /** A local SQL check program for the file selection and fix tests. */
 const SQL_CHECK_PROGRAM = `const fs = require('node:fs'); for (const path of process.argv.slice(1)) { if (fs.readFileSync(path, 'utf8').includes('CREATE FUNCTION')) { console.log(path + ':1: Replace the sample function.'); process.exitCode = 1; } }`;
 
-const SQL_CHECK = `[[command_check]]
+export const SQL_CHECK = `[[command_check]]
 name = "project/read-sql"
 paths = ["**/*.sql"]
 stage = "commit"
 command = ${JSON.stringify([process.execPath, '-e', SQL_CHECK_PROGRAM, '{files}'])}
 `;
-
-export {
-    SQL_CASES,
-    SQL_CHECK,
-    SQL_SANDBOX,
-    CHILD_MIGRATIONS,
-    SQL_DECLARATIONS,
-    SQL_DUCKDB_SOURCE,
-    SQL_FUNCTION_SOURCE,
-    CHILD_POSTGRES_TABLES,
-    QUALIFIED_FUNCTION_DECLARATION,
-};

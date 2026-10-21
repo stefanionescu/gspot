@@ -5,8 +5,15 @@ import type { ProcessOutput } from '#tests/types/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 import { SQL_CASES, SQL_SANDBOX, SQL_DUCKDB_SOURCE, SQL_FUNCTION_SOURCE } from '#tests/data/checks/sql.ts';
+
+/** Find SQL parse errors in the check report. */
+function hasSqlParseError(output: ProcessOutput): boolean {
+    return parseCheckReport(output)
+        .report.checks.flatMap((check) => check.findings)
+        .some((finding) => finding.rule === 'PRS');
+}
 
 test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL default", async () => {
     const { root, environment } = installedSandbox();
@@ -112,12 +119,5 @@ const installedSandbox = registerSharedSandbox({
 
 test.each([...SQL_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
     const result = await runCheckSample(installedSandbox(), entry, SQL_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });
-
-/** Find SQL parse errors in the check report. */
-function hasSqlParseError(output: ProcessOutput): boolean {
-    return parseCheckReport(output)
-        .report.checks.flatMap((check) => check.findings)
-        .some((finding) => finding.rule === 'PRS');
-}

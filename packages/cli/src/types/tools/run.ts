@@ -6,5 +6,5 @@ export type ToolRunOptions = Pick<AsyncSpawnOptions, 'cwd' | 'env' | 'stdin'> & 
     cancelSignal?: AbortSignal | undefined;
 };
 
-export type ToolAvailability = { path: string } | ExecutionFailure;
-export type ExecutionFailure = { status: 'error' | 'missing'; note: string };
+export type ToolAvailability = { path: string } | ProcessFailure;
+export type ProcessFailure = { status: 'error' | 'missing'; note: string };

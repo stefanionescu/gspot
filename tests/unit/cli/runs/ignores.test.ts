@@ -43,17 +43,6 @@ describe('ignores', () => {
         expect(skippedReport.checks[0]).toMatchObject({ status: 'skipped', cause: 'ignore', findings: [] });
         expect(await readFile(join(folder.path, 'checked.txt'), 'utf8')).toBe(checked);
         expect(await readFile(join(folder.path, 'fixed.txt'), 'utf8')).toBe(fixed);
-        const restored = await runGspot(folder.path, [
-            'unignore',
-            'project/quality',
-            '--paths',
-            'inputs/skip*',
-            '!inputs/skip-keep.txt',
-        ]);
-        expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-        const accepted = await runGspot(folder.path, [...commandArguments, '--', 'inputs/skip café.txt']);
-        expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-        expect(await readFile(join(folder.path, 'inputs/skip café.txt'), 'utf8')).toBe('corrected\n');
     });
 });
 

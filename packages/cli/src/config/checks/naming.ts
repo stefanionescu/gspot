@@ -7,6 +7,31 @@ const TYPESCRIPT_FUNCTION_NODES = [
 ] as const;
 
 const TYPESCRIPT_METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'] as const;
+
+export const NAMING_DEFAULTS_FILE = 'configurations/general/naming/defaults.json';
+
+/** Complete PostgreSQL name tokens, including doubled quotes inside quoted names. */
+export const SQL_NAME_TOKEN = /"(?:[^"]|"")*"|[\p{L}_][\p{L}\p{N}_$]*/gu;
+
+/** The full qualified name of a relation starts at its RangeVar location. */
+export const SQL_QUALIFIED_NAME = new RegExp(
+    String.raw`^(?:${SQL_NAME_TOKEN.source})(?:\s*\.\s*(?:${SQL_NAME_TOKEN.source}))*`,
+    'u',
+);
+
+/** Function parameters begin after an optional PostgreSQL parameter mode. */
+export const SQL_PARAMETER_PREFIX = /^\s*(?:(?:INOUT|IN|OUT|VARIADIC)\s+)?/iu;
+
+/** Return-table declarations add output parameters after the input list. */
+export const SQL_TABLE_PARAMETERS = /^\s*RETURNS\s+TABLE\s*\(/iu;
+
+export const SQL_PARAMETER_DEPTH = new Map<string, number>([
+    ['(', 1],
+    ['[', 1],
+    [')', -1],
+    [']', -1],
+]);
+
 export const DIGIT = /\d/u;
 
 /** The identifier categories a setting can narrow to; every other category borrows the limits of one of these. */
@@ -197,11 +222,17 @@ export const CASE_NAMES = [
 ] as const;
 
 export const REST_SEGMENT = /^\.\.\./u;
+
 export const DIGIT_RUNS = /\d+/gu;
+
 export const LAST_EXTENSION = /\.[^.]*$/u;
+
 export const TEST_TERM_GROUP = 'tests';
+
 export const DIGIT_BOUNDARY = /(?<=\D)(?=\d)|(?<=\d)(?=\D)/u;
+
 export const SWIFTLINT_PARENTS: ReadonlySet<string> = new Set(['types', 'variables']);
+
 export const RUFF_CATEGORIES: ReadonlySet<string> = new Set([
     'classes',
     'exceptions',
@@ -211,7 +242,9 @@ export const RUFF_CATEGORIES: ReadonlySet<string> = new Set([
 ]);
 
 export const SWIFT_NAME_QUOTE = '`';
+
 export const SWIFT_CALLABLE_NODES = [...SWIFT_FUNCTION_NODES, 'init_declaration'] as const;
+
 export const TYPESCRIPT_CALLABLE_NODES = [
     ...TYPESCRIPT_FUNCTION_NODES,
     ...TYPESCRIPT_METHOD_NODES,
@@ -219,6 +252,7 @@ export const TYPESCRIPT_CALLABLE_NODES = [
 ] as const;
 
 export const WORD_FORM_SUFFIXES = ['s', 'es', 'ed', 'ing', 'ings', 'er', 'ers'] as const;
+
 export const WORD_FORM_CONSONANT = /[aeiou][bcdfghjklmnpqrstvwxyz]$/u;
 
 export const BANNED_WORD_FORMS: Readonly<Record<string, readonly string[]>> = {
@@ -228,5 +262,7 @@ export const BANNED_WORD_FORMS: Readonly<Record<string, readonly string[]>> = {
 };
 
 export const SQL_CREATE_PREFIX = /^\s*CREATE\s+(?:OR\s+REPLACE\s+)?/iu;
+
 export const SQL_CREATE_MODIFIER = /^(?:UNIQUE|CONSTRAINT|MATERIALIZED|TEMPORARY|TEMP|UNLOGGED)\s+/iu;
+
 export const SQL_CREATE_KIND = /^\w+(?:\s+IF\s+NOT\s+EXISTS)?/iu;

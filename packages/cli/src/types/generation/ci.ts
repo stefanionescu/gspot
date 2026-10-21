@@ -1,7 +1,7 @@
+import type { Tool } from '#cli/types/configurations.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import type { PackageManager } from '#cli/types/parsers/dependencies.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
+import type { PackageManager } from '#cli/types/repository/package-manager.ts';
 
 /** An action commit and the release that its comment names. */
 export type ActionPin = { name: string; sha: string; version: string };
@@ -9,7 +9,7 @@ export type ActionPin = { name: string; sha: string; version: string };
 export type Pipeline = {
     version: string;
     packageManager?: PackageManager | undefined;
-    manualTools: ToolDeclaration[];
+    manualTools: Tool[];
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     projectInstall: string[];
     operatingSystems: NonNullable<Settings['ci']>['operating_systems'];

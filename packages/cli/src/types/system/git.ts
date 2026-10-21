@@ -1,4 +1,4 @@
-import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import type { SpawnResult } from '#cli/types/system/processes.ts';
 
 export type GitEnvironment = { env: Record<string, string | undefined> } | { failure: SpawnResult };
 
@@ -11,6 +11,3 @@ export type GitTargetEnvironment = {
     overrides: Record<string, string | undefined>;
     explicit: Record<string, string | undefined>;
 };
-
-/** Git commands share the spawn options; the Git helper sets the working folder. */
-export type GitOptions = Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>;

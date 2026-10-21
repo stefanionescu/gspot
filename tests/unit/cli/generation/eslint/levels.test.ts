@@ -35,6 +35,8 @@ test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside the
     const inside = (await eslint.calculateConfigForFile(join(sandbox.path, 'app/client.jsx'))) as EslintConfiguration;
     expect(outside.rules['react/jsx-key']).toBeUndefined();
     expect(inside.rules['react/jsx-key']![0]).toBe(2);
+    expect(outside.rules['import-x/exports-last']).toBeUndefined();
+    expect(inside.rules['import-x/exports-last']).toBeUndefined();
     const raw = 'export const query = sql`select 1`;';
     await createFileTree(sandbox.path, { 'app/client.jsx': raw, 'root.jsx': raw });
     expect(await collectLintFindings(eslint, sandbox.path, ['app/client.jsx'], ['no-restricted-syntax'])).toStrictEqual(

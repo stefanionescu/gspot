@@ -10,7 +10,7 @@ describe('trpc', () => {
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['trpc', 'typescript'], {
             level: 'all',
-            tables: `${TRPC_MODULES.replaceAll('["private/**", "app/api/trpc/**"]', '["private/**", "app/api/trpc/**", "app/private/**", "app/child/private/**", "flat/router.ts"]')}
+            tables: `${TRPC_MODULES}
 [[scope]]
 path = "app"
 [[scope]]

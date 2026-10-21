@@ -1,5 +1,5 @@
 // Reads nginx configuration text into directives.
-import { findQuotedEnd } from '#cli/parsers/comments.ts';
+import { findQuotedEnd } from '#cli/system/text.ts';
 import type { DirectiveScan } from '#cli/types/parsers/nginx.ts';
 
 import {

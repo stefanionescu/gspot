@@ -1,11 +1,10 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { readRepository } from '#cli/repository/read.ts';
+import { hasIniSection } from '#cli/parsers/ini.ts';
 import { mkdir, unlink, symlink } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { hasIniSection } from '#cli/repository/tool-settings-files.ts';
+import { readTestRepository } from '#tests/setup/builders.ts';
 import { LINKED_RULE_FOLDERS } from '#tests/data/repository/existing-tools.ts';
 import { readLintJobs, readExistingTools } from '#cli/repository/existing-tools.ts';
 
@@ -18,16 +17,12 @@ test('tool discovery finds nested tool files and skips root .gspot and vendored 
         'nested/.gspot/package.json': '{}',
     });
 
-    const repository = await readRepository(createReadCache(sandbox.path), {
-        declarations: [],
-        scopes: [],
-        manifests: readManifests(),
-    });
+    const repository = await readTestRepository(sandbox.path);
     const discovered = readExistingTools(createReadCache(sandbox.path), {
         files: repository.files,
         dependencyFiles: [],
     });
-    expect(discovered.toolFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
+    expect(discovered.replacedFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
 });
 
 test.each([
@@ -96,7 +91,7 @@ test('tool discovery reads tool sections through a link inside the repository', 
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
     const existingTools = readExistingTools(createReadCache(sandbox.path), { files: [], dependencyFiles: [] });
-    expect(existingTools.toolFiles).toContainEqual({
+    expect(existingTools.replacedFiles).toContainEqual({
         tool: 'ruff',
         path: 'pyproject.toml',
         shared: true,

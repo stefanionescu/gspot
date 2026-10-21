@@ -1,32 +1,32 @@
 import { parse } from '@decimalturn/toml-patch';
-import { planRun } from '#cli/planning/checks.ts';
-import { parseSettings } from '#cli/settings/read.ts';
+import { planChecks } from '#cli/planning/checks.ts';
+import type { Session } from '#cli/types/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
-import type { RunOptions } from '#cli/types/runs/check.ts';
-import type { ToolSearch } from '#cli/types/tools/find.ts';
+import type { RunOptions } from '#cli/types/runs/run.ts';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import { selectForScope } from '#cli/repository/coverage.ts';
-import { buildScopeView } from '#cli/settings/scope-view.ts';
+import { selectForScope } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { SampleChanges } from '#tests/types/samples.ts';
+import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import type { NamingCase } from '#cli/types/settings/tables.ts';
+import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import { SOURCE_KIND } from '#cli/config/repository/inventory.ts';
-import type { NamingSettings } from '#cli/types/checks/naming.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { readNamingSettings } from '#cli/checks/naming/settings.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
-import { selectCheckImplementation } from '#cli/checks/implementations.ts';
-import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
-import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import { MOBILE_SOURCE_FILES } from '#tests/data/generation/eslint/framework.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
+import { parseSettingsText, buildRootScopeSettings } from '#tests/setup/settings.ts';
+import { listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
+import { type Tool, type Check, type Configuration } from '#cli/types/configurations.ts';
+import type { Identifier, FileNaming, NamingSettings } from '#cli/types/checks/naming.ts';
 import { EXPO_DEPENDENCIES, REACT_NATIVE_DEPENDENCIES } from '#tests/data/checks/react.ts';
 import { NAMING_TEST_LIMITS, NAMING_TEST_SETTINGS } from '#tests/data/checks/naming/settings.ts';
-import { type ToolDeclaration, type CheckDeclaration, type ManifestDeclaration } from '#cli/types/configurations.ts';
 
 /**
  * List the shipped configurations that gspot selects in every repository.
@@ -34,9 +34,9 @@ import { type ToolDeclaration, type CheckDeclaration, type ManifestDeclaration }
  * @returns their names.
  */
 export function listAlwaysSelected(): string[] {
-    return [...readManifests().values()]
-        .filter(({ configuration }) => configuration.always_selected)
-        .map(({ configuration }) => configuration.name);
+    return [...readConfigurations().values()]
+        .filter((configuration) => configuration.always_selected)
+        .map((configuration) => configuration.name);
 }
 
 /** The init arguments for a test run without prompts. */
@@ -51,7 +51,17 @@ export function buildInitArguments(configurations: readonly string[], options: {
 
 /** A process result for check tests, with these fields changed. */
 export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnResult {
-    return { code: 0, stdout: '', stderr: '', missing: false, duration: 1, ...overrides };
+    return {
+        timedOut: false,
+        canceled: false,
+        errored: false,
+        code: 0,
+        stdout: '',
+        stderr: '',
+        missing: false,
+        duration: 1,
+        ...overrides,
+    };
 }
 
 /**
@@ -62,7 +72,7 @@ export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnR
  * @param npm package that ships the program.
  * @returns a tool record with that program pinned.
  */
-export function buildProgramPin(name: string, version: string, npm?: string): ToolDeclaration {
+export function buildProgramPin(name: string, version: string, npm?: string): Tool {
     return {
         name,
         kind: 'program',
@@ -75,27 +85,33 @@ export function buildProgramPin(name: string, version: string, npm?: string): To
  * Parse a configuration manifest for one test.
  *
  * @param name what to call the configuration.
- * @param project extra manifest tables and fields.
- * @param project.requires configurations that it needs.
- * @param project.tables extra TOML for the manifest.
- * @param project.group where the configuration sits.
- * @returns the parsed manifest.
+ * @param fields extra manifest tables and fields.
+ * @param fields.requires configurations that it needs.
+ * @param fields.tables extra TOML for the manifest.
+ * @param fields.group where the configuration sits.
+ * @returns the configuration with resolved tools.
  */
-export function buildManifest(
+export function buildConfiguration(
     name: string,
-    project: { requires?: string[]; tables?: string; group?: ManifestDeclaration['configuration']['group'] } = {},
-): ManifestDeclaration {
-    return manifestSchema.parse({
-        ...parse(project.tables ?? ''),
-        folder: `configurations/${project.group ?? 'language'}/${name}`,
+    fields: { requires?: string[]; tables?: string; group?: Configuration['group'] } = {},
+): Configuration {
+    const parsed = manifestSchema.parse({
+        ...parse(fields.tables ?? ''),
+        folder: `configurations/${fields.group ?? 'language'}/${name}`,
         configuration: {
             name,
             title: name,
-            group: project.group ?? 'language',
-            requires: project.requires ?? [],
+            group: fields.group ?? 'language',
+            requires: fields.requires ?? [],
             description: 'A configuration for the tests, long enough.',
         },
     });
+    const { configuration, tools, ...rest } = parsed;
+    return {
+        ...rest,
+        ...configuration,
+        tools: tools.map((tool) => (typeof tool === 'string' ? getTool(readConfigurations().values(), tool) : tool)),
+    };
 }
 
 /**
@@ -105,7 +121,7 @@ export function buildManifest(
  * @returns the defaults with the overrides applied.
  */
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
-    return { stage: 'all', fix: false, isDryRun: false, selectImplementation: selectCheckImplementation, ...overrides };
+    return { stage: 'all', fix: false, isDryRun: false, ...overrides };
 }
 
 /**
@@ -127,7 +143,7 @@ export function buildTrackedFile(path: string, tags: string[] = ['text']): Track
  * @returns the planned check.
  */
 export function planFixer(session: Session, script: string): PlannedCheck {
-    const [planned] = planRun(session, { stage: 'all', only: ['sandbox/fixer'] });
+    const [planned] = planChecks(session, { stage: 'all', only: ['sandbox/fixer'] });
     if (planned === undefined) throw new Error('The sandbox has no planned fixer.');
     return { ...planned, check: { ...planned.check, fix: [process.execPath, '-e', script] } };
 }
@@ -148,11 +164,12 @@ paths = ${JSON.stringify(paths)}
 stage = "commit"
 `;
 }
+
 /** The tool search state for tests that inspect installed tools. */
 export function buildInspectionContext(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,
-        timeoutSeconds: SETTING_DECLARATIONS['tool_timeout_seconds'].default,
+        timeoutSeconds: SETTING_FACTS['tool_timeout_seconds'].default,
         inspections: new Map(),
         ...fields,
     };
@@ -181,10 +198,10 @@ export function buildNamingSettings(): NamingSettings {
 
 /** Read the naming settings that apply in one scope of this settings text. */
 export function buildScopeNamingSettings(text: string, scope = ''): NamingSettings {
-    const settings = parseSettings(text, undefined);
-    const selected = selectForScope(settings, scope, readManifests());
+    const settings = parseSettingsText(text);
+    const selected = selectForScope(settings, scope, readConfigurations());
     const known = buildKnownSettings(selected, 'recommended');
-    const view = buildScopeView(known, settings, selected, scope);
+    const view = buildRootScopeSettings(settings, scope);
     return readNamingSettings(settings, {
         view,
         known,
@@ -208,9 +225,9 @@ export function buildSandboxChanges(
 /** Read the files of a sandbox with the shipped manifests, no scopes, and no declarations. */
 export function readTestRepository(root: string): Promise<Repository> {
     return readRepository(createReadCache(root), {
-        declarations: [],
+        generatedPaths: [],
         scopes: [],
-        manifests: readManifests(),
+        configurations: readConfigurations(),
     });
 }
 
@@ -230,8 +247,34 @@ export function buildMobileFiles(): Record<string, string> {
 }
 
 /** Read one shipped check by ID, rejecting unknown names. */
-export function getShippedCheck(name: string): CheckDeclaration {
-    const declaration = listChecksById(readManifests().values()).get(name);
+export function getShippedCheck(name: string): Check {
+    const declaration = listChecksById(readConfigurations().values()).get(name);
     if (declaration === undefined) throw new Error(`The shipped check ${name} does not exist.`);
     return declaration.check;
+}
+
+/** Build the settings and check declaration for one naming test. */
+export function buildFileNaming(settings: NamingSettings): FileNaming {
+    return { check: getShippedCheck('naming/identifiers'), settings, isTestFile: false };
+}
+
+/** An identifier with the source location and category defaults used by naming tests. */
+export function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
+    const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
+    return { file, language, category, line, column, label: `${language} ${category}`, ...fields };
+}
+
+/** A library pin installed from the npm package with the same name. */
+export function buildLibraryPin(name: string, version: string): Tool {
+    return { name, kind: 'library', version, installers: { npm: { name, version } } };
+}
+
+/** Read one shipped tool declaration. */
+export function getShippedTool(name: string): Tool {
+    return getTool(readConfigurations().values(), name);
+}
+
+/** Build a JSON check command for one check. */
+export function buildCheckArguments(check: string): string[] {
+    return ['check', '--only', check, '--json'];
 }

@@ -22,7 +22,7 @@ export type SqlStatementView<Kind extends keyof SqlNodeFields = keyof SqlNodeFie
 }[Kind];
 
 /** Readers for each kind keep the payload types and the context that each caller needs. */
-export type SqlStatementReaders<Result, Arguments extends unknown[] = []> = {
+export type SqlStatementVisitors<Result, Arguments extends unknown[] = []> = {
     [Kind in keyof SqlNodeFields]?: (statement: SqlStatementView<Kind>, ...readerArguments: Arguments) => Result;
 };
 

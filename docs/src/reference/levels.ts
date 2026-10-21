@@ -1,4 +1,4 @@
-import { readReferenceData } from '#cli/reference.ts';
+import { REFERENCE_FACTS } from './facts.ts';
 import { LEVEL_DESCRIPTIONS } from '../config/reference.ts';
 
 /**
@@ -7,7 +7,7 @@ import { LEVEL_DESCRIPTIONS } from '../config/reference.ts';
  * @returns one row for each level
  */
 export function buildLevelRows(): { level: string; description: string; count: number; tools: string }[] {
-    const { checks } = readReferenceData();
+    const { checks } = REFERENCE_FACTS;
     const recommended = checks.filter(({ check }) => check.level === 'recommended');
     const listToolNames = (entries: typeof checks) =>
         new Set(entries.flatMap(({ check }) => (check.tool === undefined ? [] : [check.tool])));

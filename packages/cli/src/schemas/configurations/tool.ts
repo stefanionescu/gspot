@@ -1,16 +1,31 @@
 import { z } from 'zod';
-import { stripUndefined } from '#cli/system/values.ts';
+import semver from 'semver';
+import { stripUndefined } from '#cli/system/tables.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { InstallerPin, ToolDeclaration } from '#cli/types/configurations.ts';
-import { regexSchema, commandSchema, conditionSchema, versionFloorSchema } from '#cli/schemas/configurations/parts.ts';
+import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
+import type { Tool, InstallerPin } from '#cli/types/configurations.ts';
+import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/configurations/parts.ts';
 
 import {
     TOOL_KINDS,
     TOOL_BUILDS,
+    VERSION_FLOOR,
     MAX_EXIT_CODE,
-    RULE_PLACEHOLDER,
     EXTENSION_PATTERN,
 } from '#cli/config/configurations.ts';
+
+/** Normalize version floors when gspot reads the manifest, before any version comparison. */
+const versionFloorSchema = z
+    .string()
+    .regex(VERSION_FLOOR)
+    .transform((floor, context) => {
+        const version = semver.coerce(floor);
+        if (version === null) {
+            context.addIssue({ code: 'custom', message: 'Use a numeric minimum version.' });
+            return z.NEVER;
+        }
+        return version.version;
+    }) satisfies z.ZodType<string>;
 
 const installerDefinition = z.strictObject({ name: z.string(), version: z.string() } satisfies SchemaShape<{
     name: string;
@@ -42,7 +57,7 @@ const installerFields = {
 };
 
 const toolConditionSchema = conditionSchema.pick({ setting: true, level: true }).partial() satisfies z.ZodType<
-    NonNullable<ToolDeclaration['when']>[number]
+    NonNullable<Tool['when']>[number]
 >;
 
 const replacementSchema = z.strictObject({
@@ -81,7 +96,7 @@ const toolSchema = z
                 reason: regexSchema,
                 forbidden: z.boolean().optional(),
                 example: z.string().optional(),
-            } satisfies SchemaShape<NonNullable<ToolDeclaration['suppression']>>)
+            } satisfies SchemaShape<NonNullable<Tool['suppression']>>)
             .refine((form) => form.forbidden === true || form.example !== undefined, {
                 message: 'A suppression that gspot accepts shows an example with a reason.',
                 path: ['example'],
@@ -97,15 +112,15 @@ const toolSchema = z
                         z.strictObject({
                             files: z.string().min(1),
                             options: z.record(z.string(), z.unknown()),
-                        } satisfies SchemaShape<NonNullable<ToolDeclaration['prettier']>['overrides'][number]>),
+                        } satisfies SchemaShape<NonNullable<Tool['prettier']>['overrides'][number]>),
                     )
                     .default([]),
-            } satisfies SchemaShape<NonNullable<ToolDeclaration['prettier']>>)
+            } satisfies SchemaShape<NonNullable<Tool['prettier']>>)
             .optional(),
         // The file types an ESLint plugin or parser lints; a configuration whose files take plugins owns them while the selection includes it.
         eslint: z
             .strictObject({ extensions: z.array(z.string().regex(EXTENSION_PATTERN)).min(1) } satisfies SchemaShape<
-                NonNullable<ToolDeclaration['eslint']>
+                NonNullable<Tool['eslint']>
             >)
             .optional(),
         requires: z.array(z.string().min(1)).optional(),
@@ -146,10 +161,10 @@ const toolSchema = z
                     : definition;
         }
         return { ...stripUndefined(tool), installers };
-    }) satisfies z.ZodType<ToolDeclaration>;
+    }) satisfies z.ZodType<Tool>;
 
 /** A record with only a name points to the full declaration in another configuration. */
-export const toolDeclarationSchema = z.union([
+export const manifestToolSchema = z.union([
     z
         .looseObject({ name: z.string() } satisfies SchemaShape<{ name: string }>)
         .refine((reference) => Object.keys(reference).length === 1, {
@@ -158,4 +173,4 @@ export const toolDeclarationSchema = z.union([
         })
         .transform(({ name }) => name),
     toolSchema,
-]) satisfies z.ZodType<string | ToolDeclaration>;
+]) satisfies z.ZodType<string | Tool>;

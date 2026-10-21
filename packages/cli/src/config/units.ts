@@ -1,3 +1,5 @@
+export const ISO_DATE_LENGTH = 10;
+
 export const FULL_PERCENTAGE = 100;
 
 export const BYTES_PER_KILOBYTE = 1024;

@@ -2,21 +2,21 @@
 import { posix } from 'node:path';
 import { visit } from 'unist-util-visit';
 import { readAsset } from '#cli/system/assets.ts';
+import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import type { Session } from '#cli/types/planning.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { SETTINGS_COMMANDS } from '#cli/config/settings/file.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
-import { listSelectedManifests } from '#cli/configurations/select.ts';
-import { type Level, type Manifest } from '#cli/types/configurations.ts';
-import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
-import type { RuleFile, ShippedRule, RuleSection, AgentsBlockInput } from '#cli/types/rules.ts';
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
+import { listSelectedConfigurations } from '#cli/configurations/select.ts';
+import { type Level, type Configuration } from '#cli/types/configurations.ts';
+import type { RuleFile, ShippedRule, RuleSection, AgentsBlockContent } from '#cli/types/generation/rules.ts';
 
 import {
     FIRST_READ,
@@ -24,15 +24,15 @@ import {
     ALL_LEVEL_MARKER,
     MARKDOWN_HEADING,
     RULE_OPENING_PREFIX,
-} from '#cli/config/rules.ts';
+} from '#cli/config/generation/rules.ts';
 
 // List the rules of the configurations; a file with a condition installs only when the repository meets it.
-function listConfigurationRules(manifests: Manifest[], repository: Repository): ShippedRule[] {
-    const conditions = manifests.flatMap((manifest) => Object.values(manifest.rules));
+function listConfigurationRules(configurations: Configuration[], repository: Repository): ShippedRule[] {
+    const conditions = configurations.flatMap((configuration) => Object.values(configuration.rules));
     const matched = detectConditions(conditions, repository.files, repository.dependencyFiles);
-    return manifests.flatMap((manifest) =>
-        listRuleFiles(manifest).filter((file) => {
-            const condition = manifest.rules[posix.basename(file.source)];
+    return configurations.flatMap((configuration) =>
+        listRuleFiles(configuration).filter((file) => {
+            const condition = configuration.rules[posix.basename(file.source)];
             return condition === undefined || matched.has(condition);
         }),
     );
@@ -59,18 +59,18 @@ function stripAllLevelSections(text: string, level: Level): string {
     return output.join('');
 }
 
-function groupFilesByArea(files: RuleFile[]): [string, string[]][] {
+function groupIndexLines(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
     for (const file of files) {
         if (FIRST_READ.includes(file.path)) continue;
-        const area = GROUP_LABELS[file.group];
-        const list = rows.get(area) ?? [];
+        const label = GROUP_LABELS[file.group];
+        const list = rows.get(label) ?? [];
         const scopes = file.scopes.map((path) => `\`${path}/\``).join(', ');
         const scope = file.scopes.includes('') ? '' : ` in ${scopes}`;
         const opening = (file.content.split('\n') as [string, string, string, ...string[]])[2];
         const sentence = opening.replace(RULE_OPENING_PREFIX, '');
         list.push(`\`${file.target}\`${scope}: ${sentence}`);
-        rows.set(area, list);
+        rows.set(label, list);
     }
     return [...rows];
 }
@@ -85,8 +85,8 @@ function formatRulesIndex(files: RuleFile[]): string[] {
         'A rule marked `in <folder>/` applies only to files in that folder.',
         'A more specific rule wins over a general one.',
         '',
-        ...groupFilesByArea(files).flatMap(([area, paths]) => [
-            `## ${area}`,
+        ...groupIndexLines(files).flatMap(([label, paths]) => [
+            `## ${label}`,
             '',
             ...paths.map((path) => `- ${path}`),
             '',
@@ -122,8 +122,10 @@ function parseHeadingSections(text: string): RuleSection[] {
 }
 
 // List the rule files of each scope before selecting shared content.
-function listScopeRules(selection: ScopeSelection): Set<string> {
-    return new Set(selection.selected.flatMap((manifest) => listRuleFiles(manifest).map((file) => file.path)));
+function listScopeRules(selection: Scope): Set<string> {
+    return new Set(
+        selection.selected.flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path)),
+    );
 }
 
 /**
@@ -133,7 +135,7 @@ function listScopeRules(selection: ScopeSelection): Set<string> {
  * @param session the repository and its settings.
  * @returns each rule with its content and path.
  */
-function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'repository'>): RuleFile[] {
+export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'repository'>): RuleFile[] {
     const {
         settingsFile: {
             settings: { rules, level },
@@ -141,12 +143,12 @@ function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'rep
         repository,
     } = session;
     if (!rules.enabled) return [];
-    const manifests = listSelectedManifests(session.scopes);
+    const configurations = listSelectedConfigurations(session.scopes);
     const scopeRules = session.scopes.map((selection) => ({
         path: selection.scope.path,
         rules: listScopeRules(selection),
     }));
-    const sources = new Map(listConfigurationRules(manifests, repository).map((file) => [file.path, file]));
+    const sources = new Map(listConfigurationRules(configurations, repository).map((file) => [file.path, file]));
     return sources
         .values()
         .filter(
@@ -171,21 +173,21 @@ function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'rep
  * @param inputs what the block lists.
  * @param inputs.files the rules with their content.
  * @param inputs.generatedPaths the files gspot writes outside .gspot, with managed keys.
- * @param inputs.fileSettings the keys that gspot manages inside authored tool files.
+ * @param inputs.managedKeys the keys that gspot manages inside authored tool files.
  * @param inputs.hasChecks whether any configuration runs a check.
  * @param inputs.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
  * @param inputs.startCommand the command that starts gspot.
  *
  * @returns the heading, rule index, and instructions for changing settings.
  */
-function buildAgentsBlock({
+export function buildAgentsBlock({
     files,
     generatedPaths,
-    fileSettings,
+    managedKeys,
     hasChecks,
     startCommand,
     hasOwnTitle,
-}: AgentsBlockInput): string {
+}: AgentsBlockContent): string {
     const index = files.length > 0 ? formatRulesIndex(files) : [];
     const outside = generatedPaths
         .toSorted((first, second) => first.localeCompare(second))
@@ -208,7 +210,7 @@ function buildAgentsBlock({
         '',
         '- every file under `.gspot/`',
         ...outside,
-        ...fileSettings.flatMap(({ path, keys }) => [
+        ...managedKeys.flatMap(({ path, keys }) => [
             '',
             `gspot also sets ${keys.length === 1 ? 'one key' : 'these keys'} in \`${path}\`: ${keys.map((key) => '`' + key + '`').join(' and ')}.`,
             'You can edit the other keys of that file.',
@@ -224,12 +226,10 @@ function buildAgentsBlock({
  * @param text the authored part of the file.
  * @returns whether a level-one heading exists.
  */
-function hasTopHeading(text: string): boolean {
+export function hasTopHeading(text: string): boolean {
     let found = false;
     visit(fromMarkdown(text), 'heading', (node) => {
         if (node.depth === 1) found = true;
     });
     return found;
 }
-
-export { hasTopHeading, selectRuleFiles, buildAgentsBlock };

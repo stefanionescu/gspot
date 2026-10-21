@@ -1,0 +1,30 @@
+import { stringify } from 'yaml';
+import type { PlannedToolFile } from '#cli/types/generation/files.ts';
+import { getTable, listIgnoredRules } from '#cli/settings/scope-view.ts';
+
+import {
+    YAMLLINT_RULES,
+    YAMLLINT_YAML_OPTIONS,
+    YAMLLINT_RULE_OPTIONS,
+} from '#cli/config/generation/settings/builders/yamllint.ts';
+
+/**
+ * Build the yamllint file from the settings.
+ *
+ * @param planned the tool file to build.
+ * @returns the YAML lint rules with the configured indentation and disabled checks.
+ */
+export function buildYamllintFile(planned: PlannedToolFile): string {
+    const rules: Record<string, unknown> = {
+        ...Object.fromEntries(YAMLLINT_RULES.map((rule) => [rule, {}])),
+        ...YAMLLINT_RULE_OPTIONS,
+    };
+    for (const [rule, chosen] of Object.entries(getTable(planned.selection.view, 'tools.yamllint').rules))
+        rules[rule] = { ...(rules[rule] as Record<string, unknown>), ...chosen };
+    Object.assign(
+        rules,
+        Object.fromEntries(listIgnoredRules(planned.selection, 'files/yamllint').map((name) => [name, 'disable'])),
+    );
+    const document = { rules };
+    return stringify(document, YAMLLINT_YAML_OPTIONS);
+}

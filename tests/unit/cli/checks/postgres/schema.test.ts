@@ -13,6 +13,18 @@ import {
     UNNAMED_FOREIGN_KEY_SQL,
 } from '#tests/data/checks/postgres.ts';
 
+/**
+ * A migration under migrations/, parsed.
+ *
+ * @param name file under migrations/.
+ * @param text the SQL.
+ * @returns the parsed file with its version.
+ */
+async function parseMigration(name: string, text: string): Promise<Migration> {
+    const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
+    return { path: `migrations/${name}`, name, version: name.slice(0, 1), text, statements: parsed.statements };
+}
+
 test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {
     const fields = buildSchema([
         await parseMigration('1_create.sql', KEYED_TABLES_SQL),
@@ -73,16 +85,3 @@ test('an unnamed foreign key gets the PostgreSQL default name and does not count
     expect(removed.foreignKeys).toStrictEqual([]);
     expect(removed.indexed.get('public.posts')).toStrictEqual(new Set(['id', 'title']));
 });
-
-/**
- * A migration under migrations/, parsed.
- *
- * @param name file under migrations/.
- * @param text the SQL.
- * @param version defaults to the first character of the name.
- * @returns the parsed file with its version.
- */
-async function parseMigration(name: string, text: string, version = name.slice(0, 1)): Promise<Migration> {
-    const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
-    return { path: `migrations/${name}`, name, version, text, statements: parsed.statements };
-}

@@ -1,51 +1,45 @@
 // Explain a check, or one lint rule of the tool that a check runs.
 import { quoteArgument } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/planning.ts';
-import { stripUndefined } from '#cli/system/values.ts';
+import type { Session } from '#cli/types/session.ts';
+import { listSettings } from '#cli/settings/known.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
-import { RULE_PLACEHOLDER } from '#cli/config/configurations.ts';
-import type { CommandCheck } from '#cli/types/settings/values.ts';
-import { listConfigurationSettings } from '#cli/settings/known.ts';
+import { ESLINT_TOOL } from '#cli/config/configurations.ts';
+import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
+import type { CommandCheck } from '#cli/types/settings/file.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
-import { listRuleFiles, readManifests, listChecksById } from '#cli/configurations/manifests.ts';
-import { getToolName, extractRulePrefix, getToolDeclaration } from '#cli/configurations/tools.ts';
+import { getTool, getToolName, extractRulePrefix } from '#cli/configurations/declared-tools.ts';
+import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
+import { type Tool, type Check, type KnownCheck, type Configuration } from '#cli/types/configurations.ts';
 
-import {
-    type Manifest,
-    type KnownCheck,
-    type ToolDeclaration,
-    type CheckDeclaration,
-} from '#cli/types/configurations.ts';
-
-function getRulePlugin(prefix: string, manifests: Map<string, Manifest>): ToolDeclaration | undefined {
-    return manifests
+function findRulePlugin(prefix: string, configurations: Map<string, Configuration>): Tool | undefined {
+    return configurations
         .values()
-        .flatMap((manifest) => manifest.tools)
+        .flatMap((configuration) => configuration.tools)
         .find((pin) => pin.rule_prefix === prefix);
 }
 
 // Find the page for a lint rule: the tool page, or the page of the plugin that the rule prefix names.
-function getRulePage(tool: string, rule: string, manifests: Map<string, Manifest>): string | undefined {
+function findRulePage(tool: string, rule: string, configurations: Map<string, Configuration>): string | undefined {
     const prefix = extractRulePrefix(rule);
     if (prefix === undefined) {
-        const pin = getToolDeclaration(manifests.values(), tool);
+        const pin = getTool(configurations.values(), tool);
         return pin.rule_url?.replace(RULE_PLACEHOLDER, rule);
     }
-    const plugin = getRulePlugin(prefix, manifests);
+    const plugin = findRulePlugin(prefix, configurations);
     return plugin?.rule_url?.replace(RULE_PLACEHOLDER, rule.slice(prefix.length + 1));
 }
 
 // List the settings that change the check, and the rules and crash pattern of its configuration.
 function buildCheckFacts(
-    check: CheckDeclaration,
+    check: Check,
     configuration: KnownCheck['configuration'],
-    manifests: Map<string, Manifest>,
+    configurations: Map<string, Configuration>,
     installedRules: ReadonlySet<string>,
 ): CheckFacts {
     const tool = getToolName(check);
-    const settings = (configuration === undefined ? [] : listConfigurationSettings(configuration.configuration.name))
+    const settings = (configuration === undefined ? [] : listSettings(configuration.name))
         .filter((setting) => tool !== undefined && setting.name.startsWith(`tools.${tool}.`))
         .map((setting) => setting.name);
     const rules =
@@ -54,17 +48,16 @@ function buildCheckFacts(
             : listRuleFiles(configuration)
                   .filter((file) => installedRules.has(file.path))
                   .map((file) => file.path);
-    const crashPattern = tool === undefined ? undefined : getToolDeclaration(manifests.values(), tool).crash_pattern;
+    const crashPattern = tool === undefined ? undefined : getTool(configurations.values(), tool).crash_pattern;
     return {
-        source:
-            configuration === undefined ? 'repository command' : `${configuration.configuration.name} configuration`,
+        source: configuration === undefined ? 'repository command' : `${configuration.name} configuration`,
         settings,
         rules,
         crashPattern,
         minVersions: Object.fromEntries(
             [tool, ...(check.other_tools ?? [])]
                 .filter((name) => name !== undefined)
-                .map((name) => getToolDeclaration(manifests.values(), name))
+                .map((name) => getTool(configurations.values(), name))
                 .flatMap((tool) => (tool.min_version === undefined ? [] : [[tool.name, tool.min_version]])),
         ),
     };
@@ -84,14 +77,14 @@ function formatRepositoryUse(
         );
     if (session && configuration !== undefined)
         lines.push(
-            isConfigurationSelected(session.scopes, configuration.configuration.name)
+            isConfigurationSelected(session.scopes, configuration.name)
                 ? 'Selected in this repository: yes'
-                : `Selected in this repository: no (gspot add ${configuration.configuration.name})`,
+                : `Selected in this repository: no (gspot add ${configuration.name})`,
         );
     return lines;
 }
 
-function describeCheck(
+function formatCheckExplanation(
     session: Session | undefined,
     found: KnownCheck,
     declared: CommandCheck | undefined,
@@ -112,7 +105,7 @@ function describeCheck(
         ...(check.command
             ? [`Turn one of its rules off: gspot ignore ${quoteArgument(check.name)} --rule <rule> --reason "..."`]
             : []),
-        ...(check.run_in_copy === true ? ['Runs on a scratch copy of the selected files in a temporary folder.'] : []),
+        ...(check.run_in_copy === true ? ['Runs on a copy of the selected files in a temporary folder.'] : []),
         ...(settings.length === 0
             ? []
             : [`Settings that change it: ${settings.join(', ')} (gspot set <setting> <value>)`]),
@@ -130,28 +123,28 @@ function describeCheck(
  * @returns the explanation, or undefined when no check has the ID.
  */
 export function explainCheck(session: Session | undefined, checkName: string): Explanation | undefined {
-    const manifests = readManifests();
+    const configurations = readConfigurations();
     const declared = session?.settingsFile.settings.commandChecks[checkName];
     const found: KnownCheck | undefined =
-        listChecksById(manifests.values()).get(checkName) ??
+        listChecksById(configurations.values()).get(checkName) ??
         (declared === undefined ? undefined : { check: declared, configuration: undefined });
     if (found === undefined) return undefined;
     const { check, configuration } = found;
     const facts = buildCheckFacts(
         check,
         configuration,
-        manifests,
+        configurations,
         new Set(session === undefined ? [] : selectRuleFiles(session).map((file) => file.path)),
     );
     return {
         kind: 'check',
         subject: checkName,
-        text: describeCheck(session, found, declared, facts),
+        text: formatCheckExplanation(session, found, declared, facts),
         data: {
             check: checkName,
             ...(configuration === undefined
                 ? { command: check.command, paths: check.files?.paths }
-                : { configuration: configuration.configuration.name }),
+                : { configuration: configuration.name }),
             stage: check.stage,
             level: check.level,
             summary: check.summary,
@@ -176,12 +169,12 @@ export function explainCheck(session: Session | undefined, checkName: string): E
  * @returns the explanation, or undefined when no check runs the tool.
  */
 export function explainLintRule(tool: string, rule: string): Explanation | undefined {
-    const manifests = readManifests();
+    const configurations = readConfigurations();
     const qualified = `${tool}/${rule}`;
-    const plugin = getRulePlugin(extractRulePrefix(qualified) ?? tool, manifests);
+    const plugin = findRulePlugin(extractRulePrefix(qualified) ?? tool, configurations);
     const ruleTool = plugin === undefined ? tool : ESLINT_TOOL;
     const identifier = plugin === undefined ? rule : qualified;
-    const found = listChecksById(manifests.values())
+    const found = listChecksById(configurations.values())
         .values()
         .find(
             ({ check: declaration }) =>
@@ -189,10 +182,10 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
         );
     if (!found) return undefined;
     const { check, configuration } = found;
-    const page = getRulePage(ruleTool, identifier, manifests);
+    const page = findRulePage(ruleTool, identifier, configurations);
     const key = quoteArgument(`tools.${ruleTool}.rules`);
     const entries = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
-    const optionLines = listConfigurationSettings(configuration.configuration.name)
+    const optionLines = listSettings(configuration.name)
         .filter((setting) => setting.name === `tools.${ruleTool}.rules`)
         .map(() => `Change its options: gspot set ${key} ${entries}`);
     let description = `Read the ${ruleTool} documentation for ${identifier}.`;

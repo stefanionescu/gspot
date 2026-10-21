@@ -4,17 +4,17 @@ import { realpathSync } from 'node:fs';
 import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
+import type { Tool } from '#cli/types/configurations.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
-import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/tools/inspection.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import { TOOL_ENV, NO_VERSION, VERSION_FLAG } from '#cli/config/tools/run.ts';
-import { readHostPackage, readToolProjectPackage } from '#cli/repository/packages.ts';
-import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts';
+import { readHostPackage, readToolProjectPackage } from '#cli/repository/npm/installed-packages.ts';
+import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools/inspection.ts';
 
 // Find the version that the first package.json above a folder declares for the named package, searching upward.
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
@@ -56,7 +56,7 @@ function readPackageVersion(repositoryRoot: string, path: string, name: string |
     return findVersionAbove(files, repositoryRoot, start, name);
 }
 
-function extractVersion(text: string, tool: ToolDeclaration): string | undefined {
+function extractVersion(text: string, tool: Tool): string | undefined {
     if (tool.version_pattern === undefined) return semver.coerce(text)?.version;
     const match = new RegExp(tool.version_pattern, 'u').exec(text);
     return match?.[1] ?? match?.[0];
@@ -64,11 +64,11 @@ function extractVersion(text: string, tool: ToolDeclaration): string | undefined
 
 function findVersionFailure(
     result: SpawnResult,
-    tool: ToolDeclaration,
+    tool: Tool,
     text: string,
     version: string | undefined,
 ): ParsedToolVersion | undefined {
-    if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version inspection timed out.` };
+    if (result.timedOut) return { state: 'error', note: `${tool.name} version inspection timed out.` };
     if (result.missing) return { state: 'missing', note: text };
     // A shim without a set version starts nothing, whatever other mise installs exist.
     if (text.includes(NO_VERSION)) return { state: 'missing', note: 'not installed' };
@@ -88,7 +88,7 @@ function findVersionFailure(
  *
  * @returns ok, outdated below the floor, newer above the pin, or error for no version.
  */
-function classifyToolVersion(
+export function classifyToolVersion(
     found: string,
     want: string | undefined,
     floor: string | undefined,
@@ -109,7 +109,7 @@ function classifyToolVersion(
  *
  * @returns the version or the query failure.
  */
-function readToolVersion(inspected: InspectedTool, path: string): ParsedToolVersion {
+export function readToolVersion(inspected: InspectedTool, path: string): ParsedToolVersion {
     const { root, cwd, tool, timeoutSeconds } = inspected;
     const npm = tool.installers['npm'];
     const installedVersion = readPackageVersion(root, path, npm?.name);
@@ -144,11 +144,7 @@ function isBelowFloor(found: string | undefined, floor: string | undefined): boo
  *
  * @returns the parsed version or its inspection failure.
  */
-function parseVersionOutput(
-    tool: ToolDeclaration,
-    result: SpawnResult,
-    installedVersion: string | undefined,
-): ParsedToolVersion {
+function parseVersionOutput(tool: Tool, result: SpawnResult, installedVersion: string | undefined): ParsedToolVersion {
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
     // An npm tool reports the version its package declares.
@@ -159,5 +155,3 @@ function parseVersionOutput(
         return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
     return { version };
 }
-
-export { readToolVersion, classifyToolVersion };

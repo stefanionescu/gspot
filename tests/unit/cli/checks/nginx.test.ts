@@ -9,8 +9,8 @@ import { checkFindings } from '#tests/setup/check-input.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { NGINX_CONFIGURATION, NGINX_DIRECTIVE_CASES } from '#tests/data/checks/nginx.ts';
 
 test.each([
@@ -37,8 +37,8 @@ test.each([
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['nginx']), 'nginx.conf': source });
     const session = await openSession(sandbox.path);
     using _pins = fakePinnedExecutables([
-        getToolDeclaration(session.manifests.values(), 'openssl'),
-        getToolDeclaration(session.manifests.values(), 'docker'),
+        getTool(session.configurations.values(), 'openssl'),
+        getTool(session.configurations.values(), 'docker'),
     ]);
     using run = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
         if (!command.includes('--rm')) return buildProcessResult();
@@ -70,8 +70,8 @@ test.each(['stdout', 'stderr'])(
         using resources = new DisposableStack();
         resources.use(
             fakePinnedExecutables([
-                getToolDeclaration(session.manifests.values(), 'openssl'),
-                getToolDeclaration(session.manifests.values(), 'docker'),
+                getTool(session.configurations.values(), 'openssl'),
+                getTool(session.configurations.values(), 'docker'),
             ]),
         );
         const folders: string[] = [];

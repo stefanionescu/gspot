@@ -5,7 +5,7 @@ import {
     NPM_TOOL_PROJECT_FILE,
     MISE_TOOL_PROJECT_FILE,
     PYTHON_TOOL_PROJECT_FILE,
-} from '#cli/config/system/locations.ts';
+} from '#cli/config/gspot-paths.ts';
 
 // The paths the job caches between runs: the package caches and the installed tools.
 export const CACHED_PATHS = [

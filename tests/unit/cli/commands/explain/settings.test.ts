@@ -3,39 +3,33 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import { SETTING_REASON } from '#tests/data/commands/set.ts';
-import { REASON_VALUES } from '#tests/data/commands/explain.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
+import { REASON_VALUES, NAMING_SCOPE_LIMITS } from '#tests/data/commands/explain.ts';
 
-test.each(['swift', 'sql'])("explain shows each scope's default and current naming limit (%j)", async (language) => {
-    const settings = buildKnownSettings(selectConfigurations(['naming'], readManifests()), 'recommended');
-    const swift = Number(settings.defaults.get('naming.swift.max_characters')?.value);
-    const sql = Number(settings.defaults.get('naming.sql.max_words')?.value);
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['naming'], {
-            level: 'all',
-            tables: `[[scope]]\npath = "app"\n[scope.naming.swift]\nmax_characters = ${(swift - 2).toString()}\n`,
-        }),
-        'entry.sh': 'echo example\n',
-        'app/entry.sh': 'echo example\n',
-    });
+test.each([...NAMING_SCOPE_LIMITS])(
+    "explain shows each scope's default and current naming limit (%j)",
+    async ({ key, shipped, child }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['naming'], {
+                level: 'all',
+                tables: `[[scope]]\npath = "app"\n[scope.naming.swift]\nmax_characters = 38\n`,
+            }),
+            'entry.sh': 'echo example\n',
+            'app/entry.sh': 'echo example\n',
+        });
 
-    const [key, shipped, child] =
-        language === 'swift' ? ['naming.swift.max_characters', swift, swift - 2] : ['naming.sql.max_words', sql, sql];
-
-    const explained = await runGspot(sandbox.path, ['explain', key, '--json']);
-    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(JSON.parse(explained.stdout)).toMatchObject({
-        kind: 'setting',
-        scopes: [
-            { scope: '', default: shipped, current: shipped },
-            { scope: 'app', default: shipped, current: child },
-        ],
-    });
-});
+        const explained = await runGspot(sandbox.path, ['explain', key, '--json']);
+        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+        expect(JSON.parse(explained.stdout)).toMatchObject({
+            kind: 'setting',
+            scopes: [
+                { scope: '', default: shipped, current: shipped },
+                { scope: 'app', default: shipped, current: child },
+            ],
+        });
+    },
+);
 test('a setting explanation lists settings set only in scopes and each inherited value', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
@@ -73,53 +67,48 @@ test('explain reads an inherited limits.function_lines value and its reason, and
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
-test.each(REASON_VALUES.flatMap((row) => [0, 1].map((index) => ({ row, index }))))(
-    'explain $key shows each scope value and whether it needs a reason (%j)',
-    async ({ row, index }) => {
-        await using sandbox = await testdir();
-        const explanation = 'The sandbox preserves the project convention for this native setting.';
-        const separator = row.key.lastIndexOf('.');
-        const table = row.key.slice(0, separator);
-        const field = row.key.slice(separator + 1);
-        const settings = `configurations = ["naming"]
+test.each([...REASON_VALUES])('explain $key shows each scope value and whether it needs a reason (%j)', async (row) => {
+    await using sandbox = await testdir();
+    const explanation = 'The sandbox preserves the project convention for this native setting.';
+    const separator = row.key.lastIndexOf('.');
+    const table = row.key.slice(0, separator);
+    const field = row.key.slice(separator + 1);
+    const settings = `configurations = ["naming"]
 [${table}]
 ${field} = ${row.root}
 [[scope]]\npath = "app"
 configurations = []
 [scope.${table}]
-${field} = ${row.owed[1] ? `{ value = ${row.child}, reason = "${explanation}" }` : row.child}
+${field} = ${row.needsReason[1] ? `{ value = ${row.child}, reason = "${explanation}" }` : row.child}
 `;
-        await createFileTree(sandbox.path, {
-            'gspot.toml': settings,
-            'app/source.js': 'export const active = true;\n',
-        });
-        const result = await runGspot(sandbox.path, ['explain', row.key]);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        const sections = result.stdout.split('Scope: ').slice(1);
-        expect(sections).toHaveLength(2);
-        const [scope, section, owed, target] = (
-            [
-                ['root', sections[0]!, row.owed[0], ''],
-                ['app', sections[1]!, row.owed[1], ' --scope app'],
-            ] as const
-        )[index]!;
-
+    await createFileTree(sandbox.path, {
+        'gspot.toml': settings,
+        'app/source.js': 'export const active = true;\n',
+    });
+    const result = await runGspot(sandbox.path, ['explain', row.key]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const sections = result.stdout.split('Scope: ').slice(1);
+    expect(sections).toHaveLength(2);
+    for (const [scope, section, needsReason, target] of [
+        ['root', sections[0]!, row.needsReason[0], ''],
+        ['app', sections[1]!, row.needsReason[1], ' --scope app'],
+    ] as const) {
         expect(section).toStartWith(`${scope}\n`);
-        expect(section.includes('If you set this value, give a reason:')).toBe(owed);
-        expect(section.includes(`Reason on record: ${explanation}`)).toBe(owed);
+        expect(section.includes('If you set this value, give a reason:')).toBe(needsReason);
+        expect(section.includes(`Reason on record: ${explanation}`)).toBe(needsReason);
         expect(section).toContain(`Change it: gspot set ${row.key} <value>${target} [--reason "..."]`);
-        const reported = await runGspot(sandbox.path, ['explain', row.key, '--json']);
-        expect(reported.code, reported.stdout + reported.stderr).toBe(0);
-        expect(JSON.parse(reported.stdout)).toMatchObject({
-            key: row.key,
-            scopes: [
-                { scope: '', current: row.current[0] },
-                { scope: 'app', current: row.current[1], ...(row.owed[1] ? { reason: explanation } : {}) },
-            ],
-        });
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-    },
-);
+    }
+    const reported = await runGspot(sandbox.path, ['explain', row.key, '--json']);
+    expect(reported.code, reported.stdout + reported.stderr).toBe(0);
+    expect(JSON.parse(reported.stdout)).toMatchObject({
+        key: row.key,
+        scopes: [
+            { scope: '', current: row.current[0] },
+            { scope: 'app', current: row.current[1], ...(row.needsReason[1] ? { reason: explanation } : {}) },
+        ],
+    });
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+});
 test('a neutral format setting stays settable without a reason', async () => {
     const level = 'all';
     const key = 'format.indent_style';

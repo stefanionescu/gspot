@@ -1,16 +1,16 @@
 import { posix } from 'node:path';
-import { isRecord } from '#cli/system/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { NPM_TOOL_PREFIX } from '#cli/config/checks/dependencies.ts';
-import { MISE_FILES } from '#cli/config/repository/existing-tools.ts';
 import { readCachedPackageJson } from '#cli/repository/dependency-files.ts';
 import { miseToolsSchema } from '#cli/schemas/checks/package-manager-pin.ts';
+import { MISE_FILES, NPM_TOOL_PREFIX } from '#cli/config/checks/dependencies.ts';
 
 function readPinnedVersion(value: unknown): string | undefined {
     const first: unknown = Array.isArray(value) ? value[0] : value;
@@ -50,8 +50,8 @@ function splitPackageManager(field: string | undefined): { tool: string; version
  */
 export function checkPackageManagerPin(session: Session, planned: PlannedCheck): Finding[] {
     const folder = planned.selection.scope.path;
-    const manifest = posix.join(folder, PACKAGE_JSON);
-    const declared = splitPackageManager(readCachedPackageJson(session.reads, manifest)?.packageManager);
+    const packageJsonPath = posix.join(folder, PACKAGE_JSON);
+    const declared = splitPackageManager(readCachedPackageJson(session.reads, packageJsonPath)?.packageManager);
     if (declared === undefined) return [];
     const { tool, version } = declared;
     const pin = findMisePin(session, folder, tool);
@@ -59,7 +59,7 @@ export function checkPackageManagerPin(session: Session, planned: PlannedCheck):
     return [
         buildFinding(
             planned,
-            { file: manifest, line: 1 },
+            { file: packageJsonPath, line: 1 },
             'package-manager-pin',
             `packageManager names ${tool} ${version}, but ${pin.path} pins ${tool} ${pin.version}. Write one version in both.`,
         ),

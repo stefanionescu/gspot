@@ -157,7 +157,7 @@ test('a copy leaves the virtual environment in the working tree and still checks
     expect(copied).toStrictEqual({ environment: false, source: 'selected = True\n' });
     expect(await readFile(join(root, '.venv/bin/python'), 'utf8')).toBe('interpreter');
     await writeFile(join(root, 'uv.lock'), 'version = 2\n');
-    expect(await captureRevisionFailure(root)).toContain('do not match the revision manifests');
+    expect(await captureRevisionFailure(root)).toContain('do not match the dependency files');
 });
 
 test('cancellation drains dependency copies before removing the copy and keeps installed files', async () => {
@@ -213,5 +213,5 @@ test('a manifest checked out with CRLF matches its LF blob when Git converts lin
     const source = await readFile(join(copy.root, 'node_modules/example/index.js'), 'utf8');
     expect(source).toContain('value = 1');
     await writeFile(join(sandbox.path, 'package.json'), '{\r\n    "name": "changed"\r\n}\r\n');
-    expect(await captureRevisionFailure(sandbox.path)).toContain('do not match the revision manifests');
+    expect(await captureRevisionFailure(sandbox.path)).toContain('do not match the dependency files');
 });

@@ -6,10 +6,10 @@ import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import { mkdir, readdir, symlink, readFile, realpath } from 'node:fs/promises';
 
 /** The node_modules folder of the repository root, where each package sits beside its dependencies. */
-const installedModules = join(import.meta.dir, '../../node_modules');
+export const installedModules = join(import.meta.dir, '../../node_modules');
 
 /** The node_modules folder of the tests package. It holds the package programs and links. */
-const testModules = join(import.meta.dir, '../node_modules');
+export const testModules = join(import.meta.dir, '../node_modules');
 
 /**
  * List installed packages, including names in scoped folders.
@@ -38,7 +38,7 @@ async function listPackageNames(store: string): Promise<string[]> {
  *
  * @param target the node_modules folder to create.
  */
-async function linkInstalledModules(target: string): Promise<void> {
+export async function linkInstalledModules(target: string): Promise<void> {
     const packages = await Promise.all(
         [testModules, installedModules].map(async (store) => {
             const names = await listPackageNames(store);
@@ -61,7 +61,7 @@ async function linkInstalledModules(target: string): Promise<void> {
  * @param target the node_modules folder to create.
  * @param names packages that the sandbox project declares.
  */
-async function linkPackages(target: string, names: readonly string[]): Promise<void> {
+export async function linkPackages(target: string, names: readonly string[]): Promise<void> {
     const pending = await Promise.all(
         names.map(
             async (name) =>
@@ -74,13 +74,13 @@ async function linkPackages(target: string, names: readonly string[]): Promise<v
         if (found.has(name) || !(await isOnDisk(path))) continue;
         const real = await realpath(path);
         found.set(name, real);
-        const manifest = JSON.parse(await readFile(join(real, 'package.json'), 'utf8')) as PackageJson;
+        const packageJson = JSON.parse(await readFile(join(real, 'package.json'), 'utf8')) as PackageJson;
         // The store keeps each dependency of a package beside it, in the same node_modules folder.
         const folder = join(real, ...name.split('/').map(() => '..'));
         const dependencies = {
-            ...manifest.dependencies,
-            ...manifest.optionalDependencies,
-            ...manifest.peerDependencies,
+            ...packageJson.dependencies,
+            ...packageJson.optionalDependencies,
+            ...packageJson.peerDependencies,
         };
         for (const dependency of Object.keys(dependencies)) pending.push([dependency, join(folder, dependency)]);
     }
@@ -90,5 +90,3 @@ async function linkPackages(target: string, names: readonly string[]): Promise<v
         await symlink(real, destination, FOLDER_LINK_TYPE);
     }
 }
-
-export { testModules, linkPackages, installedModules, linkInstalledModules };

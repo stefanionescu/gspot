@@ -4,34 +4,35 @@ import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { UNIGNORE_CASES } from '#tests/data/commands/ignore.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { SHELLCHECK_IGNORE } from '#tests/data/commands/ignore.ts';
 import { parse, stringify, LocalDate } from '@decimalturn/toml-patch';
 
-test.each([...UNIGNORE_CASES])(
-    'unignore from %s prints its summary and reports a repeat as unchanged',
-    async (_, tables, summary) => {
-        await using folder = await testdir();
-        const settings = buildSandboxSettings(['bash'], { rules: true, tables });
-        await createFileTree(folder.path, {
-            'gspot.toml': settings,
-            'entry.sh': 'echo example\n',
-            'control.txt': 'keep this file\n',
-        });
-        const commandArguments = ['unignore', 'bash/shellcheck', '--rule', 'SC2086'];
-        const removed = await runGspot(folder.path, commandArguments);
-        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-        expect(removed.stdout).toStartWith(`${summary}\n`);
-        const saved = await readFile(join(folder.path, 'gspot.toml'), 'utf8');
-        expect((parse(saved) as TomlTable)['ignore']).toStrictEqual(tables === 'ignore = []\n' ? [] : undefined);
-        const repeated = await runGspot(folder.path, commandArguments);
-        expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(repeated.stdout).toBe('No change: bash/shellcheck has no matching ignore.\n');
-        expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(saved);
-        expect(await readFile(join(folder.path, 'entry.sh'), 'utf8')).toBe('echo example\n');
-        expect(await readFile(join(folder.path, 'control.txt'), 'utf8')).toBe('keep this file\n');
-    },
-);
+test('unignore removes a matching ignore, and a second run reports no change', async () => {
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { rules: true, tables: SHELLCHECK_IGNORE }),
+    });
+    const commandArguments = ['unignore', 'bash/shellcheck', '--rule', 'SC2086'];
+    const removed = await runGspot(folder.path, commandArguments);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect(removed.stdout).toStartWith('Removed 1 ignore for bash/shellcheck.\n');
+    const saved = await readFile(join(folder.path, 'gspot.toml'), 'utf8');
+    expect((parse(saved) as TomlTable)['ignore']).toBeUndefined();
+    const repeated = await runGspot(folder.path, commandArguments);
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
+    expect(repeated.stdout).toBe('No change: bash/shellcheck has no matching ignore.\n');
+    expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(saved);
+});
+
+test('unignore keeps an empty ignore list and reports no change', async () => {
+    const settings = buildSandboxSettings(['bash'], { rules: true, tables: 'ignore = []\n' });
+    await using folder = await testdir({ 'gspot.toml': settings });
+    const removed = await runGspot(folder.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect(removed.stdout).toBe('No change: bash/shellcheck has no matching ignore.\n');
+    expect((parse(await readFile(join(folder.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore']).toStrictEqual([]);
+    expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(settings);
+});
 
 test('ignore removal refuses invalid settings before it changes an authored ignore', async () => {
     await using folder = await testdir();

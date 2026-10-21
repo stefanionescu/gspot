@@ -4,7 +4,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
-import { APP_JEST, VITEST_FILES } from '#tests/data/generation/eslint/fragments.ts';
+import { APP_JEST, VITEST_FILES } from '#tests/data/generation/eslint/configurations.ts';
 import { DUPLICATE_RULE_CASES, DUPLICATE_RULE_FILES } from '#tests/data/generation/eslint/lint-rules.ts';
 
 test.each([...DUPLICATE_RULE_CASES])(
@@ -81,7 +81,7 @@ test('limit-languages > a JavaScript file takes the JavaScript limits, and a Typ
 describe('jest', () => {
     test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
         await using sandbox = await testdir({
-            'gspot.toml': APP_JEST,
+            'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: APP_JEST }),
             'package.json': '{"private":true,"type":"module"}\n',
             'root.test.js': '',
             'app/sample.test.js': '',

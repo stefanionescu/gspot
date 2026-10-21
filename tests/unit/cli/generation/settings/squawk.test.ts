@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { parse } from '@decimalturn/toml-patch';
-import { getValueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/tables.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { toolFileFor, generateFile } from '#tests/setup/tool-files.ts';

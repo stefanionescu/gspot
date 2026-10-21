@@ -1,4 +1,4 @@
-import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/data/checks/python/project.ts';
+import { GOOGLE_PYPROJECT } from '#tests/data/checks/python/project.ts';
 
 export const CLEAN_PYTHON_MODULE = `"""Prices."""
 
@@ -24,7 +24,7 @@ export const PYTHON_MODULE_SANDBOX = {
     configurations: ['python'],
 
     files: {
-        'pyproject.toml': PYPROJECT + '\n' + PYDOCLINT_GOOGLE,
+        'pyproject.toml': GOOGLE_PYPROJECT,
         'example/__init__.py': '"""The test package."""\n',
         'example/prices.py': CLEAN_PYTHON_MODULE,
     },

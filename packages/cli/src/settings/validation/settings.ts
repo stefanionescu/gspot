@@ -1,20 +1,20 @@
 import { z } from 'zod';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import { selectForScope } from '#cli/repository/coverage.ts';
+import { selectForScope } from '#cli/settings/scope-view.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
-import { type SettingsError } from '#cli/types/settings/file.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { LimitLanguage } from '#cli/types/settings/tables.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/parts.ts';
-import { SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
+import { SETTINGS_REFERENCE_URL } from '#cli/config/settings/schema.ts';
+import { type KnownSettings } from '#cli/types/settings/inheritance.ts';
+import type { WrittenConfiguration } from '#cli/types/configurations.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
-import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
-import { listCheckIds, readManifests } from '#cli/configurations/manifests.ts';
-import { type Settings, type KnownSettings } from '#cli/types/settings/values.ts';
+import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
+import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
 import { formatCodeList, formatUnknownName, formatSimilarNames } from '#cli/system/text.ts';
 import { scopeSchema, settingsSchema, listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
 
@@ -31,7 +31,7 @@ import {
  * @param issue the schema validation message.
  * @returns the setting path and its validation failure, each line after the gspot.toml name.
  */
-function formatSettingsIssue(issue: z.core.$ZodIssue): string[] {
+export function formatSettingsIssue(issue: z.core.$ZodIssue): string[] {
     const branches = issue.code === 'invalid_union' ? issue.errors : [];
     const reasonedValueErrors = branches.find((errors) =>
         errors.some((child) => child.path[0] === 'value' || child.path[0] === 'reason'),
@@ -73,10 +73,10 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
     const recordName = [...scopeFields, key].map(String).join('.');
     if (record === 'scope' && Object.hasOwn(fields, recordName))
         return `Write [[${recordName}]] at the root.${fields[recordName]?.includes('paths') === true ? ' Its paths say where it applies.' : ''}`;
-    return `${describeKeyPlace(segments)}: \`${key}\` is not a gspot.toml setting.${formatSimilarKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every key.`;
+    return `${formatKeyPlace(segments)}: \`${key}\` is not a gspot.toml setting.${formatSimilarKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every key.`;
 }
 
-function describeKeyPlace(segments: KeyPath): string {
+function formatKeyPlace(segments: KeyPath): string {
     const [record, scopeIndex, ...scopeFields] = segments;
     if (record !== 'scope') return segments.length === 0 ? 'the top level' : `[${segments.map(String).join('.')}]`;
     const section = scopeFields.length === 0 ? '' : ` [${scopeFields.map(String).join('.')}]`;
@@ -97,23 +97,23 @@ function throwErrors(errors: SettingsError[]): never {
  * @param settings the parsed gspot.toml.
  * @param repositoryRoot the optional folder for checking declared scope paths.
  */
-function validateSettings(settings: Settings, repositoryRoot: string | undefined): void {
-    const manifests = readManifests();
-    const declarations: ConfigurationDeclaration[] = [
+export function validateSettings(settings: Settings, repositoryRoot: string | undefined): void {
+    const configurations = readConfigurations();
+    const written: WrittenConfiguration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
         ...Object.values(settings.scopes).flatMap((scope, scopeIndex) =>
             scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
         ),
     ];
-    const unknown = listUnknownConfigurations(declarations, manifests);
+    const unknown = listUnknownConfigurations(written, configurations);
     if (unknown.length > 0) throwErrors(unknown);
     const bundledChecks = listCheckIds([]);
     const checks = listCheckIds(Object.values(settings.commandChecks));
     const knownBySelection = new Map<string, KnownSettings>();
     const scopes = new Map(
         ['', ...Object.keys(settings.scopes)].map((scope) => {
-            const selected = selectForScope(settings, scope, manifests);
-            const key = JSON.stringify(selected.map((manifest) => manifest.configuration.name));
+            const selected = selectForScope(settings, scope, configurations);
+            const key = JSON.stringify(selected.map((configuration) => configuration.name));
             let known = knownBySelection.get(key);
             if (known === undefined) {
                 known = buildKnownSettings(selected, settings.level);
@@ -142,12 +142,10 @@ function validateSettings(settings: Settings, repositoryRoot: string | undefined
                 ? []
                 : [{ path: ['ignore', index, 'check'], message: formatUnknownName('check', entry.check, checks) }],
         ),
-        ...validateRuleExcludes(settings.rules.exclude, manifests),
+        ...validateRuleExcludes(settings.rules.exclude, configurations),
         ...(repositoryRoot === undefined ? [] : validateScopePaths(repositoryRoot, settings)),
         ...(repositoryRoot === undefined ? [] : validateRuleFilePaths(repositoryRoot, settings)),
-        ...validateKeys(known, settings, scopes, buildKnownSettings([...manifests.values()], settings.level)),
+        ...validateKeys(known, settings, scopes, buildKnownSettings([...configurations.values()], settings.level)),
     ];
     if (errors.length > 0) throwErrors(errors);
 }
-
-export { validateSettings, formatSettingsIssue };

@@ -1,5 +1,6 @@
+import type { Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding, CheckResult, BuiltInCheck, BuiltInCheckResult } from '#cli/types/runs/check.ts';
 
 /**

@@ -1,13 +1,13 @@
-// Reads spelling findings from Typos reports.
 import { resolve, relative } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
-import { parseReport } from '#cli/parsers/json.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { ToolOutput } from '#cli/types/runs/output.ts';
+import type { ReportedTypo } from '#cli/types/runs/tool-reports.ts';
 import { reportedTypoSchema } from '#cli/schemas/runs/output/typos.ts';
-import { type ReportInput, type ReportedTypo } from '#cli/types/runs/output.ts';
 
 // Read the lines of a source file as bytes, once per file, so byte offsets map to columns.
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
@@ -50,9 +50,8 @@ function computeTypoPosition(
 }
 
 // Turn one typos entry into a finding: a filename typo when it has no line, otherwise a positioned one.
-function readTypoFinding(
-    check: string,
-    help: string,
+function buildTypoFinding(
+    output: ToolOutput,
     entry: ReportedTypo,
     path: string,
     position: Pick<Finding, 'line' | 'column'>,
@@ -62,9 +61,9 @@ function readTypoFinding(
     const text =
         corrections.length === 0 ? `\`${entry.typo}\` is not allowed` : `\`${entry.typo}\` should be ${replacement}`;
     return {
-        check,
+        check: output.check,
         file: path,
-        help,
+        help: output.help,
         message: entry.line_num === undefined ? `Filename: ${text}` : text,
         fixable: entry.line_num !== undefined && corrections.length === 1,
         ...position,
@@ -75,21 +74,20 @@ function readTypoFinding(
  * Read the JSON lines that typos prints. JSON keeps filename delimiters. Offsets count UTF-8 bytes,
  * but report columns count characters.
  *
- * @param input the tool output to read.
+ * @param output the tool output to read.
  * @returns source positions with byte offsets converted to character columns.
  */
-export function parseTyposFindings(input: ReportInput): Finding[] {
-    const { check, stdout, help, root, cwd } = input;
+export function parseTyposFindings(output: ToolOutput): Finding[] {
+    const { stdout, root, cwd } = output;
     const entries = stdout
         .split('\n')
         .filter((line) => line.trim() !== '')
-        .map((line) => parseReport('Typos', line, reportedTypoSchema));
+        .map((line) => parseToolReport('Typos', line, reportedTypoSchema));
     const linesByPath = new Map<string, Buffer[]>();
     return entries.map((entry) => {
         const path = resolve(cwd, entry.path);
-        return readTypoFinding(
-            check,
-            help,
+        return buildTypoFinding(
+            output,
             entry,
             path,
             computeTypoPosition(root, convertToPosixPath(relative(root, path)), entry, linesByPath),

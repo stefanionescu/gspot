@@ -5,11 +5,11 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/builders.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { rm, mkdir, symlink, writeFile } from 'node:fs/promises';
-import { listWorkspaceFolders } from '#cli/repository/packages.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { LAYERED_SCOPE_SETTINGS } from '#tests/data/settings/scopes.ts';
+import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/data/install/python-tool-project.ts';
@@ -18,7 +18,7 @@ import { joinScope, findScopes, findProjectFolder } from '#cli/repository/scopes
 import {
     SCOPE_PATHS,
     PROJECT_FILE_FOLDERS,
-    WORKSPACE_DECLARATIONS,
+    WORKSPACE_FILE_CASES,
     INVALID_WORKSPACE_FILES,
 } from '#tests/data/repository/scopes.ts';
 
@@ -47,7 +47,7 @@ test.each(PROJECT_FILE_FOLDERS)('%s with the project file %s marks the folder %j
     expect(findProjectFolder(path, pattern)).toBe(folder);
 });
 
-test.each([...WORKSPACE_DECLARATIONS])(
+test.each([...WORKSPACE_FILE_CASES])(
     'workspace files list tooling packages while scope detection keeps applications: %j',
     async (files) => {
         await using sandbox = await testdir({
@@ -64,7 +64,7 @@ test.each([...WORKSPACE_DECLARATIONS])(
         const scopes = findScopes(
             repository.files,
             await readDependencyFiles(createReadCache(sandbox.path), repository.files),
-            readManifests().values(),
+            readConfigurations().values(),
         );
         expect(scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
     },
@@ -151,7 +151,7 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
         findScopes(
             repository.files,
             await readDependencyFiles(createReadCache(root), repository.files),
-            readManifests().values(),
+            readConfigurations().values(),
         ).map((scope) => scope.path),
     ).toStrictEqual(['packages/app']);
 });
@@ -182,7 +182,7 @@ test('every folder that holds a project file is a scope, the root and lint-only 
 
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-    const found = findScopes(repository.files, dependencyFiles, readManifests().values());
+    const found = findScopes(repository.files, dependencyFiles, readConfigurations().values());
     expect(found.map((scope) => [scope.path, scope.origin])).toStrictEqual([
         ['api', 'project'],
         ['apps/web', 'project'],
@@ -193,7 +193,7 @@ test('every folder that holds a project file is a scope, the root and lint-only 
 
 test('scope detection leaves out packages that hold only gspot npm tools or a hook manager, and keeps unpinned packages', async () => {
     await using sandbox = await testdir();
-    const manifests = {
+    const dependencyFiles = {
         'packages/process/package.json': '{"devDependencies":{"concurrently":"9.0.0"}}',
         'packages/custom/package.json': '{"devDependencies":{"eslint-plugin-custom":"1.0.0"}}',
         'packages/next/package.json': '{"devDependencies":{"@next/eslint-plugin-next":"16.0.0"}}',
@@ -201,7 +201,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
     };
     await createFileTree(sandbox.path, {
         'package.json': '{"workspaces":["packages/*"]}',
-        ...manifests,
+        ...dependencyFiles,
     });
     const repository = await readTestRepository(sandbox.path);
     expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
@@ -214,7 +214,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         findScopes(
             repository.files,
             await readDependencyFiles(createReadCache(sandbox.path), repository.files),
-            readManifests().values(),
+            readConfigurations().values(),
         ).map((scope) => scope.path),
     ).toStrictEqual(['packages/custom', 'packages/process']);
     await writeFile(
@@ -226,7 +226,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         findScopes(
             corrected.files,
             await readDependencyFiles(createReadCache(sandbox.path), corrected.files),
-            readManifests().values(),
+            readConfigurations().values(),
         ).map((scope) => scope.path),
     ).toStrictEqual(['packages/custom', 'packages/next', 'packages/process']);
 });
@@ -238,7 +238,7 @@ test('Python scopes use the dependency files read with the repository', async ()
     const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(
-        findScopes(repository.files, dependencyFiles, readManifests().values()).map((scope) => scope.path),
+        findScopes(repository.files, dependencyFiles, readConfigurations().values()).map((scope) => scope.path),
     ).toStrictEqual(['api']);
 });
 

@@ -5,8 +5,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-import { updateSandbox, applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 
 import {
     FILES_CASES,
@@ -16,11 +16,26 @@ import {
     YAML_SCOPE_SETTINGS,
 } from '#tests/data/checks/files.ts';
 
+// Checks the root and child scopes separately with yamllint.
+async function assertYamlFiles(root: string, rule?: string): Promise<void> {
+    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'files/yamllint', '--json']));
+    expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);
+    expect(checked.report.checks).toMatchObject([
+        { check: 'files/yamllint', scope: '', status: 'passed', findings: [] },
+        {
+            check: 'files/yamllint',
+            scope: 'app',
+            status: rule === undefined ? 'passed' : 'failed',
+            findings: rule === undefined ? [] : [matchFields({ file: 'app/settings/project.yaml', rule, line: 2 })],
+        },
+    ]);
+}
+
 const installedSandbox = registerSharedSandbox(FILES_SANDBOX);
 
 test.each([...FILES_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
     const result = await runCheckSample(installedSandbox(), entry, FILES_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });
 
 test('v8r validates a staged JSON file with a non-ASCII path against its schema', async () => {
@@ -92,15 +107,12 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
     });
     const directive = `#:schema ${server.url.toString()}schema.json\n`;
     resources.use(
-        await updateSandbox(installedSandbox(), {
+        await applySandboxChanges(installedSandbox(), {
             check: 'files/taplo-format',
             files: { 'settings/schema.toml': directive + 'value =\n' },
         }),
     );
     const command = ['check', 'settings/schema.toml', '--only', 'files/taplo-format', '--json'];
-    const selected = await spawnGspot(root, ['set', 'level', 'all'], environment);
-    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-    await writeFile(join(root, 'settings/schema.toml'), directive + 'value =\n');
     const failed = parseCheckReport(await spawnGspot(root, command, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks).toMatchObject([
@@ -113,36 +125,16 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
     expect(requests).toBe(0);
 });
 
-// Checks the root and child scopes separately with yamllint.
-async function assertYamlFiles(root: string, rule?: string): Promise<void> {
-    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'files/yamllint', '--json']));
-    expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);
-    expect(checked.report.checks).toMatchObject([
-        { check: 'files/yamllint', scope: '', status: 'passed', findings: [] },
-        {
-            check: 'files/yamllint',
-            scope: 'app',
-            status: rule === undefined ? 'passed' : 'failed',
-            findings: rule === undefined ? [] : [matchFields({ file: 'app/settings/project.yaml', rule, line: 2 })],
-        },
-    ]);
-}
-
 test("yamllint applies each scope's lint rule options, and Prettier keeps two-space YAML", async () => {
     const { root } = installedSandbox();
-    await using _change = await applySandboxChanges(
-        { root, environment: {}, run: spawnGspot },
-        {
-            check: 'files/yamllint',
-            removed: Object.keys(FILES_SANDBOX.files),
-            files: {
-                'gspot.toml': buildSandboxSettings([], { tables: YAML_SCOPE_SETTINGS }),
-                ...YAML_SCOPE_FILES,
-            },
+    await using _change = await applySandboxChanges(installedSandbox(), {
+        check: 'files/yamllint',
+        removed: Object.keys(FILES_SANDBOX.files),
+        files: {
+            'gspot.toml': buildSandboxSettings([], { tables: YAML_SCOPE_SETTINGS }),
+            ...YAML_SCOPE_FILES,
         },
-    );
-    const selected = await spawnGspot(root, ['set', 'level', 'all']);
-    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+    });
     await assertYamlFiles(root);
     const formatted = parseCheckReport(await spawnGspot(root, ['check', '--only', 'format/prettier', '--json']));
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);

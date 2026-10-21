@@ -1,10 +1,3 @@
-import type { PACKAGE_MANAGERS } from '#cli/config/parsers/dependencies.ts';
-
-export type PackageManager = { name: (typeof PACKAGE_MANAGERS)[number]; version: string };
-
-/** A validated package manager name and its authored or detected version, when present. */
-export type PackageManagerDeclaration = { name: (typeof PACKAGE_MANAGERS)[number]; version?: string | undefined };
-
 /** One package manager declared in the package.json development engine table. */
 export type PackageManagerEngine = { name?: string | undefined; version?: string | undefined };
 
@@ -34,9 +27,6 @@ export type PackageJsonFields = {
 };
 
 export type PackageJson = PackageJsonFields & Record<string, unknown>;
-
-/** An installed package, resolved from a dependency file. */
-export type InstalledDependency = { path: string; version: string | undefined };
 
 export type DependencyMap = Record<string, string>;
 

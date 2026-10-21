@@ -4,8 +4,8 @@ import { PATCH_FORMAT } from '#cli/config/parsers/toml.ts';
 import { patch, parse as parseToml } from '@decimalturn/toml-patch';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
-import type { TomlInput, TomlSyntax, TomlComments, TomlTextChunk, TomlTableOptions } from '#cli/types/parsers/toml.ts';
+import { isRecord, getValueAt, normalizeTables } from '#cli/system/tables.ts';
+import type { TomlSyntax, TomlComments, TomlTextChunk, TomlTableOptions } from '#cli/types/parsers/toml.ts';
 
 import {
     getTomlRange,
@@ -13,7 +13,7 @@ import {
     parseTomlSyntax,
     insertTomlComments,
     listAnchoredComments,
-} from '#cli/parsers/toml/comments.ts';
+} from '#cli/parsers/toml/syntax.ts';
 
 // Find the TOML table that the parent of a key path names, and create missing parents first.
 function findTomlTable(
@@ -132,21 +132,22 @@ export function parseTomlFile(path: string, text: string, schema?: z.ZodType): u
 /**
  * Open a TOML file for key edits, and keep its comments and layout.
  *
- * @param input the file path and TOML text.
+ * @param path the repository-relative TOML file.
+ * @param text the complete TOML document.
  * @returns the editable document.
  */
-export function openTomlFile(input: TomlInput): EditableFile {
-    const document: Record<string, unknown> = parseTomlFile(input.path, input.source);
-    const original = parseTomlSyntax(input.source, document);
+export function openTomlFile(path: string, text: string): EditableFile {
+    const document: Record<string, unknown> = parseTomlFile(path, text);
+    const original = parseTomlSyntax(text, document);
     return {
-        getValue: (path) => getValueAt(document, path),
-        set(path, value) {
-            if (path.some((key) => typeof key !== 'string')) throw new Error(`${input.path} requires TOML table keys.`);
-            const key = path.at(-1);
-            if (key === undefined) throw new Error(`${input.path} has an empty configuration key path.`);
+        getValue: (keys) => getValueAt(document, keys),
+        set(keys, value) {
+            if (keys.some((key) => typeof key !== 'string')) throw new Error(`${path} requires TOML table keys.`);
+            const key = keys.at(-1);
+            if (key === undefined) throw new Error(`${path} has an empty configuration key path.`);
             const table = findTomlTable(document, {
-                filePath: input.path,
-                keys: path.slice(0, -1),
+                filePath: path,
+                keys: keys.slice(0, -1),
                 create: value !== undefined,
             });
             if (table === undefined) return;

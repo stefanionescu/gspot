@@ -1,6 +1,6 @@
-import type { Manifest } from '#cli/types/configurations.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
-import type { EffectiveSetting } from '#cli/types/settings/values.ts';
+import type { EffectiveSetting } from '#cli/types/settings/inheritance.ts';
 
 export type Explanation = {
     kind: 'check' | 'lint-rule' | 'configuration' | 'setting' | 'path';
@@ -27,7 +27,7 @@ export type SettingScope = { scope: string; shipped: unknown; effective: Effecti
 
 export type ConfigurationExplanation = {
     name: string;
-    group: Manifest['configuration']['group'];
+    group: Configuration['group'];
     title: string;
     description: string;
     requires: string[];

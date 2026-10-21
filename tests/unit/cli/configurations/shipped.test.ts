@@ -4,33 +4,17 @@ import { listAssets } from '#cli/system/assets.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { classifyToolVersion } from '#cli/tools/versions.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { readLintRules } from '#cli/configurations/lint-rules.ts';
-import { listToolProjectPins } from '#cli/configurations/tools.ts';
-import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
-import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
-import pluginManifest from '#eslint-plugin-package' with { type: 'json' };
-import { EACH_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
-import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
-
-test('each lint-rule list names the pinned package version', () => {
-    const manifests = [...readManifests().values()];
-    const pins = listToolProjectPins(manifests).npm;
-    expect(pins[pluginManifest.name]).toBe(pluginManifest.version);
-    for (const path of listAssets('configurations/').filter((asset) => asset.endsWith('-names.json'))) {
-        const names = readLintRules(path);
-        expect(pins[names.package], path).toBe(names.version);
-    }
-    const presetFiles = new Set(
-        listAssets('configurations/').filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`)),
-    );
-    for (const manifest of manifests.filter(({ folder }) => presetFiles.has(`${folder}/${ESLINT_PRESETS_FILE}`)))
-        for (const [name, preset] of Object.entries(readPresets(manifest)))
-            expect(pins[preset.package], `${manifest.configuration.name}/${name}`).toBe(preset.version);
-});
+import type { Tool, Check } from '#cli/types/configurations.ts';
+import { readNameList } from '#cli/configurations/name-lists.ts';
+import type { Setting } from '#cli/types/settings/inheritance.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
+import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint/presets.ts';
+import { EACH_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 
 /** List every version pin of a tool by installer and package name. */
-function listToolPins(tool: ToolDeclaration): (readonly [string, string])[] {
+function listToolPins(tool: Tool): (readonly [string, string])[] {
     return [
         ...(tool.version === undefined ? [] : [[`tool:${tool.name}`, tool.version] as const]),
         ...Object.entries(tool.installers).flatMap(([installer, pin]) =>
@@ -39,40 +23,13 @@ function listToolPins(tool: ToolDeclaration): (readonly [string, string])[] {
     ];
 }
 
-test('configurations agree on every tool and installer pin', () => {
-    const versions = new Map<string, string>();
-    const mismatches: string[] = [];
-    const manifests = [...readManifests().values()];
-    const pins = manifests.flatMap(({ tools }) => tools).flatMap((tool) => listToolPins(tool));
-    for (const [name, version] of pins) {
-        const previous = versions.get(name);
-        if (previous !== undefined && previous !== version) mismatches.push(`${name}: ${previous}, ${version}`);
-        versions.set(name, version);
-    }
-    expect(mismatches).toStrictEqual([]);
-});
-
 /** Whether the pin of a tool sits below its minimum version. */
-function hasOutdatedPin(tool: ToolDeclaration): boolean {
+function hasOutdatedPin(tool: Tool): boolean {
     return tool.version !== undefined && classifyToolVersion(tool.version, undefined, tool.min_version) === 'outdated';
 }
 
-test('each tool has a pin or a floor at or above it', () => {
-    const mismatches: string[] = [];
-    for (const manifest of readManifests().values())
-        for (const tool of manifest.tools) {
-            const unpinned =
-                tool.system !== true &&
-                tool.version === undefined &&
-                Object.values(tool.installers).some((pin) => pin.version === undefined);
-            if ((unpinned && tool.min_version === undefined) || hasOutdatedPin(tool))
-                mismatches.push(`${manifest.configuration.name}: ${tool.name}`);
-        }
-    expect(mismatches).toStrictEqual([]);
-});
-
 /** Find settings expanded by normal and repeated command placeholders. */
-function commandSettings(check: CheckDeclaration): string[] {
+function commandSettings(check: Check): string[] {
     return [...(check.command ?? []), ...(check.fix ?? [])].flatMap((part) => {
         const repeated = EACH_PLACEHOLDER.exec(part)?.groups?.['setting'];
         return repeated === undefined
@@ -82,7 +39,7 @@ function commandSettings(check: CheckDeclaration): string[] {
 }
 
 /** A declared default must provide a usable value unless the check waits for that setting. */
-function hasEmptyDefault(setting: SettingDeclaration | undefined): boolean {
+function hasEmptyDefault(setting: Setting | undefined): boolean {
     const value = setting?.default;
     return (
         setting === undefined ||
@@ -94,10 +51,7 @@ function hasEmptyDefault(setting: SettingDeclaration | undefined): boolean {
 }
 
 /** Report missing declarations and empty settings that a check expands without waiting. */
-function listSettingMismatches(
-    check: CheckDeclaration,
-    declarations: ReadonlyMap<string, SettingDeclaration>,
-): string[] {
+function listSettingMismatches(check: Check, declarations: ReadonlyMap<string, Setting>): string[] {
     const awaited = check.when?.setting;
     const mismatches = awaited !== undefined && !declarations.has(awaited) ? [`${check.name}: ${awaited}`] : [];
     for (const name of commandSettings(check)) {
@@ -106,45 +60,90 @@ function listSettingMismatches(
     return mismatches;
 }
 
+test('each lint-rule list names the pinned package version', () => {
+    const configurations = [...readConfigurations().values()];
+    const pins = listToolProjectPins(configurations).npm;
+    expect(pins[pluginPackage.name]).toBe(pluginPackage.version);
+    for (const path of listAssets('configurations/').filter((asset) => asset.endsWith('-names.json'))) {
+        const names = readNameList(path);
+        expect(pins[names.package], path).toBe(names.version);
+    }
+    const presetFiles = new Set(
+        listAssets('configurations/').filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`)),
+    );
+    for (const configuration of configurations.filter(({ folder }) =>
+        presetFiles.has(`${folder}/${ESLINT_PRESETS_FILE}`),
+    ))
+        for (const [name, preset] of Object.entries(readPresets(configuration)))
+            expect(pins[preset.package], `${configuration.name}/${name}`).toBe(preset.version);
+});
+
+test('configurations agree on every tool and installer pin', () => {
+    const versions = new Map<string, string>();
+    const mismatches: string[] = [];
+    const configurations = [...readConfigurations().values()];
+    const pins = configurations.flatMap(({ tools }) => tools).flatMap((tool) => listToolPins(tool));
+    for (const [name, version] of pins) {
+        const previous = versions.get(name);
+        if (previous !== undefined && previous !== version) mismatches.push(`${name}: ${previous}, ${version}`);
+        versions.set(name, version);
+    }
+    expect(mismatches).toStrictEqual([]);
+});
+
+test('each tool has a pin or a floor at or above it', () => {
+    const mismatches: string[] = [];
+    for (const configuration of readConfigurations().values())
+        for (const tool of configuration.tools) {
+            const unpinned =
+                tool.system !== true &&
+                tool.version === undefined &&
+                Object.values(tool.installers).some((pin) => pin.version === undefined);
+            if ((unpinned && tool.min_version === undefined) || hasOutdatedPin(tool))
+                mismatches.push(`${configuration.name}: ${tool.name}`);
+        }
+    expect(mismatches).toStrictEqual([]);
+});
+
 test('a check waits for each setting with an empty default', () => {
-    const manifests = [...readManifests().values()];
-    const declarations = buildKnownSettings(manifests, 'all').declarations;
-    const mismatches = manifests.flatMap((manifest) =>
-        manifest.checks.flatMap((check) => listSettingMismatches(check, declarations)),
+    const configurations = [...readConfigurations().values()];
+    const declarations = buildKnownSettings(configurations, 'all').settings;
+    const mismatches = configurations.flatMap((configuration) =>
+        configuration.checks.flatMap((check) => listSettingMismatches(check, declarations)),
     );
     expect(mismatches).toStrictEqual([]);
 });
 
 test('every default names a declared setting', () => {
-    const manifests = [...readManifests().values()];
-    const declarations = buildKnownSettings(manifests, 'all').declarations;
+    const configurations = [...readConfigurations().values()];
+    const declarations = buildKnownSettings(configurations, 'all').settings;
     expect(
-        manifests.flatMap((manifest) =>
-            Object.keys(manifest.defaults)
+        configurations.flatMap((configuration) =>
+            Object.keys(configuration.defaults)
                 .filter((name) => !declarations.has(name))
-                .map((name) => `${manifest.configuration.name}: ${name}`),
+                .map((name) => `${configuration.name}: ${name}`),
         ),
     ).toStrictEqual([]);
 });
 
 test('tool files and checks name declared tools and checks', () => {
-    const manifests = [...readManifests().values()];
-    const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map(({ name }) => name)));
-    const checks = new Set(manifests.flatMap((manifest) => manifest.checks.map(({ name }) => name)));
+    const configurations = [...readConfigurations().values()];
+    const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)));
+    const checks = new Set(configurations.flatMap((configuration) => configuration.checks.map(({ name }) => name)));
     const mismatches: string[] = [];
-    for (const manifest of manifests) {
+    for (const configuration of configurations) {
         const names = [
-            ...manifest.toolFiles.flatMap((file) => file.tool),
-            ...manifest.eslint.required_tools,
-            ...manifest.tools.flatMap((tool) => tool.requires ?? []),
-            ...manifest.checks.flatMap((check) => [
+            ...configuration.toolFiles.flatMap((file) => file.tool),
+            ...configuration.eslint.required_tools,
+            ...configuration.tools.flatMap((tool) => tool.requires ?? []),
+            ...configuration.checks.flatMap((check) => [
                 ...(check.tool === undefined ? [] : [check.tool]),
                 ...(check.other_tools ?? []),
             ]),
         ];
         mismatches.push(
-            ...names.filter((name) => !tools.has(name)).map((name) => `${manifest.configuration.name}: ${name}`),
-            ...manifest.toolFiles.flatMap((file) => file.check.filter((name) => !checks.has(name))),
+            ...names.filter((name) => !tools.has(name)).map((name) => `${configuration.name}: ${name}`),
+            ...configuration.toolFiles.flatMap((file) => file.check.filter((name) => !checks.has(name))),
         );
     }
     expect(mismatches).toStrictEqual([]);
@@ -152,22 +151,22 @@ test('tool files and checks name declared tools and checks', () => {
 
 test('each conditional rule names a shipped rule file', () => {
     const mismatches: string[] = [];
-    for (const manifest of readManifests().values()) {
-        const files = new Set(listAssets(`${manifest.folder}/rules/`).map((path) => posix.basename(path)));
+    for (const configuration of readConfigurations().values()) {
+        const files = new Set(listAssets(`${configuration.folder}/rules/`).map((path) => posix.basename(path)));
         mismatches.push(
-            ...Object.keys(manifest.rules)
+            ...Object.keys(configuration.rules)
                 .filter((file) => !files.has(file))
-                .map((file) => `${manifest.configuration.name}: ${file}`),
+                .map((file) => `${configuration.name}: ${file}`),
         );
     }
     expect(mismatches).toStrictEqual([]);
 });
 
 test('a check that needs a build, Docker, or the network does not run at the commit stage', () => {
-    const manifests = [...readManifests().values()];
+    const configurations = [...readConfigurations().values()];
     expect(
-        manifests.flatMap((manifest) =>
-            manifest.checks
+        configurations.flatMap((configuration) =>
+            configuration.checks
                 .filter((check) => check.needs !== undefined && check.stage === 'commit')
                 .map(({ name }) => name),
         ),

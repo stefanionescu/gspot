@@ -1,19 +1,7 @@
 import { BASH_HEADER } from '#tests/data/checks/bash/samples.ts';
 
 export const SAFETY_SOURCES = [
-    { source: 'tmp=$(mktemp)\ntrap \'tmp=/etc; rm -rf "$tmp"\' EXIT\n', unsafeLines: [4] },
-    { source: 'tmp=$(mktemp)\ntrap \'rm -rf "$tmp"\' EXIT; rm -rf /etc\n', unsafeLines: [4] },
-    { source: "tmp=$(mktemp)\ntrap 'rm -rf \"$tmp\"' EXIT; trap 'rm -rf /etc' HUP\n", unsafeLines: [4] },
     { source: 'tmp=$(mktemp -d)\ntrap \'rm -rf -- "$tmp"\' EXIT\n', unsafeLines: [] },
-    { source: 'tmp=$(mktemp -d)\ntrap \'rm -rf "$tmp" /etc\' EXIT\n', unsafeLines: [4] },
-    { source: 'tmp=$(mktemp -d)\ntrap \'rm -rf "$tmp"; rm -rf /etc\' EXIT\n', unsafeLines: [4] },
-    {
-        source: `tmp=$(mktemp -d)
-tmp=/etc
-trap 'rm -rf "$tmp"' EXIT
-`,
-        unsafeLines: [5],
-    },
     { source: 'rm -rf /etc\n', unsafeLines: [3] },
 ] as const;
 

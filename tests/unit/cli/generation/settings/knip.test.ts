@@ -8,12 +8,12 @@ import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
-import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { type KnipToolFile } from '#tests/types/generated-files.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
 
 import {
     KNIP_ARGUMENTS,
@@ -25,11 +25,11 @@ import {
     KNIP_DEPENDENCY_PACKAGE,
 } from '#tests/data/checks/javascript/knip.ts';
 
-test('Knip finds unused framework component files and uses the entry points of each scope', async () => {
-    const check = readManifests()
-        .get('javascript')!
-        .checks.find(({ name }) => name === 'javascript/knip')!;
+const check = readConfigurations()
+    .get('javascript')!
+    .checks.find(({ name }) => name === 'javascript/knip')!;
 
+test('Knip finds unused framework component files and uses the entry points of each scope', async () => {
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: KNIP_ENTRY_TABLES });
     const configuration = await generateFile(
@@ -64,10 +64,6 @@ test('Knip finds unused framework component files and uses the entry points of e
 });
 
 test("Knip ignores gspot's tool packages and reports your unused dependencies", async () => {
-    const check = readManifests()
-        .get('javascript')!
-        .checks.find(({ name }) => name === 'javascript/knip')!;
-
     await using sandbox = await testdir();
     const files = { 'package.json': KNIP_DEPENDENCY_PACKAGE, 'main.js': 'export const value = 1;\n' };
     const configuration = await generateFile(
@@ -110,10 +106,6 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
 });
 
 test("Knip ignores gspot's pointer files and reports other configuration-like files", async () => {
-    const check = readManifests()
-        .get('javascript')!
-        .checks.find(({ name }) => name === 'javascript/knip')!;
-
     await using sandbox = await testdir({
         ...KNIP_POINTER_FILES,
         'gspot.toml': buildSandboxSettings(['javascript', 'markdown'], { level: 'all', tables: KNIP_POINTER_TABLES }),
@@ -126,7 +118,7 @@ test("Knip ignores gspot's pointer files and reports other configuration-like fi
     );
     const configuration = generated.find(({ path }) => path === '.gspot/configurations/language/javascript/knip.json')!;
     expect(pointers.some((pointer) => pointer.path === 'eslint.config.mjs')).toBe(true);
-    const markdown = session.manifests
+    const markdown = session.configurations
         .get('markdown')!
         .toolFiles.find(({ tool }) => tool.includes('markdownlint-cli2'))!;
     expect(buildScopeTarget('child', markdown, getToolFiles(session).targets)).toBe(markdown.target);

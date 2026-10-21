@@ -24,11 +24,11 @@ export type * from "./private/router.js";
 
 /** The server files hold the router and adapter paths; the authored import rules still apply. */
 export const TRPC_MODULES = `[trpc]
-server_files = ["private/**", "app/api/trpc/**"]
+server_files = ["private/**", "app/api/trpc/**", "app/private/**", "app/child/private/**", "flat/router.ts"]
 
 [[import_rule]]
 name = "server"
-paths = ["private/**", "app/api/trpc/**"]
+paths = ["private/**", "app/api/trpc/**", "app/private/**", "app/child/private/**", "flat/router.ts"]
 [[import_rule]]
 name = "client"
 paths = ["client/**"]

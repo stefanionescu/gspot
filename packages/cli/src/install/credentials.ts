@@ -7,7 +7,7 @@ import {
     URL_CREDENTIALS,
     INSTALL_OUTPUT_LIMIT,
     LOCKFILE_URL_PASSWORD,
-} from '#cli/config/tools/credentials.ts';
+} from '#cli/config/install/credentials.ts';
 
 /**
  * Reject a generated lockfile that holds a configured credential in either URL form.

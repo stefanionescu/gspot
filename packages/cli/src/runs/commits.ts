@@ -1,6 +1,7 @@
+import type { Session } from '#cli/types/session.ts';
 import { RAN_STATUSES } from '#cli/config/runs/run.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/report.ts';
 
@@ -12,7 +13,7 @@ import { buildBaseResult, mergeCheckResults } from '#cli/runs/report.ts';
  * @param perCommit the check to run on one commit.
  * @returns the merged result.
  */
-async function runOverPushedCommits(
+export async function runOverPushedCommits(
     session: Session,
     planned: PlannedCheck,
     perCommit: (commit: string) => CheckResult | Promise<CheckResult>,
@@ -34,10 +35,10 @@ async function runOverPushedCommits(
  * @param checkName the sibling ID.
  * @returns the executable and its arguments.
  */
-function getSiblingCommand(planned: PlannedCheck, checkName: string): string[] {
-    const manifest = planned.manifest as NonNullable<PlannedCheck['manifest']>;
-    const sibling = manifest.checks.find(({ name }) => name === checkName) as (typeof manifest.checks)[number];
+export function getSiblingCommand(planned: PlannedCheck, checkName: string): string[] {
+    const configuration = planned.configuration as NonNullable<PlannedCheck['configuration']>;
+    const sibling = configuration.checks.find(
+        ({ name }) => name === checkName,
+    ) as (typeof configuration.checks)[number];
     return sibling.command as string[];
 }
-
-export { getSiblingCommand, runOverPushedCommits };

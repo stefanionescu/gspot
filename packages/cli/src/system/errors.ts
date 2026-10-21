@@ -1,6 +1,6 @@
 // Defines coded errors for command failures.
 import type { z } from 'zod';
-import type { ErrorCode } from '#cli/types/errors.ts';
+import type { ErrorCode } from '#cli/types/system/errors.ts';
 
 /** Carries a failure code for callers to branch on. gspot reports anything else thrown as an internal failure. */
 export class GspotError extends Error {

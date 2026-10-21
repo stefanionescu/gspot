@@ -1,7 +1,7 @@
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -62,35 +62,32 @@ describe('project', () => {
     });
 });
 describe('settings', () => {
-    test.each([...DEEPEST_SCOPE_SETTINGS])(
-        '%s checks the deepest scope only',
-        async (check, path, broken, corrected, rule) => {
-            await using sandbox = await testdir();
-            const rootContent = corrected.replace('nested-capability', 'root-capability');
-            const settings = buildSandboxSettings(['xcode'], {
-                tables: '[xcode]\nallowed_entitlements = ["root-capability"]\n[[scope]]\npath = "app"\n[scope.xcode]\nallowed_entitlements = ["nested-capability"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
-                level: 'all',
-            });
-            await createFileTree(sandbox.path, {
-                'gspot.toml': settings,
-                [path]: rootContent,
-                [`app/${path}`]: corrected,
-                [`app/child/${path}`]: broken,
-                [`sibling/${path}`]: rootContent,
-            });
-
-            const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-
-            const report = result.report;
-            expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-                { scope: '', status: 'passed' },
-                { scope: 'app', status: 'passed' },
-                { scope: 'app/child', status: 'failed' },
-                { scope: 'sibling', status: 'passed' },
-            ]);
-            expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-                { file: `app/child/${path}`, line: 1, rule },
-            ]);
-        },
-    );
+    test('xcode/entitlements checks the deepest scope only', async () => {
+        const { path, unlisted: broken, allowed: corrected } = DEEPEST_SCOPE_SETTINGS;
+        const check = 'xcode/entitlements';
+        await using sandbox = await testdir();
+        const rootContent = corrected.replace('nested-capability', 'root-capability');
+        const settings = buildSandboxSettings(['xcode'], {
+            tables: '[xcode]\nallowed_entitlements = ["root-capability"]\n[[scope]]\npath = "app"\n[scope.xcode]\nallowed_entitlements = ["nested-capability"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+            level: 'all',
+        });
+        await createFileTree(sandbox.path, {
+            'gspot.toml': settings,
+            [path]: rootContent,
+            [`app/${path}`]: corrected,
+            [`app/child/${path}`]: broken,
+            [`sibling/${path}`]: rootContent,
+        });
+        const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+        const report = result.report;
+        expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+            { scope: '', status: 'passed' },
+            { scope: 'app', status: 'passed' },
+            { scope: 'app/child', status: 'failed' },
+            { scope: 'sibling', status: 'passed' },
+        ]);
+        expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
+            { file: `app/child/${path}`, line: 1, rule: 'entitlement' },
+        ]);
+    });
 });

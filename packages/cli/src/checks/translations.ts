@@ -1,12 +1,13 @@
 import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Parsed } from '#cli/types/errors.ts';
+import type { Parsed } from '#cli/types/shapes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
+import type { Session } from '#cli/types/session.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { messagesSchema } from '#cli/schemas/checks/translations.ts';
 import type { MessageFiles } from '#cli/types/checks/translations.ts';
 import { ARGUMENT_FORMATS, MESSAGE_FILE_SUFFIX } from '#cli/config/checks/translations.ts';
@@ -156,7 +157,7 @@ function readMessageFiles(
  * @param planned the scope files and translation settings.
  * @returns the findings.
  */
-function checkTranslationMessages(session: Session, planned: PlannedCheck): Finding[] {
+export function checkTranslationsMessages(session: Session, planned: PlannedCheck): Finding[] {
     const options = getTable(planned.selection.view, 'translations');
     const folder = options.messages_folder as string;
     const base = options.base_locale;
@@ -193,5 +194,3 @@ function checkTranslationMessages(session: Session, planned: PlannedCheck): Find
         return compareMessages(planned, path, messages, baseMessages);
     });
 }
-
-export { checkTranslationMessages };

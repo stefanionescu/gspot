@@ -1,10 +1,11 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { getLimit } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseGrammarComments } from '#cli/parsers/comments.ts';
 import { COMMENT_MARKERS } from '#cli/config/checks/structure.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 /**
  * Reports source files over the code-line limit of their language.
@@ -13,7 +14,7 @@ import type { Session, PlannedCheck } from '#cli/types/planning.ts';
  * @param planned the scope files and limits.
  * @returns one finding per long file.
  */
-export async function checkLongFiles(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkStructureLongFiles(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const sources = planned.files.flatMap((file) => {
         const comment: [string, string] | undefined = file.tags.includes('shell')
             ? ['bash', COMMENT_MARKERS.bash]

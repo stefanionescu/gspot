@@ -4,15 +4,15 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
+import type { RunReport } from '#cli/types/runs/run.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { pathsSchema } from '#tests/schemas/checks/typescript.ts';
+import nextPackage from 'next/package.json' with { type: 'json' };
 import workspacePackage from '#root-package' with { type: 'json' };
-import nextManifest from 'next/package.json' with { type: 'json' };
+import reactPackage from 'react/package.json' with { type: 'json' };
 import testsPackage from '#tests/package.json' with { type: 'json' };
-import reactManifest from 'react/package.json' with { type: 'json' };
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import reactDomManifest from 'react-dom/package.json' with { type: 'json' };
+import reactDomPackage from 'react-dom/package.json' with { type: 'json' };
 import type { Sandbox, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { NEXT_PACKAGE, NEXTJS_SANDBOX, REFERENCE_PROJECT_FILES } from '#tests/data/checks/nextjs.ts';
@@ -31,10 +31,10 @@ const installedSandbox = registerSharedSandbox(buildNextjsPlan());
 function buildNextjsPlan(): InstalledSandboxPlan {
     const dependencies = Object.fromEntries(
         Object.entries({
-            next: nextManifest.version,
+            next: nextPackage.version,
             ...NEXT_PACKAGE.dependencies,
-            react: reactManifest.version,
-            'react-dom': reactDomManifest.version,
+            react: reactPackage.version,
+            'react-dom': reactDomPackage.version,
             typescript: testsPackage.devDependencies.typescript,
             '@types/react': testsPackage.devDependencies['@types/react'],
             '@types/node': workspacePackage.devDependencies['@types/node'],

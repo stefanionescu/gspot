@@ -3,11 +3,12 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { REPORT_PROGRAM } from '#tests/data/test-setup.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import type { WrittenSettings } from '#cli/types/settings/file.ts';
-import type { KnownSettings } from '#cli/types/settings/values.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { type Level, type Manifest } from '#cli/types/configurations.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { selectForScope, buildScopeView } from '#cli/settings/scope-view.ts';
+import { type Level, type Configuration } from '#cli/types/configurations.ts';
+import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
+import type { ScopeView, KnownSettings } from '#cli/types/settings/inheritance.ts';
 
 /**
  * Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
@@ -92,13 +93,13 @@ export function buildReportingCheck(
 
 /** Build two configuration defaults that disagree on the SQL dialect. */
 export function buildConflictingSettings(): KnownSettings {
-    const sql = readManifests().get('sql') as Manifest;
+    const sql = readConfigurations().get('sql') as Configuration;
     return buildKnownSettings(
         [
             sql,
             {
                 ...sql,
-                configuration: { ...sql.configuration, name: 'alternate-sql' },
+                name: 'alternate-sql',
                 defaults: { 'tools.sqlfluff.dialect': 'postgres' },
             },
         ],
@@ -106,8 +107,18 @@ export function buildConflictingSettings(): KnownSettings {
     );
 }
 
-/** Build the language and structure defaults used by inheritance cases. */
-export function buildLanguageSettings(): KnownSettings {
-    const selected = selectConfigurations(['structure', 'bash', 'naming', 'format', 'prose'], readManifests());
-    return buildKnownSettings(selected, 'recommended');
+/** Parse test settings against the shipped declarations. */
+export function parseSettingsText(text: string, repositoryRoot?: string): Settings {
+    return parseSettings(text, repositoryRoot);
+}
+
+/** Read the defaults and declarations of the selected configurations at one level. */
+export function buildSelectedKnownSettings(configurations: string[], level: Level = 'recommended'): KnownSettings {
+    return buildKnownSettings(selectConfigurations(configurations, readConfigurations()), level);
+}
+
+/** Resolve the settings and configuration defaults that apply in one scope. */
+export function buildRootScopeSettings(settings: Settings, scopePath = ''): ScopeView {
+    const selected = selectForScope(settings, scopePath, readConfigurations());
+    return buildScopeView(buildKnownSettings(selected, 'recommended'), settings, selected, scopePath);
 }

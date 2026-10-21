@@ -124,7 +124,7 @@ test('lists nested two levels down read the file from the top and join several m
 test.each([
     ['', 'JSON returned no structured findings.'],
     ['noise only', 'JSON returned no structured findings.'],
-    ['{ broken', 'JSON returned invalid structured findings.'],
+    ['{ broken', 'JSON printed output that gspot cannot read.'],
     ['{"items":null}', 'Required JSON report array items is missing or invalid.'],
 ])('an invalid JSON report is refused: %s', (stdout, message) => {
     expect(() => parseJsonReport('x/y', { format: 'json', items: 'items' }, stdout)).toThrow(message);

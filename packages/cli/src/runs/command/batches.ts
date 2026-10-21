@@ -1,6 +1,7 @@
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import type { Substitutions, CommandInvocation } from '#cli/types/runs/command.ts';
-import { expandCommand, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
+import type { Session } from '#cli/types/session.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { CommandLine, Substitutions } from '#cli/types/runs/command.ts';
+import { expandCommand, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
 
 import {
     UNIX_COMMAND_LIMIT,
@@ -19,18 +20,18 @@ function computeArgumentSize(argument: string, platform: NodeJS.Platform): numbe
  * Splits a command into runs that fit the system argument limit.
  *
  * @param planned the check to run.
- * @param invocation what to run.
- * @param invocation.session the repository and its tools.
- * @param invocation.command the executable and authored arguments.
- * @param invocation.substitutions the file paths and placeholder values.
- * @param invocation.toolPath the resolved executable path.
+ * @param expansion what to run.
+ * @param expansion.session the repository and its tools.
+ * @param expansion.command the executable and authored arguments.
+ * @param expansion.substitutions the file paths and placeholder values.
+ * @param expansion.toolPath the resolved executable path.
  * @returns the runs, in order.
  */
-export function buildInvocations(
+export function buildCommandLines(
     planned: PlannedCheck,
-    invocation: { session: Session; command: string[]; substitutions: Substitutions; toolPath: string },
-): CommandInvocation[] {
-    const { session, command, substitutions, toolPath } = invocation;
+    expansion: { session: Session; command: string[]; substitutions: Substitutions; toolPath: string },
+): CommandLine[] {
+    const { session, command, substitutions, toolPath } = expansion;
     const fixed = expandCommand(session, planned, command, { ...substitutions, files: [] }).with(0, toolPath);
     return splitFileArguments(
         substitutions.files,
@@ -41,7 +42,7 @@ export function buildInvocations(
             0,
             toolPath,
         );
-        return buildFileInvocations(commandArguments, files);
+        return buildFileCommandLines(commandArguments, files);
     });
 }
 

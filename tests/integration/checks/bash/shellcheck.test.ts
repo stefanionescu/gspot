@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { planChecks } from '#cli/planning/checks.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
@@ -66,7 +66,7 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
         'sample.sh': source,
     });
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'commit', only: ['bash/shellcheck'] });
+    const plans = planChecks(session, { stage: 'commit', only: ['bash/shellcheck'] });
     const planned = plans[0]!;
     const command = ['shellcheck', '--norc', '--format=gcc', 'sample.sh'];
     const paths = { cwd: sandbox.path, root: sandbox.path };

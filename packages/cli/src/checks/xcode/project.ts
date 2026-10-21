@@ -1,13 +1,14 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { parsePbxproj } from '#cli/parsers/xcode.ts';
+import type { Session } from '#cli/types/session.ts';
 import { PBXPROJ } from '#cli/config/parsers/xcode.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import { parseProjectSources } from '#cli/parsers/xcode.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { listSourcePaths } from '#cli/repository/coverage.ts';
-import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
+import { listSourcePaths } from '#cli/repository/covered-files.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependencies.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { SWIFT_EXTENSION } from '#cli/config/repository/inventory.ts';
 
 /**
  * Reports Swift sources that no Xcode target holds.
@@ -19,7 +20,7 @@ import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 export function checkFilesWithoutTarget(session: Session, planned: PlannedCheck): Finding[] {
     const projects = listSourcePaths(planned.files, [PBXPROJ]).map((path) => ({
         path,
-        ...parsePbxproj(readCachedText(session.reads, path), path),
+        ...parseProjectSources(readCachedText(session.reads, path), path),
     }));
     if (projects.length === 0) return [];
     const references = projects.flatMap((project) =>

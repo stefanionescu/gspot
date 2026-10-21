@@ -19,6 +19,42 @@ import {
     STAGED_FORMAT_CHANGE_ARGUMENTS,
 } from '#tests/data/checks/format.ts';
 
+/** Check each generated formatter override against the bytes written by Prettier. */
+async function verifyFormatOverrides(root: string): Promise<void> {
+    const commandArguments = ['check', '--only', 'format/prettier', '--json'];
+    const files = PRETTIER_OPTIONS_BY_FILE.map(({ file }) => file);
+    const before = parseCheckReport(await spawnGspot(root, [...commandArguments, '--', ...files]));
+    expect(before.code, before.stdout + before.stderr).toBe(1);
+    const report = before.report;
+    expect(
+        report.checks
+            .flatMap(({ findings }) => findings.map(({ file }) => file))
+            .toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual(files.toSorted((left, right) => left.localeCompare(right)));
+    const corrected = await spawnGspot(root, [...commandArguments, '--fix', '--', ...files]);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    for (const { file, tabWidth, singleQuote, semi, endOfLine } of PRETTIER_OPTIONS_BY_FILE) {
+        const quote = singleQuote ? "'" : '"';
+        const terminator = semi ? ';' : '';
+        const ending = endOfLine === 'crlf' ? '\r\n' : '\n';
+        expect(await readFile(join(root, file), 'utf8')).toBe(
+            [
+                `const greeting = ${quote}hello${quote}${terminator}`,
+                'if (greeting) {',
+                `${' '.repeat(tabWidth)}console.log(greeting)${terminator}`,
+                '}',
+                '',
+            ].join(ending),
+        );
+    }
+    const editor = await spawnGspot(
+        root,
+        ['check', '--only', 'format/editorconfig-checker', '--json', '--', ...files],
+        {},
+    );
+    expect(editor.code, editor.stdout + editor.stderr).toBe(0);
+}
+
 const installedSandbox = registerSharedSandbox({
     configurations: ['format'],
     level: 'all',
@@ -40,46 +76,6 @@ test('Prettier uses the format overrides, and an ignore on one path stops its fi
         },
     });
     await verifyFormatOverrides(root);
-    const reason = 'Generated outputs retain their upstream layout except the reviewed file.';
-    await createFileTree(root, {
-        'generated/kept.json': '{"value":1}',
-        'generated/review.json': '{"value":1}',
-    });
-    const excluded = await spawnGspot(root, [
-        'ignore',
-        'format/prettier',
-        '--paths',
-        'generated/kept.json',
-        '--reason',
-        reason,
-    ]);
-    expect(excluded.code, excluded.stdout + excluded.stderr).toBe(0);
-    const commandArguments = [
-        'check',
-        '--only',
-        'format/prettier',
-        '--json',
-        '--',
-        'generated/kept.json',
-        'generated/review.json',
-    ];
-    const failed = parseCheckReport(await spawnGspot(root, commandArguments));
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([{ file: 'generated/review.json' }]);
-    const fixed = await spawnGspot(root, [...commandArguments.slice(0, 4), '--fix', ...commandArguments.slice(4)]);
-    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-    expect(await readFile(join(root, 'generated/kept.json'), 'utf8')).toBe('{"value":1}');
-    expect(JSON.parse(await readFile(join(root, 'generated/review.json'), 'utf8'))).toStrictEqual({ value: 1 });
-    const removed = await spawnGspot(root, ['unignore', 'format/prettier', '--paths', 'generated/kept.json']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const exposed = parseCheckReport(await spawnGspot(root, commandArguments));
-    expect(exposed.code, exposed.stdout + exposed.stderr).toBe(1);
-    expect(exposed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([{ file: 'generated/kept.json' }]);
-    const corrected = parseCheckReport(
-        await spawnGspot(root, [...commandArguments.slice(0, 4), '--fix', ...commandArguments.slice(4)]),
-    );
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks.every(({ findings }) => findings.length === 0)).toBe(true);
 });
 
 test('editorconfig-checker leaves indentation to the formatter and checks line endings, the final newline, and trailing spaces', async () => {
@@ -151,39 +147,3 @@ test('staged Prettier uses the indexed format before a later scoped apply and pr
     for (const [path, content] of files) expect(await readFile(join(root, path), 'utf8')).toBe(content);
     expect(readGitOutput(root, ['write-tree'])).toBe(index);
 });
-
-/** Check each generated formatter override against the bytes written by Prettier. */
-async function verifyFormatOverrides(root: string): Promise<void> {
-    const commandArguments = ['check', '--only', 'format/prettier', '--json'];
-    const files = PRETTIER_OPTIONS_BY_FILE.map(({ file }) => file);
-    const before = parseCheckReport(await spawnGspot(root, [...commandArguments, '--', ...files]));
-    expect(before.code, before.stdout + before.stderr).toBe(1);
-    const report = before.report;
-    expect(
-        report.checks
-            .flatMap(({ findings }) => findings.map(({ file }) => file))
-            .toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(files.toSorted((left, right) => left.localeCompare(right)));
-    const corrected = await spawnGspot(root, [...commandArguments, '--fix', '--', ...files]);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    for (const { file, tabWidth, singleQuote, semi, endOfLine } of PRETTIER_OPTIONS_BY_FILE) {
-        const quote = singleQuote ? "'" : '"';
-        const terminator = semi ? ';' : '';
-        const ending = endOfLine === 'crlf' ? '\r\n' : '\n';
-        expect(await readFile(join(root, file), 'utf8')).toBe(
-            [
-                `const greeting = ${quote}hello${quote}${terminator}`,
-                'if (greeting) {',
-                `${' '.repeat(tabWidth)}console.log(greeting)${terminator}`,
-                '}',
-                '',
-            ].join(ending),
-        );
-    }
-    const editor = await spawnGspot(
-        root,
-        ['check', '--only', 'format/editorconfig-checker', '--json', '--', ...files],
-        {},
-    );
-    expect(editor.code, editor.stdout + editor.stderr).toBe(0);
-}

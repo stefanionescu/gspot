@@ -19,9 +19,7 @@ test.each([...MKTEMP_CLEANUP_CASES])(
     'only a trap that removes exactly the mktemp path counts as cleanup: $source',
     async ({ source, expected }) => {
         const parsed = await parseBashScript(source);
-        expect(parsed.temporaryPaths).toStrictEqual(
-            expected.map((path) => ({ ...path, cleanupLines: [...path.cleanupLines] })),
-        );
+        expect(parsed.temporaryPaths).toStrictEqual(expected);
     },
 );
 

@@ -12,7 +12,6 @@ import { type Pipeline } from '#cli/types/generation/ci.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
-import { assertPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 
 import {
@@ -23,6 +22,30 @@ import {
     LINUX_PIPELINE,
     SETUP_ARGUMENTS,
 } from '#tests/data/ci.ts';
+
+/** Build the CI pipeline in a new sandbox that lives until the test ends. */
+async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline> {
+    const sandbox = resources.use(
+        await testdir({
+            'gspot.toml': buildSandboxSettings(['docs'], {
+                tables: '[[command_check]]\nname = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
+            }),
+            'README.md': '# Example\n',
+            'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
+        }),
+    );
+    const session = await openSession(sandbox.path);
+    const pipeline: Pipeline = {
+        ...LINUX_PIPELINE,
+        operatingSystems: [...LINUX_PIPELINE.operatingSystems],
+        projectInstall: [...LINUX_PIPELINE.projectInstall],
+        manualChecks: session.configuredChecks.filter(({ check }) =>
+            ['docs/lychee-external', 'project/audit'].includes(check.name),
+        ),
+        manualTools: session.configurations.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
+    };
+    return pipeline;
+}
 
 test('the GitHub workflow has a check job and a manual job per operating system, and no manual job without manual checks', async () => {
     await using resources = new AsyncDisposableStack();
@@ -38,38 +61,16 @@ test('the GitHub workflow has a check job and a manual job per operating system,
     expect(Object.keys(none.jobs)).toStrictEqual(['check-linux']);
 });
 
-test.each(['docs/lychee-external', 'project/audit'])(
-    'the manual job runs %s by name and the check job runs every check',
-    async (name) => {
-        await using resources = new AsyncDisposableStack();
-        const pipeline = await buildPipeline(resources);
-
-        const workflow = parse(
-            buildGithubWorkflow({
-                ...pipeline,
-                manualChecks: pipeline.manualChecks.filter(({ check }) => check.name === name),
-                manualTools: name === 'docs/lychee-external' ? pipeline.manualTools : [],
-            }).content,
-        ) as GithubWorkflow;
-        const runs = workflow.jobs['manual-linux']!.steps.map((step) => step.run ?? '');
-        const cli = quoteArgument(`npm:@gspothq/cli@${pipeline.version}`);
-        expect(
-            runs.some((run) =>
-                run.includes(`mise exec ${quoteArgument(CI_NODE)} ${cli} -- gspot check --only ${quoteArgument(name)}`),
-            ),
-        ).toBe(true);
-        expect(workflow.jobs['check-linux']!.steps.some((step) => step.run?.includes('--only') === true)).toBe(false);
-    },
-);
-
 test('the manual jobs name every manual check in one comma list', async () => {
     await using resources = new AsyncDisposableStack();
     const pipeline = await buildPipeline(resources);
     const names = pipeline.manualChecks.map(({ check }) => check.name);
     expect(names.length).toBeGreaterThan(1);
-    const expected = `gspot check --only ${quoteArgument(names.join(','))}`;
+    const cli = `npm:@gspothq/cli@${pipeline.version}`;
+    const expected = `mise exec ${quoteArgument(CI_NODE)} ${quoteArgument(cli)} -- gspot check --only ${quoteArgument(names.join(','))}`;
     const github = parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow;
     expect(github.jobs['manual-linux']!.steps.some((step) => step.run?.includes(expected) === true)).toBe(true);
+    expect(github.jobs['check-linux']!.steps.some((step) => step.run?.includes('--only') === true)).toBe(false);
     expect(buildGitlabWorkflow(pipeline).content).toContain(expected);
 });
 
@@ -104,7 +105,7 @@ test('a Swift scope adds the macOS jobs', async () => {
     expect(Object.keys(workflow.jobs)).toContain('manual-macos');
 });
 
-test.each(SETUP_CASES)(
+test.each([...SETUP_CASES])(
     'the %s job keeps setup exit %s and literal arguments before gspot',
     async (provider, setupExit) => {
         await using resources = new AsyncDisposableStack();
@@ -149,40 +150,6 @@ test.each(SETUP_CASES)(
     },
 );
 
-/** Build the CI pipeline in a new sandbox that lives until the test ends. */
-async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline> {
-    const sandbox = resources.use(
-        await testdir({
-            'gspot.toml': buildSandboxSettings(['docs'], {
-                tables: '[[command_check]]\nname = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
-            }),
-            'README.md': '# Example\n',
-            'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
-        }),
-    );
-    const session = await openSession(sandbox.path);
-    const packageManager =
-        session.packageManager === undefined
-            ? undefined
-            : readPackageManagerVersion(
-                  session.installedRoot,
-                  assertPackageManager(session.packageManager),
-                  session.timeoutSeconds,
-                  session.reads,
-              );
-    const pipeline: Pipeline = {
-        ...LINUX_PIPELINE,
-        operatingSystems: [...LINUX_PIPELINE.operatingSystems],
-        projectInstall: [...LINUX_PIPELINE.projectInstall],
-        manualChecks: session.configuredChecks.filter(({ check }) =>
-            ['docs/lychee-external', 'project/audit'].includes(check.name),
-        ),
-        manualTools: session.manifests.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
-        ...(packageManager === undefined ? {} : { packageManager }),
-    };
-    return pipeline;
-}
-
 test('without a setup command, CI installs the locked dependencies of each project and writes Next.js route types', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'python'], {
@@ -201,7 +168,7 @@ test('without a setup command, CI installs the locked dependencies of each proje
     });
 
     const session = await openSession(sandbox.path);
-    const uv = session.manifests.get('python')!.tools.find(({ name }) => name === 'uv')?.version;
+    const uv = session.configurations.get('python')!.tools.find(({ name }) => name === 'uv')?.version;
     expect(listProjectInstallLines(session)).toStrictEqual([
         'npm ci',
         `mise exec uv@${String(uv)} -- uv sync --locked`,

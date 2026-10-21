@@ -1,9 +1,10 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { listStaleFiles } from '#cli/apply/stale.ts';
+import { type Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { buildBuiltInResult } from '#cli/runs/built-in.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { GENERATED_FILE_HELP, GENERATED_FILE_MESSAGES } from '#cli/config/checks/gspot.ts';
 
 /**
@@ -13,7 +14,7 @@ import { GENERATED_FILE_HELP, GENERATED_FILE_MESSAGES } from '#cli/config/checks
  * @param planned the repository-wide drift check.
  * @returns the check result.
  */
-export function checkGeneratedFiles(session: Session, planned: PlannedCheck): CheckResult {
+export function checkGspotGeneratedFiles(session: Session, planned: PlannedCheck): CheckResult {
     const started = performance.now();
     const findings = listStaleFiles(session, generate(session)).map((entry) =>
         buildFinding(planned, { file: entry.path }, entry.kind, GENERATED_FILE_MESSAGES[entry.kind], {

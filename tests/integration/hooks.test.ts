@@ -5,6 +5,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { installRuntimes } from '#tests/setup/install.ts';
+import { HOOKS_SETTINGS } from '#tests/data/test-setup.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
@@ -74,7 +75,7 @@ test('installed and freshly cloned repositories enforce staged findings through 
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = true\n' }),
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
     });
     // hooks.enabled turns on the default Git hooks.
 
@@ -96,7 +97,7 @@ test('doctor reports hooks this clone has not installed and accepts them after i
 
 test.each(['', 'app/'])('install from %s points core.hooksPath at .gspot/hooks', async (prefix) => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = true\n' }),
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
         'app/gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = false\n' }),
     });
 

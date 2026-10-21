@@ -23,25 +23,6 @@ import {
     TYPESCRIPT_PROJECTS_SANDBOX,
 } from '#tests/data/checks/typescript/projects.ts';
 
-const installedSandbox = registerSharedSandbox(TYPESCRIPT_PROJECTS_SANDBOX);
-
-test('typescript/tsc checks an authored project without files or include', async () => {
-    const sandbox = { path: installedSandbox().root };
-
-    await using _sourceChange = await applySandboxChanges(
-        installedSandbox(),
-        buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, IMPLICIT_PROJECT_TREE),
-    );
-    commitAll(sandbox.path);
-    const failed = await checkTypes(sandbox.path);
-    expect(failed.code, failed.output).toBe(1);
-    expect(failed.findings).toMatchObject([{ file: 'src/broken.ts', rule: 'TS2322' }]);
-    await writeFile(join(sandbox.path, 'src/broken.ts'), IMPLICIT_PROJECT_FILES['src/clean.ts']);
-    const clean = await checkTypes(sandbox.path);
-    expect(clean.code, clean.output).toBe(0);
-    expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe(IMPLICIT_PROJECT_FILES['tsconfig.json']);
-});
-
 // The installed TypeScript compiler checks project references, authored compiler settings, and build output bounds.
 // Runs the TypeScript check and returns its exit code, output, and findings.
 async function checkTypes(root: string): Promise<TypecheckResult> {
@@ -52,15 +33,34 @@ async function checkTypes(root: string): Promise<TypecheckResult> {
     return { code: result.code, output, findings };
 }
 
+const installedSandbox = registerSharedSandbox(TYPESCRIPT_PROJECTS_SANDBOX);
+
+test('typescript/tsc checks an authored project without files or include', async () => {
+    const { root } = installedSandbox();
+
+    await using _sourceChange = await applySandboxChanges(
+        installedSandbox(),
+        buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, IMPLICIT_PROJECT_TREE),
+    );
+    commitAll(root);
+    const failed = await checkTypes(root);
+    expect(failed.code, failed.output).toBe(1);
+    expect(failed.findings).toMatchObject([{ file: 'src/broken.ts', rule: 'TS2322' }]);
+    await writeFile(join(root, 'src/broken.ts'), IMPLICIT_PROJECT_FILES['src/clean.ts']);
+    const clean = await checkTypes(root);
+    expect(clean.code, clean.output).toBe(0);
+    expect(await readFile(join(root, 'tsconfig.json'), 'utf8')).toBe(IMPLICIT_PROJECT_FILES['tsconfig.json']);
+});
+
 test('typescript/tsc checks both projects of a solution and writes no build output', async () => {
-    const sandbox = { path: installedSandbox().root };
+    const { root } = installedSandbox();
 
     await using _sourceChange = await applySandboxChanges(
         installedSandbox(),
         buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, SOLUTION_PROJECT_TREE),
     );
-    commitAll(sandbox.path);
-    const failed = await checkTypes(sandbox.path);
+    commitAll(root);
+    const failed = await checkTypes(root);
     expect(failed.code, failed.output).toBe(1);
     expect(
         failed.findings
@@ -68,15 +68,15 @@ test('typescript/tsc checks both projects of a solution and writes no build outp
             .map((finding) => finding.file)
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['orders/order.ts', 'users/user.ts']);
-    await writeFile(join(sandbox.path, 'orders/order.ts'), 'export const total: number = 3;');
+    await writeFile(join(root, 'orders/order.ts'), 'export const total: number = 3;');
     await writeFile(
-        join(sandbox.path, 'users/user.ts'),
+        join(root, 'users/user.ts'),
         'import { total } from "../orders/order.js"; export const active: boolean = total > 0;',
     );
-    const clean = await checkTypes(sandbox.path);
+    const clean = await checkTypes(root);
     expect(clean.code, clean.output).toBe(0);
     const output = await Promise.all(
-        ['orders', 'users'].map((folder) => readdir(join(sandbox.path, folder), { recursive: true })),
+        ['orders', 'users'].map((folder) => readdir(join(root, folder), { recursive: true })),
     );
     expect(output.flat().filter((path) => /\.(?:tsbuildinfo|js|d\.ts)$/u.test(path))).toStrictEqual([]);
 });
@@ -84,7 +84,7 @@ test('typescript/tsc checks both projects of a solution and writes no build outp
 test.each([...LEVELS])(
     'typescript/tsc keeps your tsconfig.json in a scope and reports type errors at both levels',
     async (level) => {
-        const sandbox = { path: installedSandbox().root };
+        const { root } = installedSandbox();
         const scope = 'apps/web';
         const scopeTable = `[[scope]]
 path = "${scope}"
@@ -92,7 +92,7 @@ configurations = ["typescript"]
 `;
         const authored = YOUR_TSCONFIG.replace(
             '%BUILD_INFO%',
-            JSON.stringify(join(sandbox.path, scope, 'build/cache.tsbuildinfo')),
+            JSON.stringify(join(root, scope, 'build/cache.tsbuildinfo')),
         );
         const sourceFiles = {
             'gspot.toml': buildSandboxSettings(['javascript'], { tables: scopeTable, level }),
@@ -105,36 +105,31 @@ configurations = ["typescript"]
             installedSandbox(),
             buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, sourceFiles),
         );
-        await chmod(join(sandbox.path, scope, 'tsconfig.json'), 0o640);
-        await runSandboxStep({ root: sandbox.path, environment: {}, run: spawnGspot }, ['apply']);
-        const failed = await checkTypes(sandbox.path);
+        await chmod(join(root, scope, 'tsconfig.json'), 0o640);
+        const failed = await checkTypes(root);
         expect(failed.code, failed.output).toBe(1);
         expect(failed.findings).toMatchObject([
             { check: 'typescript/tsc', file: `${scope}/src/main.ts`, rule: 'TS2322', line: 1, column: 14 },
         ]);
         await writeFile(
-            join(sandbox.path, scope, 'src/main.ts'),
+            join(root, scope, 'src/main.ts'),
             'export function echo(value: string) { return value; }\nexport const first: number = "wrong";\n',
         );
-        {
-            const checked = await checkTypes(sandbox.path);
-            expect(checked.code, checked.output).toBe(1);
-            expect(checked.findings).toMatchObject([
-                { check: 'typescript/tsc', file: `${scope}/src/main.ts`, rule: 'TS2322', line: 2, column: 14 },
-            ]);
-        }
+        const second = await checkTypes(root);
+        expect(second.code, second.output).toBe(1);
+        expect(second.findings).toMatchObject([
+            { check: 'typescript/tsc', file: `${scope}/src/main.ts`, rule: 'TS2322', line: 2, column: 14 },
+        ]);
         await writeFile(
-            join(sandbox.path, scope, 'src/main.ts'),
+            join(root, scope, 'src/main.ts'),
             'export function echo(value: string) { return value; }\nexport const first: number = 1;\n',
         );
-        const corrected = await checkTypes(sandbox.path);
+        const corrected = await checkTypes(root);
         expect(corrected.code, corrected.output).toBe(0);
-        expect(await readFile(join(sandbox.path, scope, 'tsconfig.json'), 'utf8')).toBe(authored);
-        const { mode } = await stat(join(sandbox.path, scope, 'tsconfig.json'));
+        expect(await readFile(join(root, scope, 'tsconfig.json'), 'utf8')).toBe(authored);
+        const { mode } = await stat(join(root, scope, 'tsconfig.json'));
         expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
-        expect(await readFile(join(sandbox.path, scope, 'build/cache.tsbuildinfo'), 'utf8')).toBe(
-            'authored metadata\n',
-        );
+        expect(await readFile(join(root, scope, 'build/cache.tsbuildinfo'), 'utf8')).toBe('authored metadata\n');
     },
 );
 

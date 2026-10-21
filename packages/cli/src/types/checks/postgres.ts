@@ -5,9 +5,6 @@ import type { SqlFile, SqlNodeFields, SqlStatementView } from '#cli/types/parser
 /** The declaration position of a fact, so a finding points at it. */
 type Declared = { path: string; offset: number; text: string };
 
-/** One foreign key column of a table. */
-type ForeignKey = Declared & { table: string; column: string };
-
 export type StatementReader<Kind extends keyof SqlNodeFields> = (
     statement: SqlStatementView<Kind>,
     state: SchemaState,
@@ -35,7 +32,7 @@ export type Schema = {
     /** Qualified table name to its creation position. */
     tables: Map<string, Declared>;
     secured: Set<string>;
-    foreignKeys: ForeignKey[];
+    foreignKeys: (Declared & { table: string; column: string })[];
     /** Qualified table name to the leading column of each index and key on it. */
     indexed: Map<string, Set<string>>;
 };

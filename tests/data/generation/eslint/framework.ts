@@ -1,6 +1,6 @@
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
-const SELECTOR_FILES = {
+export const SELECTOR_FILES = {
     'native/App.jsx': `const list = <FlatList data={items} />;
 const scroll = <ScrollView>{items.map(renderItem)}</ScrollView>;
 `,
@@ -10,7 +10,7 @@ const text = <input type="text" value="a" {...register("choice")} />;
 `,
 } as const;
 
-const SERVER_FILES = {
+export const SERVER_FILES = {
     'gspot.toml': buildSandboxSettings(['javascript'], {
         level: 'all',
         rules: true,
@@ -22,7 +22,7 @@ const SERVER_FILES = {
 } as const;
 
 /** Component sources for each framework parser. */
-const COMPONENT_FILES = {
+export const COMPONENT_FILES = {
     'Card.vue': '<template><p>{{ count }}</p></template>\n<script setup lang="ts">const count: number = 1;</script>\n',
     'Card.svelte': '<script lang="ts">const count: number = 1;</script>\n<p>{count}</p>\n',
     'Card.astro': `---
@@ -35,10 +35,10 @@ const count: number = 1;
 } as const;
 
 /** Literal interface text outside the test files, which the translation rule reports. */
-const I18N_SOURCE = 'export const element = <p>Hello there</p>;\n';
+export const I18N_SOURCE = 'export const element = <p>Hello there</p>;\n';
 
 // Each framework exposes the same security finding through its own markup syntax.
-const RAW_HTML_CASES = [
+export const RAW_HTML_CASES = [
     {
         configuration: 'react',
         path: 'src/Greeting.jsx',
@@ -84,10 +84,8 @@ configurations = [ "expo" ]
 enabled = false
 `;
 
-const MOBILE_SOURCE_FILES = {
+export const MOBILE_SOURCE_FILES = {
     'gspot.toml': MOBILE_SETTINGS,
     'bare/source.js': 'const { EXPO_PUBLIC_URL } = process.env;\n',
     'expo-app/source.js': 'const { EXPO_PUBLIC_URL } = process.env;\n',
 } as const;
-
-export { I18N_SOURCE, SERVER_FILES, RAW_HTML_CASES, SELECTOR_FILES, COMPONENT_FILES, MOBILE_SOURCE_FILES };

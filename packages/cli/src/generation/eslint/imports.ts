@@ -2,11 +2,17 @@ import picomatch from 'picomatch';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
-import { type ScopeSelection } from '#cli/types/settings/values.ts';
-import { findParentSelection } from '#cli/generation/eslint/lint-rules.ts';
-import { readScopeAliases, readPackageAliases } from '#cli/generation/eslint/aliases.ts';
-import { type EslintBlock, type EslintContext, type EslintImportBoundaryRule } from '#cli/types/generation/eslint.ts';
+import { type Scope } from '#cli/types/settings/inheritance.ts';
+import { findParentSelection } from '#cli/settings/scope-view.ts';
+import { CODE_LANGUAGES } from '#cli/config/generation/eslint/files.ts';
+import { readScopeAliases, readPackageAliases } from '#cli/repository/aliases.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint/tool-settings.ts';
 
+import {
+    type EslintBlock,
+    type PlannedEslintFile,
+    type EslintImportBoundaryRule,
+} from '#cli/types/generation/eslint.ts';
 import {
     buildScopeGlob,
     buildNodePatterns,
@@ -15,18 +21,16 @@ import {
 } from '#cli/generation/eslint/files.ts';
 import {
     REGEX_SYMBOLS,
-    CODE_LANGUAGES,
     ANY_DEPTH_PREFIX,
     IMPORT_EXTENSIONS,
     EXTENSIONLESS_CODE,
     FILE_EXTENSION_RULE,
     NODE_SCRIPT_PATTERNS,
-    ESLINT_SETTINGS_TABLE,
     PATH_SEPARATOR_PATTERN,
     IMPORT_BOUNDARIES_RULE,
-    ESLINT_BOUNDARY_FOLDERS,
+    IMPORT_BOUNDARY_FOLDERS,
     TYPESCRIPT_EXTENSION_MAP,
-} from '#cli/config/generation/eslint.ts';
+} from '#cli/config/generation/eslint/imports.ts';
 
 /**
  * Build the relative-import lint rules for each project and path style.
@@ -36,7 +40,7 @@ import {
  *
  * @returns the lint rule and TypeScript extension settings for each project.
  */
-function buildImportStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[]): EslintBlock[] {
+export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): EslintBlock[] {
     const changed = scopes.filter((entry) => {
         const parent = findParentSelection(scopes, entry.scope.path);
         return (
@@ -83,16 +87,13 @@ function buildImportStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[]): 
  * @param aliases the repository-relative alias targets.
  * @returns the relative-import rule setting with its folders and aliases.
  */
-function buildImportBoundariesRule(
-    scopes: ScopeSelection[],
-    aliases: Record<string, string>,
-): EslintImportBoundaryRule {
+export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
     const scopePaths = scopes.map((entry) => escapeGlob(entry.scope.path)).filter((path) => path !== '');
     const externals = [...new Set(scopes.flatMap(({ view }) => view.values.javascript?.externals ?? []))];
     return [
         'error',
         {
-            folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths],
+            folders: [...IMPORT_BOUNDARY_FOLDERS, ...scopePaths],
             aliases,
             ...(externals.length === 0 ? {} : { externals }),
         },
@@ -102,14 +103,14 @@ function buildImportBoundariesRule(
 /**
  * Resolve nested project boundaries against the aliases of each project.
  *
- * @param context the scopes and Node.js script paths to cover.
+ * @param planned the scopes and Node.js script paths to cover.
  * @returns the boundary-rule blocks with the aliases of each project.
  */
-function buildScopeImportBlocks(context: Pick<EslintContext, 'session' | 'nodeFiles'>): EslintBlock[] {
+export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const {
         session: { root, reads, scopes },
         nodeFiles,
-    } = context;
+    } = planned;
     return scopes
         .filter((entry) => entry.scope.path !== '')
         .map((entry) => {
@@ -131,14 +132,14 @@ function buildScopeImportBlocks(context: Pick<EslintContext, 'session' | 'nodeFi
  * Keep the imports of Node scripts runnable: Node needs full file names, and resolves only package.json imports.
  * These blocks come after the style and project blocks, so they win for .mjs, .cjs, and Node shebang files.
  *
- * @param context the scopes and the Node scripts without a code extension.
+ * @param planned the scopes and the Node scripts without a code extension.
  * @returns one block for each project.
  */
-function buildNodeScriptBlocks(context: Pick<EslintContext, 'session' | 'nodeFiles'>): EslintBlock[] {
+export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const {
         session: { root, scopes },
         nodeFiles,
-    } = context;
+    } = planned;
     const paths = scopes.map((entry) => entry.scope.path);
     return scopes.map((entry) => {
         const path = entry.scope.path;
@@ -167,7 +168,7 @@ function buildNodeScriptBlocks(context: Pick<EslintContext, 'session' | 'nodeFil
  * @param globs the ignore globs of the ESLint file.
  * @returns a pattern for each ignored folder without other wildcards.
  */
-function buildImportIgnores(globs: string[]): string[] {
+export function buildImportIgnores(globs: string[]): string[] {
     return globs.flatMap((glob) => {
         if (glob.startsWith('!') || !glob.endsWith(FOLDER_CONTENTS)) return [];
         const folder = glob.slice(0, -FOLDER_CONTENTS.length).replace(ANY_DEPTH_PREFIX, '');
@@ -176,11 +177,3 @@ function buildImportIgnores(globs: string[]): string[] {
         return [`${PATH_SEPARATOR_PATTERN}${escaped}${PATH_SEPARATOR_PATTERN}`];
     });
 }
-
-export {
-    buildImportIgnores,
-    buildNodeScriptBlocks,
-    buildImportStyleBlocks,
-    buildScopeImportBlocks,
-    buildImportBoundariesRule,
-};

@@ -1,20 +1,26 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { listSettings } from '#cli/settings/known.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { SizeCase } from '#tests/types/samples.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { commitAll, markExecutable } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { NESTED_CONDITION } from '#tests/data/checks/bash/tool-checks.ts';
 import { BASH_TRIVIAL_FUNCTION_CASES } from '#tests/data/checks/structure/trivial-functions.ts';
 import { BASH_HEADER, BASH_SANDBOX, CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import { runCheckSample, expectedSummary, summarizeSample, registerBashSandbox } from '#tests/setup/sample-checks.ts';
 
+import {
+    runCheckSample,
+    expectedSummary,
+    buildSampleSummary,
+    registerBashSandbox,
+} from '#tests/setup/sample-checks.ts';
 import {
     FIXED_LOOPS,
     LOOP_COUNTS,
@@ -36,6 +42,82 @@ import {
     WRONG_CLEANUP_SOURCE,
     SCOPE_READER_SETTINGS,
 } from '#tests/data/checks/bash/script-checks.ts';
+
+/**
+ * Read the shipped default of a Bash size limit.
+ *
+ * @param name the Bash size setting.
+ * @returns its declared numeric default.
+ */
+function getDefaultLimit(name: string): number {
+    const setting = listSettings('structure').find(({ name: key }) => key === `limits.${name}`)!;
+    return Number(setting.language_defaults?.['bash'] ?? setting.default);
+}
+/**
+ * Produce exactly this many nested Bash blocks.
+ *
+ * @param depth the count of nested conditions.
+ * @returns the function body.
+ */
+function buildNestedConditions(depth: number): string {
+    const opening = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (index + 1))}${NESTED_CONDITION}`);
+    const closing = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (depth - index))}fi`);
+    return [...opening, `${' '.repeat(4 * (depth + 1))}echo "$1"`, ...closing].join('\n');
+}
+
+/** Build each function-size sample together with its location, fix, and diagnostic. */
+function buildSizeCases(): SizeCase[] {
+    return BASH_SIZE_LOCATIONS.map(({ file, rule, line }) => {
+        const limit = getDefaultLimit(rule.replaceAll('-', '_'));
+        let body: string;
+        let correctedBody: string;
+        let measure: string;
+        switch (rule) {
+            case 'function-lines': {
+                correctedBody = Array.from(
+                    { length: limit - 2 },
+                    (_, index) => `    echo "line ${String(index)}"`,
+                ).join('\n');
+                body = `${correctedBody}\n    echo "$1"`;
+                measure = 'code lines';
+                break;
+            }
+            case 'function_branches': {
+                correctedBody = Array.from(
+                    { length: limit },
+                    (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo "$1"; fi`,
+                ).join('\n');
+                body = `${correctedBody}\n    if [[ -n "$1" ]]; then echo "$1"; fi`;
+                measure = 'branches';
+                break;
+            }
+            case 'block_nesting': {
+                correctedBody = buildNestedConditions(limit);
+                body = buildNestedConditions(limit + 1);
+                measure = 'levels of nesting';
+                break;
+            }
+            case 'function_assignments': {
+                const assignments = Array.from(
+                    { length: limit },
+                    (_, index) => `    total="\${1}${String(index)}"`,
+                ).join('\n');
+                correctedBody = `${assignments}\n    echo "\${total}"`;
+                body = `${assignments}\n    total="$1"\n    echo "\${total}"`;
+                measure = 'assignments';
+                break;
+            }
+        }
+        return {
+            file,
+            rule,
+            line,
+            source: `${BASH_HEADER}# main: runs the sample.\nmain() {\n${body}\n}\n\nmain "$@"\n`,
+            corrected: `${BASH_HEADER}# main: runs the sample.\nmain() {\n${correctedBody}\n}\n\nmain "$@"\n`,
+            message: `main has ${String(limit + 1)} ${measure}, over the limit of ${String(limit)}.`,
+        };
+    });
+}
 
 test.each([...SAFETY_SOURCES])(
     'safety: a trap that removes its own temporary file is allowed and other recursive removals are reported: $source',
@@ -100,116 +182,29 @@ test.each([
     ...BASH_TRIVIAL_FUNCTION_CASES,
 ])('$check reports $expected.rule and passes after the fix', async (entry) => {
     const result = await runCheckSample(bashSandbox(), entry, BASH_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });
-
-/**
- * Read the shipped default of a Bash size limit.
- *
- * @param name the Bash size setting.
- * @returns its declared numeric default.
- */
-function getDefaultLimit(name: string): number {
-    const setting = listConfigurationSettings('structure').find(
-        ({ name: key }) => key === name.replace('limits.bash.', 'limits.'),
-    )!;
-    return Number(setting.language_defaults?.['bash'] ?? setting.default);
-}
-/**
- * Produce exactly this many nested Bash blocks.
- *
- * @param depth the count of nested conditions.
- * @returns the function body.
- */
-function buildNestedConditions(depth: number): string {
-    const opening = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (index + 1))}${NESTED_CONDITION}`);
-    const closing = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (depth - index))}fi`);
-    return [...opening, `${' '.repeat(4 * (depth + 1))}echo "$1"`, ...closing].join('\n');
-}
-function buildFileSizeCase() {
-    const fileLines = getDefaultLimit('limits.bash.file_lines');
-    // The header contributes the set and shopt commands; each declaration adds one code line.
-    const filesAtLimit = Array.from(
-        { length: fileLines - 2 },
-        (_, index) => `readonly VALUE_${String(index)}=${String(index)}`,
-    ).join('\n');
-    return {
-        source: `${BASH_HEADER}${filesAtLimit}\nreadonly EXTRA=1\n`,
-        corrected: `${BASH_HEADER}${filesAtLimit}\n`,
-        expected: {
-            ...BASH_SIZE_LOCATIONS[0],
-            message: `This file has ${String(fileLines + 1)} code lines, over the limit of ${String(fileLines)}.`,
-        },
-    };
-}
-function buildSizeCases() {
-    const functionLines = getDefaultLimit('limits.bash.function_lines');
-    const branches = getDefaultLimit('limits.bash.function_branches');
-    const nesting = getDefaultLimit('limits.bash.block_nesting');
-    const assignments = getDefaultLimit('limits.bash.function_assignments');
-    const bodyAtLimit = Array.from(
-        { length: functionLines - 2 },
-        (_, index) => `    echo "line ${String(index)}"`,
-    ).join('\n');
-    const branchesAtLimit = Array.from(
-        { length: branches },
-        (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo "$1"; fi`,
-    ).join('\n');
-    const assignmentsAtLimit = Array.from(
-        { length: assignments },
-        (_, index) => `    total="\${1}${String(index)}"`,
-    ).join('\n');
-    return [
-        buildFileSizeCase(),
-        {
-            source: `${BASH_HEADER}# main: prints each line.\nmain() {\n${bodyAtLimit}\n    echo "$1"\n}\n\nmain "$@"\n`,
-            corrected: `${BASH_HEADER}# main: prints each line.\nmain() {\n${bodyAtLimit}\n}\n\nmain "$@"\n`,
-            expected: {
-                ...BASH_SIZE_LOCATIONS[1],
-                message: `main has ${String(functionLines + 1)} code lines, over the limit of ${String(functionLines)}.`,
-            },
-        },
-        {
-            source: `${BASH_HEADER}# main: selects a branch.\nmain() {\n${branchesAtLimit}\n    if [[ -n "$1" ]]; then echo "$1"; fi\n}\n\nmain "$@"\n`,
-            corrected: `${BASH_HEADER}# main: selects a branch.\nmain() {\n${branchesAtLimit}\n}\n\nmain "$@"\n`,
-            expected: {
-                ...BASH_SIZE_LOCATIONS[2],
-                message: `main has ${String(branches + 1)} branches, over the limit of ${String(branches)}.`,
-            },
-        },
-        {
-            source: `${BASH_HEADER}# main: selects nested conditions.\nmain() {\n${buildNestedConditions(nesting + 1)}\n}\n\nmain "$@"\n`,
-            corrected: `${BASH_HEADER}# main: selects nested conditions.\nmain() {\n${buildNestedConditions(nesting)}\n}\n\nmain "$@"\n`,
-            expected: {
-                ...BASH_SIZE_LOCATIONS[3],
-                message: `main has ${String(nesting + 1)} levels of nesting, over the limit of ${String(nesting)}.`,
-            },
-        },
-        {
-            source: `${BASH_HEADER}# main: updates its value.\nmain() {\n${assignmentsAtLimit}\n    total="$1"\n    echo "\${total}"\n}\n\nmain "$@"\n`,
-            corrected: `${BASH_HEADER}# main: updates its value.\nmain() {\n${assignmentsAtLimit}\n    echo "\${total}"\n}\n\nmain "$@"\n`,
-            expected: {
-                ...BASH_SIZE_LOCATIONS[4],
-                message: `main has ${String(assignments + 1)} assignments, over the limit of ${String(assignments)}.`,
-            },
-        },
-    ];
-}
-test.each(BASH_SIZE_LOCATIONS.map((expected, index) => ({ expected, index })))(
-    '$expected.rule reports $expected.file and passes after the fix',
-    async ({ index }) => {
-        const entry = buildSizeCases()[index]!;
-        const check = entry.expected.rule === 'file-lines' ? 'structure/long-files' : 'bash/function-size';
+test.each(buildSizeCases())(
+    '$rule reports $file and passes after the fix',
+    async ({ source, corrected: fixedSource, file, rule, line, message }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
-            [entry.expected.file]: entry.source,
+            [file]: source,
         });
 
-        const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+        const failed = await runChecks(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['bash/function-size'] }),
+        );
 
-        expect(failed.report.checks.flatMap(({ findings }) => findings)).toContainEqual(matchFields(entry.expected));
-        await writeFile(join(sandbox.path, entry.expected.file), entry.corrected);
-        const corrected = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+        expect(failed.report.checks.flatMap(({ findings }) => findings)).toContainEqual(
+            matchFields({ file, rule, line, message }),
+        );
+        await writeFile(join(sandbox.path, file), fixedSource);
+        const corrected = await runChecks(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['bash/function-size'] }),
+        );
 
         expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     },

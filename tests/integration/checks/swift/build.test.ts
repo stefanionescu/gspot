@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
+import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
@@ -10,7 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { createCompilerCache } from '#tests/setup/check-input.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { SWIFT_PACKAGE_CASES, SWIFT_PACKAGE_SANDBOX } from '#tests/data/checks/swift/package.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 import { XCODE_TOOL_SCHEME, XCODE_TOOL_PROJECT, XCODE_BUILD_SETTINGS } from '#tests/data/checks/xcode.ts';
 import { SWIFT_VALUE_ERROR, SWIFT_VALUE_SOURCE, SWIFT_LANGUAGE_PACKAGE } from '#tests/data/checks/swift/projects.ts';
 
@@ -95,13 +95,16 @@ test.skipIf(!isMacos)(
     },
 );
 
-const installedPackage = isMacos ? registerSharedSandbox(SWIFT_PACKAGE_SANDBOX) : undefined;
-for (const entry of SWIFT_PACKAGE_CASES) {
-    test.skipIf(!isMacos || !hasToolBuild(entry.check === 'swift/swiftlint-analyze' ? 'swiftlint' : 'periphery'))(
-        `${entry.check} reports ${entry.expected.rule} in a Swift package and passes after the fix`,
-        async () => {
-            const result = await runCheckSample(installedPackage!(), entry, SWIFT_PACKAGE_SANDBOX);
-            expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
-        },
-    );
-}
+describe.skipIf(!isMacos)('Swift package samples', () => {
+    const installedSandbox = registerSharedSandbox(SWIFT_PACKAGE_SANDBOX);
+
+    for (const entry of SWIFT_PACKAGE_CASES) {
+        test.skipIf(!hasToolBuild(entry.check === 'swift/swiftlint-analyze' ? 'swiftlint' : 'periphery'))(
+            `${entry.check} reports ${entry.expected.rule} in a Swift package and passes after the fix`,
+            async () => {
+                const result = await runCheckSample(installedSandbox(), entry, SWIFT_PACKAGE_SANDBOX);
+                expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+            },
+        );
+    }
+});

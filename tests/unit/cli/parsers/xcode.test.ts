@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
-import { parsePbxproj } from '#cli/parsers/xcode.ts';
+import { parseProjectSources } from '#cli/parsers/xcode.ts';
 import { GROUPED_PBXPROJ, PROJECT_SYNTAX_CASES, XCODE_PROJECT_REFUSALS } from '#tests/data/checks/xcode.ts';
 
 test('the project folder offset and source roots apply separately', () => {
     const source = GROUPED_PBXPROJ.replace('mainGroup = MAIN;', 'mainGroup = MAIN; projectDirPath = ../Code;');
-    const project = parsePbxproj(source, '/repo/project/App.xcodeproj/project.pbxproj');
+    const project = parseProjectSources(source, '/repo/project/App.xcodeproj/project.pbxproj');
     expect([...project.sources]).toStrictEqual(['/repo/Code/First Group/Shared.swift', '/repo/project/Root.swift']);
     expect(project.folders).toStrictEqual([
         { path: '/repo/Code/Synced/', excluded: new Set(['/repo/Code/Synced/Excluded.swift']) },
@@ -16,13 +16,13 @@ test('quoted project strings keep escapes and ignore comment-like text', () => {
         'path = "First Group";',
         String.raw`path = "First \U00e9 \"Group\"";`,
     ).replace('path = Shared.swift;', 'path = "//Shared.swift";');
-    expect([...parsePbxproj(source, '/repo/App.xcodeproj/project.pbxproj').sources]).toStrictEqual([
+    expect([...parseProjectSources(source, '/repo/App.xcodeproj/project.pbxproj').sources]).toStrictEqual([
         '/Shared.swift',
         '/repo/Root.swift',
     ]);
     expect(
         [
-            ...parsePbxproj(
+            ...parseProjectSources(
                 GROUPED_PBXPROJ.replace('path = "First Group";', String.raw`path = "First \U00e9 Group";`),
                 '/repo/App.xcodeproj/project.pbxproj',
             ).sources,
@@ -31,11 +31,11 @@ test('quoted project strings keep escapes and ignore comment-like text', () => {
 });
 
 test.each([...XCODE_PROJECT_REFUSALS])('a project with $name is refused', ({ source, message }) => {
-    expect(() => parsePbxproj(source, '/repo/App.xcodeproj/project.pbxproj')).toThrow(message);
+    expect(() => parseProjectSources(source, '/repo/App.xcodeproj/project.pbxproj')).toThrow(message);
 });
 
 test.each([...PROJECT_SYNTAX_CASES])('the project reader accepts $name', ({ source }) => {
-    expect([...parsePbxproj(source, '/repo/App.xcodeproj/project.pbxproj').sources]).toStrictEqual([
+    expect([...parseProjectSources(source, '/repo/App.xcodeproj/project.pbxproj').sources]).toStrictEqual([
         '/repo/First Group/Shared.swift',
         '/repo/Root.swift',
     ]);
@@ -46,7 +46,7 @@ test('each native target keeps its own name, sources, and folders', () => {
         'T = {isa = PBXNativeTarget;',
         'T = {isa = PBXNativeTarget; name = "App Kit";',
     );
-    expect(parsePbxproj(source, '/repo/App.xcodeproj/project.pbxproj').targets).toStrictEqual([
+    expect(parseProjectSources(source, '/repo/App.xcodeproj/project.pbxproj').targets).toStrictEqual([
         {
             name: 'App Kit',
             sources: ['/repo/First Group/Shared.swift', '/repo/Root.swift'],

@@ -1,6 +1,8 @@
+import { JSON_INDENT } from '#cli/config/generation/generate.ts';
+import testsPackage from '#tests/package.json' with { type: 'json' };
 import { STRICT_COMPILER_OPTIONS } from '#tests/data/checks/typescript/projects.ts';
 
-const LOOSE_ZOD_SCHEMA = `// A test file.
+export const LOOSE_ZOD_SCHEMA = `// A test file.
 
 import { z } from 'zod';
 
@@ -17,20 +19,16 @@ const ZOD_PACKAGE = `{
     "private": true,
     "type": "module",
     "dependencies": {
-        "zod": "4.6.2"
+        "zod": "${testsPackage.devDependencies.zod}"
     }
 }
 `;
 
-const JSON_INDENT_WIDTH = 4;
-
-const ZOD_PROJECT_FILES = {
+export const ZOD_PROJECT_FILES = {
     '.gitignore': 'node_modules\n',
     'package.json': ZOD_PACKAGE,
     'tsconfig.json':
-        JSON.stringify({ compilerOptions: STRICT_COMPILER_OPTIONS, include: ['*.ts'] }, null, JSON_INDENT_WIDTH) + '\n',
+        JSON.stringify({ compilerOptions: STRICT_COMPILER_OPTIONS, include: ['*.ts'] }, null, JSON_INDENT) + '\n',
     'schema.ts': LOOSE_ZOD_SCHEMA,
     node_modules: {},
 } as const;
-
-export { LOOSE_ZOD_SCHEMA, ZOD_PROJECT_FILES };

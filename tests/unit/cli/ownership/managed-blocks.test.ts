@@ -7,7 +7,7 @@ import type { GspotError } from '#cli/system/errors.ts';
 import { planBlock, planRemoval } from '#cli/ownership/plans.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/data/system.ts';
-import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-blocks.ts';
+import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/managed-blocks.ts';
 
 test.each([...BLOCK_FORMATS, { path: '.gitattributes', style: 'hash' as const }])(
     'block updates and removal refuse non-UTF-8 $path with a file error and keep its bytes',
@@ -70,10 +70,10 @@ describe('managed-blocks', () => {
     test('a managed block is appended and replaced without changing your own text', () => {
         const first = replaceBlock('# Mine\n\ntext\n', 'block one', { path: 'AGENTS.md', style: 'markdown' });
         expect(first).toContain('# Mine');
-        expect(readBlock(first, { path: 'AGENTS.md', style: 'markdown' })).toBe('block one');
+        expect(findBlockBody(first, { path: 'AGENTS.md', style: 'markdown' })).toBe('block one');
         const second = replaceBlock(first, 'block two', { path: 'AGENTS.md', style: 'markdown' });
         expect(second.match(/gspot managed >>>/g)).toHaveLength(1);
-        expect(readBlock(second, { path: 'AGENTS.md', style: 'markdown' })).toBe('block two');
+        expect(findBlockBody(second, { path: 'AGENTS.md', style: 'markdown' })).toBe('block two');
         expect(second.startsWith('# Mine\n\ntext\n\n')).toBe(true);
         expect(replaceBlock(second, 'block two', { path: 'AGENTS.md', style: 'markdown' })).toBe(second);
     });
@@ -82,7 +82,7 @@ describe('managed-blocks', () => {
         const { source, path } = context;
         const message = `${path} has incomplete or repeated gspot block markers. Fix the markers, then run gspot apply.`;
         expect(() => findBlockSpan(source, context)).toThrow(message);
-        expect(() => readBlock(source, context)).toThrow(message);
+        expect(() => findBlockBody(source, context)).toThrow(message);
         expect(() => replaceBlock(source, 'replacement', context)).toThrow(message);
     });
 
@@ -97,13 +97,13 @@ describe('managed-blocks', () => {
         ),
     )('block readers keep your own text with $name line endings in $path', (context) => {
         expect(findBlockSpan('authored text', context)).toBeUndefined();
-        expect(readBlock('authored text', context)).toBeUndefined();
+        expect(findBlockBody('authored text', context)).toBeUndefined();
         const { newline } = context;
         const source = `before${newline}${context.start}${newline}  instructions  ${newline}${context.end}${newline}after`;
-        expect(readBlock(source, context)).toBe('instructions');
+        expect(findBlockBody(source, context)).toBe('instructions');
         const replaced = replaceBlock(source, 'replacement', context);
         expect(replaced.startsWith(`before${newline}`)).toBe(true);
         expect(replaced.endsWith('after')).toBe(true);
-        expect(readBlock(replaced, context)).toBe('replacement');
+        expect(findBlockBody(replaced, context)).toBe('replacement');
     });
 });

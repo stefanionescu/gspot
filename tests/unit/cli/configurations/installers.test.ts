@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { buildProgramPin } from '#tests/setup/builders.ts';
-import { findToolProjectPackage } from '#cli/configurations/tools.ts';
+import { findToolProjectPackage } from '#cli/configurations/declared-tools.ts';
 import { TOOL_PROJECT_PACKAGES } from '#tests/data/configurations/manifests.ts';
 
 test.each([...TOOL_PROJECT_PACKAGES])(

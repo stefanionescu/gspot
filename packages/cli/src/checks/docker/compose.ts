@@ -1,15 +1,16 @@
 import { posix } from 'node:path';
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
+import { type Session } from '#cli/types/session.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
-import { listCheckFiles } from '#cli/repository/coverage.ts';
 import { runCommandGroups } from '#cli/runs/command/check.ts';
+import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
+import { listCheckFiles } from '#cli/repository/covered-files.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/inventory.ts';
 import { composeSchema } from '#cli/schemas/checks/docker/compose.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { type ComposeFiles, type ComposeDocuments, type ComposeDeclaration } from '#cli/types/checks/docker.ts';
 
 import {
@@ -71,7 +72,7 @@ function listBuildContexts(declarations: ComposeDeclaration[], folder: string): 
  * @param planned the scope files to read.
  * @returns the services and their build contexts.
  */
-function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeDocuments {
+export function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeDocuments {
     const documents: ComposeDocuments = { declarations: [], contexts: new Map() };
     for (const group of groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK))) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
@@ -117,5 +118,3 @@ export async function checkDockerCompose(session: Session, planned: PlannedCheck
         }),
     );
 }
-
-export { readComposeDocuments };

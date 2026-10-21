@@ -1,12 +1,12 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { GROUPED_PBXPROJ } from '#tests/data/checks/xcode.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { UNCOVERED_FILE_MESSAGE } from '#cli/config/checks/import-rules.ts';
+import { UNCOVERED_FILE_MESSAGE } from '#cli/config/checks/structure.ts';
 
 import {
     REFUSAL_HINT,
@@ -88,7 +88,7 @@ test('an Xcode native target is a Swift module named after the target', async ()
 
 test('without import rules the check is skipped', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['python'], {}),
+        'gspot.toml': buildSandboxSettings(['python']),
         'main.py': 'import os\n',
     });
     const { report } = await runChecks(

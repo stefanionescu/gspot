@@ -10,7 +10,7 @@ import { RUFF_SANDBOX, VERSION_SOURCE, RUFF_VERSION_CASES } from '#tests/data/ch
 const installedSandbox = registerSharedSandbox(RUFF_SANDBOX);
 
 test("Ruff fixes follow each scope's minimum Python version", async () => {
-    const sandbox = { path: installedSandbox().root };
+    const { root } = installedSandbox();
     const tables = RUFF_VERSION_CASES.filter(({ scope }) => scope !== '')
         .map(({ scope }) => `[[scope]]\npath = "${scope}"\n`)
         .join('');
@@ -34,7 +34,7 @@ requires-python = "${requires}"
     );
 
     const command = ['check', '--only', 'python/ruff', '--json'];
-    const checked = parseCheckReport(await spawnGspot(sandbox.path, command));
+    const checked = parseCheckReport(await spawnGspot(root, command));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = checked.report;
     for (const { scope, generics, unions } of RUFF_VERSION_CASES) {
@@ -48,11 +48,11 @@ requires-python = "${requires}"
             scope || 'root',
         ).toBe(unions);
     }
-    const fixed = parseCheckReport(await spawnGspot(sandbox.path, [...command, '--fix']));
+    const fixed = parseCheckReport(await spawnGspot(root, [...command, '--fix']));
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(1);
     const fixedReport = fixed.report;
     for (const { scope, annotation } of RUFF_VERSION_CASES) {
-        const text = await readFile(join(sandbox.path, scope, 'sample.py'), 'utf8');
+        const text = await readFile(join(root, scope, 'sample.py'), 'utf8');
         expect(text, scope).toContain(annotation);
         const result = fixedReport.checks.find((entry) => entry.scope === scope)!;
         expect(result.status, scope).toBe(scope === 'modern' ? 'passed' : 'failed');

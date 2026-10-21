@@ -1,8 +1,8 @@
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { FolderEntry } from '#cli/types/checks/structure.ts';
-import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 
 /**
  * Lists the source files that the folder checks read: no Markdown.

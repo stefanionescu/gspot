@@ -9,9 +9,9 @@ import { planSandboxCheck } from '#tests/setup/check-input.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { WORKSPACE_SOURCE_FILES } from '#tests/data/runs/copies.ts';
-import { listWorkspaceDependencyFiles } from '#cli/repository/packages.ts';
 import { mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
-import { copyIntoScratch, copyCheckIntoScratch, selectScratchCopyPaths } from '#cli/runs/copy/files.ts';
+import { listWorkspaceDependencySources } from '#cli/repository/npm/workspaces.ts';
+import { createCopy, createCheckCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
 
 test('a dry-run copy holds workspace dependencies and working bin links, and edits in it reach neither source', async () => {
     await using repository = await testdir();
@@ -31,11 +31,11 @@ test('a dry-run copy holds workspace dependencies and working bin links, and edi
     await symlink('../packages/core', join(repository.path, 'node_modules/core'));
     await symlink(external.path, join(repository.path, 'node_modules/external'));
     const session = await openSession(repository.path);
-    using copy = await copyIntoScratch(
-        selectScratchCopyPaths(
+    using copy = await createCopy(
+        selectCopyPaths(
             session.root,
             ['packages/core/value.js'],
-            session.repository.scopes.map((scope) => scope.path),
+            session.repository.scopeFolders.map((scope) => scope.path),
         ),
     );
     const scratch = copy.path;
@@ -61,7 +61,7 @@ test('a workspace member that is no scope brings its own dependency store into t
     await mkdir(join(repository.path, 'tests/node_modules'));
     await symlink('../../node_modules/.bun/vue@3/node_modules/vue', join(repository.path, 'tests/node_modules/vue'));
     const paths = ['package.json', 'tests/package.json', 'tests/app.js', '.gspot/package.json'];
-    using copy = await copyIntoScratch(selectScratchCopyPaths(repository.path, paths, ['']));
+    using copy = await createCopy(selectCopyPaths(repository.path, paths, ['']));
     const scratch = copy.path;
     expect(await readFile(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
     expect(await readFile(join(scratch, '.gspot/node_modules/prettier/package.json'), 'utf8')).toBe(
@@ -80,7 +80,7 @@ test('a link into another linked tree points at the copy of that tree, whatever 
     await mkdir(join(repository.path, 'node_modules'));
     await symlink(join(store.path, 'next@16/node_modules/next'), join(repository.path, 'node_modules/a-next'), 'dir');
     await symlink(store.path, join(repository.path, 'node_modules/z-store'), 'dir');
-    using copy = await copyIntoScratch(selectScratchCopyPaths(repository.path, ['package.json'], ['']));
+    using copy = await createCopy(selectCopyPaths(repository.path, ['package.json'], ['']));
     const scratch = copy.path;
     const copied = await realpath(join(scratch, 'node_modules/a-next'));
     expect(copied.startsWith(await realpath(join(scratch, 'node_modules/z-store')))).toBe(true);
@@ -95,9 +95,7 @@ test('a dependency link that points at nothing refuses the copy', async () => {
 
     await symlink('../missing/bin/gspot', join(repository.path, 'node_modules/.bin/gspot'));
     expect(
-        await copyIntoScratch(selectScratchCopyPaths(repository.path, ['package.json'], [''])).catch(
-            (error: unknown) => error,
-        ),
+        await createCopy(selectCopyPaths(repository.path, ['package.json'], [''])).catch((error: unknown) => error),
     ).toMatchObject({
         code: 'ENOENT',
     });
@@ -116,7 +114,7 @@ test.each([false, true])(
 
         const session = await openSession(repository.path);
         const input = planSandboxCheck(session, 'javascript/tsc', { paths: ['selected.js'] });
-        using copy = await copyCheckIntoScratch(session, input, extra ? ['document.json'] : []);
+        using copy = await createCheckCopy(session, input, extra ? ['document.json'] : []);
         expect(await readFile(join(copy.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
         expect(await readFile(join(copy.path, 'node_modules/tool/value.js'), 'utf8')).toBe(
             'export const dependency = 4;',
@@ -154,7 +152,7 @@ test.each([false, true])(
                 scope: 'apps/web',
                 paths: ['apps/web/main.js'],
             });
-            const dependencyPaths = listWorkspaceDependencyFiles(
+            const dependencyPaths = listWorkspaceDependencySources(
                 session.reads,
                 input.selection.scope.path,
                 session.repository.files,
@@ -166,7 +164,7 @@ test.each([false, true])(
             expect(dependencyPaths).not.toContain('packages/unused/private.txt');
             expect(dependencyPaths).not.toContain('packages/unused/private.js');
             expect(input.files.map((file) => file.path)).toStrictEqual(['apps/web/main.js']);
-            using copy = await copyCheckIntoScratch(session, input);
+            using copy = await createCheckCopy(session, input);
             const output = runCommandBlocking([process.execPath, 'apps/web/main.js'], { cwd: copy.path });
             expect(output.code, output.stderr).toBe(0);
             expect(output.stdout.trim()).toBe('staged dependency');

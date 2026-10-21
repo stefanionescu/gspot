@@ -1,0 +1,87 @@
+import { quoteArgument } from '#cli/system/text.ts';
+import type { Session } from '#cli/types/session.ts';
+import { formatScopeLabel } from '#cli/system/terminal.ts';
+import { isLoosening } from '#cli/settings/validation/reasons.ts';
+import type { Setting } from '#cli/types/settings/inheritance.ts';
+import { listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
+import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
+import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
+
+// Describe one scope: the default, the value and where it comes from, and how to change it.
+function formatSettingScope(key: string, setting: Setting, entry: SettingScope): string[] {
+    const recordList = Object.hasOwn(listRecordFields(), key);
+    const { scope, shipped, effective } = entry;
+    const { value, source, reason } = effective ?? { value: undefined, source: 'unset', reason: undefined };
+    const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
+    const head = [
+        '',
+        `Scope: ${formatScopeLabel(scope)}`,
+        `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
+        `Current value: ${JSON.stringify(value)} (from ${source})`,
+    ];
+    if (recordList)
+        return [...head, `Change it: write [[${key}]] records by hand in gspot.toml, then run gspot apply.`];
+    return [
+        ...head,
+        ...(value !== undefined && isLoosening(setting, value, shipped)
+            ? [
+                  'If you set this value, give a reason: write it as { value = ..., reason = "..." }, or run gspot set with --reason.',
+              ]
+            : []),
+        ...(reason === undefined ? [] : [`Reason on record: ${reason}`]),
+        `Change it: gspot set ${quoteArgument(key)} <value>${target} [--reason "..."]`,
+        `Back to the default: gspot unset ${quoteArgument(key)}${target}`,
+    ];
+}
+
+/**
+ * Describe a setting's defaults, effective values, and edit commands.
+ *
+ * @param session the repository settings and selected scopes, when available.
+ * @param key the setting name to resolve.
+ * @returns the explanation, or undefined when no selected configuration declares the setting.
+ */
+export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
+    if (session === undefined) return undefined;
+    const { settings } = session.settingsFile;
+    // A record list lives in the root table only, so only the root scope can change it.
+    const recordList = Object.hasOwn(listRecordFields(), key);
+    const scopes = session.scopes.flatMap((selection) => {
+        const match = findSetting(selection.known, key);
+        if (match === undefined || (recordList && selection.scope.path !== '')) return [];
+        return [
+            {
+                scope: selection.scope.path,
+                setting: match.setting,
+                effective: getSettingValue(selection.known, settings, key, selection.scope.path),
+                shipped: findSettingDefault(selection.known, settings, match, selection.scope.path)?.value,
+            },
+        ];
+    });
+    const first = scopes[0];
+    if (first === undefined) return undefined;
+    const lines = [
+        key,
+        '',
+        first.setting.description,
+        '',
+        ...(first.setting.reason_needed === undefined ? [] : [`Reason: ${first.setting.reason_needed} needs a reason`]),
+        ...scopes.flatMap((entry) => formatSettingScope(key, first.setting, entry)),
+    ];
+    return {
+        kind: 'setting',
+        subject: key,
+        text: `${lines.join('\n')}\n`,
+        data: {
+            key,
+            ...first.setting,
+            scopes: scopes.map(({ scope, shipped, effective }) => ({
+                scope,
+                default: shipped,
+                current: effective?.value,
+                source: effective?.source,
+                reason: effective?.reason,
+            })),
+        },
+    };
+}

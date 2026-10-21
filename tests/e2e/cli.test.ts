@@ -6,12 +6,13 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
 import { CI_PINS } from '#cli/config/generation/ci.ts';
 import { runCommand } from '#tests/setup/processes.ts';
+import { installSandbox } from '#tests/setup/install.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { parseCheckReport } from '#tests/setup/run-gspot.ts';
 import type { PackedSandbox } from '#tests/types/packages.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { setUpPackedSandbox, createPackedSandbox } from '#tests/setup/packed-sandbox.ts';
+import { createPackedSandbox } from '#tests/setup/packed-sandbox.ts';
 import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/data/packed-install.ts';
 
 // Checks what init replaced and kept, before the test reads the check report.
@@ -38,22 +39,16 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     await using consumer = await createPackedSandbox();
     const { root } = consumer;
     await createFileTree(root, STARTING_FILES);
-    const initialized = await setUpPackedSandbox(consumer, {
-        cwd: consumer.root,
+    const initialized = await installSandbox(consumer.online, {
         configurations: ['bash', 'python', 'swift'],
     });
     await assertReplacedFiles(root, initialized.stdout);
     expect(initialized.stdout).not.toContain('formatter stdout');
     const checked = parseCheckReport(
-        await runCommand(
-            [
-                ...consumer.command,
-                'check',
-                '--only',
-                'bash/shellcheck,dependencies/lockfiles,format/prettier',
-                '--json',
-            ],
-            consumer.offlineOptions,
+        await consumer.offline.run(
+            root,
+            ['check', '--only', 'bash/shellcheck,dependencies/lockfiles,format/prettier', '--json'],
+            consumer.offline.environment,
         ),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
@@ -80,9 +75,10 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     });
     await writeFile(join(root, 'broken.sh'), 'echo example\n');
     const corrected = parseCheckReport(
-        await runCommand(
-            [...consumer.command, 'check', '--only', 'bash/shellcheck', '--json'],
-            consumer.offlineOptions,
+        await consumer.offline.run(
+            root,
+            ['check', '--only', 'bash/shellcheck', '--json'],
+            consumer.offline.environment,
         ),
     );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -101,7 +97,7 @@ async function prepareFormatterSandbox(installation: PackedSandbox) {
     await fakeTool(systemTools, 'mise', `console.log(${JSON.stringify(CI_PINS.mise.version)});\n`);
     const bun = await runCommand(['bun', '--version'], {
         cwd: toolConsumer,
-        env: installation.onlineOptions.env,
+        env: installation.online.environment,
     });
     if (bun.code !== 0) throw new Error(`Bun version failed: ${bun.stdout}${bun.stderr}`);
     const authoredPackage = JSON.stringify({
@@ -112,38 +108,33 @@ async function prepareFormatterSandbox(installation: PackedSandbox) {
     await writeFile(join(toolConsumer, 'package.json'), authoredPackage);
     await writeFile(join(toolConsumer, 'source.js'), 'export const greeting="hello";');
     const toolOptions = {
-        ...installation.onlineOptions,
-        cwd: toolConsumer,
-        env: {
-            ...installation.onlineOptions.env,
-            PATH: `${systemTools}${delimiter}${installation.onlineOptions.env['PATH'] ?? ''}`,
+        ...installation.online,
+        root: toolConsumer,
+        environment: {
+            ...installation.online.environment,
+            PATH: `${systemTools}${delimiter}${installation.online.environment['PATH'] ?? ''}`,
         },
     };
-    await setUpPackedSandbox(
-        { ...installation, onlineOptions: toolOptions },
-        {
-            cwd: toolConsumer,
-            configurations: ['format'],
-            level: 'all',
-        },
-    );
+    await installSandbox(toolOptions, {
+        configurations: ['format'],
+        level: 'all',
+    });
     return { toolConsumer, toolOptions, authoredPackage };
 }
 
 test('the installed formatter reports and fixes source and keeps your package.json fields', async () => {
     await using consumer = await createPackedSandbox();
 
-    const { command } = consumer;
     const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterSandbox(consumer);
-    const formatter = [...command, 'check', 'source.js', '--only', 'format/prettier', '--json'];
-    const invalid = parseCheckReport(await runCommand(formatter, toolOptions));
+    const formatter = ['check', 'source.js', '--only', 'format/prettier', '--json'];
+    const invalid = parseCheckReport(await toolOptions.run(toolConsumer, formatter, toolOptions.environment));
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
     expect(invalid.report.checks).toMatchObject([
         { check: 'format/prettier', status: 'failed', findings: [{ file: 'source.js' }] },
     ]);
-    const fixed = await runCommand([...formatter, '--fix'], toolOptions);
+    const fixed = await toolOptions.run(toolConsumer, [...formatter, '--fix'], toolOptions.environment);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-    const valid = await runCommand(formatter, toolOptions);
+    const valid = await toolOptions.run(toolConsumer, formatter, toolOptions.environment);
     expect(valid.code, valid.stdout + valid.stderr).toBe(0);
     expect(await readFile(join(toolConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
 });

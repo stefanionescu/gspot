@@ -1,27 +1,23 @@
 // Find existing lint commands, hooks, and tool files.
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import type { FileSettings } from '#cli/types/ownership.ts';
+import type { ManagedKeys } from '#cli/types/ownership.ts';
+import { ESLINT_TOOL } from '#cli/config/configurations.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
-import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
+import { type Repository } from '#cli/types/repository/inventory.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { listReplacedFiles } from '#cli/repository/replaced-files.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
 import { MARKDOWN_EXTENSION } from '#cli/config/repository/inventory.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
-import { listToolSettingsFiles } from '#cli/repository/tool-settings-files.ts';
 import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/existing-tools.ts';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
+import { type CiJob, type ReplacedFile, type ExistingTools } from '#cli/types/repository/existing-tools.ts';
 
-import {
-    type CiJob,
-    type Repository,
-    type FoundToolFile,
-    type ExistingTools,
-} from '#cli/types/repository/inventory.ts';
 import {
     HUSKY_PATH,
     LEFTHOOK_NAMES,
@@ -203,19 +199,16 @@ export function readExistingTools(
     const repositoryRoot = reads.root;
     const { files, dependencyFiles } = repository;
     const paths = new Set(files.map((file) => file.path));
-    const manifests = readManifests();
-    const toolOnlyPackages = [...listToolOnlyPackages(dependencyFiles, manifests.values())].toSorted(
+    const configurations = readConfigurations();
+    const toolOnlyPackages = [...listToolOnlyPackages(dependencyFiles, configurations.values())].toSorted(
         (a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON),
     );
 
-    const configurations = listToolSettingsFiles(repositoryRoot, files, manifests.values());
+    const replacedFiles = listReplacedFiles(repositoryRoot, files, configurations.values());
     return {
-        toolFiles: [
+        replacedFiles: [
             ...new Map(
-                configurations.map((entry) => [
-                    JSON.stringify([entry.tool, entry.path, entry.table, entry.key]),
-                    entry,
-                ]),
+                replacedFiles.map((entry) => [JSON.stringify([entry.tool, entry.path, entry.table, entry.key]), entry]),
             ).values(),
         ],
         hooks: readHooks(repositoryRoot),
@@ -243,12 +236,12 @@ export function readExistingTools(
  * Check whether generated field edits cover an existing tool settings section.
  *
  * @param toolFile the existing file or section.
- * @param fileEdits the generated field edits.
+ * @param managedKeys the generated field edits.
  * @returns whether an edit covers that file and key.
  */
-export function isEditedInPlace(toolFile: FoundToolFile, fileEdits: FileSettings[]): boolean {
-    return fileEdits.some(
-        (output) => output.path === toolFile.path && output.changes.some((field) => field.path[0] === toolFile.key),
+export function isEditedInPlace(toolFile: ReplacedFile, managedKeys: ManagedKeys[]): boolean {
+    return managedKeys.some(
+        (output) => output.path === toolFile.path && output.keys.some((field) => field.key[0] === toolFile.key),
     );
 }
 
@@ -258,6 +251,6 @@ export function isEditedInPlace(toolFile: FoundToolFile, fileEdits: FileSettings
  * @param toolFile the existing file or section.
  * @returns the table, key, or owning tool name.
  */
-export function getToolFileSection(toolFile: FoundToolFile): string {
+export function getToolFileSection(toolFile: ReplacedFile): string {
     return toolFile.table ?? toolFile.key ?? toolFile.tool;
 }

@@ -189,7 +189,6 @@ test('a scope path narrows to its checks and its reproduce command finds the sam
     const failed = report.checks.filter((check) => check.status === 'failed');
     expect(failed.map((check) => check.scope)).toStrictEqual(['api']);
     const command = failed[0]?.reproduce;
-    expect(command).toBeDefined();
     const repeated = parseCheckReport(await runGspot(sandbox.path, [...command!.split(' ').slice(1), '--json']));
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     const repeatedReport = repeated.report;

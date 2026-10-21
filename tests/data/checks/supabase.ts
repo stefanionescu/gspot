@@ -1,5 +1,5 @@
 /** Storage policy statements, and whether each one names a bucket in a real policy and not in other text. */
-const STORAGE_POLICIES = [
+export const STORAGE_POLICIES = [
     {
         name: 'comment only',
         sql: "-- CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars');\n",
@@ -32,7 +32,7 @@ const STORAGE_POLICIES = [
     },
 ] as const;
 
-const SERVICE_KEY_SETTINGS = `configurations = ["supabase"]
+export const SERVICE_KEY_SETTINGS = `configurations = ["supabase"]
 test_files = ["qa/**"]
 [[scope]]
 path = "apps/web"
@@ -40,7 +40,7 @@ path = "apps/web"
 test_files = ["apps/web/qa/**", "apps/web/verification/**"]
 `;
 
-const SERVICE_KEY_READERS = {
+export const SERVICE_KEY_READERS = {
     'qa/entry.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
     'tests/default.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
     'client.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
@@ -50,19 +50,19 @@ const SERVICE_KEY_READERS = {
 } as const;
 
 /** Secret-key reads and the safe publishable-key replacement for each source. */
-const SECRET_KEY_READS = [
+export const SECRET_KEY_READS = [
     'process.env.SUPABASE_SECRET_KEY',
     'settings.supabase_secret_key',
     'settings.supabaseSecretKey',
     '"sb_secret_example"',
 ] as const;
 
-const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
+export const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
 
 /** A Deno handler for the Supabase configuration tests. */
 const HELLO_EDGE_FUNCTION = 'Deno.serve(() => new Response("hello"));\n';
 
-const SUPABASE_SANDBOX = {
+export const SUPABASE_SANDBOX = {
     install: false,
     configurations: ['supabase'],
 
@@ -77,7 +77,7 @@ verify_jwt = true
     },
 } as const;
 
-const SUPABASE_CASES = [
+export const SUPABASE_CASES = [
     {
         check: 'supabase/deno-lint',
         files: {
@@ -125,24 +125,12 @@ configurations = ["supabase"]
     },
 ] as const;
 
-const DOCKER_VERSION_OUTPUT = 'Docker version 29.2.1\n';
+export const DOCKER_VERSION_OUTPUT = 'Docker version 29.2.1\n';
 
-const SUPABASE_VERSION_OUTPUT = '2.75.0\n';
+export const SUPABASE_VERSION_OUTPUT = '2.75.0\n';
 
-const SUPABASE_PROJECT_CONFIG = 'project_id = "types-sample"\n';
+export const SUPABASE_PROJECT_CONFIG = 'project_id = "types-sample"\n';
 
-const INVALID_BUCKETS_CONFIG = '[storage]\nbuckets = "avatars"\n';
+export const INVALID_BUCKETS_CONFIG = '[storage]\nbuckets = "avatars"\n';
 
-export {
-    SUPABASE_CASES,
-    DATABASE_SCHEMAS,
-    SECRET_KEY_READS,
-    STORAGE_POLICIES,
-    SUPABASE_SANDBOX,
-    SERVICE_KEY_READERS,
-    SERVICE_KEY_SETTINGS,
-    DOCKER_VERSION_OUTPUT,
-    INVALID_BUCKETS_CONFIG,
-    SUPABASE_PROJECT_CONFIG,
-    SUPABASE_VERSION_OUTPUT,
-};
+export const AVATARS_BUCKET_CONFIG = '[storage.buckets.avatars]\npublic = false\n';

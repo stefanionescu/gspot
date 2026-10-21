@@ -1,26 +1,27 @@
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { isRecord } from '#cli/system/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { join, posix, relative } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
-import { type Finding } from '#cli/types/runs/check.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { walkSqlTree } from '#cli/parsers/sql/postgres.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import type { SupabaseProjectFile } from '#cli/types/checks/supabase.ts';
 import { readParsedMigrations } from '#cli/checks/postgres/migrations.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/runs/command/output.ts';
-import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/checks/supabase.ts';
-import { denoLintReportSchema, supabaseProjectSchema } from '#cli/schemas/checks/supabase.ts';
+import { denoLintReportSchema, supabaseProjectFileSchema } from '#cli/schemas/checks/supabase.ts';
 
 import {
     DENO_LOCATION,
@@ -34,8 +35,25 @@ import {
     DENO_LINT_COMMAND,
     DENO_CHECK_COMMAND,
     ADMIN_KEY_EXTENSIONS,
-    SUPABASE_CONFIG_TOML,
+    SUPABASE_PROJECT_FILE,
 } from '#cli/config/checks/supabase.ts';
+
+/**
+ * Visit every named field in an SQL parse tree.
+ *
+ * @param value the parse tree to walk.
+ * @param visit the callback for each field and its value.
+ */
+function walkSqlTree(value: unknown, visit: (key: string, child: unknown) => void): void {
+    if (Array.isArray(value)) {
+        for (const child of value) walkSqlTree(child, visit);
+    } else if (value !== null && typeof value === 'object') {
+        for (const [key, child] of Object.entries(value)) {
+            visit(key, child);
+            walkSqlTree(child, visit);
+        }
+    }
+}
 
 function buildDenoJsonArguments(root: string, folder: string): string[] {
     const path = DENO_CONFIG_FILES.map((name) => join(root, folder, name)).find(
@@ -65,8 +83,8 @@ function parseDenoCheckError(session: Session, planned: PlannedCheck, folder: st
  * @param planned the scope to read.
  * @returns the parsed file, or undefined when no file exists or the TOML has a syntax error.
  */
-function readProjectFile(session: Session, planned: PlannedCheck): SupabaseConfiguration | undefined {
-    const local = joinScope(planned.selection.scope.path, SUPABASE_CONFIG_TOML);
+function readSupabaseProjectFile(session: Session, planned: PlannedCheck): SupabaseProjectFile | undefined {
+    const local = joinScope(planned.selection.scope.path, SUPABASE_PROJECT_FILE);
     const text = findCachedText(session.reads, local);
     if (text === undefined) return undefined;
     let value: Record<string, unknown>;
@@ -76,7 +94,7 @@ function readProjectFile(session: Session, planned: PlannedCheck): SupabaseConfi
         if (error instanceof GspotError && error.code === 'filesystem') return undefined;
         throw error;
     }
-    return parseFileFields(local, value, supabaseProjectSchema);
+    return parseFileFields(local, value, supabaseProjectFileSchema);
 }
 
 /**
@@ -128,9 +146,9 @@ async function runDenoCommand(
  * @returns the findings.
  */
 export async function checkSupabaseStoragePolicies(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const config = readProjectFile(session, planned);
-    const at = { file: joinScope(planned.selection.scope.path, SUPABASE_CONFIG_TOML), line: 1 };
-    if (config === undefined) return [];
+    const projectFile = readSupabaseProjectFile(session, planned);
+    const at = { file: joinScope(planned.selection.scope.path, SUPABASE_PROJECT_FILE), line: 1 };
+    if (projectFile === undefined) return [];
     const migrations = await readParsedMigrations(session, planned);
     const policed = new Set<string>();
     const policies = migrations
@@ -148,7 +166,7 @@ export async function checkSupabaseStoragePolicies(session: Session, planned: Pl
             const literal = isRecord(node['sval']) ? node['sval']['sval'] : undefined;
             if (typeof literal === 'string') policed.add(literal);
         });
-    return (config.storage?.buckets === undefined ? [] : Object.keys(config.storage.buckets))
+    return (projectFile.storage?.buckets === undefined ? [] : Object.keys(projectFile.storage.buckets))
         .filter((bucket) => !policed.has(bucket))
         .map((bucket) =>
             buildFinding(
@@ -177,14 +195,12 @@ export async function checkSupabaseDenoLint(session: Session, planned: PlannedCh
             [...DENO_LINT_COMMAND, join(session.root, folder)],
             folder,
         );
-        let report: DenoLintReport;
-        try {
-            report = denoLintReportSchema.parse(JSON.parse(result.stdout));
-        } catch (error) {
-            throw new Error(formatOutputTail(result, 'Deno lint printed a report that is not valid JSON.'), {
-                cause: error,
-            });
-        }
+        // deno lint exits 1 with a JSON report when it finds problems, and prints only its error when it cannot run.
+        if (result.code !== 0 && result.stdout.trim() === '')
+            throw new Error(
+                formatOutputTail(result, `deno lint stopped with exit ${String(result.code)} and no report.`),
+            );
+        const report = parseToolReport('deno lint', result.stdout, denoLintReportSchema);
         const broken = report.errors.map((entry) =>
             buildFinding(
                 planned,
@@ -213,7 +229,7 @@ export async function checkSupabaseDenoLint(session: Session, planned: PlannedCh
  * @param planned the scope files to check.
  * @returns the findings.
  */
-export async function checkSupabaseDeno(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSupabaseDenoCheck(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const entry of listFunctionEntries(planned)) {
         const folder = posix.dirname(entry);

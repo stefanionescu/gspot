@@ -1,18 +1,13 @@
-import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
-
-/** The working folder and environment of a command in a packed sandbox. */
-export type CommandOptions = Required<Pick<AsyncSpawnOptions, 'cwd' | 'env'>>;
+import type { Sandbox } from '#tests/types/sandbox.ts';
 
 /** A new project that installs the packed gspot release. */
-export type PackedSandbox = {
+export type PackedSandbox = AsyncDisposable & {
     root: string;
-    command: string[];
-    /** Check commands cannot reach the network. */
-    offlineOptions: CommandOptions;
-    /** Install commands can reach the local registry and its upstream. */
-    onlineOptions: CommandOptions;
     workspace: string;
-    [Symbol.asyncDispose]: () => Promise<void>;
+    /** Install commands can reach the local registry and its upstream. */
+    online: Sandbox;
+    /** Check commands cannot reach the network. */
+    offline: Sandbox;
 };
 
 /** Package metadata and its local source to pack for installation. */
@@ -43,7 +38,7 @@ export type PackageManagerSandbox = {
 
 /** Tool project files read before an install. */
 export type ToolProjectFiles = {
-    manifest: Buffer<ArrayBuffer>;
+    projectFile: Buffer<ArrayBuffer>;
     lockfilePath: string;
     lockfile: Buffer<ArrayBuffer>;
     mode: number;

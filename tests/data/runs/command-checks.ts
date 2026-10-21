@@ -1,3 +1,4 @@
+import type { Check } from '#cli/types/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 // A check that records its inputs and passes corrected ones, and a fixer that corrects them.
@@ -23,7 +24,7 @@ export const SLOW_TOOL_PROGRAM =
 
 export const ESLINT_CRASH = { code: 1, stderr: 'Oops! Something went wrong\n' } as const;
 
-export const ESLINT_TOOL = {
+export const ESLINT_MANIFEST_TOOL = {
     name: 'eslint',
     installers: {},
     kind: 'program' as const,
@@ -39,7 +40,8 @@ export const BASE_CHECK = {
     summary: '',
     why: '',
     help: '',
-} as const;
+    output: { format: 'lines' },
+} satisfies Check;
 
 export const FAILED_RUN = { code: 1 } as const;
 

@@ -3,14 +3,34 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/processes.ts';
+import type { RunReport } from '#cli/types/runs/run.ts';
 import { PUSH_CONTENT } from '#tests/data/test-setup.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
 import { CLI_BIN, runGspot } from '#tests/setup/run-gspot.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { PUSH_CHECK_ARGUMENTS } from '#tests/data/parsers/git.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/data/commands/check.ts';
 import { readGitOutput, preparePushRepository } from '#tests/setup/git.ts';
+
+/** Require the pushed tree and uncommitted source and settings to stay unchanged. */
+async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
+    expect(readGitOutput(root, ['rev-parse', 'HEAD'])).toBe(head);
+    expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(PUSH_CONTENT.settings);
+    expect(await readFile(join(root, 'changed.sh'), 'utf8')).toBe(PUSH_CONTENT.working);
+}
+
+async function checkBrokenPush(root: string, base: string, broken: string): Promise<RunReport> {
+    const result = await runGspot(
+        root,
+        PUSH_CHECK_COMMAND,
+        {},
+        {
+            stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n`,
+        },
+    );
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    return (JSON.parse(result.stdout) as PushReport).revisions[0]!.report;
+}
 
 test.each(['local', 'remote'] as const)(
     'missing %s objects stop a pre-push check and leave the working tree as it was',
@@ -27,18 +47,9 @@ test.each(['local', 'remote'] as const)(
         );
         expect(missing.code, missing.stdout + missing.stderr).toBe(2);
         expect((JSON.parse(missing.stdout) as CommandFailureJson).error).toBe('git');
-        expect(readGitOutput(sandbox.path, ['rev-parse', 'HEAD'])).toBe(broken);
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(PUSH_CONTENT.settings);
-        expect(await readFile(join(sandbox.path, 'changed.sh'), 'utf8')).toBe(PUSH_CONTENT.working);
+        await assertWorkingTreeKept(sandbox.path, broken);
     },
 );
-
-/** Require the pushed tree and uncommitted source and settings to stay unchanged. */
-async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
-    expect(readGitOutput(root, ['rev-parse', 'HEAD'])).toBe(head);
-    expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(PUSH_CONTENT.settings);
-    expect(await readFile(join(root, 'changed.sh'), 'utf8')).toBe(PUSH_CONTENT.working);
-}
 
 test('new references compare with remote-tracking commits and scan custom destinations conservatively', async () => {
     await using sandbox = await testdir();
@@ -156,7 +167,6 @@ test('pre-push text supplies an executable reproduction of the same committed fi
     const { base, broken } = await preparePushRepository(sandbox.path);
     const failedReport = await checkBrokenPush(sandbox.path, base, broken);
     const reproduction = failedReport.checks[0]?.reproduce;
-    expect(reproduction).toBeDefined();
     const repeated = await runCommand(
         [
             'bash',
@@ -176,7 +186,7 @@ test('pre-push text supplies an executable reproduction of the same committed fi
     await assertWorkingTreeKept(sandbox.path, broken);
 });
 
-test('pre-push reports multiple objects once per object and handles forced rewinds', async () => {
+test('pre-push runs one Git object batch for several pushed refs', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken } = await preparePushRepository(sandbox.path);
     const trace = join(sandbox.path, 'git-trace.jsonl');
@@ -203,6 +213,12 @@ test('pre-push reports multiple objects once per object and handles forced rewin
             (line) => line.includes('"event":"start"') && line.includes('"--batch-check=%(objectname) %(objecttype)"'),
         );
     expect(batches).toHaveLength(1);
+    await assertWorkingTreeKept(sandbox.path, broken);
+});
+
+test('pre-push checks a commit pushed to two refs once', async () => {
+    await using sandbox = await testdir();
+    const { base, reviewed, broken } = await preparePushRepository(sandbox.path);
     const duplicated = await runGspot(
         sandbox.path,
         PUSH_CHECK_COMMAND,
@@ -215,6 +231,12 @@ test('pre-push reports multiple objects once per object and handles forced rewin
     const merged = JSON.parse(duplicated.stdout) as PushReport;
     expect(merged.revisions).toHaveLength(1);
     expect(merged.revisions[0]!.refs).toHaveLength(2);
+    await assertWorkingTreeKept(sandbox.path, broken);
+});
+
+test('pre-push of a forced rewind checks the rewound commit', async () => {
+    await using sandbox = await testdir();
+    const { base, broken } = await preparePushRepository(sandbox.path);
     const forced = await runGspot(
         sandbox.path,
         PUSH_CHECK_COMMAND,
@@ -225,16 +247,3 @@ test('pre-push reports multiple objects once per object and handles forced rewin
     expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
     await assertWorkingTreeKept(sandbox.path, broken);
 });
-
-async function checkBrokenPush(root: string, base: string, broken: string): Promise<RunReport> {
-    const result = await runGspot(
-        root,
-        PUSH_CHECK_COMMAND,
-        {},
-        {
-            stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n`,
-        },
-    );
-    expect(result.code, result.stdout + result.stderr).toBe(1);
-    return (JSON.parse(result.stdout) as PushReport).revisions[0]!.report;
-}

@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
@@ -15,25 +15,33 @@ import {
     PYTHON_INTERFACES,
     ACCESSOR_DECLARATIONS,
     STATEMENT_COUNT_CASES,
-    SWIFT_FUNCTION_LIMITS,
     TRIVIAL_FUNCTION_CASES,
 } from '#tests/data/checks/structure/trivial-functions.ts';
 
-test('Swift reports constructors, accessors, decorated methods, and nested functions, and counts the statements of closures toward their function', async () => {
-    const text = ACCESSOR_DECLARATIONS;
+/** Check one source at the configured statement limit and dispose its compiler resources. */
+async function checkTrivialFile(
+    language: 'python' | 'bash' | 'swift',
+    file: string,
+    source: string,
+    options: { statements?: number } = {},
+): Promise<readonly Finding[]> {
     await using sandbox = await testdir({
-        'example.swift': text,
-        'gspot.toml': buildSandboxSettings(['swift'], { level: 'all', tables: SWIFT_FUNCTION_LIMITS }),
+        [file]: source,
+        'gspot.toml': buildSandboxSettings([language], {
+            level: 'all',
+            tables: `[limits.${language}]\ntrivial_function_statements = ${String(options.statements ?? 2)}\n`,
+        }),
     });
-    const initial = await checkFindings(sandbox.path, 'structure/trivial-functions');
+    using resources = new DisposableStack();
+    return await checkFindings(sandbox.path, 'structure/trivial-functions', { resources });
+}
+
+test('Swift reports constructors, accessors, decorated methods, and nested functions, and counts the statements of closures toward their function', async () => {
+    const initial = await checkTrivialFile('swift', 'example.swift', ACCESSOR_DECLARATIONS);
     expect(initial.map((finding) => ({ rule: finding.rule, line: finding.line }))).toStrictEqual([
         ...[2, 4, 5, 7].map((line) => ({ rule: 'trivial-function', line })),
     ]);
-    await writeFile(
-        `${sandbox.path}/gspot.toml`,
-        buildSandboxSettings(['swift'], { level: 'all', tables: '[limits.swift]\ntrivial_function_statements = 3\n' }),
-    );
-    const increased = await checkFindings(sandbox.path, 'structure/trivial-functions');
+    const increased = await checkTrivialFile('swift', 'example.swift', ACCESSOR_DECLARATIONS, { statements: 3 });
     expect(increased.map((finding) => ({ rule: finding.rule, line: finding.line }))).toStrictEqual([
         ...[2, 4, 5, 7, 9].map((line) => ({ rule: 'trivial-function', line })),
     ]);
@@ -42,14 +50,7 @@ test('Swift reports constructors, accessors, decorated methods, and nested funct
 test.each([...TRIVIAL_FUNCTION_CASES])(
     'Swift $name reports the trivial functions at lines $lines',
     async ({ source, lines, trivialFile }) => {
-        await using sandbox = await testdir({
-            'Source.swift': source,
-            'gspot.toml': buildSandboxSettings(['swift'], {
-                level: 'all',
-                tables: SWIFT_FUNCTION_LIMITS,
-            }),
-        });
-        const result = await checkFindings(sandbox.path, 'structure/trivial-functions');
+        const result = await checkTrivialFile('swift', 'Source.swift', source);
         expect(result.map((finding) => ({ line: finding.line, rule: finding.rule }))).toStrictEqual([
             ...lines.map((line) => ({ line, rule: 'trivial-function' })),
             ...(trivialFile ? [{ line: 1, rule: 'trivial-file' }] : []),
@@ -60,26 +61,11 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
 test('Python counts the statements of nested functions, lambdas, and control flow, and reports decorated methods', async () => {
     const text =
         'class A:\n    @decorator\n    def method(self):\n        return 1\ndef outer():\n    def inner():\n        one()\n        two()\n        three()\n    return lambda x: x\ndef flow(x):\n    if x:\n        one()\n        two()\n';
-    await using sandbox = await testdir({ 'example.py': text });
-    await writeFile(
-        `${sandbox.path}/gspot.toml`,
-        buildSandboxSettings(['python'], {
-            level: 'all',
-            tables: '[limits.python]\ntrivial_function_statements = 2\n',
-        }),
-    );
-    const initial = await checkFindings(sandbox.path, 'structure/trivial-functions');
+    const initial = await checkTrivialFile('python', 'example.py', text);
     expect(initial.map((entry) => ({ rule: entry.rule, line: entry.line }))).toStrictEqual(
         [3].map((line) => ({ rule: 'trivial-function', line })),
     );
-    await writeFile(
-        `${sandbox.path}/gspot.toml`,
-        buildSandboxSettings(['python'], {
-            level: 'all',
-            tables: '[limits.python]\ntrivial_function_statements = 3\n',
-        }),
-    );
-    const increased = await checkFindings(sandbox.path, 'structure/trivial-functions');
+    const increased = await checkTrivialFile('python', 'example.py', text, { statements: 3 });
     expect(increased.map((entry) => ({ rule: entry.rule, line: entry.line }))).toStrictEqual([
         ...[3, 6, 11].map((line) => ({ rule: 'trivial-function', line })),
     ]);
@@ -151,20 +137,3 @@ test('exported JavaScript and TypeScript expressions with one importing file are
         { file: 'namespace.mjs', line: 1, rule: 'trivial-function' },
     ]);
 });
-
-/** Check one source with the same two-statement limit and dispose its compiler resources. */
-async function checkTrivialFile(
-    language: 'python' | 'bash' | 'swift',
-    file: string,
-    source: string,
-): Promise<readonly Finding[]> {
-    await using sandbox = await testdir({
-        [file]: source,
-        'gspot.toml': buildSandboxSettings([language], {
-            level: 'all',
-            tables: `[limits.${language}]\ntrivial_function_statements = 2\n`,
-        }),
-    });
-    using resources = new DisposableStack();
-    return await checkFindings(sandbox.path, 'structure/trivial-functions', { resources });
-}

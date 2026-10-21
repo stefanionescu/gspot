@@ -1,23 +1,29 @@
-import { parseReport } from '#cli/parsers/json.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { hasValePackages } from '#cli/install/vale.ts';
-import { type Finding } from '#cli/types/runs/check.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { VALE_ERROR_LINE } from '#cli/config/checks/prose.ts';
 import { valeReportSchema } from '#cli/schemas/checks/prose.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
+import { VALE_TOOL_FILE_PATH } from '#cli/config/gspot-paths.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
-import { type SpawnResult } from '#cli/types/system/processes.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { VALE_TOOL_FILE_PATH } from '#cli/config/system/locations.ts';
-import { VALE_TOOL, VALE_ARGUMENTS } from '#cli/config/tools/vale.ts';
-import { type TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { SpawnResult } from '#cli/types/system/processes.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { PROSE_GRAMMARS, SCRIPT_GRAMMAR } from '#cli/config/generation/vale.ts';
-import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/types/checks/prose.ts';
+import type { ValeAlert, ProseRoute, ProseRouteGroup } from '#cli/types/checks/prose.ts';
+
+import {
+    VALE_TOOL,
+    VALE_ARGUMENTS,
+    PROSE_GRAMMARS,
+    SCRIPT_GRAMMAR,
+    VALE_ERROR_LINE,
+} from '#cli/config/checks/prose.ts';
 
 /**
  * Parses the Vale JSON output into alerts.
@@ -26,7 +32,7 @@ import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/type
  * @returns the alerts of every file.
  */
 function parseValeAlerts(stdout: string): ValeAlert[] {
-    return Object.entries(parseReport('Vale', stdout, valeReportSchema)).flatMap(([file, alerts]) =>
+    return Object.entries(parseToolReport('Vale', stdout, valeReportSchema)).flatMap(([file, alerts]) =>
         alerts.map((alert) => ({
             file: convertToPosixPath(file),
             line: alert.Line,
@@ -143,7 +149,7 @@ function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
  * @param planned the scope to check.
  * @returns the findings.
  */
-export async function checkVale(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkProseVale(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     if (!hasValePackages(session.installedRoot, session.settingsFile.settings.level))
         throw new GspotError('tool', 'The Vale packages are not installed. Run: gspot install');
     const folder = dirname(join(session.root, VALE_TOOL_FILE_PATH));

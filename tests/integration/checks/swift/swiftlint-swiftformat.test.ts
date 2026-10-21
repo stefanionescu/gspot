@@ -4,11 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { hasToolBuild } from '#tests/setup/system.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { checkChanges } from '#tests/setup/sample-checks.ts';
+import { buildCheckArguments } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { SWIFT_FORMAT_CHECK } from '#tests/data/checks/swift/projects.ts';
 import { updateSandbox, applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {
@@ -20,31 +20,8 @@ import {
     SWIFT_INLINE_DOCS,
 } from '#tests/data/checks/swift/lint.ts';
 
-const installedSandbox = registerSharedSandbox(SWIFT_SANDBOX);
-
-test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header when it fixes spacing', async () => {
-    const { root, environment } = installedSandbox();
-
-    const path = join(root, 'Sources/App/Greeting.swift');
-    await using _change = await updateSandbox(
-        { root, environment: {}, run: spawnGspot },
-        {
-            check: 'swift/swiftformat',
-            files: {
-                'Sources/App/Greeting.swift': SOURCE_HEADER + CLEAN_SWIFT.replace('func greeting', 'func   greeting'),
-            },
-        },
-    );
-
-    const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--fix'], environment);
-
-    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-
-    expect(await readFile(path, 'utf8')).toBe(SOURCE_HEADER + CLEAN_SWIFT);
-});
-
 async function readDocumentationFindings(root: string, code: 0 | 1, scope: string) {
-    const result = parseCheckReport(await spawnGspot(root, SWIFT_FORMAT_CHECK));
+    const result = parseCheckReport(await spawnGspot(root, buildCheckArguments('swift/swiftformat')));
     expect(result.code, result.stdout + result.stderr).toBe(code);
     const report = result.report;
     expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
@@ -53,6 +30,26 @@ async function readDocumentationFindings(root: string, code: 0 | 1, scope: strin
     ]);
     return report.checks.flatMap(({ findings }) => findings.filter(({ rule }) => rule === 'blockComments'));
 }
+
+const installedSandbox = registerSharedSandbox(SWIFT_SANDBOX);
+
+test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header when it fixes spacing', async () => {
+    const { root, environment } = installedSandbox();
+
+    const path = join(root, 'Sources/App/Greeting.swift');
+    await using _change = await updateSandbox(installedSandbox(), {
+        check: 'swift/swiftformat',
+        files: {
+            'Sources/App/Greeting.swift': SOURCE_HEADER + CLEAN_SWIFT.replace('func greeting', 'func   greeting'),
+        },
+    });
+
+    const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--fix'], environment);
+
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+
+    expect(await readFile(path, 'utf8')).toBe(SOURCE_HEADER + CLEAN_SWIFT);
+});
 
 // SwiftFormat has no Windows build.
 test.skipIf(!hasToolBuild('swiftformat'))('recommended leaves Swift block comments unchecked', async () => {
@@ -83,7 +80,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             ['Value.swift', 9, 1],
         ]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
-        const corrected = await spawnGspot(root, [...SWIFT_FORMAT_CHECK, '--fix']);
+        const corrected = await spawnGspot(root, [...buildCheckArguments('swift/swiftformat'), '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await readDocumentationFindings(root, 0, '')).toStrictEqual([]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toContain('"/** not documentation */"');
@@ -126,7 +123,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             [11, 1],
         ]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_INLINE_DOCS);
-        const corrected = await spawnGspot(root, [...SWIFT_FORMAT_CHECK, '--fix']);
+        const corrected = await spawnGspot(root, [...buildCheckArguments('swift/swiftformat'), '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await readDocumentationFindings(root, 0, '')).toStrictEqual([]);
         const correctedText = await readFile(join(root, 'Value.swift'), 'utf8');
@@ -180,22 +177,19 @@ test.skipIf(!hasToolBuild('swiftlint'))(
     'SwiftLint and SwiftFormat read the configuration of their scope, and the findings keep the scope path',
     async () => {
         const { root, environment } = installedSandbox();
-        await using _change = await applySandboxChanges(
-            { root, environment: {}, run: spawnGspot },
-            {
-                check: 'swift/swiftlint',
-                removed: Object.keys(SWIFT_SANDBOX.files),
-                files: {
-                    'ios/Sources/App/Greeting.swift': CLEAN_SWIFT,
-                    'README.md': '# test\n',
-                    'ios/Sources/App/Cast.swift': '',
-                    'gspot.toml': buildSandboxSettings([], {
-                        level: 'all',
-                        scopes: [{ path: 'ios', configurations: ['swift'] }],
-                    }),
-                },
+        await using _change = await applySandboxChanges(installedSandbox(), {
+            check: 'swift/swiftlint',
+            removed: Object.keys(SWIFT_SANDBOX.files),
+            files: {
+                'ios/Sources/App/Greeting.swift': CLEAN_SWIFT,
+                'README.md': '# test\n',
+                'ios/Sources/App/Cast.swift': '',
+                'gspot.toml': buildSandboxSettings([], {
+                    level: 'all',
+                    scopes: [{ path: 'ios', configurations: ['swift'] }],
+                }),
             },
-        );
+        });
 
         for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
             const clean = await spawnGspot(root, ['check', '--only', id], environment);

@@ -2,20 +2,20 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { openSession } from '#cli/session.ts';
-import { getValueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/tables.ts';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
+import { listNeededTools } from '#cli/planning/needed-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { listRequiredTools } from '#cli/planning/needed-tools.ts';
-import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, parseToolFile } from '#tests/setup/tool-files.ts';
+import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { NESTED_PYTHON_SETTINGS } from '#tests/data/checks/python/project.ts';
 
 import {
@@ -79,22 +79,16 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
     expect(paths).toContain('.gspot/configurations/general/files/taplo.toml');
     for (const path of ['.gspot/configurations/general/format/prettier.json', '.prettierignore'])
         expect(paths).not.toContain(path);
-    const packages = listToolProjectPins(session.neededToolManifests).npm;
-    const manifests = readManifests();
-    const fileManifest = manifests.get('files')!;
-    const expected = listToolProjectPins([
-        {
-            ...fileManifest,
-        },
-    ]).npm;
+    const packages = listToolProjectPins(session.neededToolConfigurations).npm;
+    const expected = listToolProjectPins([session.configurations.get('files')!]).npm;
     expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(
         Object.keys(expected).toSorted((first, second) => first.localeCompare(second)),
     );
 });
 test.each([...LEVELS])("every configuration's tool files parse at level %s", async (level) => {
-    const configurations = [...readManifests().values()]
-        .filter((manifest) => manifest.toolFiles.length > 0)
-        .map((manifest) => manifest.configuration.name);
+    const configurations = [...readConfigurations().values()]
+        .filter((configuration) => configuration.toolFiles.length > 0)
+        .map((configuration) => configuration.name);
     await using sandbox = await testdir({
         ...TOOL_FILE_PROJECT,
         'gspot.toml': buildSandboxSettings(configurations, { level, rules: true }),
@@ -111,17 +105,17 @@ test.each([...LEVELS])("every configuration's tool files parse at level %s", asy
     const selected = new Set(
         session.scopes
             .flatMap((scope) => scope.selected)
-            .filter((manifest) => configurations.includes(manifest.configuration.name))
-            .map((manifest) => manifest.configuration.name),
+            .filter((configuration) => configurations.includes(configuration.name))
+            .map((configuration) => configuration.name),
     );
     expect(selected).toStrictEqual(new Set(configurations));
     const paths = new Set(generated.map((file) => file.path));
     const checks = session.configuredChecks;
     const checkNames = new Set(checks.map((entry) => entry.check.name));
-    const tools = new Set(checks.flatMap((entry) => listRequiredTools(entry)));
-    for (const { scope, selected: manifests } of session.scopes) {
-        const targets = manifests
-            .flatMap((manifest) => manifest.toolFiles)
+    const tools = new Set(checks.flatMap((entry) => listNeededTools(entry)));
+    for (const { scope, selected: configurations } of session.scopes) {
+        const targets = configurations
+            .flatMap((configuration) => configuration.toolFiles)
             .filter((file) => file.level !== 'all' || level === 'all')
             .filter((file) => file.tool.length === 0 || file.tool.some((name) => tools.has(name)))
             .filter((file) => file.check.length === 0 || file.check.some((name) => checkNames.has(name)))

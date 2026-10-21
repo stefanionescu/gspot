@@ -52,10 +52,7 @@ test('Vale package install deletes a package gspot no longer ships', async () =>
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.root, '.gspot/vale/Retired'))).toBe(false);
     expect(await isOnDisk(join(sandbox.root, GOOGLE_TERMS_FILE))).toBe(true);
-    expect(await readFile(join(sandbox.root, 'authored.txt'), 'utf8')).toBe('keep\n');
-    expect(
-        await readFile(join(sandbox.root, '.gspot/configurations/general/prose/styles/Google/legacy.yml'), 'utf8'),
-    ).toBe('authored legacy bytes\n');
+    await assertAuthoredFilesKept(sandbox.root);
 });
 
 test('Vale package install replaces an edited package and keeps your files', async () => {
@@ -67,8 +64,13 @@ test('Vale package install replaces an edited package and keeps your files', asy
     const installed = await spawnGspot(sandbox.root, ['install'], sandbox.environment);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await readFile(join(sandbox.root, GOOGLE_TERMS_FILE))).toStrictEqual(original);
-    expect(await readFile(join(sandbox.root, 'authored.txt'), 'utf8')).toBe('keep\n');
-    expect(
-        await readFile(join(sandbox.root, '.gspot/configurations/general/prose/styles/Google/legacy.yml'), 'utf8'),
-    ).toBe('authored legacy bytes\n');
+    await assertAuthoredFilesKept(sandbox.root);
 });
+
+/** Assert the authored files kept by a Vale package install. */
+async function assertAuthoredFilesKept(root: string): Promise<void> {
+    expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe('keep\n');
+    expect(await readFile(join(root, '.gspot/configurations/general/prose/styles/Google/legacy.yml'), 'utf8')).toBe(
+        'authored legacy bytes\n',
+    );
+}

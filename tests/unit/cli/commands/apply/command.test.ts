@@ -5,21 +5,17 @@ import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { startCommand } from '#tests/setup/processes.ts';
-import { buildInitArguments } from '#tests/setup/builders.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 
 test('init deletes a replaced file and apply regenerates owned files without changing settings', async () => {
-    await using folder = await testdir({ '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
+    await using folder = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']), 'entry.sh': 'echo example\n' });
 
     commitAll(folder.path);
-    const initialized = await runGspot(folder.path, buildInitArguments(['bash']));
-    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    const writtenVersion = await readFile(join(folder.path, '.gspot/version'), 'utf8');
-    expect(initialized.stdout.split('\n')).toContain(`gspot ${writtenVersion.trim()}`);
-    expect(await isOnDisk(join(folder.path, '.shellcheckrc'))).toBe(false);
+    const initial = await runGspot(folder.path, ['apply']);
+    expect(initial.code, initial.stdout + initial.stderr).toBe(0);
     const settingsPath = join(folder.path, 'gspot.toml');
     const settings = await readFile(settingsPath, 'utf8');
     await writeFile(join(folder.path, 'added.py'), 'print("example")\n');

@@ -19,7 +19,6 @@ export type TomlCommentNode = Extract<TomlBlock, { type: 'Comment' }>;
 export type SourceRange = { range?: readonly [number, number] };
 
 /** The authored file and its TOML text. */
-export type TomlInput = { path: string; source: string };
 
 /** A parent table to retrieve or create while editing a file. */
 export type TomlTableOptions = { filePath: string; keys: KeyPath; create: boolean };
@@ -48,9 +47,6 @@ export type TomlTablePositions = {
     counts: Map<string, number>;
     active: Map<string, number>;
 };
-
-/** A concrete syntax owner before mapping its path through your own edit. */
-export type TomlCommentAnchor = { kind: string; path: KeyPath };
 
 /** A syntax chunk inserted, kept, or left out around its owner. */
 export type TomlTextChunk = { start: number; end: number; text: string };

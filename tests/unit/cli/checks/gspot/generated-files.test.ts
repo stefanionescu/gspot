@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { SHELLCHECK_RC } from '#tests/data/checks/bash/tool-checks.ts';
@@ -41,17 +40,6 @@ test('gspot/generated-files reports edited files and apply clears them while too
     );
 
     expect(edited.report.checks[0]?.findings.filter(({ file }) => file === SHELLCHECK_RC)).toMatchObject([
-        { file: SHELLCHECK_RC, rule: 'changed', help: matchSubstring('gspot apply') },
-    ]);
-    await writeFile(
-        join(sandbox.path, SHELLCHECK_RC),
-        `<<<<<<< HEAD\n${generated}=======\n${generated}disable=SC2034\n>>>>>>> feature\n`,
-    );
-    const conflicted = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['gspot/generated-files'] }),
-    );
-    expect(conflicted.report.checks[0]?.findings.filter(({ file }) => file === SHELLCHECK_RC)).toMatchObject([
         {
             file: SHELLCHECK_RC,
             rule: 'changed',

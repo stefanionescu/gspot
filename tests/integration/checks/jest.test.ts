@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import jestManifest from 'jest/package.json' with { type: 'json' };
+import jestPackage from 'jest/package.json' with { type: 'json' };
 import { COVERAGE_ZERO_LIMITS } from '#tests/data/checks/coverage.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
@@ -18,8 +18,8 @@ import {
 
 /** The Jest project, with the pinned Jest version in its package.json. */
 function buildJestFiles(): Record<string, string> {
-    const manifest = { name: 'jest-acceptance', private: true, devDependencies: { jest: jestManifest.version } };
-    return { ...JEST_PROJECT_FILES, 'package.json': JSON.stringify(manifest) + '\n' };
+    const packageJson = { name: 'jest-acceptance', private: true, devDependencies: { jest: jestPackage.version } };
+    return { ...JEST_PROJECT_FILES, 'package.json': JSON.stringify(packageJson) + '\n' };
 }
 
 // The coverage and load-failure tests share these root project files.
@@ -44,7 +44,7 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
         'package.json': '{"name":"jest-scoped-acceptance","private":true}\n',
         'sibling.test.cjs': 'throw new Error("Tests outside the selected project must not execute");\n',
         'app/package.json':
-            JSON.stringify({ name: 'jest-nested', private: true, devDependencies: { jest: jestManifest.version } }) +
+            JSON.stringify({ name: 'jest-nested', private: true, devDependencies: { jest: jestPackage.version } }) +
             '\n',
         'app/math.cjs': MATH_SOURCE,
         'app/math.test.cjs': MATH_TEST_SOURCE,
@@ -93,9 +93,7 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
     expect(failed.report.checks.flatMap((check) => check.findings)).toStrictEqual([
         matchFields({ message: matchSubstring('toBe(7)') }),
     ]);
-    expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('preserved source\n');
-    expect(await readFile(join(sandbox.path, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');
-    expect(await readFile(join(sandbox.path, 'math.cjs'), 'utf8')).toBe(MATH_SOURCE);
+    await assertJestFilesKept(sandbox.path);
 });
 
 test('jest/coverage reports a test file with a missing import as an error and passes after the fix', async () => {
@@ -110,9 +108,7 @@ test('jest/coverage reports a test file with a missing import as an error and pa
     const recovered = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
     expect(recovered.report.checks).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);
-    expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('preserved source\n');
-    expect(await readFile(join(sandbox.path, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');
-    expect(await readFile(join(sandbox.path, 'math.cjs'), 'utf8')).toBe(MATH_SOURCE);
+    await assertJestFilesKept(sandbox.path);
 });
 
 test('jest/coverage runs root and scope tests without coverage flags when every limit is 0', async () => {
@@ -147,3 +143,10 @@ configurations = ["jest"]
     expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('preserved source\n');
     expect(await readFile(join(sandbox.path, 'app/authored.txt'), 'utf8')).toBe('preserved nested source\n');
 });
+
+/** Assert the source and authored coverage files that a Jest run must keep. */
+async function assertJestFilesKept(root: string): Promise<void> {
+    expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe('preserved source\n');
+    expect(await readFile(join(root, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');
+    expect(await readFile(join(root, 'math.cjs'), 'utf8')).toBe(MATH_SOURCE);
+}

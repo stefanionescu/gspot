@@ -6,10 +6,10 @@ import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { STATE_PATH } from '#cli/config/gspot-paths.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { STATE_PATH } from '#cli/config/system/locations.ts';
-import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
+import { readExitedProcessId } from '#tests/setup/processes.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { link, stat, mkdir, rmdir, symlink, readFile } from 'node:fs/promises';
 import { OUTSIDE_LINKS, PORTABLE_PATHS, MODE_REPLACEMENTS } from '#tests/data/system.ts';
@@ -44,9 +44,7 @@ test('a lock removed after a failed create can be taken', async () => {
 
 test('a live lock written during the dead-holder check survives', async () => {
     await using sandbox = await testdir();
-    const child = runCommandBlocking([process.execPath, '-e', 'console.log(process.pid)'], { cwd: sandbox.path });
-    expect(child.code, child.stderr).toBe(0);
-    const stale = `${child.stdout.trim()}:stale`;
+    const stale = `${readExitedProcessId()}:stale`;
     const live = `${String(process.pid)}:live`;
     await createFileTree(sandbox.path, { [`${STATE_PATH}/writer.lock`]: stale, source: 'kept' });
     const target = join(sandbox.path, `${STATE_PATH}/writer.lock`);
@@ -82,9 +80,7 @@ test('a live lock written during the dead-holder check survives', async () => {
 
 test('the recovery folder refuses a second recovery until the first one ends', async () => {
     await using sandbox = await testdir();
-    const child = runCommandBlocking([process.execPath, '-e', 'console.log(process.pid)'], { cwd: sandbox.path });
-    expect(child.code, child.stderr).toBe(0);
-    const stale = `${child.stdout.trim()}:stale`;
+    const stale = `${readExitedProcessId()}:stale`;
     await createFileTree(sandbox.path, { [`${STATE_PATH}/writer.lock`]: stale, source: 'kept' });
     const target = join(sandbox.path, `${STATE_PATH}/writer.lock`);
     await mkdir(`${target}.reclaim`);
@@ -206,12 +202,7 @@ test('rmdir refuses linked and outside parents and keeps folders that are not em
 
 test('a missing folder keeps its ENOENT error', async () => {
     await using sandbox = await testdir();
-    const failure: unknown = await Promise.resolve()
-        .then(() => openFiles(join(sandbox.path, 'missing')))
-        .catch((error: unknown) => error);
-    expect(failure).toMatchObject({
-        code: 'ENOENT',
-    });
+    expect(() => openFiles(join(sandbox.path, 'missing'))).toThrow(matchFields({ code: 'ENOENT' }));
 });
 
 test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(

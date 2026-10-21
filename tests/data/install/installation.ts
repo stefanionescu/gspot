@@ -12,14 +12,14 @@ export const REGISTRY_PASSWORDS = [
 ] as const;
 
 export const LEAKED_LOCKFILES = [
-    ['password = "synthetic/password+with spaces"'],
-    ['url = "https://alex:synthetic%2Fpassword%2Bwith%20spaces@example.com/simple"'],
+    'password = "synthetic/password+with spaces"',
+    'url = "https://alex:synthetic%2Fpassword%2Bwith%20spaces@example.com/simple"',
 ] as const;
 
 /** Installed package metadata with a name or version that holds no string. */
 export const PACKAGE_METADATA_FAILURES = [
-    { field: 'name', manifest: { name: false, version: '5.0.1' } },
-    { field: 'version', manifest: { name: 'teller', version: false } },
+    { field: 'name', packageJson: { name: false, version: '5.0.1' } },
+    { field: 'version', packageJson: { name: 'teller', version: false } },
 ] as const;
 
 export const SYSTEM_PLUGIN_REPORTS = [

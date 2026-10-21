@@ -1,14 +1,17 @@
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
+import { TSCONFIG_NAME } from '#cli/config/checks/typescript.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/repository/inventory.ts';
+import { isProjectChecked } from '#cli/checks/typescript/compiler.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
-import { TSCONFIG_FILE, TSCONFIG_NAME } from '#cli/config/parsers/tsconfig.ts';
-import { isProjectChecked, selectRequiredTsconfigOptions } from '#cli/checks/typescript/compiler.ts';
+import { selectRequiredTsconfigOptions } from '#cli/checks/typescript/scope-tsconfig.ts';
 
 /**
  * Reports each required compiler option that a scope tsconfig leaves off.

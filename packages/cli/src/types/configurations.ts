@@ -1,12 +1,11 @@
-import type { Optional } from '#cli/types/shapes.ts';
-import type { JsonValue } from '#cli/types/parsers/json.ts';
-import type { OutputSpec } from '#cli/types/runs/output.ts';
+import type { CheckOutput } from '#cli/types/runs/output.ts';
 import type { NamingOverride } from '#cli/types/checks/naming.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
-import type { TOOL_FOLDER_KINDS } from '#cli/config/system/locations.ts';
+import type { TOOL_FOLDER_KINDS } from '#cli/config/gspot-paths.ts';
+import { type Optional, type JsonValue } from '#cli/types/shapes.ts';
+import type { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import type { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependencies.ts';
-import type { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 
 import type {
     LEVELS,
@@ -30,18 +29,18 @@ type ToolFilePointer = {
 };
 
 export type SelectionWalk = {
-    manifests: Map<string, Manifest>;
+    configurations: Map<string, Configuration>;
     errors: string[];
-    order: Manifest[];
+    order: Configuration[];
     seen: Set<string>;
 };
 
 /** manifest.toml as the schema accepts it. */
-export type ManifestDeclaration = {
+export type ParsedManifest = {
     folder: string;
     defaults: Record<string, JsonValue>;
     eslint: {
-        all_level_rules: EslintAllRules;
+        all_level_rules: Set<string>;
         /** A syntax selector, for every source file or for the files that a setting lists. */
         selectors: { selector: string; message: string; files_setting?: string | undefined }[];
         rules_off: { rules: string[]; reason: string; files?: string[] | undefined }[];
@@ -75,21 +74,21 @@ export type ManifestDeclaration = {
         paths: string[];
         project_files: string[];
     };
-    files: Pick<ManifestDeclaration['detect'], 'extensions' | 'filenames' | 'tags' | 'paths'> & {
+    files: Pick<ParsedManifest['detect'], 'extensions' | 'filenames' | 'tags' | 'paths'> & {
         languages: boolean;
         prettier_plugins: boolean;
         eslint_plugins: boolean;
         kinds: FileKind[];
     };
-    tools: (string | ToolDeclaration)[];
-    toolFiles: ToolFileDeclaration[];
-    checks: CheckDeclaration[];
+    tools: (string | Tool)[];
+    toolFiles: ToolFile[];
+    checks: Check[];
     naming?: { override: (NamingOverride & { reason: string })[] } | undefined;
-    rules: Record<string, ManifestDeclaration['detect']>;
+    rules: Record<string, ParsedManifest['detect']>;
     ruff: { recommended: string[]; all: string[] };
 };
 
-export type ToolFileDeclaration = {
+export type ToolFile = {
     source?: string | undefined;
     level?: Level | undefined;
     /** Where gspot writes the file, from the repository root, or from the scope for a root file. */
@@ -115,7 +114,7 @@ export type ToolFileDeclaration = {
 );
 
 /** A validated check declaration. Repository commands need no reference example. */
-export type CheckDeclaration = Omit<ParsedCheck, 'example'> & {
+export type Check = Omit<ParsedCheck, 'example'> & {
     example?: string;
 };
 
@@ -138,8 +137,8 @@ export type ParsedCheck = {
     operating_systems?: (typeof OPERATING_SYSTEMS)[number]['name'][] | undefined;
     tool?: string | undefined;
     other_tools?: string[];
-    files?: ManifestDeclaration['files'] | undefined;
-    output: OutputSpec;
+    files?: ParsedManifest['files'] | undefined;
+    output: CheckOutput;
     cwd?: (typeof CHECK_WORKING_FOLDERS)[number] | undefined;
     summary: string;
     example: string;
@@ -147,25 +146,21 @@ export type ParsedCheck = {
     help: string;
 };
 
-/** A manifest with the full declaration of each named tool. */
-export type Manifest = Omit<ManifestDeclaration, 'tools'> & { tools: ToolDeclaration[] };
+/** A configuration with flat metadata and the full declaration of each named tool. */
+export type Configuration = Omit<ParsedManifest, 'tools' | 'configuration'> &
+    ParsedManifest['configuration'] & { tools: Tool[] };
 
 /** Public check identity and the configuration that ships its behavior. */
-export type KnownCheck = { check: CheckDeclaration; configuration?: Manifest | undefined };
+export type KnownCheck = { check: Check; configuration?: Configuration | undefined };
 
-export type ConfigurationCheck = KnownCheck & { configuration: Manifest };
+export type ConfigurationCheck = KnownCheck & { configuration: Configuration };
 
 /** A configuration name and its exact written settings location. */
-export type ConfigurationDeclaration = { name: string; path: KeyPath };
-
-/** An unknown name keeps the fields of its original declaration. */
-export type UnknownConfiguration<Declaration extends Pick<ConfigurationDeclaration, 'name'>> = Declaration & {
-    message: string;
-};
+export type WrittenConfiguration = { name: string; path: KeyPath };
 
 /** A pinned package installed in the npm or Python tool project. */
 export type ToolProjectPackage = {
-    kind: Exclude<InstalledToolFolder, 'vale'>;
+    kind: Exclude<ToolFolderKind, 'vale'>;
     name: string;
     version: string;
     requires?: readonly string[];
@@ -179,16 +174,13 @@ export type MisePin = {
 };
 
 /** A tool project installation gspot writes whole: the npm tools, Python environment, or Vale packages. */
-export type InstalledToolFolder = (typeof TOOL_FOLDER_KINDS)[number];
+export type ToolFolderKind = (typeof TOOL_FOLDER_KINDS)[number];
 
 /** The level of a check, a rule, or all settings. */
 export type Level = (typeof LEVELS)[number];
 
 /** Requirements of the generated npm and Python tool projects. */
 export type ToolProjectPins = { npm: Record<string, string>; python: string[] };
-
-/** Default lint rules that run only at level all. */
-export type EslintAllRules = Set<string>;
 
 export type InstallerPin = {
     name: string;
@@ -197,7 +189,7 @@ export type InstallerPin = {
 };
 
 /** Resolved tool metadata derives from the validated manifest; installer declarations become named pins. */
-export type ToolDeclaration = {
+export type Tool = {
     installers: Record<string, InstallerPin>;
     name: string;
     install_hint?: string;
@@ -241,13 +233,13 @@ export type ToolDeclaration = {
 export type Group = (typeof GROUPS)[number];
 
 export type Stage = (typeof STAGES)[number];
-export type GeneratorOutput = NonNullable<CheckDeclaration['generator_outputs']>[number];
+export type GeneratorOutput = NonNullable<Check['generator_outputs']>[number];
 
 /** Manifest conditions before each consumer selects its supported fields. */
 export type ConditionFields = Pick<
-    ManifestDeclaration['detect'],
+    ParsedManifest['detect'],
     'dependencies' | 'absent_dependencies' | 'filenames' | 'tags' | 'runtimes'
 > & { configuration: string; level: Level; setting: string; git: true };
 
 /** A shipped list of the lint rule names of one tool, with the package version it comes from. */
-export type LintRules = { package: string; version: string; source: string; rules: string[] };
+export type NameList = { package: string; version: string; source: string; names: string[] };

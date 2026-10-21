@@ -13,10 +13,10 @@ import type {
     SourceTree,
     GrammarName,
     ParserState,
-    ParsedSourceInput,
+    GrammarSourceFiles,
 } from '#cli/types/parsers/grammars.ts';
 
-const TREE_MEMO = { create: () => new Map<string, Tree>() };
+const PARSED_TREES = { create: () => new Map<string, Tree>() };
 
 const state: ParserState = {
     runtime: undefined,
@@ -73,7 +73,7 @@ export function findGrammarByExtension(path: string): GrammarName | undefined {
 export async function parseSource(name: GrammarName, text: string, cache?: ParseCache): Promise<Tree> {
     const parser = await getParser(name);
     if (cache?.resources === undefined) return parser.parse(text) as Tree;
-    const trees = getCachedValue(cache.reads, TREE_MEMO);
+    const trees = getCachedValue(cache.reads, PARSED_TREES);
     const key = JSON.stringify([name, text]);
     const held = trees.get(key);
     if (held !== undefined) return held.copy();
@@ -89,14 +89,17 @@ export async function parseSource(name: GrammarName, text: string, cache?: Parse
 /**
  * Read the files, lend each parsed tree to a visitor, then release its handle.
  *
- * @param input the files to parse, each with its grammar.
+ * @param sources the files to parse, each with its grammar.
  * @param visit reads one tree; syntax nodes must not leave this callback.
  * @returns a promise that settles after every file.
  */
-export async function visitParsedSources(input: ParsedSourceInput, visit: (source: SourceTree) => void): Promise<void> {
-    for (const file of input.files) {
-        const text = readCachedText(input.reads, file.path);
-        const tree = await parseSource(file.grammar, text, input);
+export async function visitParsedSources(
+    sources: GrammarSourceFiles,
+    visit: (source: SourceTree) => void,
+): Promise<void> {
+    for (const file of sources.files) {
+        const text = readCachedText(sources.reads, file.path);
+        const tree = await parseSource(file.grammar, text, sources);
         try {
             visit({ path: file.path, text, rootNode: tree.rootNode });
         } finally {

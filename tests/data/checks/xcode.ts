@@ -27,8 +27,10 @@ export const ASSET_SETTING_CASES = [
 
 /** Invalid resource files give source findings, not run errors. */
 export const INVALID_RESOURCE_DOCUMENTS = [
-    ['xcode/xcstrings', 'Localizable.xcstrings', 'null'],
-    ['xcode/assets', 'Assets.xcassets/Logo.imageset/Contents.json', '{"images":"invalid"}'],
+    { check: 'xcode/xcstrings', path: 'Localizable.xcstrings', text: 'null' },
+    { check: 'xcode/assets', path: 'Assets.xcassets/Logo.imageset/Contents.json', text: '{"images":"invalid"}' },
+    { check: 'xcode/xcstrings', path: 'App/Localizable.xcstrings', text: '{' },
+    { check: 'xcode/assets', path: 'App/Assets.xcassets/Logo.imageset/Contents.json', text: '{' },
 ] as const;
 
 export const XCODE_SANDBOX = {
@@ -154,19 +156,19 @@ export const XCODE_PROJECT_REFUSALS = [
 ] as const;
 
 export const UNREADABLE_RESOURCES = [
-    ['xcode/xcstrings', 'App/Localizable.xcstrings', '{"sourceLanguage":"en","strings":{}}\n'],
-    ['xcode/assets', 'App/Assets.xcassets/Logo.imageset/Contents.json', '{"images":[{"filename":"logo.png"}]}\n'],
+    { check: 'xcode/xcstrings', path: 'App/Localizable.xcstrings', text: '{"sourceLanguage":"en","strings":{}}\n' },
+    {
+        check: 'xcode/assets',
+        path: 'App/Assets.xcassets/Logo.imageset/Contents.json',
+        text: '{"images":[{"filename":"logo.png"}]}\n',
+    },
 ] as const;
 
-export const DEEPEST_SCOPE_SETTINGS = [
-    [
-        'xcode/entitlements',
-        'App.entitlements',
-        '<plist><dict><key>unlisted-capability</key><true/></dict></plist>',
-        '<plist><dict><key>nested-capability</key><true/></dict></plist>',
-        'entitlement',
-    ],
-] as const;
+export const DEEPEST_SCOPE_SETTINGS = {
+    path: 'App.entitlements',
+    unlisted: '<plist><dict><key>unlisted-capability</key><true/></dict></plist>',
+    allowed: '<plist><dict><key>nested-capability</key><true/></dict></plist>',
+} as const;
 
 export const SINGLE_FILE_PBXPROJ = GROUPED_PBXPROJ.replace('files = (B1, B2,);', 'files = (B2,);').replace(
     'fileSystemSynchronizedGroups = (SYNC,);',

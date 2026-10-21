@@ -45,7 +45,7 @@ process.exitCode = ${String(status)};`;
         expect(result.code).toBe(status);
         expect(result.stdout).toBe('é'.repeat(1024 * 1024));
         expect(result.stderr).toBe(result.stdout);
-        expect(result.isTimedOut).toBe(false);
+        expect(result.timedOut).toBe(false);
         expect(result.missing).toBe(false);
     },
 );
@@ -83,7 +83,7 @@ test.each(buildProcessBackends())('$name: a timeout stops the process and report
         cwd: sandbox.path,
         timeoutSeconds: 0.15,
     });
-    expect(result.isTimedOut).toBe(true);
+    expect(result.timedOut).toBe(true);
     expect(result.code).not.toBe(0);
 });
 
@@ -95,8 +95,8 @@ test.skipIf(isWindows).each(buildProcessBackends())(
         const result = await backend.execute([process.execPath, '-e', "process.kill(process.pid, 'SIGTERM')"], {
             cwd: sandbox.path,
         });
-        expect(result.isTimedOut).toBe(false);
-        expect(result.isErrored).toBe(true);
+        expect(result.timedOut).toBe(false);
+        expect(result.errored).toBe(true);
         expect(result.code).not.toBe(0);
         expect(result.missing).toBe(false);
     },
@@ -110,9 +110,9 @@ test('a process canceled before it starts reports the cancellation', async () =>
         cwd: sandbox.path,
         cancelSignal: controller.signal,
     });
-    expect(result.isCanceled).toBe(true);
+    expect(result.canceled).toBe(true);
     expect(result.code).not.toBe(0);
-    expect(result.isTimedOut).toBe(false);
+    expect(result.timedOut).toBe(false);
     expect(result.missing).toBe(false);
 });
 

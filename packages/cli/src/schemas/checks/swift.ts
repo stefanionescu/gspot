@@ -3,7 +3,7 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { type SwiftCoverage, type CoverageReport, type SwiftPackageCoverage } from '#cli/types/checks/swift.ts';
 
 /** The source targets and source paths that Swift Package Manager reports. */
-export const swiftPackageCoverageSchema = z.object({
+export const packageDescriptionSchema = z.object({
     targets: z.array(
         z.object({
             name: z.string().min(1),

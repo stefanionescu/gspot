@@ -1,25 +1,31 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
 import { LONG_PYTHON_FILE } from '#tests/data/checks/python/modules.ts';
 import { checkFindings, findBuiltInCheck, planSandboxCheck } from '#tests/setup/check-input.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
-import { ROUTE_CASES, LONE_FILE_TREE, FILE_FOLDER_CLASH_CASES } from '#tests/data/checks/structure/folders.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+
+import {
+    ROUTE_CASES,
+    LONE_FILE_TREE,
+    ROUTE_FILE_CASES,
+    FILE_FOLDER_CLASH_CASES,
+} from '#tests/data/checks/structure/folders.ts';
 
 test.each([...FILE_FOLDER_CLASH_CASES])(
     'file-folder-clashes: $check reports $expected.rule and passes after the fix',
     async (entry) => {
         await using sandbox = await createSandbox(BASH_SANDBOX);
         const result = await runCheckSample(sandbox, entry, BASH_SANDBOX);
-        expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+        expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
     },
 );
 test.each(['.sh', '.bats', ''])(
@@ -81,9 +87,12 @@ test('lone-files: lone-files counts code files only and honors ignores and neste
         ...LONE_FILE_TREE,
     });
 
-    const findings = await checkFindings(sandbox.path, 'structure/lone-files');
+    const result = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['structure/lone-files'] }),
+    );
 
-    expect(findings.map((finding) => finding.file)).toStrictEqual([
+    expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toStrictEqual([
         'dist/pkg/lone.ts',
         'lone/only.ts',
         'module/one.mts',
@@ -142,29 +151,16 @@ test.each([...ROUTE_CASES])(
     },
 );
 
-test('lone-files: a folder with only a Next.js route file is a route, not a lone file', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript', 'react', 'react-dom', 'nextjs'], { level: 'all' }),
-        'app/about/page.tsx': 'export default function About() { return null; }\n',
-        'app/api/health/route.ts': 'export function GET() { return new Response("ok"); }\n',
-        'app/lone/widget.tsx': 'export const widget = 1;\n',
-    });
-    const findings = await checkFindings(sandbox.path, 'structure/lone-files');
-    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
-        { file: 'app/lone/widget.tsx', rule: 'lone-file' },
-    ]);
-});
-
-test('lone-files: a folder with only a SvelteKit route file is a route, not a lone file', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript', 'svelte'], { level: 'all' }),
-        'package.json': '{"name":"example","private":true,"type":"module"}\n',
-        'src/routes/users/+page.svelte': '<p>Users</p>\n',
-        'src/routes/api/+server.ts': 'export function GET() { return new Response("ok"); }\n',
-        'src/lib/cards/Card.svelte': '<p>Card</p>\n',
-    });
-    const findings = await checkFindings(sandbox.path, 'structure/lone-files');
-    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
-        { file: 'src/lib/cards/Card.svelte', rule: 'lone-file' },
-    ]);
-});
+test.each([...ROUTE_FILE_CASES])(
+    'a folder with only a $framework route file is a route, not a lone file',
+    async ({ configurations, files, expected }) => {
+        await using sandbox = await testdir({
+            ...files,
+            'gspot.toml': buildSandboxSettings([...configurations], { level: 'all' }),
+        });
+        const findings = await checkFindings(sandbox.path, 'structure/lone-files');
+        expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+            { file: expected, rule: 'lone-file' },
+        ]);
+    },
+);

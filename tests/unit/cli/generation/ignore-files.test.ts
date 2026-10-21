@@ -4,7 +4,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { getValueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/tables.ts';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
@@ -13,7 +13,7 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { buildIgnoreSections } from '#cli/generation/ignore-files.ts';
+import { buildIgnoreSections } from '#cli/generation/settings/ignore-files.ts';
 
 import {
     LANGUAGE_IGNORES,

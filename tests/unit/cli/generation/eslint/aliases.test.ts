@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
-import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
+import { readScopeAliases } from '#cli/repository/aliases.ts';
 import { ALIAS_FILES, ALIAS_PROJECT } from '#tests/data/repository/aliases.ts';
 
 test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, message }) => {

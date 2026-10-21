@@ -1,83 +1,57 @@
 import { test, expect } from 'bun:test';
-import { parseSettings } from '#cli/settings/read.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
-import { buildScopeView } from '#cli/settings/scope-view.ts';
-import { checkIdentifier } from '#cli/checks/naming/names.ts';
+import { splitParts } from '#cli/checks/naming/settings.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
+import { validateIdentifier } from '#cli/checks/naming/rules.ts';
 import { BANNED_WORDS } from '#tests/data/checks/naming/settings.ts';
-import { splitParts, readNamingSettings } from '#cli/checks/naming/settings.ts';
-import { getShippedCheck, buildNamingSettings } from '#tests/setup/builders.ts';
-import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
-import { type Identifier, type NamingInputs } from '#cli/types/checks/naming.ts';
+
+import {
+    buildIdentifier,
+    buildFileNaming,
+    buildNamingSettings,
+    buildScopeNamingSettings,
+} from '#tests/setup/builders.ts';
 
 test('a number word such as base64 counts as one word; repeated, extra, banned and digit words are still reported', () => {
-    const check = getShippedCheck('naming/identifiers');
-    const selected = selectConfigurations(['naming'], readManifests());
-    const known = buildKnownSettings(selected, 'recommended');
-    const settings = parseSettings(buildSandboxSettings(['naming'], { rules: true }), undefined);
-    const view = buildScopeView(known, settings, selected, '');
-    const effective = readNamingSettings(settings, {
-        view,
-        known,
-        selected,
-        scope: { path: '', configurations: view.configurations, origin: 'root' },
-    });
-    const context = {
-        check,
-        settings: { ...effective, limitsFor: () => ({ caseNames: [], maxChars: 35, maxWords: 4 }) },
-        isTestFile: false,
-    };
-    const declaration = buildIdentifier('base64User', 'variables', 'source.ts');
-    expect(checkIdentifier(declaration, context)).toStrictEqual([]);
-    expect(checkIdentifier({ ...declaration, name: 'base64UserUser' }, context).map(({ rule }) => rule)).toStrictEqual([
-        'duplicate-words',
-    ]);
+    const effective = buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
+    const context = buildFileNaming({ ...effective, limitsFor: () => ({ caseNames: [], maxChars: 35, maxWords: 4 }) });
+    const declaration = buildIdentifier({ name: 'base64User', category: 'variables', file: 'source.ts' });
+    expect(validateIdentifier(declaration, context)).toStrictEqual([]);
     expect(
-        checkIdentifier({ ...declaration, name: 'base64FirstSecondThirdFourth' }, context).map(({ rule }) => rule),
+        validateIdentifier({ ...declaration, name: 'base64UserUser' }, context).map(({ rule }) => rule),
+    ).toStrictEqual(['duplicate-words']);
+    expect(
+        validateIdentifier({ ...declaration, name: 'base64FirstSecondThirdFourth' }, context).map(({ rule }) => rule),
     ).toStrictEqual(['words']);
-    expect(checkIdentifier({ ...declaration, name: 'base64Helper' }, context).map(({ rule }) => rule)).toStrictEqual([
-        'banned-word',
-    ]);
-    expect(checkIdentifier({ ...declaration, name: 'user2' }, context).map(({ rule }) => rule)).toStrictEqual([
+    expect(validateIdentifier({ ...declaration, name: 'base64Helper' }, context).map(({ rule }) => rule)).toStrictEqual(
+        ['banned-word'],
+    );
+    expect(validateIdentifier({ ...declaration, name: 'user2' }, context).map(({ rule }) => rule)).toStrictEqual([
         'digits',
     ]);
 });
 
-function buildNamingInputs(): NamingInputs {
-    const owned = listChecksById(readManifests().values()).get('naming/identifiers')!;
-    return { check: owned.check, settings: buildNamingSettings(), isTestFile: false };
-}
-
-function buildIdentifier(
-    name: string,
-    category: Identifier['category'] = 'functions',
-    file = 'src/a.ts',
-    language = 'typescript',
-): Identifier {
-    return { file, line: 1, column: 1, language, category, label: `${language} ${category}`, name };
-}
-
 test('a name reports every finding it has, with the rule source', () => {
-    const plain = buildNamingInputs();
-    const rules = checkIdentifier(buildIdentifier('enhancedHandler2UserUser'), plain).map((finding) => finding.rule);
+    const plain = buildFileNaming(buildNamingSettings());
+    const rules = validateIdentifier(buildIdentifier({ name: 'enhancedHandler2UserUser' }), plain).map(
+        (finding) => finding.rule,
+    );
     expect(rules).toStrictEqual(['digits', 'length', 'words', 'duplicate-words', 'banned-word']);
     expect(
-        checkIdentifier(buildIdentifier('enhancedHandler2UserUser'), plain).find(
+        validateIdentifier(buildIdentifier({ name: 'enhancedHandler2UserUser' }), plain).find(
             (finding) => finding.rule === 'banned-word',
         )?.message,
     ).toEndWith('(marketing group).');
 });
 
 test('case follows the category, and file stems are checked by dot segment', () => {
-    const plain = buildNamingInputs();
-    expect(checkIdentifier(buildIdentifier('my_type', 'types'), plain)[0]).toMatchObject({
+    const plain = buildFileNaming(buildNamingSettings());
+    expect(validateIdentifier(buildIdentifier({ name: 'my_type', category: 'types' }), plain)[0]).toMatchObject({
         rule: 'case',
         message: 'typescript types "my_type": expected pascal case.',
     });
     expect(
-        checkIdentifier(buildIdentifier('bash.test', 'files'), {
+        validateIdentifier(buildIdentifier({ name: 'bash.test', category: 'files' }), {
             ...plain,
             settings: {
                 ...buildNamingSettings(),
@@ -88,35 +62,49 @@ test('case follows the category, and file stems are checked by dot segment', () 
 });
 
 test('path exclusions, digit allowances and ignored prefixes apply', () => {
-    const plain = buildNamingInputs();
-    expect(checkIdentifier(buildIdentifier('_', 'variables'), plain)).toStrictEqual([]);
-    expect(checkIdentifier(buildIdentifier('user2', 'variables', 'tests/acceptance/a.ts'), plain)).toStrictEqual([]);
-    expect(checkIdentifier(buildIdentifier('_private_step', 'functions', 'scripts/a.sh', 'bash'), plain)).toStrictEqual(
-        [],
-    );
+    const plain = buildFileNaming(buildNamingSettings());
+    expect(validateIdentifier(buildIdentifier({ name: '_', category: 'variables' }), plain)).toStrictEqual([]);
+    expect(
+        validateIdentifier(
+            buildIdentifier({ name: 'user2', category: 'variables', file: 'tests/acceptance/a.ts' }),
+            plain,
+        ),
+    ).toStrictEqual([]);
+    expect(
+        validateIdentifier(
+            buildIdentifier({ name: '_private_step', category: 'functions', file: 'scripts/a.sh', language: 'bash' }),
+            plain,
+        ),
+    ).toStrictEqual([]);
 });
 
 test('allowed names and path overrides skip the naming rules', () => {
-    const plain = buildNamingInputs();
-    expect(checkIdentifier(buildIdentifier('requestAnimationFrame'), plain)).toStrictEqual([]);
-    expect(checkIdentifier(buildIdentifier('enhancedThing'), plain)).toStrictEqual([]);
-    expect(checkIdentifier(buildIdentifier('Content-Type', 'properties', 'api/route.ts'), plain)).toStrictEqual([]);
+    const plain = buildFileNaming(buildNamingSettings());
+    expect(validateIdentifier(buildIdentifier({ name: 'requestAnimationFrame' }), plain)).toStrictEqual([]);
+    expect(validateIdentifier(buildIdentifier({ name: 'enhancedThing' }), plain)).toStrictEqual([]);
     expect(
-        checkIdentifier(buildIdentifier('Content-Type', 'properties', 'api/internal.ts'), plain).map(
-            (finding) => finding.rule,
+        validateIdentifier(
+            buildIdentifier({ name: 'Content-Type', category: 'properties', file: 'api/route.ts' }),
+            plain,
         ),
+    ).toStrictEqual([]);
+    expect(
+        validateIdentifier(
+            buildIdentifier({ name: 'Content-Type', category: 'properties', file: 'api/internal.ts' }),
+            plain,
+        ).map((finding) => finding.rule),
     ).toStrictEqual(['case']);
 });
 
 test('a reserved word is allowed only in its named categories', () => {
-    const plain = buildNamingInputs();
-    expect(checkIdentifier(buildIdentifier('config', 'variables'), plain)).toStrictEqual([]);
-    expect(checkIdentifier(buildIdentifier('config', 'folders'), plain)).toStrictEqual([]);
-    expect(checkIdentifier(buildIdentifier('configOf'), plain)[0]?.rule).toBe('reserved-term');
+    const plain = buildFileNaming(buildNamingSettings());
+    expect(validateIdentifier(buildIdentifier({ name: 'config', category: 'variables' }), plain)).toStrictEqual([]);
+    expect(validateIdentifier(buildIdentifier({ name: 'config', category: 'folders' }), plain)).toStrictEqual([]);
+    expect(validateIdentifier(buildIdentifier({ name: 'configOf' }), plain)[0]?.rule).toBe('reserved-term');
 });
 
 test('an ignored_prefix override strips handle from function and method names in its files', () => {
-    const plain = buildNamingInputs();
+    const plain = buildFileNaming(buildNamingSettings());
     const rule = {
         ...buildNamingSettings().overrides[4]!,
         matches: buildPathMatcher(['src/**']),
@@ -129,23 +117,27 @@ test('an ignored_prefix override strips handle from function and method names in
         settings: { ...buildNamingSettings(), overrides: [...buildNamingSettings().overrides, rule] },
     };
     for (const category of ['functions', 'methods', 'variables'] as const)
-        expect(checkIdentifier(buildIdentifier('handleSubmit', category), selected)).toStrictEqual([]);
-    expect(checkIdentifier(buildIdentifier('HandleSubmit'), selected).map(({ rule }) => rule)).toStrictEqual(['case']);
+        expect(
+            validateIdentifier(buildIdentifier({ name: 'handleSubmit', category: category }), selected),
+        ).toStrictEqual([]);
+    expect(
+        validateIdentifier(buildIdentifier({ name: 'HandleSubmit' }), selected).map(({ rule }) => rule),
+    ).toStrictEqual(['case']);
 });
 
 test('the tests-group exemption follows the group, not its label', () => {
-    const plain = buildNamingInputs();
+    const plain = buildFileNaming(buildNamingSettings());
     const grouped = [{ word: 'actual', parts: ['actual'], setting: 'An independently worded label', group: 'tests' }];
     const authored = [{ word: 'actual', parts: ['actual'], setting: 'tests group' }];
     const context = { ...plain, isTestFile: true };
     expect(
-        checkIdentifier(buildIdentifier('actualRoot'), {
+        validateIdentifier(buildIdentifier({ name: 'actualRoot' }), {
             ...context,
             settings: { ...buildNamingSettings(), bannedWords: grouped },
         }),
     ).toStrictEqual([]);
     expect(
-        checkIdentifier(buildIdentifier('actualRoot'), {
+        validateIdentifier(buildIdentifier({ name: 'actualRoot' }), {
             ...context,
             settings: { ...buildNamingSettings(), bannedWords: authored },
         }),
@@ -153,7 +145,7 @@ test('the tests-group exemption follows the group, not its label', () => {
         { rule: 'banned-word', message: 'typescript functions "actualRoot": "actual" is banned (tests group).' },
     ]);
     expect(
-        checkIdentifier(buildIdentifier('actualRoot'), {
+        validateIdentifier(buildIdentifier({ name: 'actualRoot' }), {
             ...plain,
             settings: { ...buildNamingSettings(), bannedWords: grouped },
         }),
@@ -166,10 +158,12 @@ test('the tests-group exemption follows the group, not its label', () => {
 });
 
 test('a banned word matches whole words and runs of words only', () => {
-    const plain = buildNamingInputs();
+    const plain = buildFileNaming(buildNamingSettings());
     const settings = { ...buildNamingSettings(), bannedWords: BANNED_WORDS };
     const listBannedWordFindings = (name: string) =>
-        checkIdentifier(buildIdentifier(name), { ...plain, settings }).filter(({ rule }) => rule === 'banned-word');
+        validateIdentifier(buildIdentifier({ name: name }), { ...plain, settings }).filter(
+            ({ rule }) => rule === 'banned-word',
+        );
     expect(listBannedWordFindings('commonThing')[0]?.message).toContain('"common"');
     expect(listBannedWordFindings('uncommon')).toStrictEqual([]);
     expect(listBannedWordFindings('anEdgeCase')[0]?.message).toContain('"edge case"');

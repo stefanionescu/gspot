@@ -4,9 +4,8 @@ import { openSession } from '#cli/session.ts';
 import stylelint, { type Config } from 'stylelint';
 import { testModules } from '#tests/setup/modules.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { buildScopeTarget } from '#cli/repository/scopes.ts';
+import { toolFileFor } from '#tests/setup/tool-files.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { type StylelintToolFile } from '#tests/types/generated-files.ts';
 import { STYLELINT_SCOPE_FILES, STYLELINT_SCOPE_TABLES } from '#tests/data/checks/css.ts';
 
@@ -26,16 +25,16 @@ test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
             return [scope, JSON.parse(output.content) as StylelintToolFile];
         }),
     );
+    const overrides = Object.fromEntries(
+        Object.entries(documents).map(([scope, document]) => [
+            scope,
+            document.overrides?.map(({ files, customSyntax }) => ({ files, customSyntax })),
+        ]),
+    );
     expect(documents['']!.overrides).toBeUndefined();
-    expect(
-        documents['vue']!.overrides?.map(({ files, customSyntax: syntax }) => ({ files, customSyntax: syntax })),
-    ).toStrictEqual([{ files: ['**/*.vue'], customSyntax: 'postcss-html' }]);
-    expect(
-        documents['svelte']!.overrides?.map(({ files, customSyntax: syntax }) => ({ files, customSyntax: syntax })),
-    ).toStrictEqual([{ files: ['**/*.svelte'], customSyntax: 'postcss-html' }]);
-    expect(
-        documents['mixed']!.overrides?.map(({ files, customSyntax: syntax }) => ({ files, customSyntax: syntax })),
-    ).toStrictEqual([
+    expect(overrides['vue']).toStrictEqual([{ files: ['**/*.vue'], customSyntax: 'postcss-html' }]);
+    expect(overrides['svelte']).toStrictEqual([{ files: ['**/*.svelte'], customSyntax: 'postcss-html' }]);
+    expect(overrides['mixed']).toStrictEqual([
         { files: ['**/*.vue'], customSyntax: 'postcss-html' },
         { files: ['**/*.svelte'], customSyntax: 'postcss-html' },
     ]);
@@ -54,12 +53,9 @@ test("your Stylelint rule options reach each scope's file", async () => {
 
     const session = await openSession(sandbox.path);
     const generated = generate(session);
-    const declaration = session.scopes[0]!.selected.flatMap(({ toolFiles }) => toolFiles).find(
-        ({ target }) => target === '.gspot/configurations/language/css/stylelint.json',
-    )!;
     expect(generated.files.filter(({ path }) => path.endsWith('/stylelint.json'))).toHaveLength(1);
     for (const scope of ['', 'child']) {
-        const target = buildScopeTarget(scope, declaration, getToolFiles(session).targets);
+        const target = toolFileFor(session, 'stylelint', scope);
         const file = generated.files.find(({ path }) => path === target)!;
         const config = JSON.parse(file.content) as Config;
         expect(config.rules!['color-hex-length']).toBe('long');

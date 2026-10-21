@@ -4,6 +4,7 @@ import { readTree } from '#tests/setup/files.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { ARGUMENT_ERRORS, COMMAND_VALUE_ERRORS, COMMAND_VALUE_SETTINGS } from '#tests/data/commands/errors.ts';
@@ -62,7 +63,13 @@ test('apply starts no npm, and install reports a failed npm version lookup in te
     const run = processes.spawnProcessBlocking;
     using boundary = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
         if (command[0] !== 'npm' || command[1] !== '--version') return run(command, options);
-        return { code: 7, missing: false, duration: 0, stdout: '', stderr: 'version lookup failed' };
+        return buildProcessResult({
+            code: 7,
+            missing: false,
+            duration: 0,
+            stdout: '',
+            stderr: 'version lookup failed',
+        });
     });
     const applied = await runGspot(folder.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);

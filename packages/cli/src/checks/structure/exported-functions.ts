@@ -1,11 +1,12 @@
 import ts from 'typescript';
 import { join, relative } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { readTsconfig, buildCompilerHost } from '#cli/parsers/tsconfig.ts';
 import { EXPORTED_FUNCTION_EXTENSIONS } from '#cli/config/checks/structure.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
@@ -35,7 +36,7 @@ function buildExportProgram(session: Session, planned: PlannedCheck, paths: stri
     const host = buildCompilerHost(session.root, scope, session.reads, options);
     host.resolveModuleNameLiterals = (literals, file) => {
         const path = convertToPosixPath(relative(session.root, file));
-        const scope = findScope(path, session.repository.scopes).path;
+        const scope = findScope(path, session.repository.scopeFolders).path;
         const config = readScopeProject(session, scope);
         return literals.map(({ text: name }) => {
             const importedModule = ts.resolveModuleName(
@@ -56,13 +57,13 @@ function buildExportProgram(session: Session, planned: PlannedCheck, paths: stri
     return ts.createProgram({ rootNames: paths.map((path) => join(session.root, path)), options, host });
 }
 
-function recordImporter(importers: Map<ts.Symbol, Set<string>>, symbol: ts.Symbol, path: string): void {
+function addImporter(importers: Map<ts.Symbol, Set<string>>, symbol: ts.Symbol, path: string): void {
     const files = importers.get(symbol) ?? new Set<string>();
     files.add(path);
     importers.set(symbol, files);
 }
 
-function recordNamedImports(
+function addNamedImports(
     checker: ts.TypeChecker,
     nodes: ts.Node[],
     source: ts.SourceFile,
@@ -74,11 +75,11 @@ function recordNamedImports(
         if (name === undefined) continue;
         const imported = checker.getSymbolAtLocation(name);
         if (imported === undefined || !(imported.flags & ts.SymbolFlags.Alias)) continue;
-        recordImporter(importers, checker.getAliasedSymbol(imported), source.fileName);
+        addImporter(importers, checker.getAliasedSymbol(imported), source.fileName);
     }
 }
 
-function recordPropertyImports(
+function addPropertyImports(
     checker: ts.TypeChecker,
     nodes: ts.Node[],
     source: ts.SourceFile,
@@ -89,7 +90,7 @@ function recordPropertyImports(
         if (symbol === undefined) continue;
         const declaration = symbol.valueDeclaration;
         if (declaration === undefined || declaration.getSourceFile() === source) continue;
-        recordImporter(importers, symbol, source.fileName);
+        addImporter(importers, symbol, source.fileName);
     }
 }
 
@@ -98,13 +99,13 @@ function findImporters(program: ts.Program): Map<ts.Symbol, Set<string>> {
     const importers = new Map<ts.Symbol, Set<string>>();
     for (const source of program.getSourceFiles()) {
         const nodes = listTypescriptNodes(source);
-        recordNamedImports(checker, nodes, source, importers);
-        recordPropertyImports(checker, nodes, source, importers);
+        addNamedImports(checker, nodes, source, importers);
+        addPropertyImports(checker, nodes, source, importers);
     }
     return importers;
 }
 
-function readCallableDeclaration(declaration: ts.Declaration | undefined): ts.Node | undefined {
+function getCallableNode(declaration: ts.Declaration | undefined): ts.Node | undefined {
     if (declaration === undefined) return undefined;
     if (ts.isVariableDeclaration(declaration)) return declaration.initializer;
     if (ts.isBinaryExpression(declaration)) return declaration.right;
@@ -115,7 +116,7 @@ function readCallableDeclaration(declaration: ts.Declaration | undefined): ts.No
 function findExportedFunction(
     symbol: ts.Symbol,
 ): ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction | undefined {
-    const callable = readCallableDeclaration(symbol.valueDeclaration);
+    const callable = getCallableNode(symbol.valueDeclaration);
     if (
         callable === undefined ||
         !(ts.isFunctionDeclaration(callable) || ts.isFunctionExpression(callable) || ts.isArrowFunction(callable)) ||
@@ -125,7 +126,7 @@ function findExportedFunction(
     return callable;
 }
 
-function readSingleExpression(body: ts.ConciseBody): ts.Expression | undefined {
+function findSingleExpression(body: ts.ConciseBody): ts.Expression | undefined {
     if (!ts.isBlock(body)) return body;
     const statement = body.statements.length === 1 ? body.statements[0] : undefined;
     if (statement !== undefined && (ts.isReturnStatement(statement) || ts.isExpressionStatement(statement)))
@@ -134,7 +135,7 @@ function readSingleExpression(body: ts.ConciseBody): ts.Expression | undefined {
 }
 
 function findForwardedExpression(body: ts.ConciseBody): ts.Expression | undefined {
-    const expression = readSingleExpression(body);
+    const expression = findSingleExpression(body);
     if (expression === undefined) return undefined;
     const operations = listTypescriptNodes(expression);
     return operations.some((node) => ts.isFunctionLike(node)) ||

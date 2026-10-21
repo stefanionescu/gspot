@@ -1,11 +1,11 @@
 import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
-import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/data/checks/python/project.ts';
+import { GOOGLE_PYPROJECT } from '#tests/data/checks/python/project.ts';
 
 /** One correctness finding and one convention finding, to tell the levels apart. */
-const RUFF_RULE_SOURCE = 'answer = missing_name\nprint(answer)\n';
+export const RUFF_RULE_SOURCE = 'answer = missing_name\nprint(answer)\n';
 
 /** An editor that runs Ruff must find the tool file of each scope. */
-const RUFF_FORMAT_CASES = [
+export const RUFF_FORMAT_CASES = [
     {
         file: 'sample.py',
         formatted: "VALUE = 'example'\r\n",
@@ -17,14 +17,14 @@ const RUFF_FORMAT_CASES = [
 ] as const;
 
 /** Python versions whose annotations require different runtime syntax. */
-const RUFF_VERSION_CASES = [
+export const RUFF_VERSION_CASES = [
     { scope: '', requires: '>=3.8,<4', generics: false, unions: false, annotation: 'Optional[List[int]]' },
     { scope: 'legacy', requires: '==3.9.*', generics: true, unions: false, annotation: 'Optional[List[int]]' },
     { scope: 'modern', requires: '~=3.10', generics: true, unions: true, annotation: 'list[int] | None' },
 ] as const;
 
 /** Annotations must remain valid for the project's minimum Python version. */
-const VERSION_SOURCE = `"""Annotation examples."""
+export const VERSION_SOURCE = `"""Annotation examples."""
 
 from typing import List, Optional
 
@@ -34,30 +34,28 @@ def retain(values: Optional[List[int]]) -> Optional[List[int]]:
 `;
 
 /** Ruff reports the unused import; basedpyright still reports the assignment error. */
-const DUPLICATE_IMPORT_SOURCE = `"""An example module."""
+export const DUPLICATE_IMPORT_SOURCE = `"""An example module."""
 
 import math
 
 TOTAL: int = "one"
 `;
 
-const RUFF_RULE_ARGUMENTS = ['rule', '--all', '--output-format', 'json'] as const;
+export const RUFF_RULE_ARGUMENTS = ['rule', '--all', '--output-format', 'json'] as const;
 
-const RUFF_FORMAT_ARGUMENTS = ['format', '--check', '--no-cache'] as const;
+export const RUFF_FORMAT_ARGUMENTS = ['format', '--check', '--no-cache'] as const;
 
 // pydoclint gets the Google docstring style from the project.
 
-const ARITHMETIC_MODULE_PATH = 'example/math.py';
+export const ARITHMETIC_MODULE_PATH = 'example/math.py';
 
-const ARITHMETIC_DOUBLE_HEADER = `"""Arithmetic examples used by these tests."""
+export const ARITHMETIC_MODULE = `"""Arithmetic examples used by these tests."""
 
 def double(value: int) -> int:
     """Double a number.
 
     Args:
-`;
-
-const ARITHMETIC_MODULE = `${ARITHMETIC_DOUBLE_HEADER}        value: The number.
+        value: The number.
 
     Returns:
         Twice the number.
@@ -78,10 +76,10 @@ def triple(value: int) -> int:
     return value * 3
 `;
 
-const PYTHON_SANDBOX = {
+export const PYTHON_SANDBOX = {
     configurations: ['python'],
     files: {
-        'pyproject.toml': PYPROJECT + '\n' + PYDOCLINT_GOOGLE,
+        'pyproject.toml': GOOGLE_PYPROJECT,
         'pyrightconfig.json': `{
     "typeCheckingMode": "basic",
     "exclude": [".venv", "example/skipped.py"]
@@ -93,7 +91,7 @@ const PYTHON_SANDBOX = {
     },
 } as const;
 
-const ARITHMETIC_TESTS = `"""Tests of the arithmetic."""
+export const ARITHMETIC_TESTS = `"""Tests of the arithmetic."""
 
 from example.math import double, triple
 
@@ -103,23 +101,8 @@ def test_multiplication() -> None:
     assert triple(2) == 6
 `;
 
-const RUFF_SANDBOX = {
+export const RUFF_SANDBOX = {
     configurations: ['python', 'pytest'],
     level: 'all',
     files: BASE_INSTALLED_FILES,
 } as const;
-
-export {
-    RUFF_SANDBOX,
-    PYTHON_SANDBOX,
-    VERSION_SOURCE,
-    ARITHMETIC_TESTS,
-    RUFF_RULE_SOURCE,
-    ARITHMETIC_MODULE,
-    RUFF_FORMAT_CASES,
-    RUFF_VERSION_CASES,
-    RUFF_RULE_ARGUMENTS,
-    RUFF_FORMAT_ARGUMENTS,
-    ARITHMETIC_MODULE_PATH,
-    DUPLICATE_IMPORT_SOURCE,
-};

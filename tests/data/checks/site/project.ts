@@ -1,4 +1,4 @@
-export const STATIC_SITE_FILES = {
+const STATIC_SITE_FILES = {
     '.gitignore': 'node_modules\ndist\n',
     'package.json': `{
     "name": "example",

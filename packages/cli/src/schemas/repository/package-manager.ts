@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import semver from 'semver';
-import { PACKAGE_MANAGERS } from '#cli/config/parsers/dependencies.ts';
-import { type PackageManager, type PackageManagerDeclaration } from '#cli/types/parsers/dependencies.ts';
+import { PACKAGE_MANAGERS } from '#cli/config/repository/package-manager.ts';
+import { type PackageManager, type PackageManagerPin } from '#cli/types/repository/package-manager.ts';
 
 const exactVersionSchema = z
     .string()
@@ -10,11 +10,11 @@ const exactVersionSchema = z
         'Package manager version must be exact.',
     ) satisfies z.ZodType<string>;
 
-export const packageManagerDeclarationSchema = z.strictObject({
+export const packageManagerPinSchema = z.strictObject({
     name: z.enum(PACKAGE_MANAGERS),
     version: z.string().optional(),
-}) satisfies z.ZodType<PackageManagerDeclaration>;
+}) satisfies z.ZodType<PackageManagerPin>;
 
-export const packageManagerSchema = packageManagerDeclarationSchema.extend({
+export const packageManagerSchema = packageManagerPinSchema.extend({
     version: exactVersionSchema,
 }) satisfies z.ZodType<PackageManager>;

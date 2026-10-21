@@ -1,7 +1,7 @@
 // Validates how a check declares the output format of its tool.
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { OutputSpec, OutputInput } from '#cli/types/runs/output.ts';
+import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output.ts';
 import { DEFAULT_PATTERN, DEFAULT_FILE_PATTERN, DEFAULT_GROUPED_PATTERN } from '#cli/config/runs/output.ts';
 
 export const outputSchema = z
@@ -40,14 +40,14 @@ export const outputSchema = z
             ])
             .describe(
                 'How gspot reads the output: json, regex, grouped, lines, none, or the format of a named tool.',
-            ) satisfies z.ZodType<OutputInput['format']>,
+            ) satisfies z.ZodType<WrittenOutput['format']>,
         items: z.string().describe('For json: the path to the list of findings.').optional(),
         children: z.string().describe('For json: the field of each item that holds its findings.').optional(),
         line_base: (
             z
                 .union([z.literal(0), z.literal(1)])
                 .describe('Whether the tool counts lines from 0 or 1.') satisfies z.ZodType<
-                NonNullable<OutputInput['line_base']>
+                NonNullable<WrittenOutput['line_base']>
             >
         ).optional(),
         fields: z
@@ -61,7 +61,7 @@ export const outputSchema = z
                     .string()
                     .describe('For json: the field that is set when the tool can fix the finding.')
                     .optional(),
-            } satisfies SchemaShape<NonNullable<OutputSpec['fields']>>)
+            } satisfies SchemaShape<NonNullable<CheckOutput['fields']>>)
             .optional(),
         pattern: z
             .string()
@@ -76,7 +76,7 @@ export const outputSchema = z
         fixable: z.string().describe('For regex: the pattern that marks a fixable finding.').optional(),
         message: z.string().describe('For regex: the pattern for the message.').optional(),
     })
-    .transform((output): OutputSpec => {
+    .transform((output): CheckOutput => {
         switch (output.format) {
             case 'regex': {
                 return { ...output, format: 'regex', pattern: output.pattern ?? DEFAULT_PATTERN };
@@ -93,4 +93,4 @@ export const outputSchema = z
                 return { ...output, format: output.format };
             }
         }
-    }) satisfies z.ZodType<OutputSpec, OutputInput>;
+    }) satisfies z.ZodType<CheckOutput, WrittenOutput>;

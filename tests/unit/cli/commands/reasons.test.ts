@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { readTree } from '#tests/setup/files.ts';
-import { getValueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/tables.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -72,7 +72,7 @@ test('a reason on a value that does not loosen the default is refused before wri
 
 test.each([...LOOSENED_SETTINGS])(
     '$key set in a scope keeps root and sibling reasons, and unset restores inheritance',
-    async ({ key, value, second, defaults }) => {
+    async ({ key, value, second, defaults, appDefaults, siblingDefaults }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['typescript', 'site'], {
                 level: 'all',
@@ -96,8 +96,8 @@ test.each([...LOOSENED_SETTINGS])(
                 .map(({ value }) => value),
         ).toStrictEqual([
             [...defaults, second],
-            [...defaults.map((value) => (key === 'site.allowed_unlisted_pages' ? `app/${value}` : value)), second],
-            [...defaults.map((value) => (key === 'site.allowed_unlisted_pages' ? `sibling/${value}` : value)), second],
+            [...appDefaults, second],
+            [...siblingDefaults, second],
         ]);
     },
 );

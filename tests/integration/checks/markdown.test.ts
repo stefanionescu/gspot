@@ -67,7 +67,6 @@ test.each([...LEVELS])(
         expect(await readFile(join(root, 'root.md'), 'utf8')).toBe(
             MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'),
         );
-        await writeFile(join(root, 'root.md'), MARKDOWN_FILES['root.md']);
     },
 );
 

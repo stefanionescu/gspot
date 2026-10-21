@@ -1,8 +1,9 @@
 import type { Node } from 'web-tree-sitter';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { visitParsedSources } from '#cli/parsers/grammars.ts';
-import { locateNode, buildFinding } from '#cli/runs/finding.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { getNodePlace, buildFinding } from '#cli/runs/finding.ts';
 import { COMMENT_LINE, XCTEST_PREFIX, SKIP_REASON_ARGUMENT, SWIFT_STRING_LITERAL } from '#cli/config/checks/swift.ts';
 
 function hasReason(value: Node | undefined): boolean {
@@ -60,7 +61,7 @@ export async function checkSwiftSkipReasons(session: Session, planned: PlannedCh
             findings.push(
                 buildFinding(
                     planned,
-                    locateNode(source.path, node),
+                    getNodePlace(source.path, node),
                     'disabled',
                     'Explain why this test is disabled in its reason argument or availability annotation.',
                 ),

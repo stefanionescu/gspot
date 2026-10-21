@@ -21,7 +21,7 @@ curl -o setup.sh https://example.com/setup.sh
 
 /** Project files that keep each security configuration active after apply. */
 export const SEMGREP_PROJECT_FILES = {
-    'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"express":"5.2.1"}}\n',
+    'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"express":"0.0.0-test"}}\n',
     'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
     'pyproject.toml': `[project]
 name = "example"
@@ -128,12 +128,6 @@ export const SEMGREP_SANDBOX = {
         'supabase',
         'cloudflare',
     ],
-    level: 'all',
-    files: BASE_INSTALLED_FILES,
-} as const;
-
-export const CHECKS_FASTAPI_INSTALLED_SANDBOX = {
-    configurations: ['python', 'fastapi', 'security'],
     level: 'all',
     files: BASE_INSTALLED_FILES,
 } as const;

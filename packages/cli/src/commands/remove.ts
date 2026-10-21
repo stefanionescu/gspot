@@ -1,20 +1,19 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { findScopeTable } from '#cli/settings/edit.ts';
+import { getScopeTable } from '#cli/settings/edit.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { saveSettings } from '#cli/apply/save-settings.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { type Manifest } from '#cli/types/configurations.ts';
-import { isRecord, stripUndefined } from '#cli/system/values.ts';
-import { startConfigurationEdit } from '#cli/commands/settings.ts';
+import { isRecord, stripUndefined } from '#cli/system/tables.ts';
+import { type ConfigurationsOptions } from '#cli/types/apply.ts';
+import { type Configuration } from '#cli/types/configurations.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { type ConfigurationsOptions } from '#cli/types/commands/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import { applySettingsEdit, prepareConfigurationEdit } from '#cli/apply/settings-edit.ts';
 
-function refuseRequirements(configurations: string[], kept: string[], manifests: Map<string, Manifest>): void {
-    for (const configuration of configurations) {
+function assertNotRequired(names: string[], kept: string[], configurations: Map<string, Configuration>): void {
+    for (const configuration of names) {
         const chain = kept
-            .map((id) => findRequirementChain(configuration, id, manifests))
+            .map((name) => findRequirementChain(configuration, name, configurations))
             .find((found) => found !== undefined);
         if (chain)
             throw new GspotError(
@@ -31,9 +30,9 @@ function refuseRequirements(configurations: string[], kept: string[], manifests:
  * @returns the command result.
  */
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
-    const { root, input, scopeSettings, selected, manifests } = startConfigurationEdit(options);
-    const kept = selected.filter((id) => !options.configurations.includes(id));
-    refuseRequirements(options.configurations, kept, manifests);
+    const { root, input, scopeSettings, selected, configurations } = prepareConfigurationEdit(options);
+    const kept = selected.filter((name) => !options.configurations.includes(name));
+    assertNotRequired(options.configurations, kept, configurations);
     if (!options.configurations.some((name) => selected.includes(name))) {
         return {
             text: `No change: ${options.configurations.join(' and ')} ${options.configurations.length === 1 ? 'is' : 'are'} not selected.\n`,
@@ -42,9 +41,9 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         };
     }
     const current = scopeSettings.configurations;
-    const scopeTable = findScopeTable(input.table, options.scope);
-    const removed = options.configurations.filter((id) => selected.includes(id));
-    scopeTable['configurations'] = current.filter((id) => !removed.includes(id));
+    const scopeTable = getScopeTable(input.table, options.scope);
+    const removed = options.configurations.filter((name) => selected.includes(name));
+    scopeTable['configurations'] = current.filter((name) => !removed.includes(name));
     const previous = scopeTable['removed_configurations'];
     if (isRecord(previous) && previous['reason'] !== options.reason)
         throw new GspotError(
@@ -56,11 +55,38 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         reason: options.reason,
     };
     const where = options.scope === undefined ? '' : ` from scope ${options.scope}`;
-    const description = `Removed ${options.configurations.join(' and ')}${where}.`;
-    return saveSettings(root, {
-        input,
-        summary: description,
+    const summary = `Removed ${options.configurations.join(' and ')}${where}.`;
+    return applySettingsEdit(root, {
+        edit: input,
+        summary: summary,
     });
+}
+
+/**
+ * Find the chain of requirements from one configuration to another, and visit each one once.
+ *
+ * @param target the required configuration.
+ * @param from the configuration where the chain starts.
+ * @param configurations every configuration manifest.
+ * @returns the names along the chain, or undefined when no chain exists.
+ */
+function findRequirementChain(
+    target: string,
+    from: string,
+    configurations: Map<string, Configuration>,
+): string[] | undefined {
+    const seen = new Set<string>();
+    function findChain(current: string): string[] | undefined {
+        if (current === target) return [current];
+        if (seen.has(current)) return undefined;
+        seen.add(current);
+        for (const required of configurations.get(current)?.requires ?? []) {
+            const rest = findChain(required);
+            if (rest !== undefined) return [current, ...rest];
+        }
+        return undefined;
+    }
+    return findChain(from);
 }
 
 /**
@@ -69,7 +95,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
  * @param program the CLI that gets the command.
  * @param onResult writes the command result.
  */
-function registerRemove(program: Command, onResult: CommandCompletion): void {
+export function registerRemove(program: Command, onResult: CommandCompletion): void {
     program
         .command('remove')
         .argument('<configuration...>', COMMAND_HELP.remove.arguments['configuration'])
@@ -91,28 +117,3 @@ function registerRemove(program: Command, onResult: CommandCompletion): void {
             );
         });
 }
-
-/**
- * Find the chain of requirements from one configuration to another, and visit each one once.
- *
- * @param target the required configuration.
- * @param from the configuration where the chain starts.
- * @param manifests every configuration manifest.
- * @returns the names along the chain, or undefined when no chain exists.
- */
-function findRequirementChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
-    const seen = new Set<string>();
-    function findChain(current: string): string[] | undefined {
-        if (current === target) return [current];
-        if (seen.has(current)) return undefined;
-        seen.add(current);
-        for (const required of manifests.get(current)?.configuration.requires ?? []) {
-            const rest = findChain(required);
-            if (rest !== undefined) return [current, ...rest];
-        }
-        return undefined;
-    }
-    return findChain(from);
-}
-
-export { registerRemove };

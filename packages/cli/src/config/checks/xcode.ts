@@ -8,7 +8,7 @@ export const NAMED_SETS = [IMAGE_SET, '.colorset/Contents.json'] as const;
 
 export const PLIST_KEY = /<key>(?<name>[^<]+)<\/key>/gu;
 
-export const ARBITRARY_LOADS = /<key>NSAllowsArbitraryLoads<\/key>\s*<true\s*\/>/u;
+export const INSECURE_TRANSPORT_SETTING = /<key>NSAllowsArbitraryLoads<\/key>\s*<true\s*\/>/u;
 
 export const ASSET_CONTENTS = 'Contents.json';
 

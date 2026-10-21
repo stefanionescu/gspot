@@ -1,17 +1,19 @@
 import { join } from 'node:path';
 import { chmod } from 'node:fs/promises';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { findCheckCode } from '#cli/checks/code.ts';
+import { planChecks } from '#cli/planning/checks.ts';
+import { type Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
+import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
-import { runCheckImplementation } from '#cli/runs/check-run.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { PYPROJECT } from '#tests/data/checks/python/project.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { selectCheckImplementation } from '#cli/checks/implementations.ts';
+import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { buildVenvBinPath, buildVenvExecutablePath } from '#cli/system/paths.ts';
 
@@ -20,6 +22,41 @@ import {
     GOOGLE_DOCSTRING_MODULE,
     PYDOCLINT_PROJECT_CASES,
 } from '#tests/data/checks/python/docstrings.ts';
+
+/** Prepare the Python project, pinned executable, and planned pydoclint check together. */
+async function preparePydoclintCheck(
+    root: string,
+    files: Record<string, string>,
+    tables = '',
+): Promise<DisposableStack & { session: Session; planned: PlannedCheck }> {
+    using cleanup = new DisposableStack();
+    const resources = cleanup.use(new DisposableStack());
+    const executable = buildVenvExecutablePath('.gspot/.venv', 'pydoclint');
+    await createFileTree(root, {
+        ...files,
+        'gspot.toml': buildSandboxSettings(['python'], { tables }),
+        [executable]: '',
+    });
+    await chmod(join(root, executable), EXECUTABLE_FILE);
+    const session = await openSession(root, { resources });
+    const [planned] = planChecks(session, { stage: 'all', only: ['python/pydoclint'] });
+    if (planned === undefined) throw new Error('The Python sandbox does not plan pydoclint.');
+    resources.use(fakePinnedExecutables([getTool(session.configurations.values(), 'pydoclint')]));
+    return Object.assign(cleanup.move(), { session, planned });
+}
+
+async function runFakeDeptry(root: string) {
+    const session = await openSession(root);
+    using resources = fakePinnedExecutables(
+        ['uv', 'deptry'].map((name) => getTool(session.configurations.values(), name)),
+    );
+    const executed = resources.use(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })),
+    );
+    const checked = await runChecks(await openSession(root), buildRunOptions({ only: ['python/deptry'] }));
+    expect(checked.report.failed).toStrictEqual([]);
+    return { checked, commands: executed.mock.calls.map(([command]) => command) };
+}
 
 test('deptry skips a scope without pyproject.toml', async () => {
     await using sandbox = await testdir({
@@ -100,7 +137,7 @@ test('vulture reads every Python file of the scope and reports unused definition
         [join(buildVenvBinPath('.gspot/.venv'), 'vulture')]: 'fixture',
     });
     const session = await openSession(sandbox.path);
-    using resources = fakePinnedExecutables([getToolDeclaration(session.manifests.values(), 'vulture')]);
+    using resources = fakePinnedExecutables([getTool(session.configurations.values(), 'vulture')]);
     const output = [
         "app/main.py:1: unused import 'os' (90% confidence)",
         "app/nodes.py:1: unused function 'helper' (60% confidence)",
@@ -127,21 +164,14 @@ test('vulture reads every Python file of the scope and reports unused definition
 
 test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting, expected, command }) => {
     await using sandbox = await testdir();
-    const executable = buildVenvExecutablePath('.gspot/.venv', 'pydoclint');
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['python'], {
-            tables: setting === undefined ? '' : `[tools.ruff]\ndocstring_convention = "${setting}"\n`,
-        }),
-        'pyproject.toml': project,
-        'source.py': 'value = 1\n',
-        [executable]: '',
-    });
-    await chmod(join(sandbox.path, executable), 0o755);
-    const session = await openSession(sandbox.path);
-    const [planned] = planRun(session, { stage: 'all', only: ['python/pydoclint'] });
-    using _version = fakePinnedExecutables([getToolDeclaration(session.manifests.values(), 'pydoclint')]);
+    using prepared = await preparePydoclintCheck(
+        sandbox.path,
+        { 'pyproject.toml': project, 'source.py': 'value = 1\n' },
+        setting === undefined ? '' : `[tools.ruff]\ndocstring_convention = "${setting}"\n`,
+    );
+    const { session, planned } = prepared;
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
-    const result = await runCheckImplementation(session, planned!, selectCheckImplementation(planned!.check));
+    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
     expect(result.status).toBe('passed');
     expect(run.mock.calls[0]?.[0].slice(1)).toStrictEqual([
         ...command.slice(1).map((part) => (part === '{files}' ? 'source.py' : part)),
@@ -152,18 +182,12 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
 
 test('pydoclint keeps earlier style findings when a later style batch fails', async () => {
     await using sandbox = await testdir();
-    const executable = buildVenvExecutablePath('.gspot/.venv', 'pydoclint');
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['python']),
+    using prepared = await preparePydoclintCheck(sandbox.path, {
         'pyproject.toml': PYPROJECT,
         'google.py': GOOGLE_DOCSTRING_MODULE,
         'numpy.py': NUMPY_DOCSTRING_MODULE,
-        [executable]: '',
     });
-    await chmod(join(sandbox.path, executable), 0o755);
-    const session = await openSession(sandbox.path);
-    const [planned] = planRun(session, { stage: 'all', only: ['python/pydoclint'] });
-    using _version = fakePinnedExecutables([getToolDeclaration(session.manifests.values(), 'pydoclint')]);
+    const { session, planned } = prepared;
     using command = spyOn(processes, 'spawnProcess')
         .mockResolvedValueOnce(
             buildProcessResult({
@@ -176,11 +200,11 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
             buildProcessResult({
                 code: 2,
                 stderr: 'The native command could not read its configuration.',
-                isErrored: true,
+                errored: true,
                 duration: 3,
             }),
         );
-    const result = await runCheckImplementation(session, planned!, selectCheckImplementation(planned!.check));
+    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
     expect(result.status).toBe('error');
     expect(result.fileCount).toBe(2);
     expect(result.findings).toMatchObject([{ file: 'google.py', rule: 'DOC103' }]);
@@ -189,16 +213,3 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
         command.mock.calls.map(([commandArguments]) => commandArguments[commandArguments.indexOf('--style') + 1]),
     ).toStrictEqual(['google', 'numpy']);
 });
-
-async function runFakeDeptry(root: string) {
-    const session = await openSession(root);
-    using resources = fakePinnedExecutables(
-        ['uv', 'deptry'].map((name) => getToolDeclaration(session.manifests.values(), name)),
-    );
-    const executed = resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })),
-    );
-    const checked = await runChecks(await openSession(root), buildRunOptions({ only: ['python/deptry'] }));
-    expect(checked.report.failed).toStrictEqual([]);
-    return { checked, commands: executed.mock.calls.map(([command]) => command) };
-}

@@ -8,7 +8,7 @@ import { PYTEST_PYPROJECT } from '#tests/data/checks/python/project.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { PYTEST_CASES, PYTEST_SANDBOX } from '#tests/data/checks/pytest.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 
 const installedSandbox = registerSharedSandbox({
     install: false,
@@ -21,7 +21,7 @@ const installedSandbox = registerSharedSandbox({
 
 test.each([...PYTEST_CASES])('$check reports the required coverage and passes after the fix', async (entry) => {
     const result = await runCheckSample(installedSandbox(), entry, PYTEST_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });
 
 test.each([80, 0])(
@@ -29,28 +29,25 @@ test.each([80, 0])(
     async (limit) => {
         const { root, environment } = installedSandbox();
         const project = PYTEST_PYPROJECT.replace(', "pytest-cov==7.1.0"', '');
-        const change = await updateSandbox(
-            { root, environment: {}, run: spawnGspot },
-            {
-                check: 'pytest/coverage',
-                files: {
-                    'pyproject.toml': project,
-                    'uv.lock': await readFile(join(root, 'uv.lock'), 'utf8'),
-                    'app/test_child.py': 'def test_child():\n    assert 3 * 2 == 6\n',
-                    'gspot.toml': buildSandboxSettings(['python', 'pytest'], {
-                        level: 'all',
-                        tables:
-                            (limit === 0
-                                ? COVERAGE_ZERO_LIMITS
-                                : COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80')) +
-                            `[[scope]]
+        const change = await updateSandbox(installedSandbox(), {
+            check: 'pytest/coverage',
+            files: {
+                'pyproject.toml': project,
+                'uv.lock': await readFile(join(root, 'uv.lock'), 'utf8'),
+                'app/test_child.py': 'def test_child():\n    assert 3 * 2 == 6\n',
+                'gspot.toml': buildSandboxSettings(['python', 'pytest'], {
+                    level: 'all',
+                    tables:
+                        (limit === 0
+                            ? COVERAGE_ZERO_LIMITS
+                            : COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80')) +
+                        `[[scope]]
 path = "app"
 configurations = ["python", "pytest"]
 `,
-                    }),
-                },
+                }),
             },
-        );
+        });
         try {
             const installed = await runCommand(['uv', 'sync'], { cwd: root, env: environment });
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);

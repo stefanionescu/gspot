@@ -83,18 +83,6 @@ summary = "Checks that each `package.json` declares the dependencies that its np
 why = "A frozen install in CI stops when package.json and the lockfile disagree, after the push has already landed."
 
 [[check]]
-example = "A project that locks `react 19.1.0` and `react-dom 19.0.0` reports `react-versions`. Install the same version of both."
-files = { filenames = ["package.json"] }
-help = "Install the same version of react and react-dom."
-level = "recommended"
-name = "react-versions"
-runs = "scope"
-stage = "push"
-summary = "Checks that `react` and `react-dom` resolve to the same version."
-when = { dependencies = ["react-dom"] }
-why = "React stops at run time when react and react-dom differ."
-
-[[check]]
 example = "A `packageManager` of `bun@1.4.2` while `mise.toml` pins `bun = \"1.4.3\"` reports `package-manager-pin`. Write one version in both."
 files = { filenames = ["package.json"] }
 help = "Write the same version of the package manager in packageManager and in mise.toml."

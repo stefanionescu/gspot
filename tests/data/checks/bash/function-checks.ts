@@ -2,7 +2,6 @@ import { BASH_MAIN, BASH_HEADER } from '#tests/data/checks/bash/samples.ts';
 
 /** Source locations for the generated Bash size samples. */
 export const BASH_SIZE_LOCATIONS = [
-    { file: 'scripts/long.sh', rule: 'file-lines', line: 1 },
     { file: 'scripts/tall.sh', rule: 'function-lines', line: 9 },
     { file: 'scripts/branchy.sh', rule: 'function_branches', line: 9 },
     { file: 'scripts/deep.sh', rule: 'block_nesting', line: 9 },

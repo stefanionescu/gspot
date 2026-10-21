@@ -8,6 +8,21 @@ import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { checkFindings, planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
+/** Commit the asset files of one test in the docs site scope. */
+async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
+    const sandbox = resources.use(
+        await testdir({
+            'gspot.toml': buildSandboxSettings([], {
+                level: 'all',
+                scopes: [{ path: 'docs', configurations: ['site'] }],
+            }),
+            ...files,
+        }),
+    );
+    commitAll(sandbox.path);
+    return sandbox.path;
+}
+
 test("an asset in a scope's assets folder counts as used when a file outside the scope links to it", async () => {
     await using resources = new AsyncDisposableStack();
     const root = await prepareAssetRepository(resources, {
@@ -71,18 +86,3 @@ test('an unstaged deletion removes the reference without failing the asset check
         { file: 'docs/assets/logo.svg', rule: 'dead-asset' },
     ]);
 });
-
-/** Commit the asset files of one test in the docs site scope. */
-async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
-    const sandbox = resources.use(
-        await testdir({
-            'gspot.toml': buildSandboxSettings([], {
-                level: 'all',
-                scopes: [{ path: 'docs', configurations: ['site'] }],
-            }),
-            ...files,
-        }),
-    );
-    commitAll(sandbox.path);
-    return sandbox.path;
-}

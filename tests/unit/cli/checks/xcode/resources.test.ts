@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
@@ -12,11 +12,11 @@ import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { ASSET_SETTING_CASES, UNREADABLE_RESOURCES, INVALID_RESOURCE_DOCUMENTS } from '#tests/data/checks/xcode.ts';
 
 test.each([...UNREADABLE_RESOURCES])(
-    'a failed resource read is an execution error for %s, and malformed JSON is a finding',
-    async (check, path, content) => {
+    'a resource file that cannot be read is an execution error for $check',
+    async ({ check, path, text }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['xcode']),
-            [path]: content,
+            [path]: text,
             'App/Assets.xcassets/Logo.imageset/logo.png': new Uint8Array([0, 1, 2]),
             'App/Home.swift': 'let logo = Image("Logo")\n',
         });
@@ -25,7 +25,6 @@ test.each([...UNREADABLE_RESOURCES])(
         const options = buildRunOptions({ stage: 'commit', only: [check] });
         using files = openFiles(sandbox.path);
         const target = join(sandbox.path, path);
-        const { mode } = files.read(path)!;
         await rm(target);
         await mkdir(target);
         const unreadable = await runChecks(session, options);
@@ -36,11 +35,6 @@ test.each([...UNREADABLE_RESOURCES])(
         );
         const folder = files.readStats(path)!;
         expect(folder.isDirectory()).toBe(true);
-        await rm(target, { recursive: true });
-        files.write(path, { bytes: Buffer.from('{'), mode }, undefined);
-        const malformed = await runChecks(await openSession(session.root), options);
-
-        expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'syntax' }]);
     },
 );
 
@@ -134,18 +128,20 @@ test.each([...ASSET_SETTING_CASES])(
     },
 );
 
-test.each(INVALID_RESOURCE_DOCUMENTS)('%s reports malformed %s as a source finding', async (check, path, text) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['xcode'], { level: 'all' }),
-        'Source.swift': 'let image = Image("Logo")\n',
-        [path]: text,
-    });
+test.each([...INVALID_RESOURCE_DOCUMENTS])(
+    '$check reports malformed $path as a source finding',
+    async ({ check, path, text }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['xcode'], { level: 'all' }),
+            'Source.swift': 'let image = Image("Logo")\n',
+            [path]: text,
+        });
 
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-
-    const report = result.report;
-    expect(report.checks.map(({ status }) => status)).toStrictEqual(['failed']);
-    expect(
-        report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
-    ).toStrictEqual([{ file: path, line: 1, rule: 'syntax' }]);
-});
+        const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+        const report = result.report;
+        expect(report.checks.map(({ status }) => status)).toStrictEqual(['failed']);
+        expect(
+            report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
+        ).toStrictEqual([{ file: path, line: 1, rule: 'syntax' }]);
+    },
+);

@@ -1,4 +1,6 @@
-const NEXT_INSTALLATIONS = [
+import { ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/data/repository/dependency-files.ts';
+
+export const NEXT_INSTALLATIONS = [
     {
         name: 'an uninstalled Next uses the shipped manifest pin',
         rootVersion: undefined,
@@ -25,7 +27,7 @@ const NEXT_INSTALLATIONS = [
     },
 ] as const;
 
-const TOOL_REQUIREMENTS = [
+export const TOOL_REQUIREMENTS = [
     {
         name: 'a Next major requirement is accepted',
         dependency: '@next/eslint-plugin-next',
@@ -49,7 +51,7 @@ const TOOL_REQUIREMENTS = [
 ] as const;
 
 /** Only the root development dependencies count. Production and workspace dependencies do not. */
-const ROOT_DEPENDENCIES = [
+export const ROOT_DEPENDENCIES = [
     [
         'npm',
         '{"packages":{"":{"devDependencies":{"eslint":"9.39.5"},"dependencies":{"runtime":"1.0.0"}},"apps/api":{"devDependencies":{"typescript":"5.9.3"}}}}',
@@ -83,7 +85,7 @@ const ROOT_DEPENDENCIES = [
 ] as const;
 
 /** The package managers and dependency files that a package project test covers. */
-const PACKAGE_MANAGER_ROWS = [
+export const PACKAGE_MANAGER_ROWS = [
     ['npm', 'package.json'],
     ['bun', 'package.json'],
     ['pnpm', 'package.json'],
@@ -91,7 +93,7 @@ const PACKAGE_MANAGER_ROWS = [
     ['npm', 'apps/web/package.json'],
 ] as const;
 
-const YARN_CLIENTS = [
+export const YARN_CLIENTS = [
     {
         packageManager: { name: 'yarn', version: '1.22.22' },
         lockfile: ['yarn', 'install'],
@@ -106,9 +108,9 @@ const YARN_CLIENTS = [
     },
 ] as const;
 
-const CLEAR_DEPENDENCIES_SCRIPT = `require('node:fs').writeFileSync('package.json', '{"name":"root-sandbox","private":true,"dependencies":{}}')`;
+export const CLEAR_DEPENDENCIES_SCRIPT = `require('node:fs').writeFileSync('package.json', ${JSON.stringify(ROOT_PACKAGE_WITHOUT_DEPENDENCIES)})`;
 
-const PACKAGE_MANAGER_DECLARATIONS = [
+export const PACKAGE_MANAGER_PIN_CASES = [
     [
         'a packageManager with a hash suffix',
         { 'package.json': '{"packageManager":"pnpm@9.1.0+sha512.0a1b2c"}' },
@@ -138,7 +140,7 @@ const PACKAGE_MANAGER_DECLARATIONS = [
     ],
 ] as const;
 
-const NON_EXACT_PNPM_VERSIONS = [
+export const NON_EXACT_PNPM_VERSIONS = [
     [
         '{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}',
         'The tool project needs an exact pnpm version, such as pnpm@1.2.3; package.json declares "^9.1.0" in devEngines.packageManager. Write an exact version there.',
@@ -153,30 +155,4 @@ const NON_EXACT_PNPM_VERSIONS = [
     ],
 ] as const;
 
-const INSTALL_FAILURES = [
-    { frozen: false, refusal: 'HTTP 403 Forbidden' },
-    { frozen: true, refusal: 'HTTP 403 Forbidden' },
-] as const;
-
-const AUTHORED_VERSION_CASES = [
-    {
-        source: 'authored',
-        operation: 'install',
-        files: {
-            'package.json': '{"packageManager":"bun@0.0.0"}\n',
-        } as const,
-    } as const,
-] as const;
-
-export {
-    YARN_CLIENTS,
-    INSTALL_FAILURES,
-    ROOT_DEPENDENCIES,
-    TOOL_REQUIREMENTS,
-    NEXT_INSTALLATIONS,
-    PACKAGE_MANAGER_ROWS,
-    AUTHORED_VERSION_CASES,
-    NON_EXACT_PNPM_VERSIONS,
-    CLEAR_DEPENDENCIES_SCRIPT,
-    PACKAGE_MANAGER_DECLARATIONS,
-};
+export const OUTDATED_BUN_PACKAGE_JSON = '{"packageManager":"bun@0.0.0"}\n';

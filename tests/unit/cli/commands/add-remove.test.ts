@@ -1,9 +1,9 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { commitAll } from '#tests/setup/git.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -96,48 +96,46 @@ test.each([false, true].flatMap((json) => ['add', 'remove'].map((command) => ({ 
     },
 );
 
-test.each([
-    [
-        'a configuration another configuration requires',
-        ['remove', 'javascript', '--reason', 'The project no longer uses JavaScript.'],
-        'Cannot remove `javascript`: typescript requires javascript. Remove `typescript` first, or keep `javascript`.',
-        2,
-    ],
-    [
-        'a configuration the selection does not list',
-        ['remove', 'bash', '--reason', 'The project no longer uses Bash.'],
-        'No change: bash is not selected.',
-        0,
-    ],
-])(
-    'removing %s preserves the settings and reports the prescribed outcome',
-    async (_, commandArguments, expected, code) => {
-        await using sandbox = await testdir();
-        const settings = `configurations = ["typescript"]
-[rules]
-enabled = false
-[[scope]]
-path = "api"
-configurations = ["bash"]
-`;
-        await createFileTree(sandbox.path, { 'gspot.toml': settings, 'api/entry.sh': 'echo api\n' });
-        commitAll(sandbox.path);
-        const before = await readTree(sandbox.path);
-        const refused = await runGspot(sandbox.path, commandArguments);
-        expect(refused.code, refused.stdout + refused.stderr).toBe(code);
-        expect(refused.stdout).toBe(code === 0 ? `${expected}\n` : '');
-        expect(refused.stderr).toBe(code === 0 ? '' : `${expected}\n`);
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-        const structured = await runGspot(sandbox.path, [...commandArguments, '--json']);
-        expect(structured.code, structured.stdout + structured.stderr).toBe(code);
-        expect(structured.stderr).toBe('');
-        expect(JSON.parse(structured.stdout)).toStrictEqual(
-            code === 0 ? { changed: false } : { error: 'arguments', message: expected },
-        );
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-    },
-);
+test('remove refuses a configuration that another selected one requires', async () => {
+    const settings =
+        'configurations = ["typescript"]\n[rules]\nenabled = false\n[[scope]]\npath = "api"\nconfigurations = ["bash"]\n';
+    await using sandbox = await testdir({ 'gspot.toml': settings, 'api/entry.sh': 'echo api\n' });
+    commitAll(sandbox.path);
+    const before = await readTree(sandbox.path);
+    const message =
+        'Cannot remove `javascript`: typescript requires javascript. Remove `typescript` first, or keep `javascript`.';
+    const commandArguments = ['remove', 'javascript', '--reason', 'The project no longer uses JavaScript.'];
+    const result = await runGspot(sandbox.path, commandArguments);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(result.stdout).toBe('');
+    expect(result.stderr).toBe(`${message}\n`);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const structured = await runGspot(sandbox.path, [...commandArguments, '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'arguments', message });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('remove reports no change for a configuration the root does not list', async () => {
+    const settings =
+        'configurations = ["typescript"]\n[rules]\nenabled = false\n[[scope]]\npath = "api"\nconfigurations = ["bash"]\n';
+    await using sandbox = await testdir({ 'gspot.toml': settings, 'api/entry.sh': 'echo api\n' });
+    commitAll(sandbox.path);
+    const before = await readTree(sandbox.path);
+    const message = 'No change: bash is not selected.';
+    const commandArguments = ['remove', 'bash', '--reason', 'The project no longer uses Bash.'];
+    const result = await runGspot(sandbox.path, commandArguments);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toBe(`${message}\n`);
+    expect(result.stderr).toBe('');
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const structured = await runGspot(sandbox.path, [...commandArguments, '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({ changed: false });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
 
 test.each([false, true])(
     'add reports an inherited configuration as already selected and writes nothing (json: %j)',

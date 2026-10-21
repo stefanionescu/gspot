@@ -1,21 +1,20 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
-import { runFixers } from '#cli/runs/fixes.ts';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { mkdir, readFile } from 'node:fs/promises';
-import { type Session } from '#cli/types/planning.ts';
+import { planChecks } from '#cli/planning/checks.ts';
+import { type Session } from '#cli/types/session.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
+import { runFixers } from '#cli/commands/check/fixes.ts';
+import { type Check } from '#cli/types/configurations.ts';
 import { DOCS_SETTINGS } from '#tests/data/checks/docs.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { BASE_CHECK } from '#tests/data/runs/command-checks.ts';
-import { type CheckDeclaration } from '#cli/types/configurations.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/data/settings/scopes.ts';
-import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { PROJECT_OPTIONS, PROJECT_TRIGGERS } from '#tests/data/runs/plan.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
@@ -26,23 +25,25 @@ import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/cha
  */
 async function fakeProjectChecks(session: Session): Promise<void> {
     await fakeTool(session.root, '.gspot/mock-tsc', "console.log('Project finding'); process.exitCode = 1");
-    const manifest = session.manifests.get('typescript')!;
-    const check: CheckDeclaration = {
+    const configuration = session.configurations.get('typescript')!;
+    const check: Check = {
         ...BASE_CHECK,
         name: 'typescript/tsc',
         stage: PROJECT_OPTIONS.stage,
         runs: 'scope',
-        cwd: 'root' as const,
+        cwd: 'root',
         command: [join(session.root, '.gspot/mock-tsc')],
-        output: { format: 'lines' as const },
-        files: manifest.files,
+        output: { format: 'lines' },
+        files: configuration.files,
         fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
     const fileCheck = { ...check, name: 'files/v8r', runs: 'files' as const };
     for (const selection of session.scopes) {
-        if (selection.scope.path !== '') selection.selected = [{ ...manifest, tools: [], checks: [check, fileCheck] }];
+        if (selection.scope.path !== '')
+            selection.selected = [{ ...configuration, tools: [], checks: [check, fileCheck] }];
     }
 }
+
 test.each([...PROJECT_TRIGGERS])(
     'a last-file %s triggers only the affected project with %s selection, and its fixer supports a dry run',
     async (operation, selection) => {
@@ -62,19 +63,16 @@ test.each([...PROJECT_TRIGGERS])(
             selection === 'staged'
                 ? await readStagedPaths(sandbox.path).then(({ staged }) => ({ staged }))
                 : await readChangedPaths(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
-        const planned = planRun(session, { ...PROJECT_OPTIONS, only: [...PROJECT_OPTIONS.only], ...revision });
+        const planned = planChecks(session, { ...PROJECT_OPTIONS, ...revision });
         const api = planned.find((check) => check.selection.scope.path === 'api')!;
         expect(api.files).toStrictEqual([]);
         expect(api.triggerPaths).toContain('api/source.ts');
-        const fileChecks = planRun(session, { ...PROJECT_OPTIONS, only: ['files/v8r'], ...revision });
+        const fileChecks = planChecks(session, { ...PROJECT_OPTIONS, only: ['files/v8r'], ...revision });
         expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
         expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
             operation === 'delete' ? [] : ['web/source.ts'],
         );
-        const result = await runChecks(
-            session,
-            buildRunOptions({ ...PROJECT_OPTIONS, only: [...PROJECT_OPTIONS.only], ...revision }),
-        );
+        const result = await runChecks(session, buildRunOptions({ ...PROJECT_OPTIONS, ...revision }));
         expect(result.report.exitCode).toBe(1);
         const active = result.report.checks.filter((check) => check.status !== 'skipped');
         expect(active.map((check) => check.scope)).toStrictEqual(operation === 'delete' ? ['api'] : ['api', 'web']);
@@ -83,13 +81,11 @@ test.each([...PROJECT_TRIGGERS])(
         );
         const preview = await runFixers(session, [api], {
             isDryRun: true,
-            selectImplementation: selectCheckImplementation,
         });
         expect(preview.changed).toStrictEqual(['api/source.ts']);
         expect(await isOnDisk(join(sandbox.path, 'api/source.ts'))).toBe(false);
         const applied = await runFixers(session, [api], {
             isDryRun: false,
-            selectImplementation: selectCheckImplementation,
         });
         expect(applied.changed).toStrictEqual(['api/source.ts']);
         expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
@@ -100,9 +96,8 @@ test('a deleted file from another language does not trigger a TypeScript project
 
     const session = await openSession(sandbox.path);
     await fakeProjectChecks(session);
-    const planned = planRun(session, {
+    const planned = planChecks(session, {
         ...PROJECT_OPTIONS,
-        only: [...PROJECT_OPTIONS.only],
         changed: ['api/removed.py'],
     });
     expect(planned.flatMap((check) => check.files)).toStrictEqual([]);
@@ -124,9 +119,8 @@ configurations = []
 
     const session = await openSession(sandbox.path);
     await fakeProjectChecks(session);
-    const planned = planRun(session, {
+    const planned = planChecks(session, {
         ...PROJECT_OPTIONS,
-        only: [...PROJECT_OPTIONS.only],
         changed: ['api/nested/removed.ts'],
     });
     expect(
@@ -147,7 +141,7 @@ test.each(['gspot.toml', '.gspot/configurations/general/docs/lychee.toml'])(
         });
 
         const session = await openSession(sandbox.path);
-        const planned = planRun(session, { stage: 'commit', staged: [path], only: ['docs/lychee'] });
+        const planned = planChecks(session, { stage: 'commit', staged: [path], only: ['docs/lychee'] });
         expect(
             planned.map((entry) => ({
                 scope: entry.selection.scope.path,

@@ -4,9 +4,9 @@ import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.ts';
@@ -146,9 +146,9 @@ test.each([...CHECK_TOOL_MINIMUMS])(
     'explain <check> lists the minimum versions of the tools that the check runs, not of every tool of its configuration: $check',
     async ({ check, tools }) => {
         await using sandbox = await testdir();
-        const manifests = readManifests();
+        const configurations = readConfigurations();
         const expected = tools.map((name) => {
-            const minimum = getToolDeclaration(manifests.values(), name).min_version;
+            const minimum = getTool(configurations.values(), name).min_version;
             return `Needs ${name} ${String(minimum)} or newer`;
         });
         const result = await runGspot(sandbox.path, ['explain', check]);

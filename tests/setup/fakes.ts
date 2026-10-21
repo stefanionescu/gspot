@@ -1,16 +1,16 @@
 import { spyOn, type Mock } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
-import { join, dirname, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
+import type { Tool } from '#cli/types/configurations.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { EXECUTABLE_MODE } from '#tests/data/test-setup.ts';
 import type { spawnProcess } from '#cli/system/processes.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { GSPOT_NODE_MODULES_PATH } from '#cli/config/system/locations.ts';
+import { join, dirname, basename, delimiter } from 'node:path';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { GSPOT_NODE_MODULES_PATH } from '#cli/config/gspot-paths.ts';
+import { getShippedTool, buildProcessResult } from '#tests/setup/builders.ts';
 
 /**
  * Replace one child command and run the others normally.
@@ -32,7 +32,7 @@ export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typ
  * @param tools declarations whose pinned versions the fakes print.
  * @returns the disposable mocks.
  */
-export function fakePinnedExecutables(tools: ToolDeclaration[]): DisposableStack {
+export function fakePinnedExecutables(tools: Tool[]): DisposableStack {
     const resources = new DisposableStack();
     const runBlocking = processes.spawnProcessBlocking;
     resources.use(
@@ -49,7 +49,7 @@ export function fakePinnedExecutables(tools: ToolDeclaration[]): DisposableStack
             if (pin === undefined) return runBlocking(command, options);
             const version = pin.version ?? pin.min_version;
             if (version === undefined) throw new Error(`The test has no declared version for ${executable}.`);
-            return { code: 0, stdout: version, stderr: '', missing: false, duration: 1 };
+            return buildProcessResult({ stdout: version });
         }),
     );
     return resources;
@@ -76,33 +76,65 @@ export async function fakeTool(sandboxRoot: string, name: string, script: string
 }
 
 /** Write the package.json and a version program for the pinned npm tool. */
-export async function fakeNpmTool(root: string, tool: string): Promise<ToolDeclaration> {
-    const declaration = getToolDeclaration(readManifests().values(), tool);
+export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
+    const declaration = getShippedTool(tool);
     const installer = declaration.installers['npm'];
     if (installer === undefined) throw new Error(`The tool ${tool} has no npm installer.`);
-    const installed = join(root, GSPOT_NODE_MODULES_PATH, installer.name);
-    await mkdir(installed, { recursive: true });
-    await writeFile(
-        join(installed, 'package.json'),
-        JSON.stringify({ name: installer.name, version: declaration.version }),
-    );
-    await fakeTool(
-        root,
-        `${GSPOT_NODE_MODULES_PATH}/.bin/${tool}`,
-        `console.log(${JSON.stringify(declaration.version)}); process.exitCode = ${String(declaration.version_exit_code ?? 0)};`,
-    );
+    if (declaration.version === undefined) throw new Error('The npm package fake requires a pinned tool version.');
+    await fakeNpmPackage(root, {
+        name: installer.name,
+        version: declaration.version,
+        bin: tool,
+        script: `console.log(${JSON.stringify(declaration.version)}); process.exitCode = ${String(declaration.version_exit_code ?? 0)};`,
+    });
     return declaration;
 }
 /** Write an installed npm package and the program that the tool package exposes. */
 export async function fakeNpmPackage(
     root: string,
-    folder: string,
-    name: string,
-    version: string,
-    script: string,
+    npmPackage: { name: string; version: string; script: string; bin?: string },
 ): Promise<void> {
-    const path = join(root, folder, name);
+    const { name, version, script, bin = name } = npmPackage;
+    const path = join(root, GSPOT_NODE_MODULES_PATH, name);
     await mkdir(path, { recursive: true });
     await writeFile(join(path, 'package.json'), JSON.stringify({ name, version }));
-    await fakeTool(root, `${folder}/.bin/${name}`, script);
+    await fakeTool(root, `${GSPOT_NODE_MODULES_PATH}/.bin/${bin}`, script);
+}
+
+/**
+ * Pause the selected Git operation and forward every other call to Git.
+ *
+ * @param folder the launcher and call counter folder.
+ * @param options the operation, marker path, and call number to pause.
+ * @param options.operation the Git operation to pause.
+ * @param options.marker the path that records the paused process.
+ * @param options.pauseOnCall the call number to pause.
+ * @returns an environment that finds the pausing launcher first.
+ */
+export async function fakePausingGit(
+    folder: string,
+    options: { operation: 'diff' | 'clone' | 'cat-file'; marker: string; pauseOnCall: number },
+): Promise<Record<string, string>> {
+    const executable = Bun.which('git');
+    if (executable === null) throw new Error('The pausing Git fake requires Git on PATH.');
+    const script = `
+const args = process.argv.slice(2);
+if (args[0] === ${JSON.stringify(options.operation)}) {
+    const counter = Bun.file(${JSON.stringify(join(folder, 'calls.txt'))});
+    const count = (await counter.exists() ? Number(await counter.text()) : 0) + 1;
+    await Bun.write(counter, String(count));
+    if (count === ${String(options.pauseOnCall)}) {
+        const checkout = args[0] === 'clone' ? args.at(-1) : args[0] === 'cat-file' ? process.cwd() : undefined;
+        const marker = ${JSON.stringify(options.marker)};
+        await Bun.write(marker + ".tmp", JSON.stringify({pid: process.pid, checkout}));
+        await (await import("node:fs/promises")).rename(marker + ".tmp", marker);
+        await Bun.sleep(60_000);
+    }
+}
+const child = Bun.spawn([${JSON.stringify(executable)}, ...args], {stdin:'inherit', stdout:'inherit', stderr:'inherit'});
+process.exit(await child.exited);
+`;
+    await fakeTool(folder, 'git', script);
+    const environment = buildSpawnEnvironment();
+    return { ...environment, PATH: `${folder}${delimiter}${environment['PATH'] ?? ''}` };
 }

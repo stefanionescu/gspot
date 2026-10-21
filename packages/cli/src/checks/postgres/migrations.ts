@@ -1,17 +1,23 @@
 import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { listCheckFiles } from '#cli/repository/coverage.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
-import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { listCheckFiles } from '#cli/repository/covered-files.ts';
+import { SQL_EXTENSION, MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
 import { type Migration, type MigrationRead } from '#cli/types/checks/postgres.ts';
-import { MIGRATION_VERSION, MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
-import { SQUAWK_CHECK, MIGRATION_DOWN, DOWN_MIGRATION_SUFFIX } from '#cli/config/checks/postgres.ts';
 
-const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
+import {
+    SQUAWK_CHECK,
+    MIGRATION_DOWN,
+    MIGRATION_SYNTAX_SKIP,
+    DOWN_MIGRATION_SUFFIX,
+} from '#cli/config/checks/postgres.ts';
+
+const MIGRATIONS = { create: () => new Map<string, Promise<Migration[]>>() };
 
 async function parseMigrations(session: Session, paths: Pick<Migration, 'path' | 'version'>[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
@@ -39,11 +45,11 @@ async function parseMigrations(session: Session, paths: Pick<Migration, 'path' |
  * @param planned the scope whose migrations to read.
  * @returns the migrations, empty when the repository has no migrations folder.
  */
-async function readMigrations(session: Session, planned: PlannedCheck): Promise<MigrationRead> {
+export async function readMigrations(session: Session, planned: PlannedCheck): Promise<MigrationRead> {
     const paths = listMigrationPaths(planned);
     if (paths.length === 0) return { migrations: [], findings: [] };
     const key = JSON.stringify(paths);
-    const migrations = await getCachedMapValue(session.reads, MIGRATION_MEMO, key, () =>
+    const migrations = await getCachedMapValue(session.reads, MIGRATIONS, key, () =>
         parseMigrations(
             session,
             paths
@@ -105,5 +111,3 @@ export async function readParsedMigrations(session: Session, planned: PlannedChe
 export function stripDownSection(text: string): string {
     return text.split(MIGRATION_DOWN, 1)[0] ?? '';
 }
-
-export { readMigrations };

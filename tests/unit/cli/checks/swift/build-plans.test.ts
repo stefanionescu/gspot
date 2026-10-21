@@ -1,10 +1,10 @@
 import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
@@ -17,7 +17,12 @@ import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { planSandboxCheck, createCompilerCache } from '#tests/setup/check-input.ts';
 import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
-import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/data/checks/swift/projects.ts';
+
+import {
+    SWIFT_BUILD_PURPOSES,
+    SWIFT_PACKAGE_HEADER,
+    SWIFT_PROJECT_SELECTION_CASES,
+} from '#tests/data/checks/swift/projects.ts';
 
 test.each(['default', 'platform=macOS'])(
     'Xcode build plans keep destination %s for every build purpose',
@@ -75,7 +80,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
             new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.'),
         );
         using _executables = fakePinnedExecutables(
-            [...session.manifests.values()].flatMap((manifest) => manifest.tools),
+            [...session.configurations.values()].flatMap((configuration) => configuration.tools),
         );
         const executed = await runChecks(session, buildRunOptions({ only: [check] }));
 
@@ -86,7 +91,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
             false,
         );
         await createFileTree(sandbox.path, {
-            'Package.swift': '// swift-tools-version: 6.0\nimport PackageDescription\n',
+            'Package.swift': SWIFT_PACKAGE_HEADER,
         });
         const checkedSession = await openSession(sandbox.path);
         const packageInput = planSandboxCheck(checkedSession, 'swift/build');

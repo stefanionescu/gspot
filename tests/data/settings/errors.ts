@@ -1,3 +1,5 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+
 export const KEY_PATH_CASES = [
     {
         name: 'a multiline array value',
@@ -7,8 +9,43 @@ export const KEY_PATH_CASES = [
 ]
 `,
         where: ['configurations.1'],
-        messages: [],
         correction: ['12', '"files"'],
+    },
+    {
+        name: 'empty override paths',
+        text: buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: '[[tools.eslint.override]]\npaths = []\nrules = {eqeqeq = ["always"]}\n',
+        }),
+        correction: ['paths = []', 'paths = ["src"]'],
+        where: ['tools.eslint.override.0.paths:'],
+    },
+    {
+        name: 'numeric rule options',
+        text: buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n',
+        }),
+        correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'],
+        where: ['tools.eslint.override.0.rules.eqeqeq:'],
+    },
+    {
+        name: 'boolean rule options',
+        text: buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = true}\n',
+        }),
+        correction: ['eqeqeq = true', 'eqeqeq = ["always"]'],
+        where: ['tools.eslint.override.0.rules.eqeqeq:'],
+    },
+    {
+        name: 'an unknown override field',
+        text: buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: '[[tools.eslint.override]]\npaths = ["src"]\nrulez = {eqeqeq = ["always"]}\n',
+        }),
+        correction: ['rulez', 'rules'],
+        where: ['[tools.eslint.override.0]: `rulez` is not a gspot.toml setting.'],
     },
 ] as const;
 

@@ -1,22 +1,20 @@
 // The set command: validate and write one setting.
 import { GspotError } from '#cli/system/errors.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
-import { saveSettings } from '#cli/apply/save-settings.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
-import type { EffectiveSetting } from '#cli/types/settings/values.ts';
-import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
-import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
+import { isRecord, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { NUMBER, STRUCTURED, DASH_VALUE_HINT } from '#cli/config/commands/set.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { startSettingsEdit, findSettingDeclaration } from '#cli/commands/settings.ts';
+import { type Setting, type EffectiveSetting } from '#cli/types/settings/inheritance.ts';
 import { listRecordFields, findSettingSchema } from '#cli/schemas/settings/gspot-toml.ts';
-import { setKey, addToList, findScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
-import { type SetOptions, type ParsedSettingValue, type SettingReasonContext } from '#cli/types/commands/settings.ts';
+import { setKey, addToList, getScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
+import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
+import { type SetOptions, type ParsedSettingValue, type SettingReasonContext } from '#cli/types/commands/set.ts';
 
 // Structured values use the inline syntax of gspot.toml.
 function parseStructured(text: string): unknown {
@@ -39,19 +37,19 @@ function parseValueArgument(text: string): unknown {
     return isStructured ? parseStructured(text) : text;
 }
 
-function parseSettingValue(items: string[], declaration: SettingDeclaration): ParsedSettingValue {
-    const parsed = items.map((item) => parseValueArgument(item));
+function parseSettingValue(values: string[], setting: Setting): ParsedSettingValue {
+    const parsed = values.map((item) => parseValueArgument(item));
     const scalar = parsed.length === 1 ? parsed[0] : parsed;
-    const validation = findSettingSchema(declaration.name)?.safeParse(scalar);
+    const validation = findSettingSchema(setting.name)?.safeParse(scalar);
     if (validation?.success === false) {
         const issue = validation.error.issues.find((issue) => issue.code === 'invalid_value');
         if (issue !== undefined)
             throw new GspotError(
                 'arguments',
-                `The value \`${items.join(' ')}\` is not valid for ${declaration.name}. Use ${issue.values.map(String).join(' or ')}.`,
+                `The value \`${values.join(' ')}\` is not valid for ${setting.name}. Use ${issue.values.map(String).join(' or ')}.`,
             );
     }
-    if (declaration.type === 'list') return { type: 'list', value: Array.isArray(scalar) ? scalar : parsed };
+    if (setting.type === 'list') return { type: 'list', value: Array.isArray(scalar) ? scalar : parsed };
     return { type: 'scalar', value: scalar };
 }
 
@@ -62,41 +60,30 @@ function parseReasonEntries(options: SetOptions): ParsedSettingValue {
             'arguments',
             `${options.key} keeps a reason for each entry. Add --reason "..." with why each one belongs.`,
         );
-    return { type: 'scalar', value: Object.fromEntries(options.items.map((item) => [item, reason])) };
+    return { type: 'scalar', value: Object.fromEntries(options.values.map((item) => [item, reason])) };
 }
 
-function editSetting(
-    table: TomlTable,
-    change: ParsedSettingValue,
-    declaration: SettingDeclaration,
-    options: SetOptions,
-): void {
-    const scopeTable = findScopeTable(table, options.scope);
+function editSetting(table: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
+    const scopeTable = getScopeTable(table, options.scope);
     if (change.type === 'list') addToList(scopeTable, options.key, change.value);
-    else if (declaration.type === 'table' && isRecord(change.value)) {
+    else if (setting.type === 'table' && isRecord(change.value)) {
         const current = getValueAt(scopeTable, options.key.split('.'));
         const existing = getWrittenValue(current);
         setKey(scopeTable, options.key, { ...(isRecord(existing) ? existing : {}), ...change.value });
     } else setKey(scopeTable, options.key, change.value);
-    if (options.reason !== undefined && declaration.reason_values !== true) {
+    if (options.reason !== undefined && setting.reason_values !== true) {
         const current = getValueAt(scopeTable, options.key.split('.'));
         const value = getWrittenValue(current);
         setKey(scopeTable, options.key, { value, reason: options.reason });
     }
 }
 
-function refuseIncompleteReason({
-    options,
-    declaration,
-    change,
-    previous,
-    shippedDefault,
-}: SettingReasonContext): void {
+function assertCompleteReason({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
     if (
         change.type === 'list' &&
         options.reason === undefined &&
         previous?.reason !== undefined &&
-        isLoosening(declaration, change.value, shippedDefault)
+        isLoosening(setting, change.value, shippedDefault)
     )
         throw new GspotError(
             'arguments',
@@ -105,34 +92,34 @@ function refuseIncompleteReason({
 }
 
 // gspot keeps reasons for values that loosen a check, so set refuses a reason on any other value before it writes.
-function refuseUnneededReason({
+function assertReasonNeeded({
     options,
-    declaration,
+    setting,
     change,
     shippedDefault,
 }: Omit<SettingReasonContext, 'previous'>): void {
-    if (options.reason === undefined || declaration.reason_values === true) return;
-    if (isLoosening(declaration, change.value, shippedDefault)) return;
+    if (options.reason === undefined || setting.reason_values === true) return;
+    if (isLoosening(setting, change.value, shippedDefault)) return;
     throw new GspotError(
         'arguments',
         `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,
     );
 }
 
-function describeSettingChange(
+function formatSettingChange(
     change: ParsedSettingValue,
-    context: { declaration: SettingDeclaration; options: SetOptions; previous: EffectiveSetting | undefined },
+    context: { setting: Setting; options: SetOptions; previous: EffectiveSetting | undefined },
 ): string {
-    const { declaration, options, previous } = context;
-    const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
-    const isReasonTable = declaration.reason_values === true;
+    const { setting, options, previous } = context;
+    const displayKey = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
+    const isReasonTable = setting.reason_values === true;
     const was =
         previous?.value === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
-    if (isReasonTable) return `Added ${options.items.join(' and ')} to ${shown}.${was}`;
+    if (isReasonTable) return `Added ${options.values.join(' and ')} to ${displayKey}.${was}`;
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
-    if (!Array.isArray(change.value)) return `Set ${shown} to ${JSON.stringify(change.value)}.${reason}${was}`;
+    if (!Array.isArray(change.value)) return `Set ${displayKey} to ${JSON.stringify(change.value)}.${reason}${was}`;
     const items = change.value.map((item) => (typeof item === 'string' ? item : JSON.stringify(item))).join(' and ');
-    const description = change.type === 'list' ? `Added ${items} to ${shown}.` : `Set ${shown} to ${items}.`;
+    const description = change.type === 'list' ? `Added ${items} to ${displayKey}.` : `Set ${displayKey} to ${items}.`;
     return `${description}${reason}${was}`;
 }
 
@@ -148,26 +135,24 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
             'arguments',
             `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
         );
-    const edit = startSettingsEdit(options.cwd);
+    const edit = prepareSettingsEdit(options.cwd);
     const { root, input, settings } = edit;
-    const { known, match } = await findSettingDeclaration(edit, options.key, options.scope);
-    const declaration = match.declaration;
+    const { known, match } = await readSetting(edit, options.key, options.scope);
+    const setting = match.setting;
     const change =
-        declaration.reason_values === true
-            ? parseReasonEntries(options)
-            : parseSettingValue(options.items, declaration);
+        setting.reason_values === true ? parseReasonEntries(options) : parseSettingValue(options.values, setting);
     const previous = getSettingValue(known, settings, options.key, options.scope);
     const shippedDefault = findSettingDefault(known, settings, match, options.scope)?.value;
-    refuseIncompleteReason({ options, declaration, change, previous, shippedDefault });
-    refuseUnneededReason({ options, declaration, change, shippedDefault });
-    const summary = describeSettingChange(change, {
-        declaration,
+    assertCompleteReason({ options, setting, change, previous, shippedDefault });
+    assertReasonNeeded({ options, setting, change, shippedDefault });
+    const summary = formatSettingChange(change, {
+        setting,
         options,
         previous,
     });
     try {
-        editSetting(input.table, change, declaration, options);
-        return await saveSettings(root, { input, summary });
+        editSetting(input.table, change, setting, options);
+        return await applySettingsEdit(root, { edit: input, summary });
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings')
             throw new GspotError('arguments', error.message, { cause: error });
@@ -199,7 +184,7 @@ export function registerSet(program: Command, onResult: CommandCompletion): void
                 await runSetCommand({
                     cwd: process.cwd(),
                     key: setting,
-                    items,
+                    values: items,
                     ...stripUndefined({ reason: flags.reason, scope: flags.scope }),
                 }),
             );

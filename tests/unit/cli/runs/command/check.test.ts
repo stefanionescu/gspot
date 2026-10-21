@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { planChecks } from '#cli/planning/checks.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
+import { buildCommandSetup } from '#cli/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { buildCommandEnvironment } from '#cli/runs/command/check.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { PENDING_NOTES_SCRIPT } from '#tests/data/runs/command-checks.ts';
 
@@ -51,15 +51,13 @@ test('a Python check of a scratch copy reads the environment that the working tr
     await createFileTree(working.path, { ...files, '.venv/pyvenv.cfg': 'home = /usr/bin\n' });
     await createFileTree(scratch.path, files);
     const session = await openSession(scratch.path, { installedRoot: working.path });
-    const planned = planRun(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
+    const planned = planChecks(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
         ({ check }) => check.name === 'python/basedpyright',
     )!;
-    expect(buildCommandEnvironment(session, planned, {}).env['UV_PROJECT_ENVIRONMENT']).toBe(
-        join(working.path, '.venv'),
-    );
+    expect(buildCommandSetup(session, planned, {}).env['UV_PROJECT_ENVIRONMENT']).toBe(join(working.path, '.venv'));
     const inPlace = await openSession(working.path);
-    const local = planRun(inPlace, buildRunOptions({ only: ['python/basedpyright'] })).find(
+    const local = planChecks(inPlace, buildRunOptions({ only: ['python/basedpyright'] })).find(
         ({ check }) => check.name === 'python/basedpyright',
     )!;
-    expect(buildCommandEnvironment(inPlace, local, {}).env).not.toHaveProperty('UV_PROJECT_ENVIRONMENT');
+    expect(buildCommandSetup(inPlace, local, {}).env).not.toHaveProperty('UV_PROJECT_ENVIRONMENT');
 });

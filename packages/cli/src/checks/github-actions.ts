@@ -1,12 +1,13 @@
 import { join, posix } from 'node:path';
-import { copyIntoScratch } from '#cli/runs/copy/files.ts';
+import { createCopy } from '#cli/runs/copy/files.ts';
+import { type Session } from '#cli/types/session.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { GIT_FOLDER } from '#cli/config/repository/tracked.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
 import { ACTION_FILES, GITHUB_FOLDER, SELF_REPOSITORY_MARKER } from '#cli/config/checks/github-actions.ts';
 
@@ -67,13 +68,13 @@ function prepareActionlintText(text: string): string {
 }
 
 /**
- * Runs actionlint. If a workflow or action uses a $/ reference, checks a scratch copy with that reference changed to ./.
+ * Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with that reference changed to ./.
  *
  * @param session the repository and its tools.
  * @param planned the actionlint check and its files.
  * @returns the check result.
  */
-export async function checkActionlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkGithubActionsActionlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
     const inputs = new Map(
         [
@@ -87,7 +88,7 @@ export async function checkActionlint(session: Session, planned: PlannedCheck): 
         if (prepared !== source) replacements.set(file.path, prepared);
     }
     if (replacements.size === 0) return runCheckCommand(session, planned);
-    using scratch = await copyIntoScratch({
+    using scratch = await createCopy({
         root: session.root,
         paths: session.repository.files.filter((file) => file.path.startsWith(GITHUB_FOLDER)).map((file) => file.path),
         dependencies: [],
@@ -100,5 +101,5 @@ export async function checkActionlint(session: Session, planned: PlannedCheck): 
         chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
-    return await runCheckCommand(session, planned, { scratchRoot: scratch.path });
+    return await runCheckCommand(session, planned, { copyRoot: scratch.path });
 }

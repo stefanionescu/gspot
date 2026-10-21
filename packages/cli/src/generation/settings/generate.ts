@@ -1,23 +1,23 @@
 // Build each distinct tool file text once, and give its path to every scope that uses it.
 import { join } from 'node:path/posix';
-import type { Session } from '#cli/types/planning.ts';
-import { type MemoKey } from '#cli/types/system/files.ts';
+import type { Session } from '#cli/types/session.ts';
+import { type CacheKey } from '#cli/types/system/files.ts';
+import type { ToolFile } from '#cli/types/configurations.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { buildToolFile } from '#cli/generation/settings/build.ts';
-import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { TOOL_FILE_SCOPES_FOLDER } from '#cli/config/generation/files.ts';
-import { listPointerPaths, buildPointerFiles } from '#cli/generation/pointers.ts';
-import { listToolFileDeclarations } from '#cli/generation/settings/declarations.ts';
+import { TOOL_FILE_SCOPES_FOLDER } from '#cli/config/generation/settings/generate.ts';
+import { buildScopeTarget, listOwnedToolFiles } from '#cli/generation/settings/needed.ts';
+import { listPointerPaths, buildPointerFiles } from '#cli/generation/settings/pointers.ts';
 
 import type {
     WholeToolFile,
-    ToolFileContent,
-    ToolFileSelection,
+    BuiltToolFile,
+    OwnedToolFile,
     ToolFileGeneration,
     ToolFileGenerationState,
 } from '#cli/types/generation/files.ts';
 
-const toolFiles: MemoKey<Map<Session, ToolFileGeneration>> = { create: () => new Map() };
+const toolFilesKey: CacheKey<Map<Session, ToolFileGeneration>> = { create: () => new Map() };
 
 /**
  * Reuse generated settings only while the session keeps the same repository read cache.
@@ -25,15 +25,15 @@ const toolFiles: MemoKey<Map<Session, ToolFileGeneration>> = { create: () => new
  * @param session the current settings, scopes, and repository files.
  * @returns the generated settings and scope destinations.
  */
-function getToolFiles(session: Session): ToolFileGeneration {
-    return getCachedMapValue(session.reads, toolFiles, session, () => buildToolFiles(session));
+export function getToolFiles(session: Session): ToolFileGeneration {
+    return getCachedMapValue(session.reads, toolFilesKey, session, () => buildToolFiles(session));
 }
 
 // Root outputs win the shared path; other equal-content groups prefer the most scopes.
 function groupToolOutputs(
-    entries: (ToolFileSelection & { toolFile: WholeToolFile })[],
+    entries: (OwnedToolFile & { toolFile: WholeToolFile })[],
     state: ToolFileGenerationState,
-): ToolFileContent[][] {
+): BuiltToolFile[][] {
     const owners = entries[0]?.toolFile.per_scope === true ? entries : entries.slice(0, 1);
     const outputs = owners.map((entry) => ({
         ...entry,
@@ -55,14 +55,9 @@ function groupToolOutputs(
 }
 
 // Record one text group at its chosen path and map every participating scope to it.
-function recordToolOutput(
-    declared: string,
-    group: ToolFileContent[],
-    index: number,
-    state: ToolFileGenerationState,
-): void {
-    const [first] = group as [ToolFileContent, ...ToolFileContent[]];
-    const chosen = index === 0 ? declared : formatScopeTarget(first.toolFile, first.owner.selection.scope.path);
+function addToolOutput(declared: string, group: BuiltToolFile[], index: number, state: ToolFileGenerationState): void {
+    const [first] = group as [BuiltToolFile, ...BuiltToolFile[]];
+    const chosen = index === 0 ? declared : buildPerScopeTarget(first.toolFile, first.owner.selection.scope.path);
     const file =
         chosen === declared
             ? first.file
@@ -85,20 +80,20 @@ function recordToolOutput(
 }
 
 // Whole-file outputs establish destinations before pointer fragments resolve against them.
-function buildWholeFiles(declarations: ToolFileSelection[], state: ToolFileGenerationState): void {
-    const whole = declarations.filter(
-        (entry): entry is ToolFileSelection & { toolFile: WholeToolFile } => entry.toolFile.source !== undefined,
+function buildWholeFiles(toolFiles: OwnedToolFile[], state: ToolFileGenerationState): void {
+    const whole = toolFiles.filter(
+        (entry): entry is OwnedToolFile & { toolFile: WholeToolFile } => entry.toolFile.source !== undefined,
     );
     for (const [declared, entries] of Map.groupBy(whole, ({ toolFile }) => toolFile.target)) {
         const groups = groupToolOutputs(entries, state);
-        for (const [index, group] of groups.entries()) recordToolOutput(declared, group, index, state);
+        for (const [index, group] of groups.entries()) addToolOutput(declared, group, index, state);
     }
 }
 
 // A pointer-only declaration replaces the generic one for the same scope and declared target.
-function collectPointerOnlyPaths(declarations: ToolFileSelection[], selected: ToolFileSelection): Set<string> {
+function listPointerOnlyPaths(toolFiles: OwnedToolFile[], selected: OwnedToolFile): Set<string> {
     return new Set(
-        declarations
+        toolFiles
             .filter(
                 (entry) =>
                     entry.owner.selection.scope.path === selected.owner.selection.scope.path &&
@@ -109,20 +104,11 @@ function collectPointerOnlyPaths(declarations: ToolFileSelection[], selected: To
     );
 }
 
-// Both pointer phases resolve the same scope and declaration pair in the output map.
-function getSelectedTarget(selected: ToolFileSelection, state: ToolFileGenerationState): string | undefined {
-    return state.targets.get(selected.owner.selection.scope.path)?.get(selected.toolFile.target);
-}
-
-function addPointerFiles(
-    selected: ToolFileSelection,
-    declarations: ToolFileSelection[],
-    state: ToolFileGenerationState,
-): void {
+function addPointerFiles(selected: OwnedToolFile, toolFiles: OwnedToolFile[], state: ToolFileGenerationState): void {
     const { toolFile, owner } = selected;
-    const target = getSelectedTarget(selected, state) ?? toolFile.target;
-    if (isRootPointerShared(selected, declarations, target)) return;
-    const pointerOnlyPaths = collectPointerOnlyPaths(declarations, selected);
+    const target = buildScopeTarget(owner.selection.scope.path, toolFile, state.targets);
+    if (isRootPointerShared(selected, toolFiles, target)) return;
+    const pointerOnlyPaths = listPointerOnlyPaths(toolFiles, selected);
     for (const pointer of buildPointerFiles(owner, toolFile, target)) {
         if (
             toolFile.source === undefined ||
@@ -134,11 +120,11 @@ function addPointerFiles(
 }
 
 // A scope that uses the same tool file as the root needs no pointer of its own when the pointer inherits.
-function isRootPointerShared(selected: ToolFileSelection, declarations: ToolFileSelection[], target: string): boolean {
+function isRootPointerShared(selected: OwnedToolFile, toolFiles: OwnedToolFile[], target: string): boolean {
     const { toolFile, owner } = selected;
     if (toolFile.pointer?.inherit !== true || owner.selection.scope.path === '' || target !== toolFile.target)
         return false;
-    return declarations.some(
+    return toolFiles.some(
         (entry) => entry.toolFile.target === toolFile.target && entry.owner.selection.scope.path === '',
     );
 }
@@ -150,10 +136,10 @@ function isRootPointerShared(selected: ToolFileSelection, declarations: ToolFile
  * @returns the tool files, and the path that each scope uses.
  */
 function buildToolFiles(session: Session): ToolFileGeneration {
-    const declarations = listToolFileDeclarations(session);
+    const toolFiles = listOwnedToolFiles(session);
     const state: ToolFileGenerationState = { targets: new Map(), files: new Map() };
-    buildWholeFiles(declarations, state);
-    for (const entry of declarations) addPointerFiles(entry, declarations, state);
+    buildWholeFiles(toolFiles, state);
+    for (const entry of toolFiles) addPointerFiles(entry, toolFiles, state);
     return { files: [...state.files.values()], targets: state.targets };
 }
 
@@ -165,10 +151,8 @@ function buildToolFiles(session: Session): ToolFileGeneration {
  * @param scope the folder of the scope.
  * @returns the repository-relative path.
  */
-function formatScopeTarget(toolFile: Pick<ToolFileDeclaration, 'target' | 'file' | 'root'>, scope: string): string {
+export function buildPerScopeTarget(toolFile: Pick<ToolFile, 'target' | 'file' | 'root'>, scope: string): string {
     if (toolFile.root) return join(scope, toolFile.target);
     const folder = toolFile.target.slice(0, toolFile.target.length - toolFile.file.length);
     return join(folder, TOOL_FILE_SCOPES_FOLDER, scope, toolFile.file);
 }
-
-export { getToolFiles, formatScopeTarget };

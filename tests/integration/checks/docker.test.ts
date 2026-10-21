@@ -12,7 +12,7 @@ import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 
 import {
     DOCKER_CASES,
@@ -23,6 +23,17 @@ import {
     ROOT_USER_DOCKERFILE,
     TRIVY_SCOPE_SETTINGS,
 } from '#tests/data/checks/docker.ts';
+
+// Each tag gets its own payload, so a clean image never depends on the loop order.
+async function importImage(root: string, tag: string, payload: string | Buffer): Promise<void> {
+    await writeFile(join(root, 'payload.pem'), payload);
+    const archive = runCommandBlocking(['tar', '-cf', 'payload.tar', 'payload.pem'], { cwd: root });
+    if (archive.code !== 0) throw new Error(archive.stderr);
+    const imported = runCommandBlocking(['docker', 'import', 'payload.tar', tag], {
+        cwd: root,
+    });
+    if (imported.code !== 0) throw new Error(imported.stderr);
+}
 
 test('Trivy checks each Dockerfile in its deepest scope and honors an ignore limited to a scope path', async () => {
     await using sandbox = await testdir();
@@ -109,17 +120,6 @@ test.each([...LEVELS])(
     },
 );
 
-// Each tag gets its own payload, so a clean image never depends on the loop order.
-async function importImage(root: string, tag: string, payload: string | Buffer): Promise<void> {
-    await writeFile(join(root, 'payload.pem'), payload);
-    const archive = runCommandBlocking(['tar', '-cf', 'payload.tar', 'payload.pem'], { cwd: root });
-    if (archive.code !== 0) throw new Error(archive.stderr);
-    const imported = runCommandBlocking(['docker', 'import', 'payload.tar', tag], {
-        cwd: root,
-    });
-    if (imported.code !== 0) throw new Error(imported.stderr);
-}
-
 // These Docker checks need the Linux Docker engine.
 test.skipIf(!isLinux)(
     'docker/trivy-image reports a private key in an image, errors on a broken tool file, and passes a clean image',
@@ -177,5 +177,5 @@ test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the
             ? { ...entry.expected, message: matchSubstring(entry.expected.message) }
             : entry.expected;
     const result = await runCheckSample(installedSandbox(), { ...entry, expected }, DOCKER_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary({ ...entry, expected }));
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary({ ...entry, expected }));
 });

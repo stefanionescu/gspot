@@ -1,3 +1,5 @@
+import type { TemporaryPath } from '#cli/types/parsers/bash.ts';
+
 /** Quotes, parameter modifiers, and escaped hashes remain code. */
 export const BASH_COMMENT_CASES = [
     ['echo "a # b" # c', 'echo "a # b"'],
@@ -83,7 +85,7 @@ second() { local tmp=$(mktemp); trap 'rm -rf "$tmp"' RETURN; }
             { name: 'tmp', line: 2, cleanupLines: [2] },
         ],
     },
-] as const;
+] satisfies { source: string; expected: TemporaryPath[] }[];
 
 export const FORWARDING_CALL_CASES = [
     { source: 'consume "$@"\n', count: 1, forwards: true },

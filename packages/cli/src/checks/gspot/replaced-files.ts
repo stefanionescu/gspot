@@ -1,9 +1,10 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import { type Session } from '#cli/types/session.ts';
 import { buildBuiltInResult } from '#cli/runs/built-in.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
-import { listGeneratedPaths } from '#cli/repository/classify.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { listToolSettingsFiles } from '#cli/repository/tool-settings-files.ts';
+import { listReplacedFiles } from '#cli/repository/replaced-files.ts';
+import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 
 /**
  * Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint
@@ -13,11 +14,13 @@ import { listToolSettingsFiles } from '#cli/repository/tool-settings-files.ts';
  * @param planned the repository-wide check.
  * @returns the check result.
  */
-export function checkReplacedFiles(session: Session, planned: PlannedCheck): CheckResult {
+export function checkGspotReplacedFiles(session: Session, planned: PlannedCheck): CheckResult {
     const started = performance.now();
-    const tools = new Set(session.neededToolManifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
+    const tools = new Set(
+        session.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
+    );
     const generated = listGeneratedPaths(session.repository.files);
-    const findings = listToolSettingsFiles(session.root, session.repository.files, session.manifests.values())
+    const findings = listReplacedFiles(session.root, session.repository.files, session.configurations.values())
         .filter(({ tool, path, shared }) => !shared && tools.has(tool) && !generated.has(path))
         .map(({ tool, path }) =>
             buildFinding(

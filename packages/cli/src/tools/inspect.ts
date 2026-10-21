@@ -3,18 +3,18 @@ import which from 'which';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { stripUndefined } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
+import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolAvailability } from '#cli/types/tools/run.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { findToolProjectPackage } from '#cli/configurations/tools.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
-import type { InstalledDependency } from '#cli/types/parsers/dependencies.ts';
-import { locateCandidates, locateRepositoryCandidates } from '#cli/tools/locate.ts';
-import { DOT_GSPOT, GSPOT_NODE_MODULES_PATH } from '#cli/config/system/locations.ts';
-import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/tools/find.ts';
-import { readToolProjectPackage, findInstalledDependency } from '#cli/repository/packages.ts';
-import { MISE_PROGRAM, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/find.ts';
+import { findToolProjectPackage } from '#cli/configurations/declared-tools.ts';
+import { DOT_GSPOT, GSPOT_NODE_MODULES_PATH } from '#cli/config/gspot-paths.ts';
+import type { InstalledDependency } from '#cli/types/repository/installed-packages.ts';
+import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
+import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/tools/inspection.ts';
+import { MISE_TOOL, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspection.ts';
+import { readToolProjectPackage, findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 
 /**
  * Build the install command for managed tools, or the install advice for a system tool.
@@ -23,10 +23,10 @@ import { MISE_PROGRAM, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/conf
  *
  * @returns the next install step.
  */
-function buildInstallHint(tool: ToolDeclaration): string {
-    const installation = findToolProjectPackage(tool);
-    if (installation !== undefined || tool.system !== true) {
-        if (installation !== undefined || which.sync(MISE_PROGRAM, { nothrow: true }) !== null)
+function buildInstallHint(tool: Tool): string {
+    const toolProjectPackage = findToolProjectPackage(tool);
+    if (toolProjectPackage !== undefined || tool.system !== true) {
+        if (toolProjectPackage !== undefined || which.sync(MISE_TOOL, { nothrow: true }) !== null)
             return 'Run: gspot install';
         return `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`;
     }
@@ -46,7 +46,7 @@ function inspectLibraryCommand(inspected: InspectedTool, command: string[]): Too
     const { root, cwd, tool, timeoutSeconds } = inspected;
     const program = command[0] as string;
     const commandArguments = command.slice(1);
-    const [path] = locateCandidates(root, program, { search: 'mise', timeoutSeconds, searchFolders: [cwd, root] });
+    const [path] = listExecutablePaths(root, program, { search: 'mise', timeoutSeconds, searchFolders: [cwd, root] });
     return path === undefined
         ? buildMissingInspection(inspected)
         : inspectExecutablePath({ ...inspected, tool: { ...tool, version_command: commandArguments } }, path);
@@ -94,18 +94,21 @@ function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInsp
 function inspectProjectExecutable(inspected: InspectedTool): ToolInspection | undefined {
     const { root, cwd, tool, timeoutSeconds } = inspected;
     if (tool.system !== true) return undefined;
-    const installation = findToolProjectPackage(tool);
-    if (installation === undefined) return undefined;
-    const [project] = locateRepositoryCandidates(root, tool.name, { searchFolders: [cwd, root] });
+    const toolProjectPackage = findToolProjectPackage(tool);
+    if (toolProjectPackage === undefined) return undefined;
+    const [project] = listRepositoryExecutablePaths(root, tool.name, { searchFolders: [cwd, root] });
     if (project !== undefined) return inspectExecutablePath(inspected, project);
-    const [toolProjectPath] = locateCandidates(root, tool.name, {
+    const [toolProjectPath] = listExecutablePaths(root, tool.name, {
         search: 'mise',
         timeoutSeconds,
         searchFolders: [cwd, root],
-        toolProjectKind: installation.kind,
+        toolFolderKind: toolProjectPackage.kind,
     });
     if (toolProjectPath !== undefined)
-        return inspectExecutablePath({ ...inspected, want: tool.version ?? installation.version }, toolProjectPath);
+        return inspectExecutablePath(
+            { ...inspected, want: tool.version ?? toolProjectPackage.version },
+            toolProjectPath,
+        );
     return undefined;
 }
 
@@ -120,9 +123,9 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
               search: 'path' as const,
               searchFolders: [join(root, DOT_GSPOT), cwd, root],
               miseBinPaths,
-              toolProjectKind: findToolProjectPackage(tool)?.kind,
+              toolFolderKind: findToolProjectPackage(tool)?.kind,
           };
-    const [path] = locateCandidates(root, tool.name, { timeoutSeconds, ...search });
+    const [path] = listExecutablePaths(root, tool.name, { timeoutSeconds, ...search });
     return path === undefined ? buildMissingInspection(inspected) : inspectExecutablePath(inspected, path);
 }
 
@@ -134,7 +137,7 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
  *
  * @returns the install note, with the next step.
  */
-export function formatUnavailableNote(tool: ToolDeclaration, inspection: ToolInspection): string {
+export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): string {
     const hint = inspection.hint ?? buildInstallHint(tool);
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
     return inspection.state === 'outdated'
@@ -145,26 +148,26 @@ export function formatUnavailableNote(tool: ToolDeclaration, inspection: ToolIns
 /**
  * Inspect one tool, and reuse an inspection from earlier in this run.
  *
- * @param context where to search, with the run cache.
+ * @param search where to search, with the run cache.
  * @param tool the pin.
  *
  * @returns the tool path, version, and availability.
  */
-export function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolInspection {
-    const { root, inspections } = context;
-    const cwd = context.cwd ?? root;
+export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
+    const { root, inspections } = search;
+    const cwd = search.cwd ?? root;
     const key = JSON.stringify([root, cwd, tool]);
     const cached = inspections.get(key);
     if (cached) return cached;
-    const installedRoot = context.installedRoot ?? root;
+    const installedRoot = search.installedRoot ?? root;
     const inspected: InspectedTool = {
         root: installedRoot,
         cwd: isInside(relative(root, cwd)) ? join(installedRoot, relative(root, cwd)) : cwd,
         tool,
         hint: buildInstallHint(tool),
-        timeoutSeconds: context.timeoutSeconds,
+        timeoutSeconds: search.timeoutSeconds,
         want: tool.system === true ? undefined : tool.version,
-        miseBinPaths: context.miseBinPaths,
+        miseBinPaths: search.miseBinPaths,
     };
     const inspection = tool.kind === 'library' ? inspectLibrary(inspected) : inspectExecutable(inspected);
     inspections.set(key, inspection);
@@ -179,7 +182,7 @@ export function inspectTool(context: ToolSearch, tool: ToolDeclaration): ToolIns
  *
  * @returns the executable path, or the unavailable status and its message.
  */
-export function buildToolAvailability(tool: ToolDeclaration, inspection: ToolInspection): ToolAvailability {
+export function buildToolAvailability(tool: Tool, inspection: ToolInspection): ToolAvailability {
     if (AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined) return { path: inspection.path };
     if (inspection.state === 'error')
         return { status: 'error', note: inspection.note ?? `${tool.name} version inspection failed.` };

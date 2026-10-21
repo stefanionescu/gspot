@@ -2,7 +2,7 @@
     "package": "eslint",
     "version": "9.39.5",
     "source": "builtinRules",
-    "rules": [
+    "names": [
         "accessor-pairs",
         "array-bracket-newline",
         "array-bracket-spacing",

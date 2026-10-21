@@ -1,3 +1,5 @@
+export const MIGRATION_SYNTAX_SKIP = 'A migration does not parse. postgres/migration-order reports where.';
+
 export const CONSTRAINT_SUFFIXES: Readonly<Record<string, string>> = {
     CONSTR_PRIMARY: 'pkey',
     CONSTR_UNIQUE: 'key',

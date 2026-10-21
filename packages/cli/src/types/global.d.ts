@@ -12,6 +12,6 @@ declare global {
 declare module 'zod/v4/core' {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: Zod reads extra metadata types only from an interface.
     interface GlobalMeta {
-        pathRole?: 'source' | 'destination' | 'build';
+        path_role?: 'source' | 'destination' | 'build';
     }
 }

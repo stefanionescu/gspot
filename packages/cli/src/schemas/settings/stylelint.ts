@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { TableSettings } from '#cli/types/settings/tables.ts';
-import type { StylelintOptions } from '#cli/types/settings/file.ts';
 import { nonemptyString } from '#cli/schemas/configurations/parts.ts';
 import { buildRuleTableSchema } from '#cli/schemas/settings/rule-options.ts';
+import { type TableSettings, type StylelintOptions } from '#cli/types/settings/file.ts';
 
 const stylelintOptions = z
     .object({
@@ -15,12 +14,10 @@ const stylelintValue = z.union([z.literal(true), nonemptyString, z.number(), sty
     Exclude<TableSettings<'tools.stylelint'>['rules'][string], unknown[]>
 >;
 
-const stylelintRules = buildRuleTableSchema(
+export const stylelintRules = buildRuleTableSchema(
     z.record(
         nonemptyString,
         z.union([stylelintValue, z.tuple([z.union([stylelintValue, z.array(z.json())]), stylelintOptions.optional()])]),
     ),
     'css/stylelint',
 ) satisfies z.ZodType<TableSettings<'tools.stylelint'>['rules']>;
-
-export { stylelintRules };

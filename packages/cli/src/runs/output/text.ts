@@ -1,6 +1,6 @@
 // Reads tool messages with declared text patterns.
 import type { Finding } from '#cli/types/runs/check.ts';
-import { type ReportInput } from '#cli/types/runs/output.ts';
+import { type ToolOutput } from '#cli/types/runs/output.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/runs/output.ts';
 
 function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {
@@ -13,18 +13,18 @@ function setMatchedFields(finding: Finding, groups: Record<string, string | unde
     return finding;
 }
 
-function readMatchedFinding(
-    input: ReportInput,
+function buildMatchedFinding(
+    output: ToolOutput,
     fixable: RegExp | undefined,
     line: string,
     groups: Record<string, string | undefined>,
 ): Finding {
-    const { check, output, help } = input;
+    const { check, output: format, help } = output;
     return setMatchedFields(
         {
             check,
             file: (groups['file'] ?? '').replace(LEADING_DOT_SLASH, ''),
-            message: (groups['message'] ?? output.message ?? line).trim(),
+            message: (groups['message'] ?? format.message ?? line).trim(),
             help,
             fixable: fixable?.test(line) === true,
         },
@@ -35,18 +35,18 @@ function readMatchedFinding(
 /**
  * Read a finding from each matching output line.
  *
- * @param input the tool output to read.
+ * @param output the tool output to read.
  * @returns the findings from matched lines.
  */
-export function parseRegexFindings(input: ReportInput): Finding[] {
-    const { output, text } = input;
-    const pattern = new RegExp(output.pattern as string, 'u');
-    const fixable = output.fixable === undefined ? undefined : new RegExp(output.fixable, 'u');
+export function parseRegexFindings(output: ToolOutput): Finding[] {
+    const { output: format, text } = output;
+    const pattern = new RegExp(format.pattern as string, 'u');
+    const fixable = format.fixable === undefined ? undefined : new RegExp(format.fixable, 'u');
     const findings = new Map<string, Finding>();
     for (const line of text.split(/\r?\n/u)) {
         const groups = pattern.exec(line)?.groups;
         if (groups) {
-            const finding = readMatchedFinding(input, fixable, line, groups);
+            const finding = buildMatchedFinding(output, fixable, line, groups);
             findings.set(JSON.stringify(finding), finding);
         }
     }
@@ -56,13 +56,13 @@ export function parseRegexFindings(input: ReportInput): Finding[] {
 /**
  * Read findings grouped under output file headings.
  *
- * @param input the tool output to read.
+ * @param output the tool output to read.
  * @returns the findings under each matched file heading.
  */
-export function parseGroupedFindings(input: ReportInput): Finding[] {
-    const { check, output, text, help } = input;
-    const filePattern = new RegExp(output.file_pattern as string, 'u');
-    const pattern = new RegExp(output.pattern as string, 'u');
+export function parseGroupedFindings(output: ToolOutput): Finding[] {
+    const { check, output: format, text, help } = output;
+    const filePattern = new RegExp(format.file_pattern as string, 'u');
+    const pattern = new RegExp(format.pattern as string, 'u');
     const findings: Finding[] = [];
     let file = '';
     for (const line of text.split(/\r?\n/u)) {
@@ -83,11 +83,11 @@ export function parseGroupedFindings(input: ReportInput): Finding[] {
 /**
  * Read one finding from each nonempty output line.
  *
- * @param input the tool output to read.
+ * @param output the tool output to read.
  * @returns the findings from the output lines.
  */
-export function parseLineFindings(input: ReportInput): Finding[] {
-    const { check, text, help } = input;
+export function parseLineFindings(output: ToolOutput): Finding[] {
+    const { check, text, help } = output;
     return text
         .split('\n')
         .map((line) => line.trim())

@@ -32,7 +32,6 @@ async function parseScopeShape(scope: string): Promise<string> {
     const file = output.files.find((entry) => entry.path === ESLINT_FILE);
     expect(file).toBeDefined();
     const tree = await parseSource('javascript', file!.content);
-    expect(tree).not.toBeNull();
     try {
         expect(tree.rootNode.hasError).toBe(false);
         shape = tree.rootNode.toString();

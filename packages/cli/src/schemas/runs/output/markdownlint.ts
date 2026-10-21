@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { type MarkdownlintResult } from '#cli/types/runs/output.ts';
+import { type MarkdownlintResult } from '#cli/types/runs/tool-reports.ts';
 
 export const markdownlintReportSchema = z.array(
     z.object({

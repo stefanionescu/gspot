@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { getValueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/tables.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
@@ -13,23 +13,18 @@ import { BUILD_SETTINGS_PBXPROJ } from '#tests/data/checks/xcode.ts';
 import { LINT_JOBS, IMPORT_STYLE_CASES, CI_PREFERENCE_CASES } from '#tests/data/commands/init.ts';
 
 test.each([...CI_PREFERENCE_CASES])(
-    'init proposes the CI provider from %s',
-    async (_label, ci, path, remote, expected) => {
-        await using sandbox = await testdir(Object.fromEntries(ci.map((file) => [file, '{}\n'])));
+    'init proposes the CI provider from $name',
+    async ({ tracked, untracked, remote, provider }) => {
+        await using sandbox = await testdir(Object.fromEntries(tracked.map((file) => [file, '{}\n'])));
 
         readGitOutput(sandbox.path, ['init', '-q']);
-        if (ci.length > 0) readGitOutput(sandbox.path, ['add', '--', ...ci]);
-        if (path !== '') await createFileTree(sandbox.path, { [path]: '{}\n' });
+        if (tracked.length > 0) readGitOutput(sandbox.path, ['add', '--', ...tracked]);
+        if (untracked !== '') await createFileTree(sandbox.path, { [untracked]: '{}\n' });
         readGitOutput(sandbox.path, ['config', 'remote.origin.url', remote]);
         const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
-        if (expected === 'none') expect(parse(output.settings)).not.toHaveProperty('ci');
-        else
-            expect(parseSettings(output.settings, undefined).ci).toMatchObject({
-                enabled: true,
-                provider: expected,
-            });
+        expect(parseSettings(output.settings, undefined).ci?.provider).toBe(provider);
     },
 );
 

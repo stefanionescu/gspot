@@ -45,9 +45,8 @@ test.each([...LEVELS])(
 );
 
 test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig', async () => {
-    const level = 'all';
     await using sandbox = await testdir();
-    const settings = buildSandboxSettings(['typescript'], { level });
+    const settings = buildSandboxSettings(['typescript'], { level: 'all' });
     await createFileTree(sandbox.path, { ...JSDOC_FILES, 'gspot.toml': settings });
     const eslint = await createEslint(sandbox.path);
     const expectedConfiguration = {

@@ -1,24 +1,31 @@
 import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
 import { findRoot } from '#cli/repository/read.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
+import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerUnset } from '#cli/commands/unset.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
 import { registerRemove } from '#cli/commands/remove.ts';
+import { registerInit } from '#cli/commands/init/init.ts';
 import { registerInstall } from '#cli/commands/install.ts';
-import { registerInit } from '#cli/commands/init/command.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { registerCheck } from '#cli/commands/check/check.ts';
 import { registerUnignore } from '#cli/commands/unignore.ts';
 import { assertVersionPin } from '#cli/repository/version.ts';
-import { registerCheck } from '#cli/commands/check/command.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { registerDoctor } from '#cli/commands/doctor/command.ts';
-import { registerExplain } from '#cli/commands/explain/command.ts';
-import { Command, type Argument } from '@commander-js/extra-typings';
-import { VERSION_PIN_COMMANDS } from '#cli/config/commands/program.ts';
+import { registerDoctor } from '#cli/commands/doctor/doctor.ts';
+import { registerExplain } from '#cli/commands/explain/explain.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { printResult, printFailure, isColorAllowed, setOutputOptions } from '#cli/system/terminal.ts';
+import { Command, type Argument, CommanderError } from '@commander-js/extra-typings';
+import { printError, printResult, isColorAllowed, setOutputOptions } from '#cli/system/terminal.ts';
 
+import {
+    COMMAND_SUGGESTION,
+    UNKNOWN_COMMAND_NAME,
+    VERSION_PIN_COMMANDS,
+    COMMANDER_ERROR_PREFIX,
+} from '#cli/config/commands/program.ts';
 import {
     CODE_MARK,
     COMMAND_HELP,
@@ -28,6 +35,53 @@ import {
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
 } from '#cli/config/commands/help.ts';
+
+/**
+ * Format Commander argument errors with the command suggestions.
+ *
+ * @param error the refused command arguments.
+ * @param programHelp the help that gspot prints when the arguments name no command.
+ * @returns the message and any available correction.
+ */
+function formatArgumentError(error: CommanderError, programHelp: string): string {
+    const { message } = error;
+    // With no command, Commander raises a help error after writing the help to the silent error stream.
+    if (error.code === 'commander.help') return programHelp;
+    if (error.code === 'commander.unknownCommand') {
+        const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
+        const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
+        const correction = suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
+        return `Unknown command ${name}.${correction} Run gspot --help to see the commands.`;
+    }
+    const text = message.slice(COMMANDER_ERROR_PREFIX.length);
+    return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+}
+
+/**
+ * Print a command failure, and choose the exit status.
+ *
+ * @param error what the command threw.
+ * @param programHelp the help that gspot prints when the arguments name no command.
+ * @returns zero for Commander help, or the command error status.
+ */
+export function printFailure(error: unknown, programHelp: string): number {
+    if (error instanceof CommanderError) {
+        if (error.exitCode === 0) return 0;
+        printError({ error: 'arguments', message: formatArgumentError(error, programHelp) });
+        return EXIT_ERROR;
+    }
+    if (error instanceof GspotError) {
+        printError({ error: error.code, message: error.message });
+        return EXIT_ERROR;
+    }
+    const detail = (error instanceof Error ? error.message : String(error))
+        .replaceAll(/\s+/gu, ' ')
+        .trim()
+        .replace(/\.$/u, '');
+    const message = `gspot stopped because of an internal error: ${detail}. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.`;
+    printError({ error: 'failure', message });
+    return EXIT_ERROR;
+}
 
 function formatArgumentTerm(argument: Argument): string {
     const name = argument.argChoices?.join('|') ?? argument.name();
@@ -80,10 +134,10 @@ function formatProgramHelp(program: Command): string {
  * @param onResult writes the command result.
  * @returns the Commander program.
  */
-function buildProgram(onResult: CommandCompletion): Command {
+export function buildProgram(onResult: CommandCompletion): Command {
     const program: Command = new Command('gspot')
-        .description(packageManifest.description)
-        .version(packageManifest.version, '--version', GLOBAL_OPTIONS['--version'])
+        .description(cliPackage.description)
+        .version(cliPackage.version, '--version', GLOBAL_OPTIONS['--version'])
         .helpOption('-h, --help', GLOBAL_OPTIONS['-h, --help'])
         .helpCommand(false)
         .showSuggestionAfterError(true)
@@ -125,7 +179,7 @@ function buildProgram(onResult: CommandCompletion): Command {
  * @param commandArguments the arguments after the program name.
  * @returns the exit code.
  */
-async function runProgram(commandArguments: string[]): Promise<number> {
+export async function runProgram(commandArguments: string[]): Promise<number> {
     let result!: CommandResult;
     const program = buildProgram((value) => {
         result = value;
@@ -147,4 +201,3 @@ async function runProgram(commandArguments: string[]): Promise<number> {
         return printFailure(error, formatProgramHelp(program));
     }
 }
-export { runProgram, buildProgram };

@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, expect, describe } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
-import { type CheckResult } from '#cli/types/runs/check.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
@@ -40,7 +39,7 @@ describe('results', () => {
 });
 
 describe('results', () => {
-    test('each check result is reported as soon as the check ends, with ignores applied', async () => {
+    test('progress is reported as soon as each check ends, with ignores applied to the final results', async () => {
         await using sandbox = await testdir({
             'source.sh': 'echo example\n',
             'gspot.toml': buildSandboxSettings([], {
@@ -74,15 +73,15 @@ describe('results', () => {
             }),
         });
 
-        const completed: CheckResult[] = [];
+        const completed: number[] = [];
         const ready = Promise.withResolvers<undefined>();
         const running = runChecks(
             await openSession(sandbox.path),
             buildRunOptions({
                 only: ['project/fast', 'project/waiting'],
-                onResult: (entry) => {
-                    completed.push(entry);
-                    if (entry.check === 'project/fast') ready.resolve(undefined);
+                onProgress: (progress) => {
+                    completed.push(progress.completed);
+                    if (progress.completed === 1) ready.resolve(undefined);
                 },
             }),
         );
@@ -91,8 +90,9 @@ describe('results', () => {
             Promise.race([ready.promise, running]).then(() => writeFile(join(sandbox.path, 'completed'), 'ready')),
         ]);
         expect(result.report.exitCode).toBe(0);
-        expect(completed.map((entry) => entry.check)).toStrictEqual(['project/fast', 'project/waiting']);
-        expect(completed[0]).toMatchObject({ status: 'passed', findings: [] });
+        expect(completed).toStrictEqual([1, 2]);
+        expect(result.report.checks.map((entry) => entry.check)).toStrictEqual(['project/fast', 'project/waiting']);
+        expect(result.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
         expect(result.report.ignores).toStrictEqual([
             { check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' },
         ]);

@@ -1,5 +1,5 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { isRecord } from '#cli/system/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import type { PluginRule, ReferencePage } from '../types/reference.ts';
 import { FIRST_SENTENCE, REFERENCE_FOLDERS, SCHEMA_TYPE_LABELS } from '../config/reference.ts';

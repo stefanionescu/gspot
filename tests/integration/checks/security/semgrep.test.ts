@@ -1,10 +1,11 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { test, expect, describe } from 'bun:test';
 import { hasToolBuild } from '#tests/setup/system.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { Sandbox } from '#tests/types/sandbox.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { runSandboxStep } from '#tests/setup/install.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { NEXT_CONFIG_CASES } from '#tests/data/checks/nextjs.ts';
@@ -26,42 +27,38 @@ import {
     PLATFORM_ALL_SOURCE_FINDINGS,
 } from '#tests/data/checks/security/semgrep-rules.ts';
 
-// Systems without a semgrep build skip every test here, so they install nothing.
-const installedSandbox = hasToolBuild('semgrep') ? registerSharedSandbox(SEMGREP_SANDBOX) : undefined;
+/** Assert the semgrep parsing behavior. */
+async function assertSemgrepParsing(installedSandbox: () => Sandbox): Promise<void> {
+    const sandbox = installedSandbox();
+    const sourceFiles = {
+        'gspot.toml': buildSandboxSettings(['bash', 'security']),
+        'scripts/café build.sh': 'if then\n',
+    };
+    await using _sourceChange = await applyStagedSandboxChanges(
+        sandbox,
+        buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
+    );
+    const malformed = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
+    expect(malformed.code, malformed.stdout + malformed.stderr).toBe(1);
+    expect(malformed.report.checks).toMatchObject([
+        {
+            check: 'security/semgrep',
+            status: 'failed',
+            findings: [{ file: 'scripts/café build.sh', line: 1, column: 1, rule: 'parse-error' }],
+        },
+    ]);
+    await writeFile(join(sandbox.root, 'scripts/café build.sh'), 'printf "%s\\n" ready\n');
+    const corrected = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(corrected.report.checks).toMatchObject([{ check: 'security/semgrep', status: 'passed', findings: [] }]);
+}
 
-test.skipIf(!hasToolBuild('semgrep'))(
-    'Semgrep reports a Bash file it cannot parse as a finding at its position',
-    async () => {
-        const sandbox = installedSandbox!();
-        const sourceFiles = {
-            'gspot.toml': buildSandboxSettings(['bash', 'security']),
-            'scripts/café build.sh': 'if then\n',
-        };
-        await using _sourceChange = await applyStagedSandboxChanges(
-            sandbox,
-            buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
-        );
-        const malformed = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
-        expect(malformed.code, malformed.stdout + malformed.stderr).toBe(1);
-        expect(malformed.report.checks).toMatchObject([
-            {
-                check: 'security/semgrep',
-                status: 'failed',
-                findings: [{ file: 'scripts/café build.sh', line: 1, column: 1, rule: 'parse-error' }],
-            },
-        ]);
-        await writeFile(join(sandbox.root, 'scripts/café build.sh'), 'printf "%s\\n" ready\n');
-        const corrected = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(corrected.report.checks).toMatchObject([{ check: 'security/semgrep', status: 'passed', findings: [] }]);
-    },
-);
-
-test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async () => {
-    const sandbox = installedSandbox!();
+/** Assert the shell and swift rules behavior. */
+async function assertLanguageRules(installedSandbox: () => Sandbox): Promise<void> {
+    const sandbox = installedSandbox();
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['bash', 'swift', 'security'], {
-            level: 'recommended',
+            level: 'all',
         }),
         'script.sh': BASH_DOWNLOAD_SAMPLE,
         'Value.swift': SWIFT_SAMPLE,
@@ -70,18 +67,6 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async ()
         sandbox,
         buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
     );
-    const recommended = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
-    expect(recommended.code, recommended.stdout + recommended.stderr).toBe(1);
-    expect(
-        recommended.report.checks
-            .flatMap((check) => check.findings)
-            .flatMap(({ rule }) => (rule?.startsWith('gspot.swift.') === true ? [rule] : [])),
-    ).toStrictEqual(['gspot.swift.keychain-accessible-always', 'gspot.swift.weak-hash-algorithm']);
-    await writeFile(
-        join(sandbox.root, 'gspot.toml'),
-        buildSandboxSettings(['bash', 'swift', 'security'], { level: 'all' }),
-    );
-    await runSandboxStep({ root: sandbox.root, environment: {}, run: spawnGspot }, ['apply']);
     const all = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
     expect(all.code, all.stdout + all.stderr).toBe(1);
     expect(listFindingRows(all.report)).toStrictEqual([
@@ -104,48 +89,47 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async ()
     );
     const clean = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-});
+}
 
-test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
-    '%s security packs report raw inputs once, accept documented forms, and pass after fixes',
-    async (level) => {
-        const sandbox = installedSandbox!();
-        const sourceFiles = {
-            'package.json': SEMGREP_PROJECT_FILES['package.json'],
-            'tsconfig.json': SEMGREP_PROJECT_FILES['tsconfig.json'],
-            'wrangler.toml': SEMGREP_PROJECT_FILES['wrangler.toml'],
-            'supabase/config.toml': SEMGREP_PROJECT_FILES['supabase/config.toml'],
-            'Value.swift': SEMGREP_PROJECT_FILES['Value.swift'],
-            'gspot.toml': buildSandboxSettings(
-                ['javascript', 'typescript', 'swift', 'supabase', 'cloudflare', 'security', 'xcode'],
-                {
-                    level: level,
-                },
-            ),
-            ...PLATFORM_SOURCES,
-        };
-        await using _sourceChange = await applySandboxChanges(
-            sandbox,
-            buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
-        );
-        const command = ['check', '--only', 'security/semgrep,xcode/app-transport-security', '--json'];
-        const failed = parseCheckReport(await spawnGspot(sandbox.root, command));
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const findings = listFindingRows(failed.report);
-        const expected = [...PLATFORM_SOURCE_FINDINGS, ...(level === 'all' ? PLATFORM_ALL_SOURCE_FINDINGS : [])];
-        expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
-            expected.toSorted((left, right) => left.file.localeCompare(right.file)),
-        );
-        const corrections = { ...PLATFORM_SOURCE_FIXES };
-        if (level === 'all') Object.assign(corrections, PLATFORM_ALL_SOURCE_FIXES);
-        for (const [path, source] of Object.entries(corrections)) await writeFile(join(sandbox.root, path), source);
-        const corrected = parseCheckReport(await spawnGspot(sandbox.root, command));
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    },
-);
+/** Assert the platform rules behavior. */
+async function assertPlatformRules(installedSandbox: () => Sandbox, level: Level): Promise<void> {
+    const sandbox = installedSandbox();
+    const sourceFiles = {
+        'package.json': SEMGREP_PROJECT_FILES['package.json'],
+        'tsconfig.json': SEMGREP_PROJECT_FILES['tsconfig.json'],
+        'wrangler.toml': SEMGREP_PROJECT_FILES['wrangler.toml'],
+        'supabase/config.toml': SEMGREP_PROJECT_FILES['supabase/config.toml'],
+        'Value.swift': SEMGREP_PROJECT_FILES['Value.swift'],
+        'gspot.toml': buildSandboxSettings(
+            ['javascript', 'typescript', 'swift', 'supabase', 'cloudflare', 'security', 'xcode'],
+            {
+                level: level,
+            },
+        ),
+        ...PLATFORM_SOURCES,
+    };
+    await using _sourceChange = await applySandboxChanges(
+        sandbox,
+        buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
+    );
+    const command = ['check', '--only', 'security/semgrep,xcode/app-transport-security', '--json'];
+    const failed = parseCheckReport(await spawnGspot(sandbox.root, command));
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    const findings = listFindingRows(failed.report);
+    const expected = [...PLATFORM_SOURCE_FINDINGS, ...(level === 'all' ? PLATFORM_ALL_SOURCE_FINDINGS : [])];
+    expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
+        expected.toSorted((left, right) => left.file.localeCompare(right.file)),
+    );
+    const corrections = { ...PLATFORM_SOURCE_FIXES };
+    if (level === 'all') Object.assign(corrections, PLATFORM_ALL_SOURCE_FIXES);
+    for (const [path, source] of Object.entries(corrections)) await writeFile(join(sandbox.root, path), source);
+    const corrected = parseCheckReport(await spawnGspot(sandbox.root, command));
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+}
 
-test.skipIf(!hasToolBuild('semgrep'))('repository security rules report findings and pass after fixes', async () => {
-    const sandbox = installedSandbox!();
+/** Assert the authored rules behavior. */
+async function assertAuthoredRules(installedSandbox: () => Sandbox): Promise<void> {
+    const sandbox = installedSandbox();
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['typescript', 'security'], {
             tables: '[tools.semgrep]\nrule_files = ["security/own.yml"]\n',
@@ -172,27 +156,56 @@ export const four = double(2);
     const corrected = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'security/semgrep', status: 'passed', findings: [] }]);
-});
+}
 
-// The Next.js configuration rules run through the same Semgrep command as the other shipped packs.
-test.skipIf(!hasToolBuild('semgrep')).each([...NEXT_CONFIG_CASES])(
-    'Semgrep checks next.config literals: $name',
-    async ({ source, expected }) => {
-        const sandbox = installedSandbox!();
-        const sourceFiles = {
-            'gspot.toml': buildSandboxSettings(['nextjs']),
-            'next.config.ts': source,
-        };
-        await using _sourceChange = await applySandboxChanges(
-            sandbox,
-            buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
-        );
-        const checked = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
-        expect(checked.code, checked.stdout + checked.stderr).toBe(expected.length === 0 ? 0 : 1);
-        const findings = checked.report.checks
-            .flatMap(({ findings }) => findings)
-            .map(({ file, line, rule }) => ({ file, line, rule }))
-            .toSorted((left, right) => (left.line ?? 0) - (right.line ?? 0));
-        expect(findings).toStrictEqual(expected.map(({ file, line, rule }) => ({ file, line, rule })));
-    },
-);
+/** Assert the next config rules behavior. */
+async function assertNextjsRules(
+    installedSandbox: () => Sandbox,
+    { source, expected }: (typeof NEXT_CONFIG_CASES)[number],
+): Promise<void> {
+    const sandbox = installedSandbox();
+    const sourceFiles = {
+        'gspot.toml': buildSandboxSettings(['nextjs']),
+        'next.config.ts': source,
+    };
+    await using _sourceChange = await applySandboxChanges(
+        sandbox,
+        buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
+    );
+    const checked = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
+    expect(checked.code, checked.stdout + checked.stderr).toBe(expected.length === 0 ? 0 : 1);
+    const findings = checked.report.checks
+        .flatMap(({ findings }) => findings)
+        .map(({ file, line, rule }) => ({ file, line, rule }))
+        .toSorted((left, right) => (left.line ?? 0) - (right.line ?? 0));
+    expect(findings).toStrictEqual(expected.map(({ file, line, rule }) => ({ file, line, rule })));
+}
+
+describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
+    const installedSandbox = registerSharedSandbox(SEMGREP_SANDBOX);
+    test(
+        'Semgrep reports a Bash file it cannot parse as a finding at its position',
+        assertSemgrepParsing.bind(undefined, installedSandbox),
+    );
+
+    test(
+        'the Bash and Swift Semgrep rules report piped downloads, eval, always-accessible keychain items, and MD5, and pass after the fix',
+        assertLanguageRules.bind(undefined, installedSandbox),
+    );
+
+    test.each(['recommended', 'all'] as const)(
+        '%s security packs report raw inputs once, accept documented forms, and pass after fixes',
+        assertPlatformRules.bind(undefined, installedSandbox),
+    );
+
+    test(
+        'repository security rules report findings and pass after fixes',
+        assertAuthoredRules.bind(undefined, installedSandbox),
+    );
+
+    // The Next.js configuration rules run through the same Semgrep command as the other shipped packs.
+    test.each([...NEXT_CONFIG_CASES])(
+        'Semgrep checks next.config literals: $name',
+        assertNextjsRules.bind(undefined, installedSandbox),
+    );
+});

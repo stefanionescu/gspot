@@ -1,3 +1,8 @@
+const TYPED_NODE_SCRIPT = `const unused: number = 1;
+console.log("result");
+process.exit(0);
+`;
+
 const NODE_SCRIPT_SOURCE = `#!/usr/bin/env node
 const unused = 1;
 console.log(process.cwd());
@@ -11,7 +16,7 @@ process.exit(0);
 
 const NODE_SCRIPT_OUTPUT = 'console.log("result");\nprocess.exit(0);\n';
 
-const NODE_SCRIPT_CASES = [
+export const NODE_SCRIPT_CASES = [
     {
         file: 'scripts/run[one]',
         recommended: [{ ruleId: 'no-unused-vars', line: 2 }],
@@ -63,7 +68,7 @@ const NODE_SCRIPT_CASES = [
     },
 ] as const;
 
-const UNLINTED_FILES = [
+export const UNLINTED_FILES = [
     'scripts/runo',
     'scripts/runone',
     'scripts/plain',
@@ -72,7 +77,7 @@ const UNLINTED_FILES = [
     'vendor/run',
 ] as const;
 
-const NODE_SCRIPT_FILES = {
+export const NODE_SCRIPT_FILES = {
     '.gitattributes': 'emitted/** linguist-generated\nvendor/** linguist-vendored\n',
     'package.json': '{"private":true,"type":"module","engines":{"node":">=22.0.0"}}',
     'child/package.json': '{"private":true,"type":"module","engines":{"node":">=18.0.0"}}',
@@ -81,22 +86,13 @@ const NODE_SCRIPT_FILES = {
     'scripts/run{one,two}': NODE_SCRIPT_SOURCE,
     'scripts/run.task': NODE_SCRIPT_SOURCE,
     'child/scripts/run': NODE_SCRIPT_SOURCE,
-    'scripts/typed.ts': `const unused: number = 1;
-console.log("result");
-process.exit(0);
-`,
+    'scripts/typed.ts': TYPED_NODE_SCRIPT,
     'scripts/run.js': `const unused = 1;
 console.log("result");
 process.exit(0);
 `,
-    'build.config.ts': `const unused: number = 1;
-console.log("result");
-process.exit(0);
-`,
-    'src/source.ts': `const unused: number = 1;
-console.log("result");
-process.exit(0);
-`,
+    'build.config.ts': TYPED_NODE_SCRIPT,
+    'src/source.ts': TYPED_NODE_SCRIPT,
     'scripts/run.ts': `#!/usr/bin/env node
 const unused: number = 1;
 console.log(process.cwd());
@@ -110,7 +106,7 @@ process.exit(0);
     'vendor/run': NODE_SCRIPT_SOURCE,
 } as const;
 
-const NODE_SCRIPT_TABLES = `[javascript]
+export const NODE_SCRIPT_TABLES = `[javascript]
 script_files = ["scripts/**", "child/scripts/**", "build.config.ts"]
 
 [limits.javascript]
@@ -128,7 +124,7 @@ configurations = ["javascript"]
 trivial_function_statements = { value = 1, reason = "The child exercises the scoped structural floor." }
 `;
 
-const EXTENSIONLESS_SCRIPT_CASES = [
+export const EXTENSIONLESS_SCRIPT_CASES = [
     {
         file: 'scripts/syntax',
         source: '#!/usr/bin/env node\nconst =;\n',
@@ -196,7 +192,7 @@ console.log(value);
     },
 ] as const;
 
-const NODE_SCRIPT_RULES = [
+export const NODE_SCRIPT_RULES = [
     'no-unused-vars',
     '@typescript-eslint/no-unused-vars',
     'sonarjs/no-unused-vars',
@@ -205,20 +201,10 @@ const NODE_SCRIPT_RULES = [
     'no-console',
 ] as const;
 
-const EXTENSIONLESS_SCRIPT_RULES = [
+export const EXTENSIONLESS_SCRIPT_RULES = [
     'no-undef',
     'max-params',
     'gspot/no-trivial-functions',
     'n/no-unsupported-features/es-builtins',
     'n/file-extension-in-import',
 ] as const;
-
-export {
-    UNLINTED_FILES,
-    NODE_SCRIPT_CASES,
-    NODE_SCRIPT_FILES,
-    NODE_SCRIPT_RULES,
-    NODE_SCRIPT_TABLES,
-    EXTENSIONLESS_SCRIPT_CASES,
-    EXTENSIONLESS_SCRIPT_RULES,
-};

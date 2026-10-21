@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { getShippedCheck, buildProcessResult } from '#tests/setup/builders.ts';
 
 import {
@@ -26,10 +26,9 @@ test('a markdownlint record becomes a finding', async () => {
     await using sandbox = await testdir({ 'sample.md': '<span>Content</span>\n' });
 
     const check = getShippedCheck('markdown/markdownlint');
-    const valid = MARKDOWN_REPORT;
-    expect(parseOutput(check, JSON.stringify([valid]), '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
-        { file: 'sample.md', rule: 'MD033', fixable: false },
-    ]);
+    expect(
+        parseOutput(check, JSON.stringify([MARKDOWN_REPORT]), '', { root: sandbox.path, cwd: sandbox.path }),
+    ).toMatchObject([{ file: 'sample.md', rule: 'MD033', fixable: false }]);
 });
 
 test.each([...REPORT_ERRORS])('$configuration rejects $name: $message', async ({ configuration, output, message }) => {
@@ -45,8 +44,8 @@ test.each([...REPORT_ERRORS])('$configuration rejects $name: $message', async ({
 
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\neval input\n' });
-    const manifest = readManifests().get('security')!;
-    const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
+    const configuration = readConfigurations().get('security')!;
+    const check = configuration.checks.find((check) => check.name === 'security/semgrep')!;
     const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [SEMGREP_PARSE_ERROR] });
     expect(
         parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), {
@@ -79,8 +78,8 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
 
 test('Semgrep scanner, rule, unpositioned and malformed reports are errors', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\n' });
-    const manifest = readManifests().get('security')!;
-    const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
+    const configuration = readConfigurations().get('security')!;
+    const check = configuration.checks.find((check) => check.name === 'security/semgrep')!;
     const outputs = [
         '',
         '{}',

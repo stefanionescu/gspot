@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { DenoLintReport, SupabaseConfiguration } from '#cli/types/checks/supabase.ts';
+import type { DenoLintReport, SupabaseProjectFile } from '#cli/types/checks/supabase.ts';
 
-export const supabaseProjectSchema = z.object({
+export const supabaseProjectFileSchema = z.object({
     storage: z
         .object({ buckets: z.record(z.string(), z.unknown()).optional() } satisfies SchemaShape<
-            NonNullable<SupabaseConfiguration['storage']>
+            NonNullable<SupabaseProjectFile['storage']>
         >)
         .optional(),
-} satisfies SchemaShape<SupabaseConfiguration>) satisfies z.ZodType<SupabaseConfiguration>;
+} satisfies SchemaShape<SupabaseProjectFile>) satisfies z.ZodType<SupabaseProjectFile>;
 
 export const denoLintReportSchema = z.object({
     diagnostics: z.array(

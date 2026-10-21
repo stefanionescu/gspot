@@ -2,23 +2,15 @@ import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { readGitOutput } from '#tests/setup/git.ts';
 import type { CiDocument } from '#tests/types/ci.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { CLI_BIN, spawnGspot } from '#tests/setup/run-gspot.ts';
-import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { CI_SETTINGS, GITHUB_PIPELINE, GITLAB_PIPELINE } from '#tests/data/ci.ts';
-
-function commitChanges(root: string, text: string): string {
-    readGitOutput(root, ['add', '-A']);
-    readGitOutput(root, ['commit', '-qm', text]);
-    return readGitOutput(root, ['rev-parse', 'HEAD']);
-}
 
 /** Creates the CI jobs of one provider and their check settings, before the shared tool install. */
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
@@ -48,16 +40,16 @@ async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
 
 /** Commit the installed project, then a change with a shell syntax error. */
 async function commitCiChanges(root: string, provider: 'gitlab' | 'github') {
-    const base = commitChanges(root, 'base');
+    const base = commitAll(root, 'base');
     await writeFile(join(root, 'changed.sh'), 'if then\n');
-    commitChanges(root, 'invalid change');
+    commitAll(root, 'invalid change');
     const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
     const generated = Bun.YAML.parse(await readFile(join(root, workflowPath), 'utf8')) as CiDocument;
     return { base, generated };
 }
 
 /** A fake mise that runs the source CLI and can refuse to install the npm package. */
-async function createCiInstall(folder: string) {
+async function fakeCiMise(folder: string) {
     const nativeMise = Bun.which('mise')!;
     const failure = join(folder, 'mise-fails');
     await fakeTool(
@@ -82,7 +74,7 @@ const child = Bun.spawnSync([${JSON.stringify(nativeMise)}, ...args], { env, std
 process.exit(child.exitCode);
 `,
     );
-    return () => writeFile(failure, '');
+    return failure;
 }
 
 /** Runs the generated CI script with the comparison and artifact variables that the provider documents. */
@@ -112,50 +104,43 @@ async function runCiJob(
 }
 
 describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
-    const installedSandbox = registerSharedSandbox({
-        configurations: [],
-        files: {},
-        prepare: (root) => prepareCiProject(root, provider),
-    });
     test('generated jobs check changed files and pass after the fix', async () => {
-        const repository = { path: installedSandbox().root };
-        await using _change = await updateSandbox(installedSandbox(), { check: '', files: {} });
+        await using sandbox = await testdir();
+        await prepareCiProject(sandbox.path, provider);
         await using executables = await testdir();
-        const { base, generated } = await commitCiChanges(repository.path, provider);
-        using _tools = overrideEnvironment(installedSandbox().environment);
-        await createCiInstall(executables.path);
-        const invalid = await runCiJob(repository.path, generated, executables.path, base);
+        const { base, generated } = await commitCiChanges(sandbox.path, provider);
+        await fakeCiMise(executables.path);
+        const invalid = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect(invalid.stdout).toContain('project/syntax');
         expect(invalid.stdout).toContain('changed.sh');
         expect(invalid.stdout).not.toContain('legacy.sh');
-        await writeFile(join(repository.path, 'changed.sh'), 'echo corrected\n');
-        commitChanges(repository.path, 'correct syntax');
-        const valid = await runCiJob(repository.path, generated, executables.path, base);
+        await writeFile(join(sandbox.path, 'changed.sh'), 'echo corrected\n');
+        commitAll(sandbox.path, 'correct syntax');
+        const valid = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
-        const firstPush = await runCiJob(repository.path, generated, executables.path, '0'.repeat(base.length));
+        const firstPush = await runCiJob(sandbox.path, generated, executables.path, '0'.repeat(base.length));
         expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
         expect(firstPush.stdout).toContain('legacy.sh');
     });
 
     test('invalid comparisons and failed installs fail the job', async () => {
-        const repository = { path: installedSandbox().root };
-        await using _change = await updateSandbox(installedSandbox(), { check: '', files: {} });
+        await using sandbox = await testdir();
+        await prepareCiProject(sandbox.path, provider);
         await using executables = await testdir();
-        const { base, generated } = await commitCiChanges(repository.path, provider);
-        using _tools = overrideEnvironment(installedSandbox().environment);
-        const refuse = await createCiInstall(executables.path);
-        const malformed = await runCiJob(repository.path, generated, executables.path, '$(touch injected)');
+        const { base, generated } = await commitCiChanges(sandbox.path, provider);
+        const failurePath = await fakeCiMise(executables.path);
+        const malformed = await runCiJob(sandbox.path, generated, executables.path, '$(touch injected)');
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
         expect(malformed.stderr).toContain('Git merge-base failed for $(touch injected):');
-        expect(await isOnDisk(join(repository.path, 'injected'))).toBe(false);
-        const missing = await runCiJob(repository.path, generated, executables.path, 'f'.repeat(base.length));
+        expect(await isOnDisk(join(sandbox.path, 'injected'))).toBe(false);
+        const missing = await runCiJob(sandbox.path, generated, executables.path, 'f'.repeat(base.length));
         expect(missing.code).toBe(2);
         expect(missing.stderr).toBe(
             `Git merge-base failed for ${'f'.repeat(base.length)}: fatal: Not a valid commit name ${'f'.repeat(base.length)}.\n`,
         );
-        await refuse();
-        const refused = await runCiJob(repository.path, generated, executables.path, base);
+        await writeFile(failurePath, '');
+        const refused = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(refused.code).toBe(1);
         expect(refused.stderr).toContain('404 Not Found');
     });

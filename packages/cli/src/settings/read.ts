@@ -1,15 +1,14 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { stripUndefined } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
-import { COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/values.ts';
+import { COMMAND_CHECK_DEFAULTS } from '#cli/config/configurations.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
-import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts';
-import { type TomlTable, type ParsedSettings } from '#cli/types/settings/file.ts';
 import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/settings.ts';
+import { type Settings, type TomlTable, type SettingsFile, type ParsedSettings } from '#cli/types/settings/file.ts';
 
 /**
  * Parse and validate gspot.toml. Throw a GspotError with every settings error.
@@ -18,7 +17,7 @@ import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/
  * @param repositoryRoot the optional folder for validating declared scope paths.
  * @returns the normalized settings.
  */
-function parseSettings(text: string, repositoryRoot: string | undefined): Settings {
+export function parseSettings(text: string, repositoryRoot: string | undefined): Settings {
     const written = parseTomlText(text, SETTINGS_FILE);
     const result = settingsSchema.safeParse(written);
     if (!result.success)
@@ -34,7 +33,7 @@ function parseSettings(text: string, repositoryRoot: string | undefined): Settin
  * @param repositoryRoot the folder that contains gspot.toml.
  * @returns the settings and the file text.
  */
-function readSettings(repositoryRoot: string): SettingsFile {
+export function readSettings(repositoryRoot: string): SettingsFile {
     const { text } = readSettingsFile(repositoryRoot);
     return { settings: parseSettings(text, repositoryRoot), text };
 }
@@ -70,7 +69,7 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
  * @param written the raw authored table.
  * @returns normalized tables that keep the defaults and the authored scope values.
  */
-function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
+export function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
     const { command_check: commandChecks, ...document } = parsed;
     const tables = stripUndefined({
         rules: parsed.rules,
@@ -106,5 +105,3 @@ function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
         scopes: scopeTables,
     };
 }
-
-export { readSettings, parseSettings, buildSettings };

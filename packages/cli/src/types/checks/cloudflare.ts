@@ -4,4 +4,4 @@ import type { NumberedLine } from '#cli/types/text.ts';
 export type HeaderBlock = { path: string; headers: { name: string; value: string }[] };
 
 /** Parsed header rules and their syntax errors. */
-export type HeaderBlocks = { blocks: HeaderBlock[]; findings: NumberedLine[] };
+export type ParsedHeadersFile = { blocks: HeaderBlock[]; errors: NumberedLine[] };

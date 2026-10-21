@@ -1,17 +1,17 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
-import { parsePbxproj } from '#cli/parsers/xcode.ts';
-import type { Session } from '#cli/types/planning.ts';
+import type { Session } from '#cli/types/session.ts';
 import { PBXPROJ } from '#cli/config/parsers/xcode.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
+import { parseProjectSources } from '#cli/parsers/xcode.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
+import type { SwiftModule } from '#cli/types/checks/structure.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependencies.ts';
-import type { SwiftModule } from '#cli/types/checks/import-rules.ts';
-import { SWIFTPM_TARGET_FOLDERS, SWIFT_MODULE_NAME_CHARACTERS } from '#cli/config/checks/import-rules.ts';
+import { SWIFT_EXTENSION } from '#cli/config/repository/inventory.ts';
+import { SWIFTPM_TARGET_FOLDERS, SWIFT_MODULE_NAME_CHARACTERS } from '#cli/config/checks/structure.ts';
 
-function readStringArgument(call: Node, label: string): string | undefined {
+function findStringArgument(call: Node, label: string): string | undefined {
     const argument = call
         .descendantsOfType('value_argument')
         .find((node) => node.childForFieldName('name')?.text === label && node.parent?.parent?.parent?.id === call.id);
@@ -34,12 +34,12 @@ async function listPackageModules(session: Session, path: string, swiftFiles: st
             const callee = call.namedChildren[0];
             const kind = callee?.type === 'prefix_expression' ? callee.childForFieldName('target')?.text : undefined;
             const folders = SWIFTPM_TARGET_FOLDERS[kind ?? ''];
-            const name = readStringArgument(call, 'name');
+            const name = findStringArgument(call, 'name');
             if (folders === undefined) return [];
             if (name === undefined) return [];
             const folder = posix.join(
                 packageFolder,
-                readStringArgument(call, 'path') ??
+                findStringArgument(call, 'path') ??
                     posix.join(findDefaultFolder(folders, packageFolder, swiftFiles), name),
             );
             return [{ name, files: swiftFiles.filter((file) => file.startsWith(`${folder}/`)) }];
@@ -50,7 +50,7 @@ async function listPackageModules(session: Session, path: string, swiftFiles: st
 }
 
 function listXcodeModules(session: Session, path: string, swiftFiles: string[]): SwiftModule[] {
-    const project = parsePbxproj(readCachedText(session.reads, path), path);
+    const project = parseProjectSources(readCachedText(session.reads, path), path);
     return project.targets.map((target) => ({
         name: target.name.replaceAll(SWIFT_MODULE_NAME_CHARACTERS, '_'),
         files: swiftFiles.filter(

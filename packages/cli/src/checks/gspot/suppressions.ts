@@ -1,19 +1,20 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { findScope } from '#cli/repository/scopes.ts';
-import { getToolName } from '#cli/configurations/tools.ts';
+import { ISO_DATE_LENGTH } from '#cli/config/units.ts';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { listCoveredFiles } from '#cli/repository/coverage.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { ISO_DATE_LENGTH } from '#cli/config/settings/values.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { getToolName } from '#cli/configurations/declared-tools.ts';
+import { listCoveredFiles } from '#cli/repository/covered-files.ts';
 import type { SuppressionSyntax } from '#cli/types/checks/gspot.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Finding, FindingPlace } from '#cli/types/runs/check.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
-import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/comments.ts';
+import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/syntax.ts';
 import { REASON_ABOVE, EXPIRED_IGNORE_HELP, SUPPRESSION_KIND_MESSAGES } from '#cli/config/checks/gspot.ts';
 
 // A reason on the line above covers only the next line. Code or comments between them break the link.
@@ -30,14 +31,14 @@ function findReasonAbove(previous: SourceComment | undefined, comment: SourceCom
 }
 
 // Only tools whose checks claim this source contribute suppression syntax.
-function listSuppressionSyntaxes(selection: ScopeSelection): SuppressionSyntax[] {
+function listSuppressionSyntaxes(selection: Scope): SuppressionSyntax[] {
     const selected = selection.selected;
-    const checks = selected.flatMap((manifest) =>
-        manifest.checks.map((check) => ({ check, files: check.files ?? manifest.files })),
+    const checks = selected.flatMap((configuration) =>
+        configuration.checks.map((check) => ({ check, files: check.files ?? configuration.files })),
     );
     const definitions = new Map(
-        selected.flatMap((manifest) =>
-            manifest.tools.flatMap((tool) =>
+        selected.flatMap((configuration) =>
+            configuration.tools.flatMap((tool) =>
                 tool.suppression === undefined ? [] : [[tool.name, tool.suppression] as const],
             ),
         ),
@@ -153,7 +154,7 @@ function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] 
  * @param planned the files to scan, by scope.
  * @returns the findings.
  */
-export async function checkSuppressions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkGspotSuppressions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scopes = session.scopes.map((selection) => selection.scope);
     const selections = new Map(session.scopes.map((selection) => [selection.scope.path, selection]));
     const found: Finding[] = listExpiredIgnores(session, planned);

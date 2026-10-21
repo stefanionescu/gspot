@@ -5,10 +5,10 @@ import { openTomlFile, parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
 
 test('adding a root key keeps the leading comments on their table', () => {
-    const document = openTomlFile({
-        path: 'tool.toml',
-        source: '# Authored tool table.\n# Exact dependency choices.\n[install]\nexact = true\n',
-    });
+    const document = openTomlFile(
+        'tool.toml',
+        '# Authored tool table.\n# Exact dependency choices.\n[install]\nexact = true\n',
+    );
     document.set(['level'], 'all');
     expect(document.getText()).toBe(
         'level = "all"\n# Authored tool table.\n# Exact dependency choices.\n[install]\nexact = true\n',
@@ -16,10 +16,10 @@ test('adding a root key keeps the leading comments on their table', () => {
 });
 
 test("deleting a root key keeps separate comments and the next table's comments", () => {
-    const document = openTomlFile({
-        path: 'tool.toml',
-        source: '# A project note.\n\nlevel = "all"\n\n# Authored tool table.\n[install]\nexact = true # Exact version.\n',
-    });
+    const document = openTomlFile(
+        'tool.toml',
+        '# A project note.\n\nlevel = "all"\n\n# Authored tool table.\n[install]\nexact = true # Exact version.\n',
+    );
     document.set(['level'], undefined);
     expect(document.getText()).toBe(
         '# A project note.\n\n\n# Authored tool table.\n[install]\nexact = true # Exact version.\n',
@@ -27,7 +27,7 @@ test("deleting a root key keeps separate comments and the next table's comments"
 });
 
 test('reading TOML values: nested tables, arrays, scalars and missing keys', () => {
-    const document = openTomlFile({ path: 'tool.toml', source: '[defaults]\nenabled = false\nvalues = [0, ""]\n' });
+    const document = openTomlFile('tool.toml', '[defaults]\nenabled = false\nvalues = [0, ""]\n');
     expect(document.getValue(['defaults', 'enabled'])).toBe(false);
     expect(document.getValue(['defaults', 'values', 0])).toBe(0);
     expect(document.getValue(['defaults', 'values', 1])).toBe('');
@@ -39,7 +39,7 @@ test('reading TOML values: nested tables, arrays, scalars and missing keys', () 
 });
 
 test('a TOML syntax error is a GspotError that names the file and keeps the parser error as its cause', () => {
-    expect(() => openTomlFile({ path: 'apps/api/bunfig.toml', source: '[install\n' })).toThrow(
+    expect(() => openTomlFile('apps/api/bunfig.toml', '[install\n')).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'filesystem',
@@ -51,7 +51,7 @@ test('a TOML syntax error is a GspotError that names the file and keeps the pars
 
 test('a TOML edit names the file when a scalar is in the way of a table', () => {
     const source = 'install = false\n';
-    const document = openTomlFile({ path: 'apps/api/bunfig.toml', source });
+    const document = openTomlFile('apps/api/bunfig.toml', source);
     expect(() => {
         document.set(['install', 'minimumReleaseAge'], 604_800);
     }).toThrow(
@@ -62,7 +62,7 @@ test('a TOML edit names the file when a scalar is in the way of a table', () => 
 
 test('TOML edits keep dates, array order and keys named like object properties', () => {
     const source = '# Release timestamp\npublished = 2026-10-06T00:00:00Z\n';
-    const document = openTomlFile({ path: 'tool.toml', source });
+    const document = openTomlFile('tool.toml', source);
     const entries = [Object.fromEntries([['constructor', 'first']]), { Object: 'second' }];
     document.set(['copied'], document.getValue(['published']));
     document.set(['metadata', 'entries'], entries);

@@ -1,5 +1,5 @@
 /** A shell command, its line and argument count, and whether it forwards positional parameters. */
-type FunctionCall = {
+type CommandCall = {
     name: string;
     count: number;
     line: number;
@@ -25,7 +25,7 @@ export type TemporaryPath = { name: string; line: number; cleanupLines: number[]
 export type TemporaryTargets = { paths: TemporaryPath[]; targets: Map<string, TemporaryPath>; declared: Set<string> };
 
 /** The removals of a deferred trap keep their source offset and variable owner. */
-export type CleanupContext = {
+export type TrapCleanup = {
     lineOffset: number;
     owner: number | undefined;
     registry: TemporaryTargets;
@@ -36,6 +36,6 @@ export type CleanupContext = {
 export type ScriptSyntax = {
     code: string[];
     functions: ScriptFunction[];
-    calls: FunctionCall[];
+    calls: CommandCall[];
     temporaryPaths: TemporaryPath[];
 };

@@ -3,20 +3,20 @@ import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { findCheckCode } from '#cli/checks/code.ts';
+import { planChecks } from '#cli/planning/checks.ts';
+import { type Session } from '#cli/types/session.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
-import { type Session } from '#cli/types/planning.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { runCheckCode } from '#cli/commands/check/run.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
-import { runCheckImplementation } from '#cli/runs/check-run.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
@@ -26,148 +26,6 @@ import {
     NEXT_VERSION_OUTPUT,
     TYPESCRIPT_VERSION_OUTPUT,
 } from '#tests/data/checks/nextjs.ts';
-
-/**
- * Fake executable lookup and both process functions until disposal. The fakes return the output and files that Next.js writes.
- *
- * @param runCallback fake process result for tests that need another one.
- * @returns the recorded commands and a disposer that removes the fakes.
- */
-function mockNextjsCommands(
-    runCallback?: (command: readonly string[], options: AsyncSpawnOptions) => Promise<SpawnResult>,
-) {
-    using resources = new DisposableStack();
-
-    const failureOutput = {
-        stdout: TSC_FAILURE_OUTPUT,
-        stderr: '',
-    };
-    const folders: string[] = [];
-    const commands: string[][] = [];
-    // Record command arguments and source files for assertions after the check.
-    const routesSeen: string[] = [];
-    resources.use(useExecutable(process.execPath));
-    const runBlocking = processes.spawnProcessBlocking;
-    resources.use(
-        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
-            if (command[0] === 'git') return runBlocking(command, options);
-            return buildProcessResult({
-                stdout: basename(command[0] ?? '') === 'next' ? NEXT_VERSION_OUTPUT : TYPESCRIPT_VERSION_OUTPUT,
-            });
-        }),
-    );
-    const nativeRun = processes.spawnProcess;
-    resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation(async (command, options) => {
-            if (command[0] === 'git') return await nativeRun(command, options);
-            const cwd = options.cwd;
-            folders.push(cwd);
-            commands.push([...command]);
-            if (runCallback !== undefined) return await runCallback(command, options);
-            const page = await readFile(join(cwd, 'src/app/page.ts'), 'utf8');
-            const isBad = page.includes('bad');
-            if (['typegen', 'build'].includes(command[1] ?? '')) {
-                await writeFile(join(cwd, 'tsconfig.json'), '{}\n');
-                await writeFile(join(cwd, 'next-env.d.ts'), '// Generated\n');
-                await mkdir(join(cwd, '.next/types'), { recursive: true });
-                await writeFile(join(cwd, '.next/types/routes.d.ts'), '// Generated routes\n');
-            } else routesSeen.push(await readFile(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
-            const failed = isBad && command[1] !== 'typegen';
-            return buildProcessResult({ code: failed ? 1 : 0, ...(failed ? failureOutput : {}) });
-        }),
-    );
-    const owned = resources.move();
-    return {
-        directories: folders,
-        routesSeen,
-        commands,
-        [Symbol.dispose]() {
-            owned.dispose();
-        },
-    };
-}
-
-test.each([
-    { name: 'root', scope: '' },
-    { name: 'app', scope: 'app' },
-])(
-    'Next.js output preservation in $name: nextjs/tsc reports its finding, passes after the fix, and preserves source output',
-    async ({ scope }) => {
-        await using folder = await testdir();
-        const session = await prepareNextjsBuild(folder.path, scope);
-
-        const planned = planRun(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-            (entry) => entry.selection.scope.path === scope,
-        )!;
-        const untracked = join(folder.path, join(scope, '.next/local-cache.bin'));
-        const config = join(folder.path, join(scope, 'tsconfig.json'));
-        await using originalFile = await open(config, 'r');
-        const original = await originalFile.readFile();
-        const { mode } = await originalFile.stat();
-        using read = mockNextjsCommands();
-        const { directories: folders, routesSeen } = read;
-        const collectFindings = async () => {
-            const result = await runCheckImplementation(session, planned, selectCheckImplementation(planned.check));
-            return result.findings;
-        };
-        const found = await collectFindings();
-        expect(found).toHaveLength(1);
-        expect(found[0]).toMatchObject({
-            check: 'nextjs/tsc',
-            file: convertToPosixPath(join(scope, 'src/app/page.ts')),
-            line: 1,
-        });
-        expect(found[0]!.message).toContain('Type mismatch');
-        await writeFile(join(folder.path, join(scope, 'src/app/page.ts')), 'corrected input\n');
-        expect(await collectFindings()).toStrictEqual([]);
-        expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
-        expect(folders).not.toContain(join(folder.path, scope));
-        expect(await Promise.all(folders.map((cwd) => isOnDisk(cwd)))).toStrictEqual(folders.map(() => false));
-        await using currentFile = await open(config, 'r');
-        expect(await currentFile.readFile()).toStrictEqual(original);
-        const current = await currentFile.stat();
-        expect(current.mode).toBe(mode);
-        expect(await readFile(untracked)).toStrictEqual(Buffer.from(NEXT_CACHE_BYTES));
-        expect(await readFile(join(folder.path, join(scope, 'next-env.d.ts')), 'utf8')).toBe(
-            '// Authored type declaration\n',
-        );
-        expect(await readFile(join(folder.path, join(scope, '.next/types/routes.d.ts')), 'utf8')).toBe(
-            '// Retained route types\n',
-        );
-        expect(await readFile(join(folder.path, 'unrelated/private.txt'), 'utf8')).toBe('Preserve unrelated scope\n');
-    },
-);
-
-test("a failed type generation removes the scratch copy and keeps the developer's edit", async () => {
-    using resources = new DisposableStack();
-
-    const message = 'Generator failed';
-    await using folder = await testdir({
-        'gspot.toml': buildSandboxSettings(['nextjs']),
-        'package.json': '{"private":true}\n',
-        'tsconfig.json': '{}\n',
-        'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
-    });
-
-    const session = await openSession(folder.path);
-    const planned = planRun(session, { stage: 'push', only: ['nextjs/tsc'] })[0]!;
-    let scratch = '';
-    resources.use(
-        mockNextjsCommands(async (...[, options]) => {
-            scratch = options.cwd;
-            await writeFile(join(scratch, 'tsconfig.json'), 'partial generator output\n');
-            await writeFile(join(folder.path, 'tsconfig.json'), 'Concurrent developer edit\n');
-            return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
-        }),
-    );
-    expect(
-        await captureRejection(runCheckImplementation(session, planned, selectCheckImplementation(planned.check))),
-    ).toContain(message);
-    expect(scratch).not.toBe('');
-    expect(await isOnDisk(scratch)).toBe(false);
-    expect(await readFile(join(folder.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
-    expect(await isOnDisk(join(folder.path, 'next-env.d.ts'))).toBe(false);
-});
 
 /**
  * Create a Next.js project with tracked source and untracked build output, for the scratch build checks.
@@ -206,6 +64,137 @@ async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<S
     return session;
 }
 
+/**
+ * Fake executable lookup and both process functions until disposal. The fakes return the output and files that Next.js writes.
+ *
+ * @param fakeRun the process behavior supplied by the caller.
+ * @returns the recorded commands and a disposer that removes the fakes.
+ */
+function fakeNextjsCommands(fakeRun: (command: readonly string[], options: AsyncSpawnOptions) => Promise<SpawnResult>) {
+    using resources = new DisposableStack();
+
+    const folders: string[] = [];
+    const commands: string[][] = [];
+    resources.use(useExecutable(process.execPath));
+    const runBlocking = processes.spawnProcessBlocking;
+    resources.use(
+        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
+            if (command[0] === 'git') return runBlocking(command, options);
+            return buildProcessResult({
+                stdout: basename(command[0] ?? '') === 'next' ? NEXT_VERSION_OUTPUT : TYPESCRIPT_VERSION_OUTPUT,
+            });
+        }),
+    );
+    const nativeRun = processes.spawnProcess;
+    resources.use(
+        spyOn(processes, 'spawnProcess').mockImplementation(async (command, options) => {
+            if (command[0] === 'git') return await nativeRun(command, options);
+            const cwd = options.cwd;
+            folders.push(cwd);
+            commands.push([...command]);
+            return await fakeRun(command, options);
+        }),
+    );
+    const owned = resources.move();
+    return {
+        folders,
+        commands,
+        [Symbol.dispose]() {
+            owned.dispose();
+        },
+    };
+}
+
+test.each([
+    { name: 'root', scope: '' },
+    { name: 'app', scope: 'app' },
+])(
+    'Next.js output preservation in $name: nextjs/tsc reports its finding, passes after the fix, and preserves source output',
+    async ({ scope }) => {
+        await using folder = await testdir();
+        const session = await prepareNextjsBuild(folder.path, scope);
+
+        const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
+            (entry) => entry.selection.scope.path === scope,
+        )!;
+        const untracked = join(folder.path, join(scope, '.next/local-cache.bin'));
+        const config = join(folder.path, join(scope, 'tsconfig.json'));
+        await using originalFile = await open(config, 'r');
+        const original = await originalFile.readFile();
+        const { mode } = await originalFile.stat();
+        const routesSeen: string[] = [];
+        async function fakeNextjsBuild(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
+            const cwd = options.cwd;
+            const page = await readFile(join(cwd, 'src/app/page.ts'), 'utf8');
+            const isBad = page.includes('bad');
+            if (['typegen', 'build'].includes(command[1] ?? '')) {
+                await writeFile(join(cwd, 'tsconfig.json'), '{}\n');
+                await writeFile(join(cwd, 'next-env.d.ts'), '// Generated\n');
+                await mkdir(join(cwd, '.next/types'), { recursive: true });
+                await writeFile(join(cwd, '.next/types/routes.d.ts'), '// Generated routes\n');
+            } else routesSeen.push(await readFile(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
+            const failed = isBad && command[1] !== 'typegen';
+            return buildProcessResult({ code: failed ? 1 : 0, stdout: failed ? TSC_FAILURE_OUTPUT : '' });
+        }
+        using read = fakeNextjsCommands(fakeNextjsBuild);
+        const { folders } = read;
+        const collectFindings = async () => {
+            const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+            return result.findings;
+        };
+        const found = await collectFindings();
+        expect(found).toHaveLength(1);
+        expect(found[0]).toMatchObject({
+            check: 'nextjs/tsc',
+            file: convertToPosixPath(join(scope, 'src/app/page.ts')),
+            line: 1,
+        });
+        expect(found[0]!.message).toContain('Type mismatch');
+        await writeFile(join(folder.path, join(scope, 'src/app/page.ts')), 'corrected input\n');
+        expect(await collectFindings()).toStrictEqual([]);
+        expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
+        expect(folders).not.toContain(join(folder.path, scope));
+        expect(await Promise.all(folders.map((cwd) => isOnDisk(cwd)))).toStrictEqual(folders.map(() => false));
+        await using currentFile = await open(config, 'r');
+        expect(await currentFile.readFile()).toStrictEqual(original);
+        const current = await currentFile.stat();
+        expect(current.mode).toBe(mode);
+        expect(await readFile(untracked)).toStrictEqual(Buffer.from(NEXT_CACHE_BYTES));
+        expect(await readFile(join(folder.path, join(scope, 'next-env.d.ts')), 'utf8')).toBe(
+            '// Authored type declaration\n',
+        );
+        expect(await readFile(join(folder.path, join(scope, '.next/types/routes.d.ts')), 'utf8')).toBe(
+            '// Retained route types\n',
+        );
+        expect(await readFile(join(folder.path, 'unrelated/private.txt'), 'utf8')).toBe('Preserve unrelated scope\n');
+    },
+);
+
+test("a failed type generation removes the scratch copy and keeps the developer's edit", async () => {
+    const message = 'Generator failed';
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['nextjs']),
+        'package.json': '{"private":true}\n',
+        'tsconfig.json': '{}\n',
+        'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
+    });
+
+    const session = await openSession(folder.path);
+    const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] })[0]!;
+    let scratch = '';
+    using _fakes = fakeNextjsCommands(async (...[, options]) => {
+        scratch = options.cwd;
+        await writeFile(join(scratch, 'tsconfig.json'), 'partial generator output\n');
+        await writeFile(join(folder.path, 'tsconfig.json'), 'Concurrent developer edit\n');
+        return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
+    });
+    expect(await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)))).toContain(message);
+    expect(scratch).not.toBe('');
+    expect(await isOnDisk(scratch)).toBe(false);
+    expect(await readFile(join(folder.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
+    expect(await isOnDisk(join(folder.path, 'next-env.d.ts'))).toBe(false);
+});
+
 test.each(['', 'apps/web'])(`Next.js reference compilation keeps the type generation copy in %s`, async (scope) => {
     await using sandbox = await testdir();
     await prepareNextjsBuild(sandbox.path, scope);
@@ -216,17 +205,17 @@ test.each(['', 'apps/web'])(`Next.js reference compilation keeps the type genera
         '{"compilerOptions":{"composite":true,"noEmit":true},"files":["app/page.ts"]}',
     );
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
+    const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
         (entry) => entry.selection.scope.path === scope,
     )!;
-    using read = mockNextjsCommands(async (command, options) => {
+    using read = fakeNextjsCommands(async (command, options) => {
         if (command[1] === 'typegen')
             await writeFile(join(options.cwd, 'next-env.d.ts'), '// Generated in this copy\n');
         else expect(await readFile(join(options.cwd, 'next-env.d.ts'), 'utf8')).toBe('// Generated in this copy\n');
         return buildProcessResult();
     });
-    const { directories: folders, commands } = read;
-    const result = await runCheckImplementation(session, planned, selectCheckImplementation(planned.check));
+    const { folders, commands } = read;
+    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
     expect(result).toMatchObject({ status: 'passed', findings: [] });
     expect(folders).toHaveLength(2);
     expect(new Set(folders).size).toBe(1);

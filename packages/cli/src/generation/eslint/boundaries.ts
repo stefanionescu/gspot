@@ -1,21 +1,20 @@
 import { TRPC_CONFIGURATION } from '#cli/config/configurations.ts';
+import { CODE_LANGUAGES } from '#cli/config/generation/eslint/files.ts';
+import { IMPORT_RULE_CATEGORY } from '#cli/config/settings/import-rules.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { buildScopeGlob, buildNodePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 
 import type {
     EslintBlock,
-    EslintContext,
+    ScopeBoundaries,
+    PlannedEslintFile,
     EslintBoundaryPolicy,
-    EslintBoundaryContext,
 } from '#cli/types/generation/eslint.ts';
 import {
     TEMPLATE_OPEN,
-    CODE_LANGUAGES,
     TEST_IMPORT_POLICY,
     OTHER_BOUNDARY_FILE,
-    IMPORT_RULE_CATEGORY,
     TRPC_SERVER_CATEGORY,
-    TRPC_DEPENDENCY_NODES,
     TEMPLATE_OPEN_ESCAPED,
     TEST_BOUNDARY_CATEGORY,
     OTHER_BOUNDARY_ELEMENTS,
@@ -23,8 +22,9 @@ import {
     BOUNDARY_OWNER_TEMPLATE,
     TRPC_SERVER_VALUE_POLICY,
     BOUNDARY_SOURCE_TEMPLATE,
-    TRPC_DEPENDENCY_SELECTORS,
-} from '#cli/config/generation/eslint.ts';
+    BOUNDARY_DEPENDENCY_NODES,
+    BOUNDARY_DEPENDENCY_SELECTORS,
+} from '#cli/config/generation/eslint/boundaries.ts';
 
 // Your import rules precede the fixed test and server-value restrictions. The last policy that matches decides. Each
 // rule first refuses every file, with a message that names what it may import. Then it allows the rules from
@@ -35,7 +35,7 @@ function buildDependencyPolicies({
     hasFixedPolicies,
     tests,
     trpcPaths,
-}: EslintBoundaryContext): EslintBoundaryPolicy[] {
+}: ScopeBoundaries): EslintBoundaryPolicy[] {
     const policies: EslintBoundaryPolicy[] = importRules.flatMap((rule, index) => {
         const from = { file: { categories: `${IMPORT_RULE_CATEGORY}${rule.name}` } };
         const allowed = listAllowedRules(importRules, index);
@@ -88,7 +88,7 @@ function buildBoundarySettings({
     hasFixedPolicies,
     tests,
     serverFiles,
-}: EslintBoundaryContext): NonNullable<EslintBlock['settings']> {
+}: ScopeBoundaries): NonNullable<EslintBlock['settings']> {
     const files: { category: string; pattern: readonly string[]; stopMatching?: boolean }[] = importRules.map(
         (rule) => ({
             category: `${IMPORT_RULE_CATEGORY}${rule.name}`,
@@ -107,8 +107,8 @@ function buildBoundarySettings({
     if (hasFixedPolicies)
         Object.assign(settings, {
             'boundaries/elements': OTHER_BOUNDARY_ELEMENTS,
-            'boundaries/dependency-nodes': TRPC_DEPENDENCY_NODES,
-            'boundaries/additional-dependency-nodes': TRPC_DEPENDENCY_SELECTORS,
+            'boundaries/dependency-nodes': BOUNDARY_DEPENDENCY_NODES,
+            'boundaries/additional-dependency-nodes': BOUNDARY_DEPENDENCY_SELECTORS,
         });
     return settings;
 }
@@ -116,26 +116,26 @@ function buildBoundarySettings({
 /**
  * Build one boundary block from the root modules and the project tests.
  *
- * @param context the scopes, level, and Node script paths to cover.
+ * @param planned the scopes, level, and Node script paths to cover.
  *
  * @returns one classification block and its ordered dependency policies.
  */
-export function buildBoundaryBlocks(context: Pick<EslintContext, 'session' | 'nodeFiles'>): EslintBlock[] {
+export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const {
         session: {
             settingsFile: { settings },
             scopes,
         },
         nodeFiles,
-    } = context;
+    } = planned;
     const importRules = settings.import_rule;
     const codeLanguages: readonly string[] = CODE_LANGUAGES;
     const javascriptScopes = scopes.filter(({ selected }) =>
-        selected.some(({ configuration }) => codeLanguages.includes(configuration.name)),
+        selected.some((configuration) => codeLanguages.includes(configuration.name)),
     );
     const enforceTests = settings.level === 'all' && javascriptScopes.length > 0;
     const trpcScopes = scopes.filter(({ selected }) =>
-        selected.some(({ configuration }) => configuration.name === TRPC_CONFIGURATION),
+        selected.some((configuration) => configuration.name === TRPC_CONFIGURATION),
     );
     const serverFiles = [...new Set(trpcScopes.flatMap(({ view }) => view.values.trpc?.server_files ?? []))];
     // Other files of a tRPC scope import the server files only as types.

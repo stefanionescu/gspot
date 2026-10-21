@@ -9,14 +9,7 @@ import { STYLE_CASES } from '#tests/data/checks/vale-styles.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { shareProseSandbox, applySandboxChanges } from '#tests/setup/sandbox.ts';
 import { spawnGspot, spawnRootCheck, parseCheckReport } from '#tests/setup/run-gspot.ts';
-
-import {
-    VALE_INI,
-    CURRENCY_CASES,
-    VOCABULARY_SOURCE,
-    VERSION_RANGE_SOURCE,
-    VERSION_RANGE_FINDINGS,
-} from '#tests/data/checks/prose.ts';
+import { VALE_INI, VOCABULARY_SOURCE, VERSION_RANGE_SOURCE, VERSION_RANGE_FINDINGS } from '#tests/data/checks/prose.ts';
 
 const installedSandbox = shareProseSandbox();
 
@@ -64,7 +57,7 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
 });
 
 test("Vale's heading-case rule accepts a reviewed product name and reports title case", async () => {
-    const folder = { path: installedSandbox().root };
+    const { root } = installedSandbox();
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: '',
         files: {
@@ -82,7 +75,7 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
 `,
         },
     });
-    const result = parseCheckReport(await spawnGspot(folder.path, ['check', '--only', 'prose/vale', '--json']));
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
     const findings = result.report.checks.flatMap(({ findings }) => findings);
     expect(
         findings.filter(({ rule }) => rule === 'gspot.heading-case').map(({ line, rule }) => ({ line, rule })),
@@ -90,7 +83,7 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
 });
 
 test('the generated vale.ini at level recommended reports link text such as here', async () => {
-    const folder = { path: installedSandbox().root };
+    const { root } = installedSandbox();
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: '',
         files: {
@@ -106,14 +99,14 @@ Read [here](guide.md).
             'source.ts': 'const example = "[here](guide.md)";\n// Read [here](guide.md).\n',
         },
     });
-    const failed = await spawnRootCheck(folder.path, 'prose/vale');
+    const failed = await spawnRootCheck(root, 'prose/vale');
     expect(failed.status, failed.note).toBe('failed');
     expect(failed.findings).toStrictEqual([
         matchFields({ file: 'guide.md', line: 3, rule: 'gspot.link-text' }),
         matchFields({ file: 'source.ts', line: 2, rule: 'gspot.link-text' }),
     ]);
     await writeFile(
-        join(folder.path, 'guide.md'),
+        join(root, 'guide.md'),
         `# Guide
 
 Read [request guide](guide.md).
@@ -124,44 +117,37 @@ Read [request guide](guide.md).
 `,
     );
     await writeFile(
-        join(folder.path, 'source.ts'),
+        join(root, 'source.ts'),
         'const example = "[here](guide.md)";\n// Read [request guide](guide.md).\n',
     );
-    const corrected = await spawnRootCheck(folder.path, 'prose/vale');
+    const corrected = await spawnRootCheck(root, 'prose/vale');
     expect(corrected.status, corrected.note).toBe('passed');
     expect(corrected.findings).toStrictEqual([]);
 });
 
-test.each([...CURRENCY_CASES.map((entry) => ({ ...entry, rule: 'currency' as const })), ...STYLE_CASES])(
-    'Vale $rule reports prose findings and accepts source notation in $path',
-    async (entry) => {
-        const folder = { path: installedSandbox().root };
-        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-            check: '',
-            files: {
-                'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-                [entry.path]: entry.source,
-            },
-        });
-        const result = parseCheckReport(await spawnGspot(folder.path, ['check', '--only', 'prose/vale', '--json']));
-        const alerts = result.report.checks
-            .flatMap(({ findings }) => findings)
-            .filter(({ rule }) => rule === `gspot.${entry.rule}`);
-        expect(alerts.map(({ line, rule }) => ({ line, rule }))).toStrictEqual(
-            entry.lines.map((line) => ({ line, rule: `gspot.${entry.rule}` })),
-        );
-        if (entry.rule === 'placeholders')
-            expect(alerts.map(({ message }) => message)).toStrictEqual([
-                "Placeholder style 'YOUR_TOKEN'. Use <kebab-case> in angle brackets.",
-                "Placeholder style '{{token}}'. Use <kebab-case> in angle brackets.",
-            ]);
-    },
-);
+test.each([...STYLE_CASES])('Vale $rule reports prose findings and accepts source notation in $path', async (entry) => {
+    const { root } = installedSandbox();
+    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        check: '',
+        files: {
+            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+            [entry.path]: entry.source,
+        },
+    });
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
+    const alerts = result.report.checks
+        .flatMap(({ findings }) => findings)
+        .filter(({ rule }) => rule === `gspot.${entry.rule}`);
+    expect(alerts.map(({ line, rule }) => ({ line, rule }))).toStrictEqual(
+        entry.lines.map((line) => ({ line, rule: `gspot.${entry.rule}` })),
+    );
+    if ('messages' in entry) expect(alerts.map(({ message }) => message)).toStrictEqual([...entry.messages]);
+});
 
 test.each([{ scope: '' }, { scope: 'app' }])(
     'Vale accepts the words listed in gspot.toml and reports a misspelling in scope "$scope"',
     async ({ scope }) => {
-        const folder = { path: installedSandbox().root };
+        const { root } = installedSandbox();
         const settings = buildSandboxSettings(scope === '' ? ['prose', 'sql', 'spelling'] : ['prose', 'spelling'], {
             level: 'all',
             tables:
@@ -178,7 +164,7 @@ configurations = ["sql"]
             files: { 'gspot.toml': settings, [join(scope, 'guide.md')]: VOCABULARY_SOURCE },
         });
         const result = parseCheckReport(
-            await spawnGspot(folder.path, ['check', '--only', 'prose/vale', '--only', 'spelling/typos', '--json']),
+            await spawnGspot(root, ['check', '--only', 'prose/vale', '--only', 'spelling/typos', '--json']),
         );
         const findings = result.report.checks.flatMap(({ findings }) => findings);
         expect(
@@ -190,11 +176,11 @@ configurations = ["sql"]
         expect(findings.filter(({ line }) => line === 5)).toHaveLength(1);
         expect(findings.some(({ line }) => line === 3)).toBe(false);
         await writeFile(
-            join(folder.path, scope, 'guide.md'),
+            join(root, scope, 'guide.md'),
             VOCABULARY_SOURCE.replace(TYPO.receive, 'receive').replace("Avoid vale's and ajv's.", 'Use Vale and ajv.'),
         );
         const corrected = parseCheckReport(
-            await spawnGspot(folder.path, ['check', '--only', 'prose/vale', '--only', 'spelling/typos', '--json']),
+            await spawnGspot(root, ['check', '--only', 'prose/vale', '--only', 'spelling/typos', '--json']),
         );
         expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     },

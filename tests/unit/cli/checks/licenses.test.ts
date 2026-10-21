@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeNpmTool } from '#tests/setup/fakes.ts';
 import * as processes from '#cli/system/processes.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -16,7 +16,9 @@ import { matchFields, matchSubstring, captureRejection } from '#tests/setup/matc
 import {
     LICENSE_SETTINGS,
     SCANNER_FAILURES,
+    SAMPLE_PYPROJECT,
     NPM_LICENSE_REPORT,
+    LICENSE_PACKAGE_JSON,
     ALLOWED_PACKAGE_CASES,
     PYTHON_LICENSE_REPORT,
     SCAN_ALLOWED_PACKAGES,
@@ -88,26 +90,26 @@ test.each([...ALLOWED_PACKAGE_CASES])('allowed-packages: an allowed package: $na
         ),
     );
 });
-test.each(['', 'apps/example'].flatMap((scope) => LICENSE_DEPENDENCY_FILES.map((row) => [scope, ...row])))(
-    'scan: a scan in scope "%s" stops before any scanner when %s dependencies are not installed',
-    async (scope, manifest, source, installed) => {
+test.each(['', 'apps/example'].flatMap((scope) => LICENSE_DEPENDENCY_FILES.map((row) => ({ scope, ...row }))))(
+    'scan: a scan in scope "$scope" stops before any scanner when $dependencyFile dependencies are not installed',
+    async ({ scope, dependencyFile, text, installedFolder }) => {
         await using sandbox = await testdir();
-        const path = scope === '' ? manifest : `${scope}/${manifest}`;
+        const path = scope === '' ? dependencyFile : `${scope}/${dependencyFile}`;
         const tables =
             scope === ''
                 ? LICENSE_SETTINGS
                 : `${LICENSE_SETTINGS}[[scope]]\npath = "${scope}"\nconfigurations = ["licenses"]\n`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['licenses'], { tables }),
-            [path]: source,
+            [path]: text,
         });
 
         using spawn = spyOn(processes, 'spawnProcess');
         expect(await captureRejection(checkFindings(sandbox.path, 'licenses/allowed'))).toBe(
-            `Install the project dependencies first: ${installed} is missing in ${scope === '' ? 'the root' : scope}.`,
+            `Install the project dependencies first: ${installedFolder} is missing in ${scope === '' ? 'the root' : scope}.`,
         );
         expect(spawn).not.toHaveBeenCalled();
-        expect(await isOnDisk(join(sandbox.path, scope, installed))).toBe(false);
+        expect(await isOnDisk(join(sandbox.path, scope, installedFolder))).toBe(false);
     },
 );
 
@@ -117,7 +119,7 @@ test.each([...SCANNER_FAILURES])(
         await using sandbox = await testdir();
         await prepareLicenseSandbox(sandbox.path);
         await createFileTree(sandbox.path, {
-            'app/pyproject.toml': '[project]\nname = "app"\nversion = "0.0.0"\n',
+            'app/pyproject.toml': SAMPLE_PYPROJECT,
             'app/.venv/installed': 'installed',
         });
 
@@ -147,7 +149,7 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
     await prepareLicenseSandbox(sandbox.path, LICENSE_SETTINGS + SCAN_ALLOWED_PACKAGES);
     await fakeNpmTool(sandbox.path, 'license-checker-rseidelsohn');
     await createFileTree(sandbox.path, {
-        'package.json': '{"name":"example","private":true,"dependencies":{"choice":"1.0.0"}}',
+        'package.json': LICENSE_PACKAGE_JSON,
         'node_modules/installed': 'sample',
     });
 

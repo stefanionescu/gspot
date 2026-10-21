@@ -3,35 +3,42 @@ import { tmpdir } from 'node:os';
 import { join, delimiter } from 'node:path';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { hashContent } from '#cli/system/text.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Writer } from '#cli/types/ownership.ts';
-import type { Session } from '#cli/types/planning.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { FOLDER_LINK_TYPE } from '#tests/setup/system.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import type { InstallContext } from '#cli/types/install.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
+import type { ToolInstall } from '#cli/types/install/tools.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { testModules, linkPackages } from '#tests/setup/modules.ts';
 import type { Sandbox, SandboxPlan } from '#tests/types/sandbox.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectLockfileName } from '#cli/install/npm/tool-project.ts';
 import { runtimeSettingsSchema } from '#tests/schemas/preparation.ts';
-import type { PackageManager } from '#cli/types/parsers/dependencies.ts';
+import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
+import type { PackageManager } from '#cli/types/repository/package-manager.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { MISE_TRUST, PINNED_TOOLS_FILE, TEST_RUN_HASH_LENGTH, TEST_RUN_FOLDER_NAME } from '#tests/data/test-setup.ts';
 
+/**
+ * Read this checkout's validated Bun and Node pins.
+ *
+ * @returns the two pinned runtime versions.
+ */
+export async function readRuntimePins(): Promise<{ bun: string; node: string }> {
+    const runtimeSettings: unknown = parse(await readFile(join(import.meta.dir, '../..', PINNED_TOOLS_FILE), 'utf8'));
+    return runtimeSettingsSchema.parse(runtimeSettings).tools;
+}
+
 /** Give a hook repository the Bun and Node pins of this repository; a clone keeps its committed file. */
-async function installRuntimes(root: string): Promise<void> {
+export async function installRuntimes(root: string): Promise<void> {
     if (!(await isOnDisk(join(root, PINNED_TOOLS_FILE)))) {
-        const runtimeSettings: unknown = parse(
-            await readFile(join(import.meta.dir, '../..', PINNED_TOOLS_FILE), 'utf8'),
-        );
-        const { tools } = runtimeSettingsSchema.parse(runtimeSettings);
+        const tools = await readRuntimePins();
         await writeFile(join(root, PINNED_TOOLS_FILE), stringify({ tools }));
     }
     const trusted = await runCommand([...MISE_TRUST, PINNED_TOOLS_FILE], { cwd: root });
@@ -41,13 +48,13 @@ async function installRuntimes(root: string): Promise<void> {
 const repositoryRoot = join(import.meta.dir, '../..');
 
 /** The packages and tool paths of the test run for this checkout. */
-const TEST_RUN_FOLDER = join(
+export const TEST_RUN_FOLDER = join(
     tmpdir(),
     `${TEST_RUN_FOLDER_NAME}-${hashContent(repositoryRoot).slice(0, TEST_RUN_HASH_LENGTH)}`,
 );
 
 /** Run init in a sandbox, set its level and configurations, and install its tools. */
-async function installSandbox(
+export async function installSandbox(
     sandbox: Sandbox,
     options: {
         configurations: readonly string[];
@@ -72,7 +79,7 @@ async function installSandbox(
 }
 
 /** Run one gspot command in a sandbox and throw with its output when it fails. */
-async function runSandboxStep(sandbox: Sandbox, commandArguments: readonly string[]): Promise<ProcessOutput> {
+export async function runSandboxStep(sandbox: Sandbox, commandArguments: readonly string[]): Promise<ProcessOutput> {
     const result = await sandbox.run(sandbox.root, commandArguments, sandbox.environment);
     if (result.code !== 0) {
         const message = `gspot ${commandArguments.join(' ')} failed in ${sandbox.root}:\n${result.stdout}${result.stderr}`;
@@ -82,14 +89,14 @@ async function runSandboxStep(sandbox: Sandbox, commandArguments: readonly strin
 }
 
 /** Run apply and install in a sandbox. */
-async function installToolProjects(root: string): Promise<void> {
+export async function installToolProjects(root: string): Promise<void> {
     const sandbox = { root, environment: {}, run: spawnGspot };
     await runSandboxStep(sandbox, ['apply']);
     await runSandboxStep(sandbox, ['install']);
 }
 
 /** Link the installed TypeScript package and its executable launchers. */
-async function installCompiler(root: string, folder = join(root, 'node_modules')): Promise<string> {
+export async function installCompiler(root: string, folder = join(root, 'node_modules')): Promise<string> {
     await mkdir(folder, { recursive: true });
     await linkPackages(folder, ['typescript']);
     await symlink(await realpath(join(testModules, '.bin')), join(folder, '.bin'), FOLDER_LINK_TYPE);
@@ -97,7 +104,7 @@ async function installCompiler(root: string, folder = join(root, 'node_modules')
 }
 
 /** Read a tool project file, its lockfile, and the lockfile mode. */
-async function readToolProjectFiles(
+export async function readToolProjectFiles(
     root: string,
     packageManager: PackageManager['name'] | 'uv',
 ): Promise<ToolProjectFiles> {
@@ -106,7 +113,7 @@ async function readToolProjectFiles(
     await using lockfile = await open(lockfilePath, 'r');
     const attributes = await lockfile.stat();
     return {
-        manifest: await readFile(join(root, '.gspot', python ? 'pyproject.toml' : 'package.json')),
+        projectFile: await readFile(join(root, '.gspot', python ? 'pyproject.toml' : 'package.json')),
         lockfilePath,
         lockfile: await lockfile.readFile(),
         mode: attributes.mode,
@@ -120,24 +127,13 @@ async function readToolProjectFiles(
  * @param writer holds the repository lock and saves files.
  * @returns the install state.
  */
-function buildInstallContext(session: Session, writer: Writer): InstallContext {
+export function buildToolInstall(session: Session, writer: Writer): ToolInstall {
     return {
         session,
         writer,
         generated: generate(session),
-        tools: listDistinctTools(session.neededToolManifests),
-        mise: null,
+        tools: listDistinctTools(session.neededToolConfigurations),
+        misePath: null,
         steps: [],
     };
 }
-
-export {
-    runSandboxStep,
-    installSandbox,
-    TEST_RUN_FOLDER,
-    installRuntimes,
-    installCompiler,
-    installToolProjects,
-    buildInstallContext,
-    readToolProjectFiles,
-};

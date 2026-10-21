@@ -3,7 +3,7 @@ import { GIT_FOLDER } from '#cli/config/repository/tracked.ts';
 export const DOCKERIGNORE_ENTRIES = [GIT_FOLDER, '.env'] as const;
 
 /** The exit code that Trivy returns for findings, set with --exit-code. */
-export const TRIVY_EXIT = 10;
+export const TRIVY_FINDINGS_EXIT_CODE = 10;
 
 export const COMPOSE_OVERRIDE = /^(?<base>compose(?=\.override\.)|docker-compose)\.[^.]+\.ya?ml$/u;
 
@@ -29,7 +29,7 @@ export const TRIVY_IMAGE_COMMAND = [
     '--scanners',
     'vuln,secret',
     '--exit-code',
-    String(TRIVY_EXIT),
+    String(TRIVY_FINDINGS_EXIT_CODE),
     '--config',
 ] as const;
 

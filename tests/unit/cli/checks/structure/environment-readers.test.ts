@@ -1,15 +1,14 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { markExecutable } from '#tests/setup/git.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 
 import {
     BASH_ENV_READ_CASES,
@@ -102,7 +101,6 @@ test('each scope uses its own env files', async () => {
 test.each([...BASH_ENV_READ_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
     const plan = BASH_SANDBOX;
     await using sandbox = await createSandbox(plan);
-    await markExecutable(sandbox.root, 'scripts/build.sh');
     const result = await runCheckSample(sandbox, entry, plan);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });

@@ -1,11 +1,12 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { isInDependencyFolder } from '#cli/repository/classify.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
+import { isInDependencyFolder } from '#cli/repository/files/tool-folders.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
 
 /**
@@ -15,13 +16,15 @@ import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tre
  * @param planned the scope files.
  * @returns the findings.
  */
-export function checkLoneFiles(_session: Session, planned: PlannedCheck): Finding[] {
+export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck): Finding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
     const extensions = filterSourceConfigurations(planned.selection.selected).flatMap(
-        (manifest) => manifest.files.extensions,
+        (configuration) => configuration.files.extensions,
     );
-    const isRouteFile = buildPathMatcher(planned.selection.selected.flatMap((manifest) => manifest.route_files));
+    const isRouteFile = buildPathMatcher(
+        planned.selection.selected.flatMap((configuration) => configuration.route_files),
+    );
     const checked = new Set(files.map((file) => extractParentFolder(file.path)));
     return [...checked]
         .filter((folder) => folder !== '' && !isInDependencyFolder(folder))

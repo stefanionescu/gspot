@@ -6,9 +6,9 @@ import { symlink, writeFile } from 'node:fs/promises';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
@@ -43,7 +43,7 @@ test('a check whose tool is not installed fails with the pinned version and the 
     expect(check.code).toBe(2);
     expect(check.stdout).toContain('missing');
     expect(check.stdout).toContain(
-        `shellcheck ${String(getToolDeclaration([...readManifests().values()], 'shellcheck').version)} is not installed`,
+        `shellcheck ${String(getTool([...readConfigurations().values()], 'shellcheck').version)} is not installed`,
     );
     const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);

@@ -13,7 +13,7 @@ import type {
     SarifResultLocation,
     SarifArtifactLocation,
     SarifPhysicalLocation,
-} from '#cli/types/runs/output.ts';
+} from '#cli/types/runs/tool-reports.ts';
 
 const messageSchema = z.object({
     text: z.string().optional(),

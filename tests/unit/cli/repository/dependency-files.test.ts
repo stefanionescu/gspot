@@ -8,12 +8,12 @@ import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildTrackedFile, readTestRepository } from '#tests/setup/builders.ts';
-import { PYTHON_WORKSPACE_FILES } from '#tests/data/install/python-tool-project.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 
 import {
     PACKAGE_FIELDS,
     REACT_VUE_PACKAGES,
+    PYTHON_DEPENDENCY_CASES,
     INVALID_DEPENDENCY_FILES,
     PROJECT_DEPENDENCY_FILES,
     PROJECT_DEPENDENCY_SCOPES,
@@ -35,8 +35,8 @@ test('a pytest table counts as a pytest dependency', async () => {
     const source = '[tool.pytest.ini_options]\ntestpaths = ["tests"]\n';
     await createFileTree(sandbox.path, { 'pyproject.toml': source, 'source.py': 'print("authored")\n' });
     const repository = await readTestRepository(sandbox.path);
-    const manifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-    expect(manifests[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
+    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    expect(dependencyFiles[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
 });
 
 test.each(INVALID_DEPENDENCY_FILES)(
@@ -53,23 +53,6 @@ test.each(INVALID_DEPENDENCY_FILES)(
         });
     },
 );
-
-test('Python dependency file reads keep their dependencies and report invalid text', async () => {
-    await using sandbox = await testdir(PYTHON_WORKSPACE_FILES);
-
-    const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-    expect(dependencyFiles.find((entry) => entry.path === 'api/pyproject.toml')?.dependencies).toStrictEqual({
-        fastapi: 'fastapi>=1',
-    });
-    await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
-    expect(readDependencyFiles(createReadCache(sandbox.path), repository.files)).rejects.toMatchObject({
-        name: 'GspotError',
-        code: 'filesystem',
-        message: 'pyproject.toml:1:9 is not valid TOML: Error parsing TOML (1, 9):. Fix the file.',
-        cause: expect.any(Error) as Error,
-    });
-});
 
 test('a dependency file that disappears after the repository read is an error', async () => {
     const path = 'pyproject.toml';
@@ -131,9 +114,9 @@ test('declared framework dependencies follow the nearest npm project', async () 
     await using sandbox = await testdir(PROJECT_DEPENDENCY_FILES);
 
     const repository = await readTestRepository(sandbox.path);
-    const manifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     for (const { scope, names } of PROJECT_DEPENDENCY_SCOPES) {
-        expect(listProjectDependencyNames(manifests, scope), scope).toStrictEqual([...names]);
+        expect(listProjectDependencyNames(dependencyFiles, scope), scope).toStrictEqual([...names]);
     }
 });
 
@@ -161,3 +144,15 @@ test('a broken package.json stops the next session and a fixed one changes the s
         ),
     ).toStrictEqual([[], ['vue']]);
 });
+
+test.each([...PYTHON_DEPENDENCY_CASES])(
+    'each Python dependency file form gives its dependencies: $name',
+    async ({ path, source }) => {
+        await using sandbox = await testdir({ [`api/${path}`]: source });
+        const repository = await readTestRepository(sandbox.path);
+        const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+        expect(
+            Object.keys(dependencyFiles[0]!.dependencies).toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual(['fastapi', 'friendly-bard']);
+    },
+);

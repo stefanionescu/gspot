@@ -1,12 +1,14 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { HOOK_FOLDERS } from '#cli/config/repository/hooks.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { isInDependencyFolder } from '#cli/repository/files/tool-folders.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
-import { listTaggedExtensions, isInDependencyFolder } from '#cli/repository/classify.ts';
 import { extractStem, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
 import { SPEC_SUFFIX, INDEX_STEMS, COMPANION_SUFFIX } from '#cli/config/checks/structure.ts';
 
@@ -37,10 +39,12 @@ function extractPrefix(stem: string): string {
  * @param planned the scope files and limit.
  * @returns the findings.
  */
-export function checkSharedPrefixes(_session: Session, planned: PlannedCheck): Finding[] {
+export function checkStructureSharedPrefixes(_session: Session, planned: PlannedCheck): Finding[] {
     const limit = getTable(planned.selection.view, 'limits').shared_prefix_files;
-    const prefixes = new Set(planned.selection.selected.flatMap((manifest) => manifest.shared_prefixes.prefixes));
-    const kinds = new Set(planned.selection.selected.flatMap((manifest) => manifest.shared_prefixes.kinds));
+    const prefixes = new Set(
+        planned.selection.selected.flatMap((configuration) => configuration.shared_prefixes.prefixes),
+    );
+    const kinds = new Set(planned.selection.selected.flatMap((configuration) => configuration.shared_prefixes.kinds));
     const tree = buildFolderTree(planned.files);
     const seen = new Set<string>();
 

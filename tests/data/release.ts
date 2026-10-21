@@ -36,15 +36,15 @@ let code = 0;
 let output = '';
 if (name === 'npm') {
     if (args[0] === 'pkg' && args[1] === 'get') {
-        const manifest = JSON.parse(readFileSync(join(args[4], 'package.json'), 'utf8'));
-        output = JSON.stringify(manifest[args[2]]);
+        const packageJson = JSON.parse(readFileSync(join(args[4], 'package.json'), 'utf8'));
+        output = JSON.stringify(packageJson[args[2]]);
     } else if (args[0] === 'view') {
         const packageName = args[1].slice(0, args[1].lastIndexOf('@'));
         code = state.published.includes(packageName) ? 0 : 1;
     } else if (args[0] === 'publish') {
-        const manifest = JSON.parse(readFileSync(join(args[1], 'package.json'), 'utf8'));
-        if (state.published.includes(manifest.name)) code = 1;
-        else state.published.push(manifest.name);
+        const packageJson = JSON.parse(readFileSync(join(args[1], 'package.json'), 'utf8'));
+        if (state.published.includes(packageJson.name)) code = 1;
+        else state.published.push(packageJson.name);
     } else throw new Error('Unexpected npm call: ' + JSON.stringify(args));
 } else if (name === 'git') {
     if (args[0] === 'branch') output = 'main';

@@ -1,19 +1,31 @@
 import { join } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import type { Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
-import type { Session } from '#cli/types/planning.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { VALE_ALERT } from '#tests/data/checks/prose.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { checkFindings, planSandboxCheck, findBuiltInCheck, openPinnedSession } from '#tests/setup/check-input.ts';
+
+/** Create a Markdown sandbox for the valid and refused Vale output tests. */
+async function prepareValeSession(resources: AsyncDisposableStack): Promise<Session> {
+    const sandbox = resources.use(
+        await testdir({
+            'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
+            '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
+            'example.md': '# Documentation\n',
+        }),
+    );
+    return await openPinnedSession(sandbox.path, ['vale'], resources);
+}
 
 test('Vale gets the timeout setting, and its alerts become findings with file, line and column', async () => {
     await using folder = await testdir();
@@ -59,7 +71,7 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
     for (const path of paths) await writeFile(join(session.root, path), '// Changed after the run read it.\n');
 
     using resources = new DisposableStack();
-    resources.use(fakePinnedExecutables([getToolDeclaration(session.manifests.values(), 'vale')]));
+    resources.use(fakePinnedExecutables([getTool(session.configurations.values(), 'vale')]));
     const scanned: string[] = [];
     const nativePaths: string[] = [];
     const run = resources.use(
@@ -180,18 +192,6 @@ test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malfo
 
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout })));
     expect(await captureRejection(checkFindings(session.root, 'prose/vale'))).toBe(
-        'Vale returned invalid structured findings.',
+        'Vale printed output that gspot cannot read.',
     );
 });
-
-/** Create a Markdown sandbox for the valid and refused Vale output tests. */
-async function prepareValeSession(resources: AsyncDisposableStack): Promise<Session> {
-    const sandbox = resources.use(
-        await testdir({
-            'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
-            '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
-            'example.md': '# Documentation\n',
-        }),
-    );
-    return await openPinnedSession(sandbox.path, ['vale'], resources);
-}

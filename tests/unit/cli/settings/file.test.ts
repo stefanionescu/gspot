@@ -5,7 +5,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { COMMENTED_SETTINGS } from '#tests/data/settings/edits.ts';
 import { link, stat, symlink, readFile, writeFile } from 'node:fs/promises';
-import { setKey, updateSettings, readSettingsEdit } from '#cli/settings/edit.ts';
+import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import { parseTomlText, writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 
 test('a TOML syntax error names the file, line and column', () => {
@@ -31,7 +31,7 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     await writeFile(path, COMMENTED_SETTINGS);
     const input = readSettingsEdit(sandbox.path);
     setKey(input.table, 'level', 'all');
-    const result = updateSettings(sandbox.path, input);
+    const result = buildEditedSettings(sandbox.path, input);
     await writeFile(path, `${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     using log = openWriter(sandbox.path);
     expect(() => {
@@ -40,7 +40,7 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     expect(await readFile(path, 'utf8')).toBe(`${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     const fresh = readSettingsEdit(sandbox.path);
     setKey(fresh.table, 'level', 'all');
-    const next = updateSettings(sandbox.path, fresh);
+    const next = buildEditedSettings(sandbox.path, fresh);
     writeSettings(log, next.text, fresh.original);
     expect(readSettings(sandbox.path).settings.level).toBe('all');
 });

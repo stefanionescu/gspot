@@ -1,4 +1,4 @@
-import { HOOKS_PATH } from '#cli/config/system/locations.ts';
+import { HOOKS_PATH } from '#cli/config/gspot-paths.ts';
 
 const MISE_HOOKS_PATH = '.mise/tasks/hook';
 

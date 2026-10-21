@@ -3,13 +3,13 @@ import { posix } from 'node:path';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
-import { listNpmToolNames } from '#cli/configurations/tools.ts';
-import { isInstalledToolPath } from '#cli/repository/classify.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DEPENDENCY_SECTIONS } from '#cli/config/parsers/lockfiles.ts';
-import { parseRequirements, DEPENDENCY_PARSERS } from '#cli/parsers/dependencies.ts';
+import { isInToolFolder } from '#cli/repository/files/tool-folders.ts';
+import { listNpmToolNames } from '#cli/configurations/declared-tools.ts';
+import { PARSERS, parseRequirements } from '#cli/parsers/dependencies.ts';
 import { PACKAGE_JSON, REQUIREMENTS_FILE } from '#cli/config/parsers/dependencies.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
 import { findText, findCachedText, readCachedText } from '#cli/system/files/reads.ts';
@@ -17,7 +17,7 @@ import { type PackageJson, type DependencyFile } from '#cli/types/parsers/depend
 
 // Keep each parser failure tied to the dependency file that caused it.
 async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<DependencyFile | undefined> {
-    const parse = REQUIREMENTS_FILE.test(file.path) ? parseRequirements : DEPENDENCY_PARSERS[posix.basename(file.path)];
+    const parse = REQUIREMENTS_FILE.test(file.path) ? parseRequirements : PARSERS[posix.basename(file.path)];
     if (parse === undefined) return undefined;
     const text = readCachedText(reads, file.path);
     return await parse(file.path, text);
@@ -32,7 +32,7 @@ async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<
  */
 export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];
-    for (const file of files.filter((file) => file.kind === 'source' && !isInstalledToolPath(file.path))) {
+    for (const file of files.filter((file) => file.kind === 'source' && !isInToolFolder(file.path))) {
         const dependencyFile = await readDependencyFile(reads, file);
         if (dependencyFile !== undefined) dependencies.push(dependencyFile);
     }
@@ -86,11 +86,14 @@ export function readDeclaredSpecifiers(reads: ReadCache, path: string): Map<stri
  * List the tool-only packages: each package.json that holds only declared npm tools and Git hook packages.
  *
  * @param dependencyFiles the parsed files.
- * @param manifests the configurations that declare the npm tools.
+ * @param configurations the configurations that declare the npm tools.
  * @returns the paths of the tool-only packages.
  */
-export function listToolOnlyPackages(dependencyFiles: DependencyFile[], manifests: Iterable<Manifest>): Set<string> {
-    const npmNames = listNpmToolNames(manifests);
+export function listToolOnlyPackages(
+    dependencyFiles: DependencyFile[],
+    configurations: Iterable<Configuration>,
+): Set<string> {
+    const npmNames = listNpmToolNames(configurations);
     return new Set(
         dependencyFiles
             .filter((dependencyFile) => {

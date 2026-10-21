@@ -2,7 +2,7 @@
 import { posix } from 'node:path';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { pbxprojSchema } from '#cli/schemas/parsers/xcode.ts';
-import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
+import { SWIFT_EXTENSION } from '#cli/config/repository/inventory.ts';
 
 import {
     PBXPROJ,
@@ -17,12 +17,12 @@ import {
     type PbxElement,
     type XcodeProject,
     type ProjectTokens,
+    type ParsedPbxproj,
     type ProjectSources,
-    type ProjectMetadata,
     type ProjectBuildSettings,
 } from '#cli/types/parsers/xcode.ts';
 
-function readProjectString(token: string | undefined): string {
+function parseProjectString(token: string | undefined): string {
     if (token === undefined || PROJECT_PUNCTUATION.has(token))
         throw new Error('The Xcode project has an invalid string.');
     if (!token.startsWith('"')) return token;
@@ -38,10 +38,10 @@ function expectProjectToken(state: ProjectTokens, expected: string): void {
     state.index += 1;
 }
 
-function readProjectArray(state: ProjectTokens): unknown[] {
+function parseProjectArray(state: ProjectTokens): unknown[] {
     const values: unknown[] = [];
     while (state.tokens[state.index] !== ')') {
-        values.push(readProjectValue(state));
+        values.push(parseProjectValue(state));
         if (state.tokens[state.index] !== ',') break;
         state.index += 1;
     }
@@ -49,23 +49,23 @@ function readProjectArray(state: ProjectTokens): unknown[] {
     return values;
 }
 
-function readProjectDictionary(state: ProjectTokens): Record<string, unknown> {
+function parseProjectDictionary(state: ProjectTokens): Record<string, unknown> {
     const entries: [string, unknown][] = [];
     while (state.tokens[state.index] !== '}') {
-        const key = readProjectString(state.tokens[state.index++]);
+        const key = parseProjectString(state.tokens[state.index++]);
         expectProjectToken(state, '=');
-        entries.push([key, readProjectValue(state)]);
+        entries.push([key, parseProjectValue(state)]);
         expectProjectToken(state, ';');
     }
     expectProjectToken(state, '}');
     return Object.fromEntries(entries);
 }
 
-function readProjectValue(state: ProjectTokens): unknown {
+function parseProjectValue(state: ProjectTokens): unknown {
     const lexeme = state.tokens[state.index++];
-    if (lexeme === '{') return readProjectDictionary(state);
-    if (lexeme === '(') return readProjectArray(state);
-    return readProjectString(lexeme);
+    if (lexeme === '{') return parseProjectDictionary(state);
+    if (lexeme === '(') return parseProjectArray(state);
+    return parseProjectString(lexeme);
 }
 
 function parseProjectDocument(text: string): unknown {
@@ -81,7 +81,7 @@ function parseProjectDocument(text: string): unknown {
         if (token.trim() !== '' && !token.startsWith('//') && !token.startsWith('/*')) tokens.push(token);
     }
     const state: ProjectTokens = { tokens, index: 0 };
-    const value = readProjectValue(state);
+    const value = parseProjectValue(state);
     if (state.index !== tokens.length) throw new Error('The Xcode project has text after its root dictionary.');
     return value;
 }
@@ -161,7 +161,7 @@ function listTargetFolders(project: XcodeProject, id: string, target: PbxElement
 }
 
 // Validate project metadata without requiring source paths or a main group.
-function parseProjectMetadata(text: string): ProjectMetadata {
+function parsePbxproj(text: string): ParsedPbxproj {
     const project = pbxprojSchema.parse(parseProjectDocument(text));
     const root = project.objects[project.rootObject];
     if (root?.isa !== 'PBXProject') throw new Error('The Xcode project has no project root.');
@@ -175,9 +175,9 @@ function parseProjectMetadata(text: string): ProjectMetadata {
  * @param path the project.pbxproj file, relative to the repository root.
  * @returns the source paths and managed folders of the project, and the same for each target.
  */
-export function parsePbxproj(text: string, path: string): ProjectSources {
+export function parseProjectSources(text: string, path: string): ProjectSources {
     const folder = extractParentFolder(path.slice(0, path.indexOf(PBXPROJ)));
-    const parsed = parseProjectMetadata(text);
+    const parsed = parsePbxproj(text);
     const root = parsed.root;
     if (root.mainGroup === undefined) throw new Error('The Xcode project has no main group.');
     const project: XcodeProject = {
@@ -212,7 +212,7 @@ export function parsePbxproj(text: string, path: string): ProjectSources {
  * @returns the first declared SDK and Swift version.
  */
 export function parseBuildSettings(text: string): ProjectBuildSettings {
-    const project = parseProjectMetadata(text);
+    const project = parsePbxproj(text);
     const settings = Object.values(project.objects).flatMap((entry) => entry.buildSettings ?? []);
     return {
         sdkRoot: settings.find((entry) => entry.SDKROOT !== undefined)?.SDKROOT,

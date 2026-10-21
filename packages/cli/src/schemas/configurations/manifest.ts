@@ -1,13 +1,21 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { RULE_FILE_PATTERN } from '#cli/config/rules.ts';
-import type { EslintPresets } from '#cli/types/generation/eslint.ts';
+import { FILE_KINDS } from '#cli/config/repository/inventory.ts';
+import type { FileKind } from '#cli/types/repository/inventory.ts';
+import { RULE_FILE_PATTERN } from '#cli/config/generation/rules.ts';
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
+import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependencies.ts';
-import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
-import { toolDeclarationSchema } from '#cli/schemas/configurations/tool.ts';
 import { declaredNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
 
+import type {
+    ToolFile,
+    ParsedCheck,
+    ParsedManifest,
+    ConditionFields,
+    GeneratorOutput,
+} from '#cli/types/configurations.ts';
 import {
     GROUPS,
     CHECK_RUNS,
@@ -16,23 +24,16 @@ import {
     CHECK_WORKING_FOLDERS,
     SHIPPED_TOOL_FILES_FOLDER,
 } from '#cli/config/configurations.ts';
-import type {
-    ParsedCheck,
-    EslintAllRules,
-    GeneratorOutput,
-    ConditionFields,
-    ManifestDeclaration,
-    ToolFileDeclaration,
-} from '#cli/types/configurations.ts';
 import {
     levelSchema,
     regexSchema,
     nonemptyString,
-    fileKindSchema,
     conditionSchema,
     commandCheckFields,
     operatingSystemSchema,
 } from '#cli/schemas/configurations/parts.ts';
+
+const fileKindSchema = z.enum(FILE_KINDS) satisfies z.ZodType<FileKind>;
 
 const optionalStringList = z.array(z.string()).default([]);
 
@@ -47,14 +48,14 @@ const filesSchema = z.strictObject({
     // The file types that the ESLint plugins of the configurations in use lint, such as .vue, join the owned ones.
     eslint_plugins: z.boolean().default(false),
     kinds: z.array(fileKindSchema).default(['source']),
-} satisfies SchemaShape<ManifestDeclaration['files']>);
+} satisfies SchemaShape<ParsedManifest['files']>);
 
 // A syntax selector applies to every source file, or to the files that a setting lists.
 const selectorSchema = z.strictObject({
     selector: z.string().min(1),
     message: z.string().min(1),
     files_setting: z.string().min(1).optional(),
-} satisfies SchemaShape<ManifestDeclaration['eslint']['selectors'][number]>);
+} satisfies SchemaShape<ParsedManifest['eslint']['selectors'][number]>);
 
 const pointerSchema = z.strictObject({
     path: z.string(),
@@ -62,7 +63,7 @@ const pointerSchema = z.strictObject({
     body: z.string(),
     note: z.string().min(1).optional(),
     inherit: z.boolean().optional(),
-} satisfies SchemaShape<NonNullable<ToolFileDeclaration['pointer']>>);
+} satisfies SchemaShape<NonNullable<ToolFile['pointer']>>);
 
 // A tool-file consumer accepts one declared name or a nonempty list of names.
 const consumerNamesSchema = z
@@ -93,7 +94,7 @@ const toolFileSchema = z
                 pointer: { ...toolFile.pointer, folders: toolFile.pointer.folders },
             };
         return { ...toolFile, file: toolFile.target, source: posix.join(SHIPPED_TOOL_FILES_FOLDER, toolFile.target) };
-    }) satisfies z.ZodType<ToolFileDeclaration>;
+    }) satisfies z.ZodType<ToolFile>;
 
 const checkFields = z.strictObject({
     ...commandCheckFields,
@@ -169,28 +170,11 @@ const detectionSchema = z.strictObject({
     paths: optionalStringList,
     // A file, or a folder such as *.xcodeproj, whose folder contains a project: init proposes a scope there.
     project_files: optionalStringList,
-} satisfies SchemaShape<ManifestDeclaration['detect']>);
+} satisfies SchemaShape<ParsedManifest['detect']>);
 
-const eslintAllRulesSchema = z
-    .array(z.string().min(1))
-    .transform((rules) => new Set(rules)) satisfies z.ZodType<EslintAllRules>;
-
-/** JSON fields that a preset contributes to rule applicability and settings. */
-const eslintPresetBlockSchema = z.strictObject({
-    files: z.array(z.union([z.string(), z.array(z.string())])).exactOptional(),
-    ignores: z.array(z.string()).exactOptional(),
-    basePath: z.string().exactOptional(),
-    parser: z.boolean(),
-    rules: z.record(z.string(), z.json()).exactOptional(),
-} satisfies SchemaShape<EslintPresets[string]['blocks'][number]>);
-
-/** A preset copy names its exact installed package and the preset export. */
-export const eslintPresetSchema = z.strictObject({
-    package: z.string(),
-    version: z.string(),
-    source: z.string(),
-    blocks: z.tuple([eslintPresetBlockSchema], eslintPresetBlockSchema),
-} satisfies SchemaShape<EslintPresets[string]>);
+const allLevelRulesSchema = z.array(z.string().min(1)).transform((rules) => new Set(rules)) satisfies z.ZodType<
+    Set<string>
+>;
 
 // The shape of a configuration manifest.toml after validation.
 export const manifestSchema = z
@@ -199,7 +183,7 @@ export const manifestSchema = z
         defaults: z.record(z.string().min(1), z.json()).default({}),
         eslint: z
             .strictObject({
-                all_level_rules: eslintAllRulesSchema.prefault([]),
+                all_level_rules: allLevelRulesSchema.prefault([]),
                 selectors: z.array(selectorSchema).default([]),
                 rules_off: z
                     .array(
@@ -207,15 +191,15 @@ export const manifestSchema = z
                             rules: z.array(z.string().min(1)).min(1),
                             reason: nonemptyString,
                             files: z.array(z.string().min(1)).min(1).optional(),
-                        } satisfies SchemaShape<ManifestDeclaration['eslint']['rules_off'][number]>),
+                        } satisfies SchemaShape<ParsedManifest['eslint']['rules_off'][number]>),
                     )
                     .default([]),
                 required_tools: z.array(z.string().min(1)).default([]),
-            } satisfies SchemaShape<ManifestDeclaration['eslint']>)
+            } satisfies SchemaShape<ParsedManifest['eslint']>)
             .prefault({}),
         shared_prefixes: z
             .strictObject({ prefixes: optionalStringList, kinds: optionalStringList } satisfies SchemaShape<
-                ManifestDeclaration['shared_prefixes']
+                ParsedManifest['shared_prefixes']
             >)
             .prefault({}),
         ignored_paths: z.array(z.string().min(1)).default([]),
@@ -232,10 +216,10 @@ export const manifestSchema = z
             // init omits a configuration whose checks all read Git when the folder has no .git.
             when: (conditionSchema.pick({ git: true }) satisfies z.ZodType<Pick<ConditionFields, 'git'>>).optional(),
             description: nonemptyString,
-        } satisfies SchemaShape<ManifestDeclaration['configuration']>),
+        } satisfies SchemaShape<ParsedManifest['configuration']>),
         detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
-        tool: z.array(toolDeclarationSchema).default([]),
+        tool: z.array(manifestToolSchema).default([]),
         // Files under semgrep/ become per-scope Semgrep packs when the scope selects security; explicit tool files supply pack-specific metadata.
         tool_file: z.array(toolFileSchema).default([]),
         check: z.array(checkSchema).default([]),
@@ -243,7 +227,7 @@ export const manifestSchema = z
         naming: z
             .strictObject({
                 override: z.array(declaredNamingOverrideSchema).default([]),
-            } satisfies SchemaShape<NonNullable<ManifestDeclaration['naming']>>)
+            } satisfies SchemaShape<NonNullable<ParsedManifest['naming']>>)
             .optional(),
         // Rule files, by name, that install only when their condition holds. Every other file in the rules folder installs
         // with the configuration. Detection reads each condition as it reads a detection table, with the other lists empty.
@@ -270,7 +254,7 @@ export const manifestSchema = z
             .default({}),
         ruff: z
             .strictObject({ recommended: optionalStringList, all: optionalStringList } satisfies SchemaShape<
-                ManifestDeclaration['ruff']
+                ParsedManifest['ruff']
             >)
             .prefault({}),
     })
@@ -292,4 +276,4 @@ export const manifestSchema = z
                   ),
         })),
         checks: check.map((entry) => ({ ...entry, name: `${rest.configuration.name}/${entry.name}` })),
-    })) satisfies z.ZodType<ManifestDeclaration>;
+    })) satisfies z.ZodType<ParsedManifest>;

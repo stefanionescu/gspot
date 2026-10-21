@@ -8,7 +8,7 @@ import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/data/checks/css.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { hasFileSettings, planSettingsWrite } from '#cli/ownership/file-settings.ts';
+import { hasManagedKeys, planSettingsWrite } from '#cli/ownership/file-settings.ts';
 
 test('managed JSON keys survive reopening and updates and keep other bytes and the mode', async () => {
     await using sandbox = await testdir();
@@ -16,11 +16,11 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     const original = STYLELINT_PACKAGE_JSON.replaceAll('\n', '\r\n');
     await createFileTree(sandbox.path, { [path]: original });
     await chmod(join(sandbox.path, path), 0o640);
-    const changes = [{ path: ['stylelint'], value: { extends: './.stylelintrc.json' } }];
+    const changes = [{ key: ['stylelint'], value: { extends: './.stylelintrc.json' } }];
     {
         using log = openWriter(sandbox.path);
         writePlans(log, [planSettingsWrite(log, path, changes)]);
-        expect(hasFileSettings({ path, changes }, log.files.read(path)!)).toBe(true);
+        expect(hasManagedKeys({ path, keys: changes }, log.files.read(path)!)).toBe(true);
         const installed = log.files.read(path)!.bytes.toString('utf8');
         expect(installed).toBe(
             original.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.json"}'),
@@ -30,8 +30,8 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     }
     {
         using log = openWriter(sandbox.path);
-        writePlans(log, [planSettingsWrite(log, path, [{ path: ['stylelint'], value: { extends: './next.json' } }])]);
-        expect(hasFileSettings({ path, changes }, log.files.read(path)!)).toBe(false);
+        writePlans(log, [planSettingsWrite(log, path, [{ key: ['stylelint'], value: { extends: './next.json' } }])]);
+        expect(hasManagedKeys({ path, keys: changes }, log.files.read(path)!)).toBe(false);
         writePlans(log, [planRemoval(log, path)]);
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
             original
@@ -51,14 +51,14 @@ test.each(['tool.jsonc', 'package.json'])(
         await createFileTree(sandbox.path, { [path]: original });
         using log = openWriter(sandbox.path);
         const fields = [
-            { path: ['created', 'nested', 'owned'], value: 0 },
-            { path: ['kept', 'owned'], value: false },
+            { key: ['created', 'nested', 'owned'], value: 0 },
+            { key: ['kept', 'owned'], value: false },
         ];
         writePlans(log, [planSettingsWrite(log, path, fields)]);
-        expect(hasFileSettings({ path: path, changes: fields }, log.files.read(path)!)).toBe(true);
+        expect(hasManagedKeys({ path: path, keys: fields }, log.files.read(path)!)).toBe(true);
         expect(log.files.read(path)!.bytes.toString('utf8')).toContain('// Keep this comment.\n');
         writePlans(log, [planSettingsWrite(log, path, [])]);
-        expect(hasFileSettings({ path: path, changes: fields }, log.files.read(path)!)).toBe(true);
+        expect(hasManagedKeys({ path: path, keys: fields }, log.files.read(path)!)).toBe(true);
     },
 );
 
@@ -70,7 +70,7 @@ test.each(['', '[]', 'false', '{"stylelint":'])(
         using log = openWriter(sandbox.path);
         const offset = source === '' ? '0' : '13';
         expect(() =>
-            planSettingsWrite(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }]),
+            planSettingsWrite(log, 'package.json', [{ key: ['stylelint'], value: { extends: './managed.json' } }]),
         ).toThrow(
             matchFields<GspotError>({
                 name: 'GspotError',

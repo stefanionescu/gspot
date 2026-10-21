@@ -10,7 +10,6 @@ import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox
 
 import {
     SITE_CASES,
-    SITE_SETTINGS,
     COPY_PAGE_BUILD,
     TWO_SITE_SCOPES,
     BUILT_HTML_SITES,
@@ -19,11 +18,9 @@ import {
 import {
     OUTPUT_CASES,
     ALT_TEXT_PAGE,
+    SITE_SETTINGS,
     SITE_PAGE_HEAD,
     MISSING_ALT_PAGE,
-    USED_SELECTOR_CSS,
-    USED_SELECTOR_BODY,
-    REVIEWED_SELECTOR_SETTINGS,
 } from '#tests/data/checks/site/built-pages.ts';
 
 const installedSandbox = registerSharedSandbox(SITE_SANDBOX);
@@ -46,52 +43,17 @@ test.each([...SITE_CASES])('$check reports its finding and passes after the fix'
 test.each([...OUTPUT_CASES])(
     '$check reports its finding in the built site and passes after the fix',
     async (scenario) => {
-        const { check, body, finding } = scenario;
+        const { check, settings, files, findings, corrected } = scenario;
         const { root, environment } = installedSandbox();
-        const settings =
-            'level' in scenario
-                ? SITE_SETTINGS.replace('all', scenario.level) + REVIEWED_SELECTOR_SETTINGS
-                : SITE_SETTINGS;
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
             check,
-            files: {
-                'gspot.toml': settings,
-                'build.js': SITE_OUTPUT_BUILD,
-                ...Object.fromEntries(
-                    Object.entries('files' in scenario ? scenario.files : {}).map(([path, text]) => [
-                        `pages/${path}`,
-                        text,
-                    ]),
-                ),
-                'pages/index.html': `${SITE_PAGE_HEAD}${body}</body></html>`,
-                'pages/style.css': check === 'site/purgecss' ? USED_SELECTOR_CSS : '.unused { color: red; }',
-            },
+            files: { 'gspot.toml': settings, 'build.js': SITE_OUTPUT_BUILD, ...files },
         });
 
-        const pages = join(root, 'pages');
         const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json'], environment));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(failed.report.checks.flatMap((result) => result.findings)).toMatchObject(
-            check === 'site/purgecss'
-                ? [finding, { ...finding, message: 'No built page uses the selector .unused:focus-visible.' }]
-                : [finding],
-        );
-
-        if (check === 'site/html-validate') {
-            await writeFile(join(pages, 'index.html'), `${SITE_PAGE_HEAD}${body.repeat(400)}</body></html>`);
-            const repeated = parseCheckReport(
-                await spawnGspot(root, ['check', '--only', 'site/html-validate', '--json'], environment),
-            );
-            expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
-            const large = repeated.report.checks.flatMap((result) => result.findings);
-            expect({ count: large.length, last: large.at(-1) }).toMatchObject({ count: 400, last: finding });
-        }
-        if ('files' in scenario)
-            await writeFile(join(pages, 'orphan.html'), scenario.files['orphan.html'].replace('#missing', '#good'));
-        await writeFile(
-            join(pages, 'index.html'),
-            `${SITE_PAGE_HEAD}${check === 'site/purgecss' ? USED_SELECTOR_BODY : ''}<p class="unused">Example</p></body></html>`,
-        );
+        expect(failed.report.checks.flatMap((result) => result.findings)).toMatchObject([...findings]);
+        for (const [path, text] of Object.entries(corrected)) await writeFile(join(root, path), text);
         const passed = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json'], environment));
         expect(passed.code, passed.stdout + passed.stderr).toBe(0);
         expect(passed.report.checks.flatMap((result) => result.findings)).toStrictEqual([]);
@@ -138,4 +100,26 @@ test.each([...BUILT_HTML_SITES])('a built HTML ignore stays inside its own site 
     expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(appliedSettings);
     for (const scope of ['app', 'other'])
         expect(await readFile(join(root, `${scope}/build.mjs`), 'utf8')).toBe(COPY_PAGE_BUILD);
+});
+
+test('HTML Validate reports all 400 missing alt attributes in a built page', async () => {
+    const { root, environment } = installedSandbox();
+    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        check: 'site/html-validate',
+        files: {
+            'gspot.toml': SITE_SETTINGS,
+            'build.js': SITE_OUTPUT_BUILD,
+            'pages/index.html': `${SITE_PAGE_HEAD}${'<img src="image.png">'.repeat(400)}</body></html>`,
+        },
+    });
+
+    const failed = parseCheckReport(
+        await spawnGspot(root, ['check', '--only', 'site/html-validate', '--json'], environment),
+    );
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    const findings = failed.report.checks.flatMap((result) => result.findings);
+    expect({ count: findings.length, last: findings.at(-1) }).toMatchObject({
+        count: 400,
+        last: { file: 'dist/index.html', rule: 'wcag/h37', line: 1 },
+    });
 });

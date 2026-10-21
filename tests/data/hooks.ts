@@ -1,3 +1,6 @@
+const NPM_PROJECT_PACKAGE =
+    '{"private":true,"packageManager":"npm@11.10.1","devDependencies":{"@gspothq/cli":"0.1.0"}}';
+
 /** The stubs that Husky 9 writes in .husky/_/, the folder that core.hooksPath names. */
 export const HUSKY_STUBS = {
     '.husky/_/.gitignore': '*\n',
@@ -18,8 +21,7 @@ export const HOOK_REPOSITORIES = [
         name: 'a Husky folder',
         startProgram: 'npm',
         files: {
-            'package.json':
-                '{"private":true,"packageManager":"npm@11.10.1","devDependencies":{"@gspothq/cli":"0.1.0"}}',
+            'package.json': NPM_PROJECT_PACKAGE,
             '.husky/pre-commit': 'npm test\n',
         },
         setting: undefined,
@@ -29,8 +31,7 @@ export const HOOK_REPOSITORIES = [
         name: 'a Husky 9 folder',
         startProgram: 'npm',
         files: {
-            'package.json':
-                '{"private":true,"packageManager":"npm@11.10.1","devDependencies":{"@gspothq/cli":"0.1.0"}}',
+            'package.json': NPM_PROJECT_PACKAGE,
             '.husky/pre-commit': 'npm test\n',
             ...HUSKY_STUBS,
         },
@@ -41,8 +42,7 @@ export const HOOK_REPOSITORIES = [
         name: 'a Lefthook configuration',
         startProgram: 'npm',
         files: {
-            'package.json':
-                '{"private":true,"packageManager":"npm@11.10.1","devDependencies":{"@gspothq/cli":"0.1.0"}}',
+            'package.json': NPM_PROJECT_PACKAGE,
             'lefthook.yml': 'pre-commit:\n',
         },
         setting: undefined,
@@ -52,8 +52,7 @@ export const HOOK_REPOSITORIES = [
         name: 'a script in the Git hooks folder',
         startProgram: 'npm',
         files: {
-            'package.json':
-                '{"private":true,"packageManager":"npm@11.10.1","devDependencies":{"@gspothq/cli":"0.1.0"}}',
+            'package.json': NPM_PROJECT_PACKAGE,
         },
         setting: undefined,
         gitHook: true,

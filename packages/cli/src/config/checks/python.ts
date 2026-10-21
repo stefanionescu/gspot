@@ -5,7 +5,7 @@ export const PYDOCLINT_COMMAND = ['pydoclint', '--allow-init-docstring', 'true',
 
 export const PIP_INSTALL = /\bpip3? install\b/u;
 
-export const INSTALL_EXTENSIONS = ['.sh', '.bash', '.yml', '.yaml', '.toml', 'Dockerfile'] as const;
+export const INSTALL_FILE_SUFFIXES = ['.sh', '.bash', '.yml', '.yaml', '.toml', 'Dockerfile'] as const;
 
 export const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
 

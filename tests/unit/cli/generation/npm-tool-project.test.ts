@@ -4,11 +4,11 @@ import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { STYLESHEET_CASES } from '#tests/data/checks/css.ts';
 import { buildNpmProject } from '#cli/generation/projects.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
-import { isYarnBerry, assertPackageManager } from '#cli/repository/package-manager.ts';
+import { parseToolPackageJson } from '#cli/install/npm/tool-project.ts';
+import { isYarnBerry, assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { YARN_CLIENTS, NEXT_INSTALLATIONS } from '#tests/data/install/npm-tool-project.ts';
 import { REACT_NATIVE_TSCONFIG, REACT_NATIVE_DEPENDENCIES } from '#tests/data/checks/react.ts';
 
@@ -21,10 +21,11 @@ test.each([...STYLESHEET_CASES])(
         });
 
         const session = await openSession(sandbox.path);
-        const manifest = generate(session).files.find(({ path }) => path === '.gspot/package.json')!;
+        const packageJsonFile = generate(session).files.find(({ path }) => path === '.gspot/package.json')!;
         expect(
             Object.keys(
-                parseToolProject(manifest.content, assertPackageManager(session.packageManager).name).dependencies,
+                parseToolPackageJson(packageJsonFile.content, assertPackageManager(session.packageManager).name)
+                    .dependencies,
             ).includes('postcss-html'),
         ).toBe(entry.needsHtmlParser);
     },
@@ -43,7 +44,7 @@ test('a React Native project without Expo installs no Expo or DOM lint plugins',
 
     const session = await openSession(sandbox.path);
     const generated = generate(session).files.find(({ path }) => path === '.gspot/package.json')!;
-    const project = parseToolProject(generated.content, assertPackageManager(session.packageManager).name);
+    const project = parseToolPackageJson(generated.content, assertPackageManager(session.packageManager).name);
     expect(project.dependencies).toHaveProperty('eslint-plugin-react-native');
     expect(project.dependencies).not.toHaveProperty('eslint-plugin-expo');
     expect(project.dependencies).not.toHaveProperty('expo-doctor');
@@ -75,7 +76,7 @@ test.each([...YARN_CLIENTS])(
         const files = buildNpmProject({
             root: process.cwd(),
             scopes: [],
-            manifests: [],
+            configurations: [],
             isYarnBerry: isYarnBerry(packageManager),
         });
         expect(files.map((file) => file.path)).toStrictEqual(
@@ -115,10 +116,10 @@ test.each([...NEXT_INSTALLATIONS])('Next ESLint plugin requirements follow the i
     } else {
         const generated = generate(session).files.find(({ path }) => path === '.gspot/package.json');
         expect(
-            parseToolProject(generated!.content, assertPackageManager(session.packageManager).name).dependencies[
+            parseToolPackageJson(generated!.content, assertPackageManager(session.packageManager).name).dependencies[
                 '@next/eslint-plugin-next'
             ],
-        ).toBe(row.expected ?? getToolDeclaration(session.manifests.values(), '@next/eslint-plugin-next').version);
+        ).toBe(row.expected ?? getTool(session.configurations.values(), '@next/eslint-plugin-next').version);
     }
 });
 
@@ -140,7 +141,7 @@ test('only selected Next.js scopes set the shared plugin version', async () => {
     const session = await openSession(sandbox.path);
     const output = generate(session).files.find(({ path }) => path === '.gspot/package.json');
     expect(
-        parseToolProject(output!.content, assertPackageManager(session.packageManager).name).dependencies[
+        parseToolPackageJson(output!.content, assertPackageManager(session.packageManager).name).dependencies[
             '@next/eslint-plugin-next'
         ],
     ).toBe('^16');

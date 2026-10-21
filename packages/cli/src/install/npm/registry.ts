@@ -1,7 +1,7 @@
 // Read npm registry settings and write isolated package manager settings.
 import which from 'which';
 import Config from '@npmcli/config';
-import { isRecord } from '#cli/system/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
@@ -9,10 +9,10 @@ import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import { extractUrlPasswords } from '#cli/install/credentials.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
+import { NPM_TOOL } from '#cli/config/repository/package-manager.ts';
 
 import {
     NPMRC_FILE,
-    NPM_PROGRAM,
     CREDENTIAL_KEY,
     CONNECTION_KEYS,
     CERTIFICATE_KEYS,
@@ -22,13 +22,13 @@ import {
     NPM_SETTING_PREFIX,
     ENCODED_CREDENTIAL_KEY,
     NPM_SCOPE_REGISTRY_KEY,
-    PACKAGE_SETTING_VARIABLE_PREFIX,
-} from '#cli/config/tools/npm.ts';
+    NPM_SETTING_VARIABLE_PREFIX,
+} from '#cli/config/install/npm.ts';
 
 // Read and validate the npm settings before returning the registry settings that apply.
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {
     const inherited = buildSpawnEnvironment();
-    const npm = which.sync(NPM_PROGRAM, { nothrow: true });
+    const npm = which.sync(NPM_TOOL, { nothrow: true });
     const npmPath = npm === null ? dirname(process.execPath) : dirname(dirname(realpathSync(npm)));
     const config = new Config({
         npmPath,
@@ -106,17 +106,17 @@ export function extractRegistryCredentials(env: Record<string, string>): string[
 /**
  * Write npm connection settings through environment references, so the temporary .npmrc contains no credentials.
  *
- * @param work the private user settings folder.
+ * @param settingsFolder the private user settings folder.
  * @param env variables for the tool process.
  */
-export function writeNpmrc(work: string, env: Record<string, string>): void {
+export function writeNpmrc(settingsFolder: string, env: Record<string, string>): void {
     const references: string[] = [];
     for (const [key, value] of Object.entries(env)) {
         if (!key.startsWith(NPM_SETTING_PREFIX)) continue;
-        const reference = addEnvironmentReference(env, PACKAGE_SETTING_VARIABLE_PREFIX, value);
+        const reference = addEnvironmentReference(env, NPM_SETTING_VARIABLE_PREFIX, value);
         references.push(`${key.slice(NPM_SETTING_PREFIX.length)}=${reference}`);
     }
-    writeFileSync(join(work, NPMRC_FILE), `${references.join('\n')}\n`, { mode: PRIVATE_FILE });
+    writeFileSync(join(settingsFolder, NPMRC_FILE), `${references.join('\n')}\n`, { mode: PRIVATE_FILE });
 }
 
 /**

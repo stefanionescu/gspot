@@ -36,6 +36,6 @@ export function buildFinding(
  * @param node what the finding points at.
  * @returns the file, line, and column.
  */
-export function locateNode(file: string, node: Node): FindingPlace {
+export function getNodePlace(file: string, node: Node): FindingPlace {
     return { file, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
 }

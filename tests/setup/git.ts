@@ -5,6 +5,7 @@ import { runGspot } from '#tests/setup/run-gspot.ts';
 import { LFS_ATTRIBUTES } from '#tests/data/hooks.ts';
 import { runSandboxStep } from '#tests/setup/install.ts';
 import { stat, chmod, writeFile } from 'node:fs/promises';
+import { EXECUTABLE_BITS } from '#cli/config/system/modes.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { NESTED_SCOPE_FILES } from '#tests/data/runs/copies.ts';
@@ -12,14 +13,7 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
-
-import {
-    PUSH_CONTENT,
-    EXECUTABLE_BITS,
-    GIT_TEST_ARGUMENTS,
-    GIT_TEST_ENVIRONMENT,
-    SANDBOX_COMMIT_STEPS,
-} from '#tests/data/test-setup.ts';
+import { PUSH_CONTENT, HOOKS_SETTINGS, GIT_TEST_ARGUMENTS, GIT_TEST_ENVIRONMENT } from '#tests/data/test-setup.ts';
 
 /**
  * Runs git with a throwaway identity, keeping the line endings the sandbox specifies.
@@ -60,11 +54,16 @@ export function readGitOutput(cwd: string, commandArguments: readonly string[]):
  *
  * @param cwd the sandbox.
  */
-export function commitAll(cwd: string): void {
-    for (const commandArguments of SANDBOX_COMMIT_STEPS) {
+export function commitAll(cwd: string, message = 'init'): string {
+    for (const commandArguments of [
+        ['init', '-q'],
+        ['add', '-A'],
+        ['commit', '-qm', message],
+    ]) {
         const result = runGit(cwd, commandArguments);
         if (result.code !== 0) throw new Error(`Sandbox Git setup failed: ${result.stderr}${result.stdout}`);
     }
+    return readGitOutput(cwd, ['rev-parse', 'HEAD']);
 }
 
 /**
@@ -102,17 +101,12 @@ export async function preparePushRepository(
         'changed.sh': PUSH_CONTENT.base,
         'legacy.sh': PUSH_CONTENT.broken,
     });
-    commitAll(sandboxRoot);
-    const base = readGitOutput(sandboxRoot, ['rev-parse', 'HEAD']);
+    const base = commitAll(sandboxRoot);
     await writeFile(join(sandboxRoot, 'changed.sh'), PUSH_CONTENT.reviewed);
-    readGitOutput(sandboxRoot, ['add', 'changed.sh']);
-    readGitOutput(sandboxRoot, ['commit', '-qm', 'reviewed']);
-    const reviewed = readGitOutput(sandboxRoot, ['rev-parse', 'HEAD']);
+    const reviewed = commitAll(sandboxRoot, 'reviewed');
     readGitOutput(sandboxRoot, ['branch', 'reviewed', reviewed]);
     await writeFile(join(sandboxRoot, 'changed.sh'), PUSH_CONTENT.broken);
-    readGitOutput(sandboxRoot, ['add', 'changed.sh']);
-    readGitOutput(sandboxRoot, ['commit', '-qm', 'unreviewed']);
-    const broken = readGitOutput(sandboxRoot, ['rev-parse', 'HEAD']);
+    const broken = commitAll(sandboxRoot, 'unreviewed');
     await writeFile(join(sandboxRoot, 'changed.sh'), PUSH_CONTENT.working);
     await writeFile(join(sandboxRoot, 'gspot.toml'), PUSH_CONTENT.settings);
     return { base, reviewed, broken, zero: '0'.repeat(base.length) };
@@ -124,15 +118,10 @@ export async function prepareNestedRepository(
 ): Promise<{ project: string; base: string; commitId: string }> {
     await createFileTree(root, NESTED_SCOPE_FILES);
     const project = join(root, 'nested settings');
-    readGitOutput(root, ['init']);
-    readGitOutput(root, ['add', '.']);
-    readGitOutput(root, ['commit', '-m', 'Fixture']);
-    const base = readGitOutput(root, ['rev-parse', 'HEAD']);
+    const base = commitAll(root, 'Fixture');
     await writeFile(join(project, 'source.txt'), 'pushed');
     await writeFile(join(root, 'outside.txt'), 'changed context');
-    readGitOutput(root, ['add', '.']);
-    readGitOutput(root, ['commit', '-m', 'Change']);
-    const commitId = readGitOutput(root, ['rev-parse', 'HEAD']);
+    const commitId = commitAll(root, 'Change');
     await writeFile(join(project, 'source.txt'), 'indexed');
     readGitOutput(root, ['add', '.']);
     await writeFile(join(project, 'source.txt'), 'working');
@@ -161,11 +150,10 @@ export async function prepareAppliedBashRepository(sourceRoot: string): Promise<
  */
 export async function createLfsRepository(): Promise<TestdirResult> {
     const sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = true\n' }),
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
         '.gitattributes': LFS_ATTRIBUTES,
         'asset.bin': 'binary',
     });
-    readGitOutput(sandbox.path, ['init', '-q']);
     commitAll(sandbox.path);
     return sandbox;
 }

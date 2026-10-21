@@ -1,13 +1,13 @@
 import type { GitEntry } from '#cli/types/parsers/git.ts';
-import type { ScratchFolder } from '#cli/types/system/files.ts';
-import type { GITLINK_MODE } from '#cli/config/repository/revisions.ts';
+import type { GITLINK_MODE } from '#cli/config/parsers/git.ts';
+import type { TemporaryFolder } from '#cli/types/system/files.ts';
 
 export type PendingLink = { source: string; target: string };
 
-/** Dependency trees and pending links in a scratch copy of the working tree. */
+/** Dependency trees and pending links in a copy of the working tree. */
 export type DependencyTreeCopy = {
     root: string;
-    scratch: string;
+    copyRoot: string;
     cancelSignal?: AbortSignal | undefined;
     copies: Map<string, string>;
     links: PendingLink[];
@@ -16,21 +16,21 @@ export type DependencyTreeCopy = {
 /** An installed dependency tree copied privately or linked for an in-place run. */
 export type DependencyCopy = { path: string; operation: 'clone' | 'link' };
 
-/** A source path, Git blob, or gitlink folder in a scratch copy. */
-export type ScratchFile =
+/** A source path, Git blob, or gitlink folder in a copy. */
+export type CopyFile =
     | string
     | { entry: Omit<GitEntry, 'mode'> & { mode: Exclude<GitEntry['mode'], typeof GITLINK_MODE> }; bytes: Buffer };
 
-export type ScratchCopyPlan = {
+export type CopyPlan = {
     root: string;
     target: string;
-    files: Iterable<ScratchFile> | AsyncIterable<ScratchFile>;
+    files: Iterable<CopyFile> | AsyncIterable<CopyFile>;
     dependencies: DependencyCopy[];
     cancelSignal?: AbortSignal | undefined;
 };
 
 /** Exact source files and explicitly owned dependency trees. */
-export type ScratchCopyPaths = Omit<ScratchCopyPlan, 'target' | 'files'> & {
+export type CopyPaths = Omit<CopyPlan, 'target' | 'files'> & {
     paths: string[];
 };
 
@@ -38,4 +38,4 @@ export type ScratchCopyPaths = Omit<ScratchCopyPlan, 'target' | 'files'> & {
 export type DeclarationDependencies = { copies: DependencyCopy[]; configurationPaths: Set<string> };
 
 /** A disposable revision copy and the Git tree whose source it contains. */
-export type RevisionCopy = ScratchFolder & { root: string; tree: string };
+export type RevisionCopy = TemporaryFolder & { root: string; tree: string };

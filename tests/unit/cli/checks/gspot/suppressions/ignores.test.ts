@@ -1,6 +1,6 @@
 import { testdir } from 'testdirs';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { test, expect, afterEach, setSystemTime } from 'bun:test';

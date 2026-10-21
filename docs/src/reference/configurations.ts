@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import { linkSetting } from './settings.ts';
 import { formatCheckTable } from './checks.ts';
-import type { ReferencePage } from '../types/reference.ts';
-import type { readReferenceData } from '#cli/reference.ts';
+import type { readReferenceFacts } from './facts.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
-import { isInstalledByGspot } from '#cli/configurations/tools.ts';
+import type { ReferencePage, ReferenceFacts } from '../types/reference.ts';
+import { isInstalledByGspot } from '#cli/configurations/declared-tools.ts';
 import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../config/reference.ts';
 
 import {
@@ -17,8 +17,6 @@ import {
     formatReferenceLink,
 } from './markdown.ts';
 
-type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
-
 const DETECTION_LIST_FORMAT = new Intl.ListFormat('en', { type: 'disjunction' });
 
 function formatCodeNames(names: string[]): string {
@@ -30,7 +28,7 @@ function linkConfigurations(names: string[]): string {
 }
 
 // The conditions that select: every kind with patterns, apart from the dependencies that rule a selection out.
-function formatDetectionConditions(detect: Manifest['detect']): string[] {
+function formatDetectionConditions(detect: Configuration['detect']): string[] {
     return Object.entries(detect).flatMap(([kind, patterns]) => {
         if (kind === 'absent_dependencies') return [];
         if (Array.isArray(patterns))
@@ -43,16 +41,16 @@ function formatDetectionConditions(detect: Manifest['detect']): string[] {
     });
 }
 
-function formatAbsentDependencies(detect: Manifest['detect']): string {
+function formatAbsentDependencies(detect: Configuration['detect']): string {
     return detect.absent_dependencies.length === 0
         ? ''
         : `, unless the repository depends on ${formatCodeNames(detect.absent_dependencies)}`;
 }
 
 // Rule files of a configuration, with the conditions that install each one.
-function formatRules(manifest: Manifest, paths: string[]): string {
+function formatRules(configuration: Configuration, paths: string[]): string {
     const rows = paths.map((path) => {
-        const condition = manifest.rules[posix.basename(path)];
+        const condition = configuration.rules[posix.basename(path)];
         if (condition === undefined) return [formatCode(path), 'Always'];
         const conditions = formatDetectionConditions(condition).join(' or ');
         return [
@@ -63,8 +61,8 @@ function formatRules(manifest: Manifest, paths: string[]): string {
     return formatTable(['Rule file', 'Installed when'], rows);
 }
 
-function formatLintRulesOff(manifest: Manifest): string {
-    const rows = manifest.eslint.rules_off.map((exclusion) => [
+function formatLintRulesOff(configuration: Configuration): string {
+    const rows = configuration.eslint.rules_off.map((exclusion) => [
         exclusion.rules.map((rule) => formatCode(rule)).join(', '),
         exclusion.files?.map((path) => formatCode(path)).join(', ') ?? 'All files in the scope',
         escapeCell(exclusion.reason),
@@ -73,19 +71,16 @@ function formatLintRulesOff(manifest: Manifest): string {
 }
 
 // How a configuration gets selected: always, by its files and dependencies, or by another configuration.
-function formatSelection(manifest: Manifest, data: ReturnType<typeof readReferenceData>): string {
-    const { configuration } = manifest;
+function formatSelection(configuration: Configuration, facts: ReferenceFacts): string {
     if (configuration.always_selected)
         return configuration.when?.git === true ? 'Always selected in a Git repository.' : 'Always selected.';
-    const conditions = formatDetectionConditions(manifest.detect);
+    const conditions = formatDetectionConditions(configuration.detect);
     const selected =
         conditions.length === 0
             ? ''
-            : `gspot selects it in a scope with ${conditions.join(', or ')}${formatAbsentDependencies(manifest.detect)}.`;
+            : `gspot selects it in a scope with ${conditions.join(', or ')}${formatAbsentDependencies(configuration.detect)}.`;
     const requiredBy = linkConfigurations(
-        data.configurations
-            .filter((owner) => owner.configuration.requires.includes(configuration.name))
-            .map((owner) => owner.configuration.name),
+        facts.configurations.filter((owner) => owner.requires.includes(configuration.name)).map((owner) => owner.name),
     );
     return (
         [selected, requiredBy === '' ? '' : `A configuration that requires it selects it too: ${requiredBy}.`]
@@ -95,15 +90,15 @@ function formatSelection(manifest: Manifest, data: ReturnType<typeof readReferen
 }
 
 // What gspot installs and writes for a configuration, and the folders it keeps out of Git.
-function listInstalledSections(manifest: Manifest): [string, string][] {
-    const tools = manifest.tools.map((tool) => [
+function listInstalledSections(configuration: Configuration): [string, string][] {
+    const tools = configuration.tools.map((tool) => [
         tool.name,
         (tool.version === undefined ? 'Any' : formatCode(tool.version)) +
             (isInstalledByGspot(tool) ? '' : ', install it yourself'),
     ]);
     // Two pointers can share one target, so each file appears once.
-    const targets = [...new Set(manifest.toolFiles.map((toolFile) => formatCode(toolFile.target)))];
-    const ignored = manifest.ignored_paths.map((path) => formatCode(path));
+    const targets = [...new Set(configuration.toolFiles.map((toolFile) => formatCode(toolFile.target)))];
+    const ignored = configuration.ignored_paths.map((path) => formatCode(path));
     return [
         ['Tools and versions', formatTable(['Tool', 'Version'], tools)],
         ['Files gspot writes', targets.length === 0 ? '' : `gspot writes ${formatList(targets)}.`],
@@ -123,34 +118,33 @@ function formatConfigurationGuide(name: string, guideTitles: Map<string, string>
 /**
  * Build the reference page of a shipped configuration: how it gets selected, its settings, and its checks.
  *
- * @param manifest the parsed configuration
- * @param data everything the CLI exports for the reference
+ * @param configuration the parsed configuration
+ * @param facts everything the CLI exports for the reference
  * @param guideTitles the authored guide titles keyed by slug.
  * @returns the title, summary, and Markdown body
  */
 function buildConfigurationPage(
-    manifest: Manifest,
-    data: ReturnType<typeof readReferenceData>,
+    configuration: Configuration,
+    facts: ReferenceFacts,
     guideTitles: Map<string, string>,
 ): ReferencePage {
-    const { configuration } = manifest;
-    const selection = formatSelection(manifest, data);
-    const defaults = Object.entries(manifest.defaults).map(([name, value]) => [
+    const selection = formatSelection(configuration, facts);
+    const defaults = Object.entries(configuration.defaults).map(([name, value]) => [
         formatCode(name),
         formatCode(JSON.stringify(value)),
     ]);
-    const settings = (data.configurationSettings[manifest.configuration.name] ?? []).map((setting) => [
-        linkSetting(data.schema, setting.name),
-        escapeCell(setting.summary),
+    const settings = (facts.configurationSettings[configuration.name] ?? []).map((setting) => [
+        linkSetting(facts.schema, setting.name),
+        escapeCell(setting.description),
     ]);
     const sections: [string, string][] = [
-        ['Checks', formatCheckTable(manifest.checks)],
+        ['Checks', formatCheckTable(configuration.checks)],
         ['Settings', formatTable(['Setting', 'What it sets'], settings)],
         ['Selected when', selection],
-        ['Lint rules turned off', formatLintRulesOff(manifest)],
+        ['Lint rules turned off', formatLintRulesOff(configuration)],
         ['Defaults set for other configurations', formatTable(['Setting', 'Value'], defaults)],
-        ['Rules for coding agents', formatRules(manifest, data.ruleFiles[manifest.configuration.name] ?? [])],
-        ...listInstalledSections(manifest),
+        ['Rules for coding agents', formatRules(configuration, facts.ruleFiles[configuration.name] ?? [])],
+        ...listInstalledSections(configuration),
     ];
     const required = linkConfigurations(configuration.requires);
     const opening = [
@@ -167,12 +161,12 @@ function buildConfigurationPage(
 /**
  * Build the grouped configuration index and its pages.
  *
- * @param data everything the CLI exports for the reference
+ * @param facts everything the CLI exports for the reference
  * @param guideTitles the authored guide titles keyed by slug.
  * @returns the index and each configuration page, keyed by path
  */
 export function buildConfigurationPages(
-    data: ReturnType<typeof readReferenceData>,
+    facts: ReferenceFacts,
     guideTitles: Map<string, string>,
 ): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>([
@@ -185,9 +179,9 @@ export function buildConfigurationPages(
                     '`gspot remove <name>` change the selection, and `gspot list` shows it.\n' +
                     Object.entries(GROUP_LABELS)
                         .map(([group, title]) => {
-                            const rows = data.configurations
-                                .filter((manifest) => manifest.configuration.group === group)
-                                .map(({ configuration }) => [
+                            const rows = facts.configurations
+                                .filter((configuration) => configuration.group === group)
+                                .map((configuration) => [
                                     formatReferenceLink('configurations', configuration.name),
                                     escapeCell(configuration.description),
                                 ]);
@@ -197,10 +191,12 @@ export function buildConfigurationPages(
             ),
         ],
     ]);
-    for (const manifest of data.configurations)
+    for (const configuration of facts.configurations)
         pages.set(
-            `${REFERENCE_FOLDERS.configurations}/${manifest.configuration.name}.md`,
-            buildConfigurationPage(manifest, data, guideTitles),
+            `${REFERENCE_FOLDERS.configurations}/${configuration.name}.md`,
+            buildConfigurationPage(configuration, facts, guideTitles),
         );
     return pages;
 }
+
+type Configuration = ReturnType<typeof readReferenceFacts>['configurations'][number];

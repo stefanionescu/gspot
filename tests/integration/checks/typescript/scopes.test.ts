@@ -40,14 +40,12 @@ function buildStandaloneSources(level: (typeof LEVELS)[number]): Record<string, 
 test.each([...LEVELS])(
     "typescript/tsc at level %s checks each scope alone and keeps your declarations, without gspot's own @types",
     async (level) => {
-        const sandbox = { path: installedSandbox().root };
+        const { root } = installedSandbox();
         await using _sourceChange = await updateSandbox(installedSandbox(), {
             check: '',
             files: buildStandaloneSources(level),
         });
-        const broken = parseCheckReport(
-            await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']),
-        );
+        const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const report = broken.report;
         expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
@@ -57,10 +55,8 @@ test.each([...LEVELS])(
         expect(report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
             STANDALONE_TYPESCRIPT_FINDINGS[level].map((finding) => matchFields(finding)),
         );
-        await writeFile(join(sandbox.path, 'app/source.ts'), STANDALONE_FIXED_SOURCE);
-        const corrected = parseCheckReport(
-            await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']),
-        );
+        await writeFile(join(root, 'app/source.ts'), STANDALONE_FIXED_SOURCE);
+        const corrected = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toStrictEqual([
             matchFields({ scope: '', status: 'passed', findings: [] }),
@@ -72,7 +68,7 @@ test.each([...LEVELS])(
             'app/vendor/dependency.ts',
             '.gspot/node_modules/@types/private/index.d.ts',
         ] as const)
-            expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(STANDALONE_TYPESCRIPT_FILES[path]);
+            expect(await readFile(join(root, path), 'utf8')).toBe(STANDALONE_TYPESCRIPT_FILES[path]);
     },
 );
 

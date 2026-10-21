@@ -115,16 +115,11 @@ version = "2.0.0"
 reason = "Reviewed the installed Python package."
 `;
 
+export const LICENSE_PACKAGE_JSON = '{"name":"example","private":true,"dependencies":{"choice":"1.0.0"}}';
+
 export const LICENSE_DEPENDENCY_FILES = [
-    ['package.json', '{"name":"example","private":true,"dependencies":{"choice":"1.0.0"}}', 'node_modules'],
-    [
-        'pyproject.toml',
-        `[project]
-name = "example"
-version = "0.0.0"
-`,
-        '.venv',
-    ],
+    { dependencyFile: 'package.json', text: LICENSE_PACKAGE_JSON, installedFolder: 'node_modules' },
+    { dependencyFile: 'pyproject.toml', text: SAMPLE_PYPROJECT, installedFolder: '.venv' },
 ] as const;
 
 export const NPM_LICENSE_REPORT = {
@@ -150,5 +145,3 @@ version = "0.0.0"
 `,
     '.gspot/probe/.venv/installed': 'Absent_Package@2.0.0',
 } as const;
-
-export const LICENSE_CHECK = ['check', '--only', 'licenses/allowed', '--json'];

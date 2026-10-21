@@ -4,19 +4,25 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { type Tool } from '#cli/types/configurations.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { fakeTool, fakeNpmPackage } from '#tests/setup/fakes.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { type ToolDeclaration } from '#cli/types/configurations.ts';
 import { VERSION_OUTPUTS } from '#tests/data/install/installation.ts';
-import { buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
+import { getShippedTool, buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
+
+// One release below the declared floor, computed so the test does not copy its value.
+function computeVersionBelow(floor: string): string {
+    const parts = floor.split('.').map(Number);
+    const index = parts.findLastIndex((part) => part > 0);
+    parts[index]! -= 1;
+    return parts.join('.');
+}
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {
     await using sandbox = await testdir();
-    await fakeNpmPackage(sandbox.path, '.gspot/node_modules', 'teller', '5.0.1', "console.log('4.4.2');\n");
+    await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', script: "console.log('4.4.2');\n" });
     const inspection = inspectTool(buildInspectionContext(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
     expect(inspection.found).toBe('5.0.1');
     expect(inspection.state).toBe('ok');
@@ -45,13 +51,11 @@ test.each(VERSION_OUTPUTS)('version output %s gives the state %s', async (script
 
 test('an npm package version does not hide a failed program', async () => {
     await using sandbox = await testdir();
-    await fakeNpmPackage(
-        sandbox.path,
-        '.gspot/node_modules',
-        'teller',
-        '5.0.1',
-        "console.log('5.0.1'); process.exitCode = 7;\n",
-    );
+    await fakeNpmPackage(sandbox.path, {
+        name: 'teller',
+        version: '5.0.1',
+        script: "console.log('5.0.1'); process.exitCode = 7;\n",
+    });
     const inspection = inspectTool(buildInspectionContext(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
     expect(inspection.state).toBe('error');
     expect(inspection.note).toContain('exited 7');
@@ -98,7 +102,7 @@ test.each([
 ] as const)('a system bash that prints %s is %s against the 4.4 floor', async (version, state) => {
     await using sandbox = await testdir();
     using _which = useExecutable(process.execPath);
-    const tool: ToolDeclaration = {
+    const tool: Tool = {
         name: 'bash',
         kind: 'program',
         system: true,
@@ -111,18 +115,10 @@ test.each([
     expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
 });
 
-// One release below the declared floor, computed so the test does not copy its value.
-function computeVersionBelow(floor: string): string {
-    const parts = floor.split('.').map(Number);
-    const index = parts.findLastIndex((part) => part > 0);
-    parts[index]! -= 1;
-    return parts.join('.');
-}
-
 test.each(['gitleaks', 'next'])('the %s pin is outdated below its floor and accepted at it', async (name) => {
     await using sandbox = await testdir();
     using _which = useExecutable(process.execPath);
-    const pin = getToolDeclaration(readManifests().values(), name);
+    const pin = getShippedTool(name);
     const floor = pin.min_version!;
     const available = pin.system === true ? 'system' : 'ok';
     for (const version of [computeVersionBelow(floor), floor]) {

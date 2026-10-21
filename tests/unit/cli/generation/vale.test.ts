@@ -6,10 +6,9 @@ import { readGitOutput } from '#tests/setup/git.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { VALE_MARKUP_FILES } from '#cli/config/generation/vale.ts';
 import { RECOMMENDED_VALE_FILES } from '#tests/data/generation/settings.ts';
+import { VALE_PACKAGES, VALE_MARKUP_FILES } from '#cli/config/generation/settings/builders/vale.ts';
 
 test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (level) => {
     await using sandbox = await testdir({

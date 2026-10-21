@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
@@ -16,6 +16,7 @@ import {
     STORAGE_POLICIES,
     SERVICE_KEY_READERS,
     SERVICE_KEY_SETTINGS,
+    AVATARS_BUCKET_CONFIG,
     INVALID_BUCKETS_CONFIG,
 } from '#tests/data/checks/supabase.ts';
 
@@ -84,9 +85,9 @@ test.each([...STORAGE_POLICIES])(
         });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,
-            'supabase/config.toml': '[storage.buckets.avatars]\npublic = false\n',
+            'supabase/config.toml': AVATARS_BUCKET_CONFIG,
             'supabase/migrations/20261005000000_policy.sql': sql,
-            'app/supabase/config.toml': '[storage.buckets.avatars]\npublic = false\n',
+            'app/supabase/config.toml': AVATARS_BUCKET_CONFIG,
             'app/supabase/migrations/20261005000000_policy.sql': sql,
         });
         for (const scope of ['', 'app']) {

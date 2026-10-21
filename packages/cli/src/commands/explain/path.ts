@@ -1,11 +1,11 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { type Session } from '#cli/types/session.ts';
 import { findScope } from '#cli/repository/scopes.ts';
-import { type Session } from '#cli/types/planning.ts';
+import { listCheckedFiles } from '#cli/planning/files.ts';
 import { formatScopeLabel } from '#cli/system/terminal.ts';
-import { listCoveredInputs } from '#cli/planning/checks.ts';
-import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { listCoveredFiles } from '#cli/repository/covered-files.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Explanation, type PathExplanation } from '#cli/types/commands/explain.ts';
 
@@ -23,13 +23,13 @@ function formatUncheckedKind(file: TrackedFile): string | undefined {
  * @param file the tracked path to explain.
  * @returns the configurations, checks, and ignores for the file.
  */
-function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
+function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
-    const scope = findScope(path, session.repository.scopes);
-    const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as ScopeSelection;
+    const scope = findScope(path, session.repository.scopeFolders);
+    const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as Scope;
     const configurations = selection.selected.filter(
-        (manifest) =>
-            listCoveredFiles(manifest.files, [file], {
+        (configuration) =>
+            listCoveredFiles(configuration.files, [file], {
                 selected: selection.selected,
                 scope: selection.scope.path,
                 view: selection.view,
@@ -40,13 +40,13 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
         scope: formatScopeLabel(scope.path),
         fileKind: file.kind,
         tags: file.tags,
-        configurations: configurations.map((manifest) => manifest.configuration.name),
+        configurations: configurations.map((configuration) => configuration.name),
         checks: session.configuredChecks
-            .filter((check) => listCoveredInputs(session.scopes, check).some((entry) => entry.path === file.path))
+            .filter((check) => listCheckedFiles(session.scopes, check).some((entry) => entry.path === file.path))
             .map((check) => ({
                 check: check.check.name,
                 stage: check.check.stage,
-                ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
+                ...(check.configuration === undefined ? {} : { configuration: check.configuration.name }),
             })),
         ignores: session.settingsFile.settings.ignore
             .filter(
@@ -75,7 +75,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
  * @param report the kind, checks, and ignores of the file.
  * @returns the text for stdout.
  */
-function formatPathReport(report: PathExplanation): string {
+function formatPathExplanation(report: PathExplanation): string {
     const by = report.fileKindOrigin === undefined ? '' : ` by ${report.fileKindOrigin}`;
     const checks = report.checks.map(
         (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
@@ -105,7 +105,7 @@ function formatPathReport(report: PathExplanation): string {
  * @returns the file explanation, or undefined for another subject.
  * @throws GspotError when a named path does not exist.
  */
-function explainPath(session: Session | undefined, subject: string): Explanation | undefined {
+export function explainPath(session: Session | undefined, subject: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const path = subject.startsWith('./') ? subject.slice('./'.length) : subject;
     const file = session.repository.files.find((entry) => entry.path === path);
@@ -113,7 +113,6 @@ function explainPath(session: Session | undefined, subject: string): Explanation
         if (subject.startsWith('./')) throw new GspotError('arguments', `${path} is not a file in this repository.`);
         return undefined;
     }
-    const report = buildPathReport(session, file);
-    return { kind: 'path', subject: path, text: formatPathReport(report), data: report };
+    const report = buildPathExplanation(session, file);
+    return { kind: 'path', subject: path, text: formatPathExplanation(report), data: report };
 }
-export { explainPath };

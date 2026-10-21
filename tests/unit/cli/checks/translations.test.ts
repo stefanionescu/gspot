@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { runCheckSample } from '#tests/setup/sample-checks.ts';
@@ -15,6 +16,16 @@ import {
     TRANSLATION_CASES,
     TRANSLATION_SANDBOX,
 } from '#tests/data/checks/translations.ts';
+
+async function checkMessageFiles(files: Record<string, string>): Promise<readonly Finding[]> {
+    await using sandbox = await testdir({
+        ...files,
+        'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
+        'gspot.toml': buildSandboxSettings(['translations'], { level: 'all', tables: NEXT_TRANSLATIONS }),
+    });
+
+    return await checkFindings(sandbox.path, 'translations/messages');
+}
 
 test('a missing base locale is reported and restoring it enables key comparisons', async () => {
     await using sandbox = await testdir({
@@ -73,13 +84,3 @@ test('a translation keeps the arguments, tags, and select keys of its base messa
         },
     ]);
 });
-
-async function checkMessageFiles(files: Record<string, string>) {
-    await using sandbox = await testdir({
-        ...files,
-        'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
-        'gspot.toml': buildSandboxSettings(['translations'], { level: 'all', tables: NEXT_TRANSLATIONS }),
-    });
-
-    return await checkFindings(sandbox.path, 'translations/messages');
-}

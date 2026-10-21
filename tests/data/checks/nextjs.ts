@@ -40,7 +40,7 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>):
 }
 `;
 
-const NEXT_PACKAGE = {
+export const NEXT_PACKAGE = {
     name: 'example',
     version: '1.0.0',
     description: 'A test Next.js app for the tests.',
@@ -55,7 +55,7 @@ const NEXT_PACKAGE = {
 } as const;
 
 /** Locale messages for the Next.js configuration tests. */
-const NEXT_MESSAGES = {
+export const NEXT_MESSAGES = {
     'messages/en.json': `{
     "home": { "title": "Home", "greeting": "Hello {name}" }
 }
@@ -66,7 +66,7 @@ const NEXT_MESSAGES = {
 `,
 } as const;
 
-const NEXTJS_SANDBOX = {
+export const NEXTJS_SANDBOX = {
     configurations: ['nextjs', 'translations'],
     tsconfig: {
         compilerOptions: {
@@ -90,13 +90,13 @@ const NEXTJS_SANDBOX = {
     },
 } as const;
 
-const REFERENCE_PROJECT_FILES = {
+export const REFERENCE_PROJECT_FILES = {
     'compiler-ref/tsconfig.json':
         '{"compilerOptions":{"composite":true,"strict":true,"types":[],"outDir":"./dist"},"files":["source.ts"]}\n',
     'compiler-ref/source.ts': 'export const value: number = "wrong";\n',
 } as const;
 
-const NEXT_CONFIG_CASES = [
+export const NEXT_CONFIG_CASES = [
     {
         name: 'keys after a nested env value',
         source: `export default {\n  env: {\n    NESTED: { API_TOKEN: "nested text" },\n    "API_SECRET": process.env.API_SECRET,\n    ["PASSWORD"]: process.env.PASSWORD,\n    TOKEN,\n  },\n  typescript: { ["ignoreBuildErrors"]: (true as const) },\n};\n`,
@@ -164,21 +164,9 @@ const NEXT_CONFIG_CASES = [
     },
 ] as const;
 
-const TSC_FAILURE_OUTPUT = 'src/app/page.ts(1,1): error TS2322: Type mismatch\n';
+export const TSC_FAILURE_OUTPUT = 'src/app/page.ts(1,1): error TS2322: Type mismatch\n';
 
-const NEXT_VERSION_OUTPUT = 'Next.js v16.3.5';
+export const NEXT_VERSION_OUTPUT = 'Next.js v16.3.5';
 
-const TYPESCRIPT_VERSION_OUTPUT = 'Version 5.9.3';
-const NEXT_CACHE_BYTES = [0, 255, 1, 2] as const;
-
-export {
-    NEXT_PACKAGE,
-    NEXT_MESSAGES,
-    NEXTJS_SANDBOX,
-    NEXT_CACHE_BYTES,
-    NEXT_CONFIG_CASES,
-    TSC_FAILURE_OUTPUT,
-    NEXT_VERSION_OUTPUT,
-    REFERENCE_PROJECT_FILES,
-    TYPESCRIPT_VERSION_OUTPUT,
-};
+export const TYPESCRIPT_VERSION_OUTPUT = 'Version 5.9.3';
+export const NEXT_CACHE_BYTES = [0, 255, 1, 2] as const;

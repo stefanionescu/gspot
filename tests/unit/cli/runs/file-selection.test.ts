@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
-import { planRun, isActive } from '#cli/planning/checks.ts';
 import { fakeTool, fakeNpmTool } from '#tests/setup/fakes.ts';
+import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { EDITORCONFIG_FILES } from '#tests/data/checks/format.ts';
@@ -28,6 +28,7 @@ async function prepareCompiler(root: string): Promise<void> {
         `if (process.argv.includes('--version')) console.log(${JSON.stringify(declaration.version)}); else { console.log('source.ts(1,1): error TS2304: Project finding'); process.exitCode = 1; }`,
     );
 }
+
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
     await using sandbox = await testdir({
         'gspot.toml': TYPESCRIPT_SCOPES_SETTINGS,
@@ -40,7 +41,7 @@ test("a file named on the command line runs its scope's project check on every f
 
     await prepareCompiler(sandbox.path);
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { ...PROJECT_OPTIONS, only: [...PROJECT_OPTIONS.only], paths: ['api/source.ts'] });
+    const planned = planChecks(session, { ...PROJECT_OPTIONS, paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);
     expect(affected.map((check) => check.selection.scope.path)).toStrictEqual(['api']);
     expect(affected[0]?.files.map((file) => file.path)).toStrictEqual([
@@ -48,10 +49,7 @@ test("a file named on the command line runs its scope's project check on every f
         'api/source.ts',
         'api/tsconfig.json',
     ]);
-    const result = await runChecks(
-        session,
-        buildRunOptions({ ...PROJECT_OPTIONS, only: [...PROJECT_OPTIONS.only], paths: ['api/source.ts'] }),
-    );
+    const result = await runChecks(session, buildRunOptions({ ...PROJECT_OPTIONS, paths: ['api/source.ts'] }));
     expect(result.report.exitCode, JSON.stringify(result.report)).toBe(1);
     expect(result.report.checks.find(({ scope }) => scope === 'api')?.findings[0]?.message).toBe('Project finding');
 });
@@ -73,9 +71,8 @@ reason = "This input is evaluated by its owning pipeline."
             ...(present ? { 'api/ignored.ts': 'export {};\n' } : {}),
         });
         const session = await openSession(sandbox.path);
-        const planned = planRun(session, {
+        const planned = planChecks(session, {
             ...PROJECT_OPTIONS,
-            only: [...PROJECT_OPTIONS.only],
             changed: [...changed],
         });
         expect(planned.flatMap((entry) => entry.files.map((file) => file.path))).toStrictEqual([...files]);
@@ -90,7 +87,7 @@ test('EditorConfig checks source files beyond the Prettier extensions and skips 
     });
 
     const session = await openSession(sandbox.path);
-    const [planned] = planRun(session, { stage: 'commit', only: ['format/editorconfig-checker'] });
+    const [planned] = planChecks(session, { stage: 'commit', only: ['format/editorconfig-checker'] });
     expect(planned!.files.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         [...Object.keys(EDITORCONFIG_FILES), 'gspot.toml'].toSorted((left, right) => left.localeCompare(right)),
     );
@@ -118,24 +115,24 @@ test('dependencies/osv-scanner runs only when a declared trigger file changes', 
     });
     const session = await openSession(sandbox.path);
     const options = { stage: 'push' as const, only: ['dependencies/osv-scanner'] };
-    const [whole] = planRun(session, options);
+    const [whole] = planChecks(session, options);
     for (const prefix of ['', 'app/']) {
         for (const filename of LOCKFILE_TRIGGER_NAMES) {
-            const [triggered] = planRun(session, { ...options, staged: [prefix + filename] });
+            const [triggered] = planChecks(session, { ...options, staged: [prefix + filename] });
             expect(isActive(triggered!), prefix + filename).toBe(true);
             expect(triggered!.files).toStrictEqual(whole!.files);
         }
-        const [unrelated] = planRun(session, { ...options, staged: [prefix + 'source.txt'] });
+        const [unrelated] = planChecks(session, { ...options, staged: [prefix + 'source.txt'] });
         expect(isActive(unrelated!)).toBe(false);
     }
-    expect(isActive(planRun(session, { ...options, staged: ['ignored/uv.lock'] })[0]!)).toBe(false);
-    expect(isActive(planRun(session, { ...options, changed: ['source.txt'] })[0]!)).toBe(false);
+    expect(isActive(planChecks(session, { ...options, staged: ['ignored/uv.lock'] })[0]!)).toBe(false);
+    expect(isActive(planChecks(session, { ...options, changed: ['source.txt'] })[0]!)).toBe(false);
     await unlink(join(sandbox.path, 'app/uv.lock'));
     const reopened = await openSession(sandbox.path);
-    const [deleted] = planRun(reopened, { ...options, staged: ['app/uv.lock'] });
+    const [deleted] = planChecks(reopened, { ...options, staged: ['app/uv.lock'] });
     expect(deleted!.triggerPaths).toStrictEqual(['app/uv.lock']);
     expect(isActive(deleted!)).toBe(true);
-    expect(isActive(planRun(session, { ...options, staged: ['gspot.toml'] })[0]!)).toBe(true);
+    expect(isActive(planChecks(session, { ...options, staged: ['gspot.toml'] })[0]!)).toBe(true);
 });
 
 test('a project-wide TypeScript check counts source and configuration inputs without unrelated files', async () => {

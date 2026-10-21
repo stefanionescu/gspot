@@ -1,5 +1,3 @@
-type ProjectRoot = PbxElement & { mainGroup: string };
-
 export type PbxElement = {
     isa: string;
     buildSettings?: { SDKROOT?: string | undefined; SWIFT_VERSION?: string | undefined } | undefined;
@@ -20,11 +18,11 @@ export type PbxElement = {
     projectDirPath?: string | undefined;
 };
 
-export type ProjectMetadata = { objects: Record<string, PbxElement>; root: PbxElement };
+export type ParsedPbxproj = { objects: Record<string, PbxElement>; root: PbxElement };
 
 export type XcodeProject = {
     objects: Record<string, PbxElement>;
-    root: ProjectRoot;
+    root: PbxElement & { mainGroup: string };
     folder: string;
     parents: Map<string, string>;
     visiting: Set<string>;

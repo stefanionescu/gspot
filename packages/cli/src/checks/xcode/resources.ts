@@ -3,11 +3,12 @@ import { camelCase } from 'scule';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { listSourcePaths } from '#cli/repository/coverage.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { listSourcePaths } from '#cli/repository/covered-files.ts';
 import type { XcodeStrings, AssetContents } from '#cli/types/checks/xcode.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/checks/xcode.ts';
 
@@ -103,25 +104,25 @@ export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck):
  * @param planned the scope files to read.
  * @returns the findings.
  */
-export function checkXcstrings(session: Session, planned: PlannedCheck): Finding[] {
+export function checkXcodeXcstrings(session: Session, planned: PlannedCheck): Finding[] {
     return listSourcePaths(planned.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
         const text = readCachedText(session.reads, path);
         const at = { file: path, line: 1 };
-        let strings: XcodeStrings;
+        let xcstrings: XcodeStrings;
         try {
-            strings = parseJsonFile(path, text, stringsFileSchema);
+            xcstrings = parseJsonFile(path, text, stringsFileSchema);
         } catch (error) {
             if (error instanceof GspotError && error.code === 'filesystem')
                 return [buildFinding(planned, at, 'syntax', error.message)];
             throw error;
         }
-        const entries = (strings.strings === undefined ? [] : Object.entries(strings.strings)).filter(
+        const entries = (xcstrings.strings === undefined ? [] : Object.entries(xcstrings.strings)).filter(
             ([, entry]) => entry.shouldTranslate !== false,
         );
         const locales = new Set(
             entries.flatMap(([, entry]) => (entry.localizations === undefined ? [] : Object.keys(entry.localizations))),
         );
-        locales.delete(strings.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
+        locales.delete(xcstrings.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
         return entries.flatMap(([key, entry]) => {
             const missing = [...locales].filter((locale) => entry.localizations?.[locale] === undefined);
             if (missing.length === 0) return [];

@@ -7,14 +7,14 @@ import * as processes from '#cli/system/processes.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildPlan, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
 import { open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { checkFindings, planSandboxCheck, findBuiltInCheck, prepareSwiftInput } from '#tests/setup/check-input.ts';
+import { checkFindings, planSandboxCheck, findBuiltInCheck, prepareSwiftCheck } from '#tests/setup/check-input.ts';
 
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {
     using resources = new DisposableStack();
 
     await using sandbox = await testdir();
 
-    await using prepared = await prepareSwiftInput(sandbox, 'swift/build', {
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', {
         'Sources/Value.swift': 'let value = 1\n',
     });
 
@@ -58,7 +58,7 @@ test('Periphery build side effects stay in its source copy and findings name ori
 
     await using sandbox = await testdir();
 
-    await using prepared = await prepareSwiftInput(sandbox, 'swift/periphery', {
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/periphery', {
         'Main.swift': 'let unused = 1\n',
     });
 
@@ -85,7 +85,7 @@ test('concurrent Swift compilation and Periphery keep separate source and build 
 
     await using sandbox = await testdir();
 
-    await using prepared = await prepareSwiftInput(sandbox, 'swift/build');
+    await using prepared = await prepareSwiftCheck(sandbox, 'swift/build');
 
     const compile = prepared.planned;
     const session = await openSession(sandbox.path);

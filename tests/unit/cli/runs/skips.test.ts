@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { symlink } from 'node:fs/promises';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { planChecks } from '#cli/planning/checks.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { NEXT_INTL_PROJECTS } from '#tests/data/runs/plan.ts';
@@ -36,7 +36,7 @@ test('a commits check outside Git is skipped because there is no history to read
         'gspot.toml': buildSandboxSettings(['commits'], { level: 'all' }),
         'source.py': 'PORT = 8080\n',
     });
-    const planned = planRun(await openSession(sandbox.path), {
+    const planned = planChecks(await openSession(sandbox.path), {
         stage: 'push',
         only: ['commits/commitlint-pushed'],
     });
@@ -58,7 +58,7 @@ test.each([...NEXT_INTL_PROJECTS])('next-intl dependency condition: $name', asyn
         'sibling/source.ts': 'export {};\n',
     });
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'push', only: ['translations/messages'] });
+    const planned = planChecks(session, { stage: 'push', only: ['translations/messages'] });
     const check = planned.find((entry) => entry.selection.scope.path === scope)!;
     expect(check.skip).toStrictEqual(
         selected ? undefined : { cause: 'condition', note: 'Needs a project dependency: next-intl.' },
@@ -71,7 +71,7 @@ test('vue/vue-tsc without the typescript configuration is skipped with its condi
         'src/App.vue': '<template><p>App</p></template>',
     });
     expect(
-        planRun(await openSession(sandbox.path), { stage: 'all', only: ['vue/vue-tsc'] }).map(({ check, skip }) => ({
+        planChecks(await openSession(sandbox.path), { stage: 'all', only: ['vue/vue-tsc'] }).map(({ check, skip }) => ({
             check: check.name,
             skip,
         })),
@@ -95,7 +95,7 @@ test('Prettier filters its files through a linked ignore file inside the reposit
     });
     await symlink('settings/format.ignore', join(sandbox.path, '.prettierignore'));
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'commit', only: ['format/prettier'] });
+    const plans = planChecks(session, { stage: 'commit', only: ['format/prettier'] });
     expect(plans[0]!.files.map((file) => file.path)).toContain('kept.md');
     expect(plans[0]!.files.map((file) => file.path)).not.toContain('ignored.md');
 });
@@ -109,7 +109,7 @@ test('a check whose tool has no Windows build is skipped on Windows', async () =
     });
     mockResources.use(simulateOperatingSystem('win32'));
     const session = await openSession(sandbox.path);
-    expect(planRun(session, { stage: 'all', only: ['security/semgrep'] })).toMatchObject([
+    expect(planChecks(session, { stage: 'all', only: ['security/semgrep'] })).toMatchObject([
         { check: { name: 'security/semgrep' }, skip: { cause: 'system' } },
     ]);
 });

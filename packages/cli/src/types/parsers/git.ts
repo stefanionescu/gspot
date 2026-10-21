@@ -1,4 +1,4 @@
-import type { GIT_ENTRY_MODES } from '#cli/config/repository/revisions.ts';
+import type { GIT_ENTRY_MODES } from '#cli/config/parsers/git.ts';
 
 /** A validated tracked entry with a supported Git mode and full object identity. */
 export type GitEntry = { mode: (typeof GIT_ENTRY_MODES)[number]; hash: string; path: string };

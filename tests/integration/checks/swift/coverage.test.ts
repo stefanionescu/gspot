@@ -5,6 +5,7 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPlan } from '#cli/checks/swift/cache.ts';
 import { runCommand } from '#tests/setup/processes.ts';
+import { buildCheckArguments } from '#tests/setup/builders.ts';
 import { planSandboxCheck } from '#tests/setup/check-input.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -16,11 +17,37 @@ import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.t
 import {
     PARSER_SOURCE,
     XCTEST_SCOPES,
-    SWIFTLINT_COMMAND,
     FIXED_PARSER_SOURCE,
     XCTEST_COVERAGE_TESTS,
     XCTEST_COVERAGE_SOURCE,
 } from '#tests/data/checks/swift/tests.ts';
+
+/** Create a sandbox with the SwiftLint sources and the generated test tool file for one scope. */
+async function prepareSwiftScope(scope: string) {
+    await using resources = new AsyncDisposableStack();
+    const sandbox = resources.use(await testdir());
+    const root = sandbox.path;
+    const prefix = scope === '' ? '' : `${scope}/`;
+    await createFileTree(root, {
+        'gspot.toml': buildSandboxSettings(scope === '' ? ['swift'] : [], {
+            level: 'all',
+            tables:
+                scope === ''
+                    ? ''
+                    : `[[scope]]
+path = ${JSON.stringify(scope)}
+configurations = ["swift"]
+`,
+        }),
+        [`${prefix}Sources/Value.swift`]: FIXED_PARSER_SOURCE,
+        [`${prefix}AppTests/Value.swift`]: PARSER_SOURCE,
+        [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
+    });
+    expect(await spawnGspot(root, ['apply'])).toMatchObject({ code: 0 });
+    expect(await isOnDisk(join(root, `${prefix}AppTests/.swiftlint.yml`))).toBe(true);
+    const lifetime = resources.move();
+    return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
+}
 
 // This check needs the Xcode toolchain supplied by macOS.
 test.skipIf(!isMacos)(
@@ -82,32 +109,6 @@ xcode_destination = "platform=macOS"
         }
     },
 );
-/** Create a sandbox with the SwiftLint sources and the generated test tool file for one scope. */
-async function prepareSwiftScope(scope: string) {
-    await using resources = new AsyncDisposableStack();
-    const sandbox = resources.use(await testdir());
-    const root = sandbox.path;
-    const prefix = scope === '' ? '' : `${scope}/`;
-    await createFileTree(root, {
-        'gspot.toml': buildSandboxSettings(scope === '' ? ['swift'] : [], {
-            level: 'all',
-            tables:
-                scope === ''
-                    ? ''
-                    : `[[scope]]
-path = ${JSON.stringify(scope)}
-configurations = ["swift"]
-`,
-        }),
-        [`${prefix}Sources/Value.swift`]: FIXED_PARSER_SOURCE,
-        [`${prefix}AppTests/Value.swift`]: PARSER_SOURCE,
-        [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
-    });
-    expect(await spawnGspot(root, ['apply'])).toMatchObject({ code: 0 });
-    expect(await isOnDisk(join(root, `${prefix}AppTests/.swiftlint.yml`))).toBe(true);
-    const lifetime = resources.move();
-    return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
-}
 
 test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     'SwiftLint $name reports the source lint rules and passes after the fix',
@@ -115,7 +116,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         await using sandbox = await prepareSwiftScope(scope);
         const { root, prefix } = sandbox;
         await writeFile(join(root, `${prefix}Sources/Value.swift`), PARSER_SOURCE);
-        const broken = parseCheckReport(await spawnGspot(root, SWIFTLINT_COMMAND));
+        const broken = parseCheckReport(await spawnGspot(root, buildCheckArguments('swift/swiftlint')));
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const findings = broken.report.checks.flatMap((check) => check.findings);
         expect(findings).toStrictEqual(
@@ -127,7 +128,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         );
         expect(findings.every((finding) => finding.file === `${prefix}Sources/Value.swift`)).toBe(true);
         await writeFile(join(root, `${prefix}Sources/Value.swift`), FIXED_PARSER_SOURCE);
-        const corrected = await spawnGspot(root, SWIFTLINT_COMMAND);
+        const corrected = await spawnGspot(root, buildCheckArguments('swift/swiftlint'));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );
@@ -140,7 +141,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
             join(root, `${prefix}Sources/Value.swift`),
             FIXED_PARSER_SOURCE.replace('value: String', 'value:String'),
         );
-        const fixed = await spawnGspot(root, [...SWIFTLINT_COMMAND, '--fix']);
+        const fixed = await spawnGspot(root, [...buildCheckArguments('swift/swiftlint'), '--fix']);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await readFile(join(root, `${prefix}Sources/Value.swift`), 'utf8')).toBe(FIXED_PARSER_SOURCE);
     },
@@ -152,7 +153,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         const { root, prefix } = sandbox;
         const path = join(root, `${prefix}.swiftlint.yml`);
         await unlink(path);
-        const missing = await spawnGspot(root, SWIFTLINT_COMMAND);
+        const missing = await spawnGspot(root, buildCheckArguments('swift/swiftlint'));
         expect(missing.code, missing.stdout + missing.stderr).toBe(2);
         expect(missing.stdout).toContain(`${prefix}.swiftlint.yml`);
     },

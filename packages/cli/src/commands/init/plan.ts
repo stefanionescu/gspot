@@ -1,23 +1,23 @@
 import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { getColors } from '#cli/system/terminal.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
-import { isInGspotFolder } from '#cli/repository/classify.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
-import { listSubmodulePaths } from '#cli/repository/tracked.ts';
 import { readLintJobs } from '#cli/repository/existing-tools.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/tracked.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
+import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
+import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
+import { listMisePins, listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 
 import {
     type InitPlan,
+    type InitScan,
     type InitAnswers,
     type InitFileRow,
-    type InitPlanInputs,
     type DetectionSummary,
 } from '#cli/types/commands/init.ts';
 import {
@@ -26,11 +26,11 @@ import {
     NPM_TOOL_PROJECT_FILE,
     MISE_TOOL_PROJECT_FILE,
     PYTHON_TOOL_PROJECT_FILE,
-} from '#cli/config/system/locations.ts';
+} from '#cli/config/gspot-paths.ts';
 import {
     HOOKS_ROW,
     COLUMN_GAP,
-    REASON_WIDTH,
+    ORIGIN_WIDTH,
     CI_FILE_NOTES,
     ATTRIBUTES_ROW,
     CONFIGURATION_WIDTH,
@@ -38,8 +38,8 @@ import {
     DETECTION_LABEL_WIDTH,
 } from '#cli/config/commands/init.ts';
 
-function buildToolProjectRows(everySelected: Manifest[]): InitPlan['change'] {
-    const pins = listToolProjectPins(everySelected);
+function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
+    const pins = listToolProjectPins(configurations);
     const count = Object.keys(pins.npm).length;
     const rows: InitPlan['change'] =
         count === 0
@@ -51,15 +51,15 @@ function buildToolProjectRows(everySelected: Manifest[]): InitPlan['change'] {
             path: PYTHON_TOOL_PROJECT_FILE,
             note: `${formatCount(python, 'pinned Python tool')}; matching uv.lock and tool environment`,
         });
-    const mise = listMisePins(everySelected).length;
+    const mise = listMisePins(configurations).length;
     if (mise > 0) rows.unshift({ path: MISE_TOOL_PROJECT_FILE, note: formatCount(mise, 'tool pin') });
     return rows;
 }
 
 // Name the dependencies that the generated tool project pins. Keep the authored dependency file.
 function buildPinnedDependencyRows(
-    { repository, existingTools }: InitPlanInputs,
-    requirements: Manifest[],
+    { repository, existingTools }: InitScan,
+    requirements: Configuration[],
 ): InitFileRow[] {
     const pinned = new Set(Object.keys(listToolProjectPins(requirements).npm));
     return existingTools.toolOnlyPackages.flatMap((path) => {
@@ -109,16 +109,16 @@ function formatFileSection(title: string, rows: InitFileRow[]): string[] {
 }
 
 function buildConfigurationRows(
-    { everySelected, selection }: InitPlanInputs,
+    { everySelected, selection }: InitScan,
     { level }: Settings,
 ): InitPlan['configurations'] {
-    return everySelected.map((manifest) => {
-        const checks = manifest.checks.filter((check) => level === 'all' || check.level === 'recommended').length;
+    return everySelected.map((configuration) => {
+        const checks = configuration.checks.filter((check) => level === 'all' || check.level === 'recommended').length;
         return {
-            configuration: manifest.configuration.name,
-            how: selection.how.get(manifest.configuration.name) ?? 'required',
+            configuration: configuration.name,
+            origin: selection.origins.get(configuration.name) ?? 'required',
             checks,
-            checksOff: manifest.checks.length - checks,
+            checksOff: configuration.checks.length - checks,
         };
     });
 }
@@ -126,7 +126,7 @@ function buildConfigurationRows(
 function formatConfigurationSection(rows: InitPlan['configurations'], level: InitPlan['level']): string[] {
     if (rows.length === 0) return ['configurations', '  none', ''];
     const lines = rows.map((row) => {
-        return `  ${row.configuration.padEnd(CONFIGURATION_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${formatCount(row.checks, 'check')} (${String(row.checksOff)} off at ${level})`;
+        return `  ${row.configuration.padEnd(CONFIGURATION_WIDTH)} ${row.origin.padEnd(ORIGIN_WIDTH)} ${formatCount(row.checks, 'check')} (${String(row.checksOff)} off at ${level})`;
     });
     return ['configurations', ...lines, ''];
 }
@@ -134,7 +134,7 @@ function formatConfigurationSection(rows: InitPlan['configurations'], level: Ini
 /**
  * Build the file writes and integrations that init shows before it asks you to accept.
  *
- * @param planning the repository facts, answers, and configurations.
+ * @param scan the repository facts, answers, and configurations.
  * @param settings the validated gspot.toml and its generated files.
  * @param settings.settings the parsed gspot.toml for file generation.
  * @param settings.settingsText the proposed gspot.toml text.
@@ -142,16 +142,16 @@ function formatConfigurationSection(rows: InitPlan['configurations'], level: Ini
  * @param settings.generated the files to write and their ownership plan.
  * @returns the plan that init proposes.
  */
-function buildInitPlan(
-    planning: InitPlanInputs,
+export function planInitFiles(
+    scan: InitScan,
     {
         settings,
         settingsText,
         requirements,
         generated,
-    }: { settings: Settings; settingsText: string; requirements: Manifest[]; generated: GenerationResult },
+    }: { settings: Settings; settingsText: string; requirements: Configuration[]; generated: GenerationResult },
 ): InitPlan {
-    const { repository, existingTools, answers, replaced } = planning;
+    const { repository, existingTools, answers, replaced } = scan;
     const { root, hasGit } = repository;
     const change = buildToolProjectRows(requirements);
     if (hasGit) {
@@ -176,16 +176,16 @@ function buildInitPlan(
     ];
     return {
         level: settings.level,
-        configurations: buildConfigurationRows(planning, settings),
+        configurations: buildConfigurationRows(scan, settings),
         write,
         delete: replaced.deleted.filter(({ path }) => !write.some((row) => row.path === path)),
         retained: [
             ...replaced.retained,
             ...listSubmodulePaths(repository.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...buildKeptCiRows(answers.ci, existingTools.ci, readLintJobs(root, existingTools.ci)),
-            ...planning.foreignDisableComments,
+            ...scan.foreignDisableComments,
         ],
-        change: [...change, ...replaced.changed, ...buildPinnedDependencyRows(planning, requirements)],
+        change: [...change, ...replaced.changed, ...buildPinnedDependencyRows(scan, requirements)],
         noLongerRuns: existingTools.lintFolders.map((folder) => ({
             path: `${folder}/`,
             note: 'a folder of lint scripts; check remaining references before deleting it',
@@ -199,7 +199,7 @@ function buildInitPlan(
  * @param plan the configurations and file changes to preview.
  * @returns the text.
  */
-function formatInitPlan(plan: InitPlan): string {
+export function formatInitPlan(plan: InitPlan): string {
     const { dim } = getColors();
     const lines = [
         ...formatConfigurationSection(plan.configurations, plan.level),
@@ -262,12 +262,12 @@ function formatReplacedFiles(summary: DetectionSummary): string[] {
  * @param summary what init detected.
  * @returns the text, with a final blank line when the repository has existing tools.
  */
-function formatDetection(summary: DetectionSummary): string {
+export function formatDetection(summary: DetectionSummary): string {
     const languages = summary.detected
         .filter(
             (evidence) =>
                 evidence.group === 'language' &&
-                summary.manifests.get(evidence.configuration)?.configuration.always_selected !== true,
+                summary.configurations.get(evidence.configuration)?.always_selected !== true,
         )
         .map((evidence) => {
             const count = evidence.evidence.split(' ', 1)[0] ?? '';
@@ -286,7 +286,7 @@ function formatDetection(summary: DetectionSummary): string {
                         .filter(
                             (evidence) =>
                                 evidence.group === group &&
-                                summary.manifests.get(evidence.configuration)?.configuration.always_selected !== true,
+                                summary.configurations.get(evidence.configuration)?.always_selected !== true,
                         )
                         .map((evidence) => `${evidence.configuration}  ${evidence.evidence}`),
                 ),
@@ -305,5 +305,3 @@ function formatDetection(summary: DetectionSummary): string {
         ...formatReplacedFiles(summary),
     ].join('\n');
 }
-
-export { buildInitPlan, formatInitPlan, formatDetection };

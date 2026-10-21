@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { getValueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
@@ -42,7 +42,6 @@ test.each([
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stdout).toBe('');
     expect(refused.stderr).toContain(expected);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(SET_SETTINGS);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const structured = await runGspot(sandbox.path, [...commandArguments, '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);
@@ -158,7 +157,6 @@ test.each([...BANNED_WORD_SCOPES])(
         const next = readSettings(sandbox.path).settings;
         const nextTable = scope === '' ? next.written : next.scopes[scope]?.written;
         expect(getValueAt(nextTable, ['naming', 'banned_words'])).toBeUndefined();
-        expect(await readFile(join(sandbox.path, 'app/source.ts'), 'utf8')).toBe('export const active = true;\n');
     },
 );
 

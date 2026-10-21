@@ -1,8 +1,3 @@
-export const SORT_LEVELS = [
-    { level: 'recommended', severity: 0 },
-    { level: 'all', severity: 2 },
-] as const;
-
 export const SORT_RULES = [
     'perfectionist/sort-imports',
     'perfectionist/sort-named-imports',

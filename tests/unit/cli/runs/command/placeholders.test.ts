@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { planChecks } from '#cli/planning/checks.ts';
 import { symlink, writeFile } from 'node:fs/promises';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { type CommandPart } from '#cli/types/runs/command.ts';
@@ -11,8 +11,34 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { listSwiftlintToolFiles } from '#cli/checks/swift/build.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { WORKSPACE_SCOPE_CASES } from '#tests/data/runs/command-checks.ts';
-import { prepareCommand, buildCommandEnvironment } from '#cli/runs/command/check.ts';
-import { expandCommand, listScratchFiles, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
+import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
+import { expandCommand, listCopyFiles, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
+
+/** Check that the settings schema refuses an empty command setting. */
+async function verifyEmptyCommand(root: string, settings: string): Promise<void> {
+    await writeFile(join(root, 'gspot.toml'), settings);
+    const empty = await runGspot(root, ['check', '--only', 'sandbox/arguments', '--json']);
+    expect(empty.code).toBe(2);
+    expect(JSON.parse(empty.stdout)).toMatchObject({
+        error: 'settings',
+        message: expect.stringContaining('openapi.generate_command') as unknown,
+    });
+}
+
+/** Check that a list setting cannot expand inside one command argument. */
+async function verifyInlineCommand(root: string): Promise<void> {
+    const inline = parseCheckReport(await runGspot(root, ['check', '--only', 'sandbox/arguments', '--json']));
+    expect(inline.code).toBe(2);
+    expect(inline.report.checks).toMatchObject([
+        {
+            check: 'sandbox/arguments',
+            status: 'error',
+            note: expect.stringContaining(
+                'List setting openapi.generate_command must occupy a whole command argument.',
+            ) as unknown,
+        },
+    ]);
+}
 
 test('a whole setting preserves empty and multiword command arguments', async () => {
     await using sandbox = await testdir();
@@ -86,7 +112,7 @@ test('tool file inputs of a nested scope stop at the scope folder and follow a l
     });
 
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] });
+    const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
     const planned = plans.find((plan) => plan.selection.scope.path === 'app')!;
     expect(listSwiftlintToolFiles(session, planned)).toStrictEqual([
         '.gspot/configurations/language/swift/swiftlint.yml',
@@ -114,7 +140,7 @@ test.each([...WORKSPACE_SCOPE_CASES])(
         });
 
         const session = await openSession(sandbox.path);
-        const plans = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] });
+        const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
         expect(
             expandCommand(session, plans[0]!, ['before', '{workspace:--workspace}', 'after'], {
                 files: [],
@@ -129,7 +155,7 @@ test.each([...WORKSPACE_SCOPE_CASES])(
 test.each([0, 1, 2])('replaces a file marker at position %s without dropping neighboring arguments', (slot) => {
     const parts: CommandPart[] = ['before', 'after'];
     parts.splice(slot, 0, { file: true });
-    const commands = buildFileInvocations(parts, ['one.txt', 'café folder/two.txt']);
+    const commands = buildFileCommandLines(parts, ['one.txt', 'café folder/two.txt']);
     for (const [index, file] of ['one.txt', 'café folder/two.txt'].entries()) {
         const expected = ['before', 'after'];
         expected.splice(slot, 0, file);
@@ -144,12 +170,12 @@ test('a Markdown command run in a scratch copy keeps the tool files its manifest
     });
 
     const session = await openSession(sandbox.path);
-    const planned = planRun(session, { stage: 'commit', only: ['markdown/markdownlint'] })[0]!;
-    const paths = listScratchFiles(session, planned, planned.check.command!);
+    const planned = planChecks(session, { stage: 'commit', only: ['markdown/markdownlint'] })[0]!;
+    const paths = listCopyFiles(session, planned, planned.check.command!);
     expect(paths).toContain('.gspot/configurations/language/markdown/markdownlint-cli2.mjs');
     expect(paths).toContain('.gspot/configurations/language/markdown/markdownlint.jsonc');
     expect(paths).toContain('README.md');
-    expect(() => listScratchFiles(session, planned, ['markdownlint-cli2', '{tool_file:absent}'])).toThrow(
+    expect(() => listCopyFiles(session, planned, ['markdownlint-cli2', '{tool_file:absent}'])).toThrow(
         'Check markdown/markdownlint names {tool_file:absent} and no configuration writes it.',
     );
 });
@@ -169,17 +195,17 @@ stage = "commit"
     });
 
     const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', only: ['sandbox/arguments'] });
+    const plans = planChecks(session, { stage: 'all', only: ['sandbox/arguments'] });
     const planned = plans[0]!;
     planned.tool = { name: 'echo', installers: {}, kind: 'program' };
     planned.check.env = { TOOL_RELEASE: 'v3.4.0' };
     const prepared = prepareCommand(planned, {
         session,
         command: planned.check.command!,
-        environment: buildCommandEnvironment(session, planned, {}),
+        setup: buildCommandSetup(session, planned, {}),
         toolPath: process.execPath,
     });
-    const result = await spawnProcess(prepared.commands[0]!.commandArguments, {
+    const result = await spawnProcess(prepared.commandLines[0]!.commandArguments, {
         cwd: prepared.cwd,
         env: prepared.env,
     });
@@ -210,38 +236,12 @@ indent_width = ${String(width)}
     });
 
     const session = await openSession(sandbox.path);
-    const [planned] = planRun(session, { stage: 'all', only: ['bash/shfmt'] });
+    const [planned] = planChecks(session, { stage: 'all', only: ['bash/shfmt'] });
     const command = prepareCommand(planned!, {
         session,
         command: planned!.check.command!,
-        environment: buildCommandEnvironment(session, planned!, {}),
+        setup: buildCommandSetup(session, planned!, {}),
         toolPath: process.execPath,
     });
     expect(command.commandArguments[command.commandArguments.indexOf('-i') + 1]).toBe(expected);
 });
-
-/** Check that the settings schema refuses an empty command setting. */
-async function verifyEmptyCommand(root: string, settings: string): Promise<void> {
-    await writeFile(join(root, 'gspot.toml'), settings);
-    const empty = await runGspot(root, ['check', '--only', 'sandbox/arguments', '--json']);
-    expect(empty.code).toBe(2);
-    expect(JSON.parse(empty.stdout)).toMatchObject({
-        error: 'settings',
-        message: expect.stringContaining('openapi.generate_command') as unknown,
-    });
-}
-
-/** Check that a list setting cannot expand inside one command argument. */
-async function verifyInlineCommand(root: string): Promise<void> {
-    const inline = parseCheckReport(await runGspot(root, ['check', '--only', 'sandbox/arguments', '--json']));
-    expect(inline.code).toBe(2);
-    expect(inline.report.checks).toMatchObject([
-        {
-            check: 'sandbox/arguments',
-            status: 'error',
-            note: expect.stringContaining(
-                'List setting openapi.generate_command must occupy a whole command argument.',
-            ) as unknown,
-        },
-    ]);
-}

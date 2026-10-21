@@ -1,23 +1,24 @@
 import { gzipSync } from 'node:zlib';
 import { pathToFileURL } from 'node:url';
-import { parseReport } from '#cli/parsers/json.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { join, relative, isAbsolute } from 'node:path';
-import { type Finding } from '#cli/types/runs/check.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
-import { createScratchFolder } from '#cli/system/files/folders.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { purgecssReportSchema } from '#cli/schemas/checks/site/pages.ts';
-import { listBuiltFiles, getSuccessfulBuild, deriveBuiltFilePath } from '#cli/checks/site/build.ts';
+import { listBuiltFiles, getSuccessfulBuild, buildRepositoryPath } from '#cli/checks/site/build.ts';
 
 import {
     LYCHEE,
@@ -96,7 +97,7 @@ export async function checkSiteLychee(session: Session, planned: PlannedCheck): 
             parseOutput(planned.check, result.stdout, result.stderr, { root: build.folder, cwd: build.folder }),
             LYCHEE,
         );
-        findings.push(...parsed.map((finding) => ({ ...finding, file: deriveBuiltFilePath(planned, finding.file) })));
+        findings.push(...parsed.map((finding) => ({ ...finding, file: buildRepositoryPath(planned, finding.file) })));
     }
     return findings;
 }
@@ -115,7 +116,7 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
         .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
     const toolFile = join(session.root, selectToolFilePath(session, planned, HTML_VALIDATE));
-    using reports = createScratchFolder();
+    using reports = createTemporaryFolder();
     const command = [
         HTML_VALIDATE,
         HTML_VALIDATE_CONFIG_FLAG,
@@ -136,7 +137,7 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
         findings.push(
             ...parsed.map((finding) => ({
                 ...finding,
-                file: deriveBuiltFilePath(planned, finding.file),
+                file: buildRepositoryPath(planned, finding.file),
             })),
         );
     }
@@ -162,13 +163,13 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
         { cwd: build.folder, stdin: JSON.stringify({ toolFile, css: sheets, content: PURGECSS_CONTENT }) },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
-    const report = parseReport('PurgeCSS', result.stdout, purgecssReportSchema);
+    const report = parseToolReport('PurgeCSS', result.stdout, purgecssReportSchema);
     return report.flatMap((sheet) =>
         sheet.rejected.map((selector) =>
             buildFinding(
                 planned,
                 {
-                    file: deriveBuiltFilePath(
+                    file: buildRepositoryPath(
                         planned,
                         isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file,
                     ),
@@ -196,7 +197,7 @@ export async function checkSiteSize(session: Session, planned: PlannedCheck): Pr
     const build = await getSuccessfulBuild(session, planned);
     const sizes = new Map(
         listBuiltFiles(build.folder)
-            .map((source) => ({ source, path: deriveBuiltFilePath(planned, source) }))
+            .map((source) => ({ source, path: buildRepositoryPath(planned, source) }))
             .filter(({ path }) => limits.some((limit) => limit.isCounted(path)))
             .map(({ source, path }) => [path, gzipSync(readBytes(build.folder, source)).length]),
     );
@@ -237,7 +238,7 @@ export async function checkSiteSitemap(session: Session, planned: PlannedCheck):
             buildFinding(
                 planned,
                 {
-                    file: deriveBuiltFilePath(planned, sitemapFile),
+                    file: buildRepositoryPath(planned, sitemapFile),
                     line: 1,
                 },
                 'missing-page',
@@ -247,12 +248,12 @@ export async function checkSiteSitemap(session: Session, planned: PlannedCheck):
     const unlisted = [...files]
         .filter(
             (path) =>
-                path.endsWith(HTML_EXTENSION) && !listed.has(path) && !isLeftOut(deriveBuiltFilePath(planned, path)),
+                path.endsWith(HTML_EXTENSION) && !listed.has(path) && !isLeftOut(buildRepositoryPath(planned, path)),
         )
         .map((path) =>
             buildFinding(
                 planned,
-                { file: deriveBuiltFilePath(planned, path), line: 1 },
+                { file: buildRepositoryPath(planned, path), line: 1 },
                 'unlisted-page',
                 'The build wrote this page, and the sitemap does not list it.',
             ),

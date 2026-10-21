@@ -182,7 +182,7 @@ export function parseRequirements(path: string, text: string): DependencyFile {
     };
 }
 
-export const DEPENDENCY_PARSERS: Record<string, DependencyFileParser> = {
+export const PARSERS: Record<string, DependencyFileParser> = {
     [PACKAGE_JSON]: parsePackageJson,
     [PYPROJECT_TOML]: parsePyproject,
     [PACKAGE_SWIFT]: parseSwiftPackage,

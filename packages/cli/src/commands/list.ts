@@ -1,15 +1,17 @@
 import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
-import { stripUndefined } from '#cli/system/values.ts';
-import { listSettings } from '#cli/settings/inherit.ts';
+import { type Session } from '#cli/types/session.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
 import { formatScopeLabel } from '#cli/system/terminal.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { planRun, isActive } from '#cli/planning/checks.ts';
+import { type Settings } from '#cli/types/settings/file.ts';
+import { isActive, planChecks } from '#cli/planning/checks.ts';
+import { type Scope } from '#cli/types/settings/inheritance.ts';
+import { listEffectiveSettings } from '#cli/settings/inherit.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
-import { listSelectedManifests } from '#cli/configurations/select.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
+import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
-import { type Settings, type ScopeSelection } from '#cli/types/settings/values.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type ListKind, type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
@@ -33,30 +35,30 @@ function buildSettingsResult(session: Session): CommandResult {
 }
 
 function buildConfigurationsResult(session: Session): CommandResult {
-    const manifests = listSelectedManifests(session.scopes);
-    const names = new Set(manifests.map((manifest) => manifest.configuration.name));
+    const configurations = listSelectedConfigurations(session.scopes);
+    const names = new Set(configurations.map((configuration) => configuration.name));
     const planned = new Map(
-        planRun(session, { stage: 'any' }).map((check) => [
+        planChecks(session, { stage: 'any' }).map((check) => [
             `${check.selection.scope.path}\0${check.check.name}`,
             check,
         ]),
     );
-    const selected = manifests.map((manifest) => ({
-        name: manifest.configuration.name,
+    const selected = configurations.map((configuration) => ({
+        name: configuration.name,
         checks: session.scopes.flatMap((selection) =>
-            selection.selected.includes(manifest)
-                ? manifest.checks.map((check) => ({
+            selection.selected.includes(configuration)
+                ? configuration.checks.map((check) => ({
                       name: check.name,
                       scope: selection.scope.path,
-                      state: formatCheckStatus(planned.get(`${selection.scope.path}\0${check.name}`)),
+                      state: formatCheckState(planned.get(`${selection.scope.path}\0${check.name}`)),
                   }))
                 : [],
         ),
     }));
-    const available = session.manifests
+    const available = session.configurations
         .values()
-        .filter((manifest) => !names.has(manifest.configuration.name))
-        .map((manifest) => ({ name: manifest.configuration.name, description: manifest.configuration.description }))
+        .filter((configuration) => !names.has(configuration.name))
+        .map((configuration) => ({ name: configuration.name, description: configuration.description }))
         .toArray();
     const lines = ['selected'];
     for (const configuration of selected) {
@@ -82,10 +84,10 @@ function buildConfigurationsResult(session: Session): CommandResult {
  * @param scopes the settings that apply in each scope.
  * @returns values and their inheritance sources for every selected scope.
  */
-function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): SettingsListJson {
+function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson {
     const rows = scopes.flatMap((selection) => {
         const scope = selection.scope.path;
-        return listSettings(selection.known, settings, scope)
+        return listEffectiveSettings(selection.known, settings, scope)
             .filter((entry) => scope === '' || entry.origin !== 'configuration')
             .map((entry) => ({
                 key: entry.key,
@@ -93,37 +95,17 @@ function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): Setting
                 source: entry.source,
                 origin: entry.origin,
                 ...stripUndefined({ originScope: entry.originScope }),
-                reason_needed: entry.declaration.reason_needed,
+                reason_needed: entry.setting.reason_needed,
                 scope,
             }));
     });
     return { settings: rows };
 }
 
-function formatCheckStatus(check: PlannedCheck | undefined): string {
+function formatCheckState(check: PlannedCheck | undefined): string {
     if (check === undefined) return 'off (level)';
     if (check.skip !== undefined) return `off (${check.skip.cause})`;
     return isActive(check) ? 'on' : 'no matching files';
-}
-
-/**
- * Register the list command. It runs no checks and changes no files.
- *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
- */
-function registerList(program: Command, onResult: CommandCompletion): void {
-    program
-        .command('list')
-        .usage('[options] [configurations|settings]')
-        .summary(COMMAND_HELP.list.summary)
-        .description(COMMAND_HELP.list.description)
-        .addArgument(
-            new Argument('[what]', COMMAND_HELP.list.arguments.what).choices(LIST_KINDS).default('configurations'),
-        )
-        .action(async (kind) => {
-            onResult(await runListCommand(process.cwd(), kind));
-        });
 }
 
 /**
@@ -140,4 +122,22 @@ async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResul
     return kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session);
 }
 
-export { registerList };
+/**
+ * Register the list command. It runs no checks and changes no files.
+ *
+ * @param program the CLI that gets the command.
+ * @param onResult writes the command result.
+ */
+export function registerList(program: Command, onResult: CommandCompletion): void {
+    program
+        .command('list')
+        .usage('[options] [configurations|settings]')
+        .summary(COMMAND_HELP.list.summary)
+        .description(COMMAND_HELP.list.description)
+        .addArgument(
+            new Argument('[kind]', COMMAND_HELP.list.arguments.kind).choices(LIST_KINDS).default('configurations'),
+        )
+        .action(async (kind) => {
+            onResult(await runListCommand(process.cwd(), kind));
+        });
+}

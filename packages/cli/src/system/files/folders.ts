@@ -1,11 +1,11 @@
-// Creates scratch folders and lists files without following links.
+// Creates temporary folders and lists files without following links.
 import { tmpdir } from 'node:os';
 import picomatch from 'picomatch';
 import { join, relative } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import type { ScratchFolder } from '#cli/types/system/files.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
+import type { TemporaryFolder } from '#cli/types/system/files.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
 import { GLOB_EXCLUDE, DRIVE_LETTER, PARENT_SEGMENT, FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
 
@@ -23,7 +23,7 @@ function assertInsideFolder(pattern: string): void {
  *
  * @returns the folder, which the caller disposes, as `using` does.
  */
-export function createScratchFolder(): ScratchFolder {
+export function createTemporaryFolder(): TemporaryFolder {
     const path = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-')));
     return {
         path,
@@ -36,11 +36,11 @@ export function createScratchFolder(): ScratchFolder {
 /**
  * Find the files under the fixed folder of each pattern. Include dot files, and do not open folder links.
  *
- * @param cwd the folder to scan.
+ * @param folder the folder to scan.
  * @param patterns one glob or several; a leading ! excludes matches.
  * @returns matching paths relative to cwd, each once in scan order.
  */
-export function listMatchingPaths(cwd: string, patterns: string | string[]): string[] {
+export function listMatchingPaths(folder: string, patterns: string | string[]): string[] {
     const list = [patterns].flat();
     for (const pattern of list) assertInsideFolder(pattern);
     const positive = list.filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE));
@@ -53,7 +53,7 @@ export function listMatchingPaths(cwd: string, patterns: string | string[]): str
     );
     const found = new Set<string>();
     const addMatchedFile = (absolute: string): void => {
-        const file = convertToPosixPath(relative(cwd, absolute));
+        const file = convertToPosixPath(relative(folder, absolute));
         if (matches(file)) found.add(file);
     };
     const roots = positive.values().flatMap((pattern) => {
@@ -62,12 +62,13 @@ export function listMatchingPaths(cwd: string, patterns: string | string[]): str
         if (
             parts.some(
                 (_, index) =>
-                    lstatSync(join(cwd, ...parts.slice(0, index + 1)), { throwIfNoEntry: false })?.isSymbolicLink() ===
-                    true,
+                    lstatSync(join(folder, ...parts.slice(0, index + 1)), {
+                        throwIfNoEntry: false,
+                    })?.isSymbolicLink() === true,
             )
         )
             return [];
-        const path = join(cwd, base);
+        const path = join(folder, base);
         const stat = lstatSync(path, { throwIfNoEntry: false });
         if (stat === undefined) return [];
         if (!stat.isDirectory()) return glob === '' ? [{ path, isFolder: false }] : [];
@@ -81,7 +82,7 @@ export function listMatchingPaths(cwd: string, patterns: string | string[]): str
         using files = openFiles(start);
         walkFiles(files, '', (path) => {
             const absolute = join(start, path);
-            if (lstatSync(absolute).isDirectory()) return !isPruned(convertToPosixPath(relative(cwd, absolute)));
+            if (lstatSync(absolute).isDirectory()) return !isPruned(convertToPosixPath(relative(folder, absolute)));
             addMatchedFile(absolute);
             return false;
         });

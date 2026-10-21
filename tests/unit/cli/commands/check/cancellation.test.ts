@@ -1,23 +1,82 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { join, delimiter } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
-import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runChecks } from '#cli/commands/check/run.ts';
+import { fakePausingGit } from '#tests/setup/fakes.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { type PausedGit } from '#tests/types/processes.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { MILLISECONDS_PER_SECOND } from '#tests/data/test-setup.ts';
 import { SLOW_TOOL_PROGRAM } from '#tests/data/runs/command-checks.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 import { CLI_BIN, runGspot, CLI_MAIN, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { waitForExit, waitForFile, captureChild, startCommand, prepareCommand } from '#tests/setup/processes.ts';
+
+/** Start a staged check with indexed input, an authored edit, and a paused Git command. */
+async function prepareStagedCancellation(root: string, operation: 'diff' | 'clone' | 'cat-file') {
+    await createFileTree(root, {
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
+        'source.sh': 'echo indexed\n',
+        scratch: {},
+        bin: {},
+    });
+    readGitOutput(root, ['init', '-q']);
+    readGitOutput(root, ['add', '-A']);
+    const indexed = readGitOutput(root, ['ls-files', '--stage', '-z']);
+    await writeFile(join(root, 'source.sh'), 'echo authored\n');
+    const marker = join(root, 'started.json');
+    const environment = await fakePausingGit(join(root, 'bin'), { operation, marker, pauseOnCall: 1 });
+    const scratch = join(root, 'scratch');
+    await using resources = new AsyncDisposableStack();
+    const capture = resources.use(
+        startCommand([process.execPath, CLI_BIN, 'check', '--staged', '--only', 'project/bash-syntax', '--json'], {
+            cwd: root,
+            env: { ...buildSpawnEnvironment(), NO_COLOR: '1', CI: '1', ...environment, TMPDIR: scratch },
+        }),
+    );
+    expect(await waitForFile(marker)).toBe(true);
+    const started = JSON.parse(await readFile(marker, 'utf8')) as PausedGit;
+    const owned = resources.move();
+    return { ...capture, indexed, scratch, started, [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned) };
+}
+
+/** Stop the paused check and verify its public cancellation response before waiting for Git to exit. */
+async function stopStagedCancellation(
+    paused: Awaited<ReturnType<typeof prepareStagedCancellation>>,
+    signal: 'SIGINT' | 'SIGTERM',
+    exitCode: number,
+): Promise<void> {
+    paused.child.kill(signal);
+    expect(await paused.child.exited, await paused.errors).toBe(exitCode);
+    expect(JSON.parse(await paused.output)).toStrictEqual({
+        error: 'canceled',
+        message: 'Check stopped before every check finished.',
+        exitCode,
+    });
+    await waitForExit(paused.started.pid);
+}
+
+/** Verify the retained working tree and index, then run the same staged check successfully. */
+async function assertStagedRetry(
+    root: string,
+    paused: Pick<Awaited<ReturnType<typeof prepareStagedCancellation>>, 'scratch' | 'indexed'>,
+): Promise<void> {
+    expect(await readdir(paused.scratch)).toStrictEqual([]);
+    expect(readGitOutput(root, ['ls-files', '--stage', '-z'])).toBe(paused.indexed);
+    expect(await readFile(join(root, 'source.sh'), 'utf8')).toBe('echo authored\n');
+    const retry = parseCheckReport(
+        await runGspot(root, ['check', '--staged', '--only', 'project/bash-syntax', '--json']),
+    );
+    expect(retry.code, retry.stdout + retry.stderr).toBe(0);
+    expect(retry.report.checks[0]!.status).toBe('passed');
+}
 
 // Windows does not deliver these process signals like POSIX systems.
 test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
@@ -53,85 +112,30 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     },
 );
 
-// A fake git that pauses on the chosen call and passes every other call to the real git.
-async function fakeGit(
-    folder: string,
-    options: { operation: 'diff' | 'clone' | 'cat-file'; marker: string; pauseOnCall: number; executable: string },
-): Promise<Record<string, string>> {
-    const script = `
-const args = process.argv.slice(2);
-if (args[0] === ${JSON.stringify(options.operation)}) {
-    const counter = Bun.file(${JSON.stringify(join(folder, 'calls.txt'))});
-    const count = (await counter.exists() ? Number(await counter.text()) : 0) + 1;
-    await Bun.write(counter, String(count));
-    if (count === ${String(options.pauseOnCall)}) {
-        const checkout = args[0] === 'clone' ? args.at(-1) : args[0] === 'cat-file' ? process.cwd() : undefined;
-        const marker = ${JSON.stringify(options.marker)};
-        await Bun.write(marker + ".tmp", JSON.stringify({pid: process.pid, checkout}));
-        await (await import("node:fs/promises")).rename(marker + ".tmp", marker);
-        await Bun.sleep(60_000);
-    }
-}
-const child = Bun.spawn([${JSON.stringify(options.executable)}, ...args], {stdin:'inherit', stdout:'inherit', stderr:'inherit'});
-process.exit(await child.exited);
-`;
-    await fakeTool(folder, 'git', script);
-    const environment = buildSpawnEnvironment();
-    return { ...environment, PATH: `${folder}${delimiter}${environment['PATH'] ?? ''}` };
-}
-
 // Windows does not deliver these process signals like POSIX systems.
-test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
-    'staged cancellation during %s preserves source content and permits retry',
-    async (operation) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
-            'source.sh': 'echo indexed\n',
-            scratch: {},
-            bin: {},
-        });
+test.skipIf(isWindows)(
+    'canceling check --staged during git diff exits with the signal code, keeps the index and the working file, and a second run passes',
+    async () => {
+        await using sandbox = await testdir();
+        await using paused = await prepareStagedCancellation(sandbox.path, 'diff');
+        expect(await readdir(paused.scratch)).toStrictEqual([]);
+        await stopStagedCancellation(paused, 'SIGTERM', 143);
+        await assertStagedRetry(sandbox.path, paused);
+    },
+);
 
-        readGitOutput(sandbox.path, ['init', '-q']);
-        readGitOutput(sandbox.path, ['add', '-A']);
-        const indexed = readGitOutput(sandbox.path, ['ls-files', '--stage', '-z']);
-        const scratch = join(sandbox.path, 'scratch');
-        await writeFile(join(sandbox.path, 'source.sh'), 'echo authored\n');
-        const nativeGit = Bun.which('git');
-        expect(nativeGit).not.toBeNull();
-        const marker = join(sandbox.path, 'started.json');
-        const bin = join(sandbox.path, 'bin');
-        const environment = await fakeGit(bin, { operation, marker, pauseOnCall: 1, executable: nativeGit! });
-        await using capture = startCommand(
-            [process.execPath, CLI_BIN, 'check', '--staged', '--only', 'project/bash-syntax', '--json'],
-            {
-                cwd: sandbox.path,
-                env: { ...buildSpawnEnvironment(), NO_COLOR: '1', CI: '1', ...environment, TMPDIR: scratch },
-            },
-        );
-        const { child } = capture;
-        expect(await waitForFile(marker)).toBe(true);
-        const started = JSON.parse(await readFile(marker, 'utf8')) as PausedGit;
-        if (operation === 'diff') expect(await readdir(scratch)).toStrictEqual([]);
-        child.kill(operation === 'clone' ? 'SIGINT' : 'SIGTERM');
-        expect(await child.exited, await capture.errors).toBe(operation === 'clone' ? 130 : 143);
-        expect(JSON.parse(await capture.output)).toStrictEqual({
-            error: 'canceled',
-            message: 'Check stopped before every check finished.',
-            exitCode: operation === 'clone' ? 130 : 143,
-        });
-        await waitForExit(started.pid);
-        if (operation !== 'diff') {
-            expect(started.checkout).toBeDefined();
-            expect(await isOnDisk(started.checkout!)).toBe(false);
-        }
-        expect(await readdir(scratch)).toStrictEqual([]);
-        expect(readGitOutput(sandbox.path, ['ls-files', '--stage', '-z'])).toBe(indexed);
-        expect(await readFile(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
-        const retry = parseCheckReport(
-            await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/bash-syntax', '--json']),
-        );
-        expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-        expect(retry.report.checks[0]!.status).toBe('passed');
+test.skipIf(isWindows).each([
+    { operation: 'clone', signal: 'SIGINT', exitCode: 130 },
+    { operation: 'cat-file', signal: 'SIGTERM', exitCode: 143 },
+] as const)(
+    'canceling check --staged during git $operation exits with the signal code, keeps the index and the working file, and a second run passes',
+    async ({ operation, signal, exitCode }) => {
+        await using sandbox = await testdir();
+        await using paused = await prepareStagedCancellation(sandbox.path, operation);
+        await stopStagedCancellation(paused, signal, exitCode);
+        expect(paused.started.checkout).toBeDefined();
+        expect(await isOnDisk(paused.started.checkout!)).toBe(false);
+        await assertStagedRetry(sandbox.path, paused);
     },
 );
 
@@ -148,8 +152,6 @@ test.skipIf(isWindows)('push cancellation retains completed reports and names re
     readGitOutput(sandbox.path, ['commit', '-qam', 'feat: second']);
     const second = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     const marker = join(sandbox.path, 'started.json');
-    const nativeGit = Bun.which('git');
-    expect(nativeGit).not.toBeNull();
     const binaryFolder = join(sandbox.path, 'bin');
     await mkdir(binaryFolder);
     const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
@@ -161,18 +163,16 @@ test.skipIf(isWindows)('push cancellation retains completed reports and names re
                 ...buildSpawnEnvironment(),
                 NO_COLOR: '1',
                 CI: '1',
-                ...(await fakeGit(binaryFolder, {
+                ...(await fakePausingGit(binaryFolder, {
                     operation: 'clone',
                     marker,
                     pauseOnCall: 2,
-                    executable: nativeGit!,
                 })),
             },
             stdin: protocol,
         },
     );
-    const { child } = capture;
-    const { output, errors } = capture;
+    const { child, output, errors } = capture;
     expect(await waitForFile(marker)).toBe(true);
     const started = JSON.parse(await readFile(marker, 'utf8')) as Required<PausedGit>;
     child.kill('SIGINT');

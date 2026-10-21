@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { selectRunner } from '#cli/repository/package-manager.ts';
-import { VERSION_PIN_FILE } from '#cli/config/system/locations.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { VERSION_PIN_FILE } from '#cli/config/gspot-paths.ts';
+import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
 
 /**
  * Read the pinned gspot version.
@@ -26,13 +26,13 @@ export function readVersionPin(repositoryRoot: string): string | undefined {
  */
 export async function assertVersionPin(repositoryRoot: string): Promise<void> {
     const pinned = readVersionPin(repositoryRoot);
-    if (pinned !== undefined && pinned !== packageManifest.version) {
-        const runner = await selectRunner(repositoryRoot);
-        const command = runner.pin.replace('<version>', pinned);
+    if (pinned !== undefined && pinned !== cliPackage.version) {
+        const runner = await selectStartRunner(repositoryRoot);
+        const command = runner.installCommand.replace('<version>', pinned);
         throw new GspotError(
             'pin',
             [
-                `This repository pins gspot ${pinned}, and you are running gspot ${packageManifest.version}.`,
+                `This repository pins gspot ${pinned}, and you are running gspot ${cliPackage.version}.`,
                 `Install the pinned version: ${command}`,
                 'To upgrade the repository pin to this version: gspot apply',
             ].join('\n'),

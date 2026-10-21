@@ -1,13 +1,15 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseLockedSpecifiers } from '#cli/parsers/lockfiles.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { IMPORTER_LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { readDeclaredSpecifiers } from '#cli/repository/dependency-files.ts';
-import { IMPORTER_LOCKFILES, LOCKFILE_UPDATE_COMMANDS } from '#cli/config/parsers/lockfiles.ts';
+import { LOCKFILE_UPDATE_COMMANDS } from '#cli/config/checks/dependencies.ts';
 
 function findImporterLockfile(session: Session, folder: string) {
     for (const base of listEnclosingFolders(folder)) {
@@ -43,10 +45,10 @@ function compareSpecifiers(declared: Map<string, string>, locked: Map<string, st
  * @param planned the scope and the run cache.
  * @returns one finding per dependency out of step with the lockfile.
  */
-export function checkStaleLockfile(session: Session, planned: PlannedCheck): Finding[] {
+export function checkDependenciesStaleLockfile(session: Session, planned: PlannedCheck): Finding[] {
     const folder = planned.selection.scope.path;
-    const manifest = posix.join(folder, PACKAGE_JSON);
-    const declared = readDeclaredSpecifiers(session.reads, manifest);
+    const packageJsonPath = posix.join(folder, PACKAGE_JSON);
+    const declared = readDeclaredSpecifiers(session.reads, packageJsonPath);
     const found = findImporterLockfile(session, folder);
     if (declared === undefined || found === undefined) return [];
     const locked = parseLockedSpecifiers(found.lockfile, found.text, posix.join(found.base, found.lockfile)).get(
@@ -57,7 +59,7 @@ export function checkStaleLockfile(session: Session, planned: PlannedCheck): Fin
     return compareSpecifiers(declared, locked, found.path).map((message) =>
         buildFinding(
             planned,
-            { file: manifest, line: 1 },
+            { file: packageJsonPath, line: 1 },
             'stale-lockfile',
             `${message} Run ${command} and commit the lockfile.`,
         ),

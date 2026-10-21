@@ -9,7 +9,7 @@ import {
     PURGECSS_EXTRACTOR,
     PURGECSS_TOKEN_END,
     PURGECSS_PSEUDO_CLASS_PATTERN,
-} from '#cli/config/generation/settings.ts';
+} from '#cli/config/generation/settings/builders/purgecss.ts';
 import {
     STYLESHEETS,
     STYLE_CONTENT,

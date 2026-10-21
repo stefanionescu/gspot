@@ -1,15 +1,15 @@
-// Reads and edits JSON and JSON with comments.
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { JSONC_OPTIONS } from '#cli/config/parsers/json.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
+import { isRecord, getValueAt, normalizeTables } from '#cli/system/tables.ts';
 import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser';
 
-// Parse the complete JSON document before editing or returning any of its fields.
 export function parseJsonFile(path: string, text: string): Record<string, unknown>;
+
 export function parseJsonFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
+
 /**
  * Read a JSON object, and validate it against the schema, if any.
  *
@@ -41,39 +41,41 @@ export function parseJsonFile(path: string, text: string, schema?: z.ZodType): u
  * Open a JSON file to edit shared fields, and leave other content as written.
  *
  * @param path the file that syntax and edit errors name.
- * @param source the complete JSON or JSON-with-comments text.
+ * @param text the complete JSON or JSON-with-comments text.
  * @returns the editable document.
  */
-export function openJsonFile(path: string, source: string): EditableFile {
-    let text = source;
-    let document = parseJsonFile(path, text);
+export function openJsonFile(path: string, text: string): EditableFile {
+    let editedText = text;
+    let document = parseJsonFile(path, editedText);
     return {
         getValue: (keys) => normalizeTables(getValueAt(document, keys)),
         set(keys, value) {
             if (isDeepStrictEqual(normalizeTables(getValueAt(document, keys)), normalizeTables(value))) return;
-            const next = applyEdits(text, modify(text, [...keys], value, {}));
+            const next = applyEdits(editedText, modify(editedText, [...keys], value, {}));
             document = parseJsonFile(path, next);
-            text = next;
+            editedText = next;
         },
-        getText: () => text,
+        getText: () => editedText,
     };
 }
 
-export function parseReport(tool: string, text: string): unknown;
-export function parseReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value;
+export function parseToolReport(tool: string, text: string): unknown;
+
+export function parseToolReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value;
+
 /**
  * Parse and validate a report, and keep its untrusted contents out of errors.
  *
  * @param tool the program that printed the report.
  * @param text the JSON report.
  * @param schema the shape to validate when supplied.
- * @returns the parsed report, after validation against any supplied schema.
+ * @returns the parsed report, with any requested validation.
  */
-export function parseReport(tool: string, text: string, schema?: z.ZodType): unknown {
+export function parseToolReport(tool: string, text: string, schema?: z.ZodType): unknown {
     try {
         const parsed: unknown = JSON.parse(text);
         return schema === undefined ? parsed : schema.parse(parsed);
     } catch {
-        throw new GspotError('output', `${tool} returned invalid structured findings.`);
+        throw new GspotError('output', `${tool} printed output that gspot cannot read.`);
     }
 }

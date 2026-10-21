@@ -1,4 +1,4 @@
-const DUPLICATE_RULE_CASES = [
+export const DUPLICATE_RULE_CASES = [
     {
         file: 'empty-regex.js',
         source: 'export const pattern = /[]/;\n',
@@ -54,11 +54,9 @@ const DUPLICATE_RULE_CASES = [
     },
 ] as const;
 
-const DUPLICATE_RULE_FILES = {
+export const DUPLICATE_RULE_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
     'tsconfig.json':
         '{"compilerOptions":{"target":"ESNext","module":"NodeNext","moduleResolution":"NodeNext","types":[]},"include":["*.ts"]}\n',
     'api.ts': '/** @deprecated Use current instead. */\nexport function legacy() { return 1; }\n',
 } as const;
-
-export { DUPLICATE_RULE_CASES, DUPLICATE_RULE_FILES };

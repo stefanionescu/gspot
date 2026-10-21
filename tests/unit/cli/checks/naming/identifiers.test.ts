@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -12,10 +12,10 @@ import { FRAMEWORK_NAMES, TEST_PATH_SETTINGS } from '#tests/data/checks/naming/s
 
 test.each([...FRAMEWORK_NAMES])(
     "configuration-names: framework function names are allowed only inside the framework's scope",
-    async ({ configuration, names, banned_words: bannedWords }) => {
-        const source = names.map((name) => `export function ${name}() { return null; }\n`).join('');
-        const variables = names.map((name) => `export const ${name} = () => null;\n`).join('');
-        const declarations = names.map((name) => `    ${name}() { return null; }\n`).join('');
+    async ({ configuration, name, bannedWords }) => {
+        const source = `export function ${name}() { return null; }\n`;
+        const variables = `export const ${name} = () => null;\n`;
+        const declarations = `    ${name}() { return null; }\n`;
         const methods = `export class Reader {\n${declarations}}\n`;
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
@@ -29,7 +29,7 @@ test.each([...FRAMEWORK_NAMES])(
             'app/entry.ts': source,
             'app/bindings.ts': variables,
             'app/reader.ts': methods,
-            'app/parameters.ts': `export function readValue(${names[0]}: string) { return null; }\n`,
+            'app/parameters.ts': `export function readValue(${name}: string) { return null; }\n`,
             'sibling/entry.ts': source,
         });
 
@@ -43,9 +43,9 @@ test.each([...FRAMEWORK_NAMES])(
                 findings.map(({ file, line, rule }) => ({ file, line, rule })),
             ),
         ).toStrictEqual([
-            ...names.map((_, index) => ({ file: 'entry.ts', line: index + 1, rule: 'banned-word' })),
+            { file: 'entry.ts', line: 1, rule: 'banned-word' },
             { file: 'app/parameters.ts', line: 1, rule: 'banned-word' },
-            ...names.map((_, index) => ({ file: 'sibling/entry.ts', line: index + 1, rule: 'banned-word' })),
+            { file: 'sibling/entry.ts', line: 1, rule: 'banned-word' },
         ]);
         for (const file of ['entry.ts', 'sibling/entry.ts']) {
             await writeFile(join(sandbox.path, file), 'export function readValue() { return null; }\n');

@@ -1,11 +1,12 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { listCodeLines } from '#cli/parsers/bash.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { ScriptFile, LayoutIssue } from '#cli/types/checks/bash.ts';
 
 import {

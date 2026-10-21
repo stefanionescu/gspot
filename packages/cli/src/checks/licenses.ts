@@ -1,45 +1,47 @@
 import semver from 'semver';
+import type { z } from 'zod';
 import { statSync } from 'node:fs';
 import satisfies from 'spdx-satisfies';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { join, dirname, basename } from 'node:path';
 import parseExpression from 'spdx-expression-parse';
+import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { PYTHON_EXECUTABLE } from '#cli/config/runs/command.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
-import { createScratchFolder } from '#cli/system/files/folders.ts';
+import { PYTHON_EXECUTABLE } from '#cli/config/tools/python.ts';
 import { listLicenseProjects } from '#cli/planning/needed-tools.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import type { PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { readDeclaredSpecifiers } from '#cli/repository/dependency-files.ts';
 import { splitIdentity, readLockedPackages } from '#cli/parsers/lockfiles.ts';
 import { getWrittenSetting, listSettingsTables } from '#cli/settings/inherit.ts';
 import { PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/dependencies.ts';
+import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/repository/tracked.ts';
 import { pythonReportSchema, javascriptReportSchema } from '#cli/schemas/checks/licenses.ts';
-import { PIP_LICENSES_COMMAND, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
-import { type Session, type PlannedCheck, type LicenseProject } from '#cli/types/planning.ts';
 
-import {
-    type AllowedPackage,
-    type LicensedPackage,
-    type ProjectLicenses,
-    type PythonLicenseReport,
+import type {
+    AllowedPackage,
+    LicensedPackage,
+    ProjectLicenses,
+    PythonLicenseReport,
 } from '#cli/types/checks/licenses.ts';
 import {
     ANY_VERSION,
     LICENSE_CHOICE,
     TROVE_LICENSES,
-    LICENSE_CHECKER,
     UNKNOWN_LICENSE,
+    PIP_LICENSES_COMMAND,
     CLASSIFIER_SEPARATOR,
-    LICENSE_CHECKER_ARGUMENTS,
+    LICENSE_CHECKER_COMMAND,
 } from '#cli/config/checks/licenses.ts';
 
 // An expression passes when every part of an `AND`, or one part of an `OR`, has an allowed license.
@@ -64,15 +66,16 @@ function assertInstalled(planned: PlannedCheck, name: string, start: string): vo
         );
 }
 
-async function readLicenseOutput(
+async function readLicenseOutput<Value>(
     session: Session,
     planned: PlannedCheck,
-    command: string[],
+    command: [string, ...string[]],
     cwd: string,
-): Promise<unknown> {
+    schema: z.ZodType<Value>,
+): Promise<Value> {
     const result = await runCheckTool(session, planned, command, { cwd });
     if (result.code !== 0) throw new Error(`${command.join(' ')} did not run: ${formatOutputTail(result)}`);
-    return JSON.parse(result.stdout);
+    return parseToolReport(command[0], result.stdout, schema);
 }
 
 async function scanJavascriptLicenses(
@@ -84,10 +87,11 @@ async function scanJavascriptLicenses(
     const report = await readLicenseOutput(
         session,
         planned,
-        [LICENSE_CHECKER, ...LICENSE_CHECKER_ARGUMENTS, start],
+        [...LICENSE_CHECKER_COMMAND, start],
         start,
+        javascriptReportSchema,
     );
-    return Object.entries(javascriptReportSchema.parse(report)).map(([name, entry]) => ({
+    return Object.entries(report).map(([name, entry]) => ({
         name,
         license: Array.isArray(entry.licenses)
             ? entry.licenses.join(LICENSE_CHOICE)
@@ -113,14 +117,15 @@ function selectPythonLicense(entry: PythonLicenseReport): string {
 async function scanPythonLicenses(session: Session, planned: PlannedCheck, start: string): Promise<LicensedPackage[]> {
     assertInstalled(planned, PYTHON_ENVIRONMENT_FOLDER, start);
     const installed = join(start, PYTHON_ENVIRONMENT_FOLDER);
-    using scratch = createScratchFolder();
+    using scratch = createTemporaryFolder();
     const report = await readLicenseOutput(
         session,
         planned,
         [...PIP_LICENSES_COMMAND, buildVenvExecutablePath(installed, PYTHON_EXECUTABLE)],
         scratch.path,
+        pythonReportSchema,
     );
-    return pythonReportSchema.parse(report).map((entry) => ({
+    return report.map((entry) => ({
         name: normalizeIdentity(`${entry.Name}@${entry.Version}`),
         license: selectPythonLicense(entry),
     }));
@@ -162,7 +167,7 @@ function selectScanner(session: Session, dependencyFile: string) {
 async function scanProject(session: Session, planned: PlannedCheck, project: LicenseProject): Promise<ProjectLicenses> {
     const { dependencyFile, selection } = project;
     const { scan, start, lockfiles, ecosystem } = selectScanner(session, dependencyFile);
-    const configuration = project.configuration;
+    const settings = project.settings;
     const scanned = await scan(session, { ...planned, selection }, start);
     if (scanned.length === 0)
         throw new Error(
@@ -173,7 +178,7 @@ async function scanProject(session: Session, planned: PlannedCheck, project: Lic
     if (ecosystem === 'python' && locked !== undefined)
         lockedKeys = new Set([...locked].map((identity) => normalizeIdentity(identity)));
     const packages = lockedKeys === undefined ? scanned : scanned.filter(({ name }) => lockedKeys.has(name));
-    return { dependencyFile, packages, locked: [...(lockedKeys ?? [])], ecosystem, configuration };
+    return { dependencyFile, packages, locked: [...(lockedKeys ?? [])], ecosystem, settings };
 }
 
 // Each installed project uses its deepest scope; authored exceptions keep the table they came from.
@@ -248,12 +253,12 @@ function listStaleRecords(
  * @param planned the scopes whose dependencies to scan.
  * @returns the findings.
  */
-export async function checkAllowedLicenses(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkLicensesAllowed(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const { inventories, skipped } = await scanLicenses(session, planned);
-    const findings = inventories.flatMap(({ dependencyFile, packages, ecosystem, configuration }) => {
+    const findings = inventories.flatMap(({ dependencyFile, packages, ecosystem, settings }) => {
         return packages.flatMap(({ name, license }) => {
-            const isRecorded = configuration.allowed_package.some((record) => matchesRecord(record, name, ecosystem));
-            if (isRecorded || isAllowed(license, configuration.allowed)) return [];
+            const isRecorded = settings.allowed_package.some((record) => matchesRecord(record, name, ecosystem));
+            if (isRecorded || isAllowed(license, settings.allowed)) return [];
             return [
                 buildFinding(
                     planned,

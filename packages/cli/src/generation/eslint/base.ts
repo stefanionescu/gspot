@@ -1,14 +1,15 @@
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { getPreset } from '#cli/generation/eslint/presets.ts';
-import type { ScopeView } from '#cli/types/settings/values.ts';
+import { readScopeAliases } from '#cli/repository/aliases.ts';
 import { getTable, getLimit } from '#cli/settings/scope-view.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
+import type { ScopeView } from '#cli/types/settings/inheritance.ts';
 import { listScriptPaths } from '#cli/generation/eslint/runtimes.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
-import { buildRestrictedImportBlocks } from '#cli/generation/eslint/lint-rules.ts';
+import { IMPORT_BOUNDARIES_RULE } from '#cli/config/generation/eslint/imports.ts';
 import { buildScopeFiles, listNestedScopeGlobs } from '#cli/generation/eslint/files.ts';
+import { buildRestrictedImportBlocks } from '#cli/generation/eslint/settings-blocks.ts';
 
 import {
     buildImportIgnores,
@@ -26,41 +27,39 @@ import {
     BASE_SELECTORS,
     JAVASCRIPT_RULES,
     ROOT_PACKAGE_JSON_RULES,
-} from '#cli/config/generation/eslint-rules.ts';
+} from '#cli/config/generation/eslint/rules.ts';
 import {
     type EslintBlock,
     type EslintPlugins,
     type SelectorGroup,
-    type EslintContext,
     type EslintPresets,
-    type EslintFragment,
+    type EslintRuntime,
     type EslintLevelRules,
-    type EslintRuntimeBlock,
-    type EslintSettingsBlock,
+    type PlannedEslintFile,
+    type EslintBlockFields,
+    type ConfigurationBlocks,
 } from '#cli/types/generation/eslint.ts';
 import {
-    CODE_PRESETS,
-    FILE_PRESETS,
     NODE_RUNTIMES,
     RUNTIME_GLOBALS,
     BARREL_FILES_RULE,
-    EXPORTS_LAST_RULE,
     ESLINT_LIMIT_RULES,
     IMPORT_LAYOUT_RULES,
     PACKAGE_JSON_PATTERN,
     ESLINT_PLUGIN_IMPORTS,
-    IMPORT_BOUNDARIES_RULE,
     BOUNDARIES_PLUGIN_IMPORT,
     LEVEL_ALL_PLUGIN_IMPORTS,
-} from '#cli/config/generation/eslint.ts';
+    PRESETS_AFTER_CONFIGURATIONS,
+    PRESETS_BEFORE_CONFIGURATIONS,
+} from '#cli/config/generation/eslint/base.ts';
 
 // Project settings preserve their runtime expressions while rule data stays serializable.
-function buildProjectBlocks(base: EslintContext, boundaryBlocks: EslintBlock[]): EslintFragment['blocks'] {
-    const { session, projects } = base;
+function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks['blocks'] {
+    const { session, projects } = planned;
     return [
-        ...buildImportStyleBlocks(session.scopes, base.nodeFiles),
-        ...buildScopeImportBlocks(base),
-        ...buildNodeScriptBlocks(base),
+        ...buildImportStyleBlocks(session.scopes, planned.nodeFiles),
+        ...buildScopeImportBlocks(planned),
+        ...buildNodeScriptBlocks(planned),
         ...boundaryBlocks,
     ].map(({ settings, ...data }) => {
         if (settings === undefined)
@@ -81,34 +80,38 @@ function buildProjectBlocks(base: EslintContext, boundaryBlocks: EslintBlock[]):
 /**
  * Build the blocks before the fragment blocks: default lint rules, pinned presets, and project settings.
  *
- * @param base the ESLint context of the scope.
+ * @param planned the ESLint context of the scope.
  * @param plugins the import names and packages to load.
  * @param boundaryBlocks the project classifications and dependency policies.
- * @param ignoredPaths the shared ignored paths.
+ * @param ignoredGlobs the shared ignored paths.
  *
  * @returns the blocks for source syntax and lint rules.
  */
-function buildBlocksBeforeFragments(
-    base: EslintContext,
+export function buildOpeningBlocks(
+    planned: PlannedEslintFile,
     plugins: EslintPlugins,
     boundaryBlocks: EslintBlock[],
-    ignoredPaths: string[],
-): EslintFragment['blocks'] {
-    const { eslintFiles, session } = base;
-    const isAll = base.level === 'all';
-    const rules = base.levelRules;
+    ignoredGlobs: string[],
+): ConfigurationBlocks['blocks'] {
+    const { eslintFiles, session } = planned;
+    const isAll = planned.level === 'all';
+    const rules = planned.levelRules;
     const pluginMap = Object.entries(plugins)
         .map(([name, [importName]]) => `${JSON.stringify(name)}: ${importName}`)
         .join(', ');
     const pluginOptions = Object.fromEntries(
-        base.ruleOptions.flatMap(({ rules }) =>
+        planned.ruleOptions.flatMap(({ rules }) =>
             Object.keys(rules)
                 .filter((name) => name.startsWith('gspot/'))
                 .map((name) => [name, 'error']),
         ),
     );
     return [
-        ...buildBasePresetBlocks(base.eslintPresets.get(JAVASCRIPT_CONFIGURATION), CODE_PRESETS, eslintFiles.code),
+        ...buildBasePresetBlocks(
+            planned.eslintPresets.get(JAVASCRIPT_CONFIGURATION),
+            PRESETS_BEFORE_CONFIGURATIONS,
+            eslintFiles.code,
+        ),
         {
             data: {
                 files: eslintFiles.code,
@@ -119,19 +122,18 @@ function buildBlocksBeforeFragments(
                         session.scopes,
                         readScopeAliases(session.root, '', session.reads),
                     ),
-                    [EXPORTS_LAST_RULE]: 'error',
                     ...IMPORT_LAYOUT_RULES,
-                    ...buildBarrelRule(base, 'typescript'),
+                    ...buildBarrelRule(planned, 'typescript'),
                 },
             },
-            properties: `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }, 'import-x/ignore': ${JSON.stringify(buildImportIgnores(ignoredPaths))}${boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
+            properties: `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }, 'import-x/ignore': ${JSON.stringify(buildImportIgnores(ignoredGlobs))}${boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
             preset: { expression: `gspot.configs.${isAll ? 'all' : 'recommended'}.rules`, rules: {} },
         },
         {
             data: { files: eslintFiles.javascript, rules: JAVASCRIPT_RULES },
         },
-        ...buildProjectBlocks(base, boundaryBlocks),
-        ...buildRestrictedImportBlocks(base).map((block): EslintFragment['blocks'][number] => ({
+        ...buildProjectBlocks(planned, boundaryBlocks),
+        ...buildRestrictedImportBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
             data: block,
         })),
     ];
@@ -139,21 +141,22 @@ function buildBlocksBeforeFragments(
 /**
  * Build the blocks after the fragment blocks: runtime, selector, test, script, and final pinned rules.
  *
- * @param base the ESLint context of the scope.
- * @param fragmentSelectors the selectors that fragments add.
+ * @param planned the ESLint context of the scope.
+ * @param selectorGroups the selectors that fragments add.
  * @param runtimeBlocks the runtime declarations shared with file matchers.
  *
  * @returns the blocks for package and file conventions.
  */
-function buildBlocksAfterFragments(
-    base: EslintContext,
-    fragmentSelectors: SelectorGroup[],
-    runtimeBlocks: EslintRuntimeBlock[],
-): EslintFragment['blocks'] {
-    const { eslintFiles } = base;
-    const isAll = base.level === 'all';
-    const rules = base.levelRules;
-    const runtimes: EslintFragment['blocks'] = runtimeBlocks.map(({ runtime }, index) => {
+export function buildClosingBlocks(
+    planned: PlannedEslintFile,
+    selectorGroups: SelectorGroup[],
+    runtimeBlocks: EslintRuntime[],
+): ConfigurationBlocks['blocks'] {
+    const { eslintFiles } = planned;
+    const isAll = planned.level === 'all';
+    const rules = planned.levelRules;
+    const presets = planned.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
+    const runtimes: ConfigurationBlocks['blocks'] = runtimeBlocks.map(({ runtime }, index) => {
         const isNode = NODE_RUNTIMES.includes(runtime);
         const names = RUNTIME_GLOBALS[runtime] ?? runtime;
         return {
@@ -169,7 +172,7 @@ function buildBlocksAfterFragments(
     });
     return [
         ...runtimes,
-        ...fragmentSelectors.map((group): EslintFragment['blocks'][number] => ({
+        ...selectorGroups.map((group): ConfigurationBlocks['blocks'][number] => ({
             data: {
                 files: buildScopeFiles(eslintFiles.code, group.scope ?? '', group.files ?? ['**/*']),
                 ignores: [
@@ -179,7 +182,7 @@ function buildBlocksAfterFragments(
                 rules: { 'no-restricted-syntax': ['error', ...(isAll ? BASE_SELECTORS : []), ...group.selectors] },
             },
         })),
-        ...buildConsoleBlocks(base, rules.console).map((block): EslintFragment['blocks'][number] => ({
+        ...buildConsoleBlocks(planned, rules.console).map((block): ConfigurationBlocks['blocks'][number] => ({
             data: block,
         })),
         {
@@ -188,7 +191,7 @@ function buildBlocksAfterFragments(
         {
             data: { files: eslintFiles.tests, rules: TEST_RULES },
         },
-        ...buildBasePresetBlocks(base.eslintPresets.get(JAVASCRIPT_CONFIGURATION), FILE_PRESETS, eslintFiles.code),
+        ...buildBasePresetBlocks(presets, PRESETS_AFTER_CONFIGURATIONS, eslintFiles.code),
         {
             data: {
                 files: [PACKAGE_JSON_PATTERN],
@@ -199,7 +202,7 @@ function buildBlocksAfterFragments(
         {
             data: {
                 files: eslintFiles.javascript,
-                rules: { ...rules.javascript, ...buildBarrelRule(base, 'javascript') },
+                rules: { ...rules.javascript, ...buildBarrelRule(planned, 'javascript') },
             },
         },
     ];
@@ -207,17 +210,17 @@ function buildBlocksAfterFragments(
 /**
  * Keep test and script console exemptions inside their project scope.
  *
- * @param input every scope and the generated code selectors.
+ * @param planned every scope and the generated code selectors.
  * @param rules the console restrictions at the selected level.
  * @returns one console block per JavaScript scope.
  */
 function buildConsoleBlocks(
-    input: Pick<EslintContext, 'session' | 'eslintFiles'>,
+    planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
     rules: EslintLevelRules['console'],
-): EslintSettingsBlock[] {
-    const scopes = input.session.scopes.filter(({ view }) => view.configurations.includes(JAVASCRIPT_CONFIGURATION));
+): EslintBlockFields[] {
+    const scopes = planned.session.scopes.filter(({ view }) => view.configurations.includes(JAVASCRIPT_CONFIGURATION));
     return scopes.map((selection) => ({
-        files: buildScopeFiles(input.eslintFiles.code, selection.scope.path, ['**/*']),
+        files: buildScopeFiles(planned.eslintFiles.code, selection.scope.path, ['**/*']),
         ignores: [
             ...listNestedScopeGlobs(
                 scopes.map(({ scope }) => scope.path),
@@ -232,14 +235,14 @@ function buildConsoleBlocks(
 /**
  * Choose the plugin imports and names for the module header and the lint blocks.
  *
- * @param base the ESLint context of the scope.
+ * @param planned the ESLint context of the scope.
  * @param boundaryBlocks the project classifications that require the boundaries plugin.
  *
  * @returns the ESLint plugins to load.
  */
-function selectPlugins(base: EslintContext, boundaryBlocks: EslintBlock[]): EslintPlugins {
-    const isAll = base.level === 'all';
-    const repositorySettings = base.session.settingsFile.settings;
+export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): EslintPlugins {
+    const isAll = planned.level === 'all';
+    const repositorySettings = planned.session.settingsFile.settings;
     return {
         ...ESLINT_PLUGIN_IMPORTS,
         ...(isAll ? { perfectionist: LEVEL_ALL_PLUGIN_IMPORTS.perfectionist } : {}),
@@ -250,12 +253,18 @@ function selectPlugins(base: EslintContext, boundaryBlocks: EslintBlock[]): Esli
     };
 }
 // A language block uses its own index-export limit whenever the repository permits barrels.
-function buildBarrelRule(base: EslintContext, language: 'typescript' | 'javascript'): Record<string, unknown> {
-    return base.session.settingsFile.settings.structure.reexports === 'index-only'
+function buildBarrelRule(planned: PlannedEslintFile, language: 'typescript' | 'javascript'): Record<string, unknown> {
+    return planned.session.settingsFile.settings.structure.reexports === 'index-only'
         ? {
               [BARREL_FILES_RULE]: [
                   'error',
-                  { amountOfExportsToConsiderModuleAsBarrel: getLimit(base.selection.view, 'index_exports', language) },
+                  {
+                      amountOfExportsToConsiderModuleAsBarrel: getLimit(
+                          planned.selection.view,
+                          'index_exports',
+                          language,
+                      ),
+                  },
               ],
           }
         : {};
@@ -265,7 +274,7 @@ function buildBasePresetBlocks(
     presets: EslintPresets | undefined,
     sources: readonly (readonly [string, string])[],
     codeFiles: string[],
-): EslintFragment['blocks'] {
+): ConfigurationBlocks['blocks'] {
     return sources.map(([name, importName]) => {
         const selected = getPreset(presets, name);
         const { parser: _parser, ...fields } = selected.blocks[0];
@@ -280,9 +289,9 @@ function buildBasePresetBlocks(
 // The size and complexity rules with the limits of one language.
 function buildLimitRules(view: ScopeView, language: 'typescript' | 'javascript'): Record<string, unknown> {
     return Object.fromEntries(
-        Object.entries(ESLINT_LIMIT_RULES).map(([rule, declaration]) => {
-            const maximum = getLimit(view, declaration.limit, language);
-            return [rule, ['error', 'options' in declaration ? { max: maximum, ...declaration.options } : maximum]];
+        Object.entries(ESLINT_LIMIT_RULES).map(([rule, limitRule]) => {
+            const maximum = getLimit(view, limitRule.limit, language);
+            return [rule, ['error', 'options' in limitRule ? { max: maximum, ...limitRule.options } : maximum]];
         }),
     );
 }
@@ -295,7 +304,7 @@ function buildLimitRules(view: ScopeView, language: 'typescript' | 'javascript')
  *
  * @returns the lint rules at this level.
  */
-function buildLevelRules(view: ScopeView, selectors: Readonly<SelectorGroup['selectors']>): EslintLevelRules {
+export function buildLevelRules(view: ScopeView, selectors: Readonly<SelectorGroup['selectors']>): EslintLevelRules {
     return {
         code: {
             ...BASE_RULES,
@@ -308,4 +317,3 @@ function buildLevelRules(view: ScopeView, selectors: Readonly<SelectorGroup['sel
         console: CONSOLE_RULES,
     };
 }
-export { selectPlugins, buildLevelRules, buildBlocksAfterFragments, buildBlocksBeforeFragments };

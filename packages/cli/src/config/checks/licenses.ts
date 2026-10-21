@@ -1,7 +1,15 @@
-export const LICENSE_CHECKER = 'license-checker-rseidelsohn';
+/** pip-licenses prints every license field it finds: the license expression, the metadata text, and the classifiers. */
+export const PIP_LICENSES_COMMAND = ['pip-licenses', '--format=json', '--from=all', '--python'] as const;
 
-export const LICENSE_CHECKER_ARGUMENTS = ['--json', '--excludePrivatePackages', '--start'] as const;
+export const LICENSE_CHECKER_COMMAND = [
+    'license-checker-rseidelsohn',
+    '--json',
+    '--excludePrivatePackages',
+    '--start',
+] as const;
+
 export const UNKNOWN_LICENSE = 'UNKNOWN';
+
 export const LICENSE_CHOICE = ' OR ';
 
 /** pip-licenses joins several classifiers of one package with this text. */
@@ -23,6 +31,3 @@ export const TROVE_LICENSES: Readonly<Record<string, string>> = {
 };
 
 export const ANY_VERSION = '*';
-
-/** An exact package version such as 2.0.0.post1, a semver range such as ^1.2.0 or >=1 <2, or * for every version. */
-export const ALLOWED_VERSION = /^(?:\*|\d[^\s@<>=~^*|,]*|[\d.xX*^~<>=|\s-]+)$/u;

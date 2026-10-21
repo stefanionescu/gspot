@@ -1,9 +1,10 @@
+import type { PlanOptions } from '#cli/types/planning.ts';
 import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/data/settings/scopes.ts';
 
 /** A path ignore applies to one check and keeps the rule findings of the others. */
-const PROJECT_PATH_IGNORES = [
+export const PROJECT_PATH_IGNORES = [
     {
         name: 'a deleted ignored input',
         changed: ['api/ignored.ts'],
@@ -46,47 +47,52 @@ const PROJECT_PATH_IGNORES = [
     },
 ] as const;
 
-const PROJECT_TRIGGERS = [
+export const PROJECT_TRIGGERS = [
     ['delete', 'staged'],
     ['rename', 'changed'],
 ] as const;
 
-const TYPESCRIPT_SCOPES_SETTINGS = TWO_SCOPES_SETTINGS.replace(
+export const TYPESCRIPT_SCOPES_SETTINGS = TWO_SCOPES_SETTINGS.replace(
     'configurations = []',
     'configurations = ["typescript"]',
 );
 
-const PROJECT_OPTIONS = { stage: 'push' as const, only: ['typescript/tsc'] } as const;
+export const PROJECT_OPTIONS = { stage: 'push', only: ['typescript/tsc'] } satisfies Pick<
+    PlanOptions,
+    'stage' | 'only'
+>;
 
-const NEXT_INTL_PROJECTS = [
+const NEXT_INTL_PACKAGE = '{"dependencies":{"next-intl":"4.8.3"}}';
+
+export const NEXT_INTL_PROJECTS = [
     {
         name: 'root project',
         scope: '',
-        files: { 'package.json': '{"dependencies":{"next-intl":"4.8.3"}}' },
+        files: { 'package.json': NEXT_INTL_PACKAGE },
         selected: true,
     },
     {
         name: 'own child project',
         scope: 'app',
-        files: { 'app/package.json': '{"dependencies":{"next-intl":"4.8.3"}}' },
+        files: { 'app/package.json': NEXT_INTL_PACKAGE },
         selected: true,
     },
     {
         name: 'inherited root project',
         scope: 'app/deep',
-        files: { 'package.json': '{"dependencies":{"next-intl":"4.8.3"}}' },
+        files: { 'package.json': NEXT_INTL_PACKAGE },
         selected: true,
     },
     {
         name: 'unrelated child project',
         scope: '',
-        files: { 'app/package.json': '{"dependencies":{"next-intl":"4.8.3"}}' },
+        files: { 'app/package.json': NEXT_INTL_PACKAGE },
         selected: false,
     },
     {
         name: 'unrelated sibling project',
         scope: 'app',
-        files: { 'sibling/package.json': '{"dependencies":{"next-intl":"4.8.3"}}' },
+        files: { 'sibling/package.json': NEXT_INTL_PACKAGE },
         selected: false,
     },
     { name: 'absent project', scope: 'app', files: {}, selected: false },
@@ -94,7 +100,7 @@ const NEXT_INTL_PROJECTS = [
         name: 'own child replaces inherited dependencies',
         scope: 'app',
         files: {
-            'package.json': '{"dependencies":{"next-intl":"4.8.3"}}',
+            'package.json': NEXT_INTL_PACKAGE,
             'app/package.json': '{"dependencies":{"react-i18next":"16.5.3"}}',
         },
         selected: false,
@@ -102,7 +108,7 @@ const NEXT_INTL_PROJECTS = [
 ] as const;
 
 /** Lockfile changes start the dependency advisory scan. Other inputs only feed the analysis. */
-const LOCKFILE_TRIGGER_NAMES = [
+export const LOCKFILE_TRIGGER_NAMES = [
     'bun.lock',
     'package-lock.json',
     'npm-shrinkwrap.json',
@@ -111,7 +117,7 @@ const LOCKFILE_TRIGGER_NAMES = [
     'uv.lock',
 ] as const;
 
-const TSC_REPLACEMENTS = [
+export const TSC_REPLACEMENTS = [
     { configuration: 'vue', check: 'vue/vue-tsc', source: 'src/App.vue', text: '<template><p>App</p></template>' },
     { configuration: 'svelte', check: 'svelte/svelte-check', source: 'src/App.svelte', text: '<p>App</p>' },
 ] as const;
@@ -125,7 +131,7 @@ version = "1.0.0"
 } as const;
 
 /** The tool runtime follows the npm checks that apply, not the language runtime of the repository. */
-const NODE_REQUIREMENTS = [
+export const NODE_REQUIREMENTS = [
     {
         name: 'Python with npm schema peers under mise',
         tables: '',
@@ -166,7 +172,7 @@ reason = "This sandbox exercises native tools without the license scanner."
 ] as const;
 
 /** Modules apply at both levels. Roles and test paths apply at level all. */
-const ARCHITECTURE_REQUIREMENTS = [
+export const ARCHITECTURE_REQUIREMENTS = [
     {
         name: 'root modules',
         tables: `[[import_rule]]
@@ -178,44 +184,23 @@ paths = ["src/**"]
     { name: 'selected role defaults without modules', tables: '', boundary: { recommended: false, all: true } },
 ] as const;
 
-const COVERAGE_LIMITS = [
-    {
-        configuration: 'pytest',
-        provider: 'pytest-cov',
-        file: 'test_math.py',
-        configurations: ['python', 'pytest'],
-        lines: 0,
-    },
-    {
-        configuration: 'pytest',
-        provider: 'pytest-cov',
-        file: 'test_math.py',
-        configurations: ['python', 'pytest'],
-        lines: 80,
-    },
+export const COVERAGE_PROVIDERS = [
+    { configuration: 'pytest', provider: 'pytest-cov', file: 'test_math.py', configurations: ['python', 'pytest'] },
     {
         configuration: 'vitest',
         provider: '@vitest/coverage-v8',
         file: 'math.test.js',
         configurations: ['javascript', 'vitest'],
-        lines: 0,
-    },
-    {
-        configuration: 'vitest',
-        provider: '@vitest/coverage-v8',
-        file: 'math.test.js',
-        configurations: ['javascript', 'vitest'],
-        lines: 80,
     },
 ] as const;
 
 /** Pushed checks chosen by name still read the Git history. */
-const HISTORY_TABLES = `[[scope]]
+export const HISTORY_TABLES = `[[scope]]
 path = "app"
 configurations = ["commits", "secrets"]
 `;
 
-const TOOL_FILE_PLANNING_CASES = [
+export const TOOL_FILE_PLANNING_CASES = [
     {
         name: 'a TypeScript-only scope selects Knip',
         files: {
@@ -236,18 +221,3 @@ const TOOL_FILE_PLANNING_CASES = [
         selected: false,
     },
 ] as const;
-
-export {
-    HISTORY_TABLES,
-    COVERAGE_LIMITS,
-    PROJECT_OPTIONS,
-    PROJECT_TRIGGERS,
-    TSC_REPLACEMENTS,
-    NODE_REQUIREMENTS,
-    NEXT_INTL_PROJECTS,
-    PROJECT_PATH_IGNORES,
-    LOCKFILE_TRIGGER_NAMES,
-    TOOL_FILE_PLANNING_CASES,
-    ARCHITECTURE_REQUIREMENTS,
-    TYPESCRIPT_SCOPES_SETTINGS,
-};

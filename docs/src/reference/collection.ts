@@ -1,7 +1,7 @@
+import { REFERENCE_FACTS } from './facts.ts';
 import { buildCommandPages } from './commands.ts';
 import { buildSettingsPages } from './settings.ts';
 import { buildPluginPages } from './eslint-plugin.ts';
-import { readReferenceData } from '#cli/reference.ts';
 import type { Loader, DataStore } from 'astro/loaders';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import type { ReferencePage } from '../types/reference.ts';
@@ -38,16 +38,16 @@ function readGuideTitles(store: DataStore): Map<string, string> {
  * @returns pages keyed by their Markdown path
  */
 function buildReferencePages(guideTitles: Map<string, string>): Map<string, ReferencePage> {
-    const data = readReferenceData();
+    const facts = REFERENCE_FACTS;
     const pages = new Map([
-        ...buildCommandPages(data),
-        ...buildConfigurationPages(data, guideTitles),
-        ...buildSettingsPages(data),
+        ...buildCommandPages(facts),
+        ...buildConfigurationPages(facts, guideTitles),
+        ...buildSettingsPages(facts),
         ...buildPluginPages(),
-        [`${REFERENCE_FOLDERS.checks}/index.md`, buildCheckIndex(data.checks, GROUP_LABELS)],
+        [`${REFERENCE_FOLDERS.checks}/index.md`, buildCheckIndex(facts.checks, GROUP_LABELS)],
     ]);
-    const suppressions = listSuppressions(data.configurations);
-    for (const { check, configuration } of data.checks)
+    const suppressions = listSuppressions(facts.configurations);
+    for (const { check, configuration } of facts.checks)
         pages.set(`${REFERENCE_FOLDERS.checks}/${check.name}.md`, buildCheckPage(check, configuration, suppressions));
     return pages;
 }

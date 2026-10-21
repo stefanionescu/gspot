@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
@@ -42,7 +41,6 @@ reason = "Review this separately."
     const invalid = await runGspot(folder.path, ['list', 'unknown']);
     expect(invalid.code).toBe(2);
     expect(invalid.stdout + invalid.stderr).toContain('unknown');
-    expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(settings);
     expect(await isOnDisk(join(folder.path, '.gspot'))).toBe(false);
     expect(await readTree(folder.path)).toStrictEqual(before);
 });

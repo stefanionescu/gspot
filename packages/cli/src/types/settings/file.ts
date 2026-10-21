@@ -1,30 +1,98 @@
+import type { Check } from '#cli/types/configurations.ts';
 import type { STAGES } from '#cli/config/configurations.ts';
-import type { Defined, Optional } from '#cli/types/shapes.ts';
-import { type NamedCategory } from '#cli/types/checks/naming.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { REEXPORT_MODES } from '#cli/config/settings/schema.ts';
-import type { OutputSpec, OutputInput } from '#cli/types/runs/output.ts';
-import type { ImportRule, WrittenImportRule } from '#cli/types/settings/imports.ts';
+import type { Defined, Optional, SchemaShape } from '#cli/types/shapes.ts';
+import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
 import type { ConfigurationTables } from '#cli/types/settings/configuration-tables.ts';
+import type { ImportRule, WrittenImportRule } from '#cli/types/settings/import-rules.ts';
 
 import type {
     ParsedCi,
     ParsedRoot,
     NamingCase,
-    ParsedHooks,
     ParsedRules,
+    ParsedHooks,
     LimitFields,
     NamingFields,
     ParsedLimits,
     ParsedNaming,
     ParsedFormat,
+    SettingValue,
     LimitLanguage,
     SettingLanguage,
     ParsedStructure,
     LanguageLimitFields,
+    ParsedNamingOverride,
     NamingLanguageFields,
 } from '#cli/types/settings/tables.ts';
+
+export type TableValues = {
+    [Name in keyof ConfigurationTables]?: ConfigurationTables[Name] | undefined;
+} & {
+    [Tool in keyof ParsedTools as `tools.${Tool}`]?: NonNullable<ParsedTools[Tool]> | undefined;
+} & {
+    format: ParsedFormat;
+    limits?: ParsedLimits | undefined;
+    naming?: ParsedNaming | undefined;
+    structure?: ParsedStructure | undefined;
+};
+
+export type ToolTableSchemas = Pick<SchemaShape<TableValues>, `tools.${keyof ParsedTools}`>;
+
+export type TableSettings<Name extends keyof TableValues> = NonNullable<TableValues[Name]>;
+
+export type SettingsFile = {
+    settings: Settings;
+    text: string;
+};
+
+type StructureSettings = Defined<Required<NonNullable<ParsedSettings['structure']>>>;
+
+export type Settings = Omit<
+    ParsedSettings,
+    | 'scope'
+    | 'command_check'
+    | 'tools'
+    | 'limits'
+    | 'naming'
+    | 'import_rule'
+    | 'structure'
+    | 'format'
+    | 'hooks'
+    | 'ci'
+    | 'rules'
+    | 'ignore'
+> & {
+    /** Validated source table before execution defaults and normalization. */
+    written: TomlTable;
+    level: NonNullable<ParsedSettings['level']>;
+    configurations: string[];
+    removed_configurations: string[];
+    limits: NonNullable<ParsedSettings['limits']>;
+    naming: NonNullable<ParsedSettings['naming']>;
+    import_rule: ImportRule[];
+    structure: StructureSettings;
+    format: WrittenFormat;
+    allowed_words: NonNullable<ParsedSettings['allowed_words']>;
+    tools: Record<string, TomlTable>;
+    test_files: string[];
+    ignore: IgnoreRecord[];
+    commandChecks: Record<string, CommandCheck>;
+    hooks?: Defined<Required<NonNullable<ParsedSettings['hooks']>>>;
+    ci?: ParsedCi;
+    rules: ParsedRules;
+    scopes: Record<string, NonNullable<ParsedSettings['scope']>[number] & Pick<Settings, 'written'>>;
+};
+
+export type CommandCheck = Check & {
+    command: string[];
+    files: NonNullable<Check['files']>;
+};
+
+/** Root or scoped values and their source-document location. */
+export type SettingsTable = Settings | Settings['scopes'][string];
 
 type CommandCheckFields = {
     name: string;
@@ -120,27 +188,10 @@ type ParsedScope = Omit<ParsedSettings, RootOnlyFields | 'test_files' | keyof Pa
         test_files?: string[] | undefined;
     };
 
-export type ReasonedValue<Value> = { value: Value; reason: string };
-
-export type SettingValue<Value> = Value | ReasonedValue<Value>;
-
 export type WrittenLicenses = Optional<ConfigurationTables['licenses']>;
 
 export type WrittenLimits = LimitFields<SettingValue<number>> & {
     [Language in LimitLanguage]?: LanguageLimitFields<Language, SettingValue<number>> | undefined;
-};
-
-export type ParsedNamingOverride = {
-    paths: string[];
-    languages?: SettingLanguage[] | undefined;
-    categories?: NamedCategory[] | undefined;
-    ignored_prefix?: string | undefined;
-    ignored_names_pattern?: string | undefined;
-    allow_digits: boolean;
-    allow_repeated_words: boolean;
-    allowed_names?: string[] | undefined;
-    cases?: NamingCase[] | undefined;
-    reason: string;
 };
 
 export type WrittenNamingOverride = Optional<Omit<ParsedNamingOverride, 'reason'>> & { reason: string };
@@ -184,7 +235,7 @@ export type WrittenSettings = Optional<
         import_rule?: WrittenImportRule[] | undefined;
         tools?: WrittenTools | undefined;
         format?: WrittenFormat | undefined;
-        command_check?: (CommandCheckFields & { output?: OutputInput | undefined })[] | undefined;
+        command_check?: (CommandCheckFields & { output?: WrittenOutput | undefined })[] | undefined;
         structure?: WrittenStructure | undefined;
         hooks?: Optional<ParsedHooks> | undefined;
         ci?: Optional<ParsedCi> | undefined;
@@ -210,7 +261,7 @@ export type ParsedSettings = ParsedRoot & {
               until?: TomlDate | undefined;
           }[]
         | undefined;
-    command_check?: (CommandCheckFields & { output: OutputSpec })[] | undefined;
+    command_check?: (CommandCheckFields & { output: CheckOutput })[] | undefined;
     structure?: ParsedStructure | undefined;
     hooks?: ParsedHooks | undefined;
     ci?: ParsedCi | undefined;

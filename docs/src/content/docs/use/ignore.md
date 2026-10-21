@@ -10,11 +10,7 @@ gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "
 
 Every ignore needs a reason. Leave out `--rule` to ignore the whole check, and add `--paths` to select files.
 
-Leave out the check to keep paths out of every check and every generated tool file:
-
-```shell
-gspot ignore --paths "vendor/**" --reason "Vendored releases of upstream packages."
-```
+To leave paths out of every check, see [Exclude files](/configure/files/).
 
 For `structure/trivial-functions` and `python/vulture`, `--names` limits the ignore to the definitions with those
 names, such as the hooks that a framework calls by name:

@@ -1,4 +1,4 @@
-import type { ImportRule } from '#cli/types/settings/imports.ts';
+import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 
 /**
  * List the import rules whose files the files of one rule may import: the rule itself, and either its can_import list

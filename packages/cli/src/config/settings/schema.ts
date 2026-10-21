@@ -1,3 +1,13 @@
+export const REASON_WORDS_MIN = 2;
+
+export const SCHEMA_URL = 'https://generativespotting.com/gspot.schema.json';
+
+export const SCHEMA_FILE = 'gspot.schema.json';
+
+export const SETTINGS_REFERENCE_URL = 'generativespotting.com/reference/gspot-toml/';
+
+export const NAMED_FINDING_CHECKS: ReadonlySet<string> = new Set(['structure/trivial-functions', 'python/vulture']);
+
 export const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';
 
 export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql', 'css', 'html'] as const;
@@ -74,14 +84,23 @@ export const SETTINGS_EXAMPLES = [
 ] as const;
 
 export const FORMAT_INDENT_STYLES = ['space', 'tab'] as const;
+
 export const LINE_ENDINGS = ['lf', 'crlf'] as const;
+
 export const QUOTE_STYLES = ['single', 'double'] as const;
+
 export const TRAILING_COMMAS = ['all', 'es5', 'none'] as const;
+
 export const CI_PROVIDERS = ['github', 'gitlab'] as const;
+
 export const REEXPORT_MODES = ['none', 'index-only'] as const;
+
 export const SPELLING_LOCALES = ['en', 'en-us', 'en-gb', 'en-au', 'en-ca'] as const;
+
 export const IMPORT_EXTENSION_STYLES = ['js', 'ts', 'extensionless'] as const;
+
 export const DOCSTRING_CONVENTIONS = ['google', 'numpy', 'pep257'] as const;
+
 export const RULE_CONDITIONS = ['always', 'never'] as const;
 
 export const ALLOWED_WORD = /^[\p{L}\p{N}][\p{L}\p{M}\p{N}_]*(?:[-'’][\p{L}\p{M}\p{N}_]+)*$/u;
@@ -122,14 +141,14 @@ export const REASON_DESCRIPTIONS = {
     adding: 'Why these entries belong; required when you add an entry.',
 } as const;
 
-export const INTERNAL_SCHEMA_METADATA = [
+export const INTERNAL_FACT_KEYS = [
     'configurations',
     'languages',
     'categories',
     'reason_needed',
     'reason_values',
     'language_defaults',
-    'pathRole',
+    'path_role',
     'default_all',
 ] as const;
 
@@ -193,3 +212,6 @@ export const FORMAT_OVERRIDE_MIN_FIELDS = 2;
 export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
 
 export const PATH_ROLES = ['source', 'destination', 'build'] as const;
+
+/** An exact package version such as 2.0.0.post1, a semver range such as ^1.2.0 or >=1 <2, or * for every version. */
+export const ALLOWED_VERSION = /^(?:\*|\d[^\s@<>=~^*|,]*|[\d.xX*^~<>=|\s-]+)$/u;

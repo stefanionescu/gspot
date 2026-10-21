@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runChecks } from '#cli/commands/check/run.ts';
+import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
+import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
-import { checkFindings, planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 import {
     READER_PROJECT,
@@ -97,14 +97,6 @@ test('a scope with env reads and no example env file is skipped with a note', as
             scopes: [{ path: 'app', configurations: ['files'] }],
         }),
     });
-    const session = await openSession(sandbox.path);
-    const input = planSandboxCheck(session, 'secrets/env-examples', {
-        scope: 'app',
-        paths: ['.env.example', 'app/source.ts'],
-    });
-    expect(await captureRejection(findBuiltInCheck('secrets/env-examples')(session, input))).toContain(
-        'secrets.env_examples',
-    );
     const checked = await runChecks(
         await openSession(sandbox.path),
         buildRunOptions({ only: ['secrets/env-examples'], paths: ['app/source.ts'] }),

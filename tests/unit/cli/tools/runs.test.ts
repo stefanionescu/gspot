@@ -1,18 +1,11 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runTool } from '#cli/tools/run.ts';
-import { openSession } from '#cli/session.ts';
-import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { planSandboxCheck } from '#tests/setup/check-input.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
-test("a tool's output reaches its check with LF line endings when the tool prints CRLF", async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
-
-    const session = await openSession(sandbox.path);
-    const input = planSandboxCheck(session, 'bash/shfmt');
+test('a tool run turns CRLF into LF in both streams', async () => {
+    await using sandbox = await testdir();
     const printed = String.raw`process.stdout.write('one\r\ntwo\r\n'); process.stderr.write('three\r\n');`;
-    const result = await runCheckTool(session, input, [process.execPath, '-e', printed], { cwd: sandbox.path });
+    const result = await runTool([process.execPath, '-e', printed], { cwd: sandbox.path, timeoutSeconds: 2 });
     expect(result.stdout).toBe('one\ntwo\n');
     expect(result.stderr).toBe('three\n');
 });

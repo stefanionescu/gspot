@@ -10,11 +10,12 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { runSandboxStep } from '#tests/setup/install.ts';
 import { createNpmRegistry } from '#tests/setup/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import type { PackageManager } from '#cli/types/parsers/dependencies.ts';
-import prettierManifest from 'prettier/package.json' with { type: 'json' };
+import prettierPackage from 'prettier/package.json' with { type: 'json' };
+import type { PackageManager } from '#cli/types/repository/package-manager.ts';
 import type { NpmRegistry, PackageManagerSandbox } from '#tests/types/packages.ts';
 
 import {
+    REGISTRY_HOST,
     PNPM_WORKSPACE,
     NPM_SANDBOX_FILES,
     NPM_REGISTRY_TOKEN,
@@ -52,7 +53,7 @@ async function writePackageManagerSandbox(options: {
     });
     const yarnConfiguration =
         packageManager === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= YARN_VERSION_THRESHOLD
-            ? `npmRegistryServer: "${registry.url}"\nnpmAuthToken: "${NPM_REGISTRY_TOKEN}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["127.0.0.1"]\n`
+            ? `npmRegistryServer: "${registry.url}"\nnpmAuthToken: "${NPM_REGISTRY_TOKEN}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["${REGISTRY_HOST}"]\n`
             : undefined;
     if (yarnConfiguration !== undefined) await writeFile(join(root, '.yarnrc.yml'), yarnConfiguration, { mode: 0o600 });
     const initialized = runGit(root, ['init', '--quiet']);
@@ -73,12 +74,12 @@ export async function createPackageManagerSandbox(
         await mkdir(artifacts);
         const registry = resources.use(
             await createNpmRegistry(artifacts, {
-                declarations: [
+                packages: [
                     {
-                        name: prettierManifest.name,
+                        name: prettierPackage.name,
                         source: dirname(fileURLToPath(import.meta.resolve('prettier/package.json'))),
-                        version: prettierManifest.version,
-                        bin: { [prettierManifest.name]: prettierManifest.bin },
+                        version: prettierPackage.version,
+                        bin: { [prettierPackage.name]: prettierPackage.bin },
                     },
                 ],
 

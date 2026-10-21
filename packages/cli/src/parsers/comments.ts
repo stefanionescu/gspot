@@ -1,19 +1,18 @@
-// Reads comments in source files.
 import ts from 'typescript';
 import { CST, Lexer } from 'yaml';
 import { visit } from 'unist-util-visit';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
-import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
+import { listSqlTokens } from '#cli/parsers/sql/tokens.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
 import type { GrammarName } from '#cli/types/parsers/grammars.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { convertToSpaces, computePosition } from '#cli/system/text.ts';
-import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/comments.ts';
+import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/syntax.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/grammars.ts';
-import type { CommentReader, SourceComment } from '#cli/types/parsers/comments.ts';
+import type { CommentParser, SourceComment } from '#cli/types/parsers/comments.ts';
+import { findQuotedEnd, convertToSpaces, computePosition } from '#cli/system/text.ts';
 
 import {
     COMMENT_NODES,
@@ -141,7 +140,7 @@ async function parseMarkdownComments(text: string): Promise<SourceComment[]> {
     return parseSyntaxComments('html', source, text);
 }
 
-const COMMENT_PARSERS = new Map<string, CommentReader>([
+const COMMENT_PARSERS = new Map<string, CommentParser>([
     ['.toml', parseTomlComments],
     ['.yaml', parseYamlComments],
     ['.yml', parseYamlComments],
@@ -179,22 +178,6 @@ export async function parseGrammarComments(grammar: GrammarName, text: string): 
     // Preserve offsets when the HTML grammar reads the alternate comment terminator.
     const parsed = grammar === 'html' ? text.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : text;
     return parseSyntaxComments(grammar, parsed, text);
-}
-
-/**
- * Skip a quoted span before looking for comment openers outside it.
- *
- * @param line the source to scan.
- * @param start the first source offset.
- * @returns the offset after the quoted value.
- */
-export function findQuotedEnd(line: string, start: number): number {
-    const quote = line.charAt(start);
-    for (let at = start + 1; at < line.length; at += 1) {
-        if (line.charAt(at) === '\\') at += 1;
-        else if (line.charAt(at) === quote) return at + 1;
-    }
-    return line.length;
 }
 
 /**

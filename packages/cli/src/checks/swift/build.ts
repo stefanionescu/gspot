@@ -1,16 +1,18 @@
 import { join, posix, relative } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { type Files } from '#cli/types/system/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
 import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
-import { joinScope, buildScopeTarget } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/checks/swift.ts';
 import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
@@ -33,7 +35,7 @@ import {
     SWIFTLINT_ANALYZE_COMMAND,
 } from '#cli/config/checks/swift.ts';
 
-const SWIFT_BUILD_MEMO = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
+const SWIFT_BUILD_OUTPUTS = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
 
 function parseOutputFindings(
     session: Session,
@@ -86,7 +88,7 @@ async function runSwiftBuild(
     plan: SwiftBuildPlan,
     purpose: 'compile' | 'analyze',
 ): Promise<SwiftBuildOutput> {
-    return getCachedMapValue(session.reads, SWIFT_BUILD_MEMO, plan.folder, async () => {
+    return getCachedMapValue(session.reads, SWIFT_BUILD_OUTPUTS, plan.folder, async () => {
         const prepared = prepareBuild(session.root, planned.files, plan.folder);
         using files = prepared.files;
         const { source } = prepared;
@@ -135,7 +137,7 @@ export async function checkSwiftBuild(session: Session, planned: PlannedCheck): 
  * @param planned the scope to analyze.
  * @returns the findings.
  */
-export async function checkSwiftlintAnalyze(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSwiftSwiftlintAnalyze(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const plan = buildPlan(session, planned, { purpose: 'analyze' });
     const build = await runSwiftBuild(session, planned, plan, 'analyze');
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
@@ -179,7 +181,7 @@ export async function checkSwiftPeriphery(session: Session, planned: PlannedChec
 }
 
 /**
- * Lists the SwiftLint files a scratch copy keeps: the scope pointer, the tool file, and SwiftLint files in parent folders.
+ * Lists the SwiftLint files a copy keeps: the scope pointer, the tool file, and SwiftLint files in parent folders.
  *
  * @param session the repository and its tools.
  * @param planned the scope files and tool files.
@@ -188,9 +190,9 @@ export async function checkSwiftPeriphery(session: Session, planned: PlannedChec
 export function listSwiftlintToolFiles(session: Session, planned: PlannedCheck): string[] {
     const paths = [
         joinScope(planned.selection.scope.path, SWIFTLINT_CONFIG_FILE),
-        ...session.manifests
+        ...session.configurations
             .values()
-            .flatMap((manifest) => manifest.toolFiles)
+            .flatMap((configuration) => configuration.toolFiles)
             .filter((toolFile) => toolFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
             .map((toolFile) => buildScopeTarget(planned.selection.scope.path, toolFile, getToolFiles(session).targets)),
     ];

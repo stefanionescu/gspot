@@ -1,13 +1,12 @@
-// Read PostgreSQL statements and their parse trees.
-import type { Parsed } from '#cli/types/errors.ts';
+import type { Parsed } from '#cli/types/shapes.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { replacePsqlSyntax } from '#cli/parsers/sql/lexer.ts';
 import type { Node, RawStmt, ParseResult } from '@pgsql/types';
-import type { SqlFile, SqlNodeFields, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
+import { replacePsqlSyntax } from '#cli/parsers/sql/tokens.ts';
+import type { SqlFile, SqlNodeFields, SqlStatementView, SqlStatementVisitors } from '#cli/types/parsers/sql.ts';
 
-const SQL_MEMO = { create: () => new Map<string, Promise<SqlFile>>() };
+const PARSED_SQL_FILES = { create: () => new Map<string, Promise<SqlFile>>() };
 
 function buildStatementViews(bytes: Buffer, statement: RawStmt): SqlStatementView[] {
     if (statement.stmt === undefined) return [];
@@ -106,9 +105,9 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
  * @param readerArguments the extra values to pass on.
  * @returns the result, or undefined for a kind without a reader.
  */
-export function readStatement<Result, Arguments extends unknown[]>(
+export function visitStatement<Result, Arguments extends unknown[]>(
     statement: SqlStatementView,
-    readers: SqlStatementReaders<Result, Arguments>,
+    readers: SqlStatementVisitors<Result, Arguments>,
     ...readerArguments: Arguments
 ): Result | undefined {
     const read = readers[statement.kind] as
@@ -125,28 +124,11 @@ export function readStatement<Result, Arguments extends unknown[]>(
  * @returns the statements and the original error positions.
  */
 export function parseSqlFile(text: string, reads: ReadCache): Promise<SqlFile> {
-    const files = getCachedValue(reads, SQL_MEMO);
+    const files = getCachedValue(reads, PARSED_SQL_FILES);
     let parsed = files.get(text);
     if (parsed === undefined) {
         parsed = parseSqlText(text);
         files.set(text, parsed);
     }
     return parsed;
-}
-
-/**
- * Visit every named field in an SQL parse tree.
- *
- * @param value the parse tree to walk.
- * @param visit the callback for each field and its value.
- */
-export function walkSqlTree(value: unknown, visit: (key: string, child: unknown) => void): void {
-    if (Array.isArray(value)) {
-        for (const child of value) walkSqlTree(child, visit);
-    } else if (value !== null && typeof value === 'object') {
-        for (const [key, child] of Object.entries(value)) {
-            visit(key, child);
-            walkSqlTree(child, visit);
-        }
-    }
 }

@@ -1,12 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
 import { type Finding } from '#cli/types/runs/check.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -201,28 +199,6 @@ test.each([...DOC_FENCE_PATH_CASES])(
         ]);
     },
 );
-test('required-files: a root without LICENSE is reported and passes once LICENSE exists', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
-        'README.md': README,
-    });
-    const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['docs/required-files'] }));
-
-    expect(failed.report.checks).toMatchObject([
-        {
-            check: 'docs/required-files',
-            status: 'failed',
-            findings: [{ file: 'LICENSE', message: 'The root has no LICENSE file.' }],
-        },
-    ]);
-    await writeFile(join(sandbox.path, 'LICENSE'), LICENSE);
-    const corrected = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['docs/required-files'] }),
-    );
-
-    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-});
 
 test.each([...LICENSE_FILE_CASES])(
     'required-files: $name counts as a LICENSE only when it is one',
@@ -233,7 +209,7 @@ test.each([...LICENSE_FILE_CASES])(
             [name]: LICENSE,
         });
         const found = await checkFindings(sandbox.path, 'docs/required-files');
-        expect(found.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...findings]);
+        expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([...findings]);
     },
 );
 

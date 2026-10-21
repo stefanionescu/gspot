@@ -1,27 +1,43 @@
 import { readAsset } from '#cli/system/assets.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { eslintPresetsSchema } from '#cli/schemas/generation.ts';
-import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
-import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
-import { TABINDEX_RULES, FOCUSABLE_ROLES } from '#cli/config/generation/eslint-fragments.ts';
+import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint/presets.ts';
+import { TABINDEX_RULES, FOCUSABLE_ROLES } from '#cli/config/generation/eslint/configurations.ts';
 
 import type {
     EslintPreset,
     EslintPresets,
-    EslintFragment,
-    EslintSettingsBlock,
+    EslintBlockFields,
+    ConfigurationBlocks,
     EslintRuleExpression,
 } from '#cli/types/generation/eslint.ts';
 
 /**
+ * Turn enabled warnings into errors, and keep every preset option.
+ *
+ * @param rules what a pinned preset sets.
+ *
+ * @returns the lint rules as errors, and the ones that stay off.
+ */
+export function convertWarningsToErrors(rules: Record<string, unknown>): Record<string, unknown> {
+    return Object.fromEntries(
+        Object.entries(rules).map(([rule, entry]) => {
+            const entries: unknown[] = Array.isArray(entry) ? entry : [entry];
+            const [level, ...options] = entries;
+            return [rule, level === 'off' || level === 0 ? 'off' : ['error', ...options]];
+        }),
+    );
+}
+
+/**
  * Read the pinned presets shipped beside their configuration.
  *
- * @param manifest the configuration owning the preset.
+ * @param configuration the configuration owning the preset.
  * @returns preset blocks without executable plugin or parser objects.
  */
-function readPresets(manifest: Manifest): EslintPresets {
-    return eslintPresetsSchema.parse(JSON.parse(readAsset(`${manifest.folder}/${ESLINT_PRESETS_FILE}`)));
+export function readPresets(configuration: Configuration): EslintPresets {
+    return eslintPresetsSchema.parse(JSON.parse(readAsset(`${configuration.folder}/${ESLINT_PRESETS_FILE}`)));
 }
 
 /**
@@ -31,7 +47,7 @@ function readPresets(manifest: Manifest): EslintPresets {
  * @param name the required export.
  * @returns the captured preset.
  */
-function getPreset(presets: EslintPresets | undefined, name: string): EslintPreset {
+export function getPreset(presets: EslintPresets | undefined, name: string): EslintPreset {
     const preset = presets?.[name];
     if (preset === undefined) throw new Error(`The configuration ships no ${name} preset.`);
     return preset;
@@ -45,11 +61,11 @@ function getPreset(presets: EslintPresets | undefined, name: string): EslintPres
  * @param transform the rules and file fields of each block.
  * @returns the changed blocks with their runtime expressions.
  */
-function buildArrayPresetBlocks(
+export function buildArrayPresetBlocks(
     preset: EslintPreset,
     importName: string,
-    transform: (block: EslintPreset['blocks'][number]) => EslintSettingsBlock,
-): EslintFragment['blocks'] {
+    transform: (block: EslintPreset['blocks'][number]) => EslintBlockFields,
+): ConfigurationBlocks['blocks'] {
     const source = serializePresetAccess(importName, preset.source);
     return preset.blocks.map((block, index) => ({
         data: transform(block),
@@ -64,7 +80,7 @@ function buildArrayPresetBlocks(
  * @param entries imported bindings paired with captured presets.
  * @returns the combined rule expression and captured rule values.
  */
-function buildPresetRuleExpression(entries: (readonly [string, EslintPreset])[]): EslintRuleExpression {
+export function buildPresetRuleExpression(entries: (readonly [string, EslintPreset])[]): EslintRuleExpression {
     const sources = entries.map(
         ([importName, preset]) => '...' + serializePresetAccess(importName, preset.source) + '.rules',
     );
@@ -86,7 +102,7 @@ function buildPresetRuleExpression(entries: (readonly [string, EslintPreset])[])
  * @param options the rule-specific values that replace existing options.
  * @returns the rule with the added options, or the unchanged non-array entry.
  */
-function addRuleOptions(entry: unknown, options: Record<string, unknown>): unknown {
+export function addRuleOptions(entry: unknown, options: Record<string, unknown>): unknown {
     if (!Array.isArray(entry)) return entry;
     const severity: unknown = entry[0];
     const previous: unknown = entry[1];
@@ -99,7 +115,7 @@ function addRuleOptions(entry: unknown, options: Record<string, unknown>): unkno
  * @param rules the captured jsx-a11y rules.
  * @returns the rules with region roles permitted by tabindex checks.
  */
-function allowFocusableRegions(rules: Record<string, unknown>): Record<string, unknown> {
+export function allowFocusableRegions(rules: Record<string, unknown>): Record<string, unknown> {
     return Object.fromEntries(
         Object.entries(rules).map(([rule, entry]) => [
             rule,
@@ -116,20 +132,10 @@ function allowFocusableRegions(rules: Record<string, unknown>): Record<string, u
  * @param block one captured component preset.
  * @returns its fields, with warnings turned into errors.
  */
-function promotePresetRules(block: EslintPreset['blocks'][number]): EslintSettingsBlock {
+export function convertPresetWarnings(block: EslintPreset['blocks'][number]): EslintBlockFields {
     const { parser: _parser, ...fields } = block;
     return {
         ...fields,
         ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
     };
 }
-
-export {
-    getPreset,
-    readPresets,
-    addRuleOptions,
-    promotePresetRules,
-    allowFocusableRegions,
-    buildArrayPresetBlocks,
-    buildPresetRuleExpression,
-};

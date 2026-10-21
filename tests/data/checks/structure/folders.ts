@@ -85,3 +85,27 @@ export const NEST_SUFFIX_FILES = {
     'app/custom.two.ts': '',
     'app/custom.three.ts': '',
 };
+
+export const ROUTE_FILE_CASES = [
+    {
+        framework: 'Next.js',
+        configurations: ['typescript', 'react', 'react-dom', 'nextjs'],
+        files: {
+            'app/about/page.tsx': 'export default function About() { return null; }\n',
+            'app/api/health/route.ts': 'export function GET() { return new Response("ok"); }\n',
+            'app/lone/widget.tsx': 'export const widget = 1;\n',
+        },
+        expected: 'app/lone/widget.tsx',
+    },
+    {
+        framework: 'SvelteKit',
+        configurations: ['typescript', 'svelte'],
+        files: {
+            'package.json': '{"name":"example","private":true,"type":"module"}\n',
+            'src/routes/users/+page.svelte': '<p>Users</p>\n',
+            'src/routes/api/+server.ts': 'export function GET() { return new Response("ok"); }\n',
+            'src/lib/cards/Card.svelte': '<p>Card</p>\n',
+        },
+        expected: 'src/lib/cards/Card.svelte',
+    },
+] as const;

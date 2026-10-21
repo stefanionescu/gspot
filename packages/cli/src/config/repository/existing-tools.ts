@@ -1,4 +1,4 @@
-import { PACKAGE_MANAGERS } from '#cli/config/parsers/dependencies.ts';
+import { PACKAGE_MANAGERS } from '#cli/config/repository/package-manager.ts';
 
 export const LINT_FOLDERS = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;
 
@@ -20,32 +20,27 @@ export const FOREIGN_CI_FILES = new Set([
     '.buildkite/pipeline.yml',
 ]);
 
-// Highest-precedence file first within each folder.
-export const MISE_FILES = [
-    '.mise.local.toml',
-    'mise.local.toml',
-    '.mise.toml',
-    'mise.toml',
-    'mise/config.toml',
-    '.mise/config.toml',
-    '.config/mise.toml',
-    '.config/mise/config.toml',
-] as const;
-
 // In "<runner> run <task>", the task sits two words after the runner.
 export const TASK_AFTER_RUN = 2;
 
 export const RUNNER_NAMES: readonly string[] = [...PACKAGE_MANAGERS, 'mise'];
+
 export const INI_EXTENSIONS: ReadonlySet<string> = new Set(['.ini', '.cfg']);
 
 export const GITLAB_CI_FILE = '.gitlab-ci.yml';
+
 export const GITHUB_WORKFLOWS_FOLDER = '.github/workflows/';
+
 export const GITLAB_CI_FOLDER = '.gitlab/ci/';
+
 export const YAML_EXTENSIONS: readonly string[] = ['.yml', '.yaml'];
 
 export const COMMAND_SEPARATORS = /[\s;&|]+/u;
+
 export const RUN_WORD = 'run';
+
 export const LINT_TASK = 'lint';
+
 export const KEPT_DOT_FILE = '.gitkeep';
+
 export const JOB_NAME_SEPARATORS = /[-_: ]/u;
-export const MISE_TASKS_FOLDER = '.mise/tasks';

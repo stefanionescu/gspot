@@ -1,10 +1,11 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
+import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
-import { SORT_CASES, SORT_RULES, SORT_LEVELS } from '#tests/data/generation/eslint/sorting.ts';
+import { SORT_CASES, SORT_RULES } from '#tests/data/generation/eslint/sorting.ts';
 
 test('a bundler scope uses extensionless imports while the Node.js parent keeps .js suffixes', async () => {
     await using sandbox = await testdir({
@@ -28,9 +29,9 @@ test('a bundler scope uses extensionless imports while the Node.js parent keeps 
     expect(await collectLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
 });
 
-test.each([...SORT_LEVELS])(
+test.each([...LEVELS])(
     'imports and exports are sorted at level all only, in root and child scopes ($level)',
-    async ({ level, severity }) => {
+    async (level) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['typescript'], {
                 level,
@@ -52,7 +53,7 @@ test.each([...SORT_LEVELS])(
             const filePath = `${prefix}src/source.ts`;
             const config = (await eslint.calculateConfigForFile(filePath)) as EslintConfiguration;
             expect(SORT_RULES.map((rule) => config.rules[rule]?.[0] ?? 0)).toStrictEqual(
-                SORT_RULES.map(() => severity),
+                SORT_RULES.map(() => (level === 'all' ? 2 : 0)),
             );
             for (const { source, fixed } of SORT_CASES) {
                 const [result] = await eslint.lintText(source, { filePath });

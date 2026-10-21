@@ -1,19 +1,18 @@
-// Reads Knip issue categories and source locations.
-import { parseReport } from '#cli/parsers/json.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { type ReportInput } from '#cli/types/runs/output.ts';
+import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { knipReportSchema } from '#cli/schemas/runs/output/knip.ts';
 import { KNIP_ISSUE_TYPES, KNIP_ISSUE_MESSAGES } from '#cli/config/runs/output.ts';
 
 /**
  * Read the Knip JSON categories, and keep grouped symbols and source positions.
  *
- * @param input the tool output to read.
+ * @param output the tool output to read.
  * @returns the findings, with each positioned member of a grouped issue.
  */
-export function parseKnipFindings(input: ReportInput): Finding[] {
-    const { check, stdout: text, help } = input;
-    const report = parseReport('Knip', text, knipReportSchema);
+export function parseKnipFindings(output: ToolOutput): Finding[] {
+    const { check, stdout, help } = output;
+    const report = parseToolReport('Knip', stdout, knipReportSchema);
     const findings: Finding[] = [];
     for (const row of report.issues) {
         for (const category of KNIP_ISSUE_TYPES) {

@@ -8,9 +8,9 @@ import { parse as parseJsonc } from 'jsonc-parser';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { formatSettingsText } from '#cli/settings/write/text.ts';
-import { LYCHEE_MDX_EXPRESSION } from '#cli/config/generation/settings.ts';
+import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { stringify, LocalDate, parse as parseToml } from '@decimalturn/toml-patch';
+import { LYCHEE_MDX_EXPRESSION } from '#cli/config/generation/settings/builders/lychee.ts';
 
 import {
     ODD_KEY,
@@ -75,7 +75,7 @@ test('TOML tool files keep keys and values with quotes, backslashes, newlines, a
     const reason = 'Reviewed upstream.\n[extend]\nuseDefault = false';
     const option = 'custom."option"';
     await using sandbox = await testdir({
-        'gspot.toml': formatSettingsText('', {
+        'gspot.toml': buildSettingsText('', {
             configurations: ['secrets', 'dependencies', 'files', 'docs', 'python', 'markdown'],
             format: { indent_style: 'tab' },
             tools: {

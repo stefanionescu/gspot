@@ -1,19 +1,19 @@
 // Bun installs the pinned linter packages in a disposable folder and rewrites their shipped data copies.
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
-import { isRecord } from '#cli/system/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { pathToFileURL, fileURLToPath } from 'node:url';
-import { JSON_INDENT } from '#cli/config/generation/files.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { listToolProjectPins } from '#cli/configurations/tools.ts';
-import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
-import { lintRulesSchema } from '#cli/schemas/configurations/lint-rules.ts';
-import { eslintPresetSchema } from '#cli/schemas/configurations/manifest.ts';
+import { JSON_INDENT } from '#cli/config/generation/generate.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
+import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { readAsset, listAssets, buildAssetPath } from '#cli/system/assets.ts';
+import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint/presets.ts';
+import { eslintPresetSchema } from '#cli/schemas/configurations/eslint-presets.ts';
 import type { EslintPreset, EslintPresets } from '#cli/types/generation/eslint.ts';
 import type { PackageIdentity, InstalledPackage } from '#cli/types/package-copies.ts';
 
@@ -143,7 +143,7 @@ async function installPackages(
  * @returns the completed package installation.
  */
 async function preparePackages(folder: string, names: Set<string>): Promise<Map<string, InstalledPackage>> {
-    const versions = listToolProjectPins([...readManifests().values()]).npm;
+    const versions = listToolProjectPins([...readConfigurations().values()]).npm;
     const dependencies = Object.fromEntries(
         [...names]
             .toSorted((first, second) => first.localeCompare(second))
@@ -205,29 +205,29 @@ async function captureNames(installed: Map<string, InstalledPackage>, folder: st
     return new Map([
         [
             PACKAGE_COPY_FILES.eslint,
-            lintRulesSchema.parse({
+            nameListSchema.parse({
                 package: eslint.name,
                 version: eslint.version,
                 source: PACKAGE_COPY_SOURCES.eslint,
-                rules: [...builtins.builtinRules.keys()].toSorted((first, second) => first.localeCompare(second)),
+                names: [...builtins.builtinRules.keys()].toSorted((first, second) => first.localeCompare(second)),
             }),
         ],
         [
             PACKAGE_COPY_FILES.globals,
-            lintRulesSchema.parse({
+            nameListSchema.parse({
                 package: globals.name,
                 version: globals.version,
                 source: PACKAGE_COPY_SOURCES.globals,
-                rules: Object.keys(globalsExports.default).toSorted((first, second) => first.localeCompare(second)),
+                names: Object.keys(globalsExports.default).toSorted((first, second) => first.localeCompare(second)),
             }),
         ],
         [
             PACKAGE_COPY_FILES.stylelint,
-            lintRulesSchema.parse({
+            nameListSchema.parse({
                 package: standard.name,
                 version: standard.version,
                 source: PACKAGE_COPY_SOURCES.stylelint,
-                rules: Object.keys(style.rules).toSorted((first, second) => first.localeCompare(second)),
+                names: Object.keys(style.rules).toSorted((first, second) => first.localeCompare(second)),
             }),
         ],
     ]);
@@ -255,7 +255,7 @@ async function writePackageCopies(): Promise<void> {
         PACKAGE_COPY_MODULES.prettier,
         ...recipes.flatMap(({ presets }) => Object.values(presets).map((preset) => preset.package)),
     ]);
-    using folder = createScratchFolder();
+    using folder = createTemporaryFolder();
     const installed = await preparePackages(folder.path, names);
     const prepared = await captureNames(installed, folder.path);
     for (const { path, presets } of recipes) {

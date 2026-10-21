@@ -1,4 +1,3 @@
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
@@ -8,10 +7,27 @@ import { testdir, createFileTree } from 'testdirs';
 import { fakeNpmTool } from '#tests/setup/fakes.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
+
+/** Create a jscpd sandbox and apply its settings for the output failure and clone path tests. */
+async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promise<string> {
+    const folder = resources.use(await testdir());
+    await fakeNpmTool(folder.path, 'jscpd');
+    await createFileTree(folder.path, {
+        'gspot.toml': buildSandboxSettings(['bash', 'duplication'], { level: 'all' }),
+        'sample.sh': 'echo example\n',
+    });
+    {
+        const session = await openSession(folder.path);
+        using writer = openWriter(folder.path);
+        writeGeneratedFiles(session, generate(session), writer);
+    }
+    return folder.path;
+}
 
 test.each([1, 0])('jscpd output is kept in the error when exit %i writes no report', async (code) => {
     await using resources = new AsyncDisposableStack();
@@ -75,19 +91,3 @@ test.each(['relative', 'absolute', 'namespaced'])(
         ]);
     },
 );
-
-/** Create a jscpd sandbox and apply its settings for the output failure and clone path tests. */
-async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promise<string> {
-    const folder = resources.use(await testdir());
-    await fakeNpmTool(folder.path, 'jscpd');
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSandboxSettings(['bash', 'duplication'], { level: 'all' }),
-        'sample.sh': 'echo example\n',
-    });
-    {
-        const session = await openSession(folder.path);
-        using writer = openWriter(folder.path);
-        writeGeneratedFiles(session, generate(session), writer);
-    }
-    return folder.path;
-}

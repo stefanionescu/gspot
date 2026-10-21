@@ -1,5 +1,37 @@
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
 
+/** Mise task files use the script runtime and process rules. */
+export const MISE_SCRIPT_PATH = '.mise/tasks/**';
+
+export const SWIFT_EXTENSION = '.swift';
+
+export const SWIFT_IMPORT_NODE = 'import_declaration';
+
+export const SWIFT_IDENTIFIER_NODE = 'identifier';
+
+export const SWIFT_ATTRIBUTE_NODE = 'attribute';
+
+export const SWIFT_TYPE_NODE = 'user_type';
+
+export const SWIFT_CALL_NODE = 'call_expression';
+
+export const SWIFT_TEST_MODULES: ReadonlySet<string> = new Set(['XCTest', 'Testing']);
+
+export const SWIFT_TEST_ATTRIBUTES: ReadonlySet<string> = new Set(['Test', 'Suite', 'Testing.Test', 'Testing.Suite']);
+
+export const SWIFT_TEST_TARGET_CALLS: ReadonlySet<string> = new Set(['.testTarget', 'Target.testTarget']);
+
+export const SWIFT_IMPORT_TAG = 'swift-import:';
+
+export const SWIFT_TEST_TARGET_TAG = 'swift-test-target';
+
+export const SHEBANG_PREFIX = '#!';
+
+export const ENV_SPLIT_FLAG = '-S';
+
+/** Absolute env launchers end with this executable name. */
+export const ENV_EXECUTABLE_SUFFIX = '/env';
+
 export const FILE_PREFIX_BYTES = 4096;
 
 export const GENERATOR_OUTPUT_BANNERS = [
@@ -215,15 +247,24 @@ export const DOCKERFILE_NAME = 'Dockerfile';
 export const SCRIPT_TAG = 'shell';
 
 export const GENERATED_ATTRIBUTE = 'linguist-generated';
+
 export const VENDORED_ATTRIBUTE = 'linguist-vendored';
+
 export const TEXT_ATTRIBUTE = 'text';
+
 export const FILTER_ATTRIBUTE = 'filter';
+
 export const SET_VALUES: ReadonlySet<string> = new Set(['set', 'true']);
+
 export const LFS_FILTER = 'lfs';
+
 export const MARKDOWN_EXTENSION = '.md';
+
 export const ATTRIBUTE_SET = 'set';
+
 export const UNSET_VALUE = 'unset';
-export const CHECK_ATTRIBUTES_ARGUMENTS = [
+
+export const GIT_CHECK_ATTRIBUTES_ARGUMENTS = [
     'check-attr',
     '--stdin',
     '-z',
@@ -233,15 +274,18 @@ export const CHECK_ATTRIBUTES_ARGUMENTS = [
     FILTER_ATTRIBUTE,
 ] as const;
 
-export const SQL_EXTENSION = '.sql';
-
 export const SWIFT_TEST_TAG = 'swift-test';
 
 export const DEFAULT_DIALECT = 'bash';
+
 export const TEXT_TAG = 'text';
+
 export const TRAILING_VERSION = /(?<![\d.])[\d.]+$/u;
+
 export const DOCKERFILE_EXTENSION = '.dockerfile';
+
 export const DOTENV_PREFIX = '.env';
+
 export const BINARY_TAG = 'binary';
 
 export const TYPESCRIPT_TAG = 'typescript';

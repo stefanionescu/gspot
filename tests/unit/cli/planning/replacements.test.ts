@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { planRun } from '#cli/planning/checks.ts';
+import { planChecks } from '#cli/planning/checks.ts';
 import { TSC_REPLACEMENTS } from '#tests/data/runs/plan.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
@@ -18,7 +18,7 @@ test.each([...TSC_REPLACEMENTS])(
         const session = await openSession(sandbox.path);
         const options = { stage: 'all' as const, only: ['typescript/tsc', check] };
         expect(
-            planRun(session, options).find(({ check: entry }) => entry.name === 'typescript/tsc')?.skip,
+            planChecks(session, options).find(({ check: entry }) => entry.name === 'typescript/tsc')?.skip,
         ).toStrictEqual({
             cause: 'replaced',
             note: `${check} runs it here`,
@@ -34,10 +34,10 @@ reason = "The separate compiler checks this source."
         );
         const ignored = await openSession(sandbox.path);
         expect(
-            planRun(ignored, options).find(({ check: entry }) => entry.name === 'typescript/tsc')?.skip,
+            planChecks(ignored, options).find(({ check: entry }) => entry.name === 'typescript/tsc')?.skip,
         ).toBeUndefined();
         expect(
-            planRun(session, { ...options, only: ['typescript/tsc'] }).find(
+            planChecks(session, { ...options, only: ['typescript/tsc'] }).find(
                 ({ check: entry }) => entry.name === 'typescript/tsc',
             )?.skip,
         ).toBeUndefined();

@@ -20,5 +20,4 @@ export const STALE_LOCKFILE_FILES = {
             'left-pad': ['left-pad@1.3.0', '', {}, 'sha512-d'],
         },
     }),
-    'mise.toml': '[tools]\nbun = "1.4.3"\n',
 } as const;

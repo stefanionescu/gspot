@@ -5,8 +5,8 @@ import { writeAgentFiles } from './src/agents.ts';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { pruneUnusedStyles } from './src/styles.ts';
 import { SIDEBAR } from './src/config/navigation.ts';
-import { readReferenceData } from '#cli/reference.ts';
-import { SCHEMA_FILE } from '#cli/config/settings/file.ts';
+import { REFERENCE_FACTS } from './src/reference/facts.ts';
+import { SCHEMA_FILE } from '#cli/config/settings/schema.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 import { LLMS_PAGES, AGENT_STEPS } from './src/config/setup.ts';
 
@@ -49,7 +49,7 @@ export default defineConfig({
             name: 'settings-schema',
             hooks: {
                 'astro:build:done': async ({ dir }) => {
-                    const { schema } = readReferenceData();
+                    const { schema } = REFERENCE_FACTS;
                     await writeFile(new URL(SCHEMA_FILE, dir), JSON.stringify(schema) + '\n');
                 },
             },

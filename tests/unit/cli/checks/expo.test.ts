@@ -4,11 +4,15 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { DOCTOR_RESULTS, EXPO_DOCTOR_INSTALL, EXPO_SCOPES_SETTINGS } from '#tests/data/checks/expo.ts';
+import { getShippedTool, buildProcessResult } from '#tests/setup/builders.ts';
+
+import {
+    DOCTOR_RESULTS,
+    EXPO_PACKAGE_JSON,
+    EXPO_DOCTOR_INSTALL,
+    EXPO_SCOPES_SETTINGS,
+} from '#tests/data/checks/expo.ts';
 
 test.each([...DOCTOR_RESULTS])('Expo Doctor runs once in each app folder: $name', async (entry) => {
     await using sandbox = await testdir({
@@ -16,13 +20,13 @@ test.each([...DOCTOR_RESULTS])('Expo Doctor runs once in each app folder: $name'
         ...EXPO_DOCTOR_INSTALL,
         ...Object.fromEntries(
             ['apps/first', 'apps/second'].flatMap((scope) => [
-                [`${scope}/package.json`, '{"private":true,"dependencies":{"expo":"54.0.0"}}\n'],
+                [`${scope}/package.json`, EXPO_PACKAGE_JSON],
                 [`${scope}/node_modules/expo/package.json`, '{"name":"expo","version":"54.0.0"}\n'],
             ]),
         ),
     });
 
-    const version = getToolDeclaration(readManifests().values(), 'expo-doctor').version;
+    const version = getShippedTool('expo-doctor').version;
     await createFileTree(sandbox.path, {
         '.gspot/node_modules/expo-doctor/package.json': JSON.stringify({ name: 'expo-doctor', version }),
     });
@@ -67,7 +71,7 @@ test.each([...DOCTOR_RESULTS])('Expo Doctor runs once in each app folder: $name'
 test('Expo Doctor reports an uninstalled Expo project instead of accepting its empty success', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['expo'], { tables: '[rules]\nenabled = false\n' }),
-        'package.json': '{"private":true,"dependencies":{"expo":"54.0.0"}}\n',
+        'package.json': EXPO_PACKAGE_JSON,
     });
 
     expect(await captureRejection(checkFindings(sandbox.path, 'expo/expo-doctor'))).toBe(

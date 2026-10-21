@@ -1,14 +1,15 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/system/git.ts';
+import { type Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/commits.ts';
-import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/commits.ts';
+import { MESSAGE_FILE, COMMITLINT_CHECK, GIT_COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/commits.ts';
 
 /**
  * Checks every pushed commit message, including empty commits that change no files.
@@ -17,12 +18,12 @@ import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/c
  * @param planned the commitlint check and commit range.
  * @returns the check result.
  */
-export async function checkCommitlintPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    using folder = createScratchFolder();
+export async function checkCommitsCommitlintPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+    using folder = createTemporaryFolder();
     const commitFile = join(folder.path, MESSAGE_FILE);
     let count = 0;
     const result = await runOverPushedCommits(session, planned, async (commit) => {
-        const read = await runGit(session.root, [...COMMIT_MESSAGE_ARGUMENTS, commit, '--'], {
+        const read = await runGit(session.root, [...GIT_COMMIT_MESSAGE_ARGUMENTS, commit, '--'], {
             cancelSignal: session.cancelSignal,
         });
         if (read.code !== 0)

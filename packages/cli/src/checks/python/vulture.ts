@@ -1,13 +1,14 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { listChildScopes } from '#cli/planning/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { isInScope, isOutsideChildren } from '#cli/repository/scopes.ts';
 import { VULTURE_COMMAND, VULTURE_FINDING, VULTURE_DEAD_CODE } from '#cli/config/checks/python.ts';
 
-function readVultureFinding(planned: PlannedCheck, line: string, selected: ReadonlySet<string>): Finding[] {
+function parseVultureFinding(planned: PlannedCheck, line: string, selected: ReadonlySet<string>): Finding[] {
     const groups = VULTURE_FINDING.exec(line)?.groups;
     if (groups === undefined) return [];
     const file = groups['file'] ?? '';
@@ -30,7 +31,7 @@ function readVultureFinding(planned: PlannedCheck, line: string, selected: Reado
  * @param planned the scope, its files, and the repository files.
  * @returns each unused definition and each line of unreachable code.
  */
-export async function checkVulture(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkPythonVulture(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scope = planned.selection.scope.path;
     const children = listChildScopes(session.scopes, planned.selection);
     const sources = session.repository.files
@@ -40,6 +41,6 @@ export async function checkVulture(session: Session, planned: PlannedCheck): Pro
     if (sources.length === 0) return [];
     const result = await runCheckTool(session, planned, [...VULTURE_COMMAND, ...sources], { cwd: session.root });
     const selected = new Set(planned.files.map((file) => file.path));
-    const findings = result.stdout.split('\n').flatMap((line) => readVultureFinding(planned, line, selected));
+    const findings = result.stdout.split('\n').flatMap((line) => parseVultureFinding(planned, line, selected));
     return result.code === VULTURE_DEAD_CODE ? findings : assertToolFindings(result, findings, 'vulture');
 }

@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { SETTING_REASON } from '#tests/data/commands/set.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 import { HOST_LOCKFILE, LOCKFILE_HOST_CASES, DEPENDENCIES_SANDBOX } from '#tests/data/checks/dependencies.ts';
 
 test('Git download hosts need a reviewed allow-list entry, and HTTPS stays required', async () => {
@@ -93,5 +93,5 @@ test('an allowed registry host applies only in its scope', async () => {
 test.each([...LOCKFILE_HOST_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
     await using sandbox = await createSandbox(DEPENDENCIES_SANDBOX);
     const result = await runCheckSample(sandbox, entry, DEPENDENCIES_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });

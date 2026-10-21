@@ -1,5 +1,3 @@
-// Formats text, computes source positions, and hashes content.
-
 import { createHash } from 'node:crypto';
 import { distance } from 'fastest-levenshtein';
 import type { TextPosition } from '#cli/types/text.ts';
@@ -13,6 +11,22 @@ import {
     DIGEST_ALGORITHM,
     SIMILAR_NAME_LIMIT,
 } from '#cli/config/text.ts';
+
+/**
+ * Skip a quoted span before looking for comment openers outside it.
+ *
+ * @param line the source to scan.
+ * @param start the first source offset.
+ * @returns the offset after the quoted value.
+ */
+export function findQuotedEnd(line: string, start: number): number {
+    const quote = line.charAt(start);
+    for (let at = start + 1; at < line.length; at += 1) {
+        if (line.charAt(at) === '\\') at += 1;
+        else if (line.charAt(at) === quote) return at + 1;
+    }
+    return line.length;
+}
 
 /**
  * Select up to three names close enough to look like a typo, closest first.

@@ -3,12 +3,18 @@ import { LocalDate } from '@decimalturn/toml-patch';
 import { FULL_PERCENTAGE } from '#cli/config/units.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { CASE_NAMES } from '#cli/config/checks/naming.ts';
+import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { nonemptyString } from '#cli/schemas/configurations/parts.ts';
-import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
-import type { ReasonedSettingMetadata } from '#cli/types/settings/metadata.ts';
-import type { SettingValue, WrittenFormat, ReasonedValue } from '#cli/types/settings/file.ts';
-import type { NamingCase, NamingFields, TableSettings, ParsedNamingFields } from '#cli/types/settings/tables.ts';
+import type { ReasonedSettingFacts } from '#cli/types/settings/facts.ts';
+import { type WrittenFormat, type TableSettings } from '#cli/types/settings/file.ts';
 
+import {
+    type NamingCase,
+    type SettingValue,
+    type NamingFields,
+    type ReasonedValue,
+    type ParsedNamingFields,
+} from '#cli/types/settings/tables.ts';
 import {
     INDENT_MAX,
     LINE_ENDINGS,
@@ -21,57 +27,57 @@ import {
     FORMAT_OVERRIDE_MIN_FIELDS,
 } from '#cli/config/settings/schema.ts';
 
-const nonemptyStrings = z.array(nonemptyString);
+export const nonemptyStrings = z.array(nonemptyString);
 
-const wholeNumber = z.number().int().nonnegative();
-const percentage = z.number().min(0).max(FULL_PERCENTAGE);
+export const wholeNumber = z.number().int().nonnegative();
+export const percentage = z.number().min(0).max(FULL_PERCENTAGE);
 
 const formatFields = z.strictObject({
     indent_style: z
         .enum(FORMAT_INDENT_STYLES)
         .optional()
-        .default(SETTING_DECLARATIONS['format.indent_style'].default)
-        .meta(SETTING_DECLARATIONS['format.indent_style']),
+        .default(SETTING_FACTS['format.indent_style'].default)
+        .meta(SETTING_FACTS['format.indent_style']),
     indent_width: z
         .number()
         .int()
         .min(1)
         .max(INDENT_MAX)
         .optional()
-        .default(SETTING_DECLARATIONS['format.indent_width'].default)
-        .meta(SETTING_DECLARATIONS['format.indent_width']),
+        .default(SETTING_FACTS['format.indent_width'].default)
+        .meta(SETTING_FACTS['format.indent_width']),
     print_width: z
         .number()
         .int()
         .min(PRINT_WIDTH_MIN)
         .max(PRINT_WIDTH_MAX)
         .optional()
-        .default(SETTING_DECLARATIONS['format.print_width'].default)
-        .meta(SETTING_DECLARATIONS['format.print_width']),
+        .default(SETTING_FACTS['format.print_width'].default)
+        .meta(SETTING_FACTS['format.print_width']),
     line_ending: z
         .enum(LINE_ENDINGS)
         .optional()
-        .default(SETTING_DECLARATIONS['format.line_ending'].default)
-        .meta(SETTING_DECLARATIONS['format.line_ending']),
+        .default(SETTING_FACTS['format.line_ending'].default)
+        .meta(SETTING_FACTS['format.line_ending']),
     final_newline: z
         .boolean()
         .optional()
-        .default(SETTING_DECLARATIONS['format.final_newline'].default)
-        .meta(SETTING_DECLARATIONS['format.final_newline']),
-    quotes: z.enum(QUOTE_STYLES).optional().meta(SETTING_DECLARATIONS['format.quotes']),
+        .default(SETTING_FACTS['format.final_newline'].default)
+        .meta(SETTING_FACTS['format.final_newline']),
+    quotes: z.enum(QUOTE_STYLES).optional().meta(SETTING_FACTS['format.quotes']),
     trailing_commas: z
         .enum(TRAILING_COMMAS)
         .optional()
-        .default(SETTING_DECLARATIONS['format.trailing_commas'].default)
-        .meta(SETTING_DECLARATIONS['format.trailing_commas']),
+        .default(SETTING_FACTS['format.trailing_commas'].default)
+        .meta(SETTING_FACTS['format.trailing_commas']),
     semicolons: z
         .boolean()
         .optional()
-        .default(SETTING_DECLARATIONS['format.semicolons'].default)
-        .meta(SETTING_DECLARATIONS['format.semicolons']),
+        .default(SETTING_FACTS['format.semicolons'].default)
+        .meta(SETTING_FACTS['format.semicolons']),
 } satisfies SchemaShape<Omit<TableSettings<'format'>, 'override'>, Omit<WrittenFormat, 'override'>>);
 
-const relativePath = z
+export const relativePath = z
     .string()
     .min(1)
     .regex(
@@ -79,35 +85,35 @@ const relativePath = z
         /^(?!!?\/)(?![\s\S]*(?:^!?|\/)\.\.(?:\/|$))(?:[^\\:\p{Cc}]|\\[()[\]{}*?!+@,])+$/u,
         'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
     )
-    .meta({ pathRole: 'source' });
+    .meta({ path_role: 'source' });
 
-const destinationPath = relativePath.meta({ pathRole: 'destination' });
-const relativePaths = z.array(relativePath);
-const nonemptyPaths = relativePaths.min(1);
+export const destinationPath = relativePath.meta({ path_role: 'destination' });
+export const relativePaths = z.array(relativePath);
+export const nonemptyPaths = relativePaths.min(1);
 
-const namingCategorySchema = z.strictObject({
-    max_characters: allowReasonedValue(z.number().int().positive(), SETTING_DECLARATIONS['naming.max_characters']),
-    max_words: allowReasonedValue(z.number().int().positive(), SETTING_DECLARATIONS['naming.max_words']),
-    cases: allowReasonedValue(z.array(z.enum(CASE_NAMES)), SETTING_DECLARATIONS['naming.cases']),
+export const namingCategorySchema = z.strictObject({
+    max_characters: allowReasonedValue(z.number().int().positive(), SETTING_FACTS['naming.max_characters']),
+    max_words: allowReasonedValue(z.number().int().positive(), SETTING_FACTS['naming.max_words']),
+    cases: allowReasonedValue(z.array(z.enum(CASE_NAMES)), SETTING_FACTS['naming.cases']),
 } satisfies SchemaShape<ParsedNamingFields, NamingFields<SettingValue<number>, SettingValue<NamingCase[]>>>);
 
 namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
 
 /** The calendar form of CLI date arguments and of the editor JSON. */
-const calendarDateSchema = z.iso.date();
+export const calendarDateSchema = z.iso.date();
 
 /** Runtime expiry values keep unquoted TOML local dates. */
-const localDateSchema = z.custom<LocalDate>(
+export const localDateSchema = z.custom<LocalDate>(
     (value) => value instanceof LocalDate && calendarDateSchema.safeParse(value.toISOString()).success,
     { error: 'Use an unquoted TOML local date in YYYY-MM-DD form, without a time or offset.' },
 );
 
-const formatSchema = formatFields.extend({
+export const formatSchema = formatFields.extend({
     override: z
         .array(
             z
                 .strictObject({
-                    paths: nonemptyPaths.describe(SETTING_DECLARATIONS['format.override.paths'].description),
+                    paths: nonemptyPaths.describe(SETTING_FACTS['format.override.paths'].description),
                     indent_style: formatFields.shape.indent_style
                         .unwrap()
                         .describe(formatFields.shape.indent_style.description as string),
@@ -139,42 +145,42 @@ const formatSchema = formatFields.extend({
                 })
                 .meta({ minProperties: FORMAT_OVERRIDE_MIN_FIELDS }),
         )
-        .default(SETTING_DECLARATIONS['format.override'].default)
-        .meta(SETTING_DECLARATIONS['format.override']),
+        .default(SETTING_FACTS['format.override'].default)
+        .meta(SETTING_FACTS['format.override']),
 } satisfies SchemaShape<Pick<TableSettings<'format'>, 'override'>, Pick<WrittenFormat, 'override'>>);
 
 /**
  * Accept a setting value, or a reasoned value with the same value schema.
  *
  * @param schema the value validator.
- * @param metadata the description of the setting and the change that needs a reason.
+ * @param facts the description of the setting and the change that needs a reason.
  * @returns the setting schema with its default and metadata.
  */
-function allowReasonedValue<Output, Input>(
+export function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
-    metadata: ReasonedSettingMetadata & { default: z.util.NoUndefined<Output> },
+    facts: ReasonedSettingFacts & { default: z.util.NoUndefined<Output> },
 ): z.ZodDefault<z.ZodUnion<readonly [z.ZodType<Output, Input>, z.ZodType<Output, ReasonedValue<Input>>]>> {
     return z
-        .union([schema, buildReasonedValueSchema(schema, metadata)])
-        .default(metadata.default)
-        .meta(metadata);
+        .union([schema, buildReasonedValueSchema(schema, facts)])
+        .default(facts.default)
+        .meta(facts);
 }
 
 /**
  * Read one value with its required reason.
  *
  * @param schema the validator of the value.
- * @param metadata the description of the setting and the change that needs a reason.
+ * @param facts the description of the setting and the change that needs a reason.
  * @returns the value read from its strict reasoned value.
  */
 function buildReasonedValueSchema<Output, Input>(
     schema: z.ZodType<Output, Input>,
-    metadata: ReasonedSettingMetadata,
+    facts: ReasonedSettingFacts,
 ): z.ZodType<Output, ReasonedValue<Input>> {
     return z
         .strictObject({
-            value: schema.describe(metadata.description),
-            reason: z.string().describe(REASON_DESCRIPTIONS[metadata.reason_needed]),
+            value: schema.describe(facts.description),
+            reason: z.string().describe(REASON_DESCRIPTIONS[facts.reason_needed]),
         })
         .transform((entry) => entry.value) satisfies z.ZodType<Output, ReasonedValue<Input>>;
 }
@@ -185,25 +191,9 @@ function buildReasonedValueSchema<Output, Input>(
  * @param schema the validator to inspect.
  * @returns the inner validator.
  */
-function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
+export function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
     let inner = schema;
     while (inner instanceof z.ZodOptional || inner instanceof z.ZodDefault || inner instanceof z.ZodPrefault)
         inner = inner.unwrap() as z.ZodType;
     return inner;
 }
-
-export {
-    percentage,
-    wholeNumber,
-    relativePath,
-    formatSchema,
-    nonemptyPaths,
-    relativePaths,
-    localDateSchema,
-    nonemptyStrings,
-    destinationPath,
-    calendarDateSchema,
-    allowReasonedValue,
-    unwrapSettingSchema,
-    namingCategorySchema,
-};

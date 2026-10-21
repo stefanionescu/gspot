@@ -123,13 +123,13 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
 /**
  * Apply declarations over inherited attributes, clearing unspecified entries with the ! prefix.
  *
- * @param declarations the attribute tokens from one matching pattern.
+ * @param tokens the attribute tokens from one matching pattern.
  * @param previous the attributes inherited from earlier declarations.
  * @returns the new attributes. The inherited table stays unchanged.
  */
-export function mergeAttributes(declarations: string[], previous: Record<string, string>): Record<string, string> {
+export function mergeAttributes(tokens: string[], previous: Record<string, string>): Record<string, string> {
     const attributes = { ...previous };
-    for (const match of declarations) {
+    for (const match of tokens) {
         const [name = '', value] = match.split('=');
         if (name.startsWith('!')) Reflect.deleteProperty(attributes, name.slice(1));
         else if (name.startsWith('-')) attributes[name.slice(1)] = 'unset';

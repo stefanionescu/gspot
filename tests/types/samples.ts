@@ -1,5 +1,6 @@
+import type { RunReport } from '#cli/types/runs/run.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import type { Finding, RunReport, CheckResult } from '#cli/types/runs/check.ts';
+import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 
 /** What the clean rerun of a test case writes: corrected files, and the case's settings unless it names another. */
 export type SampleFix = {
@@ -49,3 +50,6 @@ export type SampleSummary = {
     failed: { code: number; checks: readonly CheckResult[] };
     passed: { code: number; checks: readonly CheckResult[] };
 };
+
+/** One Bash function-size boundary, its diagnostic, and the corrected source. */
+export type SizeCase = { file: string; rule: string; line: number; source: string; corrected: string; message: string };

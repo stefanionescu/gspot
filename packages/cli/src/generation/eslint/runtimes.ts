@@ -1,15 +1,11 @@
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import type { EslintRuntimeBlock } from '#cli/types/generation/eslint.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
+import { MISE_SCRIPT_PATH } from '#cli/config/repository/inventory.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint/tool-settings.ts';
 import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations.ts';
-import { buildScopeGlob, splitGlobSelectors, listNestedScopeGlobs } from '#cli/generation/eslint/files.ts';
-
-import {
-    COMMONJS_FILES,
-    MISE_SCRIPT_PATH,
-    ESLINT_SETTINGS_TABLE,
-    ESLINT_BROWSER_CONFIGURATIONS,
-} from '#cli/config/generation/eslint.ts';
+import { splitGlobs, buildScopeGlob, listNestedScopeGlobs } from '#cli/generation/eslint/files.ts';
+import { COMMONJS_FILES, ESLINT_BROWSER_CONFIGURATIONS } from '#cli/config/generation/eslint/runtimes.ts';
 
 function selectFrameworkRuntime(configurations: string[]): string | undefined {
     if (configurations.includes(REACT_NATIVE_CONFIGURATION)) return 'react-native';
@@ -24,7 +20,7 @@ function selectFrameworkRuntime(configurations: string[]): string | undefined {
  *
  * @returns repository-relative paths whose files use script rules.
  */
-export function listScriptPaths(selection: ScopeSelection): string[] {
+export function listScriptPaths(selection: Scope): string[] {
     const scripts = selection.view.values.javascript?.script_files ?? [];
     return [...scripts, buildScopeGlob(selection.scope.path, MISE_SCRIPT_PATH)];
 }
@@ -38,8 +34,8 @@ export function listScriptPaths(selection: ScopeSelection): string[] {
  *
  * @returns the runtime declarations, lowest priority first.
  */
-export function buildRuntimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock[] {
-    const blocks: EslintRuntimeBlock[] = [];
+export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
+    const blocks: EslintRuntime[] = [];
     for (const selection of scopes.toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path))) {
         const scope = selection.scope.path;
         const children = listNestedScopeGlobs(
@@ -48,8 +44,8 @@ export function buildRuntimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock
         ).map((path) => `!${path}`);
         const tool = selection.view.values[ESLINT_SETTINGS_TABLE];
         blocks.push(
-            { scope, runtime: 'node', ...splitGlobSelectors([buildScopeGlob(scope, '**/*'), ...children]) },
-            { scope, runtime: 'commonjs', ...splitGlobSelectors([buildScopeGlob(scope, COMMONJS_FILES), ...children]) },
+            { scope, runtime: 'node', ...splitGlobs([buildScopeGlob(scope, '**/*'), ...children]) },
+            { scope, runtime: 'commonjs', ...splitGlobs([buildScopeGlob(scope, COMMONJS_FILES), ...children]) },
         );
         const runtime = selectFrameworkRuntime(selection.view.configurations);
         if (runtime !== undefined) {
@@ -57,7 +53,7 @@ export function buildRuntimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock
             blocks.push({
                 scope,
                 runtime,
-                ...splitGlobSelectors([
+                ...splitGlobs([
                     buildScopeGlob(scope, '**/*'),
                     `!${buildScopeGlob(scope, COMMONJS_FILES)}`,
                     ...scripts.map((path) => `!${path}`),
@@ -67,7 +63,7 @@ export function buildRuntimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock
         }
         for (const override of tool?.override ?? []) {
             if (override.runtime === undefined) continue;
-            blocks.push({ scope, runtime: override.runtime, ...splitGlobSelectors([...override.paths, ...children]) });
+            blocks.push({ scope, runtime: override.runtime, ...splitGlobs([...override.paths, ...children]) });
         }
     }
     return blocks;

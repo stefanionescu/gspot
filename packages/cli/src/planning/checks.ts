@@ -1,31 +1,36 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { stripUndefined } from '#cli/system/values.ts';
+import type { Session } from '#cli/types/session.ts';
+import { findFirstSkip } from '#cli/planning/skips.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
 import { COVERAGE_DIMENSIONS } from '#cli/config/planning.ts';
-import { isOutsideChildren } from '#cli/repository/scopes.ts';
-import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Check, KnownCheck } from '#cli/types/configurations.ts';
 import { getTable, findRootSelection } from '#cli/settings/scope-view.ts';
-import { findFirstSkip, stripToolIgnoredFiles } from '#cli/planning/skips.ts';
-import { getToolName, getToolDeclaration } from '#cli/configurations/tools.ts';
-import { type KnownCheck, type CheckDeclaration } from '#cli/types/configurations.ts';
-import type { Session, PlanInputs, PlanOptions, PlannedCheck } from '#cli/types/planning.ts';
-import { isRootOnlyCheck, listChildScopes, selectCheckFiles, isRepositoryCheck } from '#cli/planning/files.ts';
+import { getTool, getToolName } from '#cli/configurations/declared-tools.ts';
+import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/planning.ts';
 
-function listCheckCandidates(session: Session, selection: ScopeSelection): KnownCheck[] {
+import {
+    isRootOnlyCheck,
+    listChildScopes,
+    selectCheckFiles,
+    isRepositoryCheck,
+    stripToolIgnoredFiles,
+} from '#cli/planning/files.ts';
+
+function listCheckCandidates(session: Session, selection: Scope): KnownCheck[] {
     const isRoot = selection.scope.path === '';
-    const entries = selection.selected.flatMap((manifest) =>
-        manifest.checks
-            .map((check) => ({ check, configuration: manifest }))
-            .filter((entry) => isRoot || !isRootOnlyCheck(manifest, entry.check)),
+    const entries = selection.selected.flatMap((configuration) =>
+        configuration.checks
+            .map((check) => ({ check, configuration: configuration }))
+            .filter((entry) => isRoot || !isRootOnlyCheck(configuration, entry.check)),
     );
     if (!isRoot) return entries;
     const own = Object.values(session.settingsFile.settings.commandChecks).map((entry) => ({ check: entry }));
     return [...entries, ...own];
 }
 
-function isWanted(check: CheckDeclaration, options: PlanOptions): boolean {
+function isWanted(check: Check, options: PlanOptions): boolean {
     if (options.only !== undefined && !options.only.includes(check.name)) return false;
     if (options.stage === 'any') return true;
     if (check.stage === 'message') return options.stage === 'message';
@@ -34,27 +39,27 @@ function isWanted(check: CheckDeclaration, options: PlanOptions): boolean {
     return options.stage === check.stage;
 }
 
-function planOne(context: PlanInputs, entry: KnownCheck): PlannedCheck {
-    const { session, selection: scope, options } = context;
-    const { check, configuration: manifest } = entry;
+function planCheck(planned: PlannedScope, entry: KnownCheck): PlannedCheck {
+    const { session, selection: scope, options } = planned;
+    const { check, configuration } = entry;
     const isRootCheck = isRepositoryCheck(check);
     const rootScope = findRootSelection(session.scopes);
     const name = getToolName(check);
-    const tool = name === undefined ? undefined : getToolDeclaration(session.manifests.values(), name);
-    const planned: PlannedCheck = {
+    const tool = name === undefined ? undefined : getTool(session.configurations.values(), name);
+    const plannedCheck: PlannedCheck = {
         selection: isRootCheck ? rootScope : scope,
         check,
-        ...selectCheckFiles(context, entry),
+        ...selectCheckFiles(planned, entry),
         ...stripUndefined({
-            manifest,
+            configuration,
             tool,
             base: options.base,
             commits: options.commits,
             messageFile: options.messageFile,
         }),
     };
-    const skip = findFirstSkip(planned, context);
-    const result = skip === undefined ? planned : { ...planned, skip };
+    const skip = findFirstSkip(plannedCheck, planned);
+    const result = skip === undefined ? plannedCheck : { ...plannedCheck, skip };
     // gspot writes the tool ignore files from the configured checks, so the configuration cannot depend on them.
     return options.forConfiguration === true ? result : stripToolIgnoredFiles(session, result);
 }
@@ -81,36 +86,36 @@ function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
     });
 }
 
-function planScope(context: PlanInputs, wholeSeen: Set<string>): PlannedCheck[] {
-    const planned: PlannedCheck[] = [];
-    const entries = listCheckCandidates(context.session, context.selection).filter((entry) =>
-        isWanted(entry.check, context.options),
+function planScope(planned: PlannedScope, plannedRepositoryChecks: Set<string>): PlannedCheck[] {
+    const checks: PlannedCheck[] = [];
+    const entries = listCheckCandidates(planned.session, planned.selection).filter((entry) =>
+        isWanted(entry.check, planned.options),
     );
     for (const entry of entries) {
         const isRootCheck = isRepositoryCheck(entry.check);
-        if (isRootCheck && wholeSeen.has(entry.check.name)) continue;
-        const check = planOne(context, entry);
+        if (isRootCheck && plannedRepositoryChecks.has(entry.check.name)) continue;
+        const check = planCheck(planned, entry);
         if (check.skip?.cause === 'level') continue;
-        if (isRootCheck) wholeSeen.add(entry.check.name);
-        planned.push(check);
+        if (isRootCheck) plannedRepositoryChecks.add(entry.check.name);
+        checks.push(check);
     }
-    return planned;
+    return checks;
 }
 
 function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
-    const wholeSeen = new Set<string>();
+    const plannedRepositoryChecks = new Set<string>();
     const host = { platform: getOperatingSystem(), arch: process.arch };
-    const narrow = buildNarrowedPaths(options);
+    const narrowedPaths = buildNarrowedPaths(options);
     return session.scopes.map((scope) => {
-        const context: PlanInputs = {
+        const context: PlannedScope = {
             session,
             selection: scope,
             options,
             host,
-            narrow,
+            narrowedPaths,
             children: listChildScopes(session.scopes, scope),
         };
-        return planScope(context, wholeSeen);
+        return planScope(context, plannedRepositoryChecks);
     });
 }
 
@@ -131,27 +136,6 @@ export function isActive(check: PlannedCheck): boolean {
 }
 
 /**
- * List the files that the configurations of a check own, apart from the inputs of a project-wide run.
- *
- * @param selections the scopes.
- * @param check the plan to read.
- *
- * @returns the files that the owners of the check select.
- */
-export function listCoveredInputs(selections: ScopeSelection[], check: PlannedCheck): TrackedFile[] {
-    const owners = check.check.files ?? check.manifest?.files;
-    const children = check.check.runs === 'scope' ? listChildScopes(selections, check.selection) : [];
-    const files = check.files.filter((file) => isOutsideChildren(file.path, children));
-    return owners === undefined
-        ? []
-        : listCoveredFiles(owners, files, {
-              selected: check.selection.selected,
-              scope: check.selection.scope.path,
-              view: check.selection.view,
-          });
-}
-
-/**
  * Plan every check for the run.
  *
  * @param session the repository to check.
@@ -159,7 +143,7 @@ export function listCoveredInputs(selections: ScopeSelection[], check: PlannedCh
  *
  * @returns the planned checks in scope order.
  */
-export function planRun(session: Session, options: PlanOptions): PlannedCheck[] {
+export function planChecks(session: Session, options: PlanOptions): PlannedCheck[] {
     const checks = planScopes(session, options).flatMap((planned) => skipReplacedChecks(planned));
     if (options.historyComplete === false) {
         const historyChecks = checks.filter((check) => check.skip === undefined && check.check.runs === 'history');
@@ -181,11 +165,11 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
  * @returns the command, with coverage only when a floor needs it.
  */
 export function stripCoverageArguments(
-    planned: Pick<PlannedCheck, 'check' | 'selection' | 'manifest'>,
-    options: Pick<CheckDeclaration, 'command'>,
+    planned: Pick<PlannedCheck, 'check' | 'selection' | 'configuration'>,
+    options: Pick<Check, 'command'>,
 ): string[] | undefined {
     const command = options.command ?? planned.check.command;
-    if (command === undefined || options.command !== undefined || planned.manifest === undefined) return command;
+    if (command === undefined || options.command !== undefined || planned.configuration === undefined) return command;
     const declaredArguments = planned.check.coverage_arguments ?? [];
     if (!hasCoverageArguments(command, declaredArguments) || !isCoverageOff(planned.selection)) return command;
     return command.filter((part) => !hasCoverageArguments([part], declaredArguments));
@@ -197,7 +181,7 @@ export function stripCoverageArguments(
  * @param selection the resolved coverage settings.
  * @returns whether the scope needs no coverage output.
  */
-export function isCoverageOff(selection: ScopeSelection): boolean {
+export function isCoverageOff(selection: Scope): boolean {
     const coverage = getTable(selection.view, 'coverage');
     return COVERAGE_DIMENSIONS.every((name) => coverage[name] === 0);
 }

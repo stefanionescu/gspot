@@ -1,19 +1,13 @@
-// Read Static Analysis Results Interchange Format (SARIF) reports.
 import { sep, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
-import { parseReport } from '#cli/parsers/json.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { SARIF_SOURCE_ROOT } from '#cli/config/runs/output.ts';
 import { sarifLogSchema } from '#cli/schemas/runs/output/sarif.ts';
 import type { Finding, FindingPlace } from '#cli/types/runs/check.ts';
-
-import {
-    type SarifRun,
-    type ReportInput,
-    type SarifPhysicalLocation,
-    type SarifArtifactLocation,
-} from '#cli/types/runs/output.ts';
+import type { SarifRun, SarifPhysicalLocation, SarifArtifactLocation } from '#cli/types/runs/tool-reports.ts';
 
 function getArtifactLocation(artifact: SarifArtifactLocation, run: SarifRun): SarifArtifactLocation {
     if (artifact.uri !== undefined || artifact.index === undefined) return artifact;
@@ -46,7 +40,7 @@ function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, sour
 }
 
 /**
- * Resolve a validated SARIF physical location into a source path and coordinates.
+ * Resolve a validated physical location into a source path and coordinates.
  *
  * @param location the first physical place of the result.
  * @param run its source metadata.
@@ -88,14 +82,14 @@ function assertSuccessfulRun(run: SarifRun): void {
 }
 
 /**
- * Read a SARIF report and validate its source locations.
+ * Read the report and validate its source locations.
  *
- * @param input the tool output to read.
+ * @param output the tool output to read.
  * @returns the report findings.
  */
-export function parseSarifFindings(input: ReportInput): Finding[] {
-    const { stdout, check, help, root: source } = input;
-    const parsed = parseReport('SARIF', stdout, sarifLogSchema);
+export function parseSarifFindings(output: ToolOutput): Finding[] {
+    const { stdout, check, help, root: source } = output;
+    const parsed = parseToolReport('SARIF', stdout, sarifLogSchema);
     return parsed.runs.flatMap((run) => {
         assertSuccessfulRun(run);
         return run.results.map((result) => ({

@@ -2,33 +2,38 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { type Manifest } from '#cli/types/configurations.ts';
-import { JSON_INDENT } from '#cli/config/generation/files.ts';
-import { TOML_FORMAT } from '#cli/config/generation/settings.ts';
+import { type Configuration } from '#cli/types/configurations.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations.ts';
-import { findInstalledDependency } from '#cli/repository/packages.ts';
-import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
-import { type GeneratedFile, type NpmProjectInputs } from '#cli/types/generation/files.ts';
-import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN, PYTHON_TOOL_PROJECT } from '#cli/config/parsers/dependencies.ts';
-import { NEXT_PACKAGE, UV_PROJECT_TABLE, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/generation/tool-projects.ts';
+import { findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
+import { JSON_INDENT, TOOL_FILE_TOML_FORMAT } from '#cli/config/generation/generate.ts';
+import { listMisePins, listToolProjectPins } from '#cli/configurations/declared-tools.ts';
+import { type GeneratedFile, type PlannedNpmProject } from '#cli/types/generation/files.ts';
 
 import {
     YARN_SETTINGS,
     NPM_TOOL_PROJECT_FILE,
     MISE_TOOL_PROJECT_FILE,
     PYTHON_TOOL_PROJECT_FILE,
-} from '#cli/config/system/locations.ts';
+} from '#cli/config/gspot-paths.ts';
+import {
+    NEXT_PACKAGE,
+    NPM_TOOL_PROJECT,
+    UV_PROJECT_TABLE,
+    NEXT_ESLINT_PLUGIN,
+    PYTHON_TOOL_PROJECT,
+    YARN_TOOL_PROJECT_SETTINGS,
+} from '#cli/config/generation/projects.ts';
 
 /**
  * Generate the mise tool project without the runtime pins of the repository.
  *
- * @param manifests the configurations in use.
+ * @param configurations the configurations in use.
  *
  * @returns the mise tool project.
  */
-export function buildMiseProject(manifests: Manifest[]): GeneratedFile {
+export function buildMiseProject(configurations: Configuration[]): GeneratedFile {
     const tools = Object.fromEntries(
-        listMisePins(manifests)
+        listMisePins(configurations)
             .toSorted((left, right) => left.name.localeCompare(right.name))
             .map((pin) => [
                 pin.name,
@@ -37,7 +42,7 @@ export function buildMiseProject(manifests: Manifest[]): GeneratedFile {
     );
     return {
         path: MISE_TOOL_PROJECT_FILE,
-        content: stringify({ tools }, { ...TOML_FORMAT, inlineTableStart: 1 }),
+        content: stringify({ tools }, { ...TOOL_FILE_TOML_FORMAT, inlineTableStart: 1 }),
     };
 }
 
@@ -47,15 +52,15 @@ export function buildMiseProject(manifests: Manifest[]): GeneratedFile {
  * @param inputs what the tool project holds.
  * @param inputs.root the repository folder.
  * @param inputs.scopes the source projects.
- * @param inputs.manifests the configurations with npm tools.
+ * @param inputs.configurations the configurations with npm tools.
  * @param inputs.isYarnBerry true for Yarn 2 or later as the repository package manager.
  *
  * @returns the tool project files.
  */
-export function buildNpmProject({ root, scopes, manifests, isYarnBerry }: NpmProjectInputs): GeneratedFile[] {
-    const pins = listToolProjectPins(manifests).npm;
+export function buildNpmProject({ root, scopes, configurations, isYarnBerry }: PlannedNpmProject): GeneratedFile[] {
+    const pins = listToolProjectPins(configurations).npm;
     const nextVersions = scopes
-        .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === NEXTJS_CONFIGURATION))
+        .filter(({ selected }) => selected.some((configuration) => configuration.name === NEXTJS_CONFIGURATION))
         .flatMap(({ scope }) => {
             const version = findInstalledDependency(root, join(scope.path, 'package.json'), NEXT_PACKAGE)?.version;
             return version === undefined ? [] : [{ scope: scope.path, major: semver.major(version) }];
@@ -92,21 +97,21 @@ export function buildNpmProject({ root, scopes, manifests, isYarnBerry }: NpmPro
 /**
  * Generate the Python tool project that holds the Python lint tools.
  *
- * @param manifests the configurations in use.
+ * @param configurations the configurations in use.
  * @param days the release hold, so uv installs no release newer than that.
  *
  * @returns the Python tool project files, or none without Python tools.
  */
-export function buildPythonProject(manifests: Manifest[], days: number): GeneratedFile[] {
-    const { python: dependencies } = listToolProjectPins(manifests);
+export function buildPythonProject(configurations: Configuration[], days: number): GeneratedFile[] {
+    const { python: dependencies } = listToolProjectPins(configurations);
     if (dependencies.length === 0) return [];
     return [
         {
             path: PYTHON_TOOL_PROJECT_FILE,
             content:
-                stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOML_FORMAT) +
+                stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOOL_FILE_TOML_FORMAT) +
                 `\n${UV_PROJECT_TABLE}\n` +
-                stringify({ package: false, 'exclude-newer': `${String(days)} days` }, TOML_FORMAT),
+                stringify({ package: false, 'exclude-newer': `${String(days)} days` }, TOOL_FILE_TOML_FORMAT),
         },
     ];
 }

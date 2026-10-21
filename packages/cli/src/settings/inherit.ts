@@ -1,72 +1,71 @@
 import { z } from 'zod';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { CATEGORY_PARENTS } from '#cli/config/checks/naming.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { commandSchema } from '#cli/schemas/configurations/parts.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/parts.ts';
 import { findSettingSchema } from '#cli/schemas/settings/gspot-toml.ts';
-import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
 import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
-import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
-import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/values.ts';
+import { isRecord, getValueAt, stripUndefined } from '#cli/system/tables.ts';
+import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inheritance.ts';
 
-import type {
-    Settings,
-    SettingState,
-    KnownSettings,
-    SettingsTable,
-    SettingDefault,
-    WrittenSetting,
-    EffectiveSetting,
-    DeclarationMatch,
-    WrittenScopeTable,
-} from '#cli/types/settings/values.ts';
+import {
+    type Setting,
+    type SettingState,
+    type SettingMatch,
+    type KnownSettings,
+    type SettingDefault,
+    type WrittenSetting,
+    type EffectiveSetting,
+    type WrittenScopeTable,
+} from '#cli/types/settings/inheritance.ts';
 
-function findLanguageDeclaration(
+function findLanguageSetting(
     known: KnownSettings,
     table: string,
     language: string,
     name: string,
-): DeclarationMatch | undefined {
-    const base = known.declarations.get(`${table}.${name}`);
+): SettingMatch | undefined {
+    const base = known.settings.get(`${table}.${name}`);
     const languages = base?.languages ?? [];
-    if (base && languages.includes(language)) return { declaration: base, language };
+    if (base && languages.includes(language)) return { setting: base, language };
     return undefined;
 }
 
-function findVariantDeclaration(
+function findVariantSetting(
     known: KnownSettings,
     table: string,
     language: string,
     rest: string[],
-): DeclarationMatch | undefined {
+): SettingMatch | undefined {
     const [first, second] = rest;
     if (first === undefined) return undefined;
-    if (second === undefined) return findLanguageDeclaration(known, table, language, first);
+    if (second === undefined) return findLanguageSetting(known, table, language, first);
     if (table !== 'naming' || rest.length !== CATEGORY_KEY_PARTS) return undefined;
-    return findCategoryDeclaration(known, language, first, second);
+    return findCategorySetting(known, language, first, second);
 }
 
-function findCategoryDeclaration(
+function findCategorySetting(
     known: KnownSettings,
     language: string,
     category: string,
     name: string,
-): DeclarationMatch | undefined {
-    const base = known.declarations.get(`naming.${name}`);
+): SettingMatch | undefined {
+    const base = known.settings.get(`naming.${name}`);
     if (!base) return undefined;
     const categories: Readonly<Record<string, readonly string[]>> = NAMING_LANGUAGE_CATEGORIES;
     const isCovered =
         (base.languages ?? []).includes(language) &&
         (categories[language]?.includes(category) === true ||
             (name === 'cases' && known.defaults.has(`naming.${language}.${category}.cases`)));
-    return isCovered ? { declaration: base, language, category } : undefined;
+    return isCovered ? { setting: base, language, category } : undefined;
 }
 
 function mergeTable(
-    declaration: SettingDeclaration,
+    setting: Setting,
     key: string,
     current: SettingState,
     table: WrittenScopeTable,
@@ -81,7 +80,7 @@ function mergeTable(
     for (const { candidate, found } of written) {
         const owner = table.scope === undefined ? SETTINGS_FILE : `[scope ${JSON.stringify(table.scope)}]`;
         result = {
-            value: mergeValue(declaration, result.value, getValueAt(table.table, candidate.split('.'))),
+            value: mergeValue(setting, result.value, getValueAt(table.table, candidate.split('.'))),
             source: candidate === key ? owner : `${owner} (${candidate})`,
             origin: table.scope === undefined ? 'root' : 'scope',
             ...stripUndefined({ originScope: table.scope }),
@@ -94,13 +93,13 @@ function mergeTable(
 /**
  * Merge two values: command arguments replace whole, other lists append, per-rule tables merge, and single values replace.
  *
- * @param declaration the setting.
+ * @param setting the setting whose schema selects the merge rule.
  * @param current the value so far.
  * @param found the value the next table writes.
  * @returns the merged value.
  */
-function mergeValue(declaration: SettingDeclaration, current: unknown, found: unknown): unknown {
-    let schema = findSettingSchema(declaration.name);
+export function mergeValue(setting: Setting, current: unknown, found: unknown): unknown {
+    let schema = findSettingSchema(setting.name);
     if (schema !== undefined) schema = unwrapSettingSchema(schema);
     if (schema instanceof z.ZodUnion)
         schema = schema.options.find((option) => option instanceof z.ZodArray || option === commandSchema) as
@@ -113,7 +112,7 @@ function mergeValue(declaration: SettingDeclaration, current: unknown, found: un
         [current, found].every((value) => Array.isArray(value))
     )
         return [...new Set([current, found].flat())];
-    if (declaration.type === 'table')
+    if (setting.type === 'table')
         return Object.fromEntries([current, found].filter(isRecord).flatMap((table) => Object.entries(table)));
     return found;
 }
@@ -124,7 +123,7 @@ function mergeValue(declaration: SettingDeclaration, current: unknown, found: un
  * @param settings the parsed gspot.toml.
  * @returns the tables in written order, root first.
  */
-function listSettingsTables(settings: Settings): WrittenScopeTable[] {
+export function listSettingsTables(settings: Settings): WrittenScopeTable[] {
     return [
         { table: settings, path: [] },
         ...Object.entries(settings.scopes).map(
@@ -140,7 +139,7 @@ function listSettingsTables(settings: Settings): WrittenScopeTable[] {
  * @param scope the folder, '' or undefined for the root alone.
  * @returns the tables with their scope paths and reported names.
  */
-function listApplicableTables(settings: Settings, scope: string | undefined): WrittenScopeTable[] {
+export function listApplicableTables(settings: Settings, scope: string | undefined): WrittenScopeTable[] {
     return listSettingsTables(settings)
         .filter((entry) => entry.scope === undefined || isInScope(scope ?? '', entry.scope))
         .toSorted((left, right) => compareScopeDepth(left.scope ?? '', right.scope ?? ''));
@@ -153,12 +152,12 @@ function listApplicableTables(settings: Settings, scope: string | undefined): Wr
  * @param key the dotted name as written.
  * @returns the match with its language and category, or undefined.
  */
-function findDeclaration(known: KnownSettings, key: string): DeclarationMatch | undefined {
-    const direct = known.declarations.get(key);
-    if (direct) return { declaration: direct };
+export function findSetting(known: KnownSettings, key: string): SettingMatch | undefined {
+    const direct = known.settings.get(key);
+    if (direct) return { setting: direct };
     const [table, language, ...rest] = key.split('.');
     if (table === undefined || language === undefined || !LANGUAGE_GROUP_TABLES.has(table)) return undefined;
-    return findVariantDeclaration(known, table, language, rest);
+    return findVariantSetting(known, table, language, rest);
 }
 
 /**
@@ -168,7 +167,7 @@ function findDeclaration(known: KnownSettings, key: string): DeclarationMatch | 
  * @param key the dotted setting name.
  * @returns the value with its reason, or undefined when the key has no value.
  */
-function getWrittenSetting(settings: Pick<Settings, 'written'>, key: string): WrittenSetting | undefined {
+export function getWrittenSetting(settings: Pick<Settings, 'written'>, key: string): WrittenSetting | undefined {
     const value: unknown = getValueAt(settings.written, key.split('.'));
     if (value === undefined) return undefined;
     return isReasonedValue(value)
@@ -186,13 +185,13 @@ function getWrittenSetting(settings: Pick<Settings, 'written'>, key: string): Wr
  * @param key the dotted name as written.
  * @returns candidate keys from the broadest declaration to the named field.
  */
-function listCandidateKeys(match: DeclarationMatch, key: string): string[] {
+function listCandidateKeys(match: SettingMatch, key: string): string[] {
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
     const parent = match.category === undefined ? undefined : parents[match.category];
     return match.language === undefined
         ? [key]
         : [
-              match.declaration.name,
+              match.setting.name,
               ...(match.category === undefined
                   ? []
                   : [`naming.${match.language}.${key.slice(key.lastIndexOf('.') + 1)}`]),
@@ -212,16 +211,16 @@ function listCandidateKeys(match: DeclarationMatch, key: string): string[] {
  * @param scope the project whose shipped paths apply.
  * @returns the default with repository-relative paths, or undefined.
  */
-function findSettingDefault(
+export function findSettingDefault(
     known: KnownSettings,
     settings: Settings,
-    match: DeclarationMatch,
+    match: SettingMatch,
     scope: string | undefined,
 ): SettingDefault | undefined {
-    const { declaration } = match;
-    const table = declaration.name.slice(0, declaration.name.indexOf('.'));
-    const field = declaration.name.slice(declaration.name.lastIndexOf('.') + 1);
-    const keys = [declaration.name];
+    const { setting } = match;
+    const table = setting.name.slice(0, setting.name.indexOf('.'));
+    const field = setting.name.slice(setting.name.lastIndexOf('.') + 1);
+    const keys = [setting.name];
     if (match.language !== undefined) {
         keys.unshift(`${table}.${match.language}.${field}`);
         if (match.category !== undefined) keys.unshift(`${table}.${match.language}.${match.category}.${field}`);
@@ -229,10 +228,10 @@ function findSettingDefault(
     const shipped = keys.map((key) => known.defaults.get(key)).find((value) => value !== undefined);
     if (shipped === undefined) return undefined;
     const folder =
-        declaration.path_role === 'build'
+        setting.path_role === 'build'
             ? (getSettingValue(known, settings, 'site.build_folder', scope)?.value as string)
             : (scope ?? '');
-    return { ...shipped, value: joinDefaultPaths(declaration.name, shipped.value, folder) };
+    return { ...shipped, value: joinDefaultPaths(setting.name, shipped.value, folder) };
 }
 
 /**
@@ -244,15 +243,15 @@ function findSettingDefault(
  * @param scope the folder whose table applies last, if any.
  * @returns the value with where it came from, or undefined when nothing exposes the key.
  */
-function getSettingValue(
+export function getSettingValue(
     known: KnownSettings,
     settings: Settings,
     key: string,
     scope?: string,
 ): EffectiveSetting | undefined {
-    const match = findDeclaration(known, key);
+    const match = findSetting(known, key);
     if (!match) return undefined;
-    const { declaration } = match;
+    const { setting } = match;
     const shipped = findSettingDefault(known, settings, match, scope);
     const tables = listApplicableTables(settings, scope);
     let initialSource = 'unset';
@@ -267,11 +266,11 @@ function getSettingValue(
     };
     const candidates = listCandidateKeys(match, key);
     let current = start;
-    for (const table of tables) current = mergeTable(declaration, key, current, table, candidates);
+    for (const table of tables) current = mergeTable(setting, key, current, table, candidates);
     const { value, source, reason, origin, originScope } = current;
     return {
         key,
-        declaration,
+        setting,
         value,
         source,
         origin,
@@ -281,7 +280,7 @@ function getSettingValue(
 
 // Check whether a written tool table groups exposed keys instead of exposing one key.
 function isKeyGroup(known: KnownSettings, key: string, value: unknown): value is Record<string, unknown> {
-    if (known.declarations.has(key) || !isRecord(value)) return false;
+    if (known.settings.has(key) || !isRecord(value)) return false;
     let schema = findSettingSchema(key);
     if (schema !== undefined) schema = unwrapSettingSchema(schema);
     return schema instanceof z.ZodObject;
@@ -294,7 +293,7 @@ function isKeyGroup(known: KnownSettings, key: string, value: unknown): value is
  * @param known the declarations, with nested tool keys.
  * @returns all known written keys, plus unknown keys from open settings tables.
  */
-function listWrittenKeys(settings: SettingsTable, known: KnownSettings): string[] {
+export function listWrittenKeys(settings: SettingsTable, known: KnownSettings): string[] {
     const keys: string[] = [];
     const pending = (settings.tools === undefined ? [] : Object.entries(settings.tools)).flatMap(([tool, table]) =>
         table === undefined
@@ -303,7 +302,7 @@ function listWrittenKeys(settings: SettingsTable, known: KnownSettings): string[
     );
     pending.push(
         ...Object.entries(settings.written).flatMap(([name, table]) => {
-            if (known.declarations.has(name)) return [{ key: name, value: table }];
+            if (known.settings.has(name)) return [{ key: name, value: table }];
             if (isRecord(table) && name !== 'tools' && name !== 'removed_configurations')
                 return Object.entries(table).map(([field, value]) => ({ key: `${name}.${field}`, value }));
             return [];
@@ -315,7 +314,7 @@ function listWrittenKeys(settings: SettingsTable, known: KnownSettings): string[
         else keys.push(key);
     }
     const format = (settings.format === undefined ? [] : Object.keys(settings.format)).map((key) => `format.${key}`);
-    const knownKeys = [...known.declarations.keys()].filter((key) => getWrittenSetting(settings, key) !== undefined);
+    const knownKeys = [...known.settings.keys()].filter((key) => getWrittenSetting(settings, key) !== undefined);
     return [...new Set([...knownKeys, ...keys, ...format])];
 }
 
@@ -327,13 +326,13 @@ function listWrittenKeys(settings: SettingsTable, known: KnownSettings): string[
  * @param scope the folder whose table applies last, if any.
  * @returns the resolved settings in key order.
  */
-function listSettings(known: KnownSettings, settings: Settings, scope?: string): EffectiveSetting[] {
+export function listEffectiveSettings(known: KnownSettings, settings: Settings, scope?: string): EffectiveSetting[] {
     const keys = [
         ...new Set([
-            ...known.declarations.keys(),
+            ...known.settings.keys(),
             ...known.defaults.keys(),
             ...listApplicableTables(settings, scope).flatMap(({ table }) =>
-                listWrittenKeys(table, known).filter((key) => findDeclaration(known, key) !== undefined),
+                listWrittenKeys(table, known).filter((key) => findSetting(known, key) !== undefined),
             ),
         ]),
     ].toSorted((a, b) => a.localeCompare(b));
@@ -346,21 +345,8 @@ function listSettings(known: KnownSettings, settings: Settings, scope?: string):
  * @param key the full setting name.
  * @returns its table name.
  */
-function getSettingTable(key: string): string {
+export function getSettingTable(key: string): string {
     const [table, tool] = key.split('.');
     if (table === 'tools' && tool !== undefined) return `${table}.${tool}`;
     return table as string;
 }
-
-export {
-    mergeValue,
-    listSettings,
-    listWrittenKeys,
-    getSettingValue,
-    findDeclaration,
-    getSettingTable,
-    getWrittenSetting,
-    listSettingsTables,
-    findSettingDefault,
-    listApplicableTables,
-};

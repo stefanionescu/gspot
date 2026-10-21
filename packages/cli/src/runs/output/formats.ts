@@ -14,7 +14,7 @@ import { parseSemgrepFindings } from '#cli/runs/output/semgrep.ts';
 import { FILE_GROUP, MISSING_PATH_CODES } from '#cli/config/runs/output.ts';
 import { parseMarkdownlintFindings } from '#cli/runs/output/markdownlint.ts';
 import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/runs/output/text.ts';
-import type { OutputSpec, OutputPaths, ParsingCheck, OutputDescriptor } from '#cli/types/runs/output.ts';
+import type { CheckOutput, OutputPaths, ParsingCheck, OutputDescriptor } from '#cli/types/runs/output.ts';
 
 /**
  * Resolve a path the way tools print it after they follow links.
@@ -55,26 +55,26 @@ function listRootPrefixes(root: string): string[] {
     return [...prefixes].toSorted((first, second) => second.length - first.length);
 }
 
-function hasFilePaths(output: OutputSpec): boolean {
+function hasFilePaths(output: CheckOutput): boolean {
     return (output.pattern ?? '').includes(FILE_GROUP);
 }
 
 /** The reader and process-result rules for every supported output format. */
 export const outputFormats = {
-    none: { read: () => [], namesFiles: () => false },
+    none: { parse: () => [], namesFiles: () => false },
     json: {
-        read: parseJsonFindings,
+        parse: parseJsonFindings,
         namesFiles: (output) => output.fields?.file !== undefined,
     },
-    sarif: { read: parseSarifFindings, namesFiles: () => true },
-    typos: { read: parseTyposFindings, namesFiles: () => true },
-    markdownlint: { read: parseMarkdownlintFindings, namesFiles: () => true },
-    knip: { read: parseKnipFindings, namesFiles: () => true },
-    semgrep: { read: parseSemgrepFindings, namesFiles: () => true },
-    lines: { read: parseLineFindings, namesFiles: () => false },
-    regex: { read: parseRegexFindings, namesFiles: hasFilePaths },
-    grouped: { read: parseGroupedFindings, namesFiles: hasFilePaths },
-} satisfies Record<OutputSpec['format'], OutputDescriptor>;
+    sarif: { parse: parseSarifFindings, namesFiles: () => true },
+    typos: { parse: parseTyposFindings, namesFiles: () => true },
+    markdownlint: { parse: parseMarkdownlintFindings, namesFiles: () => true },
+    knip: { parse: parseKnipFindings, namesFiles: () => true },
+    semgrep: { parse: parseSemgrepFindings, namesFiles: () => true },
+    lines: { parse: parseLineFindings, namesFiles: () => false },
+    regex: { parse: parseRegexFindings, namesFiles: hasFilePaths },
+    grouped: { parse: parseGroupedFindings, namesFiles: hasFilePaths },
+} satisfies Record<CheckOutput['format'], OutputDescriptor>;
 
 /**
  * Read the findings in the tool output, with every path relative to the root.
@@ -91,7 +91,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     const output = check.output;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`);
-    const findings = outputFormats[output.format].read({
+    const findings = outputFormats[output.format].parse({
         check: check.name,
         help: check.help,
         output,

@@ -33,6 +33,3 @@ export type PushSearch = {
 export type ChangedPaths = { reference: string; paths: string[]; commits?: string[] };
 
 export type StagedPaths = { staged: string[]; unstaged: number };
-
-/** The commit objects, or the Git error that stopped their selection. */
-export type CommitSelection = string[] | { error: string };

@@ -3,33 +3,34 @@ import which from 'which';
 import { statSync } from 'node:fs';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
+import { type Session } from '#cli/types/session.ts';
+import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { type Session } from '#cli/types/planning.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { listMisePins } from '#cli/configurations/tools.ts';
-import { isInGspotFolder } from '#cli/repository/classify.ts';
-import type { LocateOptions } from '#cli/types/tools/find.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { listSelectedManifests } from '#cli/configurations/select.ts';
+import { listMisePins } from '#cli/configurations/declared-tools.ts';
+import type { ExecutableSearch } from '#cli/types/tools/inspection.ts';
+import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
-import { UV_TOOL, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
-import { DOT_GSPOT, GSPOT_PYTHON_ENVIRONMENT_PATH } from '#cli/config/system/locations.ts';
+import { listSelectedConfigurations } from '#cli/configurations/select.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/repository/tracked.ts';
+import { DOT_GSPOT, GSPOT_PYTHON_ENVIRONMENT_PATH } from '#cli/config/gspot-paths.ts';
 import { buildVenvBinPath, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
 
 import {
+    MISE_TOOL,
     MISE_WHICH,
-    MISE_PROGRAM,
     NPM_BIN_FOLDER,
     MISE_LAUNCHER_FOLDER,
     MISE_BIN_PATHS_ARGUMENTS,
-} from '#cli/config/tools/find.ts';
+} from '#cli/config/tools/inspection.ts';
 
-// Search folders for tool-project and system executables. A scratch copy has no tool projects or virtual
+// Search folders for tool-project and system executables. A copy has no tool projects or virtual
 // environments of its own: they run from the working tree that the copy stands for.
-function listSearchFolders(root: string, options: LocateOptions): string[] {
-    const { searchFolders, toolProjectKind } = options;
-    if (toolProjectKind === 'npm') return [join(root, DOT_GSPOT, NPM_BIN_FOLDER)];
-    if (toolProjectKind === 'python') return [buildVenvBinPath(join(root, GSPOT_PYTHON_ENVIRONMENT_PATH))];
+function listSearchFolders(root: string, options: ExecutableSearch): string[] {
+    const { searchFolders, toolFolderKind } = options;
+    if (toolFolderKind === 'npm') return [join(root, DOT_GSPOT, NPM_BIN_FOLDER)];
+    if (toolFolderKind === 'python') return [buildVenvBinPath(join(root, GSPOT_PYTHON_ENVIRONMENT_PATH))];
     return [...new Set(searchFolders)].flatMap((folder) => [
         join(folder, NPM_BIN_FOLDER),
         buildVenvBinPath(join(folder, PYTHON_ENVIRONMENT_FOLDER)),
@@ -37,7 +38,7 @@ function listSearchFolders(root: string, options: LocateOptions): string[] {
 }
 
 // Check whether a candidate exists. A managed path must resolve inside the root; read other candidates from disk.
-function isCandidatePresent(files: Files, root: string, path: string): boolean {
+function isExecutablePresent(files: Files, root: string, path: string): boolean {
     const local = convertToPosixPath(relative(root, path));
     if (!isInGspotFolder(local)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
@@ -57,9 +58,9 @@ function isCandidatePresent(files: Files, root: string, path: string): boolean {
  * @param timeoutSeconds the limit for the mise query.
  * @returns the executable paths in preference order.
  */
-function listMiseCandidates(workingFolder: string, name: string, timeoutSeconds: number): string[] {
+function listMiseExecutablePaths(workingFolder: string, name: string, timeoutSeconds: number): string[] {
     const paths = which.sync(name, { nothrow: true, all: true }) ?? [];
-    const mise = which.sync(MISE_PROGRAM, { nothrow: true });
+    const mise = which.sync(MISE_TOOL, { nothrow: true });
     return paths.flatMap((path) => {
         if (basename(dirname(path)) !== MISE_LAUNCHER_FOLDER || mise === null) return [path];
         const result = spawnProcessBlocking([mise, MISE_WHICH, name], {
@@ -81,13 +82,17 @@ function listMiseCandidates(workingFolder: string, name: string, timeoutSeconds:
  *
  * @returns the executable paths that exist, without the system `PATH`.
  */
-function locateRepositoryCandidates(repositoryRoot: string, name: string, options: LocateOptions): string[] {
+export function listRepositoryExecutablePaths(
+    repositoryRoot: string,
+    name: string,
+    options: ExecutableSearch,
+): string[] {
     if (isAbsolute(name)) return statSync(name, { throwIfNoEntry: false }) === undefined ? [] : [name];
     using files = openFiles(repositoryRoot);
     const paths = listSearchFolders(repositoryRoot, options).flatMap((folder) =>
         listExecutableNames(name).map((file) => join(folder, file)),
     );
-    return paths.filter((path) => isCandidatePresent(files, repositoryRoot, path));
+    return paths.filter((path) => isExecutablePresent(files, repositoryRoot, path));
 }
 
 /**
@@ -99,10 +104,10 @@ function locateRepositoryCandidates(repositoryRoot: string, name: string, option
  *
  * @returns the executable folders that mise installed.
  */
-function readMiseBinPaths(repositoryRoot: string, toolNames: string[], timeoutSeconds: number): string[] {
+export function readMiseBinPaths(repositoryRoot: string, toolNames: string[], timeoutSeconds: number): string[] {
     if (
         toolNames.length === 0 ||
-        which.sync(MISE_PROGRAM, { nothrow: true }) === null ||
+        which.sync(MISE_TOOL, { nothrow: true }) === null ||
         statSync(join(repositoryRoot, DOT_GSPOT), { throwIfNoEntry: false }) === undefined
     )
         return [];
@@ -124,19 +129,19 @@ function readMiseBinPaths(repositoryRoot: string, toolNames: string[], timeoutSe
  *
  * @returns the paths that exist.
  */
-function locateCandidates(
+export function listExecutablePaths(
     repositoryRoot: string,
     name: string,
-    options: LocateOptions & { timeoutSeconds: number; search: 'mise' | 'path' },
+    options: ExecutableSearch & { timeoutSeconds: number; search: 'mise' | 'path' },
 ): string[] {
-    const found = locateRepositoryCandidates(repositoryRoot, name, options);
-    if (isAbsolute(name) || options.toolProjectKind !== undefined) return found;
+    const found = listRepositoryExecutablePaths(repositoryRoot, name, options);
+    if (isAbsolute(name) || options.toolFolderKind !== undefined) return found;
     const programs = (options.miseBinPaths ?? [])
         .flatMap((folder) => listExecutableNames(name).map((file) => join(folder, file)))
         .filter((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
     const paths =
         options.search === 'mise'
-            ? listMiseCandidates(repositoryRoot, name, options.timeoutSeconds)
+            ? listMiseExecutablePaths(repositoryRoot, name, options.timeoutSeconds)
             : (which.sync(name, { nothrow: true, all: true }) ?? []);
     return [...programs, ...found, ...paths];
 }
@@ -150,7 +155,7 @@ function locateCandidates(
 export function getMiseBinPaths(session: Session): string[] {
     session.miseBinPaths ??= readMiseBinPaths(
         session.installedRoot,
-        [...new Set(listMisePins(listSelectedManifests(session.scopes)).map((pin) => pin.name))],
+        [...new Set(listMisePins(listSelectedConfigurations(session.scopes)).map((pin) => pin.name))],
         session.timeoutSeconds,
     );
     return session.miseBinPaths;
@@ -164,7 +169,7 @@ export function getMiseBinPaths(session: Session): string[] {
  */
 export function getUvPath(session: Session): string {
     session.uvPath ??=
-        locateCandidates(session.installedRoot, UV_TOOL, {
+        listExecutablePaths(session.installedRoot, UV_TOOL, {
             search: 'path',
             searchFolders: [],
             miseBinPaths: getMiseBinPaths(session),
@@ -172,5 +177,3 @@ export function getUvPath(session: Session): string {
         })[0] ?? UV_TOOL;
     return session.uvPath;
 }
-
-export { readMiseBinPaths, locateCandidates, locateRepositoryCandidates };

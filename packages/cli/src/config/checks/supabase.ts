@@ -1,6 +1,6 @@
 export const SHARED_PREFIX = '_';
 
-export const SUPABASE_CONFIG_TOML = 'supabase/config.toml';
+export const SUPABASE_PROJECT_FILE = 'supabase/config.toml';
 
 export const DENO_LOCATION = /at (?<file>file:\/\/\S+?):(?<line>\d+):\d+/u;
 

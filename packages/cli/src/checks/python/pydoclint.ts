@@ -1,10 +1,11 @@
+import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { runCommandGroups } from '#cli/runs/command/check.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/python.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import { docstringStyleSchema } from '#cli/schemas/checks/python/pydoclint.ts';
@@ -75,7 +76,7 @@ function parsePydoclintOptions(path: string, text: string, convention: unknown):
  * @param planned the docstring check for one scope.
  * @returns the check result, with earlier findings kept when a later batch fails.
  */
-export async function checkPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkPythonPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const configured = parsePydoclintOptions(
         joinScope(planned.selection.scope.path, PYPROJECT_TOML),
         findCachedText(session.reads, joinScope(planned.selection.scope.path, PYPROJECT_TOML)) ?? '',

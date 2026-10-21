@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isRecord } from '#cli/system/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { RULE_TOKEN, RULE_OPTIONS_REFUSAL } from '#cli/config/settings/schema.ts';
 

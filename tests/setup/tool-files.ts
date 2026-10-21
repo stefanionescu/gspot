@@ -4,25 +4,25 @@ import { ESLint } from 'eslint';
 import { testdir } from 'testdirs';
 import { parse as parseIni } from 'ini';
 import { parse as parseYaml } from 'yaml';
+import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { join, extname, relative } from 'node:path';
+import type { Session } from '#cli/types/session.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import type { Session } from '#cli/types/planning.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runSandboxStep } from '#tests/setup/install.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import { extractToolFileName } from '#cli/planning/files.ts';
-import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
 import type { LintFinding, ScriptFindingCase, EslintConfiguration } from '#tests/types/tool-output.ts';
 
 /** Lint the files and keep the findings of these rules and fatal errors, sorted. */
-async function collectLintFindings(
+export async function collectLintFindings(
     eslint: ESLint,
     root: string,
     files: readonly string[],
@@ -46,18 +46,19 @@ async function collectLintFindings(
  * Links the test packages, runs apply, and loads the generated ESLint tool file.
  *
  * @param sandboxRoot folder with a gspot.toml.
+ * @param options ESLint options that the test adds.
  * @returns ESLint set up with the generated tool file.
  */
-async function createEslint(sandboxRoot: string, options?: ESLint.Options): Promise<ESLint> {
+export async function createEslint(sandboxRoot: string, options?: ESLint.Options): Promise<ESLint> {
     await linkInstalledModules(join(sandboxRoot, 'node_modules'));
     await runSandboxStep({ root: sandboxRoot, environment: {}, run: runGspot }, ['apply']);
     const session = await openSession(sandboxRoot);
-    const selection = session.scopes.find((selection) =>
-        selection.selected.some((manifest) =>
-            manifest.toolFiles.some((file) => extractToolFileName(file.file) === 'eslint'),
+    const scope = session.scopes.find((selection) =>
+        selection.selected.some((configuration) =>
+            configuration.toolFiles.some((file) => extractToolFileName(file.file) === 'eslint'),
         ),
-    ) as ScopeSelection;
-    const scope = selection.scope.path;
+    )?.scope.path;
+    if (scope === undefined) throw new Error('The sandbox selects no ESLint tool file.');
     return new ESLint({
         ...options,
         cwd: sandboxRoot,
@@ -74,7 +75,7 @@ async function createEslint(sandboxRoot: string, options?: ESLint.Options): Prom
  * @param files other content for the repository.
  * @returns the generated content.
  */
-async function generateFile(settings: string, path: string, files: Record<string, string>): Promise<string> {
+export async function generateFile(settings: string, path: string, files: Record<string, string>): Promise<string> {
     await using sandbox = await testdir({ ...files, 'gspot.toml': settings });
 
     const session = await openSession(sandbox.path);
@@ -85,7 +86,7 @@ async function generateFile(settings: string, path: string, files: Record<string
 }
 
 /** Sort findings by file, line, and rule. */
-function compareFindings(left: LintFinding, right: LintFinding): number {
+export function compareFindings(left: LintFinding, right: LintFinding): number {
     return (
         left.file.localeCompare(right.file) ||
         left.line - right.line ||
@@ -93,10 +94,10 @@ function compareFindings(left: LintFinding, right: LintFinding): number {
     );
 }
 /** Find the generated tool file for a tool and scope. */
-function toolFileFor(session: Session, tool: string, scope = ''): string {
+export function toolFileFor(session: Session, tool: string, scope = ''): string {
     const declaration = session.scopes
         .find((selection) => selection.scope.path === scope)
-        ?.selected.flatMap((manifest) => manifest.toolFiles)
+        ?.selected.flatMap((configuration) => configuration.toolFiles)
         .find((file) => extractToolFileName(file.file) === tool);
     if (declaration === undefined) throw new Error(`The sandbox generates no ${tool} file for ${scope || 'the root'}.`);
     return buildScopeTarget(scope, declaration, getToolFiles(session).targets);
@@ -116,7 +117,7 @@ function parseModule(text: string, path: string): void {
 }
 
 /** Parse a generated tool file with the parser for its extension. */
-function parseToolFile(text: string, path: string): void {
+export function parseToolFile(text: string, path: string): void {
     const parsers: Record<string, (text: string, path: string) => void> = {
         '.cfg': (text) => {
             parseIni(text);
@@ -142,8 +143,6 @@ function parseToolFile(text: string, path: string): void {
     if (parser === undefined) throw new Error(`${path}: no generated-file parser is declared.`);
     parser(text, path);
 }
-
-export { toolFileFor, createEslint, generateFile, parseToolFile, compareFindings, collectLintFindings };
 
 /** Read the rule table ESLint calculates for each file in a scoped repository. */
 export async function readEslintRules(
@@ -178,4 +177,14 @@ export function listScriptFindings(cases: readonly ScriptFindingCase[], level: L
             })),
         )
         .toSorted(compareFindings);
+}
+
+/** Read each generated tool file matched by a repository-relative glob. */
+export async function readGeneratedFiles(root: string, pattern: string): Promise<{ path: string; content: string }[]> {
+    return Promise.all(
+        [...new Bun.Glob(pattern).scanSync({ cwd: root, dot: true })].map(async (path) => ({
+            path: convertToPosixPath(path),
+            content: await readFile(join(root, path), 'utf8'),
+        })),
+    );
 }

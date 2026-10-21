@@ -1,24 +1,28 @@
 // Creates shared or isolated repositories for check samples.
 import { join, dirname } from 'node:path';
+import { openSession } from '#cli/session.ts';
 import { afterAll, beforeAll } from 'bun:test';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { generate } from '#cli/generation/generate.ts';
 import { linkPackages } from '#tests/setup/modules.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
+import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { JSON_INDENT } from '#cli/config/generation/generate.ts';
+import { VALE_TOOL_FILE_PATH } from '#cli/config/gspot-paths.ts';
 import { runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { isOnDisk, encodeZipArchive } from '#tests/setup/files.ts';
-import { VALE_TOOL_FILE_PATH } from '#cli/config/system/locations.ts';
 import { runGit, commitAll, markExecutable } from '#tests/setup/git.ts';
 import { installSandbox, runSandboxStep } from '#tests/setup/install.ts';
 import type { OriginalFile, SampleChanges } from '#tests/types/samples.ts';
 import { PROSE_SANDBOX, VALE_PACKAGE_FILES } from '#tests/data/checks/prose.ts';
+import { VALE_PACKAGES } from '#cli/config/generation/settings/builders/vale.ts';
 import type { Sandbox, SandboxPlan, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
-import { JSON_INDENT, REGISTRY_HOST, SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/data/test-setup.ts';
+import { REGISTRY_HOST, SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/data/test-setup.ts';
 import { rm, open, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
 /**
@@ -26,13 +30,13 @@ import { rm, open, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readli
  *
  * @param root the sandbox folder with a package.json.
  */
-async function pinSandboxNpm(root: string): Promise<void> {
+export async function pinSandboxNpm(root: string): Promise<void> {
     const npm = await runCommand(['npm', '--version'], { cwd: root });
     const path = join(root, 'package.json');
-    const manifest = JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
+    const packageJson = JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
     await writeFile(
         path,
-        JSON.stringify({ ...manifest, packageManager: `npm@${npm.stdout.trim()}` }, null, JSON_INDENT) + '\n',
+        JSON.stringify({ ...packageJson, packageManager: `npm@${npm.stdout.trim()}` }, null, JSON_INDENT) + '\n',
     );
 }
 
@@ -56,7 +60,7 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
 }
 
 /** Build one isolated sandbox and run its checks in the current process. */
-async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncDisposable> {
+export async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     const folder = resources.use(await testdir());
     await writeSandbox(folder.path, plan);
@@ -77,7 +81,10 @@ async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncDisposab
 }
 
 /** Run init in a sandbox and install the tools of one integration test file. */
-async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<Record<string, string>> {
+export async function prepareInstalledSandbox(
+    root: string,
+    plan: InstalledSandboxPlan,
+): Promise<Record<string, string>> {
     await writeSandbox(root, plan);
     if (plan.dependencies !== undefined) await linkPackages(join(root, 'node_modules'), Object.keys(plan.dependencies));
     await plan.before?.(root);
@@ -96,7 +103,7 @@ async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan)
 }
 
 /** Share a sandbox after installing its tools once for the current test file. */
-function registerSharedSandbox(plan: InstalledSandboxPlan): () => Sandbox {
+export function registerSharedSandbox(plan: InstalledSandboxPlan): () => Sandbox {
     const resources = new AsyncDisposableStack();
     let sandbox: Sandbox;
     beforeAll(async () => {
@@ -188,7 +195,7 @@ async function writeChanges(cwd: string, changes: SampleChanges, settings: strin
 }
 
 // Saves file bytes and modes before the first change, so a failed change still restores them.
-async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
+export async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
     const tree = runGit(cwd, ['write-tree']).stdout.trim();
     const head = runGit(cwd, ['rev-parse', 'HEAD']).stdout.trim();
@@ -234,7 +241,7 @@ async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<
 }
 
 /** Change the sandbox for a test that applies, and apply again after the restore so the generated files match. */
-async function updateSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
+export async function updateSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     const change = await changeSandbox(sandbox, changes);
     return {
         async [Symbol.asyncDispose]() {
@@ -244,7 +251,7 @@ async function updateSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<
     };
 }
 /** Share a prose sandbox whose Vale packages come from the local package server. */
-function shareProseSandbox(): () => Sandbox {
+export function shareProseSandbox(): () => Sandbox {
     let server: ReturnType<typeof Bun.serve>;
     beforeAll(() => {
         const archive = encodeZipArchive(
@@ -287,16 +294,6 @@ function shareProseSandbox(): () => Sandbox {
     });
 }
 
-export {
-    pinSandboxNpm,
-    createSandbox,
-    changeSandbox,
-    updateSandbox,
-    shareProseSandbox,
-    registerSharedSandbox,
-    prepareInstalledSandbox,
-};
-
 /** Write the sample files and run apply; disposal restores the files and applies again. */
 export async function applySandboxChanges(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
@@ -313,4 +310,11 @@ export async function applyStagedSandboxChanges(sandbox: Sandbox, changes: Sampl
     if (staged.code !== 0) throw new Error(`Staging sandbox inputs failed: ${staged.stderr}${staged.stdout}`);
     await runSandboxStep(sandbox, ['apply']);
     return resources.move();
+}
+
+/** Write the generated files for an existing test repository. */
+export async function applyGeneratedFiles(root: string): Promise<void> {
+    using writer = openWriter(root);
+    const session = await openSession(root);
+    writeGeneratedFiles(session, generate(session), writer);
 }

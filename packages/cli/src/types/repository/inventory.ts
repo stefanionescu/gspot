@@ -1,13 +1,11 @@
 import type { Ignore } from 'ignore';
 import type { Dirent } from 'node:fs';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
-import type { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import type { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { FILE_KINDS } from '#cli/config/repository/inventory.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependencies.ts';
 
 export type PathIgnore = { base: string; matcher: Ignore };
-
-export type PathExpressions = { includes: string[]; excludes: string[] };
 
 export type ListedFile = { path: string; size: number; executable: boolean; symlink: boolean };
 
@@ -27,67 +25,29 @@ export type Repository = {
     index: GitIndexEntry[];
     files: TrackedFile[];
     dependencyFiles: DependencyFile[];
-    scopes: Scope[];
+    scopeFolders: ScopeFolder[];
 };
 
-export type Tagged = { tags: string[]; isBinary: boolean };
+export type FileTags = { tags: string[]; isBinary: boolean };
 
 export type FileKind = (typeof FILE_KINDS)[number];
 
 /** A generated path that a shipped configuration declares. */
-export type FileDeclaration = { paths: string[]; kind: 'generated'; configuration: string };
+export type GeneratedPaths = { paths: string[]; kind: 'generated'; configuration: string };
 
 export type FileClassification = { kind: FileKind; origin: string };
 
-export type ExistingTools = {
-    toolFiles: FoundToolFile[];
-    hooks: {
-        kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';
-        path: string;
-        files: string[];
-    }[];
-    ci: string[];
-    agentFiles: string[];
-    ruleFolders: string[];
-    lintFolders: string[];
-    toolOnlyPackages: string[];
-};
-
-export type Scope = {
+export type ScopeFolder = {
     path: string;
     configurations: string[];
     origin: 'root' | typeof SETTINGS_FILE | 'project';
 };
 
-export type FoundToolFile = {
-    tool: string;
-    path: string;
-    shared: boolean;
-    table?: string;
-    key?: string;
-};
-
 /** Folder entries and the ignore rules they inherit or author. */
 export type FolderListing = { entries: Dirent[]; ignores: PathIgnore[] };
+
 /** A folder waiting for a read, with its inherited ignore rules. */
 export type PendingFolder = { folder: string; ignores: PathIgnore[] };
 
 /** Authored declarations and effective Git attributes used for classification. */
-export type ClassificationInputs = { declarations: FileDeclaration[]; attributes: Repository['attributes'] };
-
-/** What detection reads once from the tree of a scope, for every manifest to look at. */
-export type ScopeContents = {
-    candidates: TrackedFile[];
-    extensionCounts: Map<string, number>;
-    shebangs: Set<string>;
-    runtimes: Map<string, string>;
-    dependencies: Map<string, string>;
-    scope: string;
-};
-
-/** The continuous integration fields for lint job discovery. */
-export type CiJob = {
-    script?: string | string[] | undefined;
-    steps?: { run?: string | undefined }[] | undefined;
-    extends?: unknown;
-};
+export type FileKindRules = { generatedPaths: GeneratedPaths[]; attributes: Repository['attributes'] };

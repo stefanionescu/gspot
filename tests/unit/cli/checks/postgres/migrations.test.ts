@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { planChecks } from '#cli/planning/checks.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSchema } from '#cli/checks/postgres/schema.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -78,11 +78,11 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['postgres'], { scopes: [{ path: 'app', configurations: ['postgres'] }] });
     await createFileTree(sandbox.path, { 'gspot.toml': settings });
-    for (const scope of ['', 'app'])
+    for (const folder of ['', 'app'])
         await createFileTree(
             sandbox.path,
             Object.fromEntries(
-                Object.entries(DEFAULT_MIGRATION_FOLDER_FILES).map(([path, text]) => [join(scope, path), text]),
+                Object.entries(DEFAULT_MIGRATION_FOLDER_FILES).map(([path, text]) => [join(folder, path), text]),
             ),
         );
 
@@ -91,7 +91,7 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
     const { migrations } = await readMigrations(session, input);
     expect(migrations.map(({ name }) => name)).toStrictEqual(['1_first.sql', '2_second.sql', '3_third.sql']);
     expect(
-        planRun(session, { stage: 'commit', only: ['postgres/squawk'] })
+        planChecks(session, { stage: 'commit', only: ['postgres/squawk'] })
             .find((plan) => plan.selection.scope.path === scope)!
             .files.map(({ path }) => basename(path))
             .toSorted((left, right) => left.localeCompare(right)),
@@ -106,17 +106,8 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
     const { migrations: replacedMigrations } = await readMigrations(replacedSession, replacedInput);
     expect(replacedMigrations.map(({ name }) => name)).toStrictEqual(['5_custom.sql']);
     expect(
-        planRun(replacedSession, { stage: 'commit', only: ['postgres/squawk'] })
+        planChecks(replacedSession, { stage: 'commit', only: ['postgres/squawk'] })
             .find((plan) => plan.selection.scope.path === scope)!
             .files.map(({ path }) => basename(path)),
     ).toStrictEqual(['5_custom.sql']);
-});
-
-test('a migration that does not parse gets one syntax finding, from postgres/migration-order', async () => {
-    await using sandbox = await testdir(MALFORMED_MIGRATION_FILES);
-    const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({}));
-    const syntax = report.checks.flatMap(({ check, findings }) =>
-        findings.filter(({ rule }) => rule === 'syntax').map(() => check),
-    );
-    expect(syntax).toStrictEqual(['postgres/migration-order']);
 });

@@ -1,5 +1,5 @@
 /** Project functions and storage declarations derived from their external schema. */
-export type SupabaseConfiguration = {
+export type SupabaseProjectFile = {
     storage?: { buckets?: Record<string, unknown> | undefined } | undefined;
 };
 

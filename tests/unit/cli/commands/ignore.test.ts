@@ -6,10 +6,10 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 
 import {
@@ -22,6 +22,16 @@ import {
     UNKNOWN_IGNORE_ARGUMENTS,
     REMAINING_EXPIRY_IGNORES,
 } from '#tests/data/commands/ignore.ts';
+
+/** Read saved ignore records with their dates serialized for the assertions. */
+async function readIgnoreRecords(
+    root: string,
+): Promise<Array<Omit<IgnoreRecord, 'until'> & { until: string | undefined }>> {
+    return parseSettings(await readFile(join(root, 'gspot.toml'), 'utf8'), undefined).ignore.map((entry) => ({
+        ...entry,
+        until: entry.until?.toISOString(),
+    }));
+}
 
 test('ignore of an unknown check exits 2 and leaves gspot.toml byte for byte', async () => {
     await using folder = await testdir({ 'gspot.toml': TWO_IGNORE_RECORDS, 'entry.sh': 'echo example\n' });
@@ -227,14 +237,6 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
         new Set(['legacy scripts/nested/example.sh']),
     );
 });
-
-/** Read saved ignore records with their dates serialized for the assertions. */
-async function readIgnoreRecords(root: string) {
-    return parseSettings(await readFile(join(root, 'gspot.toml'), 'utf8'), undefined).ignore.map((entry) => ({
-        ...entry,
-        until: entry.until?.toISOString(),
-    }));
-}
 
 test('ignore without a check keeps the paths out of every check and every tool file', async () => {
     await using folder = await testdir({

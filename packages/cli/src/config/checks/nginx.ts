@@ -52,7 +52,7 @@ export const NGINX_TEST_COMMAND = ['nginx', '-T'] as const;
 export const NGINX_KEY_FILE = 'key.pem';
 export const NGINX_CERTIFICATE_FILE = 'certificate.pem';
 
-export const NGINX_COPY_PREFIX = 'configuration-';
+export const NGINX_COPY_PREFIX = 'copy-';
 export const NGINX_DUMP_FILE_LINE = /^# configuration file (?<path>[^\n]+):$/gmu;
 export const NGINX_EMERGENCY_MARK = '[emerg]';
 export const NGINX_VARIABLE_MARK = '$';

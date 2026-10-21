@@ -6,18 +6,22 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { fakeCommand } from '#tests/setup/fakes.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildInstallContext } from '#tests/setup/install.ts';
+import { buildToolInstall } from '#tests/setup/install.ts';
+import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { PYTHON_VERSION } from '#cli/config/parsers/dependencies.ts';
+import { PYTHON_VERSION } from '#cli/config/generation/projects.ts';
 import { installPythonTools, preparePythonLockfile } from '#cli/install/python/project.ts';
 import { UV_TOML, PYTHON_TOOL_PROJECT, PYTHON_TOOL_LOCKFILE } from '#tests/data/install/python-tool-project.ts';
+
+const projectText = PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VERSION);
+const lockfileText = PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION);
 
 /** The Python tool project files with the Python version filled in. */
 function buildPythonProjectFiles(): Record<string, string> {
     return {
         'gspot.toml': buildSandboxSettings([]),
-        '.gspot/pyproject.toml': PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VERSION),
-        '.gspot/uv.lock': PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION),
+        '.gspot/pyproject.toml': projectText,
+        '.gspot/uv.lock': lockfileText,
         'uv.toml': UV_TOML,
     };
 }
@@ -28,31 +32,27 @@ test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index pass
     const calls: string[][] = [];
     using _boundary = fakeCommand('unavailable-uv', (command) => {
         calls.push([...command]);
-        return Promise.resolve({
-            code: command[1] === step ? 7 : 0,
-            missing: false,
-            duration: 0,
-            stdout: 'index password test%2Bpassword test+password',
-            stderr: 'interpreter unavailable',
-        });
+        return Promise.resolve(
+            buildProcessResult({
+                code: command[1] === step ? 7 : 0,
+                stdout: 'index password test%2Bpassword test+password',
+                stderr: 'interpreter unavailable',
+            }),
+        );
     });
     using log = openWriter(repository.path);
-    const installError: unknown = await installPythonTools(
-        buildInstallContext(await openSession(repository.path), log),
+    const installationError = await installPythonTools(
+        buildToolInstall(await openSession(repository.path), log),
         'unavailable-uv',
     ).catch((error: unknown) => error);
-    expect(installError).toMatchObject({ name: 'GspotError', code: 'installation' });
-    const message = installError instanceof Error ? installError.message : String(installError);
-    expect(message).toContain(`UV ${step} failed (exit 7)`);
-    expect(message).toContain('Check Python downloads and index settings, then run: gspot install.');
-    expect(message).toContain('interpreter unavailable');
-    expect(message).toContain('run: gspot install');
-    expect(message).not.toContain('test%2Bpassword');
-    expect(message).not.toContain('test+password');
+    expect(installationError).toBeInstanceOf(Error);
+    expect(installationError).toMatchObject({
+        name: 'GspotError',
+        code: 'installation',
+        message: `UV ${step} failed (exit 7). Check Python downloads and index settings, then run: gspot install.\nindex password [redacted] [redacted]\ninterpreter unavailable`,
+    });
     expect(calls).toHaveLength(step === 'venv' ? 1 : 2);
-    expect(await readFile(join(repository.path, '.gspot/uv.lock'), 'utf8')).toBe(
-        PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION),
-    );
+    expect(await readFile(join(repository.path, '.gspot/uv.lock'), 'utf8')).toBe(lockfileText);
     expect(await readFile(join(repository.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
     expect(await isOnDisk(join(repository.path, '.gspot/.venv'))).toBe(false);
 });
@@ -61,11 +61,8 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     await using repository = await testdir(buildPythonProjectFiles());
 
     using boundary = fakeCommand('synthetic-uv', async (_command, options) => {
-        await writeFile(
-            join(options.cwd, 'uv.lock'),
-            `${PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION)}\n# test+password\n`,
-        );
-        return { code: 0, missing: false, duration: 0, stdout: '', stderr: '' };
+        await writeFile(join(options.cwd, 'uv.lock'), `${lockfileText}\n# test+password\n`);
+        return buildProcessResult();
     });
     using log = openWriter(repository.path);
     const session = await openSession(repository.path);
@@ -74,17 +71,18 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     using _read = spyOn(log.files, 'read').mockImplementation((path) =>
         path === '.gspot/uv.lock' ? undefined : read(path),
     );
-    const lockfileError: unknown = await preparePythonLockfile(buildInstallContext(session, log), {
+    const lockfileError: unknown = await preparePythonLockfile(buildToolInstall(session, log), {
         path: '.gspot/pyproject.toml',
-        content: PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VERSION),
+        content: projectText,
     }).catch((error: unknown) => error);
-    expect(lockfileError).toMatchObject({ name: 'GspotError', code: 'installation' });
-    expect(lockfileError instanceof Error ? lockfileError.message : '').toBe(
-        'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',
-    );
-    expect(await readFile(join(repository.path, '.gspot/uv.lock'), 'utf8')).toBe(
-        PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION),
-    );
+    expect(lockfileError).toBeInstanceOf(Error);
+    expect(lockfileError).toMatchObject({
+        name: 'GspotError',
+        code: 'installation',
+        message:
+            'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',
+    });
+    expect(await readFile(join(repository.path, '.gspot/uv.lock'), 'utf8')).toBe(lockfileText);
     expect(await readFile(join(repository.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
     expect(await isOnDisk(join(repository.path, '.gspot/.venv'))).toBe(false);
     expect(boundary).toHaveBeenCalledTimes(1);
@@ -96,10 +94,10 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
     const runs: { command: string[]; env: Record<string, string | undefined> | undefined }[] = [];
     using _boundary = fakeCommand('pinned-uv', (command, options) => {
         runs.push({ command: [...command], env: options.env });
-        return Promise.resolve({ code: 0, missing: false, duration: 0, stdout: '', stderr: '' });
+        return Promise.resolve(buildProcessResult());
     });
     using log = openWriter(repository.path);
-    await installPythonTools(buildInstallContext(await openSession(repository.path), log), 'pinned-uv');
+    await installPythonTools(buildToolInstall(await openSession(repository.path), log), 'pinned-uv');
     expect(runs.map(({ command }) => command[1])).toStrictEqual(['venv', 'sync']);
     for (const { command, env } of runs) {
         const flag = command.indexOf('--python');

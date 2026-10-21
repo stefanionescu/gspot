@@ -4,14 +4,13 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { I18N_SOURCE } from '#tests/data/generation/eslint/framework.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
-import { ZUSTAND_FILES, RESTRICTION_TABLES } from '#tests/data/generation/eslint/fragments.ts';
+import { ZUSTAND_FILES, RESTRICTION_TABLES } from '#tests/data/generation/eslint/configurations.ts';
 
 describe('drizzle', () => {
     test('Drizzle reports delete and update without where only for its client names', async () => {
-        const level = 'all';
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['drizzle'], {
-                level: level,
+                level: 'all',
                 rules: true,
                 scopes: [{ path: 'app', configurations: ['drizzle'] }],
                 tables: '[scope.drizzle]\nclient_names = ["connection"]\n',
@@ -65,7 +64,7 @@ describe('zustand', () => {
                 ...ZUSTAND_FILES,
                 'gspot.toml': buildSandboxSettings(['javascript', 'zustand'], {
                     tables: RESTRICTION_TABLES,
-                    level: level,
+                    level,
                 }),
             });
 

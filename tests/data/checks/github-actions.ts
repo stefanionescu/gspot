@@ -1,6 +1,6 @@
 const CALLED_WORKFLOW = '.github/workflows/called.yml';
 
-const COMPOSITE_ACTION = `name: Greet
+export const COMPOSITE_ACTION = `name: Greet
 inputs:
     message:
         description: Message to print
@@ -12,7 +12,7 @@ runs:
           run: echo "\${{ inputs.message }}"
 `;
 
-const CHECKOUT_WORKFLOW = `on: workflow_dispatch
+export const CHECKOUT_WORKFLOW = `on: workflow_dispatch
 permissions: {}
 jobs:
   build:
@@ -39,7 +39,7 @@ const CALLED_WORKFLOW_REFERENCES = [
     ],
 ] as const;
 
-const ACTIONLINT_EXITS = [
+export const ACTIONLINT_EXITS = [
     { code: 0, status: 'passed', findings: [], note: undefined },
     {
         code: 1,
@@ -50,7 +50,7 @@ const ACTIONLINT_EXITS = [
     { code: 3, status: 'error', findings: [], note: 'exit 3' },
 ] as const;
 
-const WORKFLOW_TEXT_CASES = [
+export const WORKFLOW_TEXT_CASES = [
     ...CALLED_WORKFLOW_REFERENCES.map(([reference, expected]) => ({
         path: '.github/workflows/caller.yml',
         before: `on: workflow_dispatch\njobs:\n  caller:\n    uses: ${reference}\n`,
@@ -68,5 +68,3 @@ const WORKFLOW_TEXT_CASES = [
         expected: 'name: Setup\nruns:\n  using: composite\n  steps:\n    - uses: ./.github/actions/cache\n',
     })),
 ];
-
-export { ACTIONLINT_EXITS, COMPOSITE_ACTION, CHECKOUT_WORKFLOW, WORKFLOW_TEXT_CASES };

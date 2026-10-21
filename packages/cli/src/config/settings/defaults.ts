@@ -1,3 +1,5 @@
+export const DEFAULT_QUOTES = { prettier: 'single', ruff: 'double' } as const;
+
 /** Each SDK root picks its xcodebuild destination during init. */
 export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
     ['iphoneos', 'generic/platform=iOS Simulator'],

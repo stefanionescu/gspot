@@ -2,46 +2,40 @@
 import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
-import { TRAILING_NEWLINE } from '#cli/config/text.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
+import type { GitLookup, GitRepository, GitEnvironment, GitTargetEnvironment } from '#cli/types/system/git.ts';
 import { buildSpawnEnvironment, normalizeEnvironmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import {
     type SpawnResult,
     type StdoutReader,
     type SpawnOptions,
-    type ByteSpawnResult,
+    type AsyncSpawnOptions,
 } from '#cli/types/system/processes.ts';
-import type {
-    GitLookup,
-    GitOptions,
-    GitRepository,
-    GitEnvironment,
-    GitTargetEnvironment,
-} from '#cli/types/system/git.ts';
 import {
     GIT_LOCALE,
     GIT_EXECUTABLE,
+    TRAILING_NEWLINE,
     GIT_DIR_VARIABLE,
     GIT_CLONE_COMMAND,
     GIT_PATH_VARIABLES,
     GIT_HOOKS_ARGUMENTS,
     GIT_VARIABLE_PREFIX,
     NOT_REPOSITORY_CODE,
-    WORK_TREE_ARGUMENTS,
     GIT_SOURCE_ARGUMENTS,
     GIT_FOLDER_ARGUMENTS,
     GIT_SETTING_ARGUMENTS,
     GIT_SHALLOW_ARGUMENTS,
     GIT_WORK_TREE_VARIABLE,
     NOT_REPOSITORY_MESSAGE,
+    GIT_WORK_TREE_ARGUMENTS,
     GIT_TOP_LEVEL_ARGUMENTS,
     GIT_COMMAND_CONFIGURATION,
     GIT_LOCAL_VARIABLES_ARGUMENTS,
     GIT_NONLOCAL_ENVIRONMENT_NAME,
 } from '#cli/config/system/git.ts';
 
-let sourceMetadata: { metadata: string[]; source?: GitLookup } | undefined;
+let inheritedGit: { localVariables: string[]; repository?: GitLookup } | undefined;
 
 // The original working folder of the hook decides relative paths and the implicit Git worktree root.
 function readInheritedGitEnvironment(origin: string): GitLookup {
@@ -100,7 +94,7 @@ function readTargetGitEnvironment(
  * @param explicit the environment overrides for this command.
  * @returns the environment for the requested Git command.
  */
-export function buildGitEnvironment(
+export function readGitEnvironment(
     workingFolder: string,
     commandArguments: readonly string[],
     explicit: Record<string, string | undefined>,
@@ -113,29 +107,29 @@ export function buildGitEnvironment(
     )
         return { env: explicit };
     const origin = process.cwd();
-    if (sourceMetadata === undefined) {
+    if (inheritedGit === undefined) {
         const declared = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_LOCAL_VARIABLES_ARGUMENTS], {
             cwd: origin,
             env: {},
         });
         if (declared.code !== 0) return { failure: declared };
         // The installed Git version lists its own local variable names.
-        const metadata = trimGitLine(declared.stdout)
+        const localVariables = trimGitLine(declared.stdout)
             .split('\n')
             .filter((name) => !GIT_COMMAND_CONFIGURATION.has(name));
-        sourceMetadata = { metadata };
+        inheritedGit = { localVariables };
     }
-    const { metadata } = sourceMetadata;
-    if (!metadata.some((name) => readEnvironmentVariable(name) !== undefined)) return { env: explicit };
-    const isolated = Object.fromEntries(metadata.map((name) => [name, undefined]));
+    const { localVariables } = inheritedGit;
+    if (!localVariables.some((name) => readEnvironmentVariable(name) !== undefined)) return { env: explicit };
+    const isolated = Object.fromEntries(localVariables.map((name) => [name, undefined]));
     if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((part, index) => commandArguments[index] === part))
         return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
-        Object.entries(explicit).filter(([name]) => !metadata.includes(normalizeEnvironmentKey(name))),
+        Object.entries(explicit).filter(([name]) => !localVariables.includes(normalizeEnvironmentKey(name))),
     );
-    const source = (sourceMetadata.source ??= readInheritedGitEnvironment(origin));
-    if ('failure' in source) return source;
-    return readTargetGitEnvironment(workingFolder, source, { isolated, overrides, explicit });
+    const repository = (inheritedGit.repository ??= readInheritedGitEnvironment(origin));
+    if ('failure' in repository) return repository;
+    return readTargetGitEnvironment(workingFolder, repository, { isolated, overrides, explicit });
 }
 
 /**
@@ -151,7 +145,7 @@ export function runGitBlocking(
     commandArguments: readonly string[],
     options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
 ): SpawnResult {
-    const selected = buildGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
+    const selected = readGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
     if ('failure' in selected) return selected.failure;
     return spawnProcessBlocking([GIT_EXECUTABLE, ...commandArguments], {
         ...options,
@@ -171,9 +165,9 @@ export function runGitBlocking(
 export async function runGit(
     workingFolder: string,
     commandArguments: readonly string[],
-    options: GitOptions,
+    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<SpawnResult> {
-    const selected = buildGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
+    const selected = readGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
     if ('failure' in selected) return selected.failure;
     const command = [GIT_EXECUTABLE, ...commandArguments];
     const prepared = { ...options, env: selected.env, cwd: workingFolder };
@@ -192,10 +186,10 @@ export async function runGit(
 export async function runGitStream(
     workingFolder: string,
     commandArguments: readonly string[],
-    options: GitOptions,
+    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
     read: StdoutReader,
 ): Promise<SpawnResult> {
-    const selected = buildGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
+    const selected = readGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
     if ('failure' in selected) return selected.failure;
     return streamProcess(
         [GIT_EXECUTABLE, ...commandArguments],
@@ -215,8 +209,8 @@ export async function runGitStream(
 export async function runGitForBytes(
     workingFolder: string,
     commandArguments: readonly string[],
-    options: GitOptions,
-): Promise<ByteSpawnResult> {
+    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
+): Promise<Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array }> {
     const chunks: Buffer[] = [];
     const result = await runGitStream(workingFolder, commandArguments, options, async (output) => {
         for await (const chunk of output) chunks.push(chunk);
@@ -268,7 +262,7 @@ export function readHooksFolder(workingFolder: string): string {
 export async function readGitText(
     workingFolder: string,
     commandArguments: readonly string[],
-    options: GitOptions,
+    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string> {
     const result = await runGit(workingFolder, commandArguments, options);
     if (result.code !== 0)
@@ -290,7 +284,7 @@ export async function readGitText(
 export async function readGitLines(
     workingFolder: string,
     commandArguments: readonly string[],
-    options: GitOptions,
+    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string[]> {
     const text = await readGitText(workingFolder, commandArguments, options);
     return text.split('\n').filter((line) => line !== '');
@@ -307,7 +301,7 @@ export async function readGitLines(
 export async function readGitPaths(
     workingFolder: string,
     commandArguments: readonly string[],
-    options: GitOptions,
+    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string[]> {
     const text = await readGitText(workingFolder, commandArguments, options);
     return text.split('\0').filter((path) => path !== '');
@@ -320,7 +314,10 @@ export async function readGitPaths(
  * @param options cancellation and input.
  * @returns true for a shallow repository.
  */
-export async function isShallow(workingFolder: string, options: GitOptions): Promise<boolean> {
+export async function isShallow(
+    workingFolder: string,
+    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
+): Promise<boolean> {
     const answer = await readGitText(workingFolder, GIT_SHALLOW_ARGUMENTS, options);
     return answer.trim() === 'true';
 }
@@ -343,12 +340,12 @@ export function trimGitLine(text: string): string {
  * @throws when Git cannot establish the repository state.
  */
 export function isGitRepository(workingFolder: string): boolean {
-    const inspection = runGitBlocking(workingFolder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
+    const inspection = runGitBlocking(workingFolder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
     if (isOutsideGit(inspection)) return false;
     throw new GspotError(
         'git',
-        `Git ${WORK_TREE_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
+        `Git ${GIT_WORK_TREE_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
     );
 }
 

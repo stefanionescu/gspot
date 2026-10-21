@@ -1,18 +1,17 @@
-import { isRecord } from '#cli/system/values.ts';
-import { FIRST_READ } from '#cli/config/rules.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { type Manifest } from '#cli/types/configurations.ts';
+import { FIRST_READ } from '#cli/config/generation/rules.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
 import { SETTING_RULES } from '#cli/config/settings/schema.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
-import type { SettingsError } from '#cli/types/settings/file.ts';
+import { type Configuration } from '#cli/types/configurations.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { ESLINT_LIMIT_RULES } from '#cli/config/generation/eslint.ts';
+import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
-import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
+import { ESLINT_LIMIT_RULES } from '#cli/config/generation/eslint/base.ts';
+import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 
 /**
  * Refuse scope paths that name a file or repeat, and keep written scopes whose folder does not exist yet.
@@ -21,7 +20,7 @@ import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
  * @param settings the normalized gspot.toml.
  * @returns the errors in plain English.
  */
-function validateScopePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
+export function validateScopePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
     const paths = Object.values(settings.scopes).map((table) => table.written['path'] as string);
     using files = openFiles(repositoryRoot);
     return paths.flatMap((path) => {
@@ -50,7 +49,7 @@ function validateScopePaths(repositoryRoot: string, settings: Settings): Setting
  * @param settings the parsed gspot.toml.
  * @returns an error at each key that names no file.
  */
-function validateRuleFilePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
+export function validateRuleFilePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
     using files = openFiles(repositoryRoot);
     return listSettingsTables(settings).flatMap(({ table, path }) => {
         const plugins = table.tools?.['eslint']?.['plugins'];
@@ -88,12 +87,14 @@ function validateRuleFilePaths(repositoryRoot: string, settings: Settings): Sett
  * Find the errors in [rules] exclude: an item that matches no rule, and an item that hides a file that the reader opens first.
  *
  * @param exclude the written items, relative to the rules folder.
- * @param manifests the shipped configuration declarations indexed by name.
+ * @param configurations the shipped configuration declarations indexed by name.
  * @returns each error with its position in the exclusion list.
  */
-function validateRuleExcludes(exclude: string[], manifests: Map<string, Manifest>): SettingsError[] {
+export function validateRuleExcludes(exclude: string[], configurations: Map<string, Configuration>): SettingsError[] {
     if (exclude.length === 0) return [];
-    const paths = [...manifests.values()].flatMap((manifest) => listRuleFiles(manifest).map((file) => file.path));
+    const paths = [...configurations.values()].flatMap((configuration) =>
+        listRuleFiles(configuration).map((file) => file.path),
+    );
     return exclude.flatMap((entry, index) => {
         if (FIRST_READ.some((file) => isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${file}`, trimTrailingSlashes(entry))))
             return [
@@ -123,9 +124,9 @@ function validateRuleExcludes(exclude: string[], manifests: Map<string, Manifest
  * @param settings the root settings and every scope.
  * @returns the settings errors with the key that owns each value.
  */
-function validateSettingRules(settings: Settings): SettingsError[] {
+export function validateSettingRules(settings: Settings): SettingsError[] {
     const limitRules = Object.fromEntries(
-        Object.entries(ESLINT_LIMIT_RULES).map(([rule, declaration]) => [rule, `limits.${declaration.limit}`]),
+        Object.entries(ESLINT_LIMIT_RULES).map(([rule, setting]) => [rule, `limits.${setting.limit}`]),
     );
     const owned = new Map(
         Object.entries({ ...SETTING_RULES, eslint: { ...limitRules, ...SETTING_RULES['eslint'] } }).map(
@@ -174,5 +175,3 @@ function validateSettingRules(settings: Settings): SettingsError[] {
         });
     });
 }
-
-export { validateScopePaths, validateSettingRules, validateRuleExcludes, validateRuleFilePaths };

@@ -54,7 +54,9 @@ export const JAVASCRIPT_LOCKFILES = [
     'package-lock.json',
     'npm-shrinkwrap.json',
 ] as const;
+
 export const PYTHON_LOCKFILES = ['uv.lock'] as const;
+
 export const LOCKED_PACKAGE_LOCKFILES = [...JAVASCRIPT_LOCKFILES, ...PYTHON_LOCKFILES] as const;
 
 export const NPM_PACKAGE_FOLDER = 'node_modules/';
@@ -65,9 +67,3 @@ export const PNPM_PEER_START = '(';
 export const IMPORTER_LOCKFILES = ['bun.lock', 'package-lock.json', 'pnpm-lock.yaml'] as const;
 
 export const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
-
-export const LOCKFILE_UPDATE_COMMANDS = {
-    'bun.lock': 'bun install',
-    'package-lock.json': 'npm install',
-    'pnpm-lock.yaml': 'pnpm install',
-} as const;

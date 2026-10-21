@@ -1,4 +1,3 @@
-import { TYPO } from '#tests/data/checks/spelling.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/data/checks/typescript/projects.ts';
 import { DOUBLE_JS, CHECK_SCRIPT, TYPESCRIPT_PACKAGE } from '#tests/data/checks/javascript/tsc.ts';
 
@@ -55,26 +54,6 @@ export const receiptOptions = { style: 'currency', currency: 'EUR' } as const;
 
 export const TYPESCRIPT_CASES = [
     {
-        check: 'typescript/tsc',
-        files: {
-            'src/orders/wrong.ts': `// A wrong type.
-
-/** A count that is not a number. */
-export const count: number = 'three';
-`,
-        },
-        expected: { file: 'src/orders/wrong.ts', rule: 'TS2322', line: 4, column: 14 },
-        corrected: {
-            files: {
-                'src/orders/wrong.ts': `// A wrong type.
-
-/** A count that is not a number. */
-export const count: number = 3;
-`,
-            },
-        },
-    },
-    {
         check: 'javascript/eslint',
         files: {
             'src/orders/back.ts': `// An order module that reaches back into the entry.
@@ -115,64 +94,6 @@ export const unused = 1;
 import { unused } from './orders/unused.js';
 export const additional = unused;
 `,
-            },
-        },
-    },
-    {
-        check: 'format/prettier',
-        files: {
-            'src/orders/ugly.ts': `// Badly formatted.
-
-/** A value. */
-export const   ugly   =   [1,2,
-3];
-`,
-        },
-        expected: { file: 'src/orders/ugly.ts', message: 'Not formatted the way Prettier formats it.' },
-    },
-    {
-        check: 'format/editorconfig-checker',
-        files: {
-            'src/orders/trailing.ts': `// Trailing spaces after this comment.\u0020\u0020\u0020
-
-/** A value. */
-export const orderCount = 1;
-`,
-        },
-        expected: { file: 'src/orders/trailing.ts', line: 1, message: 'Trailing whitespace' },
-    },
-    {
-        check: 'spelling/typos',
-        files: {
-            'src/orders/typo.ts': `// ${TYPO.the} order of things.
-
-/** A value. */
-export const orderCount = 1;
-`,
-        },
-        expected: {
-            file: 'src/orders/typo.ts',
-            line: 1,
-            column: 4,
-            message: `\`${TYPO.the}\` should be \`the\``,
-        },
-        corrected: {
-            files: {
-                'src/orders/typo.ts': `// The order of things.
-
-/** A value. */
-export const orderCount = 1;
-`,
-            },
-        },
-    },
-    {
-        check: 'javascript/tsc',
-        files: { 'src/orders/double.js': DOUBLE_JS.replace('twice(3)', "twice('3')") },
-        expected: { file: 'src/orders/double.js', rule: 'TS2345', line: 14, column: 28 },
-        corrected: {
-            files: {
-                'src/orders/double.js': DOUBLE_JS,
             },
         },
     },

@@ -1,8 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
-import type { ReferencePage } from '../types/reference.ts';
-import { SCHEMA_FILE } from '#cli/config/settings/file.ts';
-import type { readReferenceData } from '#cli/reference.ts';
+import { SCHEMA_FILE } from '#cli/config/settings/schema.ts';
+import type { ReferencePage, ReferenceFacts } from '../types/reference.ts';
 
 import {
     formatCode,
@@ -103,7 +102,7 @@ function listSchemaProperties(
     return map?.properties === undefined ? fixed : [...fixed, { name: MAP_KEY_NAME, node: map, required: false }];
 }
 
-function formatDefaults(variants: ReturnType<typeof readReferenceData>['settings']): string {
+function formatDefaults(variants: ReferenceFacts['settings']): string {
     return variants
         .map(({ setting, owners }) => {
             const recommended = setting.default;
@@ -118,7 +117,7 @@ function formatDefaults(variants: ReturnType<typeof readReferenceData>['settings
 }
 
 // The languages whose default differs from the default of the key.
-function formatLanguageDefaults(variants: ReturnType<typeof readReferenceData>['settings']): string {
+function formatLanguageDefaults(variants: ReferenceFacts['settings']): string {
     const defaults = variants.flatMap(({ setting }) =>
         setting.language_defaults === undefined ? [] : Object.entries(setting.language_defaults),
     );
@@ -127,17 +126,17 @@ function formatLanguageDefaults(variants: ReturnType<typeof readReferenceData>['
 }
 
 function formatSetting(
-    data: ReturnType<typeof readReferenceData>,
+    facts: ReferenceFacts,
     key: string,
     { node, required }: { node: JSONSchema.JSONSchema; required: boolean },
 ): string {
-    const variants = data.settings.filter(({ setting }) => setting.name === key);
+    const variants = facts.settings.filter(({ setting }) => setting.name === key);
     const reasons = [
         ...new Set(
             variants.flatMap(({ setting }) => (setting.reason_needed === undefined ? [] : [setting.reason_needed])),
         ),
     ];
-    const accepted = formatAcceptedValue(data.schema, node);
+    const accepted = formatAcceptedValue(facts.schema, node);
     const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (/[.\n]$/u.test(accepted) ? '' : '.');
     // A record field without a declared default takes the default of its schema.
     const schemaDefault = node.default === undefined ? 'unset' : formatCode(JSON.stringify(node.default));
@@ -167,7 +166,7 @@ function formatRowId(key: string): string {
 
 // Each key of a table or a record under its own heading, one level below the table, with the full key as its anchor.
 function formatSettingKeys(
-    data: ReturnType<typeof readReferenceData>,
+    facts: ReferenceFacts,
     prefix: string,
     keys: ReturnType<typeof listSchemaProperties>,
     level: number,
@@ -176,7 +175,7 @@ function formatSettingKeys(
         .map(({ name, node, required }) => {
             const key = prefix === '' ? name : `${prefix}.${name}`;
             const heading = `<h${String(level)} id="${formatRowId(key)}"><code>${key}</code></h${String(level)}>`;
-            return `${heading}\n\n${formatSetting(data, key, { node, required })}\n`;
+            return `${heading}\n\n${formatSetting(facts, key, { node, required })}\n`;
         })
         .join('\n');
 }
@@ -222,12 +221,12 @@ function formatVariantSection(schema: JSONSchema.JSONSchema, key: string, node: 
 
 // A table or a record: its description and its keys, then the tables and records inside it, one heading level down.
 function formatSettingTable(
-    data: ReturnType<typeof readReferenceData>,
+    facts: ReferenceFacts,
     key: string,
     value: JSONSchema.JSONSchema | boolean,
     level: number,
 ): string {
-    const { schema } = data;
+    const { schema } = facts;
     const node = getSchemaNode(schema, value);
     const children = listSchemaProperties(schema, node);
     const keys = children.filter((child) => isSettingValue(schema, child.node));
@@ -238,21 +237,18 @@ function formatSettingTable(
         (key === 'naming'
             ? 'See [Accept a banned name](/configure/gspot-toml/#accept-a-banned-name) for an exact-name override.\n\n'
             : '') +
-        (keys.length === 0 ? '' : `${formatSettingKeys(data, key, keys, level + 1)}\n`) +
+        (keys.length === 0 ? '' : `${formatSettingKeys(facts, key, keys, level + 1)}\n`) +
         children
             .filter((child) => !isSettingValue(schema, child.node) && !variants.has(child.name))
-            .map((child) => formatSettingTable(data, `${key}.${child.name}`, child.node, level + 1))
+            .map((child) => formatSettingTable(facts, `${key}.${child.name}`, child.node, level + 1))
             .join('') +
         formatVariantSection(schema, key, node, level + 1)
     );
 }
 
 // A scope takes its own keys and every root table, apart from the keys that only the root takes.
-function formatScopeSection(
-    data: ReturnType<typeof readReferenceData>,
-    value: JSONSchema.JSONSchema | boolean,
-): string {
-    const { schema } = data;
+function formatScopeSection(facts: ReferenceFacts, value: JSONSchema.JSONSchema | boolean): string {
+    const { schema } = facts;
     const node = getSchemaNode(schema, value);
     const children = listSchemaProperties(schema, node);
     const accepted = new Set(children.map(({ name }) => name));
@@ -264,7 +260,7 @@ function formatScopeSection(
         (node.description === undefined ? '' : `${node.description}\n\n`) +
         'See [Monorepos and scopes](/configure/monorepos/) for how a scope inherits settings.\n\n' +
         formatSettingKeys(
-            data,
+            facts,
             'scope',
             children.filter((child) => isSettingValue(schema, child.node)),
             TABLE_HEADING_LEVEL + 1,
@@ -311,18 +307,18 @@ export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string 
 /**
  * Build the one settings page: the top-level keys, then every table and record, each key under its own heading.
  *
- * @param data settings variants and JSON Schema from the CLI
+ * @param facts settings variants and JSON Schema from the CLI
  * @returns the page, keyed by its path
  */
-export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): Map<string, ReferencePage> {
-    const { schema } = data;
+export function buildSettingsPages(facts: ReferenceFacts): Map<string, ReferencePage> {
+    const { schema } = facts;
     const roots = listSchemaProperties(schema, schema);
     const sections = roots
         .filter((child) => !isSettingValue(schema, child.node))
         .map(({ name, node }) =>
             name === 'scope'
-                ? formatScopeSection(data, node)
-                : formatSettingTable(data, name, node, TABLE_HEADING_LEVEL),
+                ? formatScopeSection(facts, node)
+                : formatSettingTable(facts, name, node, TABLE_HEADING_LEVEL),
         );
     const page = buildReferencePage(
         'Settings',
@@ -332,7 +328,7 @@ export function buildSettingsPages(data: ReturnType<typeof readReferenceData>): 
             formatSection(
                 'Top-level keys',
                 formatSettingKeys(
-                    data,
+                    facts,
                     '',
                     roots.filter((child) => isSettingValue(schema, child.node)),
                     TABLE_HEADING_LEVEL + 1,

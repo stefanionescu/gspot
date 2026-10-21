@@ -5,13 +5,13 @@ import { rm, readFile, writeFile } from 'node:fs/promises';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { COVERAGE_ZERO_LIMITS } from '#tests/data/checks/coverage.ts';
-import vitestManifest from 'vitest/package.json' with { type: 'json' };
+import vitestPackage from 'vitest/package.json' with { type: 'json' };
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { VITEST_SOURCE, VITEST_PACKAGE, UNTESTED_SOURCE, VITEST_PROJECT_FILES } from '#tests/data/checks/vitest.ts';
 
 const vitestProjectFiles = {
     ...VITEST_PROJECT_FILES,
-    'package.json': JSON.stringify({ ...VITEST_PACKAGE, devDependencies: { vitest: vitestManifest.version } }) + '\n',
+    'package.json': JSON.stringify({ ...VITEST_PACKAGE, devDependencies: { vitest: vitestPackage.version } }) + '\n',
 };
 
 test('vitest/coverage reports a coverage limit and passes after the fix, in the root and a scope', async () => {

@@ -1,10 +1,10 @@
 // Run tools with the configured timeout and shared process options.
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
+import { readGitEnvironment } from '#cli/system/git.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { buildGitEnvironment } from '#cli/system/git.ts';
 import type { ToolRunOptions } from '#cli/types/tools/run.ts';
-import type { ScopeView } from '#cli/types/settings/values.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
+import type { ScopeView } from '#cli/types/settings/inheritance.ts';
 
 /**
  * Run a tool command with the shared output environment and the timeout from the settings.
@@ -23,9 +23,11 @@ export async function runTool(command: readonly string[], options: ToolRunOption
             stderr: 'The command was canceled.',
             missing: false,
             duration: 0,
-            isCanceled: true,
+            canceled: true,
+            timedOut: false,
+            errored: false,
         };
-    const selected = buildGitEnvironment(prepared.cwd, command, { ...TOOL_ENV, ...prepared.env });
+    const selected = readGitEnvironment(prepared.cwd, command, { ...TOOL_ENV, ...prepared.env });
     if ('failure' in selected) return selected.failure;
     const result = await spawnProcess(command, {
         ...prepared,

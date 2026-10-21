@@ -4,11 +4,11 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { readFile, writeFile } from 'node:fs/promises';
-import { type RunReport } from '#cli/types/runs/check.ts';
+import { type RunReport } from '#cli/types/runs/run.ts';
 import { setOutputOptions } from '#cli/system/terminal.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { PROGRESS_CLEAR, FINDINGS_SHOWN } from '#cli/config/terminal.ts';
+import { PROGRESS_CLEAR, FINDINGS_SHOWN } from '#cli/config/commands/check.ts';
 import { clearProgress, printProgress, formatRunReport } from '#cli/commands/check/report.ts';
 
 import {

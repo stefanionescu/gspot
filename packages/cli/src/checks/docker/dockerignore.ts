@@ -1,10 +1,11 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
 import { DOCKERFILE_NAME, DOCKERFILE_EXTENSION } from '#cli/config/repository/inventory.ts';
 import { DOCKERIGNORE, EDGE_SLASHES, DOCKERIGNORE_ENTRIES, IGNORE_PATTERN_FORMS } from '#cli/config/checks/docker.ts';
@@ -29,11 +30,11 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Find
             );
         })
         .flatMap(({ path: dockerfile }): Finding[] => {
-            const scope = findScope(dockerfile, session.repository.scopes);
-            const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as ScopeSelection;
+            const scope = findScope(dockerfile, session.repository.scopeFolders);
+            const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as Scope;
             const required = [
                 ...DOCKERIGNORE_ENTRIES,
-                ...selection.selected.flatMap((manifest) => manifest.ignored_paths),
+                ...selection.selected.flatMap((configuration) => configuration.ignored_paths),
             ];
             const paths = [
                 ...new Set([

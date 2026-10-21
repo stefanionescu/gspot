@@ -1,15 +1,16 @@
 import { join } from 'node:path';
-import { parseReport } from '#cli/parsers/json.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { type Finding } from '#cli/types/runs/check.ts';
+import type { Session } from '#cli/types/session.ts';
+import { parseToolReport } from '#cli/parsers/json.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { ImageFinding } from '#cli/types/checks/docker.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
 import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { imageReportSchema } from '#cli/schemas/checks/docker/trivy-image.ts';
-import { TRIVY_EXIT, TRIVY_TOOL_FILE, TRIVY_IMAGE_COMMAND } from '#cli/config/checks/docker.ts';
+import { TRIVY_TOOL_FILE, TRIVY_IMAGE_COMMAND, TRIVY_FINDINGS_EXIT_CODE } from '#cli/config/checks/docker.ts';
 
 // The tool's exit status and parsed findings must agree before a scan can count as clean.
 async function scanImage(session: Session, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
@@ -19,11 +20,11 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
         [...TRIVY_IMAGE_COMMAND, join(session.root, selectToolFilePath(session, planned, TRIVY_TOOL_FILE)), image],
         { cwd: session.root },
     );
-    if (result.code !== 0 && result.code !== TRIVY_EXIT) {
+    if (result.code !== 0 && result.code !== TRIVY_FINDINGS_EXIT_CODE) {
         const detail = formatOutputTail(result, `exit ${String(result.code)}`);
         throw new Error(`Trivy could not scan ${image}: ${detail}`);
     }
-    const report = parseReport('Trivy', result.stdout, imageReportSchema);
+    const report = parseToolReport('Trivy', result.stdout, imageReportSchema);
     const findings = (report.Results ?? []).flatMap((entry) => [
         ...(entry.Vulnerabilities ?? []).map((vulnerability) => ({
             rule: vulnerability.VulnerabilityID,
@@ -34,7 +35,7 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
             message: `${image}: ${secret.RuleID}: ${secret.Title}`,
         })),
     ]);
-    if ((result.code === TRIVY_EXIT) !== findings.length > 0)
+    if ((result.code === TRIVY_FINDINGS_EXIT_CODE) !== findings.length > 0)
         throw new Error(`Trivy returned an inconsistent image report for ${image}.`);
     return findings;
 }

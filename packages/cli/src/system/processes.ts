@@ -95,20 +95,20 @@ function isUnfinished(result: SpawnCompletion): boolean {
 function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult {
     const missing = result.code === 'ENOENT';
     const unfinished = isUnfinished(result);
-    const isErrored = result.failed && unfinished;
+    const errored = result.failed && unfinished;
     const code = missing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
     const messages: (string | undefined)[] = [result.stderr];
     if (unfinished) messages.push(result.shortMessage);
     return {
         // A run that errored can still report exit 0; report it as failed.
-        code: isErrored && code === 0 ? FAILED_CODE : code,
+        code: errored && code === 0 ? FAILED_CODE : code,
         stdout: result.stdout ?? '',
         stderr: messages.filter(Boolean).join('\n'),
         missing,
         duration: performance.now() - started,
-        isTimedOut: result.timedOut,
-        isCanceled: result.isCanceled,
-        isErrored,
+        timedOut: result.timedOut,
+        canceled: result.isCanceled,
+        errored,
     };
 }
 
@@ -156,12 +156,12 @@ function stopProcessTree(child: ChildProcess, state: ProcessTermination): void {
  * @returns completion state and the cleanup operation.
  */
 function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): ProcessTreeControl {
-    const state = { isTimedOut: false, isCanceled: false };
+    const state = { timedOut: false, canceled: false };
     const termination: ProcessTermination = { stopped: false, failure: undefined, drainTimer: undefined };
     const stopTree = stopProcessTree.bind(undefined, child, termination);
     const stopOnAbort = () => {
         if (termination.stopped) return;
-        state.isCanceled = true;
+        state.canceled = true;
         stopTree();
     };
     const removeExitListener = onExit(stopTree);
@@ -170,7 +170,7 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
             ? undefined
             : setTimeout(() => {
                   if (termination.stopped) return;
-                  state.isTimedOut = true;
+                  state.timedOut = true;
                   stopTree();
               }, options.timeoutSeconds * MILLISECONDS_PER_SECOND);
     let exitCleanup: Promise<void> | undefined;

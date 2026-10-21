@@ -97,3 +97,24 @@ export const IGNORE_EXPIRY_ENTRIES = [
         until: new LocalDate('2030-05-21'),
     },
 ] as const;
+
+/** The nearest configuration choices apply to child folders, and siblings stay apart. */
+export const PROJECT_CHOICES = {
+    configurations: ['nextjs', 'javascript'],
+    removed_configurations: [],
+    scope: [
+        { path: 'app', configurations: [], removed_configurations: ['nextjs'] },
+        { path: 'app/worker', configurations: ['nextjs'], removed_configurations: [] },
+        { path: 'required', configurations: [], removed_configurations: ['javascript'] },
+    ],
+} as const;
+
+/** Inheritance from the root, removal, restoring in a deeper scope, separate siblings, and required dependencies. */
+export const PROJECT_SELECTIONS = [
+    ['', 'nextjs', true],
+    ['app', 'nextjs', false],
+    ['app/child', 'nextjs', false],
+    ['app/worker', 'nextjs', true],
+    ['sibling', 'nextjs', true],
+    ['required', 'javascript', true],
+] as const;

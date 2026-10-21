@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxChanges } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { COPY_PAGE_BUILD } from '#tests/data/checks/site/build.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
@@ -20,7 +21,7 @@ const installedSandbox = registerSharedSandbox(CHECKS_HTML_INSTALLED_SANDBOX);
 test.each([...AUTOPLAY_CHECKS])(
     '$check reports audio and video autoplay and accepts user-controlled playback',
     async (entry) => {
-        const sandbox = { path: installedSandbox().root };
+        const { root } = installedSandbox();
         const skippedChecks =
             entry.scope === ''
                 ? [{ check: entry.check, scope: 'app', status: 'skipped' as const, fileCount: 0, findings: [] }]
@@ -31,17 +32,13 @@ test.each([...AUTOPLAY_CHECKS])(
             'app/page.html': AUTOPLAY_PAGE,
             'app/build.mjs': COPY_PAGE_BUILD,
         };
-        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-            check: '',
-            files: sourceFiles,
-            removed: Object.keys(CHECKS_HTML_INSTALLED_SANDBOX.files).filter(
-                (path) => path !== '.gitignore' && !Object.hasOwn(sourceFiles, path),
-            ),
-        });
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-        const checked = parseCheckReport(await spawnGspot(sandbox.path, entry.arguments));
+        await using _sourceChange = await applySandboxChanges(
+            installedSandbox(),
+            buildSandboxChanges(CHECKS_HTML_INSTALLED_SANDBOX.files, sourceFiles),
+        );
+
+        const settings = await readFile(join(root, 'gspot.toml'), 'utf8');
+        const checked = parseCheckReport(await spawnGspot(root, entry.arguments));
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         expect(checked.report.checks).toMatchObject([
             {
@@ -52,15 +49,15 @@ test.each([...AUTOPLAY_CHECKS])(
             },
             ...skippedChecks,
         ]);
-        await writeFile(join(sandbox.path, entry.source), CONTROLLED_PLAYBACK_PAGE);
-        const corrected = parseCheckReport(await spawnGspot(sandbox.path, entry.arguments));
+        await writeFile(join(root, entry.source), CONTROLLED_PLAYBACK_PAGE);
+        const corrected = parseCheckReport(await spawnGspot(root, entry.arguments));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toMatchObject([
             { check: entry.check, scope: entry.scope, status: 'passed', findings: [] },
             ...skippedChecks,
         ]);
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-        expect(await readFile(join(sandbox.path, entry.preserved), 'utf8')).toBe(AUTOPLAY_PAGE);
-        expect(await readFile(join(sandbox.path, 'app/build.mjs'), 'utf8')).toBe(COPY_PAGE_BUILD);
+        expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(settings);
+        expect(await readFile(join(root, entry.preserved), 'utf8')).toBe(AUTOPLAY_PAGE);
+        expect(await readFile(join(root, 'app/build.mjs'), 'utf8')).toBe(COPY_PAGE_BUILD);
     },
 );

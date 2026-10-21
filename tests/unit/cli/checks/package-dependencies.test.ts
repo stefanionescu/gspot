@@ -22,9 +22,9 @@ test('stale-lockfile reports each dependency that package.json and bun.lock disa
 test('react-versions reports react and react-dom that lock different versions', async () => {
     await using sandbox = await testdir({
         ...STALE_LOCKFILE_FILES,
-        'gspot.toml': buildSandboxSettings(['javascript']),
+        'gspot.toml': buildSandboxSettings(['react-dom']),
     });
-    const findings = await checkFindings(sandbox.path, 'dependencies/react-versions');
+    const findings = await checkFindings(sandbox.path, 'react-dom/react-versions');
     expect(findings.map(({ rule }) => rule)).toStrictEqual(['react-versions']);
     expect(findings[0]?.message).toStartWith('react 19.1.0 and react-dom 19.0.0 differ');
 });

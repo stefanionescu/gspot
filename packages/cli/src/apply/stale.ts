@@ -1,20 +1,20 @@
 import { createTwoFilesPatch } from 'diff';
 import type { StaleFile } from '#cli/types/apply.ts';
+import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { Session } from '#cli/types/planning.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { listStrayPaths } from '#cli/ownership/plans.ts';
 import { DIFF_CONTEXT_LINES } from '#cli/config/apply.ts';
-import { readBlock } from '#cli/system/managed-blocks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
-import { listStaleLockfiles } from '#cli/install/lockfiles.ts';
-import { hasFileSettings } from '#cli/ownership/file-settings.ts';
-import { parseToolProject } from '#cli/install/npm/tool-project.ts';
+import { findBlockBody } from '#cli/parsers/managed-blocks.ts';
+import { hasManagedKeys } from '#cli/ownership/file-settings.ts';
+import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { assertPackageManager } from '#cli/repository/package-manager.ts';
+import { parseToolPackageJson } from '#cli/install/npm/tool-project.ts';
+import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { MODE_RADIX, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import { UV_LOCKFILE, NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
+import { UV_LOCKFILE, NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/gspot-paths.ts';
 
 function buildDiff(path: string, before: string, after: string, beforeName: string): string {
     return createTwoFilesPatch(
@@ -54,7 +54,7 @@ function listStaleBlocks(files: Files, generated: GenerationResult): StaleFile[]
     const entries: StaleFile[] = [];
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
-        const current = readBlock(text, { path: block.path, style: block.style });
+        const current = findBlockBody(text, { path: block.path, style: block.style });
         const wanted = block.block.trim();
         if (current === undefined) entries.push({ path: block.path, kind: 'missing' });
         else if (current !== wanted)
@@ -68,11 +68,11 @@ function listStaleBlocks(files: Files, generated: GenerationResult): StaleFile[]
 }
 
 // Classify merged files with no remaining managed fields as missing or changed.
-function listStaleFileSettings(files: Files, generated: GenerationResult): StaleFile[] {
-    return generated.fileSettings.flatMap((output): StaleFile[] => {
+function listStaleManagedKeys(files: Files, generated: GenerationResult): StaleFile[] {
+    return generated.managedKeys.flatMap((output): StaleFile[] => {
         const current = files.read(output.path);
         if (current === undefined) return [{ path: output.path, kind: 'missing' }];
-        return hasFileSettings(output, current) ? [] : [{ path: output.path, kind: 'changed' }];
+        return hasManagedKeys(output, current) ? [] : [{ path: output.path, kind: 'changed' }];
     });
 }
 
@@ -96,7 +96,7 @@ export function listStaleFiles(
         ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),
         ...listStaleWholeFiles(files, generated),
         ...listStaleBlocks(files, generated),
-        ...listStaleFileSettings(files, generated),
+        ...listStaleManagedKeys(files, generated),
         ...strays,
     ].toSorted((a, b) => a.path.localeCompare(b.path));
 }
@@ -110,12 +110,12 @@ export function listStaleFiles(
  * @returns every path that this run writes or keeps.
  */
 export function listExpectedPaths(session: Pick<Session, 'packageManager'>, generated: GenerationResult): Set<string> {
-    const paths = new Set(
-        [...generated.files, ...generated.blocks, ...generated.fileSettings].map((file) => file.path),
-    );
+    const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));
     for (const file of generated.files) {
         if (file.path === NPM_TOOL_PROJECT_FILE)
-            paths.add(parseToolProject(file.content, assertPackageManager(session.packageManager).name).lockfilePath);
+            paths.add(
+                parseToolPackageJson(file.content, assertPackageManager(session.packageManager).name).lockfilePath,
+            );
         if (file.path === PYTHON_TOOL_PROJECT_FILE) paths.add(UV_LOCKFILE);
     }
     return paths;

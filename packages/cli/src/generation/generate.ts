@@ -1,30 +1,30 @@
-import { AGENTS_FILE } from '#cli/config/rules.ts';
 import { buildPathKey } from '#cli/system/paths.ts';
-import type { RuleFile } from '#cli/types/rules.ts';
-import type { Session } from '#cli/types/planning.ts';
-import { stripBlock } from '#cli/system/managed-blocks.ts';
+import type { Session } from '#cli/types/session.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { stripBlock } from '#cli/parsers/managed-blocks.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
+import { AGENTS_FILE } from '#cli/config/generation/rules.ts';
 import { buildBunScannerEdits } from '#cli/generation/bun.ts';
-import { isInGspotFolder } from '#cli/repository/classify.ts';
+import type { RuleFile } from '#cli/types/generation/rules.ts';
+import { listNeededTools } from '#cli/planning/needed-tools.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { listDistinctTools } from '#cli/configurations/tools.ts';
-import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
-import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm.ts';
+import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
+import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import { getTable, findRootSelection } from '#cli/settings/scope-view.ts';
-import { usesGitLfs, listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
+import { buildPointerFieldEdits } from '#cli/generation/settings/pointers.ts';
+import { hasLfsFiles, listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
-import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
+import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/projects.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
-import { DOT_GSPOT, STATE_PATH, VERSION_PIN_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
-import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
+import { DOT_GSPOT, STATE_PATH, VERSION_PIN_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-paths.ts';
+import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
 import {
     LF_ATTRIBUTES,
@@ -32,7 +32,7 @@ import {
     GIT_ATTRIBUTES_BLOCK,
     ATTRIBUTE_GLOB_CHARACTERS,
     ATTRIBUTE_QUOTED_CHARACTERS,
-} from '#cli/config/generation/files.ts';
+} from '#cli/config/generation/generate.ts';
 
 // CI includes the manual checks and adds macOS when a scope selects Swift.
 function buildWorkflow(session: Session, generated: GenerationResult): void {
@@ -42,10 +42,10 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
     } = session;
     if (settings.ci?.enabled !== true) return;
     const manual = session.configuredChecks.filter((planned) => planned.check.stage === 'manual');
-    const required = new Set(manual.flatMap((element) => listRequiredTools(element)));
+    const required = new Set(manual.flatMap((planned) => listNeededTools(planned)));
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
-            version: packageManifest.version,
+            version: cliPackage.version,
             packageManager:
                 session.packageManager === undefined
                     ? undefined
@@ -60,14 +60,14 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
             operatingSystems: settings.ci.operating_systems,
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
             manualChecks: manual,
-            manualTools: listDistinctTools(session.neededToolManifests).filter((tool) => required.has(tool.name)),
+            manualTools: listDistinctTools(session.neededToolConfigurations).filter((tool) => required.has(tool.name)),
         }),
     );
 }
 
 // A path as a Git attributes pattern that matches only that file: anchored, with glob characters escaped, and quoted
 // when it holds a space or a quote.
-function formatAttributePattern(path: string): string {
+function buildAttributePattern(path: string): string {
     const escaped = path.replaceAll(ATTRIBUTE_GLOB_CHARACTERS, (character) => `\\${character}`);
     const pattern = `/${escaped}`;
     if (!ATTRIBUTE_QUOTED_CHARACTERS.test(pattern)) return pattern;
@@ -89,7 +89,7 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
     const suffix = inheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
     const lines = outsidePaths
         .toSorted((left, right) => left.localeCompare(right))
-        .map((path) => `${formatAttributePattern(path)} linguist-generated${suffix}`);
+        .map((path) => `${buildAttributePattern(path)} linguist-generated${suffix}`);
     return [block, ...lines].join('\n');
 }
 
@@ -128,20 +128,20 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
     const block = buildAgentsBlock({
         hasOwnTitle: hasTopHeading(agentsText),
         generatedPaths: outsidePaths,
-        fileSettings: generated.fileSettings.map(({ path, changes }) => ({
+        managedKeys: generated.managedKeys.map(({ path, keys }) => ({
             path,
-            keys: changes.map((change) => change.path.join('.')),
+            keys: keys.map((change) => change.key.join('.')),
         })),
         startCommand: session.startRunner.command,
         files: rules,
-        hasChecks: listSelectedManifests(session.scopes).some((manifest) => manifest.checks.length > 0),
+        hasChecks: listSelectedConfigurations(session.scopes).some((configuration) => configuration.checks.length > 0),
     });
     generated.blocks.push({ path: AGENTS_FILE, block, style: 'markdown' });
 }
 
 function assertDistinctPaths(generated: GenerationResult): void {
     const paths = new Map<string, string>();
-    const files = [...generated.files, ...generated.blocks, ...generated.fileSettings];
+    const files = [...generated.files, ...generated.blocks, ...generated.managedKeys];
     for (const file of files) {
         assertWritablePath(file.path);
         const key = buildPathKey(file.path);
@@ -158,7 +158,7 @@ function assertDistinctPaths(generated: GenerationResult): void {
  *
  * @returns everything that apply writes.
  */
-function generate(session: Session): GenerationResult {
+export function generate(session: Session): GenerationResult {
     const {
         settingsFile: { settings },
         repository,
@@ -167,22 +167,22 @@ function generate(session: Session): GenerationResult {
     const { installedRoot, timeoutSeconds, reads } = session;
     const { root } = repository;
     const packageManager = session.packageManager?.name;
-    const manifests = session.neededToolManifests;
+    const configurations = session.neededToolConfigurations;
     const generated: GenerationResult = {
-        files: [{ path: VERSION_PIN_FILE, content: packageManifest.version + '\n' }],
+        files: [{ path: VERSION_PIN_FILE, content: cliPackage.version + '\n' }],
         blocks: [],
-        fileSettings: [],
+        managedKeys: [],
     };
     const toolFiles = getToolFiles(session);
     generated.files.push(...toolFiles.files);
-    generated.fileSettings.push(
+    generated.managedKeys.push(
         ...buildBunScannerEdits(session),
         ...buildPointerFieldEdits(session, generated.files, toolFiles.targets),
     );
     generated.files.push(
         ...buildHookFiles(settings, session.startRunner, {
             names: listHookNames(session.configuredChecks),
-            usesLfs: usesGitLfs(session.repository.attributes),
+            usesLfs: hasLfsFiles(session.repository.attributes),
         }),
         // Only Yarn needs the version, which an undeclared package manager reads from the program.
         ...(packageManager === undefined
@@ -190,7 +190,7 @@ function generate(session: Session): GenerationResult {
             : buildNpmProject({
                   root,
                   scopes,
-                  manifests,
+                  configurations,
                   isYarnBerry:
                       packageManager === 'yarn' &&
                       isYarnBerry(
@@ -202,8 +202,11 @@ function generate(session: Session): GenerationResult {
                           ),
                       ),
               })),
-        ...buildPythonProject(manifests, getTable(findRootSelection(scopes).view, 'dependencies').min_release_age_days),
-        buildMiseProject(manifests),
+        ...buildPythonProject(
+            configurations,
+            getTable(findRootSelection(scopes).view, 'dependencies').min_release_age_days,
+        ),
+        buildMiseProject(configurations),
     );
     buildWorkflow(session, generated);
     const rules = selectRuleFiles(session);
@@ -213,5 +216,3 @@ function generate(session: Session): GenerationResult {
     assertDistinctPaths(generated);
     return generated;
 }
-
-export { generate };

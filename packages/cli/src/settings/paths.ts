@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { isRecord } from '#cli/system/values.ts';
-import type { PathVisitor } from '#cli/types/settings/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import type { PathVisitor } from '#cli/types/settings/inheritance.ts';
 import { findSettingSchema } from '#cli/schemas/settings/gspot-toml.ts';
 
 function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
@@ -15,7 +15,7 @@ function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, k
         );
     if (!isRecord(value)) return value;
     if (schema instanceof z.ZodRecord) {
-        const role = (schema.keyType as z.ZodType).meta()?.pathRole;
+        const role = (schema.keyType as z.ZodType).meta()?.path_role;
         return Object.fromEntries(
             Object.entries(value).map(([key, entry]) => [
                 role === undefined ? key : visit(key, [...keys, key], role),
@@ -42,8 +42,8 @@ function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, k
  * @param keys where the field sits in its table.
  * @returns the setting with only its declared path leaves changed.
  */
-function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
-    const role = schema.meta()?.pathRole;
+export function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
+    const role = schema.meta()?.path_role;
     if (typeof value === 'string' && role !== undefined) return visit(value, keys, role);
     if (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault)
         return mapSettingPaths(schema.unwrap() as z.ZodType, value, visit, keys);
@@ -57,7 +57,7 @@ function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, 
  * @param scope the repository-relative folder that owns the default.
  * @returns the repository-relative selector.
  */
-function joinScopeSelector(path: string, scope: string): string {
+export function joinScopeSelector(path: string, scope: string): string {
     if (scope === '' || path === '') return path;
     return path.startsWith('!') ? `!${scope}/${path.slice(1)}` : `${scope}/${path}`;
 }
@@ -70,12 +70,10 @@ function joinScopeSelector(path: string, scope: string): string {
  * @param scope the owning folder, empty for repository-root values.
  * @returns repository-relative path values without changing identities or tool options.
  */
-function joinDefaultPaths(key: string, value: unknown, scope: string): unknown {
+export function joinDefaultPaths(key: string, value: unknown, scope: string): unknown {
     if (scope === '' || value === undefined) return value;
     const schema = findSettingSchema(key);
     return schema === undefined
         ? value
         : mapSettingPaths(schema, value, (path) => joinScopeSelector(path, scope), key.split('.'));
 }
-
-export { mapSettingPaths, joinDefaultPaths, joinScopeSelector };

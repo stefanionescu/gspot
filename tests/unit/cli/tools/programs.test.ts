@@ -6,19 +6,17 @@ import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { locateCandidates } from '#cli/tools/locate.ts';
 import { installCompiler } from '#tests/setup/install.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
+import { listExecutablePaths } from '#cli/tools/locate.ts';
+import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { fakeTool, fakeNpmPackage } from '#tests/setup/fakes.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { chmod, unlink, symlink, readFile } from 'node:fs/promises';
-import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
-import { buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
+import { getShippedTool, buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
 
 test("inspectTool finds the project compiler, and the original repository's compiler from a scratch copy", async () => {
     await using sandbox = await testdir({
@@ -30,9 +28,9 @@ test("inspectTool finds the project compiler, and the original repository's comp
     const snapshot = join(sandbox.path, 'snapshot');
     await installCompiler(work, join(work, '.gspot/node_modules'));
     await installCompiler(work);
-    const compiler = getToolDeclaration(readManifests().values(), 'tsc');
+    const compiler = getShippedTool('tsc');
     const projectPath = join(work, 'node_modules/typescript/package.json');
-    const project = packageJsonSchema.parse(parseJsonFile(projectPath, await readFile(projectPath, 'utf8')));
+    const project = parseJsonFile(projectPath, await readFile(projectPath, 'utf8'), packageJsonSchema);
     expect(inspectTool(buildInspectionContext(work), compiler)).toMatchObject({
         state: 'system',
         found: project.version,
@@ -57,7 +55,7 @@ test('version reads and runs use the companion programs of the chosen tool folde
     const read = inspectTool(buildInspectionContext(sandbox.path), tool);
     expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
     const executed = await runTool([read.path!], {
-        timeoutSeconds: SETTING_DECLARATIONS['tool_timeout_seconds'].default,
+        timeoutSeconds: SETTING_FACTS['tool_timeout_seconds'].default,
         cwd: sandbox.path,
         env,
     });
@@ -72,10 +70,7 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
     const active = join(sandbox.path, 'active', isWindows ? 'tsc.cmd' : 'tsc');
     using _environment = overrideEnvironment({ MISE_DATA_DIR: join(sandbox.path, 'mise') });
     using _which = useExecutable(active);
-    const inspection = inspectTool(
-        buildInspectionContext(sandbox.path),
-        getToolDeclaration(readManifests().values(), 'tsc'),
-    );
+    const inspection = inspectTool(buildInspectionContext(sandbox.path), getShippedTool('tsc'));
     expect(inspection.state).toBe('system');
     expect(inspection.path).toBe(active);
 });
@@ -95,15 +90,15 @@ test.each([0, 1])('mise finds the program in the original repository with exit c
     using _which = useExecutable((name) =>
         join(sandbox.path, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`),
     );
-    const candidates = locateCandidates(join(sandbox.path, 'work'), 'tsc', {
+    const candidates = listExecutablePaths(join(sandbox.path, 'work'), 'tsc', {
         search: 'mise',
-        timeoutSeconds: SETTING_DECLARATIONS['tool_timeout_seconds'].default,
+        timeoutSeconds: SETTING_FACTS['tool_timeout_seconds'].default,
         searchFolders: [join(sandbox.path, 'work')],
     });
     expect(candidates).toStrictEqual(status === 0 ? [executable] : []);
     if (status === 0) {
         const result = await runTool([candidates[0]!], {
-            timeoutSeconds: SETTING_DECLARATIONS['tool_timeout_seconds'].default,
+            timeoutSeconds: SETTING_FACTS['tool_timeout_seconds'].default,
             cwd: join(sandbox.path, 'copy'),
         });
         expect(result.code).toBe(0);
@@ -134,11 +129,12 @@ test('a tool project program linked outside the repository is refused before it 
 
 test('a missing npm tool does not fall back to the program in the repository node_modules', async () => {
     await using sandbox = await testdir();
-    await fakeNpmPackage(
+    await createFileTree(sandbox.path, {
+        'node_modules/teller/package.json': JSON.stringify({ name: 'teller', version: '5.0.1' }),
+    });
+    await fakeTool(
         sandbox.path,
-        'node_modules',
-        'teller',
-        '5.0.1',
+        'node_modules/.bin/teller',
         "await Bun.write('fallback-ran', ''); console.log('5.0.1');\n",
     );
     const tool = buildProgramPin('teller', '5.0.1', 'teller');
@@ -146,7 +142,7 @@ test('a missing npm tool does not fall back to the program in the repository nod
     expect(missing.state).toBe('missing');
     expect(missing.path).toBeUndefined();
     expect(await isOnDisk(join(sandbox.path, 'fallback-ran'))).toBe(false);
-    await fakeNpmPackage(sandbox.path, '.gspot/node_modules', 'teller', '5.0.1', "console.log('5.0.1');\n");
+    await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', script: "console.log('5.0.1');\n" });
     expect(inspectTool(buildInspectionContext(sandbox.path), tool)).toMatchObject({
         state: 'ok',
         found: '5.0.1',

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { type KnipReport, type KnipSymbol } from '#cli/types/runs/output.ts';
+import { type KnipReport, type KnipSymbol } from '#cli/types/runs/tool-reports.ts';
 
 const knipSymbolSchema = z.object({
     name: z.string().min(1),

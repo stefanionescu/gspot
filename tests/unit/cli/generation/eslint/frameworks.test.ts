@@ -12,6 +12,7 @@ import { NESTJS_SANDBOX } from '#tests/data/checks/nestjs.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/data/checks/typescript/projects.ts';
 import { ALIAS_IMPORT, RESPONSE_MESSAGES } from '#tests/data/generation/eslint/selectors.ts';
 import { createEslint, readEslintRules, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { SERVER_FILES, RAW_HTML_CASES, COMPONENT_FILES } from '#tests/data/generation/eslint/framework.ts';
@@ -124,6 +125,7 @@ test.each(['none', 'index-only'])(
         await using sandbox = await testdir();
         const files = ['app/page.tsx', 'app/index.ts', 'app/format.ts', 'library/page.tsx'];
         await createFileTree(sandbox.path, {
+            'tsconfig.json': STRICT_TSCONFIG_TEXT,
             'gspot.toml': buildSandboxSettings(['typescript'], {
                 level: 'all',
                 rules: true,
@@ -140,15 +142,12 @@ configurations = ["nextjs"]
         const rules = await readEslintRules(eslint, files);
         expect(rules['app/page.tsx']!['gspot/no-trivial-files']![0]).toBe(0);
         for (const file of ['app/page.tsx', 'app/index.ts']) {
-            expect(
-                rules[file]!['no-restricted-syntax']!.some(
-                    (entry: unknown) =>
-                        typeof entry === 'object' &&
-                        entry !== null &&
-                        'selector' in entry &&
-                        entry.selector === 'ExportAllDeclaration',
-                ),
-            ).toBe(file !== 'app/index.ts' || reexports !== 'index-only');
+            await createFileTree(sandbox.path, { [file]: 'export * from "./format.js";\n' });
+            expect(await collectLintFindings(eslint, sandbox.path, [file], ['no-restricted-syntax'])).toStrictEqual(
+                file !== 'app/index.ts' || reexports !== 'index-only'
+                    ? [{ file, rule: 'no-restricted-syntax', line: 1 }]
+                    : [],
+            );
         }
         // The rule skips a small component and checks a plain module in the same scope.
         expect(rules['app/format.ts']!['gspot/no-trivial-files']![0]).toBe(2);
@@ -231,10 +230,10 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
             .some(({ ruleId }) => ruleId === '@darraghor/nestjs-typed/controllers-should-supply-api-tags'),
     ).toBe(false);
     const packagePath = join(repository.root, 'package.json');
-    const manifest = JSON.parse(await readFile(packagePath, 'utf8')) as PackageJson;
+    const packageJson = JSON.parse(await readFile(packagePath, 'utf8')) as PackageJson;
     await writeFile(
         packagePath,
-        JSON.stringify({ ...manifest, dependencies: { ...manifest.dependencies, '@nestjs/swagger': '11.2.3' } }),
+        JSON.stringify({ ...packageJson, dependencies: { ...packageJson.dependencies, '@nestjs/swagger': '11.2.3' } }),
     );
     await createEslint(repository.root);
     const swagger = await runCommand([join(testModules, '.bin/eslint'), '--format', 'json', path], {

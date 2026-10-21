@@ -1,8 +1,16 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { regexSchema } from '#cli/schemas/configurations/parts.ts';
+import type { NamedCategory } from '#cli/types/settings/tables.ts';
 import { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/checks/naming.ts';
-import { regexSchema, pathContainerSchema } from '#cli/schemas/configurations/parts.ts';
-import type { NamedCategory, NamingDefaults, NamingOverride } from '#cli/types/checks/naming.ts';
+import type { PathContainer, NamingDefaults, NamingOverride } from '#cli/types/checks/naming.ts';
+
+/** Framework punctuation around a named path segment. */
+const pathContainerSchema = z.strictObject({
+    open: z.string().min(1),
+    close: z.string(),
+    category: z.enum(NAMED_CATEGORIES),
+} satisfies SchemaShape<PathContainer>);
 
 const identifierCategory = z.enum(NAMED_CATEGORIES) satisfies z.ZodType<NamedCategory>;
 

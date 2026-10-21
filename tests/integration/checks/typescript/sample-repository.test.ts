@@ -4,7 +4,7 @@ import { test, expect, beforeAll } from 'bun:test';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 
 import {
     TYPESCRIPT_CASES,
@@ -26,13 +26,10 @@ beforeAll(async () => {
 // typos needs an explicit option to keep exclusions for paths from the command line.
 test('typos keeps its excluded paths for a file named on the command line', async () => {
     const { root, environment } = installedSandbox();
-    await using _change = await updateSandbox(
-        { root, environment: {}, run: spawnGspot },
-        {
-            check: 'spelling/typos',
-            files: { 'assets/mark.svg': `<svg><title>${TYPO.the}</title></svg>\n` },
-        },
-    );
+    await using _change = await updateSandbox(installedSandbox(), {
+        check: 'spelling/typos',
+        files: { 'assets/mark.svg': `<svg><title>${TYPO.the}</title></svg>\n` },
+    });
 
     const excluded = parseCheckReport(
         await spawnGspot(root, ['check', '--only', 'spelling/typos', '--json', '--', 'assets/mark.svg'], environment),
@@ -44,5 +41,11 @@ test('typos keeps its excluded paths for a file named on the command line', asyn
 });
 test.each([...TYPESCRIPT_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
     const result = await runCheckSample(installedSandbox(), entry, TYPESCRIPT_SANDBOX);
-    expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+});
+
+test('the sample TypeScript repository passes every check that init selects for it', async () => {
+    const { root, environment } = installedSandbox();
+    const checked = await spawnGspot(root, ['check', '--json'], environment);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
 });

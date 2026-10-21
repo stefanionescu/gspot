@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { sep, join, relative } from 'node:path';
 
 // TypeScript resolves the project service from the repository root without a closing separator.
-const root = fileURLToPath(new URL('../../../..', import.meta.url)).replace(/[\\/]$/u, '');
+export const root = fileURLToPath(new URL('../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 const componentParserOptions = { tsconfigRootDir: root, ecmaVersion: 'latest', sourceType: 'module' };
 /** @type {WeakMap<object, Set<string>>} */
 const runtimeGlobalNames = new WeakMap();
@@ -25,7 +25,7 @@ const runtimeMatcherGroups = new WeakMap();
  * @param {string[]} paths repository-relative project paths.
  * @returns {string[]} absolute project paths.
  */
-function joinRoot(paths) {
+export function joinRoot(paths) {
     return paths.map((path) => join(root, path));
 }
 
@@ -35,7 +35,7 @@ function joinRoot(paths) {
  * @param {{rules?: Record<string, unknown>}[]} blocks the selected preset blocks.
  * @returns {Record<string, unknown>} the merged rules.
  */
-function mergePresetRules(blocks) {
+export function mergePresetRules(blocks) {
     return Object.assign({}, ...blocks.map((block) => block.rules));
 }
 
@@ -47,7 +47,7 @@ function mergePresetRules(blocks) {
  * @param {Record<string, object>} library the globals tables keyed by runtime name.
  * @returns {FrameworkBlock} the same block with runtime names removed from its globals.
  */
-function stripRuntimeGlobals(block, library) {
+export function stripRuntimeGlobals(block, library) {
     const names = block.languageOptions?.globals;
     if (names === undefined) return block;
     let runtimeNames = runtimeGlobalNames.get(library);
@@ -76,13 +76,13 @@ function stripRuntimeGlobals(block, library) {
  * Select the last runtime declaration that covers each file path.
  *
  * @param {number} index the position of the runtime declaration represented by this matcher.
- * @param {{scope: string, includes: string[], excludes: string[]}[]} declarations the ordered runtime declarations.
+ * @param {{scope: string, includes: string[], excludes: string[]}[]} runtimes the ordered runtime declarations.
  * @returns {function(string): boolean} whether a file belongs to this declaration after later overrides.
  */
-function runtimeMatches(index, declarations) {
-    let matchers = runtimeMatcherGroups.get(declarations);
+export function runtimeMatches(index, runtimes) {
+    let matchers = runtimeMatcherGroups.get(runtimes);
     if (matchers === undefined) {
-        matchers = declarations.map(({ scope, includes, excludes }) => {
+        matchers = runtimes.map(({ scope, includes, excludes }) => {
             const included = includes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));
             const excluded = excludes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));
             return (path) => {
@@ -90,7 +90,7 @@ function runtimeMatches(index, declarations) {
                 return included.some((pattern) => pattern(path)) && !excluded.some((pattern) => pattern(path));
             };
         });
-        runtimeMatcherGroups.set(declarations, matchers);
+        runtimeMatcherGroups.set(runtimes, matchers);
     }
     return (file) => matchers.findLastIndex((matches) => matches(relative(root, file).split(sep).join('/'))) === index;
 }
@@ -122,7 +122,7 @@ function isParseError(error) {
  * @param {{parseForESLint: (text: string, options: object) => VueProgram}} parser the component syntax reader.
  * @returns {function(string): boolean} whether a file contains a typed script block.
  */
-function vueComponentMatches(parser) {
+export function vueComponentMatches(parser) {
     return (file) => {
         try {
             const parsed = parser.parseForESLint(readFileSync(file, 'utf8'), {
@@ -152,7 +152,7 @@ function vueComponentMatches(parser) {
  * @param {object} typescriptParser the parser supplied to typed script blocks.
  * @returns {function(string): boolean} whether a file contains a typed script block.
  */
-function svelteComponentMatches(parser, typescriptParser) {
+export function svelteComponentMatches(parser, typescriptParser) {
     return (file) => {
         try {
             const parsed = parser.parseForESLint(readFileSync(file, 'utf8'), {
@@ -174,13 +174,3 @@ function svelteComponentMatches(parser, typescriptParser) {
         }
     };
 }
-
-export {
-    root,
-    joinRoot,
-    runtimeMatches,
-    mergePresetRules,
-    vueComponentMatches,
-    stripRuntimeGlobals,
-    svelteComponentMatches,
-};

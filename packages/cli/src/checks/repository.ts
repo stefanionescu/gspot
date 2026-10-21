@@ -1,13 +1,14 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { LFS_FILTER } from '#cli/config/repository/inventory.ts';
 import { findScope, joinScope } from '#cli/repository/scopes.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 /**
  * Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
@@ -16,7 +17,7 @@ import type { Session, PlannedCheck } from '#cli/types/planning.ts';
  * @param planned the tracked files and size limit.
  * @returns the findings.
  */
-export function checkLargeFiles(session: Session, planned: PlannedCheck): Finding[] {
+export function checkRepositoryLargeFiles(session: Session, planned: PlannedCheck): Finding[] {
     const limitKilobytes = getTable(planned.selection.view, 'repository').max_file_kilobytes;
     return session.repository.files
         .filter(
@@ -43,10 +44,10 @@ export function checkLargeFiles(session: Session, planned: PlannedCheck): Findin
  * @param planned the Git index and each scope.
  * @returns the findings.
  */
-export function checkLocalFiles(session: Session, planned: PlannedCheck): Finding[] {
+export function checkRepositoryLocalFiles(session: Session, planned: PlannedCheck): Finding[] {
     const scopes = session.scopes.map(({ scope }) => scope);
     const matchers = session.scopes.map(({ scope, selected, view }) => {
-        const matches = buildPathMatcher(selected.flatMap((manifest) => manifest.ignored_paths));
+        const matches = buildPathMatcher(selected.flatMap((configuration) => configuration.ignored_paths));
         const examples = new Set(getTable(view, 'secrets').env_examples);
         return {
             scope,

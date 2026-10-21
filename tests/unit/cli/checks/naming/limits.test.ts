@@ -1,8 +1,7 @@
 import { test, expect } from 'bun:test';
-import { checkIdentifier } from '#cli/checks/naming/names.ts';
-import { type Identifier } from '#cli/types/checks/naming.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { getShippedCheck, buildScopeNamingSettings } from '#tests/setup/builders.ts';
+import { validateIdentifier } from '#cli/checks/naming/rules.ts';
+import { buildIdentifier, buildFileNaming, buildScopeNamingSettings } from '#tests/setup/builders.ts';
 
 import {
     NAME_WORDS,
@@ -32,13 +31,11 @@ test('category limits inherit root and scope language settings while explicit ca
 });
 
 test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the next character or word', (language) => {
-    const check = getShippedCheck('naming/identifiers');
-
     const effective = buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
     const category = language === 'swift' || language === 'sql' ? 'functions' : 'variables';
     const { maxChars: characters, maxWords: words } = effective.limitsFor(language, category);
-    const context = { check, settings: effective, isTestFile: false };
-    const declaration: Identifier = {
+    const context = buildFileNaming(effective);
+    const declaration = buildIdentifier({
         file: 'source',
         language,
         category,
@@ -46,18 +43,20 @@ test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the ne
         name: 'z'.repeat(characters),
         line: 1,
         column: 1,
-    };
-    expect(checkIdentifier(declaration, context)).toStrictEqual([]);
+    });
+    expect(validateIdentifier(declaration, context)).toStrictEqual([]);
     expect(
-        checkIdentifier({ ...declaration, name: 'z'.repeat(characters + 1) }, context).map(({ rule }) => rule),
+        validateIdentifier({ ...declaration, name: 'z'.repeat(characters + 1) }, context).map(({ rule }) => rule),
     ).toStrictEqual(['length']);
     const separator = ['python', 'bash', 'sql'].includes(language) ? '_' : '';
     const parts = NAME_WORDS.map((word, index) =>
         separator === '' && index > 0 ? word.slice(0, 1).toUpperCase() + word.slice(1) : word,
     );
-    expect(checkIdentifier({ ...declaration, name: parts.slice(0, words).join(separator) }, context)).toStrictEqual([]);
+    expect(validateIdentifier({ ...declaration, name: parts.slice(0, words).join(separator) }, context)).toStrictEqual(
+        [],
+    );
     expect(
-        checkIdentifier({ ...declaration, name: parts.slice(0, words + 1).join(separator) }, context).map(
+        validateIdentifier({ ...declaration, name: parts.slice(0, words + 1).join(separator) }, context).map(
             ({ rule }) => rule,
         ),
     ).toStrictEqual(['words']);
@@ -66,8 +65,6 @@ test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the ne
 test.each([...LINTER_LIMIT_CASES])(
     '$language $category with a 41-letter name reports $expected, and too many words are still reported',
     ({ language, category, expected }) => {
-        const check = getShippedCheck('naming/identifiers');
-
         const effective = buildScopeNamingSettings(
             buildSandboxSettings(['naming'], {
                 rules: true,
@@ -75,8 +72,8 @@ test.each([...LINTER_LIMIT_CASES])(
                 tables: UPPER_SNAKE_OVERRIDE,
             }),
         );
-        const context = { check, settings: effective, isTestFile: false };
-        const identifier: Identifier = {
+        const context = buildFileNaming(effective);
+        const identifier = buildIdentifier({
             file: 'source',
             language,
             category,
@@ -84,23 +81,21 @@ test.each([...LINTER_LIMIT_CASES])(
             name: 'a'.repeat(41),
             line: 1,
             column: 1,
-        };
-        expect(checkIdentifier(identifier, context).map(({ rule }) => rule)).toStrictEqual([...expected]);
+        });
+        expect(validateIdentifier(identifier, context).map(({ rule }) => rule)).toStrictEqual([...expected]);
         expect(
-            checkIdentifier({ ...identifier, name: NAME_WORDS.join('_') }, context).map(({ rule }) => rule),
+            validateIdentifier({ ...identifier, name: NAME_WORDS.join('_') }, context).map(({ rule }) => rule),
         ).toContain('words');
     },
 );
 
 test("a framework's naming rules come after the shipped ones and before the repository's", () => {
-    const check = getShippedCheck('naming/identifiers');
-
     const text = buildSandboxSettings(['typescript', 'express'], {
         rules: true,
         tables: '[naming]\nbanned_words = ["handle", "use"]\n[[naming.override]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nignored_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n',
     });
     const effective = buildScopeNamingSettings(text);
-    const declaration: Identifier = {
+    const declaration = buildIdentifier({
         file: 'src/routes/auth.ts',
         line: 1,
         column: 1,
@@ -108,20 +103,21 @@ test("a framework's naming rules come after the shipped ones and before the repo
         category: 'functions',
         label: 'function',
         name: 'handleLogin',
-    };
-    const context = { check, settings: effective, isTestFile: false };
-    expect(checkIdentifier(declaration, context)).toStrictEqual([]);
-    expect(checkIdentifier({ ...declaration, file: 'src/hooks/login.ts', name: 'useLogin' }, context)).toStrictEqual(
+    });
+    const context = buildFileNaming(effective);
+    expect(validateIdentifier(declaration, context)).toStrictEqual([]);
+    expect(validateIdentifier({ ...declaration, file: 'src/hooks/login.ts', name: 'useLogin' }, context)).toStrictEqual(
         [],
     );
     expect(
-        checkIdentifier({ ...declaration, file: 'src/routes/login.ts', name: 'useLogin' }, context).map(
+        validateIdentifier({ ...declaration, file: 'src/routes/login.ts', name: 'useLogin' }, context).map(
             ({ rule }) => rule,
         ),
     ).toContain('banned-word');
     expect(
-        checkIdentifier({ ...declaration, file: 'src/app.py', language: 'python', name: 'handle_login' }, context).map(
-            ({ rule }) => rule,
-        ),
+        validateIdentifier(
+            { ...declaration, file: 'src/app.py', language: 'python', name: 'handle_login' },
+            context,
+        ).map(({ rule }) => rule),
     ).toContain('banned-word');
 });

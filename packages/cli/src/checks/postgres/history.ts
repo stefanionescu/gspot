@@ -1,18 +1,19 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/parsers/git.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
-import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
-import { readBlobs, listHeadEntries } from '#cli/repository/revisions/tree-entries.ts';
+import { readBlobs, listHeadEntries } from '#cli/repository/revisions/files.ts';
 import { readMigrations, stripDownSection, readParsedMigrations } from '#cli/checks/postgres/migrations.ts';
 
-const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };
+const COMMITTED_MIGRATIONS = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
 async function readCommittedMigrations(session: Session, paths: string[]): Promise<Map<string, string>> {
-    return getCachedMapValue(session.reads, COMMITTED_MIGRATIONS_MEMO, JSON.stringify(paths), async () => {
+    return getCachedMapValue(session.reads, COMMITTED_MIGRATIONS, JSON.stringify(paths), async () => {
         if (!session.repository.hasGit) return new Map<string, string>();
         const committed = await listHeadEntries(session.root, session.cancelSignal);
         const selected = new Set(paths);

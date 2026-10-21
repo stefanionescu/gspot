@@ -1,19 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { findRoot } from '#cli/repository/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { isGitRepository } from '#cli/system/git.ts';
-import * as processes from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
+import { readTestRepository } from '#tests/setup/builders.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
-import { findRoot, readRepository } from '#cli/repository/read.ts';
+import { listRevisionEntries } from '#cli/repository/revisions/files.ts';
 import { rm, chmod, unlink, symlink, writeFile } from 'node:fs/promises';
 import { isWindows, simulateOperatingSystem } from '#tests/setup/system.ts';
-import { listRevisionEntries } from '#cli/repository/revisions/tree-entries.ts';
-import { listTrackedFiles, readIndexEntries } from '#cli/repository/tracked.ts';
+import { listTrackedFiles, readIndexEntries } from '#cli/repository/files/tracked.ts';
 
 test.each([
     ['linked.ts', '../outside/secret.ts'],
@@ -28,21 +26,13 @@ test.each([
     readGitOutput(root, ['init', '-q']);
     await symlink(target, join(root, name));
     readGitOutput(root, ['add', '--', name]);
-    const repository = await readRepository(createReadCache(root), {
-        declarations: [],
-        scopes: [],
-        manifests: readManifests(),
-    });
+    const repository = await readTestRepository(root);
     expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
     await unlink(join(root, name));
     readGitOutput(root, ['rm', '--cached', '--', name]);
     await symlink('local.ts', join(root, 'linked.ts'));
     readGitOutput(root, ['add', 'linked.ts']);
-    const corrected = await readRepository(createReadCache(root), {
-        declarations: [],
-        scopes: [],
-        manifests: readManifests(),
-    });
+    const corrected = await readTestRepository(root);
     expect(corrected.files.find((file) => file.path === 'linked.ts')?.tags).toContain('symlink');
 });
 
@@ -50,7 +40,7 @@ test.each([
 test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
-    expect(processes.spawnProcessBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
+    expect(runCommandBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
     const entries = await listTrackedFiles(sandbox.path, [], { hasGit: false });
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
 });
@@ -71,11 +61,7 @@ test('a dangling tracked link is listed without reading its target', async () =>
     await symlink('missing.ts', join(sandbox.path, 'linked.ts'), 'file');
     readGitOutput(sandbox.path, ['init']);
     readGitOutput(sandbox.path, ['add', 'linked.ts']);
-    const repository = await readRepository(createReadCache(sandbox.path), {
-        declarations: [],
-        scopes: [],
-        manifests: readManifests(),
-    });
+    const repository = await readTestRepository(sandbox.path);
     expect(repository.files).toHaveLength(1);
     expect(repository.files[0]?.tags).toContain('symlink');
     expect(repository.files[0]?.kind).toBe('source');

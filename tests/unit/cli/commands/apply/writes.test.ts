@@ -10,14 +10,53 @@ import { type ApplyReport } from '#cli/types/apply.ts';
 import { runGit, commitAll } from '#tests/setup/git.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
-import { EXTERNAL_INPUT_CASES } from '#tests/data/system.ts';
+import { LINKED_FILE_CASES } from '#tests/data/system.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { TOOL_FOLDERS } from '#tests/data/install/installation.ts';
+import { EDITED_STYLELINT_PACKAGE } from '#tests/data/commands/init.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
-import { STYLELINT_FILES, STYLELINT_PACKAGE_JSON } from '#tests/data/checks/css.ts';
-import { COMMITLINT_PACKAGE, COMMITLINT_PROJECT } from '#tests/data/checks/commits.ts';
+import { STYLELINT_PACKAGE_FIELDS, COMMITLINT_PACKAGE_FIELDS, EDITED_COMMITLINT_PACKAGE } from '#tests/data/apply.ts';
+
+function writeObsoleteFile(root: string): void {
+    using log = openWriter(root);
+
+    writePlans(log, [
+        planReplacement(log, {
+            path: '.gspot/obsolete/old.txt',
+            next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
+        }),
+    ]);
+}
+
+/** Write selected package fields and retain the complete installed bytes for the removal checks. */
+async function writePackageFields(
+    root: string,
+    scenario: typeof COMMITLINT_PACKAGE_FIELDS | typeof STYLELINT_PACKAGE_FIELDS,
+): Promise<Map<string, string>> {
+    const session = await openSession(root);
+    const generated = generate(session);
+    expect(generated.managedKeys).toStrictEqual(
+        scenario.changes.map((file) => ({
+            ...file,
+            keys: file.keys.map((change) => ({ ...change, key: [...change.key] })),
+        })),
+    );
+    {
+        using writer = openWriter(root);
+        writeGeneratedFiles(session, generated, writer);
+    }
+    const authored = new Map<string, string>(Object.entries(scenario.project));
+    for (const path of scenario.unchanged) expect(await readFile(join(root, path), 'utf8')).toBe(authored.get(path)!);
+    return new Map(
+        await Promise.all(
+            Object.keys(scenario.project).map(
+                async (path) => [path, await readFile(join(root, path), 'utf8')] as const,
+            ),
+        ),
+    );
+}
 
 test('generated files stay writable: apply keeps their bytes and removes them when nothing needs them', async () => {
     await using sandbox = await testdir({
@@ -34,7 +73,6 @@ test('generated files stay writable: apply keeps their bytes and removes them wh
     const written = (JSON.parse(applied.stdout) as ApplyReport).written;
 
     const output = written.find((path) => path.endsWith('/engineering/rules/WORKING.md'))!;
-    expect(output).toBeDefined();
     const bytes = await readFile(join(sandbox.path, output), 'utf8');
     const attributes = await stat(join(sandbox.path, output));
     expect(attributes.mode & 0o200).toBe(0o200);
@@ -50,7 +88,7 @@ test('generated files stay writable: apply keeps their bytes and removes them wh
     expect(await isOnDisk(join(sandbox.path, output))).toBe(false);
 });
 
-test.each([...EXTERNAL_INPUT_CASES])(
+test.each([...LINKED_FILE_CASES])(
     'apply --dry-run refuses an input $path that links outside the repository',
     async ({ path, outside, files, message }) => {
         await using sandbox = await testdir({
@@ -123,128 +161,54 @@ test.each([...TOOL_FOLDERS])(
 
         const session = await openSession(sandbox.path);
         using log = openWriter(sandbox.path);
-        writeGeneratedFiles(session, { files: [], blocks: [], fileSettings: [] }, log);
+        writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, log);
         expect(await isOnDisk(join(sandbox.path, folder))).toBe(false);
     },
 );
 
-test.each([
-    {
-        tool: 'commitlint',
-        project: COMMITLINT_PROJECT,
-        original: COMMITLINT_PACKAGE,
-        configurations: [],
-        tables: '[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n',
-        hasGit: true,
-        leaveLevel: 'recommended' as const,
-        unchanged: ['plain/package.json'],
-        changes: [
-            {
-                path: 'package.json',
-                changes: [
-                    {
-                        path: ['commitlint'],
-                        value: { extends: './.gspot/configurations/general/commits/commitlint.json' },
-                    },
-                ],
-            },
-            {
-                path: 'app/child/package.json',
-                changes: [
-                    {
-                        path: ['commitlint'],
-                        value: { extends: '../../.gspot/configurations/general/commits/commitlint.json' },
-                    },
-                ],
-            },
-            {
-                path: 'app/package.json',
-                changes: [
-                    {
-                        path: ['commitlint'],
-                        value: { extends: '../.gspot/configurations/general/commits/commitlint.json' },
-                    },
-                ],
-            },
-        ],
-    },
-    {
-        tool: 'stylelint',
-        project: STYLELINT_FILES,
-        original: STYLELINT_PACKAGE_JSON,
-        configurations: ['css'],
-        tables: '[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "other"\n',
-        hasGit: false,
-        leaveLevel: 'all' as const,
-        unchanged: ['plain/package.json', 'app/child/package.json', 'other/package.json'],
-        changes: [
-            { path: 'package.json', changes: [{ path: ['stylelint'], value: { extends: './.stylelintrc.json' } }] },
-            {
-                path: 'app/package.json',
-                changes: [{ path: ['stylelint'], value: { extends: './.stylelintrc.json' } }],
-            },
-        ],
-    },
-])('leaving a tool selection preserves unrelated package.json fields: $tool', async (row) => {
+test('leaving level all removes the managed commitlint field from every package.json and keeps the other fields', async () => {
+    const scenario = COMMITLINT_PACKAGE_FIELDS;
     await using sandbox = await testdir({
-        ...row.project,
-        'gspot.toml': buildSandboxSettings(row.configurations, { level: 'all', tables: row.tables }),
+        ...scenario.project,
+        'gspot.toml': buildSandboxSettings(scenario.configurations, { level: 'all', tables: scenario.tables }),
     });
-
-    if (row.hasGit) commitAll(sandbox.path);
-    let session = await openSession(sandbox.path);
+    commitAll(sandbox.path);
+    const installed = await writePackageFields(sandbox.path, scenario);
+    await writeFile(join(sandbox.path, 'app/package.json'), EDITED_COMMITLINT_PACKAGE);
+    installed.set('app/package.json', EDITED_COMMITLINT_PACKAGE);
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'recommended' }));
+    const session = await openSession(sandbox.path);
     const generated = generate(session);
-    expect(generated.fileSettings).toStrictEqual(
-        row.changes.map((file) => ({
-            ...file,
-            changes: file.changes.map((change) => ({ ...change, path: [...change.path] })),
-        })),
+    expect(generated.managedKeys).toStrictEqual(
+        scenario.changes.map((file) => ({ path: file.path, keys: [{ key: ['commitlint'], value: undefined }] })),
     );
     {
-        using log = openWriter(sandbox.path);
-        writeGeneratedFiles(session, generated, log);
+        using writer = openWriter(sandbox.path);
+        writeGeneratedFiles(session, generated, writer);
     }
-    const authored = new Map<string, string>(Object.entries(row.project));
-    for (const path of row.unchanged) expect(authored.get(path)).toBe(await readFile(join(sandbox.path, path), 'utf8'));
-    const installedCopies = new Map(
-        await Promise.all(
-            Object.keys(row.project).map(
-                async (path) => [path, await readFile(join(sandbox.path, path), 'utf8')] as const,
-            ),
-        ),
-    );
-    const installed = installedCopies.get('app/package.json')!;
-    const editedPackage = installed.replace('native-project', 'edited-project');
-    await writeFile(join(sandbox.path, 'app/package.json'), editedPackage);
-    installedCopies.set('app/package.json', editedPackage);
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: row.leaveLevel }));
-    session = await openSession(sandbox.path);
-    expect(generate(session).fileSettings).toStrictEqual(
-        row.tool === 'commitlint'
-            ? row.changes.map((file) => ({ path: file.path, changes: [{ path: [row.tool], value: undefined }] }))
-            : [],
-    );
-    {
-        using log = openWriter(sandbox.path);
-        writeGeneratedFiles(session, generate(session), log);
-    }
-    for (const [path, source] of installedCopies) {
-        const actual = await readFile(join(sandbox.path, path), 'utf8');
-        if (row.tool === 'commitlint') {
-            const expected = JSON.parse(source) as Record<string, unknown>;
-            Reflect.deleteProperty(expected, row.tool);
-            expect(JSON.parse(actual)).toStrictEqual(expected);
-        } else expect(actual).toBe(source);
+    for (const [path, source] of installed) {
+        const expected = JSON.parse(source) as Record<string, unknown>;
+        Reflect.deleteProperty(expected, 'commitlint');
+        expect(JSON.parse(await readFile(join(sandbox.path, path), 'utf8'))).toStrictEqual(expected);
     }
 });
 
-function writeObsoleteFile(root: string): void {
-    using log = openWriter(root);
-
-    writePlans(log, [
-        planReplacement(log, {
-            path: '.gspot/obsolete/old.txt',
-            next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
-        }),
-    ]);
-}
+test('removing css leaves package.json files with an authored stylelint field byte for byte', async () => {
+    const scenario = STYLELINT_PACKAGE_FIELDS;
+    await using sandbox = await testdir({
+        ...scenario.project,
+        'gspot.toml': buildSandboxSettings(scenario.configurations, { level: 'all', tables: scenario.tables }),
+    });
+    const installed = await writePackageFields(sandbox.path, scenario);
+    await writeFile(join(sandbox.path, 'app/package.json'), EDITED_STYLELINT_PACKAGE);
+    installed.set('app/package.json', EDITED_STYLELINT_PACKAGE);
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'all' }));
+    const session = await openSession(sandbox.path);
+    const generated = generate(session);
+    expect(generated.managedKeys).toStrictEqual([]);
+    {
+        using writer = openWriter(sandbox.path);
+        writeGeneratedFiles(session, generated, writer);
+    }
+    for (const [path, source] of installed) expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
+});

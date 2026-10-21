@@ -183,11 +183,15 @@ export const MALFORMED_TASK_FILES = [
 
 /** Root files that count as a license, and one that does not. */
 export const LICENSE_FILE_CASES = [
+    { name: 'LICENSE', findings: [] },
     { name: 'COPYING', findings: [] },
     { name: 'LICENCE', findings: [] },
     { name: 'LICENSE-MIT', findings: [] },
     { name: 'LICENSE.rst', findings: [] },
-    { name: 'NOTICE', findings: [{ file: 'LICENSE', rule: 'missing-license' }] },
+    {
+        name: 'NOTICE',
+        findings: [{ file: 'LICENSE', rule: 'missing-license', message: 'The root has no LICENSE file.' }],
+    },
 ] as const;
 
 export const ROOT_LINK_FILES = {

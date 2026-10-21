@@ -1,14 +1,16 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { type Session } from '#cli/types/session.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToSystemPath } from '#cli/system/paths.ts';
-import { extractToolFileName } from '#cli/planning/files.ts';
-import { listGeneratedPaths } from '#cli/repository/classify.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
+import type { ToolFile } from '#cli/types/configurations.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import { joinScope, buildScopeTarget } from '#cli/repository/scopes.ts';
-import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import type { CommandPart, Substitutions, CommandInvocation } from '#cli/types/runs/command.ts';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
+import type { CommandPart, CommandLine, Substitutions } from '#cli/types/runs/command.ts';
 
 import {
     EACH_PLACEHOLDER,
@@ -25,7 +27,7 @@ import {
     WORKSPACE_PLACEHOLDER,
     MESSAGE_FILE_PLACEHOLDER,
     WHOLE_SETTING_PLACEHOLDER,
-} from '#cli/config/configurations.ts';
+} from '#cli/config/placeholders.ts';
 
 function assertArgumentList(value: unknown, name: string): string[] {
     if (!Array.isArray(value) || !value.every((item) => typeof item === 'string'))
@@ -65,14 +67,14 @@ function expandExistingPlaceholder(repositoryRoot: string, part: string): string
         : [groups['flag'] ?? '', convertToSystemPath(path)];
 }
 
-function listToolFiles(session: Session, planned: PlannedCheck): ToolFileDeclaration[] {
-    // The own targets of the check come first, because readToolFileDeclaration takes the first match.
+function listToolFiles(session: Session, planned: PlannedCheck): ToolFile[] {
+    // The own targets of the check come first, because getToolFile takes the first match.
     const own = planned.selection.selected
-        .filter((manifest) => manifest.checks.some((check) => check.name === planned.check.name))
-        .flatMap((manifest) => manifest.toolFiles);
-    const every = session.manifests
+        .filter((configuration) => configuration.checks.some((check) => check.name === planned.check.name))
+        .flatMap((configuration) => configuration.toolFiles);
+    const every = session.configurations
         .values()
-        .flatMap((manifest) => manifest.toolFiles)
+        .flatMap((configuration) => configuration.toolFiles)
         .toArray();
     return [...own, ...every];
 }
@@ -111,7 +113,7 @@ function expandPlainPart(
  * @param name the tool or setting it belongs to.
  * @returns the manifest record of that tool file.
  */
-export function readToolFileDeclaration(session: Session, planned: PlannedCheck, name: string): ToolFileDeclaration {
+export function getToolFile(session: Session, planned: PlannedCheck, name: string): ToolFile {
     const target = listToolFiles(session, planned).find((toolFile) => extractToolFileName(toolFile.file) === name);
     if (!target)
         throw new Error(`Check ${planned.check.name} names {tool_file:${name}} and no configuration writes it.`);
@@ -127,7 +129,7 @@ export function readToolFileDeclaration(session: Session, planned: PlannedCheck,
  * @returns the repository-relative path.
  */
 export function selectToolFilePath(session: Session, planned: PlannedCheck, name: string): string {
-    const target = readToolFileDeclaration(session, planned, name);
+    const target = getToolFile(session, planned, name);
     return buildScopeTarget(planned.selection.scope.path, target, getToolFiles(session).targets);
 }
 
@@ -161,16 +163,16 @@ export function listCommandToolFiles(session: Session, planned: PlannedCheck, co
 }
 
 /**
- * Lists the source and tool files that a scratch copy needs for a command.
+ * Lists the source and tool files that a copy needs for a command.
  *
  * @param session the repository and manifests.
  * @param planned the check and its files.
  * @param command the arguments, with tool file placeholders.
- * @returns repository-relative paths for the scratch copy.
+ * @returns repository-relative paths for the copy.
  */
-export function listScratchFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
+export function listCopyFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
     const scope = planned.selection.scope.path;
-    const owned = (planned.manifest?.toolFiles ?? []).map((toolFile) =>
+    const owned = (planned.configuration?.toolFiles ?? []).map((toolFile) =>
         buildScopeTarget(scope, toolFile, getToolFiles(session).targets),
     );
     return [
@@ -254,7 +256,7 @@ export function expandCommand(
  * @param files the paths relative to the working folder.
  * @returns one command per file, or one command when no file marker exists.
  */
-export function buildFileInvocations(parts: CommandPart[], files: string[]): CommandInvocation[] {
+export function buildFileCommandLines(parts: CommandPart[], files: string[]): CommandLine[] {
     const hasFile = parts.some((part) => typeof part !== 'string');
     return (hasFile ? files : ['']).map((file) => ({
         commandArguments: parts.map((part) => (typeof part === 'string' ? part : file)),

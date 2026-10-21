@@ -1,20 +1,20 @@
-import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { resolve, relative } from 'node:path';
 import { warn } from '#cli/system/terminal.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { DRY_RUN_NOTE } from '#cli/config/terminal.ts';
 import { readHookStatus } from '#cli/install/hooks.ts';
-import { stripUndefined } from '#cli/system/values.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
 import { formatUnknownName } from '#cli/system/text.ts';
+import type { StageFilter } from '#cli/types/planning.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
-import type { Session, StageFilter } from '#cli/types/planning.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import type { RunReport, RunOptions } from '#cli/types/runs/check.ts';
-import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
+import type { RunReport, RunOptions } from '#cli/types/runs/run.ts';
+import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
-import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
@@ -35,8 +35,7 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
             stage,
             fix: options.fix,
             isDryRun: options.isDryRun,
-            selectImplementation: selectCheckImplementation,
-            onResult: options.onResult,
+            onProgress: options.onProgress,
             staged: staging.staged,
             changed: changedPaths,
             comparison,
@@ -94,10 +93,10 @@ function selectArgumentPaths(session: Session, options: CheckOptions, changed: s
  * @param session the configurations that run here.
  * @param only the check IDs that the flag names.
  */
-function refuseUnknownChecks(session: Session, only: string[] | undefined): void {
+function assertKnownChecks(session: Session, only: string[] | undefined): void {
     const known = new Set([
         ...session.scopes.flatMap((scope) =>
-            scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.name)),
+            scope.selected.flatMap((configuration) => configuration.checks.map((check) => check.name)),
         ),
         ...Object.values(session.settingsFile.settings.commandChecks).map((check) => check.name),
     ]);
@@ -116,25 +115,25 @@ function warnAboutHooks(session: Session, revision: RevisionSource | undefined):
 }
 
 // Read the changed paths: from the revision, from the --changed ref, or none for a whole push.
-async function readChangedSet(
+async function readChangedFilter(
     session: Session,
     options: CheckOptions,
-    signal: AbortSignal,
+    cancelSignal: AbortSignal,
     revision: RevisionSource | undefined,
 ): Promise<ChangedPaths | undefined> {
     if (revision?.content === 'commit' && revision.changed !== undefined)
         return { reference: revision.reference, paths: revision.changed };
-    return options.base === undefined ? undefined : readChangedPaths(session.root, options.base, signal);
+    return options.base === undefined ? undefined : readChangedPaths(session.root, options.base, cancelSignal);
 }
 
 // Collect the run filters: the changed paths, the staged paths, and the stage.
 async function readRunFilters(
     session: Session,
     options: CheckOptions,
-    signal: AbortSignal,
+    cancelSignal: AbortSignal,
     revision: RevisionSource | undefined,
 ): Promise<RunFilters> {
-    const changed = await readChangedSet(session, options, signal, revision);
+    const changed = await readChangedFilter(session, options, cancelSignal, revision);
     const staging = revision?.content === 'index' ? revision.staged : { staged: undefined, unstaged: 0 };
     const stage: StageFilter = options.stage ?? 'all';
     const paths = selectArgumentPaths(session, options, [...(staging.staged ?? []), ...(changed?.paths ?? [])]);
@@ -144,27 +143,27 @@ async function readRunFilters(
 /**
  * Run check and return what to print.
  *
- * @param treeFolder the working tree or scratch copy to check.
+ * @param treeFolder the working tree or copy to check.
  * @param options the parsed flags.
- * @param signal stops the run.
+ * @param cancelSignal stops the run.
  * @param revision the commit or index that the copy holds, if any.
  * @returns the command result.
  */
 export async function checkTree(
     treeFolder: string,
     options: CheckOptions,
-    signal: AbortSignal,
+    cancelSignal: AbortSignal,
     revision?: RevisionSource,
 ): Promise<CommandResult<RunReport>> {
     using resources = new DisposableStack();
     const session = await openSession(treeFolder, {
         installedRoot: revision?.installedRoot ?? treeFolder,
         resources,
-        cancelSignal: signal,
+        cancelSignal: cancelSignal,
     });
-    refuseUnknownChecks(session, options.only);
+    assertKnownChecks(session, options.only);
     warnAboutHooks(session, revision);
-    const { changed, staging, stage, paths } = await readRunFilters(session, options, signal, revision);
+    const { changed, staging, stage, paths } = await readRunFilters(session, options, cancelSignal, revision);
     const result = await runChecks(session, buildRunOptions(options, { changed, staging, stage, paths }, revision));
     if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
     const reportText = formatRunReport(result.report, { verbose: options.verbose });

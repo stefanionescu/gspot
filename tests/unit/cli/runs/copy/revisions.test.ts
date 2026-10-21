@@ -6,14 +6,34 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
-import { type GitHookReport } from '#tests/types/processes.ts';
+import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
-import { readIndexEntries, listSubmodulePaths } from '#cli/repository/tracked.ts';
+import { type GitHookReport, type ProcessOutput } from '#tests/types/processes.ts';
+import { readIndexEntries, listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import { listHeadEntries, listRevisionEntries } from '#cli/repository/revisions/files.ts';
 import { runGit, commitAll, readGitOutput, prepareNestedRepository } from '#tests/setup/git.ts';
-import { listHeadEntries, listRevisionEntries } from '#cli/repository/revisions/tree-entries.ts';
 import { chmod, mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 import { GIT_HOOK_CASES, GIT_HOOK_FIELDS, GIT_HOOK_REPORT, GIT_HOOK_SCRIPT } from '#tests/data/runs/copies.ts';
+
+// Run the hook with the real module entry points and the inherited Git environment.
+function runGitHook(worktree: string, index: string, folder: string, report: string): ProcessOutput {
+    const revision = pathToFileURL(Bun.resolveSync('#cli/runs/copy/revision.ts', import.meta.dir)).href;
+    const owner = pathToFileURL(Bun.resolveSync('#cli/system/git.ts', import.meta.dir)).href;
+    const tool = pathToFileURL(Bun.resolveSync('#cli/tools/run.ts', import.meta.dir)).href;
+    return runGit(worktree, ['-c', `core.hooksPath=${join(folder, 'hook')}`, 'commit', '-qm', 'hook'], {
+        GIT_INDEX_FILE: index,
+        GIT_CONFIG_COUNT: '1',
+        GIT_CONFIG_KEY_0: 'gspot.boundary',
+        GIT_CONFIG_VALUE_0: 'inherited',
+        GSPOT_HOOK_RUNTIME: process.execPath,
+        GSPOT_HOOK_PROBE: join(folder, 'hook/probe.mjs'),
+        GSPOT_HOOK_REVISION: revision,
+        GSPOT_HOOK_GIT: owner,
+        GSPOT_HOOK_TOOL: tool,
+        GSPOT_HOOK_TIMEOUT: String(SETTING_FACTS['tool_timeout_seconds'].default),
+        GSPOT_HOOK_REPORT: report,
+    });
+}
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();
@@ -69,26 +89,6 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
     expect(await readFile(join(outside.path, 'source.txt'), 'utf8')).toBe('outside source');
 });
 
-// Run the hook with the real module entry points and the inherited Git environment.
-async function runGitHook(worktree: string, index: string, folder: string, report: string) {
-    const revision = pathToFileURL(await Bun.resolve('#cli/runs/copy/revision.ts', import.meta.dir)).href;
-    const owner = pathToFileURL(await Bun.resolve('#cli/system/git.ts', import.meta.dir)).href;
-    const tool = pathToFileURL(await Bun.resolve('#cli/tools/run.ts', import.meta.dir)).href;
-    return runGit(worktree, ['-c', `core.hooksPath=${join(folder, 'hook')}`, 'commit', '-qm', 'hook'], {
-        GIT_INDEX_FILE: index,
-        GIT_CONFIG_COUNT: '1',
-        GIT_CONFIG_KEY_0: 'gspot.boundary',
-        GIT_CONFIG_VALUE_0: 'inherited',
-        GSPOT_HOOK_RUNTIME: process.execPath,
-        GSPOT_HOOK_PROBE: join(folder, 'hook/probe.mjs'),
-        GSPOT_HOOK_REVISION: revision,
-        GSPOT_HOOK_GIT: owner,
-        GSPOT_HOOK_TOOL: tool,
-        GSPOT_HOOK_TIMEOUT: String(SETTING_DECLARATIONS['tool_timeout_seconds'].default),
-        GSPOT_HOOK_REPORT: report,
-    });
-}
-
 test.each([...GIT_HOOK_CASES])(
     'the $part command preserves the owner index and working tree: $name',
     async ({ part }) => {
@@ -113,7 +113,7 @@ test.each([...GIT_HOOK_CASES])(
         });
         await chmod(join(sandbox.path, 'hook/pre-commit'), 0o755);
         const report = join(sandbox.path, 'report.json');
-        const result = await runGitHook(worktree, index, sandbox.path, report);
+        const result = runGitHook(worktree, index, sandbox.path, report);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const actual = JSON.parse(await readFile(report, 'utf8')) as GitHookReport;
         if (part === 'HEAD') {

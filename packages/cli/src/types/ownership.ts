@@ -1,11 +1,11 @@
-import type { JsonValue } from '#cli/types/parsers/json.ts';
+import type { JsonValue } from '#cli/types/shapes.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 
 /** One locked repository writer. */
 export type Writer = { files: Files; [Symbol.dispose](): void };
 
-export type FileSettings = { path: string; changes: { path: KeyPath; value: JsonValue | undefined }[] };
+export type ManagedKeys = { path: string; keys: { key: KeyPath; value: JsonValue | undefined }[] };
 
 export type ReplacementRequest = {
     path: string;

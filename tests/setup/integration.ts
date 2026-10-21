@@ -5,18 +5,12 @@ import { readFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { TEST_RUN_FOLDER } from '#tests/setup/install.ts';
+import { stopOnSignals } from '#tests/setup/processes.ts';
 import { createNpmRegistry } from '#tests/setup/registry.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { testModules, installedModules } from '#tests/setup/modules.ts';
-
-import {
-    TERMINATED_EXIT,
-    TOOL_PATHS_FILE,
-    INTERRUPTED_EXIT,
-    GSPOT_LAUNCHER_PATH,
-    PACKED_PACKAGES_FILE,
-} from '#tests/data/test-setup.ts';
+import { TOOL_PATHS_FILE, GSPOT_LAUNCHER_PATH, PACKED_PACKAGES_FILE } from '#tests/data/test-setup.ts';
 
 const resources = new AsyncDisposableStack();
 
@@ -30,21 +24,9 @@ const stop = (code: number): void => {
     });
 };
 
-const stopOnSigint = (): void => {
-    stop(INTERRUPTED_EXIT);
-};
-
-const stopOnSigterm = (): void => {
-    stop(TERMINATED_EXIT);
-};
-
-process.once('SIGINT', stopOnSigint);
-
-process.once('SIGTERM', stopOnSigterm);
+resources.use(stopOnSignals(stop));
 
 afterAll(async () => {
-    process.removeListener('SIGINT', stopOnSigint);
-    process.removeListener('SIGTERM', stopOnSigterm);
     await resources.disposeAsync();
 });
 
@@ -52,7 +34,7 @@ try {
     const folder = TEST_RUN_FOLDER;
     if (!(await isOnDisk(join(folder, PACKED_PACKAGES_FILE))))
         throw new Error('Run mise run test integration or mise run test e2e first.');
-    const registry = resources.use(await createNpmRegistry(work.path, { declarations: [] }));
+    const registry = resources.use(await createNpmRegistry(work.path, { packages: [] }));
     resources.use(
         overrideEnvironment({
             GSPOT_TEST_NPM_REGISTRY: registry.url,

@@ -1,11 +1,11 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
-import { runChecks } from '#cli/runs/run.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';

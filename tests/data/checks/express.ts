@@ -1,5 +1,3 @@
-import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
-
 export const EXPRESS_SCOPE_SETTINGS = `[[scope]]
 path = "app"
 
@@ -14,7 +12,7 @@ path = "sibling"
 
 /** An Express package and sources inside and outside its folder, for the scoped security test. */
 export const EXPRESS_SCOPE_FILES = {
-    'app/package.json': '{"name":"security-app","private":true,"dependencies":{"express":"5.2.1"}}',
+    'app/package.json': '{"name":"security-app","private":true,"dependencies":{"express":"0.0.0-test"}}',
     'source.js': 'res.send(req.body.message);\n',
     'app/source.js': 'res.send(req.body.message);\n',
     'app/child/source.js': 'res.send(req.body.message);\n',
@@ -45,9 +43,3 @@ export const EXPRESS_SCOPE_FINDINGS = [
     { scope: 'app', file: 'app/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
     { scope: 'app/child', file: 'app/child/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
 ] as const;
-
-export const CHECKS_EXPRESS_INSTALLED_SANDBOX = {
-    configurations: ['javascript', 'security', 'express'],
-    level: 'all',
-    files: BASE_INSTALLED_FILES,
-} as const;

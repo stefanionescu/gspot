@@ -1,8 +1,9 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { RUNTIME_EMBEDS } from '#cli/config/checks/bash.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 /**
  * Reports each line that embeds another runtime.

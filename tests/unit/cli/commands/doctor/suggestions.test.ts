@@ -1,22 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
-import { generate } from '#cli/generation/generate.ts';
-import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
+import { type DryRunJson } from '#cli/types/commands/apply.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
+import { COMMITLINT_PACKAGE } from '#tests/data/checks/commits.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
-import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
-import { SERVER_FILES } from '#tests/data/generation/eslint/framework.ts';
 import { STYLELINT_FILES, STYLELINT_SUGGESTIONS } from '#tests/data/checks/css.ts';
 import { REMOVED_CONFIGURATION_SUGGESTIONS } from '#tests/data/commands/doctor.ts';
-import { COMMITLINT_PACKAGE, COMMITLINT_PROJECT } from '#tests/data/checks/commits.ts';
 
 test('a folder without Git keeps authored commit settings and reports its actual prerequisite', async () => {
     await using sandbox = await testdir({
@@ -24,49 +19,43 @@ test('a folder without Git keeps authored commit settings and reports its actual
         'gspot.toml': buildSandboxSettings([], { level: 'all' }),
     });
 
-    const session = await openSession(sandbox.path);
-    expect(generate(session).fileSettings).toStrictEqual([]);
-    expect(listSuggestions(session).unowned.filter((row) => row.note.includes('commitlint'))).toStrictEqual([
-        { path: 'package.json', note: 'commitlint requires a Git repository', command: 'git init' },
-    ]);
+    const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
+    expect(
+        (JSON.parse(preview.stdout) as DryRunJson).stale.filter(({ path }) => path === 'package.json'),
+    ).toStrictEqual([]);
+    const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
+    expect(
+        (JSON.parse(doctor.stdout) as DoctorReport).suggestions.unowned.filter((row) =>
+            row.note.includes('commitlint'),
+        ),
+    ).toStrictEqual([{ path: 'package.json', note: 'commitlint requires a Git repository', command: 'git init' }]);
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(COMMITLINT_PACKAGE);
 });
-test('Next.js suggests CSS without translations for its explicit server files', async () => {
-    await using sandbox = await testdir(SERVER_FILES);
-
-    const suggestions = listSuggestions(await openSession(sandbox.path)).suggested.map(
-        ({ configuration }) => configuration,
-    );
-    expect(suggestions).toContain('css');
-    expect(suggestions).not.toContain('translations');
-});
-test('doctor removes obsolete managed commitlint fields and suggests level all for newly authored fields', async () => {
+test('doctor suggests gspot add css for a selected Next.js scope', async () => {
     await using sandbox = await testdir({
-        ...COMMITLINT_PROJECT,
-        'gspot.toml': buildSandboxSettings([], { level: 'all', scopes: [{ path: 'app' }, { path: 'app/child' }] }),
+        'app/.keep': '',
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            rules: true,
+            scopes: [{ path: 'app', configurations: ['nextjs'] }],
+        }),
     });
 
+    const result = await runGspot(sandbox.path, ['doctor', '--json']);
+    expect((JSON.parse(result.stdout) as DoctorReport).suggestions.suggested).toStrictEqual([
+        { configuration: 'css', evidence: 'suggested by react', command: 'gspot add css' },
+    ]);
+});
+test('doctor suggests gspot set level all for a commitlint field in package.json at level recommended', async () => {
+    await using sandbox = await testdir({
+        'package.json': COMMITLINT_PACKAGE,
+        'gspot.toml': buildSandboxSettings([], { level: 'recommended' }),
+    });
     commitAll(sandbox.path);
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(
-        listSuggestions(await openSession(sandbox.path)).unowned.filter((row) => row.path.endsWith('package.json')),
-    ).toStrictEqual([]);
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'recommended' }));
-    const removed = await runGspot(sandbox.path, ['apply']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    for (const [path, source] of Object.entries(COMMITLINT_PROJECT)) {
-        const expected = JSON.parse(source) as Record<string, unknown>;
-        Reflect.deleteProperty(expected, 'commitlint');
-        expect(JSON.parse(await readFile(join(sandbox.path, path), 'utf8'))).toStrictEqual(expected);
-    }
-    expect(
-        listSuggestions(await openSession(sandbox.path)).unowned.filter((row) => row.note.includes('commitlint')),
-    ).toStrictEqual([]);
-    await writeFile(join(sandbox.path, 'package.json'), COMMITLINT_PACKAGE);
-    expect(
-        listSuggestions(await openSession(sandbox.path))
-            .unowned.filter((row) => row.note.includes('commitlint'))
+        (JSON.parse(result.stdout) as DoctorReport).suggestions.unowned
+            .filter((row) => row.note.includes('commitlint'))
             .map(({ path, command }) => ({ path, command })),
     ).toStrictEqual([{ path: 'package.json', command: 'gspot set level all' }]);
 });
@@ -81,7 +70,8 @@ test('doctor suggests moving authored Stylelint fields while excluding managed f
 
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const suggestions = listSuggestions(await openSession(sandbox.path));
+    const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
+    const { suggestions } = JSON.parse(doctor.stdout) as DoctorReport;
     expect(suggestions.unowned.filter((row) => ['package.json', 'app/package.json'].includes(row.path))).toStrictEqual(
         [],
     );
@@ -114,7 +104,9 @@ dependencies = ["pytest==8.4.2"]
     const authored = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(JSON.parse(authored.stdout)).toMatchObject({
         suggestions: {
-            detected: matchItems([matchFields({ configuration: 'python', evidence: 'pyproject.toml' })]),
+            detected: matchItems([
+                matchFields({ configuration: 'python', evidence: 'pyproject.toml', command: 'gspot add python' }),
+            ]),
         },
     });
     expect(await readFile(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);
@@ -126,22 +118,6 @@ dependencies = ["pytest==8.4.2"]
     readGitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commit},${path}`]);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(JSON.parse(result.stdout)).toMatchObject({ submodules: [path] });
-});
-test('doctor suggests the command that adds the configuration of a new Python file', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['bash']),
-        'entry.sh': 'echo\n',
-    });
-
-    {
-        using log = openWriter(sandbox.path);
-        const session = await openSession(sandbox.path);
-        writeGeneratedFiles(session, generate(session), log);
-    }
-    await writeFile(join(sandbox.path, 'service.py'), 'print("hello")\n');
-    const result = await runGspot(sandbox.path, ['doctor', '--json']);
-    const { suggestions } = JSON.parse(result.stdout) as DoctorReport;
-    expect(suggestions.detected).toContainEqual(matchFields({ configuration: 'python', command: 'gspot add python' }));
 });
 test('doctor detects installed test frameworks and suggests no other runner', async () => {
     await using sandbox = await testdir();

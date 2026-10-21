@@ -1,8 +1,9 @@
 import { COMMITLINT_PACKAGE } from '#tests/data/checks/commits.ts';
+import { STYLELINT_PACKAGE_JSON } from '#tests/data/checks/css.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 
 /** pyproject.toml tables that init leaves in place while a generated tool file takes over. */
-const REPLACED_PYPROJECT_TABLES = [
+export const REPLACED_PYPROJECT_TABLES = [
     {
         configuration: 'python',
         table: 'tool.basedpyright',
@@ -27,7 +28,7 @@ const REPLACED_PYPROJECT_TABLES = [
 ] as const;
 
 /** Existing tool files that checks for level all must leave alone at level recommended. */
-const INACTIVE_CONFIGURATIONS = {
+export const INACTIVE_CONFIGURATIONS = {
     '.commitlintrc.json': '{"rules":{}}\n',
     '.commitlintrc.mts': 'export default { rules: {} };\n',
     '.syncpackrc.json': '{"versionGroups":[]}\n',
@@ -36,7 +37,7 @@ const INACTIVE_CONFIGURATIONS = {
 } as const;
 
 /** A script that runs Stylelint without a path to a tool file, so Stylelint finds one itself. */
-const STYLELINT_LOOKUP_SCRIPT = `
+export const STYLELINT_LOOKUP_SCRIPT = `
 import stylelint from './.gspot/node_modules/stylelint/lib/index.mjs';
 const result = await stylelint.lint({ files: [process.argv[1]], cwd: process.cwd() });
 const findings = result.results.flatMap(({ warnings, parseErrors, invalidOptionWarnings }) => [
@@ -48,7 +49,7 @@ process.stdout.write(JSON.stringify(findings));
 `;
 
 /** Authored lint jobs that stop init from adding CI by itself, but not when a provider flag asks for it. */
-const LINT_JOBS = [
+export const LINT_JOBS = [
     { name: 'a GitLab lint job', path: '.gitlab-ci.yml', content: 'quality:\n  script: npm run lint\n' },
     {
         name: 'a GitHub lint job',
@@ -64,34 +65,52 @@ jobs:
 ] as const;
 
 /** Repository CI signals and the provider each signal selects. */
-const CI_PREFERENCE_CASES = [
-    [
-        'a GitHub workflow before a GitLab remote',
-        ['.github/workflows/build.yml'],
-        '',
-        'git@gitlab.com:example/repo.git',
-        'github',
-    ],
-    [
-        'tracked GitLab before GitHub',
-        ['.gitlab-ci.yml', '.github/workflows/build.yml'],
-        '',
-        'git@github.com:example/repo.git',
-        'gitlab',
-    ],
-    ['GitLab file before GitHub remote', [], '.gitlab-ci.yml', 'git@github.com:example/repo.git', 'gitlab'],
-    [
-        'GitHub remote with unrelated Bitbucket configuration',
-        ['bitbucket-pipelines.yml'],
-        '',
-        'git@github.com:example/repo.git',
-        'github',
-    ],
-    ['GitHub SSH remote', [], '', 'git@github.com:example/repo.git', 'github'],
-    ['unrecognized remote host', [], '', 'https://github.com.example.com/example/repo.git', 'none'],
+export const CI_PREFERENCE_CASES = [
+    {
+        name: 'a GitHub workflow before a GitLab remote',
+        tracked: ['.github/workflows/build.yml'],
+        untracked: '',
+        remote: 'git@gitlab.com:example/repo.git',
+        provider: 'github',
+    },
+    {
+        name: 'tracked GitLab before GitHub',
+        tracked: ['.gitlab-ci.yml', '.github/workflows/build.yml'],
+        untracked: '',
+        remote: 'git@github.com:example/repo.git',
+        provider: 'gitlab',
+    },
+    {
+        name: 'GitLab file before GitHub remote',
+        tracked: [],
+        untracked: '.gitlab-ci.yml',
+        remote: 'git@github.com:example/repo.git',
+        provider: 'gitlab',
+    },
+    {
+        name: 'GitHub remote with unrelated Bitbucket configuration',
+        tracked: ['bitbucket-pipelines.yml'],
+        untracked: '',
+        remote: 'git@github.com:example/repo.git',
+        provider: 'github',
+    },
+    {
+        name: 'GitHub SSH remote',
+        tracked: [],
+        untracked: '',
+        remote: 'git@github.com:example/repo.git',
+        provider: 'github',
+    },
+    {
+        name: 'unrecognized remote host',
+        tracked: [],
+        untracked: '',
+        remote: 'https://github.com.example.com/example/repo.git',
+        provider: undefined,
+    },
 ] as const;
 
-const FORMAT_FILE_CASES = [
+export const FORMAT_FILE_CASES = [
     {
         name: 'no formatter configuration',
         files: {},
@@ -159,7 +178,7 @@ max_line_length = 96
     },
 ] as const;
 
-const SCOPE_FORMAT_FILES = {
+export const SCOPE_FORMAT_FILES = {
     '.prettierrc.json': '{"tabWidth":2,"printWidth":90,"singleQuote":false}',
     'app/.prettierrc.json': '{"tabWidth":6,"printWidth":100,"singleQuote":true}',
     'app/source.js': 'export const app = 1;\n',
@@ -172,7 +191,7 @@ const SCOPE_INDENT_WIDTH = 6;
 const ROOT_PRINT_WIDTH = 90;
 const SCOPE_PRINT_WIDTH = 100;
 
-const SCOPE_FORMAT_CASES = [
+export const SCOPE_FORMAT_CASES = [
     {
         name: 'repository configuration',
         expected: [
@@ -185,16 +204,16 @@ const SCOPE_FORMAT_CASES = [
 ] as const;
 
 /** Git-dependent plan rows belong only to a repository with a Git index. */
-const GIT_PLAN_CASES = [
+export const GIT_PLAN_CASES = [
     { name: 'a folder outside Git', hasGit: false },
     { name: 'a Git repository', hasGit: true },
 ] as const;
 
-const PYTHON_SOURCE = { 'source.py': 'VALUE = 1\n' };
+export const PYTHON_SOURCE = { 'source.py': 'VALUE = 1\n' };
 
-const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
+export const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
 
-const REPLACED_TOOL_FILES = {
+export const REPLACED_TOOL_FILES = {
     'typos.toml': `[default.extend-words]
 # The device identifier API name.
 udid = "udid"
@@ -205,7 +224,7 @@ udid = "udid"
     '.prettierrc': '{ "semi": false }\n',
 } as const;
 
-const INIT_FILES = {
+export const INIT_FILES = {
     ...REPLACED_TOOL_FILES,
     'scripts/a.sh': CLEAN_BASH_SCRIPT,
     'src/a.js': 'export const a = 1;\n',
@@ -214,28 +233,11 @@ const INIT_FILES = {
 } as const;
 
 /** Empty and named language lists both keep the common checks. */
-const CONFIGURATION_CHOICES = [
+export const CONFIGURATION_CHOICES = [
     { configurations: undefined },
     { configurations: undefined, noConfigurations: true },
     { configurations: ['python'] },
 ] as const;
-
-export {
-    LINT_JOBS,
-    INIT_FILES,
-    PYTHON_SOURCE,
-    GIT_PLAN_CASES,
-    FORMAT_FILE_CASES,
-    TOOL_ONLY_PACKAGE,
-    SCOPE_FORMAT_CASES,
-    SCOPE_FORMAT_FILES,
-    CI_PREFERENCE_CASES,
-    REPLACED_TOOL_FILES,
-    CONFIGURATION_CHOICES,
-    INACTIVE_CONFIGURATIONS,
-    STYLELINT_LOOKUP_SCRIPT,
-    REPLACED_PYPROJECT_TABLES,
-};
 
 /** A file that changes between the init plan and the write: an edited package.json field. */
 export const EDITED_STYLELINT_PACKAGE = `{
@@ -272,5 +274,33 @@ export const IMPORT_STYLE_CASES = [
             'src/entry.ts': 'export const value = 1;\n',
         },
         expected: undefined,
+    },
+] as const;
+
+/** Native Stylelint lookup before and after replacing an authored standalone file. */
+export const STYLELINT_REPLACEMENT_CASES = [
+    {
+        name: 'a root package field',
+        scope: '',
+        packageText: STYLELINT_PACKAGE_JSON,
+        command: ['init', '--yes', '--configurations', 'css'],
+        changed: ['package.json'],
+        unchangedFiles: [],
+    },
+    {
+        name: 'a scoped package field',
+        scope: 'app',
+        packageText: STYLELINT_PACKAGE_JSON,
+        command: ['init', '--yes', '--no-configurations'],
+        changed: ['app/package.json'],
+        unchangedFiles: [],
+    },
+    {
+        name: 'a standalone file',
+        scope: '',
+        packageText: '{"private":true,"type":"module"}',
+        command: ['init', '--yes', '--configurations', 'css'],
+        changed: [],
+        unchangedFiles: [{ path: 'package.json', text: '{"private":true,"type":"module"}' }],
     },
 ] as const;

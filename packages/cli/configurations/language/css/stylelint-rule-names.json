@@ -2,7 +2,7 @@
     "package": "stylelint-config-standard",
     "version": "39.0.0",
     "source": "resolveConfig.rules",
-    "rules": [
+    "names": [
         "alpha-value-notation",
         "annotation-no-unknown",
         "at-rule-descriptor-no-unknown",

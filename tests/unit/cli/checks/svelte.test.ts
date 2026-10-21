@@ -6,6 +6,7 @@ import { join, dirname, resolve } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeNpmTool } from '#tests/setup/fakes.ts';
 import * as processes from '#cli/system/processes.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -13,12 +14,22 @@ import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT } from '#tests/data/checks/svelte.
 import { textSchema, pathsSchema, fieldsSchema } from '#tests/schemas/checks/typescript.ts';
 import { checkFindings, findBuiltInCheck, planSandboxCheck } from '#tests/setup/check-input.ts';
 
-async function prepareSvelteResult(root: string, stdout: string) {
-    const session = await openSession(root);
-    const input = planSandboxCheck(session, 'svelte/svelte-check');
-    await fakeNpmTool(root, 'svelte-check');
-    const run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code: 1, stdout }));
-    return { session, input, run };
+/** Run svelte-check against one fake output in the selected scope. */
+async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<Finding[]> {
+    const scope = options.scope ?? '';
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['svelte'], {
+            tables: scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`,
+        }),
+        [scope === '' ? 'src/Count.svelte' : `${scope}/src/Count.svelte`]: '<p>Count</p>',
+    });
+    await fakeNpmTool(sandbox.path, 'svelte-check');
+    using _run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code: 1, stdout }));
+    const session = await openSession(sandbox.path);
+    return await findBuiltInCheck('svelte/svelte-check')(
+        session,
+        planSandboxCheck(session, 'svelte/svelte-check', { scope }),
+    );
 }
 
 test.each([...SVELTE_PROJECTS])(
@@ -67,17 +78,7 @@ test.each([...SVELTE_PROJECTS])(
 );
 
 test('svelte-check errors and warnings become findings at one-based positions with their code as the rule', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['svelte'], { scopes: [{ path: 'apps/web' }] }),
-        'apps/web/src/Count.svelte': '<p>Count</p>',
-    });
-    const session = await openSession(sandbox.path);
-    await fakeNpmTool(sandbox.path, 'svelte-check');
-    using _run = spyOn(processes, 'spawnProcess').mockResolvedValue(
-        buildProcessResult({ code: 1, stdout: SVELTE_CHECK_OUTPUT }),
-    );
-    const input = planSandboxCheck(session, 'svelte/svelte-check');
-    expect(await findBuiltInCheck('svelte/svelte-check')(session, input)).toStrictEqual([
+    expect(await runSvelteCheck(SVELTE_CHECK_OUTPUT)).toStrictEqual([
         {
             check: 'svelte/svelte-check',
             file: 'src/Count.svelte',
@@ -97,33 +98,20 @@ test('svelte-check errors and warnings become findings at one-based positions wi
             fixable: false,
         },
     ]);
-    const nested = await findBuiltInCheck('svelte/svelte-check')(
-        session,
-        planSandboxCheck(session, 'svelte/svelte-check', { scope: 'apps/web' }),
-    );
+    const nested = await runSvelteCheck(SVELTE_CHECK_OUTPUT, { scope: 'apps/web' });
     expect(nested[0]?.file).toBe('apps/web/src/Count.svelte');
 });
 
 // POSIX treats a backslash as a file-name character; Windows treats it as a directory separator.
 test('file-name separators follow the current platform', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['svelte']) });
-    const { session, input, run } = await prepareSvelteResult(
-        sandbox.path,
+    const findings = await runSvelteCheck(
         SVELTE_CHECK_OUTPUT.replace('src/Count.svelte', String.raw`src\\Count.svelte`),
     );
-    using _run = run;
-    const findings = await findBuiltInCheck('svelte/svelte-check')(session, input);
     expect(findings[0]?.file).toBe(process.platform === 'win32' ? 'src/Count.svelte' : String.raw`src\Count.svelte`);
 });
 
 test('a svelte-check failure line is an error, not a clean result', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['svelte']) });
-    const { session, input, run } = await prepareSvelteResult(
-        sandbox.path,
-        '1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"',
-    );
-    using _run = run;
-    expect(await captureRejection(findBuiltInCheck('svelte/svelte-check')(session, input))).toBe(
-        'The svelte-check run failed: Failed to locate tsconfig or jsconfig',
-    );
+    expect(
+        await captureRejection(runSvelteCheck('1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"')),
+    ).toBe('The svelte-check run failed: Failed to locate tsconfig or jsconfig');
 });

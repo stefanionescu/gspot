@@ -1,19 +1,13 @@
-import type { SettingsError } from '#cli/types/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { isLoosening, validateReason, isReasonAccepted } from '#cli/settings/validation/reasons.ts';
+import { type Settings, type SettingsError, type SettingsTable } from '#cli/types/settings/file.ts';
+import type { SettingMatch, KnownSettings, WrittenSetting } from '#cli/types/settings/inheritance.ts';
 
-import type {
-    Settings,
-    KnownSettings,
-    SettingsTable,
-    WrittenSetting,
-    DeclarationMatch,
-} from '#cli/types/settings/values.ts';
 import {
+    findSetting,
     getSettingTable,
     getSettingValue,
-    findDeclaration,
     listWrittenKeys,
     getWrittenSetting,
     listSettingsTables,
@@ -35,20 +29,25 @@ function formatLooseningError(
 }
 
 // List the errors of a written list: bad items, and loosening items without a reason when the declaration requires reasons.
-function listErrors(key: string, written: WrittenSetting, match: DeclarationMatch, shipped: unknown): SettingsError[] {
+function validateWrittenList(
+    key: string,
+    written: WrittenSetting,
+    match: SettingMatch,
+    shipped: unknown,
+): SettingsError[] {
     if (!Array.isArray(written.value)) return [];
     const message =
-        written.reason !== undefined || isLoosening(match.declaration, written.value, shipped)
+        written.reason !== undefined || isLoosening(match.setting, written.value, shipped)
             ? validateReason(key, written.reason)
             : undefined;
     return message === undefined ? [] : [{ path: [...key.split('.'), 'reason'], message }];
 }
 
 // Find the error of a written single value that loosens the shipped default without an accepted reason.
-function validateScalar(
+function validateWrittenScalar(
     key: string,
     written: WrittenSetting,
-    match: DeclarationMatch,
+    match: SettingMatch,
     scope: string | undefined,
     shipped: unknown,
 ): SettingsError[] {
@@ -56,7 +55,7 @@ function validateScalar(
         const message = validateReason(key, written.reason);
         if (message !== undefined) return [{ path: [...key.split('.'), 'reason'], message }];
     }
-    if (!isLoosening(match.declaration, written.value, shipped) || isReasonAccepted(written.reason)) return [];
+    if (!isLoosening(match.setting, written.value, shipped) || isReasonAccepted(written.reason)) return [];
     const error = formatLooseningError(key, written, shipped, scope);
     return [{ path: key.split('.'), message: error }];
 }
@@ -68,20 +67,20 @@ function validateWrittenKey(
     scope: string | undefined,
     key: string,
 ): SettingsError[] {
-    const match = findDeclaration(known, key);
+    const match = findSetting(known, key);
     if (!match) return [{ path: key.split('.'), message: formatUnknownSetting(known, key) }];
     const written = getWrittenSetting(table, key);
     if (!written) return [];
     const shipped = findSettingDefault(known, settings, match, scope)?.value;
-    if (written.reason !== undefined && !isLoosening(match.declaration, written.value, shipped))
+    if (written.reason !== undefined && !isLoosening(match.setting, written.value, shipped))
         return [
             {
                 path: key.split('.'),
                 message: `\`${key}\` does not loosen the default. Write it as a plain value, without a reason.`,
             },
         ];
-    if (match.declaration.type === 'list') return listErrors(key, written, match, shipped);
-    return validateScalar(key, written, match, scope, shipped);
+    if (match.setting.type === 'list') return validateWrittenList(key, written, match, shipped);
+    return validateWrittenScalar(key, written, match, scope, shipped);
 }
 
 // Configuration defaults that conflict in the root or a scope. No written table settles them.
@@ -115,8 +114,8 @@ function listUnsettledConflicts(
  * @param key the written dotted name.
  * @returns the error, with a command that lists the settings.
  */
-function formatUnknownSetting(known: KnownSettings, key: string): string {
-    const all = known.declarations.keys().toArray();
+export function formatUnknownSetting(known: KnownSettings, key: string): string {
+    const all = known.settings.keys().toArray();
     if (key.startsWith('limits.')) {
         const limits = all.filter((candidate) => candidate.startsWith('limits.'));
         return `\`${key}\` is not a limit any check reads. The limits that exist are ${formatCodeList(limits.map((candidate) => candidate.slice('limits.'.length)))}.`;
@@ -141,20 +140,20 @@ function formatUnknownSetting(known: KnownSettings, key: string): string {
  * @param known the declarations and defaults of the selection.
  * @param settings the parsed gspot.toml.
  * @param scopeKnown the declarations of each scope by path, which its own table uses.
- * @param retained the settings saved for configurations whose repository evidence disappeared.
+ * @param everyConfiguration the settings of every shipped configuration, so a root table may keep a setting whose configuration this repository does not select.
  * @returns the errors in plain English, empty when the settings pass validation.
  */
-function validateKeys(
+export function validateKeys(
     known: KnownSettings,
     settings: Settings,
     scopeKnown: Map<string, KnownSettings>,
-    retained: KnownSettings,
+    everyConfiguration: KnownSettings,
 ): SettingsError[] {
     const errors = listUnsettledConflicts(known, settings, scopeKnown);
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
-    const later = [known, ...scopeKnown.values(), retained].toReversed();
+    const later = [known, ...scopeKnown.values(), everyConfiguration].toReversed();
     const everywhere: KnownSettings = {
-        declarations: new Map(later.flatMap((entry) => entry.declarations.entries().toArray())),
+        settings: new Map(later.flatMap((entry) => entry.settings.entries().toArray())),
         defaults: new Map(later.flatMap((entry) => entry.defaults.entries().toArray())),
         errors: known.errors,
     };
@@ -173,7 +172,7 @@ function validateKeys(
     for (const { table, scope, path } of listSettingsTables(settings)) {
         const active = scope === undefined ? everywhere : (scopeKnown.get(scope) as KnownSettings);
         const selectedKnown: KnownSettings = {
-            declarations: new Map([...everywhere.declarations, ...active.declarations]),
+            settings: new Map([...everywhere.settings, ...active.settings]),
             defaults: new Map([...everywhere.defaults, ...active.defaults]),
             errors: active.errors,
         };
@@ -186,5 +185,3 @@ function validateKeys(
     }
     return errors;
 }
-
-export { validateKeys, formatUnknownSetting };

@@ -1,13 +1,14 @@
 import { parseAllDocuments } from 'yaml';
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { listCodeFences } from '#cli/parsers/markdown.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers/json.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { ParseCache, GrammarName } from '#cli/types/parsers/grammars.ts';
 import type { FenceParser, FenceSyntaxError } from '#cli/types/checks/markdown.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
@@ -87,7 +88,7 @@ async function validateCodeFences(text: string, cache: ParseCache): Promise<Fenc
         javascript: (body) => findTreeSyntaxError('javascript', body, cache),
         python: (body) => findTreeSyntaxError('python', body, cache),
     };
-    const findings: FenceSyntaxError[] = [];
+    const errors: FenceSyntaxError[] = [];
     for (const fence of listCodeFences(text)) {
         const parser = FENCE_PARSERS[fence.language];
         if (typeof parser !== 'string' || fence.body.trim() === '') continue;
@@ -99,10 +100,10 @@ async function validateCodeFences(text: string, cache: ParseCache): Promise<Fenc
             .join('\n')
             .replaceAll(ELLIPSIS_ARGUMENTS, EMPTY_ARGUMENTS)
             .replaceAll(ANGLE_PLACEHOLDER, PLACEHOLDER_VALUE);
-        const finding = await readers[parser](body);
-        if (finding !== undefined) findings.push({ ...finding, line: fence.startLine + finding.line });
+        const error = await readers[parser](body);
+        if (error !== undefined) errors.push({ ...error, line: fence.startLine + error.line });
     }
-    return findings;
+    return errors;
 }
 
 /**
@@ -116,14 +117,14 @@ export async function checkMarkdownFences(session: Session, planned: PlannedChec
     const findings: Finding[] = [];
     for (const file of planned.files) {
         const text = readCachedText(session.reads, file.path);
-        const syntaxFindings = await validateCodeFences(text, session);
+        const errors = await validateCodeFences(text, session);
         findings.push(
-            ...syntaxFindings.map((finding) =>
+            ...errors.map((error) =>
                 buildFinding(
                     planned,
-                    { file: file.path, line: finding.line },
+                    { file: file.path, line: error.line },
                     'syntax',
-                    `Fix this code example: ${finding.message}`,
+                    `Fix this code example: ${error.message}`,
                 ),
             ),
         );

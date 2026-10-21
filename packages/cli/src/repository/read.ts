@@ -2,30 +2,30 @@
 import { statSync, realpathSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findScopes } from '#cli/repository/scopes.ts';
-import { detectSwiftTags } from '#cli/parsers/swift.ts';
 import { join, posix, dirname, resolve } from 'node:path';
-import { classifyFile } from '#cli/repository/classify.ts';
-import { stripBlock } from '#cli/system/managed-blocks.ts';
+import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import { stripBlock } from '#cli/parsers/managed-blocks.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
-import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
-import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { detectSwiftTags } from '#cli/repository/swift-tags.ts';
+import { classifyFile } from '#cli/repository/files/classify.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedText, readCachedPrefix } from '#cli/system/files/reads.ts';
-import { readIndexEntries, listTrackedFiles } from '#cli/repository/tracked.ts';
-import type { Scope, Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
+import { readIndexEntries, listTrackedFiles } from '#cli/repository/files/tracked.ts';
+import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { trimGitLine, isOutsideGit, runGitBlocking, isGitRepository } from '#cli/system/git.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
-import { GIT_LOCALE, WORK_TREE_ARGUMENTS, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
+import { GIT_LOCALE, GIT_WORK_TREE_ARGUMENTS, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 
 import {
     SET_VALUES,
+    SWIFT_EXTENSION,
     FILE_PREFIX_BYTES,
     VENDORED_ATTRIBUTE,
     GENERATED_ATTRIBUTE,
-    CHECK_ATTRIBUTES_ARGUMENTS,
+    GIT_CHECK_ATTRIBUTES_ARGUMENTS,
 } from '#cli/config/repository/inventory.ts';
 
 /**
@@ -37,7 +37,7 @@ import {
  */
 function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
-    const result = runGitBlocking(repositoryRoot, CHECK_ATTRIBUTES_ARGUMENTS, {
+    const result = runGitBlocking(repositoryRoot, GIT_CHECK_ATTRIBUTES_ARGUMENTS, {
         stdin: paths.join('\0') + '\0',
     });
     if (result.code !== 0) throw new Error(`Git could not read the attributes: ${result.stderr.trim()}`);
@@ -49,14 +49,14 @@ function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Re
  *
  * @param reads the run cache.
  * @param options what the read needs.
- * @param options.declarations the generated and vendored path rules.
+ * @param options.generatedPaths the generated and vendored path rules.
  * @param options.scopes the written scope tables.
- * @param options.manifests the shipped configurations.
+ * @param options.configurations the shipped configurations.
  * @returns the repository inventory.
  */
 export async function readRepository(
     reads: ReadCache,
-    { declarations, scopes, manifests }: RepositoryReadOptions,
+    { generatedPaths, scopes, configurations }: RepositoryReadOptions,
 ): Promise<Repository> {
     const root = reads.root;
     const hasGit = isGitRepository(root);
@@ -72,7 +72,7 @@ export async function readRepository(
         : new Map<string, Record<string, string>>();
     for (const entry of entries) {
         const prefix = entry.symlink ? Buffer.alloc(0) : readCachedPrefix(reads, entry.path, FILE_PREFIX_BYTES);
-        const file = classifyFile(root, entry, prefix, { declarations, attributes });
+        const file = classifyFile(root, entry, prefix, { generatedPaths, attributes });
         if (!entry.symlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
             const tags = await detectSwiftTags(file.path, readCachedText(reads, file.path));
             file.tags.push(...tags);
@@ -80,13 +80,13 @@ export async function readRepository(
         tracked.push(file);
     }
     const dependencyFiles = await readDependencyFiles(reads, tracked);
-    const discovered = findScopes(tracked, dependencyFiles, manifests.values());
-    const written: Scope[] = [
+    const discovered = findScopes(tracked, dependencyFiles, configurations.values());
+    const written: ScopeFolder[] = [
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes
             .filter((entry) => files.readStats(entry.path)?.isDirectory() === true)
             .map(
-                (entry): Scope => ({
+                (entry): ScopeFolder => ({
                     path: entry.path,
                     configurations: entry.configurations,
                     origin: SETTINGS_FILE,
@@ -100,7 +100,7 @@ export async function readRepository(
         hasGit,
         files: tracked,
         dependencyFiles,
-        scopes: [...new Map([...discovered, ...written].map((scope) => [scope.path, scope])).values()].toSorted(
+        scopeFolders: [...new Map([...discovered, ...written].map((scope) => [scope.path, scope])).values()].toSorted(
             (left, right) => left.path.localeCompare(right.path),
         ),
     };
@@ -148,7 +148,7 @@ export function findRoot(start: string): string {
     const gitRoot = top.code === 0 ? resolve(trimGitLine(top.stdout)) : undefined;
     if (gitRoot !== undefined) return gitRoot;
     // Broken Git metadata stops the search; a folder outside any repository does not.
-    if (!isOutsideGit(runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
+    if (!isOutsideGit(runGitBlocking(folder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
         throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);
     let current = folder;
     while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {

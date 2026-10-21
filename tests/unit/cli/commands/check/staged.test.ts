@@ -1,20 +1,55 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { readGitOutput } from '#tests/setup/git.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
-import { generate } from '#cli/generation/generate.ts';
-import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { isWindows, isCaseFolding } from '#tests/setup/system.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
+
+/** Create two index entries that differ only by letter case. */
+async function createCaseClashingSandbox(): Promise<TestdirResult> {
+    const sandbox = await testdir();
+    try {
+        const check = {
+            command: [
+                process.execPath,
+                '-e',
+                'console.log(JSON.stringify(process.argv.slice(1).map(file => ({file,message:require("node:fs").readFileSync(file,"utf8")})))); process.exitCode = 1;',
+                '{files}',
+            ],
+            output: { format: 'json', fields: { file: 'file', message: 'message' } },
+            paths: ['docs/**'],
+            stage: 'commit',
+        };
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildSandboxSettings([], {
+                tables: stringify({ rules: { enabled: false }, command_check: [{ name: 'sandbox/report', ...check }] }),
+            }),
+            'docs/guide.md': '# Guide\n',
+        });
+        readGitOutput(sandbox.path, ['init', '-q']);
+        readGitOutput(sandbox.path, ['add', '-A']);
+        readGitOutput(sandbox.path, ['commit', '-qm', 'base']);
+        for (const [path, text] of [
+            ['docs/Notes.md', '# Notes\n'],
+            ['docs/NOTES.md', '# NOTES\n'],
+        ]) {
+            await writeFile(join(sandbox.path, '.git', 'staged-blob'), text!);
+            const hash = readGitOutput(sandbox.path, ['hash-object', '-w', '.git/staged-blob']);
+            readGitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `100644,${hash},${path!}`]);
+        }
+        return sandbox;
+    } catch (error) {
+        await sandbox[Symbol.asyncDispose]();
+        throw error;
+    }
+}
 
 test('a staged check reads index bytes and file modes, converts no line endings, and writes nothing into the working tree', async () => {
     await using folder = await testdir();
@@ -62,11 +97,16 @@ stage = "commit"
 
 test('a staged check copies the locked dependencies and leaves the working tree as it was', async () => {
     await using folder = await testdir();
-    const manifest = { name: 'snapshot-project', private: true, type: 'module', dependencies: { dependency: '1.0.0' } };
+    const packageJson = {
+        name: 'snapshot-project',
+        private: true,
+        type: 'module',
+        dependencies: { dependency: '1.0.0' },
+    };
     const lockfile = JSON.stringify({
-        name: manifest.name,
+        name: packageJson.name,
         lockfileVersion: 3,
-        packages: { '': manifest, 'node_modules/dependency': { version: '1.0.0' } },
+        packages: { '': packageJson, 'node_modules/dependency': { version: '1.0.0' } },
     });
     const command = [
         process.execPath,
@@ -79,7 +119,7 @@ test('a staged check copies the locked dependencies and leaves the working tree 
     ];
     await createFileTree(folder.path, {
         '.gitignore': '.gspot/\nnode_modules/\n',
-        'package.json': JSON.stringify(manifest),
+        'package.json': JSON.stringify(packageJson),
         'package-lock.json': lockfile,
         'node_modules/dependency/package.json':
             '{"name":"dependency","version":"1.0.0","type":"module","exports":"./index.js"}',
@@ -124,9 +164,8 @@ version = "0.0.0"
         'child/main.py': 'value = 2\n',
     });
     for (const scope of ['', 'child']) await mkdir(join(sandbox.path, scope, '.venv'));
-    const session = await openSession(sandbox.path);
-    using log = openWriter(sandbox.path);
-    writeGeneratedFiles(session, generate(session), log);
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     readGitOutput(sandbox.path, ['init', '-q']);
     readGitOutput(sandbox.path, ['add', '-A']);
     const original = await readFile(join(sandbox.path, '.gspot/configurations/language/python/basedpyright.json'));
@@ -145,51 +184,12 @@ version = "0.0.0"
     const refused = await runGspot(sandbox.path, commandArguments);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
-        'do not match the revision manifests and lockfiles',
+        'do not match the dependency files and lockfiles of the revision',
     );
     expect(await readFile(join(sandbox.path, '.gspot/configurations/language/python/basedpyright.json'))).toEqual(
         original,
     );
 });
-
-/** Create two index entries that differ only by letter case. */
-async function createCaseClashingSandbox() {
-    const sandbox = await testdir();
-    try {
-        const check = {
-            command: [
-                process.execPath,
-                '-e',
-                'console.log(JSON.stringify(process.argv.slice(1).map(file => ({file,message:require("node:fs").readFileSync(file,"utf8")})))); process.exitCode = 1;',
-                '{files}',
-            ],
-            output: { format: 'json', fields: { file: 'file', message: 'message' } },
-            paths: ['docs/**'],
-            stage: 'commit',
-        };
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings([], {
-                tables: stringify({ rules: { enabled: false }, command_check: [{ name: 'sandbox/report', ...check }] }),
-            }),
-            'docs/guide.md': '# Guide\n',
-        });
-        readGitOutput(sandbox.path, ['init', '-q']);
-        readGitOutput(sandbox.path, ['add', '-A']);
-        readGitOutput(sandbox.path, ['commit', '-qm', 'base']);
-        for (const [path, text] of [
-            ['docs/Notes.md', '# Notes\n'],
-            ['docs/NOTES.md', '# NOTES\n'],
-        ]) {
-            await writeFile(join(sandbox.path, '.git', 'staged-blob'), text!);
-            const hash = readGitOutput(sandbox.path, ['hash-object', '-w', '.git/staged-blob']);
-            readGitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `100644,${hash},${path!}`]);
-        }
-        return sandbox;
-    } catch (error) {
-        await sandbox[Symbol.asyncDispose]();
-        throw error;
-    }
-}
 
 test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep both spellings and bytes', async () => {
     await using sandbox = await createCaseClashingSandbox();

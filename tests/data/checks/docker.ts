@@ -1,8 +1,6 @@
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 // Trivy uses this configured exit code when an image report contains findings.
-export const TRIVY_FINDINGS_EXIT = 10;
-
 export const TRIVY_CONFIG_PATH = '.gspot/configurations/infrastructure/docker/trivy.yml';
 
 export const VALID_REPORT =
@@ -300,3 +298,5 @@ rule = "DS-0002"
 paths = ["app/**"]
 reason = "This test exercises scoped advisory exceptions."
 `;
+
+export const NGINX_COMPOSE = 'services: {app: {image: nginx:1.27.2}}\n';

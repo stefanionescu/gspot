@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { parseSyml } from '@yarnpkg/parsers';
-import { isRecord } from '#cli/system/values.ts';
+import { isRecord } from '#cli/system/tables.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
 import { LEADING_SLASH } from '#cli/config/system/paths.ts';

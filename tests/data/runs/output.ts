@@ -1,7 +1,7 @@
 import { TYPO } from '#tests/data/checks/spelling.ts';
 
 // One output setting per format. Each carries the patterns or fields its format needs.
-export const OUTPUTS = [
+export const CHECK_OUTPUTS = [
     { format: 'regex', pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$` },
     {
         format: 'grouped',
@@ -70,51 +70,51 @@ export const REPORT_ERRORS = [
         configuration: 'markdown',
         name: 'empty report',
         output: '',
-        message: 'Markdownlint returned invalid structured findings.',
+        message: 'Markdownlint printed output that gspot cannot read.',
     },
     {
         configuration: 'markdown',
         name: 'non-JSON text',
         output: 'not JSON',
-        message: 'Markdownlint returned invalid structured findings.',
+        message: 'Markdownlint printed output that gspot cannot read.',
     },
     {
         configuration: 'markdown',
         name: 'non-array report',
         output: '{}',
-        message: 'Markdownlint returned invalid structured findings.',
+        message: 'Markdownlint printed output that gspot cannot read.',
     },
     {
         configuration: 'markdown',
         name: 'empty rules',
         output: [{ ...MARKDOWN_REPORT, ruleNames: [] }],
-        message: 'Markdownlint returned invalid structured findings.',
+        message: 'Markdownlint printed output that gspot cannot read.',
     },
 
     {
         configuration: 'markdown',
         name: 'invalid fix',
         output: [{ ...MARKDOWN_REPORT, fixInfo: [] }],
-        message: 'Markdownlint returned invalid structured findings.',
+        message: 'Markdownlint printed output that gspot cannot read.',
     },
 
     {
         configuration: 'spelling',
         name: 'unfinished JSON',
         output: '{',
-        message: 'Typos returned invalid structured findings.',
+        message: 'Typos printed output that gspot cannot read.',
     },
     {
         configuration: 'spelling',
         name: 'partial typo',
         output: { type: 'typo', path: 'sample.txt', typo: TYPO.the },
-        message: 'Typos returned invalid structured findings.',
+        message: 'Typos printed output that gspot cannot read.',
     },
     {
         configuration: 'spelling',
         name: 'error output',
         output: { type: 'error', message: 'Read failed.' },
-        message: 'Typos returned invalid structured findings.',
+        message: 'Typos printed output that gspot cannot read.',
     },
     {
         configuration: 'spelling',
@@ -213,7 +213,7 @@ export const ENCODED_REPORT = {
     ],
 } as const;
 
-export const FAILED_INVOCATIONS = [
+export const FAILED_ANALYSES = [
     { executionSuccessful: false },
     { executionSuccessful: true, toolExecutionNotifications: [{ level: 'error' }] },
 ] as const;

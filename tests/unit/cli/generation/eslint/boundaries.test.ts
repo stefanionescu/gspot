@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { getValueAt } from '#cli/system/values.ts';
+import { getValueAt } from '#cli/system/tables.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { parseToolProject } from '#cli/install/npm/tool-project.ts';
-import { importRulesSchema } from '#cli/schemas/settings/imports.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { assertPackageManager } from '#cli/repository/package-manager.ts';
+import { parseToolPackageJson } from '#cli/install/npm/tool-project.ts';
+import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
+import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 
 import {
@@ -39,7 +39,7 @@ test.each([...MODULE_CASES])(
         await createFileTree(sandbox.path, { ...MODULE_FILES, 'gspot.toml': settings });
         const eslint = await createEslint(sandbox.path);
         const session = await openSession(sandbox.path);
-        const packages = parseToolProject(
+        const packages = parseToolPackageJson(
             await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'),
             assertPackageManager(session.packageManager).name,
         );

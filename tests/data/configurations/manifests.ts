@@ -1,4 +1,8 @@
-export const INVALID_VERSION_FLOORS = [['future']] as const;
+export const VERSION_FLOORS = [
+    { floor: '4', expected: '4.0.0' },
+    { floor: '4.4', expected: '4.4.0' },
+    { floor: 'future', expected: undefined },
+] as const;
 
 export const SEMGREP_ASSETS = [
     'configurations/language/example/tool-files/semgrep/first.yml',
@@ -43,10 +47,9 @@ target = "semgrep/second.yml"
 check = "example/scan"
 `;
 
-export const REPLACE_DECLARATION = `[[tool]]
-name = "example"
-version = "1.0.0"
-[[tool.replace_key]]
+export const TOOL_TABLE = '[[tool]]\nname = "example"\nversion = "1.0.0"\n';
+
+export const REPLACE_KEY_TABLE = `${TOOL_TABLE}[[tool.replace_key]]
 file = "package.json"
 `;
 
@@ -85,15 +88,13 @@ export const TOOL_PROJECT_PACKAGES = [
     },
 ] as const;
 
-export const TOOL_DECLARATION = '[[tool]]\nname = "example"\nversion = "1.0.0"\n';
-
 export const EXAMPLE_MANIFEST_PATH = 'configurations/language/example/manifest.toml';
 
 /** The public reader runs once in a separate process for each package fixture. */
 export const MANIFEST_READER_SCRIPT = `
 import { spyOn } from 'bun:test';
 import * as assets from '#cli/system/assets.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 const fixture = JSON.parse(process.argv[1]);
 const paths = Object.keys(fixture.files);
 const readAsset = assets.readAsset;
@@ -102,7 +103,7 @@ using listing = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
 );
 using reading = spyOn(assets, 'readAsset').mockImplementation((path) => fixture.files[path] ?? readAsset(path));
 try {
-    process.stdout.write(JSON.stringify([...readManifests()]));
+    process.stdout.write(JSON.stringify([...readConfigurations()]));
 } catch (error) {
     process.stderr.write(error.message);
     process.exitCode = 1;

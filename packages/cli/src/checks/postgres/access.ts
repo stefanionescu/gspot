@@ -1,11 +1,12 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Session } from '#cli/types/session.ts';
 import { computePosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildSchema } from '#cli/checks/postgres/schema.ts';
 import type { Migration } from '#cli/types/checks/postgres.ts';
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import { readParsedMigrations } from '#cli/checks/postgres/migrations.ts';
 import { getNodeFields, listNodeFields } from '#cli/parsers/sql/postgres.ts';

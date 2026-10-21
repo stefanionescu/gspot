@@ -147,24 +147,9 @@ export const LINTER_LIMIT_CASES = [
     { language: 'python', category: 'exceptions', expected: ['length'] },
 ] as const;
 
-// Names that frameworks require, written out here so the test does not read them from the shipped files.
 export const FRAMEWORK_NAMES = [
-    {
-        configuration: 'nextjs',
-        names: ['getStaticProps', 'getServerSideProps', 'generateMetadata', 'generateStaticParams', 'generateViewport'],
-        banned_words: [
-            'get static props',
-            'get server side props',
-            'generate metadata',
-            'generate static params',
-            'generate viewport',
-        ],
-    },
-    {
-        configuration: 'react',
-        names: ['useSyncExternalStore', 'getSnapshot', 'getServerSnapshot'],
-        banned_words: ['use sync external store', 'get snapshot', 'get server snapshot'],
-    },
+    { configuration: 'nextjs', name: 'getServerSideProps', bannedWords: ['get server side props'] },
+    { configuration: 'react', name: 'useSyncExternalStore', bannedWords: ['use sync external store'] },
 ] as const;
 
 export const TEST_PATH_SETTINGS = `level = "all"

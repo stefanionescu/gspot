@@ -8,22 +8,22 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
+import { type FormatSettings } from '#cli/types/settings/file.ts';
 import { FORMAT_FILE_CASES, SCOPE_FORMAT_CASES, SCOPE_FORMAT_FILES } from '#tests/data/commands/init.ts';
 
-async function prepareFormatPreview(root: string) {
-    const result = await runGspot(root, [...buildInitArguments(['format']), '--dry-run', '--json']);
+/** Read the proposed format settings in scope order through the init command. */
+async function readInitFormatOptions(root: string, commandArguments: string[]): Promise<FormatSettings[]> {
+    const result = await runGspot(root, [...commandArguments, '--dry-run', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
     const text = (JSON.parse(result.stdout) as InitJson).settings;
-    const session = await openSession(root, {
-        settingsFile: { settings: parseSettings(text, undefined), text },
-    });
-    return { result, session };
+    const session = await openSession(root, { settingsFile: { settings: parseSettings(text, undefined), text } });
+    return session.scopes.map(({ view }) => getTable(view, 'format'));
 }
 
 test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', async ({ files, expected }) => {
     await using sandbox = await testdir(files);
-    const { result, session } = await prepareFormatPreview(sandbox.path);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(getTable(session.scopes[0]!.view, 'format')).toMatchObject(expected);
+    const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
+    expect(options[0]).toMatchObject(expected);
     for (const [path, source] of Object.entries(files))
         expect(await readFile(`${sandbox.path}/${path}`, 'utf8')).toBe(source);
     expect(await isOnDisk(`${sandbox.path}/gspot.toml`)).toBe(false);
@@ -37,16 +37,10 @@ test.each([...SCOPE_FORMAT_CASES])('init reads the format settings of each scope
         'app/deep/package.json': '{"private":true}',
         'sibling/package.json': '{"private":true}',
     });
-    const { result, session } = await prepareFormatPreview(sandbox.path);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(
-        session.scopes.map((selection) => [
-            selection.scope.path,
-            getTable(selection.view, 'format').indent_width,
-            getTable(selection.view, 'format').print_width,
-            getTable(selection.view, 'format').quotes,
-        ]),
-    ).toEqual(expected.map((row) => [...row]));
+    const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
+    expect(options.map(({ indent_width, print_width, quotes }) => [indent_width, print_width, quotes])).toStrictEqual(
+        expected.map(([, ...options]) => options),
+    );
     for (const [path, source] of Object.entries(SCOPE_FORMAT_FILES))
         expect(await readFile(`${sandbox.path}/${path}`, 'utf8')).toBe(source);
 });
@@ -62,17 +56,12 @@ test('init turns Prettier overrides and the Ruff quote style into format overrid
         'main.py': 'value = 1\n',
         'package.json': '{"private":true,"devDependencies":{"prettier":"3.8.1"}}',
     });
-    const result = await runGspot(sandbox.path, [...buildInitArguments(['format']), '--dry-run', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const text = (JSON.parse(result.stdout) as InitJson).settings;
-    const settings = parseSettings(text, undefined);
-    expect(settings.written).toMatchObject({
-        format: {
-            quotes: 'double',
-            override: [
-                { paths: ['**/*.ts', 'src/**/*.css'], indent_width: 2, print_width: 100 },
-                { paths: ['**/*.py'], quotes: 'single' },
-            ],
-        },
+    const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
+    expect(options[0]).toMatchObject({
+        quotes: 'double',
+        override: [
+            { paths: ['**/*.ts', 'src/**/*.css'], indent_width: 2, print_width: 100 },
+            { paths: ['**/*.py'], quotes: 'single' },
+        ],
     });
 });

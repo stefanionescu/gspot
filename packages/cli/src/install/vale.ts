@@ -5,16 +5,22 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { runInstallStep } from '#cli/install/steps.ts';
 import { getMiseBinPaths } from '#cli/tools/locate.ts';
+import { VALE_TOOL } from '#cli/config/checks/prose.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { InstallContext } from '#cli/types/install.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
+import type { ToolInstall } from '#cli/types/install/tools.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { redactInstallOutput } from '#cli/install/credentials.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { VALE_TOOL, VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { DOT_GSPOT, VALE_PACKAGES_PATH, VALE_TOOL_FILE_PATH } from '#cli/config/system/locations.ts';
-import { VALE_INSTALL_PREFIX, VALE_INSTALL_ARGUMENTS, VALE_STYLES_PATH_PATTERN } from '#cli/config/install.ts';
+import { DOT_GSPOT, VALE_PACKAGES_PATH, VALE_TOOL_FILE_PATH } from '#cli/config/gspot-paths.ts';
+
+import {
+    VALE_INSTALL_PREFIX,
+    VALE_PACKAGE_FOLDERS,
+    VALE_INSTALL_ARGUMENTS,
+    VALE_STYLES_PATH_PATTERN,
+} from '#cli/config/install/vale.ts';
 
 /**
  * Check that the upstream styles exist before prose checks run.
@@ -36,16 +42,16 @@ export function hasValePackages(repositoryRoot: string, level: Settings['level']
 /**
  * Download the upstream packages for the level, and replace the installed ones. Needs the network.
  *
- * @param context what install needs for this step.
+ * @param install what install needs for this step.
  *
  * @returns the install summary.
  */
-export async function installValePackages(context: InstallContext): Promise<string> {
-    const { session } = context;
+export async function installValePackages(install: ToolInstall): Promise<string> {
+    const { session } = install;
     const { root } = session;
     const level = session.settingsFile.settings.level;
     if (level === 'recommended') return '';
-    const tool = getToolDeclaration(session.neededToolManifests, VALE_TOOL);
+    const tool = getTool(session.neededToolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(
         tool,
         inspectTool({ ...session, miseBinPaths: getMiseBinPaths(session) }, tool),
@@ -65,7 +71,7 @@ export async function installValePackages(context: InstallContext): Promise<stri
         mkdirSync(dirname(config), { recursive: true });
         writeFileSync(config, content);
         const command = [available.path, '--config', config, ...VALE_INSTALL_ARGUMENTS];
-        const result = await runInstallStep(context, command, { cwd: dirname(config) });
+        const result = await runInstallStep(install, command, { cwd: dirname(config) });
         if (result.code !== 0)
             throw new GspotError(
                 'installation',

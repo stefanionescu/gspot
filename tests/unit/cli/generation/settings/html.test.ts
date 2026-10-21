@@ -21,13 +21,9 @@ test.each([...LEVELS])(
         const output = generate(await openSession(sandbox.path));
         const source = output.files.filter(({ path }) => path.endsWith('/html/html-validate.json'));
         expect(source.map(({ path }) => path)).toEqual(['.gspot/configurations/language/html/html-validate.json']);
-        for (const file of source) {
-            expect(parse(file.content)).toMatchObject({
-                rules: {
-                    'no-inline-style': level === 'all' ? 'error' : 'off',
-                },
-            });
-        }
+        expect(parse(source[0]!.content)).toMatchObject({
+            rules: { 'no-inline-style': level === 'all' ? 'error' : 'off' },
+        });
         const built = output.files.filter(({ path }) => path.endsWith('/site/html-validate.json'));
         expect(built.map(({ path }) => path)).toEqual(['.gspot/configurations/framework/site/html-validate.json']);
     },

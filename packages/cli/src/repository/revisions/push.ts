@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
-import { readHead } from '#cli/repository/revisions/tree-entries.ts';
+import { readHead } from '#cli/repository/revisions/files.ts';
 import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
 import { runGit, isShallow, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
 
@@ -14,21 +14,20 @@ import {
     type PushSearch,
     type PushRevision,
     type PushSelection,
-    type CommitSelection,
 } from '#cli/types/repository/revisions.ts';
 import {
     ABSENT_HASH,
     PEEL_SUFFIX,
     TREE_SUFFIX,
-    LOG_ARGUMENTS,
-    PEEL_ARGUMENTS,
-    TREE_ARGUMENTS,
     REMOTES_OPTION,
-    REMOTE_ARGUMENTS,
-    REV_LIST_ARGUMENTS,
-    DIFF_NAMES_ARGUMENTS,
-    SHALLOW_FILE_ARGUMENTS,
-    ROOT_COMMITS_ARGUMENTS,
+    GIT_LOG_ARGUMENTS,
+    GIT_PEEL_ARGUMENTS,
+    GIT_TREE_ARGUMENTS,
+    GIT_REMOTE_ARGUMENTS,
+    GIT_REV_LIST_ARGUMENTS,
+    GIT_DIFF_NAMES_ARGUMENTS,
+    GIT_SHALLOW_FILE_ARGUMENTS,
+    GIT_ROOT_COMMITS_ARGUMENTS,
     MISSING_PUSH_REVISION_MESSAGE,
 } from '#cli/config/repository/revisions.ts';
 
@@ -61,7 +60,7 @@ async function readPeeledCommits(
         ),
     ];
     if (hashes.length === 0) return new Map();
-    const responses = await readGitLines(root, PEEL_ARGUMENTS, {
+    const responses = await readGitLines(root, GIT_PEEL_ARGUMENTS, {
         cancelSignal,
         stdin: hashes.map((hash) => `${hash}${PEEL_SUFFIX}`).join('\n') + '\n',
     });
@@ -76,38 +75,34 @@ async function readPeeledCommits(
 
 // Read the commits where the history of a shallow clone stops.
 async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): Promise<Set<string>> {
-    const path = await readGitText(root, SHALLOW_FILE_ARGUMENTS, { cancelSignal });
+    const path = await readGitText(root, GIT_SHALLOW_FILE_ARGUMENTS, { cancelSignal });
     const text = await readFile(resolve(root, path.trim()), 'utf8');
     return new Set(text.trim().split('\n'));
 }
 
 // Compare an update with its previous commit, or a new ref with the Git remote-tracking namespace.
-async function readComparison(context: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
-    const { root, cancelSignal } = context;
+async function readComparison(search: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
+    const { root, cancelSignal } = search;
     if (!ABSENT_HASH.test(remoteHash)) {
-        if (!context.commits.has(remoteHash))
+        if (!search.commits.has(remoteHash))
             throw new GspotError('git', MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', remoteHash));
-        const previous = context.commits.get(remoteHash);
+        const previous = search.commits.get(remoteHash);
         if (previous === undefined)
             return { base: await readPushBase(root, cancelSignal), changed: undefined, range: [hash] };
-        const changed = await readGitPaths(root, [...DIFF_NAMES_ARGUMENTS, previous, hash, '--'], { cancelSignal });
+        const changed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, previous, hash, '--'], { cancelSignal });
         return { base: previous, changed, range: [hash, `^${previous}`] };
     }
-    const range = [
-        hash,
-        '--not',
-        context.remote === undefined ? REMOTES_OPTION : `${REMOTES_OPTION}=${context.remote}`,
-    ];
-    const changed = await readGitPaths(root, [...LOG_ARGUMENTS, ...range, '--'], { cancelSignal });
+    const range = [hash, '--not', search.remote === undefined ? REMOTES_OPTION : `${REMOTES_OPTION}=${search.remote}`];
+    const changed = await readGitPaths(root, [...GIT_LOG_ARGUMENTS, ...range, '--'], { cancelSignal });
     return { base: await readPushBase(root, cancelSignal), changed, range };
 }
 
 // Build the revision that a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
-async function buildRevision(context: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
-    const { root, cancelSignal, boundaries } = context;
-    const { base, changed, range } = await readComparison(context, hash, line.remoteHash);
-    const history = await readGitLines(root, [...REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
-    const tree = await readGitText(root, [...TREE_ARGUMENTS, `${hash}${TREE_SUFFIX}`], { cancelSignal });
+async function buildRevision(search: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
+    const { root, cancelSignal, boundaries } = search;
+    const { base, changed, range } = await readComparison(search, hash, line.remoteHash);
+    const history = await readGitLines(root, [...GIT_REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
+    const tree = await readGitText(root, [...GIT_TREE_ARGUMENTS, `${hash}${TREE_SUFFIX}`], { cancelSignal });
     const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => a.localeCompare(b));
     return {
         base,
@@ -121,7 +116,7 @@ async function buildRevision(context: PushSearch, line: PushLine, hash: string):
 }
 
 // Share a check only for matching commits, comparison bases, and changed paths.
-function recordRevision(result: PushSelection, revision: PushRevision): void {
+function addRevision(result: PushSelection, revision: PushRevision): void {
     const duplicate = result.revisions.find(
         (entry) =>
             entry.hash === revision.hash &&
@@ -138,19 +133,19 @@ function recordRevision(result: PushSelection, revision: PushRevision): void {
 }
 
 // Records what one pre-push line pushes: a deleted ref, a non-commit object, or a revision.
-async function selectLine(context: PushSearch, result: PushSelection, line: PushLine): Promise<void> {
+async function selectLine(search: PushSearch, result: PushSelection, line: PushLine): Promise<void> {
     if (ABSENT_HASH.test(line.localHash)) {
         result.skipped.push({ ref: line.remoteRef, hash: line.localHash, reason: 'deleted ref' });
         return;
     }
-    if (!context.commits.has(line.localHash))
+    if (!search.commits.has(line.localHash))
         throw new GspotError('git', MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', line.localHash));
-    const commit = context.commits.get(line.localHash);
+    const commit = search.commits.get(line.localHash);
     if (commit === undefined) {
         result.skipped.push({ ref: line.localRef, hash: line.localHash, reason: 'non-commit object' });
         return;
     }
-    recordRevision(result, await buildRevision(context, line, commit));
+    addRevision(result, await buildRevision(search, line, commit));
 }
 
 /**
@@ -163,7 +158,7 @@ async function selectLine(context: PushSearch, result: PushSelection, line: Push
 async function readPushBase(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
     const compared = await readDefaultRef(repositoryRoot, cancelSignal);
     if (compared !== '') return readMergeBase(repositoryRoot, compared, cancelSignal);
-    const roots = await readGitLines(repositoryRoot, ROOT_COMMITS_ARGUMENTS, { cancelSignal });
+    const roots = await readGitLines(repositoryRoot, GIT_ROOT_COMMITS_ARGUMENTS, { cancelSignal });
     return roots.at(-1) as string;
 }
 
@@ -187,7 +182,8 @@ export async function selectPush(
         .filter((row) => row.trim() !== '')
         .map((line) => parseLine(line));
     const shallow = await isShallow(repositoryRoot, { cancelSignal });
-    const remotes = remote === undefined ? [] : await readGitLines(repositoryRoot, REMOTE_ARGUMENTS, { cancelSignal });
+    const remotes =
+        remote === undefined ? [] : await readGitLines(repositoryRoot, GIT_REMOTE_ARGUMENTS, { cancelSignal });
     const context: PushSearch = {
         root: repositoryRoot,
         cancelSignal,
@@ -212,11 +208,11 @@ export async function readPushedCommits(
     repositoryRoot: string,
     commits: string[] | undefined,
     cancelSignal?: AbortSignal,
-): Promise<CommitSelection> {
+): Promise<string[] | { error: string }> {
     if (commits !== undefined) return commits;
     if ((await readHead(repositoryRoot, cancelSignal)) === undefined) return [];
     const base = await readPushBase(repositoryRoot, cancelSignal);
-    const listed = await runGit(repositoryRoot, [...REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {
+    const listed = await runGit(repositoryRoot, [...GIT_REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {
         cancelSignal,
     });
     if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };

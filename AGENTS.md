@@ -121,6 +121,9 @@ These folder rules apply to `packages/cli/src/`, `packages/eslint-plugin/src/`, 
 - Declare a list of allowed names as an `as const` array in `config/`, its type as `(typeof LIST)[number]` in
   `types/`, and its schema as `z.enum(LIST)`.
 
+- `system/` holds the code every layer may import: access to files, processes, Git, the environment, and the terminal,
+  and the pure text and value helpers that `parsers/` needs.
+
 ## Dependency overrides
 
 The root `package.json` overrides keep transitive packages on security fixes.

@@ -40,19 +40,19 @@ export async function runNpmPack(work: string, declarations: readonly RegistryPa
             integrity: `sha512-${createHash('sha512').update(archive).digest('base64')}`,
         });
     }
-    const manifest = join(work, PACKED_PACKAGES_FILE);
-    await writeFile(manifest, JSON.stringify(packages));
-    return manifest;
+    const packagesFile = join(work, PACKED_PACKAGES_FILE);
+    await writeFile(packagesFile, JSON.stringify(packages));
+    return packagesFile;
 }
 
 /** Serve the packed npm packages and any extra packages that a credential test asks for. */
 export async function createNpmRegistry(
     work: string,
-    options: { declarations: readonly RegistryPackage[]; token?: string },
+    options: { packages: readonly RegistryPackage[]; token?: string },
 ): Promise<NpmRegistry> {
     const folder = TEST_RUN_FOLDER;
     const files = [join(folder, PACKED_PACKAGES_FILE)];
-    if (options.declarations.length > 0) files.push(await runNpmPack(work, options.declarations));
+    if (options.packages.length > 0) files.push(await runNpmPack(work, options.packages));
 
     const packages = new Map<string, PackedPackage>();
     for (const file of files)
@@ -79,20 +79,20 @@ export async function createNpmRegistry(
                 return pathname === tarball
                     ? new Response(await readFile(entry.filename))
                     : Response.json({ error: 'Package not found' }, { status: 404 });
-            const { filename: _filename, integrity, ...manifest } = entry;
+            const { filename: _filename, integrity, ...packageFields } = entry;
             return Response.json({
                 name,
                 'dist-tags': { latest: entry.version },
                 time: { [entry.version]: selectPublishTime(name) },
                 versions: {
-                    [entry.version]: { ...manifest, dist: { tarball: `${url.origin}/${tarball}`, integrity } },
+                    [entry.version]: { ...packageFields, dist: { tarball: `${url.origin}/${tarball}`, integrity } },
                 },
             });
         },
     });
     const url = `http://${REGISTRY_HOST}:${String(server.port)}`;
     const npmrc = join(work, '.npmrc');
-    await writeFile(npmrc, `@gspothq:registry=${url}/\n`, { mode: 0o600 });
+    await writeFile(npmrc, `${GSPOT_PACKAGE_SCOPE.slice(0, -1)}:registry=${url}/\n`, { mode: 0o600 });
     return {
         url,
         npmrc,

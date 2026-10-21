@@ -4,10 +4,10 @@ import { parseDocument } from 'yaml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { buildScopeTarget } from '#cli/repository/scopes.ts';
+import { toolFileFor } from '#tests/setup/tool-files.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
 
 test('a language choice brings its security rules without selecting security', async () => {
     await using sandbox = await testdir({
@@ -29,7 +29,7 @@ test('a language choice brings its security rules without selecting security', a
     expect(generated?.content).not.toContain('gspot.javascript.no-eval');
 });
 
-test.each([...(['recommended', 'all'] as const)])(
+test.each([...LEVELS])(
     `Cloudflare Worker rules cover src and Supabase rules use the functions folder at %s`,
     async (level) => {
         await using sandbox = await testdir({
@@ -87,11 +87,8 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
 
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    const declaration = session.scopes[0]!.selected.flatMap(({ toolFiles }) => toolFiles).find(
-        ({ target }) => target === '.gspot/configurations/language/javascript/semgrep.yml',
-    )!;
     for (const scope of ['', 'jwt', 'jwt/child', 'other']) {
-        const target = buildScopeTarget(scope, declaration, getToolFiles(session).targets);
+        const target = toolFileFor(session, 'semgrep', scope);
         const text = output.files.find((file) => file.path === target)!.content;
         const parsed: unknown = parseDocument(text).toJS();
         if (scope.startsWith('jwt')) {

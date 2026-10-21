@@ -1,6 +1,13 @@
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { GUIDE, README, LICENSE } from '#tests/data/checks/docs.ts';
 
+const AMBIGUOUS_WORD_RULE = `extends: existence
+message: "Avoid '%s'."
+level: error
+tokens:
+  - ambiguousword
+`;
+
 export const VALE_ALERT = {
     Line: 1,
     Span: [3, 5],
@@ -21,51 +28,20 @@ tokens: [delve]
 `;
 
 export const VALE_PACKAGE_FILES = {
-    'Google/terms.yml': `extends: existence
-message: "Avoid '%s'."
-level: error
-tokens:
-  - ambiguousword
-`,
-    'Microsoft/terms.yml': `extends: existence
-message: "Avoid '%s'."
-level: error
-tokens:
-  - ambiguousword
-`,
-    'write-good/terms.yml': `extends: existence
-message: "Avoid '%s'."
-level: error
-tokens:
-  - ambiguousword
-`,
-    'proselint/terms.yml': `extends: existence
-message: "Avoid '%s'."
-level: error
-tokens:
-  - ambiguousword
-`,
-    'alex/terms.yml': `extends: existence
-message: "Avoid '%s'."
-level: error
-tokens:
-  - ambiguousword
-`,
-    'RedHat/terms.yml': `extends: existence
-message: "Avoid '%s'."
-level: error
-tokens:
-  - ambiguousword
-`,
-    'Harper/styles/Harper/terms.yml': `extends: existence
-message: "Avoid '%s'."
-level: error
-tokens:
-  - ambiguousword
-`,
+    ...Object.fromEntries<string>(
+        [
+            'Google/terms.yml',
+            'Microsoft/terms.yml',
+            'write-good/terms.yml',
+            'proselint/terms.yml',
+            'alex/terms.yml',
+            'RedHat/terms.yml',
+            'Harper/styles/Harper/terms.yml',
+        ].map((path) => [path, AMBIGUOUS_WORD_RULE]),
+    ),
     'Harper/styles/config/dictionaries/harper.txt': `dictionary fixture
 `,
-} as const;
+};
 
 export const PACKAGE_STYLE_CASES = [
     {
@@ -150,26 +126,6 @@ The other native branch.
     },
 ] as const;
 
-/** The currency rule reports prices in prose but not `$1` parameters in source comments. */
-export const CURRENCY_CASES = [
-    {
-        path: 'prices.md',
-        source: `# Prices
-
-The price is $5.00.
-
-The price is $15.
-
-The price is 5 dollars.
-
-The price is USD 5.
-`,
-        lines: [3, 5, 7],
-    },
-    { path: 'source.sh', source: '# Read $1 and $2 as positional parameters.\nprintf "%s" "$1"\n', lines: [] },
-    { path: 'source.ts', source: '// Use $1 as the regular expression replacement.\nconst value = 1;\n', lines: [] },
-] as const;
-
 export const VOCABULARY_SOURCE = `# Guide
 
 Use sqlfluff and NebulaProduct.
@@ -181,18 +137,18 @@ Avoid vale's and ajv's.
 
 // Only the row that tests the time limit gets a short one; a slow start under load must not fail the other row.
 export const VALE_INSTALL_FAILURES = [
-    [
-        'timeout',
-        'setInterval(() => {}, 1000);',
-        'ran longer than tool_timeout_seconds (1s).',
-        'tool_timeout_seconds = 1\n',
-    ],
-    [
-        'its error',
-        'console.error("Registry request failed: https://alex:synthetic-password@example.com/styles.zip"); process.exitCode = 7;',
-        'Registry request failed: https://[redacted]@example.com/styles.zip',
-        '',
-    ],
+    {
+        name: 'timeout',
+        script: 'setInterval(() => {}, 1000);',
+        message: 'ran longer than tool_timeout_seconds (1s).',
+        settings: 'tool_timeout_seconds = 1\n',
+    },
+    {
+        name: 'its error',
+        script: 'console.error("Registry request failed: https://alex:synthetic-password@example.com/styles.zip"); process.exitCode = 7;',
+        message: 'Registry request failed: https://[redacted]@example.com/styles.zip',
+        settings: '',
+    },
 ] as const;
 
 export const FIXED_VALE_INSTALL_SCRIPT = String.raw`

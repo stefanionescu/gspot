@@ -16,14 +16,14 @@ export const REASON_VALUES = [
         root: '200',
         child: '400',
         current: [200, 400],
-        owed: [false, true] as const,
+        needsReason: [false, true] as const,
     },
     {
         key: 'limits.trivial_function_statements',
         root: '3',
         child: '1',
         current: [3, 1],
-        owed: [false, true] as const,
+        needsReason: [false, true] as const,
     },
     {
         key: 'dependencies.allowed_registries',
@@ -33,14 +33,14 @@ export const REASON_VALUES = [
             ['registry.npmjs.org', 'registry.yarnpkg.com'],
             ['registry.npmjs.org', 'registry.yarnpkg.com', 'registry.example.com'],
         ],
-        owed: [false, true] as const,
+        needsReason: [false, true] as const,
     },
     {
         key: 'naming.banned_words',
         root: '["temporary"]',
         child: '["other"]',
         current: [['temporary'], ['temporary', 'other']],
-        owed: [false, false] as const,
+        needsReason: [false, false] as const,
     },
 ] as const;
 
@@ -92,7 +92,32 @@ export const CONFIGURATION_DETECTION_LINES = [
 
 export const CHECK_TOOL_MINIMUMS = [
     { check: 'gspot/unmatched-patterns', tools: [] },
-    { check: 'dependencies/react-versions', tools: [] },
+    { check: 'react-dom/react-versions', tools: [] },
     { check: 'javascript/eslint', tools: ['node'] },
     { check: 'dependencies/osv-scanner', tools: ['osv-scanner'] },
+] as const;
+
+/** Naming limits with distinct language defaults and one stricter child value. */
+export const NAMING_SCOPE_LIMITS = [
+    { key: 'naming.swift.max_characters', shipped: 40, child: 38 },
+    { key: 'naming.sql.max_words', shipped: 7, child: 7 },
+] as const;
+
+/** Bare and plugin-prefixed ESLint names resolve to the page declared for their rule. */
+export const RULE_PAGES = [
+    ['no-undef', 'https://eslint.org/docs/latest/rules/no-undef'],
+    ['no-var', 'https://eslint.org/docs/latest/rules/no-var'],
+    ['eslint/no-var', 'https://eslint.org/docs/latest/rules/no-var'],
+    ['gspot/no-trivial-functions', 'https://generativespotting.com/reference/eslint-plugin/no-trivial-functions/'],
+    ['@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
+    [
+        'unicorn/prefer-set-has',
+        'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
+    ],
+    [
+        'eslint/unicorn/prefer-set-has',
+        'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
+    ],
+    ['eslint/@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
+    ['eslint/sonarjs/no-identical-functions', null],
 ] as const;

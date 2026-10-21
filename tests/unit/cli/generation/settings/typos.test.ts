@@ -3,10 +3,9 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { toolFileFor } from '#tests/setup/tool-files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
 
 test('typos.toml lists each allowed word once and keeps quoted paths', async () => {
     const words = ['café', "apostrophe'word", 'long-term'];
@@ -57,15 +56,12 @@ spelling.locale = "en-us"
 
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    const declaration = session.scopes[0]!.selected.flatMap(({ toolFiles }) => toolFiles).find(
-        ({ target }) => target === '.gspot/configurations/general/spelling/typos.toml',
-    )!;
     for (const [scope, locale] of [
         ['', 'en'],
         ['british', 'en-gb'],
         ['british/american', 'en-us'],
     ] as const) {
-        const path = buildScopeTarget(scope, declaration, getToolFiles(session).targets);
+        const path = toolFileFor(session, 'typos', scope);
         const target = output.files.find((file) => file.path === path)!;
         expect(parse(target.content)).toHaveProperty('default.locale', locale);
     }

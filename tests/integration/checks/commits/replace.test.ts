@@ -31,11 +31,9 @@ test.each(['', 'app'])(
     'commitlint reads the generated config through the package.json field gspot writes, in %s',
     async (scope) => {
         await using sandbox = await testdir();
-        const { packageFile, messageFile, cwd } = {
-            packageFile: posix.join(scope, 'package.json'),
-            messageFile: posix.join(scope, 'message.txt'),
-            cwd: join(sandbox.path, scope),
-        };
+        const packageFile = posix.join(scope, 'package.json');
+        const messageFile = posix.join(scope, 'message.txt');
+        const cwd = join(sandbox.path, scope);
         await createFileTree(sandbox.path, {
             [packageFile]: COMMITLINT_PACKAGE,
             [messageFile]: 'special: authored contract\n',
