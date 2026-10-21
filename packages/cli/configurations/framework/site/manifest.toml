@@ -5,7 +5,7 @@ suggests = ["css", "javascript"]
 title = "Static Site"
 
 [detect]
-paths = ["site.webmanifest", "sitemap.xml"]
+filenames = ["site.webmanifest", "sitemap.xml"]
 
 [files]
 extensions = [".svg"]

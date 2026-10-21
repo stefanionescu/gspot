@@ -13,7 +13,13 @@ import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import { buildManifest, buildTrackedFile } from '#tests/setup/builders.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
 import { PYTHON_DEPENDENCY_CASES } from '#tests/data/repository/dependency-files.ts';
-import { SWIFT_TARGET_CASES, SWIFT_TEST_SAMPLES, PRISMA_CONTENT_CASES } from '#tests/data/configurations/detection.ts';
+
+import {
+    SWIFT_TARGET_CASES,
+    SWIFT_TEST_SAMPLES,
+    PRISMA_CONTENT_CASES,
+    SITE_DETECTION_PATHS,
+} from '#tests/data/configurations/detection.ts';
 
 test('detection proposes a language from an extension and the always-selected configurations', () => {
     const plans = detectConfigurations(
@@ -297,3 +303,11 @@ function runtimeDetectionRows() {
         },
     ];
 }
+
+test('site is detected from a site.webmanifest or sitemap.xml in any folder', () => {
+    const manifests = readManifests(createReadCache(process.cwd()));
+    for (const path of SITE_DETECTION_PATHS) {
+        const detected = detectConfigurations(process.cwd(), [buildTrackedFile(path)], manifests, []);
+        expect(detected.find(({ configuration }) => configuration === 'site')?.evidence).toBe(path);
+    }
+});
