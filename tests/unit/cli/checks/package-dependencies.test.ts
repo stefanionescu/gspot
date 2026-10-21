@@ -2,6 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { MISE_PIN_FILES } from '#tests/data/checks/dependencies.ts';
 import { STALE_LOCKFILE_FILES } from '#tests/data/checks/package-dependencies.ts';
 
 test('stale-lockfile reports each dependency that package.json and bun.lock disagree on', async () => {
@@ -33,5 +34,32 @@ test('package-manager-pin reports a packageManager that names another version th
         'packageManager names bun 1.4.2, but mise.toml pins bun 1.4.3. Write one version in both.',
     ]);
     await Bun.write(`${sandbox.path}/package.json`, packageJson.replace('1.4.2', '1.4.3'));
+    expect(await checkFindings(sandbox.path, 'dependencies/package-manager-pin')).toStrictEqual([]);
+});
+
+test.each([...MISE_PIN_FILES])('package-manager-pin reads the bun pin from $file', async ({ file }) => {
+    await using sandbox = await testdir({
+        'package.json': JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' }),
+        [file]: '[tools]\nbun = "0.0.0-test.2"\n',
+        'gspot.toml': buildSettingsText(['javascript']),
+    });
+    const findings = await checkFindings(sandbox.path, 'dependencies/package-manager-pin');
+    expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        {
+            file: 'package.json',
+            line: 1,
+            rule: 'package-manager-pin',
+            message: `packageManager names bun 0.0.0-test.1, but ${file} pins bun 0.0.0-test.2. Write one version in both.`,
+        },
+    ]);
+});
+
+test('package-manager-pin uses the highest-precedence mise file in a folder', async () => {
+    await using sandbox = await testdir({
+        ...Object.fromEntries(MISE_PIN_FILES.map(({ file }) => [file, '[tools]\nbun = "0.0.0-test.2"\n'])),
+        '.mise.local.toml': '[tools]\nbun = "0.0.0-test.1"\n',
+        'package.json': JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' }),
+        'gspot.toml': buildSettingsText(['javascript']),
+    });
     expect(await checkFindings(sandbox.path, 'dependencies/package-manager-pin')).toStrictEqual([]);
 });

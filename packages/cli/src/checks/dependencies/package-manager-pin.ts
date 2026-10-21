@@ -5,9 +5,10 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import { NPM_TOOL_PREFIX } from '#cli/config/checks/dependencies.ts';
+import { MISE_FILES } from '#cli/config/repository/existing-tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { readPackageFields } from '#cli/checks/dependencies/package-json.ts';
-import { MISE_FILES, NPM_TOOL_PREFIX } from '#cli/config/checks/dependencies.ts';
 
 const miseToolsSchema = z.looseObject({ tools: z.record(z.string(), z.unknown()).default({}) });
 

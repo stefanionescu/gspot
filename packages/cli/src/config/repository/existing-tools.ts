@@ -20,16 +20,16 @@ export const FOREIGN_CI_FILES = new Set([
     '.buildkite/pipeline.yml',
 ]);
 
+// Highest-precedence file first within each folder.
 export const MISE_FILES = [
-    'mise.toml',
-    '.mise.toml',
-    '.mise/config.toml',
-    '.tool-versions',
+    '.mise.local.toml',
     'mise.local.toml',
+    '.mise.toml',
+    'mise.toml',
+    'mise/config.toml',
+    '.mise/config.toml',
     '.config/mise.toml',
     '.config/mise/config.toml',
-    'mise/config.toml',
-    '.mise.local.toml',
 ] as const;
 
 // In "<runner> run <task>", the task sits two words after the runner.

@@ -144,3 +144,14 @@ export const SYNCPACK_FILES = [
 /** An .npmrc with Windows line endings, a list written with `[]`, and a comment. */
 export const NPMRC_LIST_CRLF =
     '; registry settings\r\nmin-release-age-exclude[]=@acme/tools\r\nregistry=https://registry.npmjs.org/\r\n';
+
+export const MISE_PIN_FILES = [
+    { file: 'mise.toml' },
+    { file: '.mise.toml' },
+    { file: 'mise/config.toml' },
+    { file: '.mise/config.toml' },
+    { file: '.config/mise.toml' },
+    { file: '.config/mise/config.toml' },
+    { file: 'mise.local.toml' },
+    { file: '.mise.local.toml' },
+] as const;

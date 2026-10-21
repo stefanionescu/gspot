@@ -136,7 +136,7 @@ function readTaskNames(input: CheckInput, scope: string): TaskNames {
     const files = [
         ...new Set(
             ancestors.flatMap(({ path }) => [
-                ...MISE_FILES.filter((file) => file !== '.tool-versions').map((file) => posix.join(path, file)),
+                ...MISE_FILES.map((file) => posix.join(path, file)),
                 ...listMatchingPaths(input.root, posix.join(path, MISE_CONF_FILES)),
             ]),
         ),
