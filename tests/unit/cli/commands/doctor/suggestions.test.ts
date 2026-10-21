@@ -15,6 +15,7 @@ import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { SERVER_FILES } from '#tests/data/generation/eslint/framework.ts';
 import { STYLELINT_FILES, STYLELINT_SUGGESTIONS } from '#tests/data/checks/css.ts';
+import { REMOVED_CONFIGURATION_SUGGESTIONS } from '#tests/data/commands/doctor.ts';
 import { COMMITLINT_PACKAGE, COMMITLINT_PROJECT } from '#tests/data/checks/commits.ts';
 
 test('a folder without Git keeps authored commit settings and reports its actual prerequisite', async () => {
@@ -229,3 +230,17 @@ path = "api app/deep"
     const restored = await runRegisteredCommand(sandbox.path, ['doctor']);
     expect((restored.json as DoctorReport).suggestions.undetected).toStrictEqual([]);
 });
+
+test.each([...REMOVED_CONFIGURATION_SUGGESTIONS])(
+    'doctor skips removed configurations and keeps detection evidence outside their scopes: $name',
+    async ({ project, expected }) => {
+        await using sandbox = await testdir(project);
+        const result = await runRegisteredCommand(sandbox.path, ['doctor']);
+        const { suggestions } = result.json as DoctorReport;
+        expect(suggestions.detected.filter(({ configuration }) => configuration === 'bash')).toStrictEqual([
+            ...expected,
+        ]);
+        expect(suggestions.detected.map(({ configuration }) => configuration)).toContain('python');
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(project['gspot.toml']);
+    },
+);

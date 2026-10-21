@@ -1,4 +1,5 @@
 import { quoteArgument } from '#cli/system/text.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { formatScopeLabel } from '#cli/system/terminal.ts';
@@ -9,17 +10,39 @@ import { hasGeneratedHeader } from '#cli/repository/classify.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { type GenerationResult } from '#cli/types/generation/files.ts';
+import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
 import { readLintJobs, readExistingTools } from '#cli/repository/existing-tools.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { type ExistingTools, type FoundToolFile } from '#cli/types/repository/inventory.ts';
+
+function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
+    const { root, repository, manifests, settingsFile } = session;
+    const { dependencyFiles } = repository;
+    const settings = settingsFile.settings;
+    return detectConfigurations(root, repository.files, manifests, dependencyFiles).flatMap((entry) => {
+        if (settings.removed_configurations.includes(entry.configuration)) return [];
+        const removedScopes = Object.entries(settings.scopes)
+            .filter(([, table]) => table.removed_configurations.includes(entry.configuration))
+            .map(([path]) => path);
+        if (removedScopes.length === 0) return [entry];
+        const files = repository.files.filter((file) => !removedScopes.some((path) => isInScope(file.path, path)));
+        const paths = new Set(files.map((file) => file.path));
+        return detectConfigurations(
+            root,
+            files,
+            new Map([...manifests].filter(([name]) => name === entry.configuration)),
+            dependencyFiles.filter((file) => paths.has(file.path)),
+        );
+    });
+}
 
 function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
     const { root, repository, manifests, settingsFile } = session;
     const { dependencyFiles } = repository;
     const selections = listSelectedManifests(session.scopes);
     const selected = new Set(selections.map((manifest) => manifest.configuration.name));
-    const detected = detectConfigurations(root, repository.files, manifests, dependencyFiles);
     const settings = settingsFile.settings;
+    const detected = listDetectedConfigurations(session);
     const choices = [
         { path: '', configurations: settings.configurations },
         ...Object.entries(settings.scopes).map(([path, table]) => ({ path, configurations: table.configurations })),
