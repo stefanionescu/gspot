@@ -19,7 +19,7 @@ test("Vale's dashes rule checks the reason text of ESLint comments and skips the
         'gspot.toml': buildSandboxSettings(['prose', 'typescript']),
         '.gspot/configurations/general/prose/vale.ini': VALE_INI,
         '.gspot/configurations/general/prose/styles/Example/Dashes.yml': readFileSync(
-            buildAssetPath('configurations/general/prose/tool-files/styles/gspot/dashes.yml'),
+            buildAssetPath('configurations/general/prose/tool-files/styles/gspot/em-dashes.yml'),
             'utf8',
         ),
         'source.ts': [
@@ -66,7 +66,7 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
         files: {
             'gspot.toml': buildSandboxSettings(['prose'], {
                 level: 'all',
-                tables: 'allowed_words = { Microsoft = "The guide names this browser.", Edge = "The guide names this browser." }\n',
+                tables: '[spelling]\nallowed_words = { Microsoft = "The guide names this browser.", Edge = "The guide names this browser." }\n',
             }),
             'guide.md': `# Guide
 
@@ -154,7 +154,7 @@ test.each([{ scope: '' }, { scope: 'app' }])(
         const settings = buildSandboxSettings(scope === '' ? ['prose', 'sql', 'spelling'] : ['prose', 'spelling'], {
             level: 'all',
             tables:
-                'allowed_words = { NebulaProduct = "The project product." }\n' +
+                '[spelling]\nallowed_words = { NebulaProduct = "The project product." }\n' +
                 (scope === ''
                     ? ''
                     : `[[scope]]

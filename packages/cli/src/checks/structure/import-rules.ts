@@ -49,12 +49,12 @@ function buildRuleLookup(rules: ImportRule[]): RuleLookup {
 }
 
 function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
-    const { view, scope } = planned.selection;
+    const { settings, folder } = planned.scope;
     const matches = buildPathMatcher([
-        ...view.test_files,
+        ...settings.test_files,
         ...CONFIG_FILE_PATTERNS,
-        ...(view.values.javascript?.script_files ?? []),
-        joinScope(scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), MISE_SCRIPT_PATH),
+        ...(settings.values.javascript?.script_files ?? []),
+        joinScope(folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), MISE_SCRIPT_PATH),
     ]);
     return (file) => matches(file.path) || file.tags.includes(NODE_SHEBANG_TAG);
 }
@@ -104,25 +104,25 @@ async function checkFileImports(
 }
 
 function buildPythonSearch(session: Session, planned: PlannedCheck): PythonSearch {
-    const { view, scope } = planned.selection;
-    const python = view.values.python;
+    const { settings, folder } = planned.scope;
+    const python = settings.values.python;
     return {
         files: new Set(session.repository.files.map((file) => file.path)),
         roots: [...PYTHON_SOURCE_ROOTS, ...(python?.extra_paths ?? [])]
-            .map((root) => posix.join(scope.path, root))
+            .map((root) => posix.join(folder.path, root))
             .map((root) => (root === '.' ? '' : root)),
         externals: new Set(python?.externals),
     };
 }
 
 async function checkPythonImports(session: Session, planned: PlannedCheck, lookup: RuleLookup): Promise<Finding[]> {
-    if (!planned.selection.view.configurations.includes(PYTHON_CONFIGURATION)) return [];
+    if (!planned.scope.settings.configurations.includes(PYTHON_CONFIGURATION)) return [];
     const search = buildPythonSearch(session, planned);
     const files = planned.files.filter(({ path }) => PYTHON_EXTENSIONS.some((extension) => path.endsWith(extension)));
     const findings = await Promise.all(
         files.map(({ path }) =>
             checkFileImports(session, planned, lookup, { path, grammar: 'python' }, (root) =>
-                listPythonImports(root, path, search).map(({ node, module, target }) => ({
+                listPythonImports(root, path, search).map(({ node, module, path: target }) => ({
                     node,
                     module,
                     owners: [lookup.ownerOf(target)],
@@ -145,7 +145,7 @@ function listSwiftImports(root: Node, path: string, modules: SwiftModule[], look
 
 async function checkSwiftImports(session: Session, planned: PlannedCheck, lookup: RuleLookup): Promise<Finding[]> {
     const files = planned.files.filter(({ path }) => path.endsWith(SWIFT_EXTENSION));
-    if (!planned.selection.view.configurations.includes(SWIFT_CONFIGURATION) || files.length === 0) return [];
+    if (!planned.scope.settings.configurations.includes(SWIFT_CONFIGURATION) || files.length === 0) return [];
     const modules = await listSwiftModules(session);
     const findings = await Promise.all(
         files.map(({ path }) =>

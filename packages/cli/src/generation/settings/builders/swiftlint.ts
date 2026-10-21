@@ -1,6 +1,6 @@
 import { stringify } from 'yaml';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { getTable, getLimit, listIgnoredRules } from '#cli/settings/scope-view.ts';
+import { getTable, getLimit, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 
 import {
     SWIFTLINT_OPT_IN,
@@ -22,40 +22,37 @@ function buildSeverityLimits(count: number) {
  * @returns the SwiftLint rules with the source limits of the repository.
  */
 export function buildSwiftlintFile(planned: PlannedToolFile): string {
-    const { format } = planned.selection.view.values;
+    const { format } = planned.scope.settings.values;
     const level = planned.level;
 
     const isAll = level === 'all';
-    const off = [
-        ...listIgnoredRules(planned.selection, 'swift/swiftlint'),
-        ...(isAll ? [] : SWIFTLINT_RECOMMENDED_OFF),
-    ];
+    const off = [...listIgnoredRules(planned.scope, 'swift/swiftlint'), ...(isAll ? [] : SWIFTLINT_RECOMMENDED_OFF)];
     const offSet = new Set(off);
     const options = {
         line_length: { ...buildSeverityLimits(format.print_width), ignores_urls: true },
         file_length: {
-            ...buildSeverityLimits(getLimit(planned.selection.view, 'file_lines', 'swift')),
+            ...buildSeverityLimits(getLimit(planned.scope.settings, 'file_lines', 'swift')),
             ignore_comment_only_lines: true,
         },
-        type_body_length: buildSeverityLimits(getLimit(planned.selection.view, 'type_lines', 'swift')),
+        type_body_length: buildSeverityLimits(getLimit(planned.scope.settings, 'type_lines', 'swift')),
         function_parameter_count: {
-            ...buildSeverityLimits(getLimit(planned.selection.view, 'function_parameters', 'swift')),
+            ...buildSeverityLimits(getLimit(planned.scope.settings, 'function_parameters', 'swift')),
             ignores_default_parameters: false,
         },
-        function_body_length: buildSeverityLimits(getLimit(planned.selection.view, 'function_lines', 'swift')),
-        cyclomatic_complexity: buildSeverityLimits(getLimit(planned.selection.view, 'cyclomatic_complexity', 'swift')),
-        closure_body_length: buildSeverityLimits(getLimit(planned.selection.view, 'closure_lines', 'swift')),
+        function_body_length: buildSeverityLimits(getLimit(planned.scope.settings, 'function_lines', 'swift')),
+        cyclomatic_complexity: buildSeverityLimits(getLimit(planned.scope.settings, 'cyclomatic_complexity', 'swift')),
+        closure_body_length: buildSeverityLimits(getLimit(planned.scope.settings, 'closure_lines', 'swift')),
         identifier_name: {
             min_length: 1,
-            max_length: getTable(planned.selection.view, 'naming').swift?.max_characters,
+            max_length: getTable(planned.scope.settings, 'naming').swift?.max_characters,
         },
-        type_name: { min_length: 1, max_length: getTable(planned.selection.view, 'naming').swift?.max_characters },
+        type_name: { min_length: 1, max_length: getTable(planned.scope.settings, 'naming').swift?.max_characters },
         nesting: {
             type_level: buildSeverityLimits(1),
             function_level: buildSeverityLimits(SWIFTLINT_FUNCTION_NESTING),
         },
         missing_docs: { error: ['open', 'public'] },
-        unused_import: { always_keep_imports: getTable(planned.selection.view, 'tools.swiftlint').always_keep_imports },
+        unused_import: { always_keep_imports: getTable(planned.scope.settings, 'tools.swiftlint').always_keep_imports },
         trailing_comma: { mandatory_comma: format.trailing_commas !== 'none' },
     };
     const document = {

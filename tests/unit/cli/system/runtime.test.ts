@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { validateRuntimeVersion } from '#cli/system/runtime.ts';
 
-test('gspot refuses a Node.js or Bun older than the engines floor and names the floor', () => {
+test('gspot refuses a Node.js or Bun older than the engines minimum and names the minimum', () => {
     const engines = cliPackage.engines;
     expect(validateRuntimeVersion({ node: '24.15.0' }, engines)).toBeUndefined();
     expect(validateRuntimeVersion({ node: '22.12.0' }, engines)).toBe(

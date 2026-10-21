@@ -29,7 +29,7 @@ test.skipIf(!isLinux)(
         });
 
         commitAll(sandbox.path);
-        const command = ['check', '--only', 'nginx/config-test', '--json'];
+        const command = ['check', '--only', 'nginx/syntax', '--json'];
         const failed = parseCheckReport(await spawnGspot(sandbox.path, command));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(failed.report.checks.flatMap((check) => check.findings)).toMatchObject([
@@ -45,8 +45,8 @@ test.skipIf(!isLinux)(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const report = corrected.report;
         expect(report.checks).toMatchObject([
-            { check: 'nginx/config-test', scope: '', status: 'skipped', fileCount: 0 },
-            { check: 'nginx/config-test', scope: 'proxy', status: 'passed', fileCount: 3 },
+            { check: 'nginx/syntax', scope: '', status: 'skipped', fileCount: 0 },
+            { check: 'nginx/syntax', scope: 'proxy', status: 'passed', fileCount: 3 },
         ]);
         expect(report.checks[1]!.files?.toSorted()).toStrictEqual([
             'proxy/conf.d/server.conf',
@@ -63,8 +63,8 @@ test.skipIf(!isLinux)(
         const unavailable = parseCheckReport(await spawnGspot(sandbox.path, command));
         expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
         expect(unavailable.report.checks).toMatchObject([
-            { check: 'nginx/config-test', scope: '', status: 'skipped', fileCount: 0 },
-            { check: 'nginx/config-test', scope: 'proxy', status: 'error' },
+            { check: 'nginx/syntax', scope: '', status: 'skipped', fileCount: 0 },
+            { check: 'nginx/syntax', scope: 'proxy', status: 'error' },
         ]);
         await writeFile(
             join(sandbox.path, 'gspot.toml'),
@@ -82,7 +82,7 @@ test.skipIf(!hasToolBuild('gixy'))('gixy finds the forged proxy target and passe
     commitAll(sandbox.path);
     const environment = {};
     await installSandbox(
-        { root: sandbox.path, environment: environment, run: spawnGspot },
+        { root: sandbox.path, environment, run: spawnGspot },
         { configurations: ['nginx'], level: 'all' },
     );
     const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);

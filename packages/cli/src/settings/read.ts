@@ -41,18 +41,18 @@ export function readSettings(repositoryRoot: string): SettingsFile {
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
     return Object.fromEntries(
         (checks ?? []).map((entry) => {
-            const name = entry.name;
+            const id = entry.id;
             const { paths, outputs, ...definition } = stripUndefined(entry);
             return [
-                name,
+                id,
                 {
                     ...definition,
                     ...(outputs === undefined
                         ? {}
                         : { generator_outputs: outputs.map((path) => ({ kind: 'path' as const, path })) }),
-                    name,
+                    id,
                     ...COMMAND_CHECK_DEFAULTS,
-                    summary: entry.summary ?? `Runs the repository's own check ${name}.`,
+                    summary: entry.summary ?? `Runs the repository's own check ${id}.`,
                     why: 'The repository declared this command in gspot.toml as part of its gate.',
                     help: entry.help ?? 'Read the command output; this repository declares the check.',
                     files: { ...structuredClone(COMMAND_CHECK_DEFAULTS.files), paths },
@@ -95,7 +95,6 @@ export function buildSettings(parsed: ParsedSettings, written: TomlTable): Setti
         import_rule: parsed.import_rule,
         structure: settingsSchema.shape.structure.unwrap().prefault({}).parse(parsed.structure),
         format: stripUndefined({ ...parsed.format }),
-        allowed_words: parsed.allowed_words,
         tools: stripUndefined({ ...parsed.tools }),
         test_files: parsed.test_files,
         ignore: (parsed.ignore ?? []).map((entry) => stripUndefined(entry)),

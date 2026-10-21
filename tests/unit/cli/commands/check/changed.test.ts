@@ -12,7 +12,7 @@ import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {
     const gspotToml = stringify({
         configurations: [],
-        command_check: [buildReportingCheck({ name: 'sandbox/paths', paths: ['api/**', 'web/**'], stage: 'commit' })],
+        command_check: [buildReportingCheck({ id: 'sandbox/paths', paths: ['api/**', 'web/**'], stage: 'commit' })],
     });
 
     await createFileTree(root, { 'gspot.toml': gspotToml, ...files });

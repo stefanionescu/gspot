@@ -48,7 +48,7 @@ test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index pass
     expect(installationError).toBeInstanceOf(Error);
     expect(installationError).toMatchObject({
         name: 'GspotError',
-        code: 'installation',
+        code: 'install',
         message: `UV ${step} failed (exit 7). Check Python downloads and index settings, then run: gspot install.\nindex password [redacted] [redacted]\ninterpreter unavailable`,
     });
     expect(calls).toHaveLength(step === 'venv' ? 1 : 2);
@@ -78,7 +78,7 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     expect(lockfileError).toBeInstanceOf(Error);
     expect(lockfileError).toMatchObject({
         name: 'GspotError',
-        code: 'installation',
+        code: 'install',
         message:
             'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',
     });

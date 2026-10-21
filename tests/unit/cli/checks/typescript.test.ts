@@ -41,7 +41,7 @@ test('tsc: a scope whose project lists no JavaScript file passes with nothing to
         stage: 'push',
         only: ['javascript/tsc'],
         staged: ['gspot.toml'],
-    }).find((entry) => entry.selection.scope.path === 'site')!;
+    }).find((entry) => entry.scope.folder.path === 'site')!;
     expect(await runCheckCode(reopened, site, findCheckCode(site.check))).toMatchObject({
         check: 'javascript/tsc',
         scope: 'site',

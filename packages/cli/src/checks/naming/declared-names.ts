@@ -16,7 +16,7 @@ import { extractTypescriptIdentifiers } from '#cli/checks/naming/languages/types
  * @returns the source files and their language names.
  */
 export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
-    const languages = planned.selection.selected
+    const languages = planned.scope.configurations
         .filter((configuration) => configuration.group === 'language')
         .map((configuration) => ({
             configuration,

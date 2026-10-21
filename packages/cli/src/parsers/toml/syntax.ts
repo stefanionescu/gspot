@@ -96,13 +96,13 @@ export function isTomlKind<Kind extends string>(
  * Index concrete keys, headers, and array items without changing layout.
  *
  * @param source TOML text.
- * @param value what the TOML parser returned.
+ * @param parsed what the TOML parser returned.
  * @returns syntax entries and source-ordered comments.
  */
-export function parseTomlSyntax(source: string, value: Record<string, unknown>): TomlSyntax {
+export function parseTomlSyntax(source: string, parsed: Record<string, unknown>): TomlSyntax {
     const document = parseDocument(source);
     const comments: TomlSyntax['comments'] = [];
-    const positions = { value, counts: new Map<string, number>(), active: new Map<string, number>() };
+    const positions = { value: parsed, counts: new Map<string, number>(), active: new Map<string, number>() };
     const entries = document.cst.flatMap((node): TomlSyntax['pathNodes'] => {
         if (isTomlKind(node, 'Comment')) {
             comments.push(node);
@@ -129,7 +129,7 @@ export function parseTomlSyntax(source: string, value: Record<string, unknown>):
     });
     return {
         document,
-        value,
+        value: parsed,
         pathNodes: entries,
         comments: comments.toSorted((left, right) => getTomlRange(left)[0] - getTomlRange(right)[0]),
     };

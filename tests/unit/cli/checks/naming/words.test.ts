@@ -117,9 +117,7 @@ test('an ignored_prefix override strips handle from function and method names in
         settings: { ...buildNamingSettings(), overrides: [...buildNamingSettings().overrides, rule] },
     };
     for (const category of ['functions', 'methods', 'variables'] as const)
-        expect(
-            validateIdentifier(buildIdentifier({ name: 'handleSubmit', category: category }), selected),
-        ).toStrictEqual([]);
+        expect(validateIdentifier(buildIdentifier({ name: 'handleSubmit', category }), selected)).toStrictEqual([]);
     expect(
         validateIdentifier(buildIdentifier({ name: 'HandleSubmit' }), selected).map(({ rule }) => rule),
     ).toStrictEqual(['case']);
@@ -161,7 +159,7 @@ test('a banned word matches whole words and runs of words only', () => {
     const plain = buildFileNaming(buildNamingSettings());
     const settings = { ...buildNamingSettings(), bannedWords: BANNED_WORDS };
     const listBannedWordFindings = (name: string) =>
-        validateIdentifier(buildIdentifier({ name: name }), { ...plain, settings }).filter(
+        validateIdentifier(buildIdentifier({ name }), { ...plain, settings }).filter(
             ({ rule }) => rule === 'banned-word',
         );
     expect(listBannedWordFindings('commonThing')[0]?.message).toContain('"common"');

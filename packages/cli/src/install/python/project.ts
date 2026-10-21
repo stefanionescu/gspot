@@ -45,7 +45,7 @@ function readPythonLockfile(runFolder: string, credentials: string[], project: T
     assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
     if (!isPythonLockfileCurrent(project, lockfile))
         throw new GspotError(
-            'installation',
+            'install',
             'The uv lockfile does not match the tool project. Existing files were preserved.',
         );
     return lockfile;
@@ -80,7 +80,7 @@ async function runUv(
         );
     if (result.code !== 0)
         throw new GspotError(
-            'installation',
+            'install',
             `UV ${String(commandArguments[0])} failed (exit ${String(result.code)}). Check Python downloads and index settings, then run: gspot install.\n${redactInstallOutput(result, credentials)}`,
         );
     return result;
@@ -147,7 +147,7 @@ export async function preparePythonLockfile(
 
     const credentials = writePythonSettings(root, runFolder);
     await runUv(install, {
-        runFolder: runFolder,
+        runFolder,
         commandArguments: UV_LOCKFILE_ARGUMENTS,
         executable: getUvPath(install.session),
         credentials,
@@ -179,7 +179,7 @@ export async function installPythonTools(install: ToolInstall, executable: strin
     const credentials = writePythonSettings(root, settings.path);
     for (const commandArguments of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
         await runUv(install, {
-            runFolder: runFolder,
+            runFolder,
             commandArguments,
             executable,
             credentials,

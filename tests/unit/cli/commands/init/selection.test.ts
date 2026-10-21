@@ -39,7 +39,7 @@ test.each([...CONFIGURATION_CHOICES])(
         const initialized = await runGspot(sandbox.path, ['init', '--yes', ...flags]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const session = await openSession(sandbox.path);
-        const selected = session.scopes[0]!.selected.map((configuration) => configuration.name);
+        const selected = session.scopes[0]!.configurations.map((configuration) => configuration.name);
         for (const configuration of listAlwaysSelected()) expect(selected).toContain(configuration);
     },
 );
@@ -74,8 +74,10 @@ test('init leaves javascript out of a root package.json with only tool dependenc
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const session = await openSession(sandbox.path);
     expect(session.repository.scopeFolders.map(({ path }) => path)).toStrictEqual(['', 'app']);
-    expect(session.scopes.find(({ scope }) => scope.path === '')!.view.configurations).not.toContain('javascript');
-    expect(session.scopes.find(({ scope }) => scope.path === 'app')!.view.configurations).toContain('javascript');
+    expect(session.scopes.find(({ folder }) => folder.path === '')!.settings.configurations).not.toContain(
+        'javascript',
+    );
+    expect(session.scopes.find(({ folder }) => folder.path === 'app')!.settings.configurations).toContain('javascript');
 });
 
 test('the JavaScript tools and the ESLint tool file appear only after gspot add javascript for a new Node script, at both levels', async () => {
@@ -101,7 +103,7 @@ test('the JavaScript tools and the ESLint tool file appear only after gspot add 
         const applied = await runGspot(sandbox.path, ['set', 'level', level]);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const selected = await openSession(sandbox.path);
-        expect(selected.scopes.flatMap(({ view }) => view.configurations)).toContain('javascript');
+        expect(selected.scopes.flatMap(({ settings }) => settings.configurations)).toContain('javascript');
         const dependencies = Object.keys(
             (JSON.parse(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')) as ToolPackageJson)
                 .devDependencies,

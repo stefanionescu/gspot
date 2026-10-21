@@ -14,7 +14,7 @@ describe('results', () => {
         const reporter = [process.execPath, '-e', 'console.log("source.txt"); process.exitCode = 1;'];
         const entries = ['broken', 'kept'].map(
             (name) =>
-                `[[command_check]]\nname = "sandbox/${name}"\ncommand = ${JSON.stringify(reporter)}\npaths = ["source.txt"]\nstage = "commit"\n[command_check.output]\nformat = "${name === 'broken' ? 'json' : 'lines'}"\n`,
+                `[[command_check]]\nid = "sandbox/${name}"\ncommand = ${JSON.stringify(reporter)}\npaths = ["source.txt"]\nstage = "commit"\n[command_check.output]\nformat = "${name === 'broken' ? 'json' : 'lines'}"\n`,
         );
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([], { tables: entries.join('') }),
@@ -47,7 +47,7 @@ describe('results', () => {
                     ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' }],
                     command_check: [
                         {
-                            name: 'project/fast',
+                            id: 'project/fast',
                             paths: ['source.sh'],
                             stage: 'commit',
                             command: [
@@ -58,7 +58,7 @@ describe('results', () => {
                             output: { format: 'regex', pattern: '^(?<file>[^:]+):(?<rule>[^:]+):(?<message>.*)$' },
                         },
                         {
-                            name: 'project/waiting',
+                            id: 'project/waiting',
                             paths: ['source.sh'],
                             stage: 'commit',
                             command: [

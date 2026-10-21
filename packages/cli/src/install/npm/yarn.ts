@@ -10,7 +10,7 @@ import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { YARN_SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { addEnvironmentReference } from '#cli/install/npm/registry.ts';
-import { getTable, findRootSelection } from '#cli/settings/scope-view.ts';
+import { getTable, findRootScope } from '#cli/settings/scope-settings.ts';
 import { yarnSettingsSchema, yarnConfigEntrySchema } from '#cli/schemas/install/npm/yarn.ts';
 
 import {
@@ -96,7 +96,7 @@ export async function writeYarnSettings(
     const listed = await runInstallStep(install, YARN_CONFIG_LIST_ARGUMENTS, { cwd: root, env });
     if (listed.code !== 0)
         throw new GspotError(
-            'installation',
+            'install',
             'Cannot read Yarn connection settings. Check the repository Yarn configuration.',
         );
     const entries = listed.stdout
@@ -107,7 +107,7 @@ export async function writeYarnSettings(
     for (const entry of entries) {
         const command = [...YARN_CONFIG_GET_ARGUMENTS, entry.key, ...YARN_CONFIG_GET_FLAGS];
         const read = await runInstallStep(install, command, { cwd: root, env });
-        if (read.code !== 0) throw new GspotError('installation', `Cannot read Yarn setting ${entry.key}.`);
+        if (read.code !== 0) throw new GspotError('install', `Cannot read Yarn setting ${entry.key}.`);
         settings[entry.key] = convertToReference(
             parseToolReport('yarn config get', read.stdout),
             entry.key,
@@ -116,7 +116,7 @@ export async function writeYarnSettings(
         );
     }
     settings[YARN_SETTING_KEYS.npmMinimalAgeGate] =
-        getTable(findRootSelection(install.session.scopes).view, 'dependencies').min_release_age_days * MINUTES_PER_DAY;
+        getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days * MINUTES_PER_DAY;
     settings[YARN_SETTING_KEYS.npmPreapprovedPackages] = [...GSPOT_PACKAGES];
     writeFileSync(join(runFolder, YARN_INSTALL_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return secrets.filter((value) => value.length > 0);

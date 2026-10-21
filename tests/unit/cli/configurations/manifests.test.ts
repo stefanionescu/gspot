@@ -10,11 +10,11 @@ import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 import {
     TOOL_TABLE,
     SEMGREP_ASSETS,
-    VERSION_FLOORS,
     REPLACE_KEY_TABLE,
     SINGLE_TOOL_FILES,
     SEMGREP_TOOL_FILES,
     CONFIGURATION_TABLE,
+    MINIMUM_VERSION_CASES,
     EXAMPLE_MANIFEST_PATH,
     MANIFEST_READER_SCRIPT,
 } from '#tests/data/configurations/manifests.ts';
@@ -47,10 +47,10 @@ test('a manifest without [detect] takes the matchers of [files]', () => {
     expect(empty.detect.paths).toStrictEqual([]);
 });
 
-test.each([...VERSION_FLOORS])(
-    'a minimum version $floor becomes $expected, and a word is refused',
-    ({ floor, expected }) => {
-        const parsed = manifestToolSchema.safeParse({ name: 'example', version: '4.4.0', min_version: floor });
+test.each([...MINIMUM_VERSION_CASES])(
+    'a minimum version $minimum becomes $expected, and a word is refused',
+    ({ minimum, expected }) => {
+        const parsed = manifestToolSchema.safeParse({ name: 'example', version: '4.4.0', min_version: minimum });
         expect(parsed.success && typeof parsed.data !== 'string' ? parsed.data.min_version : undefined).toBe(expected);
     },
 );

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { RULE_TOKEN, RULE_OPTIONS_REFUSAL } from '#cli/config/settings/schema.ts';
 
@@ -23,7 +23,7 @@ export function buildRuleTableSchema<Schema extends z.ZodType>(
     check: string,
 ): z.ZodType<z.output<Schema>, z.input<Schema>> {
     return z.preprocess((table: z.input<Schema>, context) => {
-        if (!isRecord(table)) return table;
+        if (!isTable(table)) return table;
         for (const [rule, value] of Object.entries(table)) {
             const parsed = schema.safeParse({ [rule]: value });
             if (parsed.success) continue;

@@ -6,10 +6,10 @@ import { visitParsedSources } from '#cli/parsers/grammars.ts';
 import { getNodePlace, buildFinding } from '#cli/runs/finding.ts';
 import { COMMENT_LINE, XCTEST_PREFIX, SKIP_REASON_ARGUMENT, SWIFT_STRING_LITERAL } from '#cli/config/checks/swift.ts';
 
-function hasReason(value: Node | undefined): boolean {
-    if (value === undefined || value.text === 'nil') return false;
-    if (!value.type.endsWith('string_literal')) return true;
-    const literal = SWIFT_STRING_LITERAL.exec(value.text);
+function hasReason(reason: Node | undefined): boolean {
+    if (reason === undefined || reason.text === 'nil') return false;
+    if (!reason.type.endsWith('string_literal')) return true;
+    const literal = SWIFT_STRING_LITERAL.exec(reason.text);
     if (literal === null) return true;
     const whitespace = new RegExp(`\\\\${literal[1] ?? ''}[nrt0]`, 'gu');
     return (literal[3] ?? '').replaceAll(whitespace, ' ').trim() !== '';

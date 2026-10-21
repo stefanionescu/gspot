@@ -1,8 +1,8 @@
 import { getValueAt } from '#cli/system/tables.ts';
 import { join, dirname, relative } from 'node:path';
-import { findScope } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
@@ -69,9 +69,9 @@ export function buildJsconfigFile(planned: PlannedToolFile): string {
     const { root, reads } = planned.session;
     const { targetPath: target } = planned;
     const { files } = planned.session.repository;
-    const scope = planned.selection.scope.path;
-    const scopes = planned.session.scopes.map((entry) => entry.scope);
-    const importStyle = getTable(planned.selection.view, 'tools.eslint').import_extension;
+    const scope = planned.scope.folder.path;
+    const scopes = planned.session.scopes.map((entry) => entry.folder);
+    const importStyle = getTable(planned.scope.settings, 'tools.eslint').import_extension;
     const ignoredGlobs = convertToGlobs(
         buildIgnoreSections(planned.session).filter((section) => planned.level !== 'all' || section.key !== 'build'),
     );
@@ -86,7 +86,7 @@ export function buildJsconfigFile(planned: PlannedToolFile): string {
             importStyle === 'extensionless' &&
             file.kind === 'source' &&
             file.tags.includes('javascript') &&
-            findScope(file.path, scopes).path === scope,
+            findScopeFolder(file.path, scopes).path === scope,
     );
     const hasSourceSelection = SOURCE_SELECTION_FIELDS.some(
         (field) => getValueAt(jsconfigOwner?.raw, [field]) !== undefined,

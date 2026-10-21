@@ -86,7 +86,7 @@ test('apply starts no npm, and install reports a failed npm version lookup in te
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);
     expect(structured.stderr).toBe('');
     expect(JSON.parse(structured.stdout)).toStrictEqual({
-        error: 'installation',
+        error: 'install',
         message:
             'Cannot determine the npm version for the tool project.\nTool installation is incomplete. Run: gspot install',
     });

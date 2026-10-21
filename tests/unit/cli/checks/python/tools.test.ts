@@ -101,10 +101,10 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
         const patterns = command.flatMap((value, index) => (value === '--extend-exclude' ? [command[index + 1]!] : []));
         expect(patterns.at(-1)).toBe('authored');
         expect(patterns.some((pattern) => new RegExp(pattern).test('.gspot/pyproject.toml'))).toBe(true);
-        for (const candidate of scopes.filter(
+        for (const nestedScope of scopes.filter(
             (path) => path !== scope && path.startsWith(scope === '' ? '' : `${scope}/`),
         )) {
-            const relative = candidate.slice(scope === '' ? 0 : scope.length + 1);
+            const relative = nestedScope.slice(scope === '' ? 0 : scope.length + 1);
             expect(patterns.some((pattern) => new RegExp(pattern).test(`${relative}/.venv/sample.py`))).toBe(true);
         }
         expect(patterns.some((pattern) => new RegExp(pattern).test('appish/sample.py'))).toBe(false);

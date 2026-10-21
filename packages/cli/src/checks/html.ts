@@ -114,7 +114,7 @@ function checkScriptAttributes(planned: PlannedCheck, source: SourceTree): Findi
  * @param planned the scope HTML files.
  * @returns the findings.
  */
-export async function checkHtmlScripts(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkHtmlInlineScripts(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: Finding[] = [];
     await visitParsedSources({ reads: session.reads, resources: session.resources, files }, (source) =>

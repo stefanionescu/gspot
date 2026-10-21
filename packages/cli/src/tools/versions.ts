@@ -80,23 +80,23 @@ function findVersionFailure(
 }
 
 /**
- * Classify a reported version against its pin and floor.
+ * Classify a reported version against its pin and minimum.
  *
  * @param found the version the tool reported.
  * @param want the pinned version.
- * @param floor the lowest version the configuration accepts.
+ * @param minimum the lowest version the configuration accepts.
  *
- * @returns ok, outdated below the floor, newer above the pin, or error for no version.
+ * @returns ok, outdated below the minimum, newer above the pin, or error for no version.
  */
 export function classifyToolVersion(
     found: string,
     want: string | undefined,
-    floor: string | undefined,
+    minimum: string | undefined,
 ): ToolInspection['state'] {
-    if (want === undefined) return isBelowFloor(found, floor) ? 'outdated' : 'system';
+    if (want === undefined) return isBelowMinimum(found, minimum) ? 'outdated' : 'system';
     const version = semver.coerce(found);
     if (version === null) return 'error';
-    if (isBelowFloor(found, floor)) return 'outdated';
+    if (isBelowMinimum(found, minimum)) return 'outdated';
     const pinned = semver.coerce(want);
     return pinned !== null && semver.gt(version, pinned) ? 'newer' : 'ok';
 }
@@ -122,16 +122,16 @@ export function readToolVersion(inspected: InspectedTool, path: string): ParsedT
 }
 
 /**
- * Compare a version with its accepted floor.
+ * Compare a version with its accepted minimum.
  *
  * @param found the observed version.
- * @param floor the accepted minimum.
+ * @param minimum the accepted minimum.
  *
- * @returns whether the observed version falls below the floor.
+ * @returns whether the observed version falls below the minimum.
  */
-function isBelowFloor(found: string | undefined, floor: string | undefined): boolean {
+function isBelowMinimum(found: string | undefined, minimum: string | undefined): boolean {
     const version = semver.coerce(found);
-    const lowest = semver.coerce(floor);
+    const lowest = semver.coerce(minimum);
     return version !== null && lowest !== null && semver.lt(version, lowest);
 }
 

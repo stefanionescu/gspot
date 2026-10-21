@@ -19,7 +19,7 @@ import { EDITED_STYLELINT_PACKAGE } from '#tests/data/commands/init.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { STYLELINT_PACKAGE_FIELDS, COMMITLINT_PACKAGE_FIELDS, EDITED_COMMITLINT_PACKAGE } from '#tests/data/apply.ts';
 
-function writeObsoleteFile(root: string): void {
+function writeStrayFile(root: string): void {
     using log = openWriter(root);
 
     writePlans(log, [
@@ -63,7 +63,7 @@ test('generated files stay writable: apply keeps their bytes and removes them wh
         'gspot.toml': buildSandboxSettings([], { rules: true, tables: '[rules]\nenabled = true\n' }),
     });
 
-    writeObsoleteFile(sandbox.path);
+    writeStrayFile(sandbox.path);
     expect(runGit(sandbox.path, ['init', '-q']).code).toBe(0);
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code).toBe(0);
@@ -113,7 +113,7 @@ test('apply removes an obsolete directory link without following it', async () =
     });
 
     const root = join(folder.path, 'project');
-    writeObsoleteFile(root);
+    writeStrayFile(root);
     await rm(join(root, '.gspot/obsolete'), { recursive: true });
     await symlink('../../outside', join(root, '.gspot/obsolete'));
     expect(await runGspot(root, ['apply'])).toHaveProperty('code', 0);

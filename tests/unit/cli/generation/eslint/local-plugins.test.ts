@@ -7,7 +7,7 @@ import { commitAll } from '#tests/setup/git.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { toolFileFor, createEslint, generateFile, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { toolFileFor, createEslint, generateFile, listLintFindings } from '#tests/setup/tool-files.ts';
 
 import {
     SCOPE_PLUGIN_FILES,
@@ -26,7 +26,7 @@ test('a scope plugin reaches its scope, and an inherited root plugin writes one 
     commitAll(sandbox.path);
     const eslint = await createEslint(sandbox.path);
     expect(
-        await collectLintFindings(
+        await listLintFindings(
             eslint,
             sandbox.path,
             ['source.js', 'outside/source.js', 'app/source.js', 'app/nested/source.js'],

@@ -13,19 +13,19 @@ import { stringify, LocalDate, parse as parseToml } from '@decimalturn/toml-patc
 import { LYCHEE_MDX_EXPRESSION } from '#cli/config/generation/settings/builders/lychee.ts';
 
 import {
-    ODD_KEY,
-    ODD_VALUE,
     REGISTRIES,
     XCODE_SCHEME,
     XCODE_PROJECT,
-    ODD_VALUE_FILES,
-    ODD_VALUE_SETTINGS,
+    SPECIAL_CHARACTER_KEY,
+    SPECIAL_CHARACTER_VALUE,
+    SPECIAL_CHARACTER_FILES,
+    SPECIAL_CHARACTER_SETTINGS,
 } from '#tests/data/generation/settings.ts';
 
 test('odd JSON keys and YAML values stay literal in tool files', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': stringify(ODD_VALUE_SETTINGS),
-        ...ODD_VALUE_FILES,
+        'gspot.toml': stringify(SPECIAL_CHARACTER_SETTINGS),
+        ...SPECIAL_CHARACTER_FILES,
     });
 
     const session = await openSession(sandbox.path);
@@ -33,7 +33,9 @@ test('odd JSON keys and YAML values stay literal in tool files', async () => {
     const markdownRules = output.files.find(
         ({ path }) => path === '.gspot/configurations/language/markdown/markdownlint.jsonc',
     )!;
-    expect(parseJsonc(markdownRules.content)).toMatchObject({ MD044: { names: [ODD_KEY, ODD_VALUE] } });
+    expect(parseJsonc(markdownRules.content)).toMatchObject({
+        MD044: { names: [SPECIAL_CHARACTER_KEY, SPECIAL_CHARACTER_VALUE] },
+    });
     const markdownCli = output.files.find(
         (entry) => entry.path === '.gspot/configurations/language/markdown/markdownlint-cli2.mjs',
     )!;
@@ -65,7 +67,7 @@ test('odd JSON keys and YAML values stay literal in tool files', async () => {
     expect(yaml.get('.gspot/configurations/infrastructure/docker/hadolint.yml')).toMatchObject({
         trustedRegistries: REGISTRIES,
     });
-    expect(yaml.get('.gspot/configurations/general/files/yamllint.yml')).toMatchObject({
+    expect(yaml.get('.gspot/configurations/general/data-files/yamllint.yml')).toMatchObject({
         rules: { truthy: { 'allowed-values': ['yes', 'no'] }, indentation: { spaces: 'consistent' } },
     });
 });
@@ -76,7 +78,7 @@ test('TOML tool files keep keys and values with quotes, backslashes, newlines, a
     const option = 'custom."option"';
     await using sandbox = await testdir({
         'gspot.toml': buildSettingsText('', {
-            configurations: ['secrets', 'dependencies', 'files', 'docs', 'python', 'markdown'],
+            configurations: ['secrets', 'dependencies', 'data-files', 'docs', 'python', 'markdown'],
             format: { indent_style: 'tab' },
             tools: {
                 markdownlint: { rules: { MD044: { [option]: text } } },
@@ -102,7 +104,7 @@ test('TOML tool files keep keys and values with quotes, backslashes, newlines, a
     expect(parsed.get('.gspot/configurations/general/dependencies/osv-scanner.toml')).toMatchObject({
         IgnoredVulns: [{ id: text, reason, ignoreUntil: new Date('2099-09-20T00:00:00.000Z') }],
     });
-    expect(parsed.get('.gspot/configurations/general/files/taplo.toml')).toMatchObject({
+    expect(parsed.get('.gspot/configurations/general/data-files/taplo.toml')).toMatchObject({
         formatting: { indent_string: '\t' },
     });
     const markdown = output.files.find(

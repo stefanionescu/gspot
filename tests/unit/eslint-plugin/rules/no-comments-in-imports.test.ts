@@ -45,63 +45,63 @@ createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-im
         {
             code: "import { a } from './a';\n// @ts-expect-error The declaration is incomplete.\nimport { b } from './b';",
             output: null,
-            errors: [{ messageId: 'noCommentsInImports', line: 2 }],
+            errors: [{ messageId: 'comment', line: 2 }],
         },
         {
             code: "import { a } from './a';\n/* global process */\nimport { b } from '../b';",
             output: null,
-            errors: [{ messageId: 'noCommentsInImports', line: 2 }],
+            errors: [{ messageId: 'comment', line: 2 }],
         },
         {
             code: "import { a } from './a';\n// Explains the complete\n// import below.\nimport { c } from './c';\nexport const b = a + c;",
             output: "// Explains the complete\n// import below.\nimport { a } from './a';\nimport { c } from './c';\nexport const b = a + c;",
-            errors: [{ messageId: 'noCommentsInImports' }],
+            errors: [{ messageId: 'comment' }],
         },
         {
             code: "import { a } from './a'; // trailing\nexport const b = a;",
             output: "// trailing\nimport { a } from './a';\nexport const b = a;",
-            errors: [{ messageId: 'noCommentsInImports' }],
+            errors: [{ messageId: 'comment' }],
         },
         {
             code: "import { a } from './a';\n\n// The complete\n// file header.\n\n\nexport const b = a;",
             output: "// The complete\n// file header.\n\nimport { a } from './a';\n\nexport const b = a;",
-            errors: [{ messageId: 'noCommentsInImports' }],
+            errors: [{ messageId: 'comment' }],
         },
 
         {
             code: "import { a } from './a';\n/* header */\n\n\nexport const b = a;",
             output: "/* header */\n\nimport { a } from './a';\nexport const b = a;",
-            errors: [{ messageId: 'noCommentsInImports' }],
+            errors: [{ messageId: 'comment' }],
         },
         {
             code: "import { a } from './a';\n// the b helper\nimport { b } from './b';",
             output: "// the b helper\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'noCommentsInImports', line: 2 }],
+            errors: [{ messageId: 'comment', line: 2 }],
         },
         {
             code: "import { a } from './a'; // trailing\nimport { b } from './b';",
             output: "// trailing\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'noCommentsInImports', line: 1 }],
+            errors: [{ messageId: 'comment', line: 1 }],
         },
         {
             code: "import { a } from './a';\nimport { b } from './b'; // last line",
             output: "// last line\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'noCommentsInImports', line: 2 }],
+            errors: [{ messageId: 'comment', line: 2 }],
         },
         {
             code: "import { a } from './a';\n/* block */\nimport { b } from './b';",
             output: "/* block */\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'noCommentsInImports', line: 2 }],
+            errors: [{ messageId: 'comment', line: 2 }],
         },
         {
             code: "import {\n    a, // inside the braces\n} from './a';\nimport { b } from './b';",
             output: "// inside the braces\nimport {\n    a,\n} from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'noCommentsInImports', line: 2 }],
+            errors: [{ messageId: 'comment', line: 2 }],
         },
         {
             code: "import { a } from './a';\n// one\n// two\nimport { b } from './b';",
             output: "// one\n// two\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'noCommentsInImports', line: 2 }],
+            errors: [{ messageId: 'comment', line: 2 }],
         },
     ],
 });
@@ -122,7 +122,7 @@ createRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(
             {
                 code: "const a = require('./a');\n// the b helper\nconst b = require('./b');",
                 output: "// the b helper\nconst a = require('./a');\nconst b = require('./b');",
-                errors: [{ messageId: 'noCommentsInImports', line: 2 }],
+                errors: [{ messageId: 'comment', line: 2 }],
             },
         ],
     },

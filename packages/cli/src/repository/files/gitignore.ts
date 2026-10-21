@@ -44,15 +44,15 @@ export function listGitignorePatterns(reads: ReadCache, trackedPaths: string[]):
 /**
  * Test a path against ignore files in order, keeping later negations.
  *
- * @param candidate the repository-relative file or folder path.
+ * @param path the repository-relative file or folder path.
  * @param ignores the patterns with the folder that contains each ignore file.
  * @returns whether the final matching pattern ignores the path.
  */
-export function isIgnored(candidate: string, ignores: PathIgnore[]): boolean {
+export function isIgnored(path: string, ignores: PathIgnore[]): boolean {
     let ignored = false;
     for (const { base, matcher } of ignores) {
-        if (!candidate.startsWith(base) || candidate === base) continue;
-        const result = matcher.test(candidate.slice(base.length));
+        if (!path.startsWith(base) || path === base) continue;
+        const result = matcher.test(path.slice(base.length));
         if (result.ignored) ignored = true;
         else if (result.unignored) ignored = false;
     }
@@ -79,6 +79,6 @@ export function buildGitignoreTest(reads: ReadCache, trackedPaths: string[]): (p
     return (path) => {
         const segments = path.split('/');
         const folders = segments.slice(0, -1).map((_, index) => `${segments.slice(0, index + 1).join('/')}/`);
-        return [...folders, path, `${path}/`].some((candidate) => isIgnored(candidate, ignores));
+        return [...folders, path, `${path}/`].some((entry) => isIgnored(entry, ignores));
     };
 }

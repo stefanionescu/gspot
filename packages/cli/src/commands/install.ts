@@ -25,7 +25,7 @@ async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promis
     const generated = generate(session);
     // The tools install from the tool projects on disk, so those must match the settings first.
     if (listStaleFiles(session, generated).some((file) => TOOL_PROJECT_FILES.has(file.path)))
-        throw new GspotError('installation', 'Run gspot apply first');
+        throw new GspotError('install', 'Run gspot apply first');
     using writer = openWriter(root);
     const { note, steps } = await installTools(session, writer, generated);
     return {

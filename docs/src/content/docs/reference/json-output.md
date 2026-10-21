@@ -36,7 +36,7 @@ Each finding has `check`, `file`, `message`, and `fixable`. Optional fields incl
 `help`. Source lines and columns start at `1`. A finding without a source location can have an empty `file`.
 
 The `cause` of a skip takes one of `level`, `system`, `replaced`, `setting`, `condition`, `ignore`, or
-`inputs`.
+`no-files`.
 
 ## Push report
 
@@ -57,19 +57,19 @@ boundary of a shallow clone. Checks that read history then refuse to run.
 Commands with `--json` report an error with `error` and `message`. `error` holds one of the codes below.
 `message` describes the failure and the action to take.
 
-| Code           | What failed                                                     |
-| -------------- | --------------------------------------------------------------- |
-| `arguments`    | Command arguments or flags.                                     |
-| `git`          | A Git operation.                                                |
-| `files`        | Preparing files for a check.                                    |
-| `writing`      | Saving gspot.toml.                                              |
-| `filesystem`   | Reading or accessing a file.                                    |
-| `settings`     | A setting or the gspot.toml format.                             |
-| `manifest`     | A shipped configuration manifest.                               |
-| `installation` | Installing tools.                                               |
-| `tool`         | Finding or running a tool.                                      |
-| `output`       | Reading a tool's output.                                        |
-| `pin`          | The repository's version pin.                                   |
-| `prompt`       | Asking for a plan to be accepted.                               |
-| `failure`      | An unexpected error; the message names it.                      |
-| `canceled`     | A signal stopped the command. The object also holds `exitCode`. |
+| Code            | What failed                                                                             |
+| --------------- | --------------------------------------------------------------------------------------- |
+| `arguments`     | Command arguments or flags.                                                             |
+| `git`           | A Git operation.                                                                        |
+| `copy`          | Copying the files of a check into a temporary folder.                                   |
+| `writing`       | Saving gspot.toml.                                                                      |
+| `filesystem`    | A file of the repository: missing, not readable, not valid, or at a path gspot refuses. |
+| `settings`      | A setting or the gspot.toml format.                                                     |
+| `configuration` | A shipped configuration.                                                                |
+| `install`       | Installing tools.                                                                       |
+| `tool`          | Finding or running a tool.                                                              |
+| `output`        | Reading a tool's output.                                                                |
+| `pin`           | The repository's version pin.                                                           |
+| `prompt`        | Asking for a plan to be accepted.                                                       |
+| `unexpected`    | An unexpected error; the message names it.                                              |
+| `canceled`      | A signal stopped the command. The object also holds `exitCode`.                         |

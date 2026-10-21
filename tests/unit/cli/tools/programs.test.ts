@@ -92,14 +92,14 @@ test.each([0, 1])('mise finds the program in the original repository with exit c
     using _which = useExecutable((name) =>
         join(sandbox.path, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`),
     );
-    const candidates = listExecutablePaths(join(sandbox.path, 'work'), 'tsc', {
+    const executablePaths = listExecutablePaths(join(sandbox.path, 'work'), 'tsc', {
         search: 'mise',
         timeoutSeconds: SETTING_FACTS['tool_timeout_seconds'].default,
         searchFolders: [join(sandbox.path, 'work')],
     });
-    expect(candidates).toStrictEqual(status === 0 ? [executable] : []);
+    expect(executablePaths).toStrictEqual(status === 0 ? [executable] : []);
     if (status === 0) {
-        const result = await runTool([candidates[0]!], {
+        const result = await runTool([executablePaths[0]!], {
             timeoutSeconds: SETTING_FACTS['tool_timeout_seconds'].default,
             cwd: join(sandbox.path, 'copy'),
         });

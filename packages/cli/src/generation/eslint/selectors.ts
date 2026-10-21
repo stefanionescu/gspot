@@ -68,20 +68,20 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
 }
 
 // The selectors that settings turn on: environment reads outside the readers at level all, and alias suffixes.
-function listSettingSelectors(selection: Scope, level: Level): SelectorPaths[] {
+function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];
-    const owners = selection.view.values.structure?.environment_readers ?? [];
+    const owners = scope.settings.values.structure?.environment_readers ?? [];
     if (level === 'all' && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, except: owners });
-    const styles = selection.view.values[ESLINT_SETTINGS_TABLE]?.import_extension;
+    const styles = scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
     if (styles !== undefined)
         selectors.push({ ...ALIAS_IMPORT_SELECTORS[styles === 'extensionless' ? 'never' : 'always'], except: [] });
     return selectors;
 }
 
 // A selector covers the files that its setting lists in the scope, or every source file when it names no setting.
-function buildSelectorPaths(selection: Scope, entry: Configuration['eslint']['selectors'][number]): SelectorPaths {
-    const listed = entry.files_setting === undefined ? undefined : selection.view.settings[entry.files_setting];
-    const files = entry.files_setting === undefined ? {} : { files: (listed as string[] | undefined) ?? [] };
+function buildSelectorPaths(scope: Scope, entry: Configuration['eslint']['selectors'][number]): SelectorPaths {
+    const listed = entry.paths_setting === undefined ? undefined : scope.settings.settings[entry.paths_setting];
+    const files = entry.paths_setting === undefined ? {} : { files: (listed as string[] | undefined) ?? [] };
     return { selector: entry.selector, message: entry.message, ...files, except: [] };
 }
 
@@ -99,24 +99,24 @@ export function buildSelectorGroups(
     level: Level,
     reexports: Settings['structure']['reexports'],
 ): SelectorGroup[] {
-    const scopePaths = scopes.map((entry) => entry.scope.path);
-    return scopes.flatMap((selection) => {
-        const prefix = selection.scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
-        const declarations = selection.selected.flatMap((configuration) =>
+    const scopePaths = scopes.map((entry) => entry.folder.path);
+    return scopes.flatMap((scope) => {
+        const prefix = scope.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
+        const declarations = scope.configurations.flatMap((configuration) =>
             level === 'all' ? configuration.eslint.selectors : [],
         );
         const applied: SelectorPaths[] = [
             ...new Map(declarations.map((entry) => [entry.selector, entry])).values(),
-        ].map((entry) => buildSelectorPaths(selection, entry));
+        ].map((entry) => buildSelectorPaths(scope, entry));
         if (level === 'all') {
             const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];
             applied.push(...REEXPORT_SELECTORS.map((selector) => ({ ...selector, except })));
         }
-        applied.push(...listSettingSelectors(selection, level));
+        applied.push(...listSettingSelectors(scope, level));
         return groupSelectors(applied).map((group) => ({
             ...group,
-            scope: selection.scope.path,
-            ignoredScopes: listNestedScopes(scopePaths, selection.scope.path),
+            scope: scope.folder.path,
+            ignoredScopes: listNestedScopes(scopePaths, scope.folder.path),
         }));
     });
 }

@@ -9,7 +9,7 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { UNCOVERED_FILE_MESSAGE } from '#cli/config/checks/structure.ts';
 
 import {
-    REFUSAL_HINT,
+    REFUSAL_HELP,
     SWIFT_IMPORT_FILES,
     SWIFT_IMPORT_RULES,
     PYTHON_IMPORT_FILES,
@@ -33,19 +33,19 @@ test('Python imports follow the import rules: rules above, can_import, relative 
             file: 'src/app/core/uses_web.py',
             line: 1,
             rule: 'refused-import',
-            message: `Import rule "core" may import only its own files, not app.web.views from import-rule:web. ${REFUSAL_HINT}`,
+            message: `Import rule "core" may import only its own files, not app.web.views from import-rule:web. ${REFUSAL_HELP}`,
         },
         {
             file: 'src/app/web/views.py',
             line: 2,
             rule: 'refused-import',
-            message: `Import rule "web" may import its own files and "storage", not app.core.model from import-rule:core. ${REFUSAL_HINT}`,
+            message: `Import rule "web" may import its own files and "storage", not app.core.model from import-rule:core. ${REFUSAL_HELP}`,
         },
         {
             file: 'src/app/web/views.py',
             line: 4,
             rule: 'refused-import',
-            message: `Import rule "web" may import its own files and "storage", not ..core.model from import-rule:core. ${REFUSAL_HINT}`,
+            message: `Import rule "web" may import its own files and "storage", not ..core.model from import-rule:core. ${REFUSAL_HELP}`,
         },
     ]);
 });
@@ -62,7 +62,7 @@ test('Swift imports follow the import rules through the SwiftPM targets, and a f
             file: 'Sources/Core/Model.swift',
             line: 2,
             rule: 'refused-import',
-            message: `Import rule "core" may import only its own files, not Feature from import-rule:feature. ${REFUSAL_HINT}`,
+            message: `Import rule "core" may import only its own files, not Feature from import-rule:feature. ${REFUSAL_HELP}`,
         },
     ]);
 });

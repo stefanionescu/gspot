@@ -1,5 +1,5 @@
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scope-view.ts';
+import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 
 import {
     SQL_FILE_EXTENSIONS,
@@ -14,15 +14,15 @@ import {
  * @returns the SQL dialect, formatting choices, and SQLFluff rule exclusions.
  */
 export function buildSqlfluffFile(planned: PlannedToolFile): string {
-    const { format } = planned.selection.view.values;
+    const { format } = planned.scope.settings.values;
     const level = planned.level;
 
     const isAll = level === 'all';
 
-    const off = [...listIgnoredRules(planned.selection, 'sql/sqlfluff'), ...(isAll ? [] : SQLFLUFF_RECOMMENDED_OFF)];
+    const off = [...listIgnoredRules(planned.scope, 'sql/sqlfluff'), ...(isAll ? [] : SQLFLUFF_RECOMMENDED_OFF)];
     const sections = {
         sqlfluff: {
-            dialect: getTable(planned.selection.view, 'tools.sqlfluff').dialect,
+            dialect: getTable(planned.scope.settings, 'tools.sqlfluff').dialect,
             templater: 'raw',
             sql_file_exts: SQL_FILE_EXTENSIONS,
             max_line_length: format.print_width,

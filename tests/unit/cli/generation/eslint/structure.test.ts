@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { createEslint, listFindingRules, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/tool-files.ts';
 import type { LintFinding, SourceRuleCase, EslintConfiguration } from '#tests/types/tool-output.ts';
 
 import {
@@ -26,7 +26,7 @@ import {
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);
     const eslint = await createEslint(root);
-    const findings = await collectLintFindings(eslint, root, ENTRY_FOLDERS, TRIVIAL_RULES);
+    const findings = await listLintFindings(eslint, root, ENTRY_FOLDERS, TRIVIAL_RULES);
     return findings.map(({ file, rule }) => ({ file, rule }));
 }
 
@@ -46,7 +46,7 @@ async function assertSourceRules(
     for (const file of files) {
         for (const { name, source, rule, count } of cases) {
             await createFileTree(root, { [file]: source });
-            const findings = await collectLintFindings(eslint, root, [file], [rule]);
+            const findings = await listLintFindings(eslint, root, [file], [rule]);
             expect(findings, name).toStrictEqual(Array.from({ length: count }, () => ({ file, rule, line: 1 })));
         }
     }
@@ -116,7 +116,7 @@ test.each([...LEVELS])('structure > size limits apply to test files only at leve
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             tables: '[limits]\nfile_lines = 8\nfunction_lines = 5\nfunction_statements = 3\n',
-            level: level,
+            level,
         }),
         'package.json': '{"private":true,"type":"module"}\n',
         'sample.test.js': '',
@@ -130,7 +130,7 @@ test.each([...LEVELS])('structure > size limits apply to test files only at leve
     ).join('\n');
     const source = `export function count() {\n${declarations}\n    return value0;\n}\n`;
     await createFileTree(sandbox.path, { 'sample.test.js': source });
-    const findings = await collectLintFindings(eslint, sandbox.path, ['sample.test.js'], rules);
+    const findings = await listLintFindings(eslint, sandbox.path, ['sample.test.js'], rules);
     expect(listFindingRules(findings)).toStrictEqual(
         level === 'all' ? rules.toSorted((left, right) => left.localeCompare(right)) : [],
     );
@@ -141,7 +141,7 @@ test.each([...LEVELS])(
     async (level) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
-                level: level,
+                level,
                 scopes: [{ path: 'app', configurations: ['javascript'] }],
             }),
             'package.json': '{"private":true,"type":"module"}\n',
@@ -152,7 +152,7 @@ test.each([...LEVELS])(
         const eslint = await createEslint(sandbox.path);
         for (const filePath of ['main.js', 'app/main.js']) {
             await createFileTree(sandbox.path, { [filePath]: 'export function start() { return launch(); }' });
-            expect(await collectLintFindings(eslint, sandbox.path, [filePath], TRIVIAL_RULES)).toStrictEqual(
+            expect(await listLintFindings(eslint, sandbox.path, [filePath], TRIVIAL_RULES)).toStrictEqual(
                 level === 'all'
                     ? [
                           { file: filePath, rule: 'gspot/no-trivial-files', line: 1 },
@@ -164,7 +164,7 @@ test.each([...LEVELS])(
                 [filePath]: 'function start() { return launch(); } export const app = start();',
             });
             expect(
-                await collectLintFindings(eslint, sandbox.path, [filePath], ['gspot/no-trivial-functions']),
+                await listLintFindings(eslint, sandbox.path, [filePath], ['gspot/no-trivial-functions']),
             ).toStrictEqual(level === 'all' ? [{ file: filePath, rule: 'gspot/no-trivial-functions', line: 1 }] : []);
         }
     },
@@ -187,13 +187,13 @@ test('structure > a JSON import attribute is accepted where your import extensio
         const config = (await eslint.calculateConfigForFile(filePath)) as EslintConfiguration;
         expect(config.rules['n/file-extension-in-import']![0]).toBe(2);
         await createFileTree(sandbox.path, { [filePath]: 'import manifest from "#manifest";' });
-        expect(await collectLintFindings(eslint, sandbox.path, [filePath], ['no-restricted-syntax'])).toStrictEqual([
+        expect(await listLintFindings(eslint, sandbox.path, [filePath], ['no-restricted-syntax'])).toStrictEqual([
             { file: filePath, rule: 'no-restricted-syntax', line: 1 },
         ]);
         await createFileTree(sandbox.path, {
             [filePath]: 'import manifest from "#manifest" with { type: "json" };',
         });
-        expect(await collectLintFindings(eslint, sandbox.path, [filePath], ['no-restricted-syntax'])).toStrictEqual([]);
+        expect(await listLintFindings(eslint, sandbox.path, [filePath], ['no-restricted-syntax'])).toStrictEqual([]);
     }
 });
 

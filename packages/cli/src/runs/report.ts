@@ -31,8 +31,8 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
  */
 export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 'scopes'>): CheckResult {
     return {
-        check: planned.check.name,
-        scope: planned.selection.scope.path,
+        check: planned.check.id,
+        scope: planned.scope.folder.path,
         status: 'passed',
         fileCount: listCheckedFiles(session.scopes, planned).length,
         duration: 0,
@@ -73,7 +73,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
             results.get(check) ?? {
                 ...buildBaseResult(check, session),
                 status: 'skipped' as const,
-                cause: check.skip?.cause ?? 'inputs',
+                cause: check.skip?.cause ?? 'no-files',
                 note: check.skip?.note ?? 'No matching files.',
             },
     );
@@ -104,7 +104,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
 /**
  * Formats the command that runs one check alone.
  *
- * @param checkName the ID to run.
+ * @param checkId the ID to run.
  * @param scope the folder path, '' for the root.
  * @param options the message file or the exact push input.
  * @param options.push the hook input that the check read.
@@ -114,15 +114,15 @@ export function buildRunReport(run: FinishedRun): RunReport {
  * @param options.staged whether the finding came from the index.
  * @returns the command line.
  */
-export function formatReproduceCommand(checkName: string, scope: string, options: ReproduceOptions): string {
+export function formatReproduceCommand(checkId: string, scope: string, options: ReproduceOptions): string {
     const { push, messageFile, staged } = options;
     if (push !== undefined) {
         const remote = push.remote === undefined ? '' : ` -- ${quoteArgument(push.remote)}`;
-        return `printf '%s' ${quoteArgument(push.stdin)} | gspot check --hook pre-push --only ${quoteArgument(checkName)}${remote}`;
+        return `printf '%s' ${quoteArgument(push.stdin)} | gspot check --hook pre-push --only ${quoteArgument(checkId)}${remote}`;
     }
     const parts = ['gspot check'];
     if (scope !== '' && messageFile === undefined) parts.push(quoteArgument(scope));
-    parts.push('--only', quoteArgument(checkName));
+    parts.push('--only', quoteArgument(checkId));
     if (messageFile !== undefined) parts.push('--hook', 'commit-msg', '--', quoteArgument(messageFile));
     if (staged) parts.push('--staged');
     return parts.join(' ');

@@ -11,11 +11,11 @@ import { getSettingTable, getSettingValue, listEffectiveSettings } from '#cli/se
 
 import type {
     Scope,
-    ScopeView,
-    KnownSettings,
+    ScopeValues,
     ScopeSettings,
+    KnownSettings,
     EffectiveSetting,
-    ConfigurationSelection,
+    SelectedConfigurations,
 } from '#cli/types/settings/inheritance.ts';
 
 /**
@@ -26,34 +26,34 @@ import type {
  *
  * @returns the scope, or undefined at the root.
  */
-export function findParentSelection(scopes: Scope[], path: string): Scope | undefined {
+export function findParentScope(scopes: Scope[], path: string): Scope | undefined {
     return scopes
-        .filter(({ scope }) => scope.path !== path && isInScope(path, scope.path))
-        .toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path))
+        .filter(({ folder }) => folder.path !== path && isInScope(path, folder.path))
+        .toSorted((left, right) => compareScopeDepth(left.folder.path, right.folder.path))
         .at(-1);
 }
 
 /**
  * Select the manifests of the root and each parent scope, each once, in order.
  *
- * @param settings the written selections.
- * @param settings.configurations the root choices.
- * @param settings.scopes each folder with its written choices.
- * @param settings.removed_configurations the names that you removed.
+ * @param selected the written selections.
+ * @param selected.configurations the root choices.
+ * @param selected.scopes each folder with its written choices.
+ * @param selected.removed_configurations the names that you removed.
  * @param scope the folder to select for.
  * @param configurations every configuration manifest.
  * @returns the manifests in order.
  */
 export function selectForScope(
-    settings: ConfigurationSelection,
+    selected: SelectedConfigurations,
     scope: string,
     configurations: Map<string, Configuration>,
 ): Configuration[] {
     const automatic = listAutomaticConfigurations(configurations);
     const choices = new Set<string>();
     const tables = [
-        settings,
-        ...Object.entries(settings.scopes)
+        selected,
+        ...Object.entries(selected.scopes)
             .filter(([ancestor]) => isInScope(scope, ancestor))
             .toSorted(([left], [right]) => compareScopeDepth(left, right))
             .map(([, entry]) => entry),
@@ -65,50 +65,50 @@ export function selectForScope(
     return selectConfigurations([...choices, ...automatic], configurations);
 }
 
-function listNamingVariants(known: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
+function listNamingVariants(knownSettings: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
     return SETTING_LANGUAGES.flatMap((language) =>
         Object.keys(namingCategorySchema.shape).flatMap((field) => [
             `naming.${language}.${field}`,
             ...NAMING_LANGUAGE_CATEGORIES[language].map((category) => `naming.${language}.${category}.${field}`),
         ]),
     )
-        .filter((key) => !known.settings.has(key))
-        .map((key) => getSettingValue(known, settings, key, scope))
+        .filter((key) => !knownSettings.settings.has(key))
+        .map((key) => getSettingValue(knownSettings, settings, key, scope))
         .filter((row) => row !== undefined);
 }
 
-function listLimitVariants(known: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
-    return [...known.settings.values()]
+function listLimitVariants(knownSettings: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
+    return [...knownSettings.settings.values()]
         .filter((setting) => setting.name.startsWith('limits.') && setting.type === 'number')
         .flatMap((setting) =>
             (setting.languages ?? []).map(
                 (language) => `limits.${language}.${setting.name.slice(setting.name.lastIndexOf('.') + 1)}`,
             ),
         )
-        .filter((key) => !known.settings.has(key))
-        .map((key) => getSettingValue(known, settings, key, scope))
+        .filter((key) => !knownSettings.settings.has(key))
+        .map((key) => getSettingValue(knownSettings, settings, key, scope))
         .filter((row) => row !== undefined);
 }
 
 /**
  * Build the merged view of a scope from the known settings, the written settings, and the configurations of the scope.
  *
- * @param known the declarations and defaults of the selection.
+ * @param knownSettings the declarations and defaults of the selection.
  * @param settings the written root values and scoped overrides.
- * @param selected the manifests of the scope.
+ * @param configurations the manifests of the scope.
  * @param scope the folder, '' for the root.
  * @returns the view the templates read.
  */
-export function buildScopeView(
-    known: KnownSettings,
+export function buildScopeSettings(
+    knownSettings: KnownSettings,
     settings: Settings,
-    selected: Configuration[],
+    configurations: Configuration[],
     scope: string,
-): ScopeView {
-    const { settings: entries, values, test_files: testFiles } = buildScopeSettings(known, settings, scope);
+): ScopeSettings {
+    const { settings: entries, values, test_files: testFiles } = buildScopeValues(knownSettings, settings, scope);
     const ignores = settings.ignore.map((entry) => ({ ...entry, paths: entry.paths ?? [] }));
     return {
-        configurations: selected.map((configuration) => configuration.name),
+        configurations: configurations.map((configuration) => configuration.name),
         test_files: testFiles,
         settings: entries,
         values,
@@ -119,12 +119,15 @@ export function buildScopeView(
 /**
  * Read one validated table from the scope's merged values.
  *
- * @param view the merged scope data.
+ * @param scopeSettings the merged scope data.
  * @param name the table's dotted name.
  * @returns the requested table.
  */
-export function getTable<Name extends keyof TableValues>(view: ScopeView, name: Name): TableSettings<Name> {
-    const value = view.values[name];
+export function getTable<Name extends keyof TableValues>(
+    scopeSettings: ScopeSettings,
+    name: Name,
+): TableSettings<Name> {
+    const value = scopeSettings.values[name];
     if (value === undefined) throw new Error(`The selected scope has no ${name} settings.`);
     return value;
 }
@@ -132,13 +135,15 @@ export function getTable<Name extends keyof TableValues>(view: ScopeView, name: 
 /**
  * Read a language's limit, falling back to the scope's general limit.
  *
- * @param view the merged scope data.
+ * @param scopeSettings the merged scope data.
  * @param key the limit name.
  * @param language the language, if the check reads a language-specific value.
  * @returns the numeric limit.
  */
-export function getLimit(view: ScopeView, key: string, language?: string): number {
-    const value = getValueAt(view.values.limits, [language ?? '', key]) ?? getValueAt(view.values.limits, [key]);
+export function getLimit(scopeSettings: ScopeSettings, key: string, language?: string): number {
+    const value =
+        getValueAt(scopeSettings.values.limits, [language ?? '', key]) ??
+        getValueAt(scopeSettings.values.limits, [key]);
     if (typeof value !== 'number')
         throw new Error(
             `The selected scope has no ${[language, key].filter((part) => part !== undefined).join('.')} limit.`,
@@ -149,25 +154,25 @@ export function getLimit(view: ScopeView, key: string, language?: string): numbe
 /**
  * List the written ignores that apply to a check or to every check.
  *
- * @param view the merged scope data.
+ * @param scopeSettings the merged scope data.
  * @param check the check name.
  * @returns the matching ignores with normalized paths.
  */
-export function listIgnores(view: ScopeView, check: string): ScopeView['ignores'] {
-    return view.ignores.filter((entry) => entry.check === check || entry.check === undefined);
+export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeSettings['ignores'] {
+    return scopeSettings.ignores.filter((entry) => entry.check === check || entry.check === undefined);
 }
 
 /**
  * List the lint rules disabled throughout the selected scope.
  *
- * @param selection the scope and its merged data.
+ * @param scope the scope and its merged data.
  * @param check the check name.
  * @returns the disabled rule names.
  */
-export function listIgnoredRules(selection: Scope, check: string): string[] {
-    return selection.view.ignores
+export function listIgnoredRules(scope: Scope, check: string): string[] {
+    return scope.settings.ignores
         .filter((entry) => entry.check === check)
-        .filter((entry) => entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path))
+        .filter((entry) => entry.paths.length === 0 || isScopeCovered(entry.paths, scope.folder.path))
         .map((entry) => entry.rule)
         .filter((rule) => rule !== undefined);
 }
@@ -175,19 +180,19 @@ export function listIgnoredRules(selection: Scope, check: string): string[] {
 /**
  * Resolve the known settings once into validated table values and numeric limits.
  *
- * @param known the declarations and defaults.
+ * @param knownSettings the declarations and defaults.
  * @param settings the written gspot.toml.
  * @param scope the folder to resolve for.
  * @returns typed execution values without adding defaults to written tables.
  */
-function buildScopeSettings(known: KnownSettings, settings: Settings, scope: string): ScopeSettings {
-    const listed = listEffectiveSettings(known, settings, scope);
+function buildScopeValues(knownSettings: KnownSettings, settings: Settings, scope: string): ScopeValues {
+    const listed = listEffectiveSettings(knownSettings, settings, scope);
     const entries = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
     fillTableValues(namespaces, listed);
-    const variants = listNamingVariants(known, settings, scope);
+    const variants = listNamingVariants(knownSettings, settings, scope);
     fillTableValues(namespaces, variants);
-    fillTableValues(namespaces, listLimitVariants(known, settings, scope));
+    fillTableValues(namespaces, listLimitVariants(knownSettings, settings, scope));
     return {
         settings: entries,
         values: tableValuesSchema.parse(namespaces),
@@ -231,8 +236,8 @@ function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting
  * @param scopes the selection of each scope, the root among them.
  * @returns the selection of the scope with an empty path.
  */
-export function findRootSelection(scopes: readonly Scope[]): Scope {
-    const root = scopes.find((selection) => selection.scope.path === '');
+export function findRootScope(scopes: readonly Scope[]): Scope {
+    const root = scopes.find((scope) => scope.folder.path === '');
     if (root === undefined) throw new Error('The scopes hold no repository root.');
     return root;
 }

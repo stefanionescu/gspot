@@ -33,7 +33,7 @@ test('an unexpected error during install prints the internal error once and chan
     expect(failed.code).toBe(2);
     expect(failed.stderr).toBe('');
     expect(JSON.parse(failed.stdout)).toStrictEqual({
-        error: 'failure',
+        error: 'unexpected',
         message,
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);

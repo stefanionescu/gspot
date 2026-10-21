@@ -1,7 +1,7 @@
 import { formatCount } from '#cli/system/text.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { isRecord, stripUndefined } from '#cli/system/tables.ts';
+import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import type { IgnoreRemoval } from '#cli/types/commands/unignore.ts';
@@ -16,7 +16,7 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
     const entries = ignores.map((entry) => ({
         entry,
         matching:
-            isRecord(entry) &&
+            isTable(entry) &&
             entry['check'] === options.check &&
             (options.rule === undefined || entry['rule'] === options.rule),
     }));

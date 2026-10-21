@@ -2,10 +2,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { join, relative, normalize } from 'node:path';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { type SiteBuild } from '#cli/types/checks/site.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
@@ -17,9 +17,9 @@ import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 const SITE_BUILDS = { create: () => new Map<string, Promise<SiteBuild>>() };
 
 async function runSiteBuild(session: Session, planned: PlannedCheck, copyRoot: string): Promise<SiteBuild> {
-    const site = getTable(planned.selection.view, 'site');
+    const site = getTable(planned.scope.settings, 'site');
     const folderPath = site['build_folder'];
-    const cwd = join(copyRoot, planned.selection.scope.path);
+    const cwd = join(copyRoot, planned.scope.folder.path);
     const command = site['build_command'];
     const result = await runCheckTool(session, planned, command, { cwd });
     const folder = join(copyRoot, folderPath);
@@ -39,7 +39,7 @@ async function runSiteBuild(session: Session, planned: PlannedCheck, copyRoot: s
  * @returns the build, shared by every caller.
  */
 function getSiteBuild(session: Session, planned: PlannedCheck): Promise<SiteBuild> {
-    const key = join(session.root, planned.selection.scope.path);
+    const key = join(session.root, planned.scope.folder.path);
     const scopeBuilds = getCachedValue(session.reads, SITE_BUILDS);
     const held = scopeBuilds.get(key);
     if (held !== undefined) return held;
@@ -83,8 +83,8 @@ export function listBuiltFiles(folder: string): string[] {
  * @param path the file path inside the build folder.
  * @returns the repository-relative path.
  */
-export function buildRepositoryPath(planned: Pick<PlannedCheck, 'selection'>, path: string): string {
-    return `${getTable(planned.selection.view, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
+export function buildRepositoryPath(planned: Pick<PlannedCheck, 'scope'>, path: string): string {
+    return `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
 }
 
 /**

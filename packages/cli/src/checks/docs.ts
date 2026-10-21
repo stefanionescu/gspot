@@ -13,12 +13,12 @@ import { LEADING_DOT_SLASH } from '#cli/config/runs/output.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { MISE_FILES } from '#cli/config/checks/dependencies.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/inspection.ts';
-import { findScope, joinScope } from '#cli/repository/scopes.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import type { PathIndex, TaskNames } from '#cli/types/checks/docs.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { joinScope, findScopeFolder } from '#cli/repository/scopes.ts';
 import { buildGitignoreTest } from '#cli/repository/files/gitignore.ts';
 import { readCachedPackageJson } from '#cli/repository/dependency-files.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
@@ -46,13 +46,13 @@ import {
 
 function listGeneratorPaths(planned: PlannedCheck): string[] {
     const paths: string[] = [];
-    const generatorOutputs = planned.selection.selected.flatMap((configuration) =>
+    const generatorOutputs = planned.scope.configurations.flatMap((configuration) =>
         configuration.checks.flatMap((check) => check.generator_outputs ?? []),
     );
     for (const output of generatorOutputs) {
         if (output.kind === 'pattern') continue;
         const path = output.path.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-            const value = planned.selection.view.settings[name];
+            const value = planned.scope.settings.settings[name];
             return typeof value === 'string' ? value : '';
         });
         if (path !== '') paths.push(path);
@@ -63,13 +63,13 @@ function listGeneratorPaths(planned: PlannedCheck): string[] {
 function listKnownPaths(session: Session, planned: PlannedCheck): Set<string> {
     const known = includeParentFolders(session.repository.files.map((file) => file.path));
     for (const path of includeParentFolders([...listGeneratedPaths(session.repository.files)])) known.add(path);
-    for (const toolFile of planned.selection.selected.flatMap((configuration) => configuration.toolFiles))
+    for (const toolFile of planned.scope.configurations.flatMap((configuration) => configuration.toolFiles))
         known.add(toolFile.target);
     for (const path of listGeneratorPaths(planned)) known.add(path);
     // A check ID such as postgres/migration-order looks like a path, so count it as known.
     for (const check of session.configurations.values().flatMap((configuration) => configuration.checks))
-        known.add(check.name);
-    for (const check of Object.values(session.settingsFile.settings.commandChecks)) known.add(check.name);
+        known.add(check.id);
+    for (const check of Object.values(session.settingsFile.settings.commandChecks)) known.add(check.id);
     return known;
 }
 
@@ -216,7 +216,7 @@ export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): 
         session.reads,
         session.repository.files.map((file) => file.path),
     );
-    const projects = Map.groupBy(files, (file) => findScope(file.path, session.repository.scopeFolders).path);
+    const projects = Map.groupBy(files, (file) => findScopeFolder(file.path, session.repository.scopeFolders).path);
     return [...projects].flatMap(([scope, sources]) => {
         const index: PathIndex = { known, isIgnored, tasks: readTaskNames(session, scope) };
         return sources.flatMap((file) => {
@@ -236,18 +236,18 @@ export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): 
 export function checkDocsRequiredFiles(session: Session, planned: PlannedCheck): Finding[] {
     const findings: Finding[] = [];
     const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));
-    const readme = joinScope(planned.selection.scope.path, README_FILE);
+    const readme = joinScope(planned.scope.folder.path, README_FILE);
     if (!repositoryPaths.has(readme))
         findings.push(
             buildFinding(
                 planned,
                 { file: readme },
                 'missing-readme',
-                `The scope ${planned.selection.scope.path === '' ? ROOT_SCOPE_LABEL : planned.selection.scope.path} has no README.md.`,
+                `The scope ${planned.scope.folder.path === '' ? ROOT_SCOPE_LABEL : planned.scope.folder.path} has no README.md.`,
             ),
         );
     if (
-        planned.selection.scope.path === '' &&
+        planned.scope.folder.path === '' &&
         ![...repositoryPaths].some((path) => !path.includes('/') && LICENSE_FILE.test(path))
     )
         findings.push(

@@ -22,17 +22,17 @@ import { THEME_SWITCH_LABELS } from '../../config/site.ts';
             const button = this.querySelector('button');
             if (button === null) throw new Error('The theme toggle has no button.');
             const root = document.documentElement;
-            const label = (): void => {
+            const updateLabel = (): void => {
                 const text = THEME_SWITCH_LABELS[root.dataset['theme'] === 'light' ? 'light' : 'dark'];
                 button.setAttribute('aria-label', text);
                 button.title = text;
             };
-            label();
+            updateLabel();
             button.addEventListener('click', () => {
                 const next = root.dataset['theme'] === 'light' ? 'dark' : 'light';
                 root.dataset['theme'] = next;
                 localStorage.setItem(THEME_STORAGE_KEY, next);
-                label();
+                updateLabel();
             });
         }
     }

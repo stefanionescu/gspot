@@ -32,7 +32,7 @@ function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]
 }
 
 // Compute the line and character column of a typo from the byte offset that typos reports.
-function computeTypoPosition(
+function getTypoPosition(
     root: string,
     path: string,
     entry: ReportedTypo,
@@ -90,7 +90,7 @@ export function parseTyposFindings(output: ToolOutput): Finding[] {
             output,
             entry,
             path,
-            computeTypoPosition(root, convertToPosixPath(relative(root, path)), entry, linesByPath),
+            getTypoPosition(root, convertToPosixPath(relative(root, path)), entry, linesByPath),
         );
     });
 }

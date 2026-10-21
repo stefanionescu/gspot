@@ -50,7 +50,7 @@ allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output.ts", "packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/types/repository/selection.ts", "packages/cli/src/types/settings/**"]
+paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output.ts", "packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/types/repository/detection.ts", "packages/cli/src/types/settings/**"]
 categories = ["properties"]
 cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."

@@ -13,8 +13,8 @@ import { parseTyposFindings } from '#cli/runs/output/typos.ts';
 import { parseSemgrepFindings } from '#cli/runs/output/semgrep.ts';
 import { FILE_GROUP, MISSING_PATH_CODES } from '#cli/config/runs/output.ts';
 import { parseMarkdownlintFindings } from '#cli/runs/output/markdownlint.ts';
+import type { CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/runs/output.ts';
 import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/runs/output/text.ts';
-import type { CheckOutput, OutputPaths, ParsingCheck, OutputDescriptor } from '#cli/types/runs/output.ts';
 
 /**
  * Resolve a path the way tools print it after they follow links.
@@ -70,7 +70,7 @@ export const outputFormats = {
     lines: { parse: parseLineFindings, namesFiles: () => false },
     regex: { parse: parseRegexFindings, namesFiles: (output) => (output.pattern ?? '').includes(FILE_GROUP) },
     grouped: { parse: parseGroupedFindings, namesFiles: (output) => (output.pattern ?? '').includes(FILE_GROUP) },
-} satisfies Record<CheckOutput['format'], OutputDescriptor>;
+} satisfies Record<CheckOutput['format'], OutputParser>;
 
 /**
  * Read the findings in the tool output, with every path relative to the root.
@@ -88,7 +88,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`);
     const findings = outputFormats[output.format].parse({
-        check: check.name,
+        check: check.id,
         help: check.help,
         output,
         stdout,

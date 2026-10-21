@@ -1,15 +1,15 @@
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { join, posix, relative } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { parseToolReport } from '#cli/parsers/json.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -26,16 +26,16 @@ import { denoLintReportSchema, supabaseProjectFileSchema } from '#cli/schemas/ch
 import {
     DENO_LOCATION,
     SHARED_PREFIX,
-    ADMIN_KEY_TAGS,
     FUNCTION_ENTRY,
-    ADMIN_KEY_NAMES,
     FILE_URL_PREFIX,
     DENO_CONFIG_FLAG,
     DENO_CONFIG_FILES,
     DENO_LINT_COMMAND,
     DENO_CHECK_COMMAND,
-    ADMIN_KEY_EXTENSIONS,
+    SERVICE_ROLE_KEY_TAGS,
     SUPABASE_PROJECT_FILE,
+    SERVICE_ROLE_KEY_NAMES,
+    SERVICE_ROLE_KEY_EXTENSIONS,
 } from '#cli/config/checks/supabase.ts';
 
 /**
@@ -84,7 +84,7 @@ function parseDenoCheckError(session: Session, planned: PlannedCheck, folder: st
  * @returns the parsed file, or undefined when no file exists or the TOML has a syntax error.
  */
 function readSupabaseProjectFile(session: Session, planned: PlannedCheck): SupabaseProjectFile | undefined {
-    const local = joinScope(planned.selection.scope.path, SUPABASE_PROJECT_FILE);
+    const local = joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE);
     const text = findCachedText(session.reads, local);
     if (text === undefined) return undefined;
     let value: Record<string, unknown>;
@@ -105,7 +105,7 @@ function readSupabaseProjectFile(session: Session, planned: PlannedCheck): Supab
  * @returns the entry file paths, repository-relative.
  */
 function listFunctionEntries(planned: PlannedCheck): string[] {
-    const base = getTable(planned.selection.view, 'supabase').functions_folder;
+    const base = getTable(planned.scope.settings, 'supabase').functions_folder;
     const entries = new Map<string, string>();
     for (const { path } of planned.files) {
         const folder = posix.dirname(path);
@@ -134,7 +134,7 @@ async function runDenoCommand(
         ...command.slice(-1),
     ];
     return await runCheckTool(session, planned, commandArguments, {
-        cwd: join(session.root, planned.selection.scope.path),
+        cwd: join(session.root, planned.scope.folder.path),
     });
 }
 
@@ -147,7 +147,7 @@ async function runDenoCommand(
  */
 export async function checkSupabaseStoragePolicies(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const projectFile = readSupabaseProjectFile(session, planned);
-    const at = { file: joinScope(planned.selection.scope.path, SUPABASE_PROJECT_FILE), line: 1 };
+    const at = { file: joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE), line: 1 };
     if (projectFile === undefined) return [];
     const migrations = await readParsedMigrations(session, planned);
     const policed = new Set<string>();
@@ -162,8 +162,8 @@ export async function checkSupabaseStoragePolicies(session: Session, planned: Pl
         );
     for (const fields of policies)
         walkSqlTree([fields.qual, fields.with_check], (key, node) => {
-            if (key !== 'A_Const' || !isRecord(node)) return;
-            const literal = isRecord(node['sval']) ? node['sval']['sval'] : undefined;
+            if (key !== 'A_Const' || !isTable(node)) return;
+            const literal = isTable(node['sval']) ? node['sval']['sval'] : undefined;
             if (typeof literal === 'string') policed.add(literal);
         });
     return (projectFile.storage?.buckets === undefined ? [] : Object.keys(projectFile.storage.buckets))
@@ -252,10 +252,10 @@ export async function checkSupabaseDenoCheck(session: Session, planned: PlannedC
  * @returns the findings.
  */
 export function checkServiceRoleKey(session: Session, planned: PlannedCheck): Finding[] {
-    const folder = getTable(planned.selection.view, 'supabase').functions_folder;
-    const tests = planned.selection.view.test_files;
+    const folder = getTable(planned.scope.settings, 'supabase').functions_folder;
+    const tests = planned.scope.settings.test_files;
     const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);
-    const extensions = [...listTaggedExtensions(...ADMIN_KEY_TAGS), ...ADMIN_KEY_EXTENSIONS];
+    const extensions = [...listTaggedExtensions(...SERVICE_ROLE_KEY_TAGS), ...SERVICE_ROLE_KEY_EXTENSIONS];
     const files = planned.files.filter(
         (file) =>
             file.kind === 'source' &&
@@ -266,10 +266,10 @@ export function checkServiceRoleKey(session: Session, planned: PlannedCheck): Fi
         readCachedText(session.reads, file.path)
             .split('\n')
             .flatMap((text, index): Finding[] => {
-                if (ADMIN_KEY_NAMES.every((name) => !text.includes(name))) return [];
+                if (SERVICE_ROLE_KEY_NAMES.every((name) => !text.includes(name))) return [];
                 const message =
                     'This file names a privileged Supabase key, which bypasses row level security, outside the paths allowed to hold it.';
-                return [buildFinding(planned, { file: file.path, line: index + 1 }, 'admin-key', message)];
+                return [buildFinding(planned, { file: file.path, line: index + 1 }, 'service-role-key', message)];
             }),
     );
 }

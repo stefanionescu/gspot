@@ -1,5 +1,5 @@
 /** Source path patterns, which must match a file, and output paths, which need not. */
-export const UNUSED_PATH_CASES = [
+export const UNMATCHED_PATH_CASES = [
     {
         name: 'primitive lists and nested record paths',
         files: { 'scripts/kept.sh': 'echo kept\n', 'src/kept.txt': 'kept\n' },
@@ -57,7 +57,7 @@ export const UNUSED_PATH_CASES = [
         settings: {
             configurations: ['docs', 'structure', 'nextjs'],
             command_check: [
-                { name: 'reports/collect', command: ['echo'], stage: 'commit', paths: ['.reports/command.json'] },
+                { id: 'reports/collect', command: ['echo'], stage: 'commit', paths: ['.reports/command.json'] },
             ],
             ignore: [
                 {

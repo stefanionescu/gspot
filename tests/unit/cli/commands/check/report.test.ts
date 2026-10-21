@@ -221,13 +221,13 @@ test('NO_COLOR prints findings without color on terminal streams', async () => {
         });
         Object.defineProperty(stream, 'isTTY', { value: true, configurable: true });
     }
-    const result = await runGspot(sandbox.path, ['check', '--only', 'gspot/unmatched-patterns'], {
+    const result = await runGspot(sandbox.path, ['check', '--only', 'gspot/unmatched-paths'], {
         NO_COLOR: '1',
         CI: '',
     });
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stdout).toContain('absent/** under [[ignore]] matches no tracked file or folder.');
-    expect(result.stdout).toContain('gspot/unmatched-patterns');
+    expect(result.stdout).toContain('gspot/unmatched-paths');
     expect(result.stdout).not.toContain('\u001B[');
     const stderr = result.stderr.replaceAll(PROGRESS_CLEAR, '');
     expect(stderr).toBe(stripVTControlCharacters(stderr));

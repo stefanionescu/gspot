@@ -10,7 +10,7 @@ import { TAPLO_FORMATTING } from '#cli/config/generation/settings/builders/taplo
  * @returns the Taplo formatting settings with automatic schema lookup disabled.
  */
 export function buildTaploFile(planned: PlannedToolFile): string {
-    const { format } = planned.selection.view.values;
+    const { format } = planned.scope.settings.values;
 
     return stringifyToml(
         {

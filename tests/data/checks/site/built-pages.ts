@@ -33,7 +33,7 @@ kilobytes = 10
 
 const SELECTOR_FINDING = {
     file: 'dist/style.css',
-    rule: 'dead-selector',
+    rule: 'unused-selector',
     line: 1,
     message: 'No built page uses the selector .unused.',
 } as const;
@@ -155,7 +155,7 @@ export const OUTPUT_CASES = [
             SELECTOR_FINDING,
             {
                 file: 'dist/style.css',
-                rule: 'dead-selector',
+                rule: 'unused-selector',
                 line: 1,
                 message: 'No built page uses the selector .unused:focus-visible.',
             },

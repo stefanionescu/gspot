@@ -25,7 +25,7 @@ test('a linked .gspot folder stops check, and nothing outside changes', async ()
     await using folder = await testdir({
         'project/source.txt': 'input\n',
         'project/gspot.toml': buildSandboxSettings([], {
-            tables: `[[command_check]]\nname = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'console.log("Exact finding"); process.exitCode=1'])}\noutput = { format = "lines" }\n`,
+            tables: `[[command_check]]\nid = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'console.log("Exact finding"); process.exitCode=1'])}\noutput = { format = "lines" }\n`,
         }),
         'outside/sentinel': 'authored outside\n',
     });

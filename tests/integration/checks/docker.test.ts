@@ -25,8 +25,8 @@ import {
 } from '#tests/data/checks/docker.ts';
 
 // Each tag gets its own payload, so a clean image never depends on the loop order.
-async function importImage(root: string, tag: string, payload: string | Buffer): Promise<void> {
-    await writeFile(join(root, 'payload.pem'), payload);
+async function importImage(root: string, tag: string, contents: string | Buffer): Promise<void> {
+    await writeFile(join(root, 'payload.pem'), contents);
     const archive = runCommandBlocking(['tar', '-cf', 'payload.tar', 'payload.pem'], { cwd: root });
     if (archive.code !== 0) throw new Error(archive.stderr);
     const imported = runCommandBlocking(['docker', 'import', 'payload.tar', tag], {

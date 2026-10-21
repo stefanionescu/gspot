@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import type { NamedCategory } from '#cli/types/settings/tables.ts';
 import { addIdentifier } from '#cli/checks/naming/languages/identifier.ts';
-import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
+import type { Identifier, FileIdentifiers } from '#cli/types/checks/naming.ts';
 
 import {
     PYTHON_CONSTANT,
@@ -20,11 +20,11 @@ function getHolderType(node: Node): string {
     return block?.type === 'block' ? (block.parent?.type ?? 'module') : 'module';
 }
 
-function addClasses(sink: ExtractSink, root: Node): void {
+function addClasses(found: FileIdentifiers, root: Node): void {
     for (const node of root.descendantsOfType('class_definition')) {
         const name = node.childForFieldName('name');
         const bases = node.childForFieldName('superclasses')?.text ?? '';
-        if (name !== null) addIdentifier(sink, name, PYTHON_EXCEPTION_BASE.test(bases) ? 'exceptions' : 'classes');
+        if (name !== null) addIdentifier(found, name, PYTHON_EXCEPTION_BASE.test(bases) ? 'exceptions' : 'classes');
     }
 }
 
@@ -40,22 +40,22 @@ function findParameterName(parameter: Node): Node | null {
     return unwrapSplat(inner ?? parameter.namedChildren[0] ?? null);
 }
 
-function addParameters(sink: ExtractSink, definition: Node): void {
+function addParameters(found: FileIdentifiers, definition: Node): void {
     const parameters = definition.childForFieldName('parameters')?.namedChildren ?? [];
     const names = parameters
         .filter((parameter) => PYTHON_PARAMETER_NODES.has(parameter.type) || PYTHON_SPLAT_NODES.has(parameter.type))
         .map((parameter) => findParameterName(parameter));
     for (const name of names)
         if (name?.type === 'identifier' && !PYTHON_IMPLICIT_PARAMETERS.has(name.text))
-            addIdentifier(sink, name, 'parameters');
+            addIdentifier(found, name, 'parameters');
 }
 
-function addFunctions(sink: ExtractSink, root: Node): void {
+function addFunctions(found: FileIdentifiers, root: Node): void {
     for (const node of root.descendantsOfType('function_definition')) {
-        addParameters(sink, node);
+        addParameters(found, node);
         const name = node.childForFieldName('name');
         if (name !== null)
-            addIdentifier(sink, name, getHolderType(node) === 'class_definition' ? 'methods' : 'functions');
+            addIdentifier(found, name, getHolderType(node) === 'class_definition' ? 'methods' : 'functions');
     }
 }
 
@@ -90,17 +90,17 @@ function isTypeAlias(node: Node): boolean {
     return isTypeForm(node.childForFieldName('right'));
 }
 
-function addAssignment(sink: ExtractSink, node: Node): void {
+function addAssignment(found: FileIdentifiers, node: Node): void {
     const left = node.childForFieldName('left');
     if (left?.type !== 'identifier') return;
-    addIdentifier(sink, left, isTypeAlias(node) ? 'type_aliases' : classifyDeclaredName(node, left.text));
+    addIdentifier(found, left, isTypeAlias(node) ? 'type_aliases' : classifyDeclaredName(node, left.text));
 }
 
-function addAssignments(sink: ExtractSink, root: Node): void {
-    for (const node of root.descendantsOfType('assignment')) addAssignment(sink, node);
+function addAssignments(found: FileIdentifiers, root: Node): void {
+    for (const node of root.descendantsOfType('assignment')) addAssignment(found, node);
     for (const node of root.descendantsOfType('type_alias_statement')) {
         const left = node.childForFieldName('left') ?? node.namedChildren[0] ?? null;
-        if (left !== null) addIdentifier(sink, left, 'type_aliases');
+        if (left !== null) addIdentifier(found, left, 'type_aliases');
     }
 }
 
@@ -112,9 +112,9 @@ function addAssignments(sink: ExtractSink, root: Node): void {
  * @returns the declared names.
  */
 export function extractPythonIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
-    const sink: ExtractSink = { file, language: 'python', out: [] };
-    addClasses(sink, syntaxRoot);
-    addFunctions(sink, syntaxRoot);
-    addAssignments(sink, syntaxRoot);
-    return sink.out;
+    const found: FileIdentifiers = { file, language: 'python', out: [] };
+    addClasses(found, syntaxRoot);
+    addFunctions(found, syntaxRoot);
+    addAssignments(found, syntaxRoot);
+    return found.out;
 }

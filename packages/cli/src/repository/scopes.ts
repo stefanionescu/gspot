@@ -85,7 +85,7 @@ export function joinScope(scope: string, path: string): string {
  * @param configurations the configurations with project files and npm tools.
  * @returns project scopes in path order.
  */
-export function findScopes(
+export function findScopeFolders(
     files: TrackedFile[],
     dependencyFiles: DependencyFile[],
     configurations: Iterable<Configuration>,
@@ -142,13 +142,13 @@ export function findProjectFolder(path: string, pattern: string): string | undef
  * Find the scope of a file: the deepest scope that contains it, else the root.
  *
  * @param path the file to place.
- * @param scopes the candidates to search.
+ * @param scopeFolders the candidates to search.
  * @returns the deepest matching scope, or the root.
  */
-export function findScope(path: string, scopes: ScopeFolder[]): ScopeFolder {
-    const root: ScopeFolder = scopes.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
+export function findScopeFolder(path: string, scopeFolders: ScopeFolder[]): ScopeFolder {
+    const root: ScopeFolder = scopeFolders.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
     return (
-        scopes
+        scopeFolders
             .filter((scope) => scope.path !== '' && isInScope(path, scope.path))
             .toSorted((left, right) => right.path.length - left.path.length)[0] ?? root
     );

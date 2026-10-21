@@ -48,5 +48,5 @@ export type ToolProjectFiles = {
 export type IndexedPythonSandbox = AsyncDisposable & {
     rootProject: Buffer<ArrayBuffer>;
     rootConfiguration: Buffer<ArrayBuffer>;
-    inputs: ToolProjectFiles;
+    projectFiles: ToolProjectFiles;
 };

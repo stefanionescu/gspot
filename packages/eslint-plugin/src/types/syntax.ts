@@ -14,7 +14,7 @@ export type ImportSource =
     | TSESTree.ExportAllDeclaration
     | TSESTree.ExportNamedDeclaration
     | TSESTree.ImportExpression;
-export type ContentCheck = (node: TSESTree.Node | null) => boolean;
+export type NontrivialCheck = (node: TSESTree.Node | null) => boolean;
 
 export type TypeServices = {
     checker: ts.TypeChecker;

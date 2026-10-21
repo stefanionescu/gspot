@@ -1,11 +1,11 @@
 // Finds and reads repository roots, file attributes, dependency files, and scopes.
 import { statSync, realpathSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
-import { findScopes } from '#cli/repository/scopes.ts';
 import { join, posix, dirname, resolve } from 'node:path';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { stripBlock } from '#cli/parsers/managed-blocks.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { findScopeFolders } from '#cli/repository/scopes.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { detectSwiftTags } from '#cli/repository/swift-tags.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
@@ -87,7 +87,7 @@ export async function readRepository(
         tracked.push(file);
     }
     const dependencyFiles = await readDependencyFiles(reads, tracked);
-    const discovered = findScopes(tracked, dependencyFiles, configurations.values());
+    const discovered = findScopeFolders(tracked, dependencyFiles, configurations.values());
     const written: ScopeFolder[] = [
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes

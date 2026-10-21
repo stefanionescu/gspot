@@ -12,6 +12,14 @@ import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/set
 import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
 import {
+    SCHEMA_URL,
+    SETTINGS_EXAMPLES,
+    INTERNAL_FACT_KEYS,
+    TABLE_DESCRIPTIONS,
+    JSON_SCHEMA_DIALECT,
+    NAMED_FINDING_CHECKS,
+} from '#cli/config/settings/schema.ts';
+import {
     formatSchema,
     relativePath,
     nonemptyPaths,
@@ -20,15 +28,6 @@ import {
     allowReasonedValue,
     unwrapSettingSchema,
 } from '#cli/schemas/settings/parts.ts';
-import {
-    SCHEMA_URL,
-    ALLOWED_WORD,
-    SETTINGS_EXAMPLES,
-    INTERNAL_FACT_KEYS,
-    TABLE_DESCRIPTIONS,
-    JSON_SCHEMA_DIALECT,
-    NAMED_FINDING_CHECKS,
-} from '#cli/config/settings/schema.ts';
 
 const ignoreSchema = z
     .strictObject({
@@ -63,7 +62,7 @@ const ignoreSchema = z
     });
 
 const commandCheckSchema = z.strictObject({
-    name: z.string().min(1).describe(SETTING_FACTS['command_check.name'].description),
+    id: z.string().min(1).describe(SETTING_FACTS['command_check.id'].description),
     command: commandCheckFields.command.unwrap().meta(SETTING_FACTS['command_check.command']),
     paths: nonemptyPaths.meta(SETTING_FACTS['command_check.paths']),
     outputs: relativePaths.optional().describe(SETTING_FACTS['command_check.outputs'].description),
@@ -158,10 +157,6 @@ export const scopeSchema = z.strictObject({
 /** Top-level gspot.toml keys shown by gspot list settings and the settings reference. */
 export const rootSettingSchemas = {
     level: levelSchema.default(SETTING_FACTS['level'].default).meta(SETTING_FACTS['level']),
-    allowed_words: z
-        .record(z.string().regex(ALLOWED_WORD, 'Use a plain word, without a regular expression pattern.'), z.string())
-        .default(SETTING_FACTS['allowed_words'].default)
-        .meta(SETTING_FACTS['allowed_words']),
     tool_timeout_seconds: z
         .number()
         .int()
@@ -200,8 +195,8 @@ export const settingsSchema = z
             },
             {
                 key: 'command_check',
-                field: 'name',
-                names: (written.command_check ?? []).map((entry) => entry.name),
+                field: 'id',
+                names: (written.command_check ?? []).map((entry) => entry.id),
             },
         ];
         for (const { key, field, names } of records) {

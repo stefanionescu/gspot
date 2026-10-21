@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { createEslint, generateFile, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, generateFile, listLintFindings } from '#tests/setup/tool-files.ts';
 import { HOST_MODULE, LOCAL_PLUGIN, LOCAL_PLUGIN_TABLES } from '#tests/data/generation/externals.ts';
 
 test('javascript.externals reach the import boundaries rule and the Knip unresolved imports', async () => {
@@ -45,7 +45,7 @@ test('tools.eslint.plugins loads your plugin by its path and turns its rules on 
 
     commitAll(sandbox.path);
     const eslint = await createEslint(sandbox.path);
-    expect(await collectLintFindings(eslint, sandbox.path, ['source.js'], ['local/no-forbidden'])).toStrictEqual([
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['local/no-forbidden'])).toStrictEqual([
         { file: 'source.js', rule: 'local/no-forbidden', line: 1 },
     ]);
     await writeFile(

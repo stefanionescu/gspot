@@ -33,7 +33,7 @@ export const RUNTIME_EMBEDS = [
 export const ALL_LEVEL_SAFETY_PATTERNS = [
     [
         /\|\|\s*true(?:\s|$)/u,
-        'blanket-success',
+        'ignored-failure',
         '`|| true` hides the failure of this command. Handle the failure, or let it stop the script.',
     ],
 ] as const;
@@ -87,9 +87,9 @@ export const BASH_DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '#
 
 export const COUNT_LIMITS = [
     { limit: 'function_lines', rule: 'function-lines', noun: 'code lines' },
-    { limit: 'function_branches', rule: 'function_branches', noun: 'branches' },
-    { limit: 'block_nesting', rule: 'block_nesting', noun: 'levels of nesting' },
-    { limit: 'function_assignments', rule: 'function_assignments', noun: 'assignments' },
+    { limit: 'function_branches', rule: 'function-branches', noun: 'branches' },
+    { limit: 'block_nesting', rule: 'block-nesting', noun: 'levels of nesting' },
+    { limit: 'function_assignments', rule: 'function-assignments', noun: 'assignments' },
 ] as const;
 
 /** A comment that directs ShellCheck, which must sit on the line it covers. */

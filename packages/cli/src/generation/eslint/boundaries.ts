@@ -133,23 +133,25 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
     } = planned;
     const importRules = settings.import_rule;
     const codeLanguages: readonly string[] = CODE_LANGUAGES;
-    const javascriptScopes = scopes.filter(({ selected }) =>
-        selected.some((configuration) => codeLanguages.includes(configuration.name)),
+    const javascriptScopes = scopes.filter(({ configurations }) =>
+        configurations.some((configuration) => codeLanguages.includes(configuration.name)),
     );
     const enforceTests = settings.level === 'all' && javascriptScopes.length > 0;
-    const trpcScopes = scopes.filter(({ selected }) =>
-        selected.some((configuration) => configuration.name === TRPC_CONFIGURATION),
+    const trpcScopes = scopes.filter(({ configurations }) =>
+        configurations.some((configuration) => configuration.name === TRPC_CONFIGURATION),
     );
-    const serverFiles = [...new Set(trpcScopes.flatMap(({ view }) => view.values.trpc?.server_files ?? []))];
+    const serverFiles = [
+        ...new Set(trpcScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.values.trpc?.server_files ?? [])),
+    ];
     // Other files of a tRPC scope import the server files only as types.
     const trpcPaths =
         serverFiles.length === 0
             ? []
-            : trpcScopes.map(({ scope }) =>
-                  joinScope(scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
+            : trpcScopes.map(({ folder }) =>
+                  joinScope(folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
               );
     if (importRules.length === 0 && !enforceTests && trpcPaths.length === 0) return [];
-    const tests = [...new Set(javascriptScopes.flatMap(({ view }) => view.test_files))];
+    const tests = [...new Set(javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.test_files))];
     const hasFixedPolicies = trpcPaths.length > 0 || enforceTests;
     const input = { importRules, tests, enforceTests, hasFixedPolicies, trpcPaths, serverFiles };
     return [

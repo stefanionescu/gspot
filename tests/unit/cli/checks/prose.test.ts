@@ -169,7 +169,7 @@ test.each([
     expect(await checkFindings(session.root, 'prose/vale')).toStrictEqual(
         findings.map((finding) => ({
             ...finding,
-            help: 'Rewrite the sentence the alert names, add a real name and its reason to the root allowed_words setting, or use `gspot ignore prose/vale --rule <rule> --reason "<why>"`.',
+            help: 'Rewrite the sentence the alert names, add a real name and its reason to the `spelling.allowed_words` setting, or use `gspot ignore prose/vale --rule <rule> --reason "<why>"`.',
         })),
     );
 });

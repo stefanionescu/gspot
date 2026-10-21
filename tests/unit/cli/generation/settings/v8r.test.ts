@@ -9,7 +9,7 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 test.each([true, false])('the v8r catalog lists your custom schemas: %s', async (hasSchemas) => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['files'], {
+        'gspot.toml': buildSandboxSettings(['data-files'], {
             level: 'all',
             rules: true,
             tables: stringify({
@@ -31,7 +31,7 @@ test.each([true, false])('the v8r catalog lists your custom schemas: %s', async 
     });
 
     const output = generate(await openSession(sandbox.path));
-    const text = output.files.find((file) => file.path === '.gspot/configurations/general/files/v8r.yml')!.content;
+    const text = output.files.find((file) => file.path === '.gspot/configurations/general/data-files/v8r.yml')!.content;
     const parsed: unknown = parse(text);
     if (hasSchemas)
         expect(parsed).toMatchObject({

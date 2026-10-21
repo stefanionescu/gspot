@@ -10,12 +10,12 @@ import { writeYarnSettings } from '#cli/install/npm/yarn.ts';
 import { rmSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import { REINSTALL_HINT } from '#cli/config/install/credentials.ts';
+import { REINSTALL_HELP } from '#cli/config/install/credentials.ts';
 import { prepareReleaseAge } from '#cli/install/npm/release-age.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { parseToolPackageJson } from '#cli/install/npm/tool-project.ts';
-import { getTable, findRootSelection } from '#cli/settings/scope-view.ts';
+import { getTable, findRootScope } from '#cli/settings/scope-settings.ts';
 import { type NpmToolProject } from '#cli/types/install/tool-projects.ts';
 import type { PackageManager } from '#cli/types/repository/package-manager.ts';
 import { isLockfileCurrent, stripRegistryUrls } from '#cli/install/npm/lockfiles.ts';
@@ -63,7 +63,7 @@ async function createNpmLockfile(
     );
     if (which.sync(NODE_TOOL, { nothrow: true }) === null)
         throw new GspotError(
-            'installation',
+            'install',
             'node is required by the npm tool project. Install it before it creates its lockfile.',
         );
     using scratch = createTemporaryFolder();
@@ -74,11 +74,11 @@ async function createNpmLockfile(
     if (recorded !== undefined && isLockfileCurrent(packageManager.name, recorded, project.dependencies))
         writeFileSync(join(runFolder, project.lockfile), recorded);
     const lockfileArguments = selectPackageManagerArguments(packageManager).lockfile;
-    const days = getTable(findRootSelection(install.session.scopes).view, 'dependencies').min_release_age_days;
+    const days = getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days;
     // The hold goes where versions get chosen. A frozen install takes them from the lockfile, and npm ci ignores
     // min-release-age-exclude for lockfile entries without a URL.
     const run = await runPackageManager(install, {
-        runFolder: runFolder,
+        runFolder,
         packageManager,
         commandArguments: prepareReleaseAge(runFolder, lockfileArguments, packageManager, days),
         failure: 'lockfile resolution failed',
@@ -93,7 +93,7 @@ async function createNpmLockfile(
     const lockfile = readFileSync(join(runFolder, project.lockfile), 'utf8');
     if (!isLockfileCurrent(packageManager.name, lockfile, project.dependencies))
         throw new GspotError(
-            'installation',
+            'install',
             `${packageManager.name} produced a mismatched tool lockfile. Existing files were preserved.`,
         );
     return lockfile;
@@ -142,8 +142,8 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerCo
         const result = await runInstallStep(install, commandArguments, { cwd: runFolder, env });
         if (result.code !== 0) {
             throw new GspotError(
-                'installation',
-                `${packageManager.name} ${failure} (exit ${String(result.code)}). ${REINSTALL_HINT}.\n${redactInstallOutput(result, credentials)}`,
+                'install',
+                `${packageManager.name} ${failure} (exit ${String(result.code)}). ${REINSTALL_HELP}.\n${redactInstallOutput(result, credentials)}`,
             );
         }
         return { env, credentials };
@@ -248,7 +248,7 @@ export async function installNpmTools(install: ToolInstall): Promise<string> {
     owner.deleteTree(GSPOT_NODE_MODULES_PATH);
     const runFolder = join(root, DOT_GSPOT);
     await runPackageManager(install, {
-        runFolder: runFolder,
+        runFolder,
         packageManager,
         commandArguments: selectPackageManagerArguments(packageManager).install,
         failure: 'installation failed',

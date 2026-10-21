@@ -24,7 +24,7 @@ import {
     MALFORMED_TASK_FILES,
 } from '#tests/data/checks/docs.ts';
 
-async function collectDocsFindings(
+async function runMissingPathsCheck(
     files: Record<string, string>,
     options: { paths?: string[] } = {},
 ): Promise<readonly Finding[]> {
@@ -33,7 +33,7 @@ async function collectDocsFindings(
 }
 
 test('missing-paths: a path in an .mdx page that names no tracked file is reported', async () => {
-    const found = await collectDocsFindings(
+    const found = await runMissingPathsCheck(
         { 'docs/guide.mdx': MDX_GUIDE, 'docs/example.ts': '' },
         { paths: ['docs/guide.mdx'] },
     );
@@ -48,7 +48,7 @@ test('missing-paths: a path in an .mdx page that names no tracked file is report
 });
 
 test('missing-paths: wildcard examples are skipped; bold, italic and code paths are checked', async () => {
-    const found = await collectDocsFindings(
+    const found = await runMissingPathsCheck(
         {
             'a.md': 'Outputs use `reports/report.*` or `src/*.ts`.\nSee **src/missing.ts**, *src/absent.ts*, and `src/gone.ts`.\n',
             'src/here.ts': '',
@@ -64,7 +64,7 @@ test('missing-paths: wildcard examples are skipped; bold, italic and code paths 
 });
 
 test('missing-paths: gitignored paths and paths inside ignored folders count as present; others are reported', async () => {
-    const found = await collectDocsFindings(
+    const found = await runMissingPathsCheck(
         {
             'a.md': 'Build `output/report.json` and `app/cache`.\nSee `app/absent.ts`, `app/private.ts`, `.next/types/routes.d.ts`, and `src/gone.ts`.\n',
             '.gitignore': '/output/report.json\n.next/\n',
@@ -80,14 +80,12 @@ test('missing-paths: gitignored paths and paths inside ignored folders count as 
 });
 
 test('missing-paths: command check names count as present; unknown ones are reported', async () => {
-    const findings = await collectDocsFindings(
+    const findings = await runMissingPathsCheck(
         {
             'gspot.toml': buildSandboxSettings(['docs'], {
                 level: 'all',
                 tables: stringify({
-                    command_check: [
-                        { name: 'tests/coverage', command: ['true'], paths: ['tests/**'], stage: 'manual' },
-                    ],
+                    command_check: [{ id: 'tests/coverage', command: ['true'], paths: ['tests/**'], stage: 'manual' }],
                 }),
             }),
             'a.md': 'Run `tests/coverage` and `tests/missing`.\n',
@@ -111,7 +109,7 @@ test.each([...MISE_TASK_SOURCES])(
     'missing-paths: $name count, and an unknown task is reported',
     async ({ tasks, files }) => {
         const named = [...tasks, 'absent'].map((task) => '`mise run ' + task + '`').join(', ');
-        const found = await collectDocsFindings({ 'a.md': `Run ${named}.\n`, ...files }, { paths: ['a.md'] });
+        const found = await runMissingPathsCheck({ 'a.md': `Run ${named}.\n`, ...files }, { paths: ['a.md'] });
         expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
             { file: 'a.md', line: 1, rule: 'missing-task', message: 'mise run absent names no task or script.' },
         ]);
@@ -119,14 +117,14 @@ test.each([...MISE_TASK_SOURCES])(
 );
 
 test('missing-paths: clone host names are skipped while missing repository paths are reported', async () => {
-    const found = await collectDocsFindings({
+    const found = await runMissingPathsCheck({
         'README.md': 'Clone github.com/example/demo.git and read docs/guide.md.\n',
     });
     expect(found.map(({ message }) => message)).toStrictEqual(['docs/guide.md names no tracked file or folder.']);
 });
 
 test('missing-paths: paths relative to the document are found, and missing ones nearby are still reported', async () => {
-    const found = await collectDocsFindings(
+    const found = await runMissingPathsCheck(
         {
             'docs/guide.md':
                 'See `./examples/good.ts`, `../src/here.ts`, and `src/here.ts`.\nSee `./examples/gone.ts` and `../src/gone.ts`.\nSee `./src/here.ts` and `./missing/`.\n',
@@ -160,7 +158,7 @@ test.each([...MALFORMED_TASK_FILES])(
 );
 
 test('missing-paths: documented tasks are checked against their task tool and the nearest scope that defines them', async () => {
-    const found = await collectDocsFindings({
+    const found = await runMissingPathsCheck({
         'gspot.toml': buildSandboxSettings([], { level: 'recommended', tables: DOC_TASK_SCOPES }),
         ...DOC_TASK_FILES,
     });
@@ -191,7 +189,7 @@ test('missing-paths: a document in a child scope does not read unrelated or shad
 test.each([...DOC_FENCE_PATH_CASES])(
     'missing-paths: a $language fence with "$metadata" reports example paths=$reported',
     async ({ metadata, language, reported }) => {
-        const pathFindings = await collectDocsFindings(
+        const pathFindings = await runMissingPathsCheck(
             {
                 'guide.md': `> ~~~${language} ${metadata}\n> cat src/example.ts\n> ~~~\n\nSee src/missing.ts.\n`,
             },

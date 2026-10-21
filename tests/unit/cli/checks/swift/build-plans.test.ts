@@ -5,8 +5,8 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
@@ -38,7 +38,7 @@ test.each(['default', 'platform=macOS'])(
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'swift/build');
         for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
-            const { commandArguments } = buildPlan(session, input, { purpose: purpose });
+            const { commandArguments } = buildPlan(session, input, { purpose });
             expect(commandArguments[commandArguments.indexOf('-destination') + 1]).toBe(
                 destination === 'default'
                     ? configurationTableSchemas.swift.unwrap().shape.xcode_destination.parse(undefined)
@@ -57,7 +57,7 @@ test.each([...SWIFT_PROJECT_SELECTION_CASES])(
 
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'swift/build', { scope });
-        expect(getTable(input.selection.view, 'swift').xcode_project).toBe(project);
+        expect(getTable(input.scope.settings, 'swift').xcode_project).toBe(project);
         const plan = buildPlan(session, input);
         const container = project.endsWith('.xcworkspace') ? '-workspace' : '-project';
         expect(plan.commandArguments[plan.commandArguments.indexOf(container) + 1]).toBe(argument);
@@ -76,7 +76,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
 
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, check);
-        expect(() => buildPlan(session, input, { purpose: purpose })).toThrow(
+        expect(() => buildPlan(session, input, { purpose })).toThrow(
             new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.'),
         );
         using _executables = fakePinnedExecutables(
@@ -92,7 +92,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
                 note: expect.stringContaining('swift.xcode_project') as string,
             }),
         );
-        expect(await isOnDisk(getScopeBuildFolder(session.installedRoot, input.selection.scope.path, purpose))).toBe(
+        expect(await isOnDisk(getScopeBuildFolder(session.installedRoot, input.scope.folder.path, purpose))).toBe(
             false,
         );
         await createFileTree(sandbox.path, {
@@ -100,7 +100,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         });
         const checkedSession = await openSession(sandbox.path);
         const packageInput = planSandboxCheck(checkedSession, 'swift/build');
-        const plan = buildPlan(checkedSession, packageInput, { purpose: purpose });
+        const plan = buildPlan(checkedSession, packageInput, { purpose });
         expect(plan.commandArguments[0]).toBe('swift');
         if (plan.kind !== 'package') throw new Error('Expected a Swift package build.');
         expect(plan.commandArguments).toContain(plan.scratch);

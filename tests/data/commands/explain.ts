@@ -91,7 +91,7 @@ export const CONFIGURATION_DETECTION_LINES = [
 ] as const;
 
 export const CHECK_TOOL_MINIMUMS = [
-    { check: 'gspot/unmatched-patterns', tools: [] },
+    { check: 'gspot/unmatched-paths', tools: [] },
     { check: 'react-dom/react-versions', tools: [] },
     { check: 'javascript/eslint', tools: ['node'] },
     { check: 'dependencies/osv-scanner', tools: ['osv-scanner'] },

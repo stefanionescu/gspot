@@ -45,7 +45,7 @@ test.each([...REPORT_ERRORS])('$configuration rejects $name: $message', async ({
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\neval input\n' });
     const configuration = readConfigurations().get('security')!;
-    const check = configuration.checks.find((check) => check.name === 'security/semgrep')!;
+    const check = configuration.checks.find((check) => check.id === 'security/semgrep')!;
     const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [SEMGREP_PARSE_ERROR] });
     expect(
         parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), {
@@ -79,7 +79,7 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
 test('Semgrep scanner, rule, unpositioned and malformed reports are errors', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\n' });
     const configuration = readConfigurations().get('security')!;
-    const check = configuration.checks.find((check) => check.name === 'security/semgrep')!;
+    const check = configuration.checks.find((check) => check.id === 'security/semgrep')!;
     const outputs = [
         '',
         '{}',

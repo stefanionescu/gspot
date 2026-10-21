@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
 import { APP_JEST, VITEST_FILES } from '#tests/data/generation/eslint/configurations.ts';
 import { DUPLICATE_RULE_CASES, DUPLICATE_RULE_FILES } from '#tests/data/generation/eslint/lint-rules.ts';
 
@@ -18,7 +18,7 @@ test.each([...DUPLICATE_RULE_CASES])(
 
         const eslint = await createEslint(sandbox.path);
 
-        const reports = await collectLintFindings(eslint, sandbox.path, [file], rules);
+        const reports = await listLintFindings(eslint, sandbox.path, [file], rules);
         expect(
             reports.map(({ rule }) => rule),
             file,
@@ -53,7 +53,7 @@ test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum
         });
         const eslint = await createEslint(folder.path);
         const file = `example.${extension}`;
-        expect(await collectLintFindings(eslint, folder.path, [file], ['max-params'])).toStrictEqual(
+        expect(await listLintFindings(eslint, folder.path, [file], ['max-params'])).toStrictEqual(
             maximum === 7 ? [{ file, rule: 'max-params', line: 2 }] : [],
         );
     },
@@ -73,7 +73,7 @@ test('limit-languages > a JavaScript file takes the JavaScript limits, and a Typ
         'example.ts': `export function choose${body.replace('(value)', '(value: number)')}\n`,
     });
     const eslint = await createEslint(folder.path);
-    expect(await collectLintFindings(eslint, folder.path, ['example.js', 'example.ts'], ['complexity'])).toStrictEqual([
+    expect(await listLintFindings(eslint, folder.path, ['example.js', 'example.ts'], ['complexity'])).toStrictEqual([
         { file: 'example.js', rule: 'complexity', line: 1 },
     ]);
 });
@@ -93,8 +93,8 @@ describe('jest', () => {
         const root = `root.test.${extension}`;
         const nested = `app/sample.test.${extension}`;
         await createFileTree(sandbox.path, { [root]: focused, [nested]: focused });
-        expect(await collectLintFindings(eslint, sandbox.path, [root], ['jest/no-focused-tests'])).toStrictEqual([]);
-        expect(await collectLintFindings(eslint, sandbox.path, [nested], ['jest/no-focused-tests'])).toStrictEqual([
+        expect(await listLintFindings(eslint, sandbox.path, [root], ['jest/no-focused-tests'])).toStrictEqual([]);
+        expect(await listLintFindings(eslint, sandbox.path, [nested], ['jest/no-focused-tests'])).toStrictEqual([
             { file: nested, rule: 'jest/no-focused-tests', line: 2 },
         ]);
     });
@@ -124,13 +124,13 @@ describe('testing-library', () => {
         const paths = ['source.test.js', 'source.js', 'child/source.test.js', 'neighbor/source.test.js'];
         await createFileTree(sandbox.path, Object.fromEntries(paths.map((path) => [path, source])));
         expect(
-            await collectLintFindings(eslint, sandbox.path, paths, ['testing-library/no-debugging-utils']),
+            await listLintFindings(eslint, sandbox.path, paths, ['testing-library/no-debugging-utils']),
         ).toStrictEqual([{ file: 'source.test.js', rule: 'testing-library/no-debugging-utils', line: 2 }]);
         await createFileTree(sandbox.path, {
             'source.test.js': `import { screen } from '${library}';\nscreen.getByRole('button');\n`,
         });
         expect(
-            await collectLintFindings(eslint, sandbox.path, ['source.test.js'], ['testing-library/no-debugging-utils']),
+            await listLintFindings(eslint, sandbox.path, ['source.test.js'], ['testing-library/no-debugging-utils']),
         ).toStrictEqual([]);
     });
 });
@@ -155,7 +155,7 @@ test.only('checks the value', () => { expect({value: 1}).toEqual({value: 1}); })
 `,
             });
             const rules = ['vitest/no-focused-tests', 'vitest/prefer-strict-equal'];
-            expect(await collectLintFindings(eslint, sandbox.path, [path], rules)).toStrictEqual([
+            expect(await listLintFindings(eslint, sandbox.path, [path], rules)).toStrictEqual([
                 { file: path, rule: 'vitest/no-focused-tests', line: 2 },
                 ...(level === 'all' ? [{ file: path, rule: 'vitest/prefer-strict-equal', line: 2 }] : []),
             ]);

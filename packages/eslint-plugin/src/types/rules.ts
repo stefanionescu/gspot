@@ -7,13 +7,15 @@ export type RuleDocs = {
     fix: string;
     example: string;
 };
-export type ClientEnvOptions = [{ isClient: boolean; publicPrefixes: readonly string[]; allowed: readonly string[] }];
+export type ClientEnvOptions = [
+    { client: boolean; publicPrefixes: readonly string[]; allowedNames: readonly string[] },
+];
 export type ImportBoundariesOptions = [
     { folders: readonly string[]; aliases: Record<string, string>; externals: readonly string[] },
 ];
-export type TrivialFunctionsOptions = [{ trivialStatements: number }];
+export type TrivialFunctionsOptions = [{ trivialFunctionStatements: number }];
 
-export type TrivialFilesOptions = [{ trivialStatements: number; allowIndex: boolean }];
+export type TrivialFilesOptions = [{ trivialFunctionStatements: number; allowIndex: boolean }];
 
 export type MagicNumbersOptions = [Record<string, unknown>];
 export type RuleContext = Readonly<TSESLint.RuleContext<string, unknown[]>>;

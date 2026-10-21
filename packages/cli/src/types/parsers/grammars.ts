@@ -19,7 +19,7 @@ export type GrammarSourceFiles = ParseCache & { files: ParsedFile[] };
 export type SourceTree = { path: string; text: string; rootNode: Node };
 
 /** Initialization and grammar instances shared for the lifetime of the process. */
-export type ParserState = {
+export type ParserGrammars = {
     runtime: Promise<void> | undefined;
     parsers: Map<GrammarName, Promise<Parser>>;
 };

@@ -6,9 +6,9 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
-import { isRecord, getValueAt, stripUndefined } from '#cli/system/tables.ts';
+import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
-import { NUMBER, STRUCTURED, DASH_VALUE_HINT } from '#cli/config/commands/set.ts';
+import { NUMBER, STRUCTURED, DASH_VALUE_HELP } from '#cli/config/commands/set.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type Setting, type EffectiveSetting } from '#cli/types/settings/inheritance.ts';
 import { listRecordFields, findSettingSchema } from '#cli/schemas/settings/gspot-toml.ts';
@@ -66,10 +66,10 @@ function parseReasonEntries(options: SetOptions): ParsedSettingValue {
 function editSetting(table: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
     const scopeTable = getScopeTable(table, options.scope);
     if (change.type === 'list') addToList(scopeTable, options.key, change.value);
-    else if (setting.type === 'table' && isRecord(change.value)) {
+    else if (setting.type === 'table' && isTable(change.value)) {
         const current = getValueAt(scopeTable, options.key.split('.'));
         const existing = getWrittenValue(current);
-        setKey(scopeTable, options.key, { ...(isRecord(existing) ? existing : {}), ...change.value });
+        setKey(scopeTable, options.key, { ...(isTable(existing) ? existing : {}), ...change.value });
     } else setKey(scopeTable, options.key, change.value);
     if (options.reason !== undefined && setting.reason_values !== true) {
         const current = getValueAt(scopeTable, options.key.split('.'));
@@ -138,12 +138,12 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
         );
     const edit = prepareSettingsEdit(options.cwd);
     const { root, input, settings } = edit;
-    const { known, match } = await readSetting(edit, options.key, options.scope);
+    const { known: knownSettings, match } = await readSetting(edit, options.key, options.scope);
     const setting = match.setting;
     const change =
         setting.reason_values === true ? parseReasonEntries(options) : parseSettingValue(options.values, setting);
-    const previous = getSettingValue(known, settings, options.key, options.scope);
-    const shippedDefault = findSettingDefault(known, settings, match, options.scope)?.value;
+    const previous = getSettingValue(knownSettings, settings, options.key, options.scope);
+    const shippedDefault = findSettingDefault(knownSettings, settings, match, options.scope)?.value;
     assertCompleteReason({ options, setting, change, previous, shippedDefault });
     assertReasonNeeded({ options, setting, change, shippedDefault });
     const summary = formatSettingChange(change, {
@@ -178,7 +178,7 @@ export function registerSet(program: Command, onResult: CommandCompletion): void
         .option('--scope <path>', COMMAND_HELP.set.options['--scope <path>'], trimTrailingSlashes)
         .exitOverride((error) => {
             if (error.code !== 'commander.unknownOption') throw error;
-            throw new CommanderError(error.exitCode, error.code, `${error.message}. ${DASH_VALUE_HINT}`);
+            throw new CommanderError(error.exitCode, error.code, `${error.message}. ${DASH_VALUE_HELP}`);
         })
         .action(async (setting, items, flags) => {
             onResult(

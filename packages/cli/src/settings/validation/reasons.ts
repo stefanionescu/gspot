@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { ReasonNeeded } from '#cli/types/settings/facts.ts';
 import { REASON_WORDS_MIN } from '#cli/config/settings/schema.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
@@ -46,7 +47,7 @@ export function validateSettingReasons(settings: Settings): SettingsError[] {
         const [field, , table] = path.toReversed();
         if (table === 'tools' && field === 'rules') return [];
         if (Array.isArray(value)) return value.flatMap((entry, index) => visit(entry, [...path, index]));
-        if (!isRecord(value)) return [];
+        if (!isTable(value)) return [];
         const reason = value['reason'];
         const own: SettingsError[] = [];
         if (reason !== undefined)
@@ -75,9 +76,16 @@ export function validateSettingReasons(settings: Settings): SettingsError[] {
         ...settings.ignore.flatMap((entry, index) =>
             buildErrorsAt(['ignore', index, 'reason'], validateReason(`ignore.${String(index)}`, entry.reason)),
         ),
-        ...Object.entries(settings.allowed_words).flatMap(([word, reason]) =>
-            buildErrorsAt(['allowed_words', word], validateReason(`allowed_words.${word}`, reason)),
-        ),
+        ...listSettingsTables(settings).flatMap(({ table, path }) => {
+            const words = table.spelling?.allowed_words;
+            if (words === undefined) return [];
+            return Object.entries(words).flatMap(([word, reason]) =>
+                buildErrorsAt(
+                    [...path, 'spelling', 'allowed_words', word],
+                    validateReason(`spelling.allowed_words.${word}`, reason),
+                ),
+            );
+        }),
         ...visit(settings.written, []),
     ];
 }
@@ -108,9 +116,9 @@ export function isLoosening(setting: Setting, value: unknown, shipped: unknown):
             return value.some(
                 (item) => !Array.isArray(shipped) || !shipped.some((entry) => isDeepStrictEqual(item, entry)),
             );
-        if (isRecord(value))
+        if (isTable(value))
             return Object.entries(value).some(
-                ([key, entry]) => !isRecord(shipped) || !isDeepStrictEqual(entry, shipped[key]),
+                ([key, entry]) => !isTable(shipped) || !isDeepStrictEqual(entry, shipped[key]),
             );
         return !isDeepStrictEqual(value, shipped);
     }

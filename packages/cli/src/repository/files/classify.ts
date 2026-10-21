@@ -222,11 +222,11 @@ export function classifyFile(
     rules: FileKindRules,
 ): TrackedFile {
     const tagged = tagFile(entry, prefix);
-    const verdict = classifyKind({ root: repositoryRoot, entry, prefix, isBinary: tagged.isBinary }, rules);
+    const kind = classifyKind({ root: repositoryRoot, entry, prefix, isBinary: tagged.isBinary }, rules);
     return {
         path: entry.path,
-        kind: verdict.kind,
-        kindOrigin: verdict.origin,
+        kind: kind.kind,
+        kindOrigin: kind.origin,
         tags: tagged.tags,
         executable: entry.executable,
         size: entry.size,

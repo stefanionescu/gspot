@@ -14,16 +14,16 @@ import {
     YAML_SCOPE_FILES,
     YAML_SCOPE_SAMPLE,
     YAML_SCOPE_SETTINGS,
-} from '#tests/data/checks/files.ts';
+} from '#tests/data/checks/data-files.ts';
 
 // Checks the root and child scopes separately with yamllint.
 async function assertYamlFiles(root: string, rule?: string): Promise<void> {
-    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'files/yamllint', '--json']));
+    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'data-files/yamllint', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);
     expect(checked.report.checks).toMatchObject([
-        { check: 'files/yamllint', scope: '', status: 'passed', findings: [] },
+        { check: 'data-files/yamllint', scope: '', status: 'passed', findings: [] },
         {
-            check: 'files/yamllint',
+            check: 'data-files/yamllint',
             scope: 'app',
             status: rule === undefined ? 'passed' : 'failed',
             findings: rule === undefined ? [] : [matchFields({ file: 'app/settings/project.yaml', rule, line: 2 })],
@@ -53,7 +53,7 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
     });
     state.use(
         await applySandboxChanges(installedSandbox(), {
-            check: 'files/v8r',
+            check: 'data-files/v8r',
             files: { 'settings/café.json': '', '.v8rrc.yml': '' },
             settings: `
 [[tools.v8r.schema]]
@@ -67,12 +67,12 @@ url = "${server.url.toString()}schema.json"
     const path = join(root, 'settings/café.json');
     await writeFile(path, JSON.stringify({ count: 'invalid' }));
     expect(runGit(root, ['add', '-A']).code).toBe(0);
-    const command = ['check', '--only', 'files/v8r', '--staged', '--json'];
+    const command = ['check', '--only', 'data-files/v8r', '--staged', '--json'];
     const invalid = parseCheckReport(await spawnGspot(root, command, environment));
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
     expect(invalid.report.checks).toMatchObject([
         {
-            check: 'files/v8r',
+            check: 'data-files/v8r',
             status: 'failed',
             findings: [
                 matchFields({
@@ -86,7 +86,7 @@ url = "${server.url.toString()}schema.json"
     expect(runGit(root, ['add', 'settings/café.json']).code).toBe(0);
     const valid = parseCheckReport(await spawnGspot(root, command, environment));
     expect(valid.code, valid.stdout + valid.stderr).toBe(0);
-    expect(valid.report.checks).toMatchObject([{ check: 'files/v8r', status: 'passed', findings: [] }]);
+    expect(valid.report.checks).toMatchObject([{ check: 'data-files/v8r', status: 'passed', findings: [] }]);
 });
 
 test('Taplo never downloads a schema named in a #:schema comment', async () => {
@@ -108,27 +108,29 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
     const directive = `#:schema ${server.url.toString()}schema.json\n`;
     resources.use(
         await applySandboxChanges(installedSandbox(), {
-            check: 'files/taplo-format',
+            check: 'data-files/taplo-format',
             files: { 'settings/schema.toml': directive + 'value =\n' },
         }),
     );
-    const command = ['check', 'settings/schema.toml', '--only', 'files/taplo-format', '--json'];
+    const command = ['check', 'settings/schema.toml', '--only', 'data-files/taplo-format', '--json'];
     const failed = parseCheckReport(await spawnGspot(root, command, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks).toMatchObject([
-        { check: 'files/taplo-format', status: 'failed', findings: [{ file: 'settings/schema.toml', line: 2 }] },
+        { check: 'data-files/taplo-format', status: 'failed', findings: [{ file: 'settings/schema.toml', line: 2 }] },
     ]);
     await writeFile(join(root, 'settings/schema.toml'), directive + 'value = 1\n');
     const corrected = parseCheckReport(await spawnGspot(root, command, environment));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check: 'files/taplo-format', status: 'passed', findings: [] }]);
+    expect(corrected.report.checks).toMatchObject([
+        { check: 'data-files/taplo-format', status: 'passed', findings: [] },
+    ]);
     expect(requests).toBe(0);
 });
 
 test("yamllint applies each scope's lint rule options, and Prettier keeps two-space YAML", async () => {
     const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'files/yamllint',
+        check: 'data-files/yamllint',
         removed: Object.keys(FILES_SANDBOX.files),
         files: {
             'gspot.toml': buildSandboxSettings([], { tables: YAML_SCOPE_SETTINGS }),
@@ -150,13 +152,14 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
 test('v8r accepts a gspot.toml with an unquoted until date', async () => {
     const { root, environment } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'files/v8r',
+        check: 'data-files/v8r',
         files: {},
-        settings: '\n[[ignore]]\ncheck = "files/yamllint"\nreason = "The sample holds no YAML."\nuntil = 2099-01-01\n',
+        settings:
+            '\n[[ignore]]\ncheck = "data-files/yamllint"\nreason = "The sample holds no YAML."\nuntil = 2099-01-01\n',
     });
     const checked = parseCheckReport(
-        await spawnGspot(root, ['check', 'gspot.toml', '--only', 'files/v8r', '--json'], environment),
+        await spawnGspot(root, ['check', 'gspot.toml', '--only', 'data-files/v8r', '--json'], environment),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(checked.report.checks).toMatchObject([{ check: 'files/v8r', status: 'passed', fileCount: 1 }]);
+    expect(checked.report.checks).toMatchObject([{ check: 'data-files/v8r', status: 'passed', fileCount: 1 }]);
 });

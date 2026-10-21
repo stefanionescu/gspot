@@ -1,6 +1,6 @@
 import { REFERENCE_FACTS } from './facts.ts';
-import { buildCommandPages } from './commands.ts';
-import { buildSettingsPages } from './settings.ts';
+import { buildCommandPage } from './commands.ts';
+import { buildSettingsPage } from './settings.ts';
 import { buildPluginPages } from './eslint-plugin.ts';
 import type { Loader, DataStore } from 'astro/loaders';
 import { docsLoader } from '@astrojs/starlight/loaders';
@@ -14,9 +14,9 @@ import {
     PAGES_FOLDER,
     REFERENCE_PATH,
     SECTION_HEADING,
+    DOCS_SOURCE_NAME,
     REFERENCE_FOLDERS,
     REFERENCE_IDS_KEY,
-    REFERENCE_COLLECTION_NAME,
 } from '../config/reference.ts';
 
 // Read authored frontmatter only after the content loader has populated its store.
@@ -40,15 +40,15 @@ function readGuideTitles(store: DataStore): Map<string, string> {
 function buildReferencePages(guideTitles: Map<string, string>): Map<string, ReferencePage> {
     const facts = REFERENCE_FACTS;
     const pages = new Map([
-        ...buildCommandPages(facts),
+        [`${REFERENCE_FOLDERS.commands}/index.md`, buildCommandPage(facts)],
         ...buildConfigurationPages(facts, guideTitles),
-        ...buildSettingsPages(facts),
+        [`${REFERENCE_FOLDERS.settings}/index.md`, buildSettingsPage(facts)],
         ...buildPluginPages(),
         [`${REFERENCE_FOLDERS.checks}/index.md`, buildCheckIndex(facts.checks, GROUP_LABELS)],
     ]);
     const suppressions = listSuppressions(facts.configurations);
     for (const { check, configuration } of facts.checks)
-        pages.set(`${REFERENCE_FOLDERS.checks}/${check.name}.md`, buildCheckPage(check, configuration, suppressions));
+        pages.set(`${REFERENCE_FOLDERS.checks}/${check.id}.md`, buildCheckPage(check, configuration, suppressions));
     return pages;
 }
 
@@ -57,9 +57,9 @@ function buildReferencePages(guideTitles: Map<string, string>): Map<string, Refe
  *
  * @returns the Astro loader
  */
-export function buildReferenceCollection(): Loader {
+export function createDocsSource(): Loader {
     return {
-        name: REFERENCE_COLLECTION_NAME,
+        name: DOCS_SOURCE_NAME,
         async load(context) {
             const previous = JSON.parse(context.meta.get(REFERENCE_IDS_KEY) ?? '[]') as string[];
             for (const id of previous) context.store.delete(id);
@@ -68,7 +68,7 @@ export function buildReferenceCollection(): Loader {
             const entries = [];
             for (const [path, page] of buildReferencePages(guideTitles)) {
                 const id = `${REFERENCE_PATH.slice(1)}${path.slice(0, -'.md'.length)}`;
-                if (context.store.has(id)) throw new Error(`Duplicate reference identity: ${id}`);
+                if (context.store.has(id)) throw new Error(`Two docs pages have the ID ${id}.`);
                 const { body } = page;
                 const metadata = await context.parseData({
                     id,

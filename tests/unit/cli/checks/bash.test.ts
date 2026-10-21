@@ -25,8 +25,8 @@ import {
     FIXED_LOOPS,
     LOOP_COUNTS,
     COUNTED_LOOPS,
+    BASH_SIZE_CASES,
     DOC_COMMENT_CASES,
-    BASH_SIZE_LOCATIONS,
     TRAP_FUNCTION_SOURCE,
     UNREAD_ARGUMENT_CASES,
     UNUSED_FUNCTION_CASES,
@@ -67,7 +67,7 @@ function buildNestedConditions(depth: number): string {
 
 /** Build each function-size sample together with its location, fix, and diagnostic. */
 function buildSizeCases(): SizeCase[] {
-    return BASH_SIZE_LOCATIONS.map(({ file, rule, line }) => {
+    return BASH_SIZE_CASES.map(({ file, rule, line }) => {
         const limit = getDefaultLimit(rule.replaceAll('-', '_'));
         let body: string;
         let correctedBody: string;
@@ -82,7 +82,7 @@ function buildSizeCases(): SizeCase[] {
                 measure = 'code lines';
                 break;
             }
-            case 'function_branches': {
+            case 'function-branches': {
                 correctedBody = Array.from(
                     { length: limit },
                     (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo "$1"; fi`,
@@ -91,13 +91,13 @@ function buildSizeCases(): SizeCase[] {
                 measure = 'branches';
                 break;
             }
-            case 'block_nesting': {
+            case 'block-nesting': {
                 correctedBody = buildNestedConditions(limit);
                 body = buildNestedConditions(limit + 1);
                 measure = 'levels of nesting';
                 break;
             }
-            case 'function_assignments': {
+            case 'function-assignments': {
                 const assignments = Array.from(
                     { length: limit },
                     (_, index) => `    total="\${1}${String(index)}"`,
@@ -228,7 +228,7 @@ test('Bash function-size counts C-style loops as branches and nesting, not their
         { scope: 'api', fileCount: 1 },
     ]);
     for (const check of checks) {
-        expect(check.findings.map(({ rule, message }) => ({ rule, message: message }))).toStrictEqual([...LOOP_COUNTS]);
+        expect(check.findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([...LOOP_COUNTS]);
         expect(check.findings.map(({ file, line }) => ({ file, line }))).toStrictEqual(
             Array.from({ length: 3 }, () => ({
                 file: check.scope === '' ? 'source.sh' : 'api/source.sh',

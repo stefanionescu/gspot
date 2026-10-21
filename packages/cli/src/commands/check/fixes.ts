@@ -24,7 +24,7 @@ function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | un
     if (!isReportedCrash(check, planned.tool, result) && (result.code === 0 || check.exit_codes !== undefined))
         return undefined;
     const detail = [result.stderr.trim(), result.stdout.trim()].filter(Boolean).join('\n');
-    return detail === '' ? `${planned.check.name} exited ${String(result.code)}` : detail;
+    return detail === '' ? `${planned.check.id} exited ${String(result.code)}` : detail;
 }
 
 async function runFixCommands(
@@ -32,7 +32,7 @@ async function runFixCommands(
     prepared: PreparedCommand,
     cancelSignal: AbortSignal | undefined,
 ): Promise<FixResult> {
-    const check = planned.check.name;
+    const check = planned.check.id;
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const before = readContents(prepared.root, paths);
     let note: string | undefined;
@@ -40,8 +40,8 @@ async function runFixCommands(
         const { result, failure } = await runToolProcess(command.commandArguments, {
             ...prepared,
             cancelSignal,
-            timeoutSeconds: Number(planned.selection.view.settings['tool_timeout_seconds']),
-            name: planned.check.name,
+            timeoutSeconds: Number(planned.scope.settings.settings['tool_timeout_seconds']),
+            name: planned.check.id,
         });
         note = failure?.note ?? findFixFailure(planned, result);
         if (note !== undefined) break;
@@ -89,7 +89,7 @@ function mergeResults(first: FixResult | undefined, next: FixResult): FixResult 
 
 // A canceled or skipped fix returns before it finds the tool or writes files.
 async function runFixer(session: Session, planned: PlannedCheck, root: string): Promise<FixResult> {
-    const check = planned.check.name;
+    const check = planned.check.id;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'failed', changed: [], note: 'The fix was canceled.' };
     if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)

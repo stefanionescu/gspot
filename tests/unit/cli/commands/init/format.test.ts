@@ -5,7 +5,7 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { type FormatSettings } from '#cli/types/settings/file.ts';
@@ -17,7 +17,7 @@ async function readInitFormatOptions(root: string, commandArguments: string[]): 
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const text = (JSON.parse(result.stdout) as InitJson).settings;
     const session = await openSession(root, { settingsFile: { settings: parseSettings(text, undefined), text } });
-    return session.scopes.map(({ view }) => getTable(view, 'format'));
+    return session.scopes.map(({ settings }) => getTable(settings, 'format'));
 }
 
 test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', async ({ files, expected }) => {

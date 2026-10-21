@@ -17,19 +17,19 @@ export type PreparedSql = { text: string; variables: SqlRange[] };
 export type SqlNodeFields = { [Entry in Node as keyof Entry]: Entry[keyof Entry] };
 
 /** A statement keeps the link between its kind and payload. */
-export type SqlStatementView<Kind extends keyof SqlNodeFields = keyof SqlNodeFields> = {
+export type SqlStatement<Kind extends keyof SqlNodeFields = keyof SqlNodeFields> = {
     [Name in Kind]: { kind: Name; fields: SqlNodeFields[Name]; start: number };
 }[Kind];
 
 /** Readers for each kind keep the payload types and the context that each caller needs. */
 export type SqlStatementVisitors<Result, Arguments extends unknown[] = []> = {
-    [Kind in keyof SqlNodeFields]?: (statement: SqlStatementView<Kind>, ...readerArguments: Arguments) => Result;
+    [Kind in keyof SqlNodeFields]?: (statement: SqlStatement<Kind>, ...readerArguments: Arguments) => Result;
 };
 
 /** A parsed file: the statements, or the error with its line and column. */
 export type SqlFile = {
     source: string;
     variables: SqlRange[];
-    statements: SqlStatementView[];
+    statements: SqlStatement[];
     error: { text: string; line: number; column: number } | undefined;
 };

@@ -9,17 +9,17 @@ import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/config
 import {
     TOOL_KINDS,
     TOOL_BUILDS,
-    VERSION_FLOOR,
     MAX_EXIT_CODE,
     EXTENSION_PATTERN,
+    MINIMUM_VERSION_PATTERN,
 } from '#cli/config/configurations.ts';
 
-/** Normalize version floors when gspot reads the manifest, before any version comparison. */
-const versionFloorSchema = z
+/** Normalize minimum versions when gspot reads the manifest, before any version comparison. */
+const minimumVersionSchema = z
     .string()
-    .regex(VERSION_FLOOR)
-    .transform((floor, context) => {
-        const version = semver.coerce(floor);
+    .regex(MINIMUM_VERSION_PATTERN)
+    .transform((minimum, context) => {
+        const version = semver.coerce(minimum);
         if (version === null) {
             context.addIssue({ code: 'custom', message: 'Use a numeric minimum version.' });
             return z.NEVER;
@@ -71,8 +71,8 @@ const toolSchema = z
         name: z.string(),
         kind: z.enum(TOOL_KINDS).default('program'),
         version: z.string().optional(),
-        min_version: versionFloorSchema.optional(),
-        install_hint: z.string().min(1).optional(),
+        min_version: minimumVersionSchema.optional(),
+        install_help: z.string().min(1).optional(),
         system: z.boolean().optional(),
         // The systems that the tool has a build for; unset means every system.
         builds: z.array(z.enum(TOOL_BUILDS)).min(1).optional(),

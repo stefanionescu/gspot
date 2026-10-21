@@ -14,9 +14,9 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { VERSION_OUTPUTS } from '#tests/data/install/installation.ts';
 import { buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
 
-// One release below the declared floor, computed so the test does not copy its value.
-function computeVersionBelow(floor: string): string {
-    const parts = floor.split('.').map(Number);
+// One release below the declared minimum, computed so the test does not copy its value.
+function buildVersionBelow(minimum: string): string {
+    const parts = minimum.split('.').map(Number);
     const index = parts.findLastIndex((part) => part > 0);
     parts[index]! -= 1;
     return parts.join('.');
@@ -101,7 +101,7 @@ test('a command reads each version once and the next session reads it again', as
 test.each([
     ['3.2.57', 'outdated'],
     ['5.2.0', 'system'],
-] as const)('a system bash that prints %s is %s against the 4.4 floor', async (version, state) => {
+] as const)('a system bash that prints %s is %s against the 4.4 minimum', async (version, state) => {
     await using sandbox = await testdir();
     using _which = useExecutable(process.execPath);
     const tool: Tool = {
@@ -114,22 +114,22 @@ test.each([
         version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
     };
     const inspection = inspectTool(buildInspectionContext(sandbox.path), tool);
-    expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
+    expect(inspection).toMatchObject({ state, found: version, minimumVersion: '4.4' });
 });
 
-test.each(['gitleaks', 'next'])('the %s pin is outdated below its floor and accepted at it', async (name) => {
+test.each(['gitleaks', 'next'])('the %s pin is outdated below its minimum and accepted at it', async (name) => {
     await using sandbox = await testdir();
     using _which = useExecutable(process.execPath);
     const pin = getTool(readConfigurations().values(), name);
-    const floor = pin.min_version!;
+    const minimum = pin.min_version!;
     const available = pin.system === true ? 'system' : 'ok';
-    for (const version of [computeVersionBelow(floor), floor]) {
+    for (const version of [buildVersionBelow(minimum), minimum]) {
         const printed = name === 'next' ? `Next.js v${version}` : version;
         const tool = { ...pin, version_command: ['-e', `console.log(${JSON.stringify(printed)});`] };
         expect(inspectTool(buildInspectionContext(sandbox.path), tool)).toMatchObject({
-            state: version === floor ? available : 'outdated',
+            state: version === minimum ? available : 'outdated',
             found: version,
-            floor,
+            minimumVersion: minimum,
         });
     }
 });

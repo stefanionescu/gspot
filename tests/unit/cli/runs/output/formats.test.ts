@@ -10,9 +10,9 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { type Check } from '#cli/types/configurations.ts';
+import type { CommandRun } from '#cli/types/runs/command.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import type { CommandRunState } from '#cli/types/runs/command.ts';
 import { outputSchema } from '#cli/schemas/configurations/output.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { BASE_CHECK, FAILED_RUN } from '#tests/data/runs/command-checks.ts';
@@ -33,7 +33,7 @@ test.each(
 )('the $format format gives one result for $input output', async ({ output, input }) => {
     await using sandbox = await testdir();
     const check = {
-        name: 'sandbox/output',
+        id: 'sandbox/output',
         runs: 'files' as const,
         help: 'Correct the sandbox file.',
         output: outputSchema.parse(output),
@@ -80,7 +80,7 @@ test.each([
 test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (source) => {
     await using sandbox = await testdir({ 'settings/café.toml': 'a=1\n' });
 
-    const check = getShippedCheck('files/taplo-format');
+    const check = getShippedCheck('data-files/taplo-format');
     const path = join(sandbox.path, 'settings', 'café.toml');
     const diff = `--- a/${path}\n+++ b/${path}\n@@ -1 +1 @@\n-a=1\n+a = 1\n`;
     const log = `ERROR taplo:format_files: the file is not properly formatted path="${path}"\n`;
@@ -103,9 +103,9 @@ test.each([
 ])(
     'a Taplo syntax error in $root names its file and position and is not fixable',
     ({ root, stdout, stderr, line, column }) => {
-        const check = getShippedCheck('files/taplo-format');
+        const check = getShippedCheck('data-files/taplo-format');
         expect(parseOutput(check, stdout, stderr, { root, cwd: root })).toMatchObject([
-            { check: 'files/taplo-format', file: 'settings.toml', line, column, fixable: false },
+            { check: 'data-files/taplo-format', file: 'settings.toml', line, column, fixable: false },
         ]);
     },
 );
@@ -113,7 +113,7 @@ test.each([
 test('grouped output drops line endings and makes absolute paths relative', async () => {
     await using sandbox = await testdir({ 'settings/café.toml': 'a=1\n' });
 
-    const base = getShippedCheck('files/taplo-format');
+    const base = getShippedCheck('data-files/taplo-format');
     const check: Check = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
     const output = `${join(sandbox.path, 'settings', 'café.toml')}:\r\n  1: Incorrect spacing\r\n`;
     const findings = parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path });
@@ -148,7 +148,7 @@ test('EditorConfig output keeps file and line findings', async () => {
 test.skipIf(isLinux)('an absolute path that names the root in another case is still relative to it', async () => {
     await using sandbox = await testdir({ 'example/math.py': 'answer = 1\n' });
 
-    const base = getShippedCheck('files/taplo-format');
+    const base = getShippedCheck('data-files/taplo-format');
     const check: Check = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
     const output = `${join(sandbox.path.toUpperCase(), 'example', 'math.py')}:\n  1: Incorrect spacing\n`;
     expect(parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
@@ -170,9 +170,7 @@ test.each([
     const stdout = JSON.stringify([
         { filePath: path, messages: [{ ruleId: null, severity: 2, message: 'Invalid syntax.', line: 1, column: 2 }] },
     ]);
-    expect(parseOutput(check, stdout, '', { root: root, cwd: root })).toMatchObject([
-        { file: expected, line: 1, column: 2 },
-    ]);
+    expect(parseOutput(check, stdout, '', { root, cwd: root })).toMatchObject([{ file: expected, line: 1, column: 2 }]);
 });
 
 test('a regex finding without a rule group keeps a trailing bracketed word in its message', () => {
@@ -259,7 +257,7 @@ test.each([false, true])(
         const planned = planChecks(session, { stage: 'commit', only: ['format/prettier'] })[0]!;
         const tool = getTool(readConfigurations().values(), 'prettier');
         const parsed: Finding[] = [];
-        const state: CommandRunState = { root: sandbox.path, cwd: sandbox.path, findings: [], failed: false };
+        const state: CommandRun = { root: sandbox.path, cwd: sandbox.path, findings: [], failed: false };
         addCommandLine(
             planned,
             tool,

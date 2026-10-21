@@ -55,10 +55,10 @@ test.each(['tool.jsonc', 'package.json'])(
             { key: ['kept', 'owned'], value: false },
         ];
         writePlans(log, [planSettingsWrite(log, path, fields)]);
-        expect(hasManagedKeys({ path: path, keys: fields }, log.files.read(path)!)).toBe(true);
+        expect(hasManagedKeys({ path, keys: fields }, log.files.read(path)!)).toBe(true);
         expect(log.files.read(path)!.bytes.toString('utf8')).toContain('// Keep this comment.\n');
         writePlans(log, [planSettingsWrite(log, path, [])]);
-        expect(hasManagedKeys({ path: path, keys: fields }, log.files.read(path)!)).toBe(true);
+        expect(hasManagedKeys({ path, keys: fields }, log.files.read(path)!)).toBe(true);
     },
 );
 

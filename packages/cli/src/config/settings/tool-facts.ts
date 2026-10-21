@@ -109,9 +109,9 @@ export const TOOL_SETTING_FACTS = {
         default: {},
     },
     'tools.yamllint.rules': {
-        configurations: ['files'],
+        configurations: ['data-files'],
         description:
-            'Option tables for active YAML rules; the level decides which rules run, and [format] sets the width. Accept a finding with gspot ignore files/yamllint --rule `<rule>` --reason `<why>`.',
+            'Option tables for active YAML rules; the level decides which rules run, and [format] sets the width. Accept a finding with gspot ignore data-files/yamllint --rule `<rule>` --reason `<why>`.',
         default: {},
     },
     'tools.markdownlint.rules': {
@@ -151,7 +151,7 @@ export const TOOL_SETTING_FACTS = {
         default: [] as [],
     },
     'tools.v8r.schema': {
-        configurations: ['files'],
+        configurations: ['data-files'],
         description: 'File patterns mapped to schema URLs, for files that the SchemaStore catalog does not know.',
         default: [] as [],
     },

@@ -8,7 +8,7 @@ export const SCOPE_FINDINGS = [
     {
         check: 'supabase/service-role-key',
         root: [],
-        nested: [{ file: 'apps/backend/client.ts', rule: 'admin-key' }],
+        nested: [{ file: 'apps/backend/client.ts', rule: 'service-role-key' }],
     },
     {
         check: 'translations/messages',
@@ -25,7 +25,7 @@ export const SCOPE_FINDINGS = [
     },
     {
         check: 'site/unused-assets',
-        root: [{ file: 'assets/unused.png', rule: 'dead-asset' }],
+        root: [{ file: 'assets/unused.png', rule: 'unused-asset' }],
         nested: [],
     },
 ] as const;

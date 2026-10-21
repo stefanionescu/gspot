@@ -52,8 +52,8 @@ const CASE_TESTS = {
     'timestamp-snake': isSnakeMigration,
 } satisfies Record<NamingCase, (name: string) => boolean>;
 
-function isWordForm(word: string, stem: string): boolean {
-    return (BANNED_WORD_FORMS[stem] ?? [stem]).some((base) => {
+function isWordForm(word: string, term: string): boolean {
+    return (BANNED_WORD_FORMS[term] ?? [term]).some((base) => {
         if (word === base) return true;
         const forms = [base];
         if (base.endsWith('e')) forms.push(base.slice(0, -1));
@@ -84,8 +84,8 @@ function checkCase(checked: CheckedIdentifier, name: string, limits: CategoryLim
     const isMatched = limits.caseNames.some((caseName) => {
         if (caseName === 'timestamp-snake') return CASE_TESTS[caseName](name);
         const subject = isFileName ? digitless.replace(LAST_EXTENSION, '') : digitless;
-        return [subject, checked.identifier.name.replaceAll(DIGIT_RUNS, '')].some((candidate) =>
-            candidate.split('.').every((segment) => CASE_TESTS[caseName](segment)),
+        return [subject, checked.identifier.name.replaceAll(DIGIT_RUNS, '')].some((text) =>
+            text.split('.').every((segment) => CASE_TESTS[caseName](segment)),
         );
     });
     return isMatched
@@ -310,7 +310,7 @@ export function validateIdentifiers(
     settings: NamingSettings,
     identifiers: Identifier[],
 ): Finding[] {
-    const isTestFile = buildPathMatcher(planned.selection.view.test_files);
+    const isTestFile = buildPathMatcher(planned.scope.settings.test_files);
     return identifiers.flatMap((identifier) =>
         validateIdentifier(identifier, {
             check: planned.check,

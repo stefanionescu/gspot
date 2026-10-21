@@ -32,7 +32,7 @@ export const ESLINT_MANIFEST_TOOL = {
 } as const;
 
 export const BASE_CHECK = {
-    name: 'sandbox/diagnostic',
+    id: 'sandbox/diagnostic',
     command: ['tool'],
     level: 'recommended',
     stage: 'commit',
@@ -53,10 +53,10 @@ export const LOCATED_CHECK = {
 export const FILELESS_CHECKS = [
     {
         ...BASE_CHECK,
-        name: 'sandbox/coverage',
+        id: 'sandbox/coverage',
         output: { format: 'regex', pattern: '^ERROR: (?<message>.*)$' },
     },
-    { ...BASE_CHECK, name: 'sandbox/lines', output: { format: 'lines' } },
+    { ...BASE_CHECK, id: 'sandbox/lines', output: { format: 'lines' } },
 ] as const;
 
 // Prints each line of the listed files that holds PENDING as file:line:text, the way grep -n -H does.

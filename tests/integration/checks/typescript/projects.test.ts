@@ -15,7 +15,7 @@ import { stat, chmod, readdir, symlink, readFile, writeFile } from 'node:fs/prom
 
 import {
     OUTDIR_CASES,
-    YOUR_TSCONFIG,
+    AUTHORED_TSCONFIG,
     IMPLICIT_PROJECT_TREE,
     SOLUTION_PROJECT_TREE,
     REFERENCE_BUILD_FILES,
@@ -90,7 +90,7 @@ test.each([...LEVELS])(
 path = "${scope}"
 configurations = ["typescript"]
 `;
-        const authored = YOUR_TSCONFIG.replace(
+        const authored = AUTHORED_TSCONFIG.replace(
             '%BUILD_INFO%',
             JSON.stringify(join(root, scope, 'build/cache.tsbuildinfo')),
         );

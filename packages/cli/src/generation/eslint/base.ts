@@ -2,12 +2,12 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { getPreset } from '#cli/generation/eslint/presets.ts';
 import { readScopeAliases } from '#cli/repository/aliases.ts';
-import { getLimit, getTable } from '#cli/settings/scope-view.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import type { ScopeView } from '#cli/types/settings/inheritance.ts';
+import { getLimit, getTable } from '#cli/settings/scope-settings.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import { MISE_SCRIPT_PATH } from '#cli/config/repository/inventory.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
+import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { IMPORT_BOUNDARIES_RULE } from '#cli/config/generation/eslint/imports.ts';
 import { buildScopeFiles, listNestedScopeGlobs } from '#cli/generation/eslint/files.ts';
@@ -66,7 +66,7 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
     ].map(({ settings, ...data }) => {
         if (settings === undefined)
             return {
-                data: data,
+                data,
                 properties: '',
             };
         const runtime =
@@ -74,7 +74,7 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
                 ? `settings: ${JSON.stringify(settings)}`
                 : `settings: { ...${JSON.stringify(settings)}, 'import/resolver': { typescript: { project: joinRoot(${JSON.stringify(projects)}) } } }`;
         return {
-            data: data,
+            data,
             properties: runtime,
         };
     });
@@ -221,21 +221,20 @@ function buildConsoleBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
     rules: EslintLevelRules['console'],
 ): EslintBlockFields[] {
-    const scopes = planned.session.scopes.filter(({ view }) => view.configurations.includes(JAVASCRIPT_CONFIGURATION));
-    return scopes.map((selection) => ({
-        files: buildScopeFiles(planned.eslintFiles.code, selection.scope.path, ['**/*']),
+    const scopes = planned.session.scopes.filter(({ settings }) =>
+        settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
+    );
+    return scopes.map((scope) => ({
+        files: buildScopeFiles(planned.eslintFiles.code, scope.folder.path, ['**/*']),
         ignores: [
             ...listNestedScopeGlobs(
-                scopes.map(({ scope }) => scope.path),
-                selection.scope.path,
+                scopes.map(({ folder }) => folder.path),
+                scope.folder.path,
             ),
-            ...selection.view.test_files,
+            ...scope.settings.test_files,
 
-            ...(selection.view.values.javascript?.script_files ?? []),
-            joinScope(
-                selection.scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
-                MISE_SCRIPT_PATH,
-            ),
+            ...(scope.settings.values.javascript?.script_files ?? []),
+            joinScope(scope.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), MISE_SCRIPT_PATH),
         ],
         rules,
     }));
@@ -270,7 +269,7 @@ function buildBarrelRule(planned: PlannedEslintFile, language: 'typescript' | 'j
                   'error',
                   {
                       amountOfExportsToConsiderModuleAsBarrel: getLimit(
-                          planned.selection.view,
+                          planned.scope.settings,
                           'index_exports',
                           language,
                       ),
@@ -299,10 +298,10 @@ function buildBasePresetBlocks(
 }
 
 // The size and complexity rules with the limits of one language.
-function buildLimitRules(view: ScopeView, language: 'typescript' | 'javascript'): Record<string, unknown> {
+function buildLimitRules(settings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
     return Object.fromEntries(
         Object.entries(ESLINT_LIMIT_RULES).map(([rule, limitRule]) => {
-            const maximum = getLimit(view, limitRule.limit, language);
+            const maximum = getLimit(settings, limitRule.limit, language);
             return [rule, ['error', 'options' in limitRule ? { max: maximum, ...limitRule.options } : maximum]];
         }),
     );
@@ -312,20 +311,23 @@ function buildLimitRules(view: ScopeView, language: 'typescript' | 'javascript')
  * Calculate the ESLint limit options from the settings. JavaScript files get the JavaScript limits in their own
  * block, which comes after the block for every code file.
  *
- * @param view the settings that the limits read.
+ * @param scopeSettings the settings that the limits read.
  * @param selectors the syntax patterns and their paths.
  *
  * @returns the lint rules at this level.
  */
-export function buildLevelRules(view: ScopeView, selectors: Readonly<SelectorGroup['selectors']>): EslintLevelRules {
+export function buildLevelRules(
+    scopeSettings: ScopeSettings,
+    selectors: Readonly<SelectorGroup['selectors']>,
+): EslintLevelRules {
     return {
         code: {
             ...BASE_RULES,
             'no-restricted-syntax': ['error', ...selectors],
-            ...buildLimitRules(view, 'typescript'),
-            'sonarjs/no-identical-functions': ['error', getTable(view, 'duplication').min_lines],
+            ...buildLimitRules(scopeSettings, 'typescript'),
+            'sonarjs/no-identical-functions': ['error', getTable(scopeSettings, 'duplication').min_lines],
         },
-        javascript: buildLimitRules(view, 'javascript'),
+        javascript: buildLimitRules(scopeSettings, 'javascript'),
         node: NODE_RULES,
         console: CONSOLE_RULES,
     };

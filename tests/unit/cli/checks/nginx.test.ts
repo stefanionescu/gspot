@@ -33,7 +33,7 @@ test.each([
         hosts: source.includes('https://api:3000') ? ['api:127.0.0.1'] : [],
         certificates: [],
     })),
-])('nginx config-test mounts $name', async ({ source, hosts, certificates }) => {
+])('nginx/syntax mounts $name', async ({ source, hosts, certificates }) => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['nginx']), 'nginx.conf': source });
     const session = await openSession(sandbox.path);
     using _pins = fakePinnedExecutables([
@@ -52,7 +52,7 @@ test.each([
         expect(command.slice(-2)).toStrictEqual(['nginx', '-T']);
         return buildProcessResult({ stdout: '# configuration file /etc/nginx/nginx.conf:\n' });
     });
-    expect(await checkFindings(sandbox.path, 'nginx/config-test')).toStrictEqual([]);
+    expect(await checkFindings(sandbox.path, 'nginx/syntax')).toStrictEqual([]);
     expect(run).toHaveBeenCalledTimes(2);
     expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(source);
 });
@@ -87,7 +87,7 @@ test.each(['stdout', 'stderr'])(
             );
         });
 
-        expect(await captureRejection(checkFindings(session.root, 'nginx/config-test'))).toBe(
+        expect(await captureRejection(checkFindings(session.root, 'nginx/syntax'))).toBe(
             `The openssl command could not write the temporary certificate: ${message}`,
         );
         expect(spawn).toHaveBeenCalledTimes(1);

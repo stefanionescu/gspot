@@ -13,8 +13,8 @@ import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { listCoveredFiles } from '#cli/repository/covered-files.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
 import { parseJsonFile, parseToolReport } from '#cli/parsers/json.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { cloneReportSchema } from '#cli/schemas/checks/duplication.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
@@ -32,11 +32,11 @@ export async function checkDuplicationJscpd(session: Session, planned: PlannedCh
     const work = workFolder.path;
     const owned = [
         ...new Set(
-            filterSourceConfigurations(planned.selection.selected).flatMap((configuration) =>
+            filterSourceConfigurations(planned.scope.configurations).flatMap((configuration) =>
                 listCoveredFiles(configuration.files, planned.files, {
-                    selected: planned.selection.selected,
-                    scope: planned.selection.scope.path,
-                    view: planned.selection.view,
+                    configurations: planned.scope.configurations,
+                    scopePath: planned.scope.folder.path,
+                    settings: planned.scope.settings,
                 })
                     .filter((file) => file.kind === 'source')
                     .map((file) => file.path),
@@ -44,8 +44,8 @@ export async function checkDuplicationJscpd(session: Session, planned: PlannedCh
         ),
     ];
     using files = openFiles(session.root);
-    const generatedPath = buildScopeTarget(
-        planned.selection.scope.path,
+    const generatedPath = getToolFileTarget(
+        planned.scope.folder.path,
         getToolFile(session, planned, JSCPD),
         getToolFiles(session).targets,
     );

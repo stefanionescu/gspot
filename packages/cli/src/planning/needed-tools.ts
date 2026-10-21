@@ -1,8 +1,8 @@
 import { basename } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
@@ -24,9 +24,9 @@ function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     return (
         conditions === undefined ||
         conditions.some((condition) => {
-            if (condition.level !== undefined && condition.level !== scope.view.settings['level']) return false;
+            if (condition.level !== undefined && condition.level !== scope.settings.settings['level']) return false;
             if (condition.setting === undefined) return true;
-            return !isSettingEmpty(scope.view.settings[condition.setting]);
+            return !isSettingEmpty(scope.settings.settings[condition.setting]);
         })
     );
 }
@@ -47,7 +47,7 @@ function addPeerPackages(names: Set<string>, configurations: readonly Configurat
  *
  * @returns each extra tool once.
  */
-export function listCompanionTools(scope: Scope, check: Check, command?: string[]): string[] {
+export function listOtherTools(scope: Scope, check: Check, command?: string[]): string[] {
     const withoutCoverage =
         hasCoverageArguments(check.command, check.coverage_arguments) &&
         isCoverageOff(scope) &&
@@ -62,16 +62,16 @@ export function listCompanionTools(scope: Scope, check: Check, command?: string[
     ]);
     // ESLint loads the packages of every configuration that adds a block to its tool file.
     const plugins = tools.has(ESLINT_TOOL)
-        ? scope.selected.flatMap((configuration) => configuration.eslint.required_tools)
+        ? scope.configurations.flatMap((configuration) => configuration.eslint.required_tools)
         : [];
     const syntax =
         check.tool === STYLELINT_TOOL
-            ? scope.view.configurations
+            ? scope.settings.configurations
                   .flatMap((name) => STYLELINT_COMPONENTS[name] ?? [])
                   .map((dialect) => dialect.customSyntax)
             : [];
     return [...new Set([...otherTools, ...plugins, ...syntax])].filter((name) => {
-        const pin = getTool(scope.selected, name);
+        const pin = getTool(scope.configurations, name);
         return isToolConditionMet(scope, pin.when);
     });
 }
@@ -85,11 +85,11 @@ export function listCompanionTools(scope: Scope, check: Check, command?: string[
  */
 export function listNeededTools(check: PlannedCheck): string[] {
     const names = new Set(
-        [check.tool?.name, ...listCompanionTools(check.selection, check.check), check.check.fix?.[0]].filter(
+        [check.tool?.name, ...listOtherTools(check.scope, check.check), check.check.fix?.[0]].filter(
             (name) => name !== undefined,
         ),
     );
-    addPeerPackages(names, check.selection.selected);
+    addPeerPackages(names, check.scope.configurations);
     return [...names];
 }
 
@@ -97,13 +97,13 @@ export function listNeededTools(check: PlannedCheck): string[] {
  * List the configured checks of one scope: its own checks and the checks that run once for the repository.
  *
  * @param session the repository and its configured checks.
- * @param selection the scope whose checks to list.
+ * @param scope the scope whose checks to list.
  *
  * @returns the checks whose tools the scope needs.
  */
-export function listScopeChecks(session: Session, selection: Scope): PlannedCheck[] {
+export function listScopeChecks(session: Session, scope: Scope): PlannedCheck[] {
     return session.configuredChecks.filter(
-        (planned) => planned.selection.scope.path === selection.scope.path || planned.check.runs === 'once',
+        (planned) => planned.scope.folder.path === scope.folder.path || planned.check.runs === 'once',
     );
 }
 
@@ -128,10 +128,14 @@ export function selectNeededConfigurations(session: Session, checks: PlannedChec
         );
     const needed = new Set([...checks.flatMap((check) => listNeededTools(check)), ...licenses]);
     if (needed.has(PRETTIER_TOOL))
-        for (const { name } of listPrettierPlugins(session.scopes.flatMap(({ selected }) => selected)).keys())
+        for (const { name } of listPrettierPlugins(
+            session.scopes.flatMap(({ configurations }) => configurations),
+        ).keys())
             needed.add(name);
-    const selected = listSelectedConfigurations(session.scopes);
-    const selectedTools = new Set(selected.flatMap((configuration) => configuration.tools.map(({ name }) => name)));
+    const configurations = listSelectedConfigurations(session.scopes);
+    const selectedTools = new Set(
+        configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)),
+    );
     addPeerPackages(needed, [...session.configurations.values()]);
     const extras = [...needed].flatMap((name) =>
         selectedTools.has(name)
@@ -140,7 +144,7 @@ export function selectNeededConfigurations(session: Session, checks: PlannedChec
                   .filter((configuration) => configuration.tools.some((tool) => tool.name === name))
                   .slice(0, 1),
     );
-    const owners = new Set([...selected, ...extras]);
+    const owners = new Set([...configurations, ...extras]);
     return [...owners].map((configuration) => ({
         ...configuration,
         tools: configuration.tools
@@ -165,37 +169,37 @@ export function listLicenseProjects(
     settings: Settings,
     check: Check,
 ): LicenseProject[] {
-    const entries = scopes.map((selection) => selection.scope);
-    return scopes.flatMap((selection) =>
+    const entries = scopes.map((scope) => scope.folder);
+    return scopes.flatMap((scope) =>
         files
             .filter(
                 (file) =>
                     !file.path.startsWith(`${DOT_GSPOT}/`) &&
-                    findScope(file.path, entries).path === selection.scope.path,
+                    findScopeFolder(file.path, entries).path === scope.folder.path,
             )
             .flatMap((file) => {
                 if (
-                    !selection.selected.some(
+                    !scope.configurations.some(
                         (configuration) =>
                             configuration.name === LICENSES_CONFIGURATION &&
                             listCoveredFiles(check.files ?? configuration.files, [file], {
-                                selected: selection.selected,
-                                scope: selection.scope.path,
-                                view: selection.view,
+                                configurations: scope.configurations,
+                                scopePath: scope.folder.path,
+                                settings: scope.settings,
                             }).length > 0,
                     )
                 )
                     return [];
-                const options = getTable(selection.view, 'licenses');
+                const options = getTable(scope.settings, 'licenses');
                 const licenseSettings = { allowed: options.allowed, allowed_package: options.allowed_package };
                 return licenseSettings.allowed.length === 0 && licenseSettings.allowed_package.length === 0
                     ? []
                     : [
                           {
                               dependencyFile: file.path,
-                              selection,
+                              scope,
                               settings: licenseSettings,
-                              skip: findSettingsSkip(settings, selection, check),
+                              skip: findSettingsSkip(settings, scope, check),
                           },
                       ];
             }),

@@ -61,13 +61,13 @@ function buildFindingPlace(location: SarifPhysicalLocation, run: SarifRun, sourc
 function assertSuccessfulRun(run: SarifRun): void {
     const unsuccessful =
         run.invocations?.filter(
-            (invocation) =>
-                invocation.executionSuccessful === false ||
-                invocation.toolExecutionNotifications?.some((notification) => notification.level === 'error') === true,
+            (analysis) =>
+                analysis.executionSuccessful === false ||
+                analysis.toolExecutionNotifications?.some((notification) => notification.level === 'error') === true,
         ) ?? [];
     if (unsuccessful.length > 0) {
-        const notifications = unsuccessful.flatMap((invocation) =>
-            (invocation.toolExecutionNotifications ?? []).filter((notification) => notification.level === 'error'),
+        const notifications = unsuccessful.flatMap((analysis) =>
+            (analysis.toolExecutionNotifications ?? []).filter((notification) => notification.level === 'error'),
         );
         const detail = notifications
             .map((notification) => notification.message?.text)

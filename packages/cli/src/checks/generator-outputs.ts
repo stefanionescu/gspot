@@ -21,10 +21,10 @@ import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/
 function listMissingOutputs(
     session: Session,
     planned: PlannedCheck,
-    targets: GeneratorOutput[],
+    outputs: GeneratorOutput[],
     commandText: string,
 ): Finding[] {
-    return targets
+    return outputs
         .filter((target) => findCachedText(session.reads, target.path) === undefined)
         .map((entry) =>
             buildFinding(
@@ -39,7 +39,7 @@ function listMissingOutputs(
 // A pattern from a setting names one file, such as the Worker types file. A copy on disk that Git does not track hides it
 // from the type checks and from this check, which compare tracked files.
 function listUntrackedOutputs(session: Session, planned: PlannedCheck, named: string[], excluded: string[]): Finding[] {
-    const scope = planned.selection.scope.path;
+    const scope = planned.scope.folder.path;
     const tracked = new Set(session.repository.index.map(({ path }) => path));
     return named.length === 0 || !session.repository.hasGit
         ? []
@@ -98,7 +98,7 @@ function listDeclaredOutputs(
         const { kind, path: original } = entry;
         const isNamed = kind === 'pattern' && original.includes('{setting:');
         const replaced = replacePlaceholders(session, planned, original, values);
-        const path = isNamed ? stripScopePrefix(replaced, planned.selection.scope.path) : replaced;
+        const path = isNamed ? stripScopePrefix(replaced, planned.scope.folder.path) : replaced;
         if (path === '') return [];
         if (isNamed) named.push(path);
         return [{ kind, path }];
@@ -107,7 +107,7 @@ function listDeclaredOutputs(
 }
 
 function listGeneratorSources(session: Session, planned: PlannedCheck): GeneratorRun | undefined {
-    const values = buildCommandSubstitutions(session, planned, join(session.root, planned.selection.scope.path));
+    const values = buildCommandSubstitutions(session, planned, join(session.root, planned.scope.folder.path));
     const declaration = planned.check.command ?? [];
     const command = expandCommand(session, planned, declaration, values);
     if (command.length === 0) return undefined;
@@ -118,7 +118,7 @@ function listGeneratorSources(session: Session, planned: PlannedCheck): Generato
     const patterns = declared.filter((entry) => entry.kind === 'pattern').map((entry) => entry.path);
     const isMatched = buildPathMatcher(patterns);
     const selected = planned.files
-        .map((file) => posix.relative(planned.selection.scope.path, file.path))
+        .map((file) => posix.relative(planned.scope.folder.path, file.path))
         .filter((path) => isMatched(path));
 
     const commandText = command.filter((part) => typeof part === 'string').join(' ');
@@ -133,11 +133,11 @@ function listGeneratorSources(session: Session, planned: PlannedCheck): Generato
  * @returns one finding per missing or stale file.
  */
 export async function checkGeneratorOutputs(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const inputs = listGeneratorSources(session, planned);
-    if (inputs === undefined) return [];
-    const { values, commandText, declaration, patterns, targets, selected } = inputs;
+    const sources = listGeneratorSources(session, planned);
+    if (sources === undefined) return [];
+    const { values, commandText, declaration, patterns, targets, selected } = sources;
     const excluded = [...GENERATOR_IGNORED_FOLDERS, DOT_GSPOT].map((name) => `!**/${name}/**`);
-    const untracked = listUntrackedOutputs(session, planned, inputs.named, excluded);
+    const untracked = listUntrackedOutputs(session, planned, sources.named, excluded);
     if (untracked.length > 0) return untracked;
     if (targets.length + selected.length === 0) return [];
     const missing = listMissingOutputs(session, planned, targets, commandText);
@@ -147,8 +147,8 @@ export async function checkGeneratorOutputs(session: Session, planned: PlannedCh
         planned,
         targets.map((entry) => entry.path),
     );
-    const cwd = join(folder.path, planned.selection.scope.path);
-    const outputFiles = { root: folder.path, scope: planned.selection.scope.path, patterns, targets, excluded };
+    const cwd = join(folder.path, planned.scope.folder.path);
+    const outputFiles = { root: folder.path, scope: planned.scope.folder.path, patterns, targets, excluded };
     const before = readOutputContents(outputFiles);
     const commandArguments = expandCommand({ ...session, root: folder.path }, planned, declaration, {
         ...values,

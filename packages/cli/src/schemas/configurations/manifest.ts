@@ -54,7 +54,7 @@ const filesSchema = z.strictObject({
 const selectorSchema = z.strictObject({
     selector: z.string().min(1),
     message: z.string().min(1),
-    files_setting: z.string().min(1).optional(),
+    paths_setting: z.string().min(1).optional(),
 } satisfies SchemaShape<ParsedManifest['eslint']['selectors'][number]>);
 
 const pointerSchema = z.strictObject({
@@ -83,7 +83,7 @@ const toolFileSchema = z
         pointer: pointerSchema.optional(),
         per_scope: z.boolean().default(false),
         rule_dependencies: z.record(z.string().min(1), z.array(z.string().min(1)).min(1)).optional(),
-        rule_paths_setting: z.string().min(1).optional(),
+        paths_setting: z.string().min(1).optional(),
     })
     // Copied files use the same relative path beneath tool-files and the generated configuration folder.
     .transform((toolFile) => {
@@ -275,5 +275,5 @@ export const manifestSchema = z
                       toolFile.file,
                   ),
         })),
-        checks: check.map((entry) => ({ ...entry, name: `${rest.configuration.name}/${entry.name}` })),
+        checks: check.map(({ name, ...entry }) => ({ ...entry, id: `${rest.configuration.name}/${name}` })),
     })) satisfies z.ZodType<ParsedManifest>;

@@ -65,7 +65,7 @@ path="z/app"
 
 # A check
 [[command_check]]
-name="a/task"
+id="a/task"
 command=["bun","task.ts"]
 paths=["src/**"]
 stage="manual"
@@ -82,7 +82,7 @@ path="z/app"
 [[scope]]
 path="a/app"
 [[command_check]]
-name="a/task"
+id="a/task"
 command=["bun","task.ts"]
 paths=["src/**"]
 stage="manual"
@@ -107,7 +107,7 @@ path = "a/app"
 
 # A check
 [[command_check]]
-name = "a/task"
+id = "a/task"
 command = ["bun", "task.ts"]
 paths = ["src/**"]
 stage = "manual"

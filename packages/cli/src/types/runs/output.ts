@@ -47,7 +47,7 @@ export type OutputPaths = { cwd: string; root: string };
 
 /** Check identity, output declaration, and fixer command consumed by output parsing. */
 export type ParsingCheck = {
-    name: string;
+    id: string;
     help: string;
     runs: (typeof CHECK_RUNS)[number];
     output: CheckOutput;
@@ -55,7 +55,7 @@ export type ParsingCheck = {
 };
 
 /** The parser of one format and its source-file checks. */
-export type OutputDescriptor = {
+export type OutputParser = {
     parse: (output: ToolOutput) => Finding[];
     namesFiles: (output: CheckOutput) => boolean;
 };

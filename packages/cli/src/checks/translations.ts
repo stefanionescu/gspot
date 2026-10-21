@@ -4,8 +4,8 @@ import type { Parsed } from '#cli/types/shapes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import type { Session } from '#cli/types/session.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { messagesSchema } from '#cli/schemas/checks/translations.ts';
@@ -51,7 +51,7 @@ function compareMessages(
     messages: Map<string, string>,
     baseMessages: Map<string, string>,
 ): Finding[] {
-    const base = getTable(planned.selection.view, 'translations').base_locale;
+    const base = getTable(planned.scope.settings, 'translations').base_locale;
     const broken = [...messages].flatMap(([key, text]) => {
         const message = validateMessage(text);
         return message === undefined
@@ -158,7 +158,7 @@ function readMessageFiles(
  * @returns the findings.
  */
 export function checkTranslationsMessages(session: Session, planned: PlannedCheck): Finding[] {
-    const options = getTable(planned.selection.view, 'translations');
+    const options = getTable(planned.scope.settings, 'translations');
     const folder = options.messages_folder as string;
     const base = options.base_locale;
     const isMessageFile = (path: string): boolean =>

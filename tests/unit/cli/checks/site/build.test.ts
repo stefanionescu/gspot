@@ -44,12 +44,12 @@ test('build: a build that reads an untracked file fails until the file is in the
 readFileSync('local-input.txt');
 ${SITE_BUILD_SCRIPT}`,
     });
-    const session = await openSession(sandbox.path, { resources: resources });
+    const session = await openSession(sandbox.path, { resources });
     const request = planSandboxCheck(session, 'site/build', { paths: ['build.js'] });
     expect(await findBuiltInCheck('site/build')(session, request)).toStrictEqual([
         matchFields({ rule: 'build', message: expect.stringContaining('local-input.txt') as string }),
     ]);
-    const checkedSession = await openSession(sandbox.path, { resources: resources });
+    const checkedSession = await openSession(sandbox.path, { resources });
     const corrected = await getSuccessfulBuild(
         checkedSession,
         planSandboxCheck(checkedSession, 'site/build', { paths: ['build.js', 'local-input.txt'] }),
@@ -117,7 +117,7 @@ test("build: a scope's site build copies only the workspace packages it depends 
     await symlink('../packages/core', join(sandbox.path, 'node_modules/core'));
     await symlink('../packages/unused', join(sandbox.path, 'node_modules/unused'));
     using resources = new DisposableStack();
-    const session = await openSession(sandbox.path, { resources: resources });
+    const session = await openSession(sandbox.path, { resources });
     const input = planSandboxCheck(session, 'site/build', { scope: 'web' });
     const built = await getSuccessfulBuild(session, input);
     expect(built.isBuilt, built.outputTail).toBe(true);

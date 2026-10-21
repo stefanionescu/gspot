@@ -1,6 +1,6 @@
 ---
 title: Tests and coverage
-description: Run your tests before every push and fail when coverage drops under its floor.
+description: Run your tests before every push and fail when coverage drops under its minimum.
 ---
 
 gspot runs your test suite as a check at the push stage, and the check fails when coverage falls below
@@ -59,7 +59,7 @@ and `--strict-config`.
 
 ## Swift
 
-The [Swift](/languages/swift/#tests) page covers Swift tests and their coverage floors.
+The [Swift](/languages/swift/#tests) page covers Swift tests and their coverage minimums.
 
 ## Test files
 

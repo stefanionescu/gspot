@@ -10,7 +10,7 @@ import { BANNER_BYTES } from '#cli/config/repository/inventory.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { type GenerationResult } from '#cli/types/generation/files.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
+import type { ConfigurationEvidence } from '#cli/types/repository/detection.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { type ReplacedFile, type ExistingTools } from '#cli/types/repository/existing-tools.ts';
 import { readLintJobs, isEditedInPlace, readExistingTools } from '#cli/repository/existing-tools.ts';
@@ -36,8 +36,8 @@ function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
 
 function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
     const { repository, configurations, settingsFile } = session;
-    const selections = listSelectedConfigurations(session.scopes);
-    const selected = new Set(selections.map((configuration) => configuration.name));
+    const selectedConfigurations = listSelectedConfigurations(session.scopes);
+    const selected = new Set(selectedConfigurations.map((configuration) => configuration.name));
     const settings = settingsFile.settings;
     const detected = listDetectedConfigurations(session);
     const choices = [
@@ -69,7 +69,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
             });
         });
     const rows = new Map<string, Suggestions['suggested'][number]>();
-    for (const configuration of selections)
+    for (const configuration of selectedConfigurations)
         for (const name of configuration.suggests)
             if (!selected.has(name) && !rows.has(name))
                 rows.set(name, {

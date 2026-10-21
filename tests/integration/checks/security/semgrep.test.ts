@@ -103,7 +103,7 @@ async function assertPlatformRules(installedSandbox: () => Sandbox, level: Level
         'gspot.toml': buildSandboxSettings(
             ['javascript', 'typescript', 'swift', 'supabase', 'cloudflare', 'security', 'xcode'],
             {
-                level: level,
+                level,
             },
         ),
         ...PLATFORM_SOURCES,

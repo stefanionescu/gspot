@@ -23,7 +23,7 @@ test.each([...PYTHON_PROJECTS])(
         await using repository = await testdir();
         await using artifacts = await testdir();
         await using prepared = await createIndexedPythonSandbox(repository.path, artifacts.path, configuration);
-        const { projectFile, lockfilePath, lockfile } = prepared.inputs;
+        const { projectFile, lockfilePath, lockfile } = prepared.projectFiles;
         const { rootProject, rootConfiguration } = prepared;
         expect(lockfile.toString('utf8')).not.toContain(PYTHON_INDEX_CREDENTIALS.password);
         const brokenUv = await fakeTool(artifacts.path, 'bin/uv', 'process.exitCode = 87;');
@@ -103,7 +103,7 @@ test('conflicted Python lockfiles survive offline apply and are repaired by inst
     await using repository = await testdir();
     await using artifacts = await testdir();
     await using prepared = await createIndexedPythonSandbox(repository.path, artifacts.path, configuration);
-    const { lockfilePath, lockfile } = prepared.inputs;
+    const { lockfilePath, lockfile } = prepared.projectFiles;
     const { rootConfiguration } = prepared;
     const conflict = '<<<<<<< interrupted lockfile\n';
     await chmod(lockfilePath, 0o644);

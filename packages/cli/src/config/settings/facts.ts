@@ -209,6 +209,13 @@ export const SETTING_FACTS = {
         reason_needed: 'adding',
         default: ['404.html'] as ['404.html'],
     },
+    'spelling.allowed_words': {
+        configurations: ['spelling'],
+        reason_values: true,
+        description:
+            'Words the spelling checks accept beyond the shipped spelling list, each with the reason it is a real word. A scope adds its words to the root words.',
+        default: {},
+    },
     'spelling.locale': {
         configurations: ['spelling'],
         description:

@@ -28,7 +28,7 @@ function listVersions(locked: Set<string> | undefined, declared: Map<string, str
  * @returns a finding when the versions differ.
  */
 export function checkReactVersions(session: Session, planned: PlannedCheck): Finding[] {
-    const folder = planned.selection.scope.path;
+    const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const declared = readDeclaredSpecifiers(session.reads, packageJsonPath);
     if (declared === undefined || !declared.has(REACT_PACKAGE) || !declared.has(REACT_DOM_PACKAGE)) return [];

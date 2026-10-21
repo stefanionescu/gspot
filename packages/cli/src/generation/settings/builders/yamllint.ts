@@ -1,6 +1,6 @@
 import { stringify } from 'yaml';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scope-view.ts';
+import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 
 import {
     YAMLLINT_RULES,
@@ -19,11 +19,11 @@ export function buildYamllintFile(planned: PlannedToolFile): string {
         ...Object.fromEntries(YAMLLINT_RULES.map((rule) => [rule, {}])),
         ...YAMLLINT_RULE_OPTIONS,
     };
-    for (const [rule, chosen] of Object.entries(getTable(planned.selection.view, 'tools.yamllint').rules))
+    for (const [rule, chosen] of Object.entries(getTable(planned.scope.settings, 'tools.yamllint').rules))
         rules[rule] = { ...(rules[rule] as Record<string, unknown>), ...chosen };
     Object.assign(
         rules,
-        Object.fromEntries(listIgnoredRules(planned.selection, 'files/yamllint').map((name) => [name, 'disable'])),
+        Object.fromEntries(listIgnoredRules(planned.scope, 'data-files/yamllint').map((name) => [name, 'disable'])),
     );
     const document = { rules };
     return stringify(document, YAMLLINT_YAML_OPTIONS);

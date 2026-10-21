@@ -5,7 +5,7 @@ import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { isRecord, stripUndefined } from '#cli/system/tables.ts';
+import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { type ConfigurationsOptions } from '#cli/types/apply.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { applySettingsEdit, prepareConfigurationEdit } from '#cli/apply/settings-edit.ts';
@@ -18,7 +18,7 @@ function restoreConfigurations(table: TomlTable, removed: string[], configuratio
     else
         table['removed_configurations'] = {
             value: remaining,
-            reason: isRecord(previous) ? previous['reason'] : undefined,
+            reason: isTable(previous) ? previous['reason'] : undefined,
         };
 }
 
@@ -48,7 +48,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     const summary = `Added ${options.configurations.join(' and ')}${where}.`;
     return await applySettingsEdit(root, {
         edit: input,
-        summary: summary,
+        summary,
     });
 }
 
@@ -69,7 +69,7 @@ export function registerAdd(program: Command, onResult: CommandCompletion): void
             onResult(
                 await runAddCommand({
                     cwd: process.cwd(),
-                    configurations: configurations,
+                    configurations,
                     ...stripUndefined({ scope: flags.scope }),
                 }),
             );

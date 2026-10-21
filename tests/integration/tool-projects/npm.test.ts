@@ -158,8 +158,8 @@ test.each([...PACKAGE_MANAGER_ROWS])(
         await using sandbox = await createPackageManagerSandbox(packageManager, projectPath);
         const { root, rootPackage, yarnConfiguration } = sandbox;
         await installToolProjects(root);
-        const inputs = await readToolProjectFiles(root, packageManager);
-        const { projectFile, lockfilePath, lockfile, mode } = inputs;
+        const projectFiles = await readToolProjectFiles(root, packageManager);
+        const { projectFile, lockfilePath, lockfile, mode } = projectFiles;
         const installed = await spawnGspot(root, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         expect(installed.stdout).toContain('.gspot/node_modules');
@@ -204,7 +204,7 @@ test.each([...PACKAGE_MANAGER_ROWS])(
         const second = JSON.parse(applied.stdout) as ApplyReport;
         expect(second.written).toStrictEqual([]);
         expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
-        if (projectPath === 'package.json') await assertCloneInstallation(sandbox, inputs);
+        if (projectPath === 'package.json') await assertCloneInstallation(sandbox, projectFiles);
     },
 );
 

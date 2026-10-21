@@ -1,5 +1,5 @@
 export const FILES_SANDBOX = {
-    configurations: ['files'],
+    configurations: ['data-files'],
     files: {
         'settings/clean.toml': 'a = 1\n',
         'config.yaml': '---\nkey: 1\n',
@@ -9,13 +9,13 @@ export const FILES_SANDBOX = {
 
 export const FILES_CASES = [
     {
-        check: 'files/yamllint',
+        check: 'data-files/yamllint',
         files: { 'config.yaml': 'key: 1\nkey: 2\n' },
         expected: { file: 'config.yaml', line: 2, rule: 'key-duplicates' },
         corrected: { files: { 'config.yaml': '---\nkey: 1\n' } },
     },
     {
-        check: 'files/taplo-format',
+        check: 'data-files/taplo-format',
         files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
         expected: {
             file: 'settings/layout.toml',
@@ -24,7 +24,7 @@ export const FILES_CASES = [
         corrected: { files: { 'settings/layout.toml': 'a = 1\nb = 2\n' } },
     },
     {
-        check: 'files/xmllint',
+        check: 'data-files/xmllint',
         files: { 'settings/feed.xml': '<feed><entry></feed>\n' },
         expected: {
             file: 'settings/feed.xml',

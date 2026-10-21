@@ -1,19 +1,19 @@
 import { posix } from 'node:path';
 import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { selectForScope } from '#cli/settings/scope-view.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
+import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/python.ts';
-import { isRecord, stripUndefined } from '#cli/system/tables.ts';
+import { selectForScope } from '#cli/settings/scope-settings.ts';
 import { DEFAULT_QUOTES } from '#cli/config/settings/defaults.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { FORMAT_CONFIGURATION } from '#cli/config/configurations.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
-import { buildDraftSelection } from '#cli/commands/init/selection.ts';
+import { buildSelectedConfigurations } from '#cli/commands/init/selection.ts';
 import { PYTHON_FILES } from '#cli/config/generation/settings/builders/ruff.ts';
 import type { SettingsDraft, PrettierOptions } from '#cli/types/commands/init.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
@@ -135,7 +135,7 @@ function readFormatOptions(
     const usesPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
     if (usesPrettier) {
-        let options: unknown = isRecord(packageOptions) ? packageOptions : {};
+        let options: unknown = isTable(packageOptions) ? packageOptions : {};
         if (prettierFile !== undefined && (PRETTIER_JSON_FILES as readonly string[]).includes(prettierFile.path))
             options = parseJsonFile(posix.join(root, prettierFile.path), prettierFile.text);
         return { ...PRETTIER_DEFAULTS, ...stripUndefined(prettierSettingsSchema.parse(options)) };
@@ -152,21 +152,21 @@ function readScopeFormat(
     },
 ): TomlTable {
     const { draft, repository, configurations } = init;
-    const selected = selectForScope(buildDraftSelection(draft), scope, configurations);
+    const selected = selectForScope(buildSelectedConfigurations(draft), scope, configurations);
     const format = selected.find((entry) => entry.name === FORMAT_CONFIGURATION);
     if (format === undefined) return {};
     const options = readFormatOptions(
         posix.join(repository.root, scope, PACKAGE_JSON),
         Object.fromEntries(
             repository.dependencyFiles
-                .filter((entry) => findScope(entry.path, draft.scopes).path === scope)
+                .filter((entry) => findScopeFolder(entry.path, draft.scopes).path === scope)
                 .flatMap((entry) => Object.entries(entry.dependencies)),
         ),
         getTool([format], 'prettier').replace as string[],
     );
     const quotes = convertQuotes(options?.singleQuote);
     const hasPython = repository.files.some(
-        (file) => file.path.endsWith(PYTHON_EXTENSION) && findScope(file.path, draft.scopes).path === scope,
+        (file) => file.path.endsWith(PYTHON_EXTENSION) && findScopeFolder(file.path, draft.scopes).path === scope,
     );
     const overrides = buildFormatOverrides(options, { root: posix.join(repository.root, scope), quotes, hasPython });
     if (options === null) return overrides.length === 0 ? {} : { format: { override: overrides } };

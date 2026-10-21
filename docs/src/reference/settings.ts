@@ -7,7 +7,6 @@ import { formatTable, formatSection, buildReferencePage, formatReferencePath } f
 import {
     MAP_KEY_NAME,
     ANGLE_BRACKETS,
-    REFERENCE_FOLDERS,
     HEADING_ID_DROPPED,
     SCHEMA_TYPE_LABELS,
     LISTED_VALUES_LIMIT,
@@ -17,9 +16,12 @@ import {
     REASONED_VALUE_LABEL,
 } from '../config/reference.ts';
 
-function getSchemaNode(schema: JSONSchema.JSONSchema, value: JSONSchema.JSONSchema | boolean): JSONSchema.JSONSchema {
-    if (typeof value === 'boolean') return value ? {} : { not: {} };
-    let node = value;
+function getSchemaNode(
+    schema: JSONSchema.JSONSchema,
+    subschema: JSONSchema.JSONSchema | boolean,
+): JSONSchema.JSONSchema {
+    if (typeof subschema === 'boolean') return subschema ? {} : { not: {} };
+    let node = subschema;
     while (node.$ref !== undefined) {
         const { $ref: reference, ...local } = node;
         // buildJsonSchema writes every local reference into $defs.
@@ -42,8 +44,8 @@ function isReasonedValue(node: JSONSchema.JSONSchema): boolean {
     );
 }
 
-function formatAcceptedValue(schema: JSONSchema.JSONSchema, value: JSONSchema.JSONSchema | boolean): string {
-    const node = getSchemaNode(schema, value);
+function formatAcceptedValue(schema: JSONSchema.JSONSchema, subschema: JSONSchema.JSONSchema | boolean): string {
+    const node = getSchemaNode(schema, subschema);
     if (isReasonedValue(node)) return REASONED_VALUE_LABEL;
     if (node.const !== undefined)
         return [`\`${JSON.stringify(node.const)}\``, node.description]
@@ -72,9 +74,9 @@ function formatAcceptedValue(schema: JSONSchema.JSONSchema, value: JSONSchema.JS
 // The keys under a table or a record: its fixed keys, then the keys of each map entry under a <name> placeholder.
 function listSchemaProperties(
     schema: JSONSchema.JSONSchema,
-    value: JSONSchema.JSONSchema | boolean,
+    subschema: JSONSchema.JSONSchema | boolean,
 ): Array<{ name: string; node: JSONSchema.JSONSchema; required: boolean }> {
-    const node = getSchemaNode(schema, value);
+    const node = getSchemaNode(schema, subschema);
     const shape =
         typeof node.items === 'object' && !Array.isArray(node.items) ? getSchemaNode(schema, node.items) : node;
     const required = new Set(shape.required);
@@ -200,11 +202,11 @@ function formatVariantSection(schema: JSONSchema.JSONSchema, key: string, node: 
 function formatSettingTable(
     facts: ReferenceFacts,
     key: string,
-    value: JSONSchema.JSONSchema | boolean,
+    subschema: JSONSchema.JSONSchema | boolean,
     level: number,
 ): string {
     const { schema } = facts;
-    const node = getSchemaNode(schema, value);
+    const node = getSchemaNode(schema, subschema);
     const children = listSchemaProperties(schema, node);
     const keys = children.filter((child) => isSettingValue(schema, child.node));
     const variants = new Set(listVariantTables(schema, node).map(({ name }) => name));
@@ -225,9 +227,9 @@ function formatSettingTable(
 }
 
 // A scope takes its own keys and every root table, apart from the keys that only the root takes.
-function formatScopeSection(facts: ReferenceFacts, value: JSONSchema.JSONSchema | boolean): string {
+function formatScopeSection(facts: ReferenceFacts, subschema: JSONSchema.JSONSchema | boolean): string {
     const { schema } = facts;
-    const node = getSchemaNode(schema, value);
+    const node = getSchemaNode(schema, subschema);
     const children = listSchemaProperties(schema, node);
     const accepted = new Set(children.map(({ name }) => name));
     const rootOnly = listSchemaProperties(schema, schema)
@@ -282,12 +284,12 @@ export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string 
 }
 
 /**
- * Build the one settings page: the top-level keys, then every table and record, each key under its own heading.
+ * Build the settings page: the top-level keys, then every table and record, each key under its own heading.
  *
  * @param facts settings variants and JSON Schema from the CLI
- * @returns the page, keyed by its path
+ * @returns the settings page, whose table of contents lists the tables only
  */
-export function buildSettingsPages(facts: ReferenceFacts): Map<string, ReferencePage> {
+export function buildSettingsPage(facts: ReferenceFacts): ReferencePage {
     const { schema } = facts;
     const roots = listSchemaProperties(schema, schema);
     const sections = roots
@@ -315,5 +317,5 @@ export function buildSettingsPages(facts: ReferenceFacts): Map<string, Reference
     );
     // Every key has a heading, so the table of contents lists the tables only.
     page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };
-    return new Map([[`${REFERENCE_FOLDERS.settings}/index.md`, page]]);
+    return page;
 }

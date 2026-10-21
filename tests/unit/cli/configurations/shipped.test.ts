@@ -17,7 +17,7 @@ import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint/presets.ts';
 import { EACH_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 
 /** Find settings expanded by normal and repeated command placeholders. */
-function commandSettings(check: Check): string[] {
+function listCommandSettings(check: Check): string[] {
     return [...(check.command ?? []), ...(check.fix ?? [])].flatMap((part) => {
         const repeated = EACH_PLACEHOLDER.exec(part)?.groups?.['setting'];
         return repeated === undefined
@@ -41,9 +41,9 @@ function hasEmptyDefault(setting: Setting | undefined): boolean {
 /** Report missing declarations and empty settings that a check expands without waiting. */
 function listSettingMismatches(check: Check, declarations: ReadonlyMap<string, Setting>): string[] {
     const awaited = check.when?.setting;
-    const mismatches = awaited !== undefined && !declarations.has(awaited) ? [`${check.name}: ${awaited}`] : [];
-    for (const name of commandSettings(check)) {
-        if (name !== awaited && hasEmptyDefault(declarations.get(name))) mismatches.push(`${check.name}: ${name}`);
+    const mismatches = awaited !== undefined && !declarations.has(awaited) ? [`${check.id}: ${awaited}`] : [];
+    for (const name of listCommandSettings(check)) {
+        if (name !== awaited && hasEmptyDefault(declarations.get(name))) mismatches.push(`${check.id}: ${name}`);
     }
     return mismatches;
 }
@@ -86,7 +86,7 @@ test('configurations agree on every tool and installer pin', () => {
     expect(mismatches).toStrictEqual([]);
 });
 
-test('each tool has a pin or a floor at or above it', () => {
+test('each tool has a pin or a minimum version at or above it', () => {
     const tools = [...readConfigurations().values()].flatMap((configuration) =>
         configuration.tools.map((tool) => ({ configuration: configuration.name, tool })),
     );
@@ -130,7 +130,7 @@ test('every default names a declared setting', () => {
 test('tool files and checks name declared tools and checks', () => {
     const configurations = [...readConfigurations().values()];
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)));
-    const checks = new Set(configurations.flatMap((configuration) => configuration.checks.map(({ name }) => name)));
+    const checks = new Set(configurations.flatMap((configuration) => configuration.checks.map(({ id: name }) => name)));
     const mismatches: string[] = [];
     for (const configuration of configurations) {
         const names = [
@@ -169,7 +169,7 @@ test('a check that needs a build, Docker, or the network does not run at the com
         configurations.flatMap((configuration) =>
             configuration.checks
                 .filter((check) => check.needs !== undefined && check.stage === 'commit')
-                .map(({ name }) => name),
+                .map(({ id: name }) => name),
         ),
     ).toStrictEqual([]);
 });

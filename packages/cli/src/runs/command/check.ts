@@ -9,25 +9,25 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import type { ProcessFailure } from '#cli/types/tools/run.ts';
+import { listOtherTools } from '#cli/planning/needed-tools.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { stripCoverageArguments } from '#cli/planning/checks.ts';
 import { buildCommandLines } from '#cli/runs/command/batches.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
-import { listCompanionTools } from '#cli/planning/needed-tools.ts';
 import { PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/report.ts';
 import type { CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/python.ts';
-import { findTool, runToolProcess, buildCompanionEnvironment } from '#cli/runs/command/tool.ts';
+import { findTool, runToolProcess, buildOtherToolEnvironment } from '#cli/runs/command/tool.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import type {
+    CopyRun,
     CommandRun,
     CommandGroup,
     CommandSetup,
     Substitutions,
-    CommandRunState,
     PreparedCommand,
 } from '#cli/types/runs/command.ts';
 import {
@@ -49,13 +49,13 @@ async function runCommands(
 ): Promise<CheckResult> {
     const { check } = planned;
     const { cwd, commandArguments } = prepared;
-    const state: CommandRunState = { root: prepared.root, cwd, findings: [], failed: false };
+    const state: CommandRun = { root: prepared.root, cwd, findings: [], failed: false };
     const started = performance.now();
     for (const commandLine of prepared.commandLines) {
         const { result, failure } = await runToolProcess(commandLine.commandArguments, {
             ...prepared,
             cancelSignal,
-            timeoutSeconds: Number(planned.selection.view.settings['tool_timeout_seconds']),
+            timeoutSeconds: Number(planned.scope.settings.settings['tool_timeout_seconds']),
             name: tool.name,
         });
         if (failure !== undefined)
@@ -99,7 +99,7 @@ function findMissingToolFile(
 }
 
 // Reports the repository command, not the copy command.
-async function runInCopy(run: CommandRun): Promise<CheckResult> {
+async function runInCopy(run: CopyRun): Promise<CheckResult> {
     const { session, planned, tool, command, toolPath, setup, base, options } = run;
     using copy =
         options.copyRoot === undefined && planned.check.run_in_copy === true
@@ -110,9 +110,9 @@ async function runInCopy(run: CommandRun): Promise<CheckResult> {
         folder === undefined
             ? prepareCommand(planned, { session, command, setup, toolPath })
             : prepareCommandIn(folder, planned, { session, command, toolPath, options });
-    prepared.env = buildCompanionEnvironment(
+    prepared.env = buildOtherToolEnvironment(
         session,
-        listCompanionTools(planned.selection, planned.check, command),
+        listOtherTools(planned.scope, planned.check, command),
         prepared.env,
     );
     const result = await runCommands(planned, { cancelSignal: session.cancelSignal, tool, prepared, base });
@@ -121,13 +121,13 @@ async function runInCopy(run: CommandRun): Promise<CheckResult> {
     return { ...result, command: reported.filter((part) => typeof part === 'string') };
 }
 
-function findUnavailableCompanion(
+function findMissingOtherTool(
     session: Session,
     planned: PlannedCheck,
     command: string[],
     cwd: string,
 ): ProcessFailure | undefined {
-    for (const name of listCompanionTools(planned.selection, planned.check, command)) {
+    for (const name of listOtherTools(planned.scope, planned.check, command)) {
         const required = getTool(session.configurations.values(), name);
         const availability = findTool(session, cwd, required);
         if ('status' in availability) return availability;
@@ -217,9 +217,9 @@ export function prepareToolEnvironment(
  * @returns the paths and environment for the tool.
  */
 export function buildCommandSetup(session: Session, planned: PlannedCheck, options: CheckRunOptions): CommandSetup {
-    const { check, selection } = planned;
+    const { check, scope } = planned;
     const runsInScope = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
-    const cwd = runsInScope ? join(session.root, selection.scope.path) : session.root;
+    const cwd = runsInScope ? join(session.root, scope.folder.path) : session.root;
     const substitutions = buildCommandSubstitutions(session, planned, cwd);
     const files = substitutions.files;
     if (options.listFileArguments !== undefined) substitutions.files = options.listFileArguments(session, planned);
@@ -234,7 +234,7 @@ export function buildCommandSetup(session: Session, planned: PlannedCheck, optio
               );
     const python =
         planned.configuration?.name === PYTHON_CONFIGURATION
-            ? buildCopyPythonEnvironment(session, selection.scope.path)
+            ? buildCopyPythonEnvironment(session, scope.folder.path)
             : {};
     return { root: session.root, cwd, files, substitutions, env: { ...env, ...python } };
 }
@@ -250,11 +250,11 @@ export function buildCommandSetup(session: Session, planned: PlannedCheck, optio
 export function buildCommandSubstitutions(source: Session, planned: PlannedCheck, cwd: string): Substitutions {
     const substitutions: Substitutions = {
         files: planned.files.map((file) => convertToPosixPath(relative(cwd, join(source.root, file.path)))),
-        scope: planned.selection.scope.path,
+        scope: planned.scope.folder.path,
         root: source.root,
         indent:
-            planned.selection.view.values.format.indent_style === 'space'
-                ? planned.selection.view.values.format.indent_width
+            planned.scope.settings.values.format.indent_style === 'space'
+                ? planned.scope.settings.values.format.indent_width
                 : 0,
     };
     if (planned.messageFile !== undefined) substitutions.messageFile = planned.messageFile;
@@ -316,7 +316,7 @@ export async function runCheckCommand(
     if (missing !== undefined) return missing;
     const availability = findTool(session, cwd, tool);
     if ('status' in availability) return { ...base, ...availability };
-    const companion = findUnavailableCompanion(session, planned, command, cwd);
+    const companion = findMissingOtherTool(session, planned, command, cwd);
     if (companion !== undefined) return { ...base, ...companion };
     return runInCopy({ session, planned, tool, command, toolPath: availability.path, setup, base, options });
 }

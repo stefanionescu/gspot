@@ -2,7 +2,7 @@ allowed_words = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
 ignored_paths = [".build", "DerivedData", "**/.build/**", "**/DerivedData/**", "**/Pods/**"]
 
 [configuration]
-description = "Swift sources and their XCTest and Swift Testing tests: lint and analyzer rules for each level, one format, a clean build, no unused code, a reason on each disabled test, and a coverage floor."
+description = "Swift sources and their XCTest and Swift Testing tests: lint and analyzer rules for each level, one format, a clean build, no unused code, a reason on each disabled test, and a minimum coverage."
 title = "Swift"
 
 [detect]
@@ -54,7 +54,7 @@ name = "swift"
 system = true
 
 [[tool]]
-install_hint = "install Xcode from the App Store"
+install_help = "install Xcode from the App Store"
 name = "xcodebuild"
 system = true
 
@@ -162,15 +162,15 @@ summary = "Checks that skip calls and disabled traits name a nonempty reason, an
 why = "A skipped test with no reason stays off, because nobody can tell when to restore it."
 
 [[check]]
-example = "A Swift target reports 85% line coverage against a 90% floor. Add a test that exercises its uncovered lines, then rerun the target."
+example = "A Swift target reports 85% line coverage against a 90% minimum. Add a test that exercises its uncovered lines, then rerun the target."
 files = { extensions = [".swift"] }
-help = "Add tests for the target, or lower its floor with a reason."
+help = "Add tests for the target, or lower its minimum with a reason."
 level = "recommended"
 name = "coverage"
 needs = ["build"]
 operating_systems = ["macos", "linux"]
 runs = "scope"
 stage = "push"
-summary = "Measures each source target in Xcode projects and Swift packages against `coverage.lines` and its `coverage.swift_target` floor."
+summary = "Measures each source target in Xcode projects and Swift packages against `coverage.lines` and its `coverage.swift_target` minimum."
 when = { tags = ["swift-test", "swift-test-target"] }
-why = "A floor for each target exposes Swift code that no test runs."
+why = "A coverage minimum for each target exposes Swift code that no test runs."

@@ -20,15 +20,15 @@ import {
 export function buildBasedpyrightFile(planned: PlannedToolFile): string {
     const pythonScopePath = posix.join(
         posix.relative(posix.dirname(planned.targetPath), '.'),
-        planned.selection.scope.path,
+        planned.scope.folder.path,
     );
     // uv records the environment beside its tracked lockfile, even before the environment exists locally.
     const pythonVenv = planned.session.repository.files.some(
-        (file) => file.path === joinScope(planned.selection.scope.path, PROJECT_UV_LOCKFILE),
+        (file) => file.path === joinScope(planned.scope.folder.path, PROJECT_UV_LOCKFILE),
     )
         ? PYTHON_ENVIRONMENT_FOLDER
         : undefined;
-    const extraPaths = planned.selection.view.values.python?.extra_paths ?? [];
+    const extraPaths = planned.scope.settings.values.python?.extra_paths ?? [];
     return JSON.stringify(
         {
             ...BASEDPYRIGHT_OPTIONS,

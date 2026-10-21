@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import type { NamedCategory } from '#cli/types/settings/tables.ts';
 import { addIdentifier } from '#cli/checks/naming/languages/identifier.ts';
-import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
+import type { Identifier, FileIdentifiers } from '#cli/types/checks/naming.ts';
 
 import {
     SWIFT_NAME_QUOTE,
@@ -10,31 +10,31 @@ import {
     SWIFT_MEMBER_PARENTS,
 } from '#cli/config/checks/naming.ts';
 
-function addTypes(sink: ExtractSink, root: Node): void {
+function addTypes(found: FileIdentifiers, root: Node): void {
     for (const node of root.descendantsOfType([...SWIFT_TYPE_NODES])) {
         const name = node.childForFieldName('name');
         if (name?.type === 'type_identifier')
-            addIdentifier(sink, name, 'types', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
+            addIdentifier(found, name, 'types', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
     }
 }
 
 // A parameter holds the name callers write and the name the body reads; the body's name supplies the declaration.
-function addParameters(sink: ExtractSink, declaration: Node): void {
+function addParameters(found: FileIdentifiers, declaration: Node): void {
     for (const parameter of declaration.namedChildren) {
         if (parameter.type !== 'parameter') continue;
         const name = parameter.childrenForFieldName('name').find((child) => child.type === 'simple_identifier');
-        if (name) addIdentifier(sink, name, 'parameters', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
+        if (name) addIdentifier(found, name, 'parameters', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
     }
 }
 
-function addFunctions(sink: ExtractSink, root: Node): void {
+function addFunctions(found: FileIdentifiers, root: Node): void {
     const declarations = root.descendantsOfType([...SWIFT_CALLABLE_NODES]);
     for (const node of declarations) {
-        addParameters(sink, node);
+        addParameters(found, node);
         const name = node.childForFieldName('name');
         if (name?.type !== 'simple_identifier') continue;
         addIdentifier(
-            sink,
+            found,
             name,
             SWIFT_MEMBER_PARENTS.has(node.parent?.type ?? '') ? 'methods' : 'functions',
             name.text.replaceAll(SWIFT_NAME_QUOTE, ''),
@@ -51,21 +51,21 @@ function classifyDeclaredName(node: Node): NamedCategory {
     return parent === 'source_file' && isConstant ? 'constants' : 'variables';
 }
 
-function addNames(sink: ExtractSink, root: Node): void {
+function addNames(found: FileIdentifiers, root: Node): void {
     for (const node of root.descendantsOfType('property_declaration')) {
         const category = classifyDeclaredName(node);
         for (const pattern of node.childrenForFieldName('name')) {
             const bound = pattern.childForFieldName('bound_identifier');
-            if (bound) addIdentifier(sink, bound, category, bound.text.replaceAll(SWIFT_NAME_QUOTE, ''));
+            if (bound) addIdentifier(found, bound, category, bound.text.replaceAll(SWIFT_NAME_QUOTE, ''));
         }
     }
 }
 
-function addCases(sink: ExtractSink, root: Node): void {
+function addCases(found: FileIdentifiers, root: Node): void {
     for (const entry of root.descendantsOfType('enum_entry'))
         for (const name of entry.childrenForFieldName('name'))
             if (name.type === 'simple_identifier')
-                addIdentifier(sink, name, 'enum_cases', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
+                addIdentifier(found, name, 'enum_cases', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
 }
 
 /**
@@ -76,10 +76,10 @@ function addCases(sink: ExtractSink, root: Node): void {
  * @returns the declared names.
  */
 export function extractSwiftIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
-    const sink: ExtractSink = { file, language: 'swift', out: [] };
-    addTypes(sink, syntaxRoot);
-    addFunctions(sink, syntaxRoot);
-    addNames(sink, syntaxRoot);
-    addCases(sink, syntaxRoot);
-    return sink.out;
+    const found: FileIdentifiers = { file, language: 'swift', out: [] };
+    addTypes(found, syntaxRoot);
+    addFunctions(found, syntaxRoot);
+    addNames(found, syntaxRoot);
+    addCases(found, syntaxRoot);
+    return found.out;
 }

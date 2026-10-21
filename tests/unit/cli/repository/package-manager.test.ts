@@ -59,7 +59,7 @@ test.each([...NON_EXACT_PNPM_VERSIONS])(
         });
 
         expect(detectPackageManager(sandbox.path, [])).rejects.toThrow(
-            matchFields<GspotError>({ name: 'GspotError', code: 'installation', message }),
+            matchFields<GspotError>({ name: 'GspotError', code: 'install', message }),
         );
     },
 );

@@ -1,4 +1,4 @@
-import { findMarkdownCopy } from '../agents.ts';
+import { buildMarkdownCopyPath } from '../agents.ts';
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { entryToSimpleMarkdown } from 'starlight-llms-txt/markdown';
@@ -11,7 +11,7 @@ import { entryToSimpleMarkdown } from 'starlight-llms-txt/markdown';
 export const getStaticPaths = (async () => {
     const pages = await getCollection('docs');
     return pages.flatMap((entry) => {
-        const copy = findMarkdownCopy(entry.id);
+        const copy = buildMarkdownCopyPath(entry.id);
         return copy === undefined ? [] : [{ params: { markdown: copy.slice(1) }, props: { entry } }];
     });
 }) satisfies GetStaticPaths;

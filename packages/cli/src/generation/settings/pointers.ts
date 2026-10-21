@@ -8,7 +8,7 @@ import type { ManagedKeys } from '#cli/types/ownership.ts';
 import type { ToolFile } from '#cli/types/configurations.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listCoveredFiles } from '#cli/repository/covered-files.ts';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { listScopeChecks, listNeededTools } from '#cli/planning/needed-tools.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
@@ -18,15 +18,15 @@ import { TARGET_PLACEHOLDER, TARGET_JSON_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER 
 /**
  * Resolve target placeholders in pointer text.
  *
- * @param value the body text.
+ * @param body the body text.
  * @param pointerPath the pointer file.
  * @param targetPath the generated tool file.
  *
  * @returns the text with quoted module and JSON paths preserved.
  */
-function fillTarget(value: string, pointerPath: string, targetPath: string): string {
+function fillTarget(body: string, pointerPath: string, targetPath: string): string {
     const target = buildRelativeTarget(pointerPath, targetPath);
-    return value.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
+    return body.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
         if (placeholder === TARGET_MODULE_PLACEHOLDER) {
             return JSON.stringify(
                 target
@@ -84,35 +84,35 @@ function buildPointerFile(
  * @returns the root or folder paths.
  */
 export function listPointerPaths(owner: ToolFileOwner, toolFile: ToolFile): string[] {
-    const { selection, configuration } = owner;
+    const { scope, configuration } = owner;
     const { scopes, repository } = owner.session;
     const { pointer } = toolFile;
     if (pointer === undefined) return [];
-    const scope = selection.scope.path;
-    if (pointer.folders === undefined) return [toolFile.per_scope ? joinScope(scope, pointer.path) : pointer.path];
+    const scopePath = scope.folder.path;
+    if (pointer.folders === undefined) return [toolFile.per_scope ? joinScope(scopePath, pointer.path) : pointer.path];
     const children = listNestedScopes(
-        scopes.map((entry) => entry.scope.path),
-        scope,
+        scopes.map((entry) => entry.folder.path),
+        scopePath,
     );
     const matches = buildPathMatcher(pointer.folders);
     const owned = listCoveredFiles(configuration.files, repository.files, {
-        selected: selection.selected,
-        scope: '',
-        view: selection.view,
-    }).filter((file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)));
+        configurations: scope.configurations,
+        scopePath: '',
+        settings: scope.settings,
+    }).filter((file) => isInScope(file.path, scopePath) && children.every((child) => !isInScope(file.path, child)));
     const folders = new Set(
         owned.flatMap(({ path }) =>
             [...includeParentFolders([extractParentFolder(path)])]
                 .filter((folder) => folder !== '' && matches(folder))
                 .toSorted((left, right) => right.length - left.length)
-                .map((folder) => (isInScope(folder, scope) ? folder : scope)),
+                .map((folder) => (isInScope(folder, scopePath) ? folder : scopePath)),
         ),
     );
     return [...folders].map((folder) => `${folder}/${pointer.path}`);
 }
 
 function listPointerFieldTargets({
-    selection,
+    scope,
     configuration,
     tool,
     consumed,
@@ -124,19 +124,19 @@ function listPointerFieldTargets({
         .filter((replacement) => replacement.pointer === true)
         .flatMap((replacement) =>
             configuration.toolFiles
-                .map((file) => ({ file, target: buildScopeTarget(selection.scope.path, file, targets) }))
+                .map((file) => ({ file, target: getToolFileTarget(scope.folder.path, file, targets) }))
                 .filter(
                     ({ file, target }) =>
                         file.tool.includes(tool.name) && (!file.per_scope || consumed || !paths.has(target)),
                 )
                 .map(({ file, target }) => {
-                    const scope = file.per_scope ? selection.scope.path : '';
-                    const children = file.per_scope ? listNestedScopes(scopePaths, scope) : [];
-                    const pointerPath = file.pointer === undefined ? target : joinScope(scope, file.pointer.path);
+                    const scopePath = file.per_scope ? scope.folder.path : '';
+                    const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
+                    const pointerPath = file.pointer === undefined ? target : joinScope(scopePath, file.pointer.path);
                     const pointerTarget = paths.has(pointerPath) ? pointerPath : (file.pointer?.path ?? target);
                     return {
                         key: replacement.key,
-                        scope,
+                        scope: scopePath,
                         children,
                         target: pointerTarget,
                     };
@@ -159,11 +159,11 @@ export function buildPointerFieldEdits(
 ): ManagedKeys[] {
     const { root, repository, scopes } = session;
     const paths = new Set(generated.map(({ path }) => path));
-    const scopePaths = scopes.map(({ scope }) => scope.path);
-    const tools = scopes.flatMap((selection) => {
-        const required = new Set(listScopeChecks(session, selection).flatMap((check) => listNeededTools(check)));
-        return selection.selected.flatMap((configuration) =>
-            configuration.tools.map((tool) => ({ selection, configuration, tool, consumed: required.has(tool.name) })),
+    const scopePaths = scopes.map(({ folder }) => folder.path);
+    const tools = scopes.flatMap((scope) => {
+        const required = new Set(listScopeChecks(session, scope).flatMap((check) => listNeededTools(check)));
+        return scope.configurations.flatMap((configuration) =>
+            configuration.tools.map((tool) => ({ scope, configuration, tool, consumed: required.has(tool.name) })),
         );
     });
     const pointerTargets = tools.flatMap((selected) =>

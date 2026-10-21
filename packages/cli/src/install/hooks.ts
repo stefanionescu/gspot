@@ -93,8 +93,7 @@ export function installHooks(session: Session, steps: (readonly string[])[]): st
     if (plan.command !== undefined) {
         steps.push(plan.command);
         const result = runGitBlocking(session.repository.root, plan.command.slice(1));
-        if (result.code !== 0)
-            throw new GspotError('installation', `Cannot set core.hooksPath: ${result.stderr.trim()}`);
+        if (result.code !== 0) throw new GspotError('install', `Cannot set core.hooksPath: ${result.stderr.trim()}`);
     }
     return plan.note;
 }

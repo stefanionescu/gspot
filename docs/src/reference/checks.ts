@@ -43,7 +43,7 @@ function formatCheckFacts(check: Check, configuration: Configuration): string {
     const configurationName = configuration.name;
     const timing =
         check.stage === 'manual'
-            ? `only when \`gspot check --only ${check.name}\` names it`
+            ? `only when \`gspot check --only ${check.id}\` names it`
             : `at the \`${check.stage}\` [stage](/start/concepts/#stage)`;
     return [
         `Part of the [\`${configurationName}\`](${formatReferencePath('configurations', configurationName)}) configuration, at the \`${check.level}\` [level](/start/concepts/#levels). It runs ${timing}, ${CHECK_RUN_LABELS[check.runs]}.`,
@@ -65,8 +65,8 @@ function formatSuppressionComment(form: Suppression | undefined): string {
 // How to turn the check off for some files or for one lint rule, and the comment that silences one place.
 function formatTurnOff(check: Check, suppressions: Map<string, Suppression>): string {
     const commands = [
-        `gspot ignore ${check.name} --paths "<glob>" --reason "<why>"`,
-        ...(check.command === undefined ? [] : [`gspot ignore ${check.name} --rule <rule> --reason "<why>"`]),
+        `gspot ignore ${check.id} --paths "<glob>" --reason "<why>"`,
+        ...(check.command === undefined ? [] : [`gspot ignore ${check.id} --rule <rule> --reason "<why>"`]),
     ];
     const program = getToolName(check);
     const comment = formatSuppressionComment(program === undefined ? undefined : suppressions.get(program));
@@ -94,7 +94,7 @@ export function buildCheckPage(
         formatSection('Turn it off', formatTurnOff(check, suppressions)),
         formatSection(
             'Suppression forms',
-            check.name === SUPPRESSIONS_CHECK
+            check.id === SUPPRESSIONS_CHECK
                 ? formatTable(
                       ['Tool', 'Form'],
                       [...suppressions].map(([name, form]) => [
@@ -105,7 +105,7 @@ export function buildCheckPage(
                 : '',
         ),
     ];
-    return buildReferencePage(check.name, check.summary, lines.join(''));
+    return buildReferencePage(check.id, check.summary, lines.join(''));
 }
 
 /**
@@ -159,8 +159,8 @@ export function listGuideChecks(configurations: string[]): GuideCheck[] {
     return REFERENCE_FACTS.checks
         .filter(({ configuration }) => configurations.includes(configuration.name))
         .map(({ check }) => ({
-            name: check.name,
-            link: formatReferencePath('checks', check.name),
+            name: check.id,
+            link: formatReferencePath('checks', check.id),
             stage: check.stage,
             summary: check.summary,
         }));
@@ -176,7 +176,7 @@ export function formatCheckTable(checks: Check[]): string {
     return formatTable(
         ['Check', 'Stage', 'Level', 'What it does'],
         checks.map((check) => [
-            `[\`${check.name}\`](${formatReferencePath('checks', check.name)})`,
+            `[\`${check.id}\`](${formatReferencePath('checks', check.id)})`,
             `\`${check.stage}\``,
             `\`${check.level}\``,
             check.summary,

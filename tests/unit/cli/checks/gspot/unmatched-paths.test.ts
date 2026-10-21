@@ -4,10 +4,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { UNUSED_PATH_CASES } from '#tests/data/checks/gspot/unmatched-patterns.ts';
+import { UNMATCHED_PATH_CASES } from '#tests/data/checks/gspot/unmatched-paths.ts';
 
-test.each([...UNUSED_PATH_CASES])(
-    'gspot/unmatched-patterns reports only paths without tracked matches: $name',
+test.each([...UNMATCHED_PATH_CASES])(
+    'gspot/unmatched-paths reports each setting path without a tracked match: $name',
     async ({ files, settings, unmatched }) => {
         await using sandbox = await testdir();
         const { configurations, ...tables } = settings;
@@ -20,14 +20,14 @@ test.each([...UNUSED_PATH_CASES])(
             }),
         });
         commitAll(sandbox.path);
-        const findings = await checkFindings(sandbox.path, 'gspot/unmatched-patterns');
+        const findings = await checkFindings(sandbox.path, 'gspot/unmatched-paths');
         expect(findings.map((finding) => finding.message.split(' under ', 1)[0])).toStrictEqual([...unmatched]);
         expect(findings).toMatchObject(
             unmatched.map(() => ({
-                check: 'gspot/unmatched-patterns',
+                check: 'gspot/unmatched-paths',
                 file: 'gspot.toml',
                 line: 1,
-                rule: 'unused-record',
+                rule: 'unmatched-path',
             })),
         );
     },

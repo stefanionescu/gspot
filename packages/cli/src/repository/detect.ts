@@ -14,22 +14,22 @@ import {
     type ScopeContents,
     type DetectionEvidence,
     type ConfigurationEvidence,
-} from '#cli/types/repository/selection.ts';
+} from '#cli/types/repository/detection.ts';
 
 function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scope: string): ScopeContents {
-    const candidates = files.filter(
+    const scopeFiles = files.filter(
         (file) => file.kind === 'source' && !file.path.startsWith(`${DOT_GSPOT}/`) && isInScope(file.path, scope),
     );
     const extensionCounts = new Map<string, number>();
     const shebangs = new Set(
-        candidates.flatMap((file) =>
+        scopeFiles.flatMap((file) =>
             file.tags.filter((tag) => tag.startsWith(SHEBANG_TAG)).map((tag) => tag.slice(SHEBANG_TAG.length)),
         ),
     );
-    const paths = new Set(candidates.map((file) => file.path));
+    const paths = new Set(scopeFiles.map((file) => file.path));
     const scopeDependencyFiles = dependencyFiles.filter((dependencyFile) => paths.has(dependencyFile.path));
     const runtimes = new Map([
-        ...candidates.flatMap((file) =>
+        ...scopeFiles.flatMap((file) =>
             file.tags
                 .filter((tag) => tag.startsWith(RUNTIME_TAG))
                 .map((tag) => [tag.slice(RUNTIME_TAG.length), `${file.path} shebang`] as const),
@@ -38,12 +38,12 @@ function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFil
             dependencyFile.runtimes === undefined ? [] : Object.entries(dependencyFile.runtimes),
         ),
     ]);
-    for (const file of candidates) {
+    for (const file of scopeFiles) {
         const extension = extractExtension(file.path);
         if (extension !== '') extensionCounts.set(extension, (extensionCounts.get(extension) ?? 0) + 1);
     }
     return {
-        candidates,
+        files: scopeFiles,
         extensionCounts,
         shebangs,
         runtimes,
@@ -71,7 +71,7 @@ function findContentEvidence(
 ): DetectionEvidence | undefined {
     for (const [path, pattern] of Object.entries(detect.content)) {
         const target = joinScope(contents.scope, path);
-        const file = contents.candidates.find((candidate) => candidate.path === target);
+        const file = contents.files.find((entry) => entry.path === target);
         if (file === undefined) continue;
         const text = findText(root, file.path);
         if (text !== undefined && new RegExp(pattern, 'u').test(text)) return { evidence: file.path };
@@ -96,14 +96,14 @@ function findConfigurationEvidence(
 
 function findFilenameEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     const matches = buildFilenameMatcher(detect.filenames);
-    const file = contents.candidates.find((candidate) => matches(candidate.path));
+    const file = contents.files.find((entry) => matches(entry.path));
     return file === undefined ? undefined : { evidence: file.path };
 }
 
 // A project file names the project it marks, so use the file as evidence and its folder as a scope.
 function findProjectEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     for (const pattern of detect.project_files) {
-        const found = contents.candidates.find((file) => findProjectFolder(file.path, pattern) !== undefined);
+        const found = contents.files.find((file) => findProjectFolder(file.path, pattern) !== undefined);
         if (found !== undefined) return { evidence: found.path };
     }
     return undefined;
@@ -137,12 +137,12 @@ function findRuntimeEvidence(detect: Configuration['detect'], contents: ScopeCon
 function findPathEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     if (detect.paths.length === 0) return undefined;
     const matcher = buildPathMatcher(detect.paths);
-    const file = contents.candidates.find((candidate) => matcher(candidate.path));
+    const file = contents.files.find((entry) => matcher(entry.path));
     return file === undefined ? undefined : { evidence: file.path };
 }
 
 function findTagEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
-    const file = contents.candidates.find((candidate) => detect.tags.some((tag) => candidate.tags.includes(tag)));
+    const file = contents.files.find((entry) => detect.tags.some((tag) => entry.tags.includes(tag)));
     return file === undefined ? undefined : { evidence: file.path };
 }
 

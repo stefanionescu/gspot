@@ -22,7 +22,13 @@ async function prepareLanguages(installation: PackedSandbox): Promise<void> {
     await installSandbox(online, { configurations: ['bash', 'python', 'swift'] });
     const vocabulary = await online.run(
         installation.root,
-        ['set', 'allowed_words', 'NebulaConfiguration', '--reason', 'NebulaConfiguration is the project name.'],
+        [
+            'set',
+            'spelling.allowed_words',
+            'NebulaConfiguration',
+            '--reason',
+            'NebulaConfiguration is the project name.',
+        ],
         online.environment,
     );
     expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);

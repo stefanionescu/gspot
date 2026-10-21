@@ -1,10 +1,10 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { listCodeLines } from '#cli/parsers/bash.ts';
 import type { Session } from '#cli/types/session.ts';
-import { getLimit } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
 import { COUNT_LIMITS } from '#cli/config/checks/bash.ts';
+import { getLimit } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 
 /**
@@ -25,7 +25,7 @@ export async function checkBashFunctionSize(session: Session, planned: PlannedCh
                 function_assignments: entry.assignments,
             };
             return COUNT_LIMITS.flatMap(({ limit, rule, noun }) => {
-                const maximum = getLimit(planned.selection.view, limit, 'bash');
+                const maximum = getLimit(planned.scope.settings, limit, 'bash');
                 const count = counts[limit];
                 return count <= maximum
                     ? []

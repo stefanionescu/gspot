@@ -2,7 +2,7 @@ import type { StageFilter } from '#cli/types/planning.ts';
 import type { CanceledCommandJson } from '#cli/types/terminal.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { RunReport, CheckProgress } from '#cli/types/runs/run.ts';
-import type { PushInput, StagedPaths, ChangedPaths, PushSelection } from '#cli/types/repository/revisions.ts';
+import type { PushInput, StagedPaths, ChangedPaths, PushedRevisions } from '#cli/types/repository/revisions.ts';
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport };
 
@@ -10,7 +10,7 @@ type CheckedRevision = { hash: string; refs: string[]; commits: string[]; histor
 export type PushReport = {
     canceled?: { pendingRefs: string[] };
     revisions: CheckedRevision[];
-    skipped: PushSelection['skipped'];
+    skipped: PushedRevisions['skipped'];
     exitCode: number;
 };
 

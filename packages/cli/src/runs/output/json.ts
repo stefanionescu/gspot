@@ -58,7 +58,7 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
     const finding: Finding = {
         check,
         file,
-        message: message,
+        message,
         help,
         fixable: getFieldValues('fixable').some((entries) => entries.some((value) => value !== undefined)),
     };

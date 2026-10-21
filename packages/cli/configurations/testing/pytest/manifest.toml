@@ -1,5 +1,5 @@
 [configuration]
-description = "pytest suites: test style rules, test-name prefixes, and a coverage floor before every push."
+description = "pytest suites: test style rules, test-name prefixes, and a minimum coverage before every push."
 requires = ["python"]
 title = "pytest"
 
@@ -15,7 +15,7 @@ paths = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"]
 reason = "The test runner finds a test by this prefix."
 
 [[tool]]
-install_hint = "Run: python -m pip install pytest"
+install_help = "Run: python -m pip install pytest"
 min_version = "7.0.0"
 name = "pytest"
 suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "if TYPE_CHECKING:  # pragma: no cover # imports for type checkers only" }
@@ -23,7 +23,7 @@ system = true
 version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 
 [[tool]]
-install_hint = "Install pytest-cov in the Python environment used by pytest."
+install_help = "Install pytest-cov in the Python environment used by pytest."
 kind = "library"
 name = "pytest-cov"
 system = true
@@ -47,6 +47,6 @@ name = "coverage"
 output = { format = "regex", pattern = "^(?<message>(?:FAIL Required test coverage|FAILED |ERROR ).*)$" }
 runs = "scope"
 stage = "push"
-summary = "Runs pytest with coverage, and fails on a broken test or a covered share under the floor."
+summary = "Runs pytest with coverage, and fails on a broken test or a covered share under the minimum."
 tool = ["pytest", "pytest-cov"]
 why = "Coverage shows the Python branches and lines that no test runs, before a push."

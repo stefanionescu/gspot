@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { parseTomlSyntax } from '#cli/parsers/toml/syntax.ts';
@@ -26,7 +26,7 @@ function sortTable(table: TomlTable): TomlTable {
 
 function sortValue(value: unknown, path: string[]): unknown {
     if (Array.isArray(value)) return value.map((entry: unknown) => sortValue(entry, path));
-    if (!isRecord(value)) return value;
+    if (!isTable(value)) return value;
     const fields: Readonly<Record<string, readonly string[]>> = listRecordFields();
     const recordOrder: readonly string[] | undefined = isReasonedValue(value)
         ? ['value', 'reason']

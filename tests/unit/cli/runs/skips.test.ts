@@ -58,7 +58,7 @@ test.each([...NEXT_INTL_PROJECTS])('next-intl dependency condition: $name', asyn
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'push', only: ['translations/messages'] });
-    const check = planned.find((entry) => entry.selection.scope.path === scope)!;
+    const check = planned.find((entry) => entry.scope.folder.path === scope)!;
     expect(check.skip).toStrictEqual(
         selected ? undefined : { cause: 'condition', note: 'Needs a project dependency: next-intl.' },
     );
@@ -71,7 +71,7 @@ test('vue/vue-tsc without the typescript configuration is skipped with its condi
     });
     expect(
         planChecks(await openSession(sandbox.path), { stage: 'all', only: ['vue/vue-tsc'] }).map(({ check, skip }) => ({
-            check: check.name,
+            check: check.id,
             skip,
         })),
     ).toStrictEqual([
@@ -109,6 +109,6 @@ test('a check whose tool has no Windows build is skipped on Windows', async () =
     mockResources.use(simulateOperatingSystem('win32'));
     const session = await openSession(sandbox.path);
     expect(planChecks(session, { stage: 'all', only: ['security/semgrep'] })).toMatchObject([
-        { check: { name: 'security/semgrep' }, skip: { cause: 'system' } },
+        { check: { id: 'security/semgrep' }, skip: { cause: 'system' } },
     ]);
 });

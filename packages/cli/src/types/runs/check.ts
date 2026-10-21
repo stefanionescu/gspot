@@ -39,7 +39,7 @@ export type CheckResult = {
     duration: number;
     findings: readonly Finding[];
     note?: string;
-    cause?: SkipCause | 'inputs';
+    cause?: SkipCause | 'no-files';
     reproduce?: string;
     command?: readonly string[];
 };

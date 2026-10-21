@@ -7,7 +7,7 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolFile } from '#cli/types/configurations.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
 import type { CommandLine, CommandPart, Substitutions } from '#cli/types/runs/command.ts';
@@ -46,7 +46,7 @@ function expandEachPlaceholder(planned: PlannedCheck, part: string): string[] | 
     const groups = EACH_PLACEHOLDER.exec(part)?.groups;
     if (groups === undefined) return undefined;
     const name = groups['setting'] ?? '';
-    const held = planned.selection.view.settings[name];
+    const held = planned.scope.settings.settings[name];
     const items = held ?? [];
     return assertArgumentList(items, name).flatMap((item) => [groups['flag'] ?? '', convertToSystemPath(item)]);
 }
@@ -69,8 +69,8 @@ function expandExistingPlaceholder(repositoryRoot: string, part: string): string
 
 function listToolFiles(session: Session, planned: PlannedCheck): ToolFile[] {
     // The own targets of the check come first, because getToolFile takes the first match.
-    const own = planned.selection.selected
-        .filter((configuration) => configuration.checks.some((check) => check.name === planned.check.name))
+    const own = planned.scope.configurations
+        .filter((configuration) => configuration.checks.some((check) => check.id === planned.check.id))
         .flatMap((configuration) => configuration.toolFiles);
     const every = session.configurations
         .values()
@@ -115,8 +115,7 @@ function expandPlainPart(
  */
 export function getToolFile(session: Session, planned: PlannedCheck, name: string): ToolFile {
     const target = listToolFiles(session, planned).find((toolFile) => extractToolFileName(toolFile.file) === name);
-    if (!target)
-        throw new Error(`Check ${planned.check.name} names {tool_file:${name}} and no configuration writes it.`);
+    if (!target) throw new Error(`Check ${planned.check.id} names {tool_file:${name}} and no configuration writes it.`);
     return target;
 }
 
@@ -130,7 +129,7 @@ export function getToolFile(session: Session, planned: PlannedCheck, name: strin
  */
 export function listCommandToolFiles(session: Session, planned: PlannedCheck, command: readonly string[]): string[] {
     const parts = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
-    const scope = planned.selection.scope.path;
+    const scope = planned.scope.folder.path;
     return [
         ...new Set(
             parts.flatMap((part) => {
@@ -138,8 +137,8 @@ export function listCommandToolFiles(session: Session, planned: PlannedCheck, co
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
                     .map((name) =>
-                        buildScopeTarget(
-                            planned.selection.scope.path,
+                        getToolFileTarget(
+                            planned.scope.folder.path,
                             getToolFile(session, planned, name),
                             getToolFiles(session).targets,
                         ),
@@ -164,9 +163,9 @@ export function listCommandToolFiles(session: Session, planned: PlannedCheck, co
  * @returns repository-relative paths for the copy.
  */
 export function listCopyFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
-    const scope = planned.selection.scope.path;
+    const scope = planned.scope.folder.path;
     const owned = (planned.configuration?.toolFiles ?? []).map((toolFile) =>
-        buildScopeTarget(scope, toolFile, getToolFiles(session).targets),
+        getToolFileTarget(scope, toolFile, getToolFiles(session).targets),
     );
     return [
         ...new Set([
@@ -197,7 +196,7 @@ export function replacePlaceholders(
             session.settingsFile.settings.level === 'all' ? all : recommended,
         )
         .replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-            const found = planned.selection.view.settings[name];
+            const found = planned.scope.settings.settings[name];
             if (Array.isArray(found)) throw new Error(`List setting ${name} must occupy a whole command argument.`);
             return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
                 ? String(found)
@@ -207,8 +206,8 @@ export function replacePlaceholders(
             convertToSystemPath(
                 join(
                     session.root,
-                    buildScopeTarget(
-                        planned.selection.scope.path,
+                    getToolFileTarget(
+                        planned.scope.folder.path,
                         getToolFile(session, planned, name),
                         getToolFiles(session).targets,
                     ),
@@ -242,7 +241,7 @@ export function expandCommand(
     return command.flatMap((part) => {
         const name = WHOLE_SETTING_PLACEHOLDER.exec(part)?.groups?.['name'];
         if (name !== undefined) {
-            const value = planned.selection.view.settings[name];
+            const value = planned.scope.settings.settings[name];
             if (Array.isArray(value)) return assertArgumentList(value, name);
         }
 

@@ -66,7 +66,7 @@ test.each([
         const stdout = JSON.stringify([{ filePath: '/repo/a.js', messages: [{ message: name, ...extra }] }]);
         const check = {
             runs: 'files' as const,
-            name: 'javascript/eslint',
+            id: 'javascript/eslint',
             help: 'Correct the defect.',
             output,
             fix: ['formatter'],
@@ -74,7 +74,7 @@ test.each([
         const findings = parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' });
         expect(findings).toMatchObject([{ file: 'a.js', fixable: expected }]);
         expect(
-            parseOutput({ runs: check.runs, name: check.name, help: check.help, output }, stdout, '', {
+            parseOutput({ runs: check.runs, id: check.id, help: check.help, output }, stdout, '', {
                 root: '/repo',
                 cwd: '/repo',
             }),

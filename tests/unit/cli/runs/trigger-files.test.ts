@@ -23,12 +23,12 @@ import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/cha
  *
  * @param session sandbox whose checks to replace.
  */
-async function fakeProjectChecks(session: Session): Promise<void> {
+async function replaceChildScopeChecks(session: Session): Promise<void> {
     await fakeTool(session.root, '.gspot/mock-tsc', "console.log('Project finding'); process.exitCode = 1");
     const configuration = session.configurations.get('typescript')!;
     const check: Check = {
         ...BASE_CHECK,
-        name: 'typescript/tsc',
+        id: 'typescript/tsc',
         stage: PROJECT_OPTIONS.stage,
         runs: 'scope',
         cwd: 'root',
@@ -37,10 +37,10 @@ async function fakeProjectChecks(session: Session): Promise<void> {
         files: configuration.files,
         fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
-    const fileCheck = { ...check, name: 'files/v8r', runs: 'files' as const };
-    for (const selection of session.scopes) {
-        if (selection.scope.path !== '')
-            selection.selected = [{ ...configuration, tools: [], checks: [check, fileCheck] }];
+    const fileCheck = { ...check, id: 'data-files/v8r', runs: 'files' as const };
+    for (const scope of session.scopes) {
+        if (scope.folder.path !== '')
+            scope.configurations = [{ ...configuration, tools: [], checks: [check, fileCheck] }];
     }
 }
 
@@ -58,16 +58,16 @@ test.each([...PROJECT_TRIGGERS])(
         else readGitOutput(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
         await mkdir(join(sandbox.path, 'api'), { recursive: true });
         const session = await openSession(sandbox.path);
-        await fakeProjectChecks(session);
+        await replaceChildScopeChecks(session);
         const revision =
             selection === 'staged'
                 ? await readStagedPaths(sandbox.path).then(({ staged }) => ({ staged }))
                 : await readChangedPaths(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
         const planned = planChecks(session, { ...PROJECT_OPTIONS, ...revision });
-        const api = planned.find((check) => check.selection.scope.path === 'api')!;
+        const api = planned.find((check) => check.scope.folder.path === 'api')!;
         expect(api.files).toStrictEqual([]);
         expect(api.triggerPaths).toContain('api/source.ts');
-        const fileChecks = planChecks(session, { ...PROJECT_OPTIONS, only: ['files/v8r'], ...revision });
+        const fileChecks = planChecks(session, { ...PROJECT_OPTIONS, only: ['data-files/v8r'], ...revision });
         expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
         expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
             operation === 'delete' ? [] : ['web/source.ts'],
@@ -95,7 +95,7 @@ test('a deleted file from another language does not trigger a TypeScript project
     await using sandbox = await testdir({ 'gspot.toml': TWO_SCOPES_SETTINGS, 'api/kept.ts': 'export {};\n' });
 
     const session = await openSession(sandbox.path);
-    await fakeProjectChecks(session);
+    await replaceChildScopeChecks(session);
     const planned = planChecks(session, {
         ...PROJECT_OPTIONS,
         changed: ['api/removed.py'],
@@ -118,7 +118,7 @@ configurations = []
     });
 
     const session = await openSession(sandbox.path);
-    await fakeProjectChecks(session);
+    await replaceChildScopeChecks(session);
     const planned = planChecks(session, {
         ...PROJECT_OPTIONS,
         changed: ['api/nested/removed.ts'],
@@ -126,9 +126,9 @@ configurations = []
     expect(
         planned
             .filter((check) => check.triggerPaths.length > 0)
-            .map((check) => [check.selection.scope.path, check.triggerPaths]),
+            .map((check) => [check.scope.folder.path, check.triggerPaths]),
     ).toStrictEqual([['api/nested', ['api/nested/removed.ts']]]);
-    expect(planned.find((check) => check.selection.scope.path === 'api')?.files).toStrictEqual([]);
+    expect(planned.find((check) => check.scope.folder.path === 'api')?.files).toStrictEqual([]);
 });
 test.each(['gspot.toml', '.gspot/configurations/general/docs/lychee.toml'])(
     'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
@@ -144,7 +144,7 @@ test.each(['gspot.toml', '.gspot/configurations/general/docs/lychee.toml'])(
         const planned = planChecks(session, { stage: 'commit', staged: [path], only: ['docs/lychee'] });
         expect(
             planned.map((entry) => ({
-                scope: entry.selection.scope.path,
+                scope: entry.scope.folder.path,
                 files: entry.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
             })),
         ).toStrictEqual([

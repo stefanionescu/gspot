@@ -29,7 +29,7 @@ async function readScript(session: Session, file: TrackedFile): Promise<ScriptFi
  */
 export function readScripts(session: Session, planned: PlannedCheck): Promise<ScriptFile[]> {
     const files = planned.files.filter((file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG));
-    const key = JSON.stringify([planned.selection.scope.path, files.map((file) => file.path)]);
+    const key = JSON.stringify([planned.scope.folder.path, files.map((file) => file.path)]);
     return getCachedMapValue(session.reads, PARSED_SCRIPTS, key, async () => {
         const scripts: ScriptFile[] = [];
         for (const file of files) scripts.push(await readScript(session, file));

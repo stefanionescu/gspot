@@ -2,7 +2,6 @@ import ts from 'typescript';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
@@ -10,6 +9,7 @@ import { listCheckedFiles } from '#cli/planning/files.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { JSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
@@ -42,7 +42,9 @@ function buildScopeCompilerProject(
     // The compiler names its files with forward slashes on every system.
     const files = new Set(
         repository.files
-            .filter((file) => file.kind === 'source' && findScope(file.path, repository.scopeFolders).path === scope)
+            .filter(
+                (file) => file.kind === 'source' && findScopeFolder(file.path, repository.scopeFolders).path === scope,
+            )
             .map((file) => convertToPosixPath(join(root, file.path))),
     );
     return {
@@ -70,7 +72,7 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
     const toolFile = getToolFile(session, planned, extractToolFileName(JSCONFIG_FILE)) as WholeToolFile;
     const paths = new Set([
         toolFile.target,
-        ...session.scopes.map(({ scope }) => buildPerScopeTarget(toolFile, scope.path)),
+        ...session.scopes.map(({ folder }) => buildPerScopeTarget(toolFile, folder.path)),
     ]);
     using files = openFiles(session.root);
     for (const path of paths) {
@@ -78,7 +80,7 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
         if (written === undefined) continue;
         const expected = buildJsconfigFile({
             session,
-            selection: planned.selection,
+            scope: planned.scope,
             configuration: planned.configuration as Configuration,
             toolFile,
             targetPath: path,
@@ -97,7 +99,7 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
  * @returns the check result.
  */
 export async function checkJavascriptTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const scope = planned.selection.scope.path;
+    const scope = planned.scope.folder.path;
     if (listCheckedFiles(session.scopes, planned).length === 0)
         return { ...buildBaseResult(planned, session), fileCount: 0 };
     const target = findJavascriptProject(session, planned);

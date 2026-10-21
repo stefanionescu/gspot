@@ -31,11 +31,11 @@ function readReferencedProjects(
 ): Map<string, TypeScriptConfiguration> {
     const projects = new Map<string, TypeScriptConfiguration>();
     const pending = [resolve(path)];
-    for (const candidate of pending) {
-        if (projects.has(candidate)) continue;
-        const parsed = readTsconfig(repositoryRoot, candidate, reads);
-        if (parsed === undefined) throw new Error(`Missing TypeScript project: ${candidate}`);
-        projects.set(candidate, parsed);
+    for (const projectPath of pending) {
+        if (projects.has(projectPath)) continue;
+        const parsed = readTsconfig(repositoryRoot, projectPath, reads);
+        if (parsed === undefined) throw new Error(`Missing TypeScript project: ${projectPath}`);
+        projects.set(projectPath, parsed);
         pending.push(
             ...(parsed.projectReferences ?? []).map((reference) => resolve(ts.resolveProjectReferencePath(reference))),
         );
@@ -81,7 +81,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
     return {
         ...parsed,
         raw: authored,
-        tsconfigFiles: tsconfigFiles,
+        tsconfigFiles,
         extendedConfigurationFiles: sourceFile.extendedSourceFiles ?? [],
     };
 }

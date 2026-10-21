@@ -111,20 +111,20 @@ function findBlockCommentEnd(text: string, from: number): number {
 }
 
 // Find the index past the whole lexeme: a block comment closes with nesting, and a dollar quote at the return of its tag.
-function findLexemeEnd(text: string, at: number, lexeme: MatchedToken): number {
-    if (lexeme.kind === 'block-comment') return findBlockCommentEnd(text, lexeme.end);
-    if (lexeme.kind !== 'dollar') return lexeme.end;
-    const tag = text.slice(at, lexeme.end);
-    const close = text.indexOf(tag, lexeme.end);
+function findTokenEnd(text: string, at: number, token: MatchedToken): number {
+    if (token.kind === 'block-comment') return findBlockCommentEnd(text, token.end);
+    if (token.kind !== 'dollar') return token.end;
+    const tag = text.slice(at, token.end);
+    const close = text.indexOf(tag, token.end);
     return close === -1 ? text.length : close + tag.length;
 }
 
 // Build the parser text that stands in for a meta-command or a psql variable, with the same length so positions hold.
-function buildReplacement(kind: SqlToken['kind'], lexeme: string): string {
-    if (kind === 'command') return ' '.repeat(lexeme.length);
-    if (lexeme[1] === "'") return `''${' '.repeat(lexeme.length - "''".length)}`;
-    if (lexeme[1] === '"') return ` ${lexeme.slice(1)}`;
-    return `_${lexeme.slice(1)}`;
+function buildReplacement(kind: SqlToken['kind'], text: string): string {
+    if (kind === 'command') return ' '.repeat(text.length);
+    if (text[1] === "'") return `''${' '.repeat(text.length - "''".length)}`;
+    if (text[1] === '"') return ` ${text.slice(1)}`;
+    return `_${text.slice(1)}`;
 }
 
 /**
@@ -136,13 +136,13 @@ function buildReplacement(kind: SqlToken['kind'], lexeme: string): string {
 export function* listSqlTokens(text: string): Generator<SqlToken> {
     let at = 0;
     while (at < text.length) {
-        const lexeme = TOKEN_MATCHERS[text[at] ?? '']?.(text, at);
-        if (lexeme === undefined) {
+        const matched = TOKEN_MATCHERS[text[at] ?? '']?.(text, at);
+        if (matched === undefined) {
             at += 1;
             continue;
         }
-        const end = findLexemeEnd(text, at, lexeme);
-        yield { start: at, end, kind: lexeme.kind };
+        const end = findTokenEnd(text, at, matched);
+        yield { start: at, end, kind: matched.kind };
         at = end;
     }
 }

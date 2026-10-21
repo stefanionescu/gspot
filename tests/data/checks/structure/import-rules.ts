@@ -57,5 +57,5 @@ export const SWIFT_IMPORT_FILES = {
     'Tests/CoreTests/ModelTests.swift': 'import Core\n',
 } as const;
 
-export const REFUSAL_HINT =
+export const REFUSAL_HELP =
     'Move the code, move that rule above this one, or list the rules it may import in can_import.';

@@ -1,4 +1,4 @@
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -10,7 +10,7 @@ import { LOCAL_PATH_PREFIX, PATHS_BASE_OPTION } from '#cli/config/repository/ali
 
 function findImportTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;
-    if (!isRecord(target)) return undefined;
+    if (!isTable(target)) return undefined;
     return Object.values(target).find((value) => typeof value === 'string');
 }
 

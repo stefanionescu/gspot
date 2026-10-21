@@ -51,15 +51,15 @@ export function explainSetting(session: Session | undefined, key: string): Expla
     const { settings } = session.settingsFile;
     // A record list lives in the root table only, so only the root scope can change it.
     const recordList = Object.hasOwn(listRecordFields(), key);
-    const scopes = session.scopes.flatMap((selection) => {
-        const match = findSetting(selection.known, key);
-        if (match === undefined || (recordList && selection.scope.path !== '')) return [];
+    const scopes = session.scopes.flatMap((scope) => {
+        const match = findSetting(scope.knownSettings, key);
+        if (match === undefined || (recordList && scope.folder.path !== '')) return [];
         return [
             {
-                scope: selection.scope.path,
+                scope: scope.folder.path,
                 setting: match.setting,
-                effective: getSettingValue(selection.known, settings, key, selection.scope.path),
-                shipped: findSettingDefault(selection.known, settings, match, selection.scope.path)?.value,
+                effective: getSettingValue(scope.knownSettings, settings, key, scope.folder.path),
+                shipped: findSettingDefault(scope.knownSettings, settings, match, scope.folder.path)?.value,
             },
         ];
     });

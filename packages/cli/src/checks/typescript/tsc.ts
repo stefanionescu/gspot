@@ -26,7 +26,7 @@ import {
 export async function checkTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
         session.root,
-        planned.selection.scope.path,
+        planned.scope.folder.path,
         listCheckedFiles(session.scopes, planned)
             .filter((file) => file.tags.includes('typescript'))
             .map((file) => file.path),

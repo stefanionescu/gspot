@@ -35,13 +35,13 @@ const PRESET_ASSET_PATHS = new Set(listAssets(CONFIGURATIONS_FOLDER));
  * A tool file for one scope asks that scope; a tool file written once asks every scope.
  *
  * @param scopes every project and its settings.
- * @param selection the scope that gets the tool file.
- * @param target the tool file declaration and its scope requirements.
+ * @param scope the scope that gets the tool file.
+ * @param toolFile the tool file declaration and its scope requirements.
  * @returns each configuration with a fragment for this tool file, once.
  */
-function listToolFileConfigurations(scopes: Scope[], selection: Scope, target: ToolFile): Configuration[] {
-    if (target.per_scope) return selection.selected;
-    const every = [selection, ...scopes].flatMap((entry) => entry.selected);
+function listToolFileConfigurations(scopes: Scope[], scope: Scope, toolFile: ToolFile): Configuration[] {
+    if (toolFile.per_scope) return scope.configurations;
+    const every = [scope, ...scopes].flatMap((entry) => entry.configurations);
     return new Map(every.map((configuration) => [configuration.name, configuration])).values().toArray();
 }
 
@@ -62,8 +62,8 @@ function readEslintPresets(session: PlannedToolFile['session']): Map<string, Esl
 }
 
 // The blocks that gspot.toml writes: runtime environments, trivial-code limits, rules turned off, and ignored rules.
-function buildSettingsBlocks(context: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
-    const { session } = context;
+function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
+    const { session } = planned;
     const ignored = session.settingsFile.settings.ignore.flatMap((entry): EslintRuleBlock[] =>
         entry.rule === undefined || entry.check !== ESLINT_CHECK
             ? []
@@ -76,8 +76,8 @@ function buildSettingsBlocks(context: Pick<PlannedEslintFile, 'session' | 'nodeF
               ],
     );
     return [
-        ...buildEnvironmentRuleBlocks(context),
-        ...buildTrivialRuleBlocks(context),
+        ...buildEnvironmentRuleBlocks(planned),
+        ...buildTrivialRuleBlocks(planned),
         ...buildRulesOffBlocks(session.scopes),
         ...ignored,
     ];
@@ -90,8 +90,8 @@ function buildSettingsBlocks(context: Pick<PlannedEslintFile, 'session' | 'nodeF
  * @returns the context that the ESLint file needs.
  */
 export function buildPlannedEslintFile(planned: PlannedToolFile): PlannedEslintFile {
-    const { session, selection, toolFile } = planned;
-    const { view } = selection;
+    const { session, scope, toolFile } = planned;
+    const { settings } = scope;
     const { scopes } = session;
     const repositorySettings = session.settingsFile.settings;
     const { level } = repositorySettings;
@@ -99,8 +99,7 @@ export function buildPlannedEslintFile(planned: PlannedToolFile): PlannedEslintF
     const nodeFiles = session.repository.files
         .filter((file) => !recognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
         .map((file) => file.path);
-    const configurations = listToolFileConfigurations(scopes, selection, toolFile);
-    const context = { session, nodeFiles };
+    const configurations = listToolFileConfigurations(scopes, scope, toolFile);
     const options = buildRuleOptions(repositorySettings, scopes);
     const allLevelRules = new Set(
         [...session.configurations.values()].flatMap((configuration) => [...configuration.eslint.all_level_rules]),
@@ -108,30 +107,31 @@ export function buildPlannedEslintFile(planned: PlannedToolFile): PlannedEslintF
     const eslintFiles = buildFilePatterns({
         components: configurations,
         nodeFiles,
-        scopes: scopes.map((selection) => ({
-            scope: selection.scope.path,
-            tests: selection.view.test_files,
+        scopes: scopes.map((entry) => ({
+            scope: entry.folder.path,
+            tests: entry.settings.test_files,
             scripts: [
-                ...(selection.view.values.javascript?.script_files ?? []),
+                ...(entry.settings.values.javascript?.script_files ?? []),
                 joinScope(
-                    selection.scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
+                    entry.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
                     MISE_SCRIPT_PATH,
                 ),
             ],
         })),
     });
     return {
-        ...context,
-        selection,
+        session,
+        nodeFiles,
+        scope,
         level,
         projects: session.repository.files
             .filter((file) => basename(file.path) === TSCONFIG_FILE)
             .map((file) => file.path),
         ruleOptions: options,
-        levelRules: buildLevelRules(view, level === 'all' ? BASE_SELECTORS : []),
-        settingsBlocks: buildSettingsBlocks(context),
-        allLevelRules: allLevelRules,
-        blockInput: {
+        levelRules: buildLevelRules(settings, level === 'all' ? BASE_SELECTORS : []),
+        settingsBlocks: buildSettingsBlocks({ session, nodeFiles }),
+        allLevelRules,
+        blockWriter: {
             applied: new Set(),
             allLevelRules,
             level,

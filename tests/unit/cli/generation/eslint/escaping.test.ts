@@ -6,7 +6,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { ESLINT_FILE } from '#tests/data/generation/settings.ts';
-import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
 import { SCOPE_CONFIGURATIONS } from '#tests/data/generation/eslint/selectors.ts';
 
 /** Generate, parse, and lint one scope before returning its JavaScript syntax shape. */
@@ -48,7 +48,7 @@ async function parseScopeShape(scope: string): Promise<string> {
     const eslint = await createEslint(sandbox.path);
     const filePath = `${child}/source.js`;
     await createFileTree(sandbox.path, { [filePath]: 'missing();' });
-    expect(await collectLintFindings(eslint, sandbox.path, [filePath], ['no-undef'])).toStrictEqual([
+    expect(await listLintFindings(eslint, sandbox.path, [filePath], ['no-undef'])).toStrictEqual([
         { file: filePath, rule: 'no-undef', line: 1 },
     ]);
     return shape;

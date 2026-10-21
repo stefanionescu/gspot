@@ -79,8 +79,8 @@ allowed_urls = { value = ["/child-only$"], reason = "The child guide describes a
 
 /** A missing text fragment, and a fragment that matches the page. */
 export const LINK_TEXT_CASES = [
-    { fragment: 'absent', failures: [{ scope: '', file: 'root.md', rule: 'ERROR' }] },
-    { fragment: 'Current%20setup', failures: [] },
+    { text: 'absent', failures: [{ scope: '', file: 'root.md', rule: 'ERROR' }] },
+    { text: 'Current%20setup', failures: [] },
 ] as const;
 
 // Documents for both the tool checks and the built-in checks.

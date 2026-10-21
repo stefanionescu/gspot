@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import { CATEGORY_LABELS } from '#cli/config/checks/naming.ts';
 import type { NamedCategory } from '#cli/types/settings/tables.ts';
-import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
+import type { Identifier, FileIdentifiers } from '#cli/types/checks/naming.ts';
 
 /**
  * Builds an identifier with its file and the label that findings show.
@@ -11,7 +11,7 @@ import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
  * @returns the labeled identifier.
  */
 export function createIdentifier(
-    source: Pick<ExtractSink, 'file' | 'language'>,
+    source: Pick<FileIdentifiers, 'file' | 'language'>,
     declaration: Omit<Identifier, 'file' | 'language' | 'label'>,
 ): Identifier {
     const label = CATEGORY_LABELS[declaration.category];
@@ -21,15 +21,15 @@ export function createIdentifier(
 /**
  * Adds an identifier at its source place, except an empty name or `_`.
  *
- * @param sink the file and the identifiers found so far.
+ * @param found the file and the identifiers found so far.
  * @param node the parsed declaration.
  * @param category the kind of declared name.
  * @param name the authored spelling, after any language change.
  */
-export function addIdentifier(sink: ExtractSink, node: Node, category: NamedCategory, name = node.text): void {
+export function addIdentifier(found: FileIdentifiers, node: Node, category: NamedCategory, name = node.text): void {
     if (name === '' || name === '_') return;
-    sink.out.push(
-        createIdentifier(sink, {
+    found.out.push(
+        createIdentifier(found, {
             line: node.startPosition.row + 1,
             column: node.startPosition.column + 1,
             category,

@@ -29,7 +29,7 @@ export type PlanOptions = {
 /** What planning one scope needs. */
 export type PlannedScope = {
     session: Session;
-    selection: Scope;
+    scope: Scope;
     options: PlanOptions;
     host: Host;
     narrowedPaths: Set<string> | undefined;
@@ -45,7 +45,7 @@ export type ToolIgnore = { file: string; matches: (path: string) => boolean };
 export type PlannedCheck = {
     base?: string;
     commits?: string[];
-    selection: Scope;
+    scope: Scope;
     check: Check;
     configuration?: Configuration;
     files: TrackedFile[];
@@ -61,7 +61,7 @@ export type StageFilter = Stage | 'all';
 /** An installed project and the license settings for its report. */
 export type LicenseProject = {
     dependencyFile: string;
-    selection: Scope;
+    scope: Scope;
     settings: ConfigurationTables['licenses'];
     skip: SettingsSkip | undefined;
 };

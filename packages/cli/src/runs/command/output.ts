@@ -12,10 +12,10 @@ import { TAIL_LINES, OUT_OF_MEMORY } from '#cli/config/runs/command.ts';
 import { parseOutput, outputFormats } from '#cli/runs/output/formats.ts';
 
 import type {
+    CommandRun,
     OutputCheck,
     CommandLine,
     ParsedFindings,
-    CommandRunState,
     CommandLineOutput,
 } from '#cli/types/runs/command.ts';
 
@@ -29,7 +29,7 @@ function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, 
             tool.finding_header_pattern === undefined ? undefined : new RegExp(tool.finding_header_pattern, 'u');
         text = output.split('\n').find((line) => line.trim() !== '' && header?.test(line) !== true) ?? emptyOutputText;
     }
-    const { name, help } = check;
+    const { id: name, help } = check;
     return {
         check: name,
         file: file === undefined ? '' : convertToPosixPath(file),
@@ -53,7 +53,7 @@ function isOnDisk(file: string, roots: string[]): boolean {
 }
 
 function throwCrash(planned: OutputCheck, result: SpawnResult): never {
-    const name = planned.tool?.name ?? planned.check.name;
+    const name = planned.tool?.name ?? planned.check.id;
     const detail = formatOutputTail(result, `${name} exited ${String(result.code)}`);
     throw new GspotError('output', `${name} crashed with exit ${String(result.code)}.\n${detail}`);
 }
@@ -104,7 +104,7 @@ function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths:
  */
 export function buildCheckResult(
     check: Check,
-    completion: { base: CheckResult; state: CommandRunState; commandArguments: string[]; started: number },
+    completion: { base: CheckResult; state: CommandRun; commandArguments: string[]; started: number },
 ): CheckResult {
     const { base, state, commandArguments, started } = completion;
     const output = check.output;
@@ -141,26 +141,26 @@ export function parseCommandFindings(planned: OutputCheck, result: SpawnResult, 
  * @param planned the check that ran.
  * @param tool the declaration with its version pin.
  * @param output what one run printed and parsed.
- * @param state what the runs collected so far.
+ * @param commandRun what the runs collected so far.
  */
 export function addCommandLine(
     planned: PlannedCheck,
     tool: Tool,
     output: CommandLineOutput,
-    state: CommandRunState,
+    commandRun: CommandRun,
 ): void {
     const { commandLine, result, findings } = output;
     const { check } = planned;
     const file =
         commandLine.file === undefined
             ? undefined
-            : convertToPosixPath(relative(state.root, join(state.cwd, commandLine.file)));
-    setFindingFiles(findings, commandLine, state);
+            : convertToPosixPath(relative(commandRun.root, join(commandRun.cwd, commandLine.file)));
+    setFindingFiles(findings, commandLine, commandRun);
     if (result.code !== 0) {
-        state.failed = true;
+        commandRun.failed = true;
         if (findings.length === 0) findings.push(buildUnexplainedFailure(check, tool, result, file));
     }
-    state.findings.push(...findings);
+    commandRun.findings.push(...findings);
 }
 
 /**

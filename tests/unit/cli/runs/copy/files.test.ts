@@ -154,7 +154,7 @@ test.each([false, true])(
             });
             const dependencyPaths = listWorkspaceDependencySources(
                 session.reads,
-                input.selection.scope.path,
+                input.scope.folder.path,
                 session.repository.files,
             );
             expect(new Set(dependencyPaths).size).toBe(dependencyPaths.length);

@@ -11,7 +11,7 @@ import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/settings
 test('file and folder arguments narrow the files each check gets', async () => {
     await using sandbox = await testdir();
     const entries = ['one', 'two', 'three'].map((name) =>
-        buildReportingCheck({ name: `sandbox/${name}`, paths: ['src/**', 'docs/**'], stage: 'commit' }),
+        buildReportingCheck({ id: `sandbox/${name}`, paths: ['src/**', 'docs/**'], stage: 'commit' }),
     );
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: entries }) }),
@@ -41,7 +41,7 @@ test('file and folder arguments narrow the files each check gets', async () => {
 test('--only repeats and leaves the paths after it as paths', async () => {
     await using sandbox = await testdir();
     const entries = ['one', 'two', 'three'].map((name) =>
-        buildReportingCheck({ name: `sandbox/${name}`, paths: ['src/**'], stage: 'commit' }),
+        buildReportingCheck({ id: `sandbox/${name}`, paths: ['src/**'], stage: 'commit' }),
     );
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: entries }) }),
@@ -75,7 +75,7 @@ test('path arguments keep the findings of a project-wide check in the named file
             tables: stringify({
                 command_check: [
                     {
-                        name: 'sandbox/project',
+                        id: 'sandbox/project',
                         paths: ['src/**'],
                         stage: 'commit',
                         command: [
@@ -108,7 +108,7 @@ test('path arguments keep the findings of a project-wide check in the named file
 test('--staged keeps every stage while --hook pre-commit runs only commit checks', async () => {
     const definitions = ['commit', 'push', 'manual'].map(
         (name) => `
-[[command_check]]\nname = "sandbox/${name}"
+[[command_check]]\nid = "sandbox/${name}"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 paths = ["source.txt"]
 stage = "${name}"
@@ -148,7 +148,7 @@ stage = "${name}"
 
 test('a manual check runs only when --only names it', async () => {
     const definition = `
-[[command_check]]\nname = "sandbox/manual"
+[[command_check]]\nid = "sandbox/manual"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 paths = ["source.txt"]
 stage = "manual"

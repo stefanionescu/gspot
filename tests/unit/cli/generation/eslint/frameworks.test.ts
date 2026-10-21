@@ -14,7 +14,7 @@ import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/data/checks/typescript/projects.ts';
 import { ALIAS_IMPORT, RESPONSE_MESSAGES } from '#tests/data/generation/eslint/selectors.ts';
-import { createEslint, readEslintRules, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, readEslintRules, listLintFindings } from '#tests/setup/tool-files.ts';
 import { SERVER_FILES, RAW_HTML_CASES, COMPONENT_FILES } from '#tests/data/generation/eslint/framework.ts';
 
 test('components > Vue, Svelte and Astro files parse in their scopes, and a plain scope gets none of their rules', async () => {
@@ -35,7 +35,7 @@ test('components > Vue, Svelte and Astro files parse in their scopes, and a plai
     const eslint = await createEslint(sandbox.path);
     for (const prefix of ['', 'app/']) {
         expect(
-            await collectLintFindings(
+            await listLintFindings(
                 eslint,
                 sandbox.path,
                 Object.keys(COMPONENT_FILES).map((path) => `${prefix}${path}`),
@@ -70,12 +70,12 @@ test.each([...RAW_HTML_CASES])(
 
         const eslint = await createEslint(sandbox.path);
         const path = `app/${component.path}`;
-        expect(await collectLintFindings(eslint, sandbox.path, [path], [component.rule])).toStrictEqual([
+        expect(await listLintFindings(eslint, sandbox.path, [path], [component.rule])).toStrictEqual([
             { file: path, rule: component.rule, line: 1 },
         ]);
-        expect(await collectLintFindings(eslint, sandbox.path, ['plain.js'], [component.rule])).toStrictEqual([]);
+        expect(await listLintFindings(eslint, sandbox.path, ['plain.js'], [component.rule])).toStrictEqual([]);
         await createFileTree(sandbox.path, { [path]: component.corrected });
-        expect(await collectLintFindings(eslint, sandbox.path, [path], [component.rule])).toStrictEqual([]);
+        expect(await listLintFindings(eslint, sandbox.path, [path], [component.rule])).toStrictEqual([]);
     },
 );
 
@@ -84,7 +84,7 @@ test.each([...LEVELS])(
     async (level) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
-                level: level,
+                level,
                 rules: true,
                 tables: '[tools.eslint]\nimport_extension = "js"\n',
                 scopes: [{ path: 'api', configurations: ['express'] }],
@@ -113,9 +113,7 @@ test.each([...LEVELS])(
                 return lines.map((line) => ({ file, rule: 'no-restricted-syntax', line }));
             })
             .toSorted((left, right) => left.file.localeCompare(right.file) || left.line - right.line);
-        expect(await collectLintFindings(eslint, sandbox.path, files, ['no-restricted-syntax'])).toStrictEqual(
-            expected,
-        );
+        expect(await listLintFindings(eslint, sandbox.path, files, ['no-restricted-syntax'])).toStrictEqual(expected);
     },
 );
 
@@ -143,7 +141,7 @@ configurations = ["nextjs"]
         expect(rules['app/page.tsx']!['gspot/no-trivial-files']![0]).toBe(0);
         for (const file of ['app/page.tsx', 'app/index.ts']) {
             await createFileTree(sandbox.path, { [file]: 'export * from "./format.js";\n' });
-            expect(await collectLintFindings(eslint, sandbox.path, [file], ['no-restricted-syntax'])).toStrictEqual(
+            expect(await listLintFindings(eslint, sandbox.path, [file], ['no-restricted-syntax'])).toStrictEqual(
                 file !== 'app/index.ts' || reexports !== 'index-only'
                     ? [{ file, rule: 'no-restricted-syntax', line: 1 }]
                     : [],
@@ -160,7 +158,7 @@ test('nextjs > Next.js reports require-server-only in .server files and server f
 
     const eslint = await createEslint(sandbox.path);
     expect(
-        await collectLintFindings(
+        await listLintFindings(
             eslint,
             sandbox.path,
             ['app/lib/widget/server.js', 'app/lib/widget/data.server.js', 'app/server/data.js'],
@@ -204,7 +202,7 @@ test('nextjs > Next.js route rules use each project root and stay off in a scope
         expect(config.rules['@next/next/no-html-link-for-pages'], scope).toStrictEqual([2]);
         const file = `${scope}/${path}`;
         expect(
-            await collectLintFindings(eslint, sandbox.path, [file], ['@next/next/no-html-link-for-pages']),
+            await listLintFindings(eslint, sandbox.path, [file], ['@next/next/no-html-link-for-pages']),
         ).toStrictEqual([{ file, rule: '@next/next/no-html-link-for-pages', line: 1 }]);
     }
     const empty = (await eslint.calculateConfigForFile(
@@ -265,7 +263,7 @@ test('nextjs > react-refresh knows the catchError wrapper of next/error', async 
     )) as EslintConfiguration;
     expect(config.rules['react-refresh/only-export-components']?.[1]).toMatchObject({ extraHOCs: ['catchError'] });
     expect(
-        await collectLintFindings(
+        await listLintFindings(
             eslint,
             sandbox.path,
             ['web/app/layout.jsx', 'web/components/panel.jsx', 'web/components/mixed.jsx'],
@@ -288,11 +286,6 @@ test('react-dom > a scrollable region may take tabIndex, and an article may not'
 
     const eslint = await createEslint(sandbox.path);
     expect(
-        await collectLintFindings(
-            eslint,
-            sandbox.path,
-            ['log.jsx', 'story.jsx'],
-            ['jsx-a11y/no-noninteractive-tabindex'],
-        ),
+        await listLintFindings(eslint, sandbox.path, ['log.jsx', 'story.jsx'], ['jsx-a11y/no-noninteractive-tabindex']),
     ).toStrictEqual([{ file: 'story.jsx', rule: 'jsx-a11y/no-noninteractive-tabindex', line: 2 }]);
 });

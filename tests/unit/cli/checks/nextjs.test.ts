@@ -115,7 +115,7 @@ test.each([
         const session = await prepareNextjsBuild(folder.path, scope);
 
         const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-            (entry) => entry.selection.scope.path === scope,
+            (entry) => entry.scope.folder.path === scope,
         )!;
         const untracked = join(folder.path, join(scope, '.next/local-cache.bin'));
         const config = join(folder.path, join(scope, 'tsconfig.json'));
@@ -202,7 +202,7 @@ test.each(['', 'apps/web'])(`Next.js reference compilation keeps the type genera
     );
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-        (entry) => entry.selection.scope.path === scope,
+        (entry) => entry.scope.folder.path === scope,
     )!;
     using read = fakeNextjsCommands(async (command, options) => {
         if (command[1] === 'typegen')

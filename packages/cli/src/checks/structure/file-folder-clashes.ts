@@ -2,7 +2,7 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { extractStem, extractParentFolder } from '#cli/system/paths.ts';
+import { extractBaseName, extractParentFolder } from '#cli/system/paths.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
 
 /**
@@ -16,14 +16,14 @@ export function checkFileFolderClashes(_session: Session, planned: PlannedCheck)
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
     return files.flatMap((file) => {
-        const stem = extractStem(file.path);
+        const stem = extractBaseName(file.path);
         const siblings = tree.get(extractParentFolder(file.path)) ?? [];
         if (siblings.every((entry) => !(entry.kind === 'folder' && entry.name === stem))) return [];
         return [
             buildFinding(
                 planned,
                 { file: file.path, line: 1 },
-                'stem-collision',
+                'file-folder-clash',
                 `${file.path} sits beside a folder named ${stem}/, so an import of ./${stem} names both.`,
             ),
         ];

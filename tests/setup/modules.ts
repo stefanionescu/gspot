@@ -36,9 +36,9 @@ async function listPackageNames(store: string): Promise<string[]> {
  * Links to the real package folders keep relative dependencies that Windows store junctions break.
  * Copied sandboxes keep the installed dependency layout.
  *
- * @param target the node_modules folder to create.
+ * @param modulesFolder the node_modules folder to create.
  */
-export async function linkInstalledModules(target: string): Promise<void> {
+export async function linkInstalledModules(modulesFolder: string): Promise<void> {
     const packages = await Promise.all(
         [testModules, installedModules].map(async (store) => {
             const names = await listPackageNames(store);
@@ -47,7 +47,7 @@ export async function linkInstalledModules(target: string): Promise<void> {
     );
     const links = [[installedModules, '.bun'] as const, [testModules, '.bin'] as const, ...packages.flat()];
     for (const [store, name] of links) {
-        const destination = join(target, name);
+        const destination = join(modulesFolder, name);
         if (await isOnDisk(destination)) continue;
         await mkdir(dirname(destination), { recursive: true });
         const original = await realpath(join(store, name));
@@ -58,10 +58,10 @@ export async function linkInstalledModules(target: string): Promise<void> {
  * Link declared packages and the installed packages they depend on, so a scratch copy of node_modules holds only those.
  * A test package wins over a workspace package of the same name, as in linkInstalledModules.
  *
- * @param target the node_modules folder to create.
+ * @param modulesFolder the node_modules folder to create.
  * @param names packages that the sandbox project declares.
  */
-export async function linkPackages(target: string, names: readonly string[]): Promise<void> {
+export async function linkPackages(modulesFolder: string, names: readonly string[]): Promise<void> {
     const pending = await Promise.all(
         names.map(
             async (name) =>
@@ -85,7 +85,7 @@ export async function linkPackages(target: string, names: readonly string[]): Pr
         for (const dependency of Object.keys(dependencies)) pending.push([dependency, join(folder, dependency)]);
     }
     for (const [name, real] of found) {
-        const destination = join(target, name);
+        const destination = join(modulesFolder, name);
         await mkdir(dirname(destination), { recursive: true });
         await symlink(real, destination, FOLDER_LINK_TYPE);
     }

@@ -123,9 +123,9 @@ function parseHeadingSections(text: string): RuleSection[] {
 }
 
 // List the rule files of each scope before selecting shared content.
-function listScopeRules(selection: Scope): Set<string> {
+function listScopeRules(scope: Scope): Set<string> {
     return new Set(
-        selection.selected.flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path)),
+        scope.configurations.flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path)),
     );
 }
 
@@ -145,9 +145,9 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
     } = session;
     if (!rules.enabled) return [];
     const configurations = listSelectedConfigurations(session.scopes);
-    const scopeRules = session.scopes.map((selection) => ({
-        path: selection.scope.path,
-        rules: listScopeRules(selection),
+    const scopeRules = session.scopes.map((scope) => ({
+        path: scope.folder.path,
+        rules: listScopeRules(scope),
     }));
     const sources = new Map(listConfigurationRules(configurations, repository).map((file) => [file.path, file]));
     return sources
@@ -171,13 +171,13 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
 /**
  * Build the managed block for the rules.
  *
- * @param inputs what the block lists.
- * @param inputs.files the rules with their content.
- * @param inputs.generatedPaths the files gspot writes outside .gspot, with managed keys.
- * @param inputs.managedKeys the keys that gspot manages inside authored tool files.
- * @param inputs.hasChecks whether any configuration runs a check.
- * @param inputs.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
- * @param inputs.startCommand the command that starts gspot.
+ * @param block what the block lists.
+ * @param block.files the rules with their content.
+ * @param block.generatedPaths the files gspot writes outside .gspot, with managed keys.
+ * @param block.managedKeys the keys that gspot manages inside authored tool files.
+ * @param block.hasChecks whether any configuration runs a check.
+ * @param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
+ * @param block.startCommand the command that starts gspot.
  *
  * @returns the heading, rule index, and instructions for changing settings.
  */

@@ -1,11 +1,11 @@
 import type { ColumnDef } from '@pgsql/types';
-import { computePosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text.ts';
 import { listSqlTokens } from '#cli/parsers/sql/tokens.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { createIdentifier } from '#cli/checks/naming/languages/identifier.ts';
 import type { SqlNamed, Identifier, IdentifierRead } from '#cli/types/checks/naming.ts';
 import { parseSqlFile, visitStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
-import type { SqlFile, SqlStatementView, SqlStatementVisitors } from '#cli/types/parsers/sql.ts';
+import type { SqlFile, SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/sql.ts';
 
 import {
     SQL_NAME_TOKEN,
@@ -26,7 +26,7 @@ function buildColumnName(column: ColumnDef): SqlNamed {
     };
 }
 
-function listAddedColumns({ fields }: SqlStatementView<'AlterTableStmt'>): SqlNamed[] {
+function listAddedColumns({ fields }: SqlStatement<'AlterTableStmt'>): SqlNamed[] {
     return listNodeFields(fields.cmds, 'AlterTableCmd')
         .filter((command) => command.subtype === 'AT_AddColumn')
         .flatMap((command) =>
@@ -87,7 +87,7 @@ function parseParameterSpans(source: string, start: number): { spans: number[]; 
     return { spans: scanned.spans, end: scanned.end + 1 };
 }
 
-function findFunctionName(statement: SqlStatementView<'CreateFunctionStmt'>, source: string) {
+function findFunctionName(statement: SqlStatement<'CreateFunctionStmt'>, source: string) {
     let start = statement.start;
     for (const pattern of [SQL_CREATE_PREFIX, SQL_CREATE_MODIFIER, SQL_CREATE_KIND])
         start += pattern.exec(source.slice(start))?.[0].length ?? 0;
@@ -97,7 +97,7 @@ function findFunctionName(statement: SqlStatementView<'CreateFunctionStmt'>, sou
     return { start, qualified, offset: start + (lastPart?.index ?? 0) };
 }
 
-function listFunctionNames(statement: SqlStatementView<'CreateFunctionStmt'>, source: string): SqlNamed[] {
+function listFunctionNames(statement: SqlStatement<'CreateFunctionStmt'>, source: string): SqlNamed[] {
     const { start, qualified, offset } = findFunctionName(statement, source);
     const names: SqlNamed[] = [
         {
@@ -157,7 +157,7 @@ function extractStatementIdentifiers({
 }: {
     file: string;
     source: string;
-    statement: SqlStatementView;
+    statement: SqlStatement;
     parsed: SqlFile;
     lexicalSource: string;
 }): Identifier[] {
@@ -182,7 +182,7 @@ function extractStatementIdentifiers({
                 createIdentifier(
                     { file, language: 'sql' },
                     {
-                        ...computePosition(source, identifierStart + quoteWidth),
+                        ...getPosition(source, identifierStart + quoteWidth),
                         category: entry.category,
                         name: entry.name,
                     },

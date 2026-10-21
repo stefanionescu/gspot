@@ -10,7 +10,7 @@ export type PushRevision = {
     paths?: string[];
 };
 
-export type PushSelection = {
+export type PushedRevisions = {
     revisions: PushRevision[];
     skipped: { ref: string; hash: string; reason: 'deleted ref' | 'non-commit object' }[];
 };

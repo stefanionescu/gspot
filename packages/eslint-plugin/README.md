@@ -34,7 +34,7 @@ A finding looks like this:
 
 ```text
 src/orders.js
-  15:14  error  getOrderTotal only renames orderTotal. Export the source value directly instead of an alias  gspot/no-alias-exports
+  15:14  error  getOrderTotal only renames orderTotal. Export the source value under its own name  gspot/no-renamed-exports
 ```
 
 ## Rules
@@ -44,7 +44,7 @@ src/orders.js
 | `gspot/no-client-env`          | recommended | Private environment reads in client modules.                                         |
 | `gspot/no-comments-in-imports` | all         | Comments inside or right after the import block.                                     |
 | `gspot/import-boundaries`      | all         | Relative imports that leave the nearest boundary folder.                             |
-| `gspot/no-alias-exports`       | all         | Exported constants that only rename another value.                                   |
+| `gspot/no-renamed-exports`     | all         | Exported constants that only rename another value.                                   |
 | `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.       |
 | `gspot/no-trivial-files`       | all         | Files with only forwarding code, aliases, re-exports, or small unexported functions. |
 | `gspot/no-trivial-functions`   | all         | Named functions of two statements or fewer, exported or not.                         |

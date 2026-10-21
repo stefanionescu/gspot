@@ -72,7 +72,12 @@ export const NPM_SANDBOX_FILES = {
 } as const;
 
 /** Package manager sandboxes test the Prettier and EditorConfig installs, not the code analyzers. */
-export const NPM_SANDBOX_IGNORES = ['files/v8r', 'javascript/eslint', 'javascript/tsc', 'javascript/knip'] as const;
+export const NPM_SANDBOX_IGNORES = [
+    'data-files/v8r',
+    'javascript/eslint',
+    'javascript/tsc',
+    'javascript/knip',
+] as const;
 
 export const NPM_REGISTRY_TOKEN = 'synthetic-package-install-token';
 
@@ -165,7 +170,7 @@ dependencies = ["authored-dependency"]
 export const UV_PROJECT_VARIABLES = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT_ENVIRONMENT'] as const;
 
 export const PYTHON_SANDBOX_IGNORES = [
-    'files/v8r',
+    'data-files/v8r',
     'security/semgrep',
     'security/semgrep-registry',
     'format/editorconfig-checker',
@@ -181,7 +186,7 @@ export const PYTHON_INDEX_NAME = 'gspot-test';
 export const RUFF_VERSION_OUTPUT = /^ruff (?<version>\d+\.\d+\.\d[-+\w.]*)$/u;
 
 export const NPM_CHECK_IGNORES = `[[ignore]]
-check = "files/v8r"
+check = "data-files/v8r"
 reason = "This sandbox exercises tools without JSON schema checks."
 [[ignore]]
 check = "format/editorconfig-checker"

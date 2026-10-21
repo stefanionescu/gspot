@@ -61,7 +61,7 @@ async function copyTree(
                 const original = realpathSync(path);
                 if (isInside(relative(original, copy.root)))
                     throw new GspotError(
-                        'files',
+                        'copy',
                         `Installed dependency link ${relative(copy.copyRoot, destination)} points to this repository or a parent folder. Check this commit in its own clone after installing its project dependencies there.`,
                     );
                 copy.links.push({ source: original, target: destination });

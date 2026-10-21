@@ -68,17 +68,17 @@ enabled = false
 enabled = true
 provider = "%PROVIDER%"
 [[command_check]]
-name = "project/syntax"
+id = "project/syntax"
 stage = "commit"
 paths = ["*.sh"]
 command = %SYNTAX_COMMAND%
 output = { format = "lines" }
 [[command_check]]
-name = "project/audit"
+id = "project/audit"
 stage = "manual"
 paths = ["*.sh"]
 command = %AUDIT_COMMAND%
 [[ignore]]
-check = "files/v8r"
+check = "data-files/v8r"
 reason = "The jobs test the generated workflow; without an npm check, each install runs mise only."
 `;

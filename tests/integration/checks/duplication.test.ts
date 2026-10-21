@@ -37,7 +37,7 @@ test('a block copied between two files is a finding on the file that holds it', 
     commitAll(sandbox.path);
     const environment = {};
     await installSandbox(
-        { root: sandbox.path, environment: environment, run: spawnGspot },
+        { root: sandbox.path, environment, run: spawnGspot },
         { configurations: ['bash'], level: 'all' },
     );
     await checkDuplication(sandbox.path, environment, 0);

@@ -31,7 +31,7 @@ async function assertSupabaseScopes(installedSandbox: () => Sandbox): Promise<vo
         buildSandboxChanges(SUPABASE_SANDBOX.files, files),
     );
 
-    await runSandboxStep({ root: root, environment: environment, run: spawnGspot }, ['install']);
+    await runSandboxStep({ root, environment, run: spawnGspot }, ['install']);
     const command = ['check', '--only', 'security/semgrep', '--json'];
     const failed = parseCheckReport(await spawnGspot(root, command, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
@@ -46,7 +46,7 @@ async function assertSupabaseScopes(installedSandbox: () => Sandbox): Promise<vo
             .map((file) => ({
                 file,
                 line: 1,
-                rule: 'gspot.javascript.no-secret-in-log',
+                rule: 'gspot.javascript.secret-in-log',
             }))
             .toSorted((a, b) => a.file.localeCompare(b.file)),
     );

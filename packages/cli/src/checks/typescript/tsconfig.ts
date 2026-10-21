@@ -23,29 +23,29 @@ import { selectRequiredTsconfigOptions } from '#cli/checks/typescript/scope-tsco
 export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck): Finding[] {
     const project = readTsconfigProject(
         session.root,
-        planned.selection.scope.path,
+        planned.scope.folder.path,
         planned.files.filter((file) => file.tags.includes(TYPESCRIPT_TAG)).map((file) => file.path),
         session.reads,
     );
     const scopeTsconfig =
         project === undefined
-            ? joinScope(planned.selection.scope.path, TSCONFIG_FILE)
+            ? joinScope(planned.scope.folder.path, TSCONFIG_FILE)
             : convertToPosixPath(relative(session.root, project.path));
-    const candidates = new Set([
+    const tsconfigPaths = new Set([
         scopeTsconfig,
         ...planned.files.map((file) => file.path).filter((path) => TSCONFIG_NAME.test(posix.basename(path))),
     ]);
-    const required = selectRequiredTsconfigOptions(session.settingsFile.settings.level, planned.selection.selected);
-    const projects = [...candidates].flatMap((path) => {
+    const required = selectRequiredTsconfigOptions(session.settingsFile.settings.level, planned.scope.configurations);
+    const projects = [...tsconfigPaths].flatMap((path) => {
         const parsed = readTsconfig(session.root, join(session.root, path), session.reads);
         return parsed === undefined ? [] : [{ path, parsed }];
     });
     const unchecked = projects.filter(
         ({ path }) =>
             !isProjectChecked(session.reads, {
-                check: planned.check.name,
+                check: planned.check.id,
                 path: join(session.root, path),
-                scope: planned.selection.scope.path,
+                scope: planned.scope.folder.path,
                 required,
             }),
     );

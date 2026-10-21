@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { PathVisitor } from '#cli/types/settings/inheritance.ts';
 import { findSettingSchema } from '#cli/schemas/settings/gspot-toml.ts';
@@ -13,7 +13,7 @@ function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, k
         return value.map((entry: unknown, index) =>
             mapSettingPaths(schema.element as z.ZodType, entry, visit, [...keys, index]),
         );
-    if (!isRecord(value)) return value;
+    if (!isTable(value)) return value;
     if (schema instanceof z.ZodRecord) {
         const role = (schema.keyType as z.ZodType).meta()?.path_role;
         return Object.fromEntries(

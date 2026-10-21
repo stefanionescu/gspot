@@ -72,7 +72,7 @@ CREATE FUNCTION named.named() RETURNS TABLE (
 const SQL_CHECK_PROGRAM = `const fs = require('node:fs'); for (const path of process.argv.slice(1)) { if (fs.readFileSync(path, 'utf8').includes('CREATE FUNCTION')) { console.log(path + ':1: Replace the sample function.'); process.exitCode = 1; } }`;
 
 export const SQL_CHECK = `[[command_check]]
-name = "project/read-sql"
+id = "project/read-sql"
 paths = ["**/*.sql"]
 stage = "commit"
 command = ${JSON.stringify([process.execPath, '-e', SQL_CHECK_PROGRAM, '{files}'])}

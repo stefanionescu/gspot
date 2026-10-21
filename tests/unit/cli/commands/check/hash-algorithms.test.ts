@@ -9,12 +9,12 @@ import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/settings.ts';
 
 // The files a check reports and the status it ends with, for a staged run and for a push of the same change.
-async function collectVerdicts(format: 'sha1' | 'sha256'): Promise<unknown> {
+async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
                 rules: { enabled: false },
-                command_check: [buildReportingCheck({ name: 'sandbox/report', paths: ['src/**'], stage: 'commit' })],
+                command_check: [buildReportingCheck({ id: 'sandbox/report', paths: ['src/**'], stage: 'commit' })],
             }),
         }),
         'src/kept.ts': 'export {};\n',
@@ -53,7 +53,7 @@ async function collectVerdicts(format: 'sha1' | 'sha256'): Promise<unknown> {
 }
 
 test('SHA-256 object names give the staged and push checks the results of SHA-1 names', async () => {
-    const expected = await collectVerdicts('sha1');
+    const expected = await runChangeChecks('sha1');
     expect(expected).toStrictEqual({ staged: [1, [['failed', ['src/changed.ts']]]], pushed: [1, [['failed']]] });
-    expect(await collectVerdicts('sha256')).toStrictEqual(expected);
+    expect(await runChangeChecks('sha256')).toStrictEqual(expected);
 });

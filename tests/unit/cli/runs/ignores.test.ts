@@ -11,7 +11,7 @@ describe('ignores', () => {
     test('a path ignore keeps the check and its fixer off those paths, and a run of only ignored paths is skipped', async () => {
         await using folder = await testdir();
         const settings = buildSandboxSettings([], {
-            tables: `[[command_check]]\nname = "project/quality"\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\nreason = "The skipped input preserves the sample."\n`,
+            tables: `[[command_check]]\nid = "project/quality"\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\nreason = "The skipped input preserves the sample."\n`,
         });
         await createFileTree(folder.path, {
             'gspot.toml': settings,

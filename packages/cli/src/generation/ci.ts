@@ -79,14 +79,12 @@ function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSys
     const required = new Set(checks.flatMap((check) => listNeededTools(check)));
     const tools = pipeline.manualTools.flatMap((tool) => {
         const pin = findMisePin(tool);
-        return pin !== undefined &&
-            required.has(tool.name) &&
-            findMissingBuild(tool, { platform: platform, arch: arch }) === undefined
+        return pin !== undefined && required.has(tool.name) && findMissingBuild(tool, { platform, arch }) === undefined
             ? [pin.name]
             : [];
     });
     return {
-        checks: [...new Set(checks.map((planned) => planned.check.name))].toSorted((first, second) =>
+        checks: [...new Set(checks.map((planned) => planned.check.id))].toSorted((first, second) =>
             first.localeCompare(second),
         ),
         tools,
@@ -294,15 +292,15 @@ function buildFrozenInstall(session: Session, lockfile: string): readonly string
  */
 export function listProjectInstallLines(session: Session): string[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
-    return session.scopes.flatMap(({ scope, selected }) => {
+    return session.scopes.flatMap(({ folder, configurations }) => {
         const installs = Object.keys(FROZEN_INSTALLS)
-            .filter((lockfile) => tracked.has(joinScope(scope.path, lockfile)))
+            .filter((lockfile) => tracked.has(joinScope(folder.path, lockfile)))
             .flatMap((lockfile) => {
                 const command = buildFrozenInstall(session, lockfile);
                 return command === undefined ? [] : [command.map((argument) => quoteArgument(argument)).join(' ')];
             });
-        const isNext = selected.some((configuration) => configuration.name === NEXTJS_CONFIGURATION);
+        const isNext = configurations.some((configuration) => configuration.name === NEXTJS_CONFIGURATION);
         const lines = [...installs, ...(isNext && installs.length > 0 ? [NEXT_TYPEGEN_LINE] : [])];
-        return scope.path === '' ? lines : lines.map((line) => `(cd ${quoteArgument(scope.path)} && ${line})`);
+        return folder.path === '' ? lines : lines.map((line) => `(cd ${quoteArgument(folder.path)} && ${line})`);
     });
 }

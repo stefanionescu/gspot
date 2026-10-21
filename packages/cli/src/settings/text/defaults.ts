@@ -3,9 +3,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { buildSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import { selectForScope } from '#cli/settings/scope-view.ts';
-import { isRecord, getValueAt } from '#cli/system/tables.ts';
+import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { type WrittenTable } from '#cli/types/settings/text.ts';
+import { selectForScope } from '#cli/settings/scope-settings.ts';
 import { DETECTED_SETTINGS } from '#cli/config/settings/defaults.ts';
 import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -38,7 +38,7 @@ function isInheritedValueChanged(
     );
 }
 
-function parseConfigurationSelection(table: TomlTable) {
+function parseSelectedConfigurations(table: TomlTable) {
     return {
         configurations: settingsSchema.shape.configurations.parse(table['configurations']),
         removed_configurations: settingsSchema.shape.removed_configurations.parse(table['removed_configurations']),
@@ -76,7 +76,7 @@ function stripTableDefaults(
                 return [
                     [
                         name,
-                        isRecord(value) ? stripTableDefaults(value, writtenTable, tables, settings, segments) : value,
+                        isTable(value) ? stripTableDefaults(value, writtenTable, tables, settings, segments) : value,
                     ],
                 ];
             }),
@@ -88,9 +88,9 @@ function stripTableDefaults(
     return Object.fromEntries(
         entries.filter(
             ([name, value]) =>
-                !isRecord(value) ||
+                !isTable(value) ||
                 Object.keys(value).length > 0 ||
-                (isRecord(table[name]) && Object.keys(table[name]).length === 0),
+                (isTable(table[name]) && Object.keys(table[name]).length === 0),
         ),
     );
 }
@@ -107,33 +107,33 @@ export function stripDefaults(settings: TomlTable): TomlTable {
     const effectiveSettings = buildSettings(parsed, settings);
     const level = settingsSchema.shape.level.parse(settings['level']);
     const scopes = (settings['scope'] ?? []) as TomlTable[];
-    const selection = {
-        ...parseConfigurationSelection(settings),
+    const selected = {
+        ...parseSelectedConfigurations(settings),
         scopes: Object.fromEntries(
-            scopes.map((table) => [trimTrailingSlashes(table['path'] as string), parseConfigurationSelection(table)]),
+            scopes.map((table) => [trimTrailingSlashes(table['path'] as string), parseSelectedConfigurations(table)]),
         ),
     };
     const root = {
         scope: '',
         table: settings,
-        known: buildKnownSettings(selectForScope(selection, '', configurations), level),
+        known: buildKnownSettings(selectForScope(selected, '', configurations), level),
     };
     const tables = [
         root,
         ...scopes.map<WrittenTable>((table) => {
-            const scope = trimTrailingSlashes(table['path'] as string);
+            const scopePath = trimTrailingSlashes(table['path'] as string);
             return {
-                scope,
+                scope: scopePath,
                 table,
-                known: buildKnownSettings(selectForScope(selection, scope, configurations), level),
+                known: buildKnownSettings(selectForScope(selected, scopePath, configurations), level),
             };
         }),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     // The writer has no project input to prove a computed default. Keep a written choice until the writer knows that input.
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.known.defaults.delete(key);
     const scopeValues = scopes.map((table) => {
-        const scope = trimTrailingSlashes(table['path'] as string);
-        const writtenTable = tables.find((entry) => entry.scope === scope) as WrittenTable;
+        const scopePath = trimTrailingSlashes(table['path'] as string);
+        const writtenTable = tables.find((entry) => entry.scope === scopePath) as WrittenTable;
         return stripTableDefaults(writtenTable.table, writtenTable, tables, effectiveSettings);
     });
     const rootValues = stripTableDefaults(settings, root, tables, effectiveSettings);

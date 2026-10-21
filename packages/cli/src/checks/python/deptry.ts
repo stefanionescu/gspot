@@ -17,7 +17,7 @@ import { DEPTRY_COMMAND, DEPTRY_EXCLUDE_FLAG, DEPTRY_FIRST_PARTY_FLAG } from '#c
 // The modules of python.externals count as first party, beside the project's own known_first_party list, which the
 // command-line flag replaces.
 function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
-    const externals = planned.selection.view.values.python?.externals ?? [];
+    const externals = planned.scope.settings.values.python?.externals ?? [];
     if (externals.length === 0) return [];
     return [...new Set([...written, ...externals])].flatMap((module) => [DEPTRY_FIRST_PARTY_FLAG, module]);
 }
@@ -30,21 +30,21 @@ function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
  * @returns the check result.
  */
 export async function checkPythonDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const text = findCachedText(session.reads, joinScope(planned.selection.scope.path, PYPROJECT_TOML));
+    const text = findCachedText(session.reads, joinScope(planned.scope.folder.path, PYPROJECT_TOML));
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(
-        joinScope(planned.selection.scope.path, PYPROJECT_TOML),
+        joinScope(planned.scope.folder.path, PYPROJECT_TOML),
         text,
         deptrySchema,
     ).tool.deptry;
     return await runCheckCommand(session, planned, {
-        command: buildUvRunCommand(planned.selection, join(session.root, planned.selection.scope.path), [
+        command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.folder.path), [
             ...DEPTRY_COMMAND,
             ...[
                 String.raw`(^|.*[/\\])${RegExp.escape(DOT_GSPOT)}([/\\]|$)`,
-                ...listChildScopes(session.scopes, planned.selection).map((path) => {
+                ...listChildScopes(session.scopes, planned.scope).map((path) => {
                     const child = posix
-                        .relative(planned.selection.scope.path, path)
+                        .relative(planned.scope.folder.path, path)
                         .split('/')
                         .map((part) => RegExp.escape(part))
                         .join(String.raw`[/\\]`);

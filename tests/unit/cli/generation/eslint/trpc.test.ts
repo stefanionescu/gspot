@@ -2,7 +2,7 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
 import { TRPC_FILES, TRPC_TYPES, TRPC_IMPORTS, TRPC_MODULES, TRPC_FAILURES } from '#tests/data/checks/trpc.ts';
 
 describe('trpc', () => {
@@ -45,21 +45,19 @@ path = "flat"
             ...Object.entries(TRPC_FAILURES),
             ...TRPC_IMPORTS.map(({ line }, index): [string, number] => [`form${String(index)}.ts`, line]),
         ]);
-        expect(await collectLintFindings(eslint, sandbox.path, paths, ['boundaries/dependencies'])).toStrictEqual(
+        expect(await listLintFindings(eslint, sandbox.path, paths, ['boundaries/dependencies'])).toStrictEqual(
             [...expected]
                 .map(([file, line]) => ({ file, rule: 'boundaries/dependencies', line }))
                 .toSorted((left, right) => left.file.localeCompare(right.file) || left.line - right.line),
         );
         for (const file of TRPC_IMPORTS.map((_, index) => `form${String(index)}.ts`)) {
             await createFileTree(sandbox.path, { [file]: TRPC_TYPES });
-            expect(await collectLintFindings(eslint, sandbox.path, [file], ['boundaries/dependencies'])).toStrictEqual(
-                [],
-            );
+            expect(await listLintFindings(eslint, sandbox.path, [file], ['boundaries/dependencies'])).toStrictEqual([]);
         }
         await createFileTree(sandbox.path, { 'form0.ts': 'import { broken from "./private/router.js";\n' });
-        expect(
-            await collectLintFindings(eslint, sandbox.path, ['form0.ts'], ['boundaries/dependencies']),
-        ).toStrictEqual([{ file: 'form0.ts', rule: null, line: 1 }]);
+        expect(await listLintFindings(eslint, sandbox.path, ['form0.ts'], ['boundaries/dependencies'])).toStrictEqual([
+            { file: 'form0.ts', rule: null, line: 1 },
+        ]);
     });
 });
 describe('trpc', () => {
@@ -96,7 +94,7 @@ describe('trpc', () => {
             const eslint = await createEslint(sandbox.path);
             for (const file of [...checked, ...unchecked]) {
                 expect(
-                    await collectLintFindings(eslint, sandbox.path, [file], ['no-restricted-syntax']),
+                    await listLintFindings(eslint, sandbox.path, [file], ['no-restricted-syntax']),
                     file,
                 ).toStrictEqual(
                     level === 'all' && checked.has(file) ? [{ file, rule: 'no-restricted-syntax', line: 1 }] : [],

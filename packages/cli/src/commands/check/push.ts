@@ -6,7 +6,7 @@ import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { selectPush } from '#cli/repository/revisions/push.ts';
 import { type PushReport, type CheckOptions } from '#cli/types/commands/check.ts';
-import { type PushRevision, type PushSelection } from '#cli/types/repository/revisions.ts';
+import { type PushRevision, type PushedRevisions } from '#cli/types/repository/revisions.ts';
 
 // Check one pushed commit in a copy. Return undefined when the signal stops the run.
 async function checkRevision(
@@ -34,7 +34,7 @@ async function checkRevision(
 
 // Build the push report: the checked revisions, the updates that no check covers, and the refs that a cancellation left.
 function buildPushReport(
-    selected: PushSelection,
+    selected: PushedRevisions,
     revisions: PushReport['revisions'],
     cancelSignal: AbortSignal,
 ): PushReport {

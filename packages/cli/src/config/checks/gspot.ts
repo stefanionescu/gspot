@@ -28,7 +28,7 @@ export const SUPPRESSION_KIND_MESSAGES = {
 export const GENERATOR_IGNORED_FOLDERS = [NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER] as const;
 
 export const UNESCAPED_GROUP = /(?<!\\)[()[\]]/u;
-export const GROUP_HINT = String.raw` If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`;
+export const GROUP_HELP = String.raw` If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`;
 
 export const EXPIRED_IGNORE_HELP =
     'Fix the findings and delete the ignore with gspot unignore. To keep it, write a later until date in gspot.toml.';

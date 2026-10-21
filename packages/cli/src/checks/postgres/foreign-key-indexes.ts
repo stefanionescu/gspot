@@ -1,6 +1,6 @@
+import { getPosition } from '#cli/system/text.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { computePosition } from '#cli/system/text.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildSchema } from '#cli/checks/postgres/schema.ts';
@@ -21,7 +21,7 @@ export async function checkForeignKeyIndexes(session: Session, planned: PlannedC
         .map((key) =>
             buildFinding(
                 planned,
-                { file: key.path, ...computePosition(key.text, key.offset) },
+                { file: key.path, ...getPosition(key.text, key.offset) },
                 'foreign-key-index',
                 `${key.table}.${key.column} is a foreign key and no index leads with it.`,
             ),

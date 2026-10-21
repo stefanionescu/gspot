@@ -71,7 +71,7 @@ export const REFERENCE_FOLDERS = {
 } as const;
 /** The first sentence of a text: everything up to the first period that ends a sentence. */
 export const FIRST_SENTENCE = /^[\s\S]*?\.(?=\s|$)/u;
-export const REFERENCE_COLLECTION_NAME = 'gspot-reference';
+export const DOCS_SOURCE_NAME = 'gspot-docs';
 export const REFERENCE_IDS_KEY = 'reference-ids';
 export const PAGES_FOLDER = 'src/content/docs';
 /** Matches code spans and kept tags to keep, and markup to escape, in generated reference text. */

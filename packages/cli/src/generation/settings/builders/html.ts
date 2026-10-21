@@ -1,5 +1,5 @@
-import { listIgnoredRules } from '#cli/settings/scope-view.ts';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
+import { listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 
 import {
@@ -21,7 +21,7 @@ export function buildHtmlSettings(planned: PlannedToolFile): string {
     const rules: Record<string, unknown> = { ...HTML_RULES, ...HTML_VALIDATE_OVERRIDES[configuration] };
     for (const rule of [
         ...(planned.level === 'all' ? [] : HTML_RECOMMENDED_OFF),
-        ...listIgnoredRules(planned.selection, check),
+        ...listIgnoredRules(planned.scope, check),
     ])
         rules[rule] = 'off';
     return JSON.stringify({ extends: HTML_VALIDATE_EXTENDS, rules }, null, JSON_INDENT);

@@ -22,7 +22,7 @@ function parseSarifReport(report: unknown, root: string): Finding[] {
     return parseOutput(
         {
             runs: 'files',
-            name: 'docker/trivy-config',
+            id: 'docker/trivy-config',
             help: 'Correct the defect.',
             output: outputSchema.parse({ format: 'sarif' }),
         },
@@ -47,16 +47,13 @@ test('sarifFindings maps every result to its file and line', () => {
     ]);
 });
 
-test.each([...FAILED_ANALYSES])(
-    'a failed CodeQL run in the report is an error, not a clean result: %j',
-    (invocation) => {
-        const sourceRoot = resolve('selected-source');
+test.each([...FAILED_ANALYSES])('a failed CodeQL run in the report is an error, not a clean result: %j', (analysis) => {
+    const sourceRoot = resolve('selected-source');
 
-        expect(() =>
-            parseSarifReport({ version: '2.1.0', runs: [{ results: [], invocations: [invocation] }] }, sourceRoot),
-        ).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'output' }));
-    },
-);
+    expect(() =>
+        parseSarifReport({ version: '2.1.0', runs: [{ results: [], invocations: [analysis] }] }, sourceRoot),
+    ).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'output' }));
+});
 
 test.each([
     { uri: 'api/some%20file.ts', uriBaseId: '%SRCROOT%' },

@@ -21,16 +21,16 @@ import { ESLINT_TOOL, ESLINT_RULE_NAMES_FILE } from '#cli/config/configurations.
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
-    const candidates = [
+    const knownSubjects = [
         ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks)),
         ...readConfigurations().keys(),
-        ...(session?.scopes.flatMap((selection) =>
-            listEffectiveSettings(selection.known, session.settingsFile.settings, selection.scope.path).map(
+        ...(session?.scopes.flatMap((scope) =>
+            listEffectiveSettings(scope.knownSettings, session.settingsFile.settings, scope.folder.path).map(
                 (setting) => setting.key,
             ),
         ) ?? []),
     ];
-    const similar = formatSimilarNames(subject, [...new Set(candidates)]);
+    const similar = formatSimilarNames(subject, [...new Set(knownSubjects)]);
     return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
 }
 

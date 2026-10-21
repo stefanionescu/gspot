@@ -18,7 +18,7 @@ import { PIP_INSTALL, INSTALL_FILE_SUFFIXES } from '#cli/config/checks/python.ts
 export function checkPythonPipInstalls(session: Session, planned: PlannedCheck): Finding[] {
     if (
         !(planned.check.files?.filenames ?? []).some((file) =>
-            planned.files.some(({ path }) => path === joinScope(planned.selection.scope.path, file)),
+            planned.files.some(({ path }) => path === joinScope(planned.scope.folder.path, file)),
         )
     )
         throw new GspotError('skip', 'Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');

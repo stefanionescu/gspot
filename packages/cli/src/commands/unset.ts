@@ -4,7 +4,7 @@ import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { UnsetOptions } from '#cli/types/commands/unset.ts';
-import { isRecord, getValueAt, stripUndefined } from '#cli/system/tables.ts';
+import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
 import { deleteKey, getScopeTable, removeFromList, getWrittenValue } from '#cli/settings/edit.ts';
@@ -12,7 +12,7 @@ import { deleteKey, getScopeTable, removeFromList, getWrittenValue } from '#cli/
 // Remove entries from a written table, and drop the setting when no entries remain.
 function removeTableItems(scopeTable: TomlTable, key: string, items: string[]): void {
     const table = getWrittenValue(getValueAt(scopeTable, key.split('.')));
-    if (!isRecord(table)) return;
+    if (!isTable(table)) return;
     for (const item of items) Reflect.deleteProperty(table, item);
     if (Object.keys(table).length === 0) deleteKey(scopeTable, key);
 }

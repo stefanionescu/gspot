@@ -21,15 +21,15 @@ Change `gspot.toml`, then run `gspot apply`; gspot writes every generated file f
 | Pointers, such as `eslint.config.mjs`, `ruff.toml`, `pyrightconfig.json`, and `.swiftlint.yml` in Swift test folders | Files that lead a tool or editor to its tool file, at each scope root that needs one and inside test folders.                                                                                                 | Yes    |
 | `.editorconfig` and `.prettierignore`                                                                                | Editor settings and the files the formatter skips.                                                                                                                                                            | Yes    |
 | `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`                                                              | The CI job.                                                                                                                                                                                                   | Yes    |
-| The gspot sections in `AGENTS.md`, `.gitignore`, and `.gitattributes`                                                | The part between gspot markers. The rest of each file stays yours.                                                                                                                                            | Yes    |
+| The managed blocks in `AGENTS.md`, `.gitignore`, and `.gitattributes`                                                | The part between the gspot markers. The rest of each file stays yours.                                                                                                                                        | Yes    |
 | Keys in your own files, such as `minimumReleaseAge` in `bunfig.toml`                                                 | Install options. The other keys stay yours.                                                                                                                                                                   | Yes    |
 | `.gspot/node_modules/`, `.gspot/.venv/`, `.gspot/vale/`, `.gspot/state/`, `.gspot/.yarnrc-install.yml`               | Installed tools, run state, and install settings. `.gitignore` keeps them out of Git.                                                                                                                         | No     |
 
-The gspot section of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Some tools have no pointer; gspot passes their tool file when it runs them, so give your editor the same path. Run `gspot install` in each new clone.
+The managed block of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Some tools have no pointer; gspot passes their tool file when it runs them, so give your editor the same path. Run `gspot install` in each new clone.
 
 ## Do not edit generated files
 
-Do not edit a generated file. Each one has a gspot header or sits in a section between gspot markers; gspot finds its
+Do not edit a generated file. Each one has a gspot header or sits in a managed block between the gspot markers; gspot finds its
 files by these markers and the generated text.
 
 `gspot apply` replaces those files from your settings, even files with

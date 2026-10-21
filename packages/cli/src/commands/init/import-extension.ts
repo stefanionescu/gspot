@@ -35,19 +35,19 @@ function detectImportExtension(
 /**
  * Choose the import suffix style of each JavaScript scope that no framework configuration chooses.
  *
- * @param selections each scope with its selected configurations.
+ * @param scopes each scope with its selected configurations.
  * @param repository the tracked files and dependency declarations.
  * @returns the settings table to write for each scope that needs a style other than the default.
  */
 export function buildImportExtensionTables(
-    selections: { scope: string; selected: Configuration[] }[],
+    scopes: { scope: string; selected: Configuration[] }[],
     repository: Repository,
 ): Map<string, TomlTable> {
     const reads = createReadCache(repository.root);
     return new Map(
-        selections.flatMap(({ scope, selected }): [string, TomlTable][] => {
-            if (!selected.some((configuration) => configuration.name === JAVASCRIPT_CONFIGURATION)) return [];
-            if (selected.some((configuration) => Object.hasOwn(configuration.defaults, IMPORT_EXTENSION_SETTING)))
+        scopes.flatMap(({ scope, selected: configurations }): [string, TomlTable][] => {
+            if (!configurations.some((configuration) => configuration.name === JAVASCRIPT_CONFIGURATION)) return [];
+            if (configurations.some((configuration) => Object.hasOwn(configuration.defaults, IMPORT_EXTENSION_SETTING)))
                 return [];
             const style = detectImportExtension(repository, scope, reads);
             if (style === undefined) return [];

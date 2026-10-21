@@ -7,7 +7,7 @@ import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { parseTomlText, isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
-import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
+import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 
 function splitKey(key: string): SettingKey {
@@ -56,7 +56,7 @@ export function deleteKey(table: TomlTable, key: string): void {
     let current = table;
     for (const part of path) {
         const next = current[part];
-        if (!isRecord(next)) return;
+        if (!isTable(next)) return;
         tables.push(next);
         current = next;
     }
@@ -101,22 +101,22 @@ export function addToList(table: TomlTable, key: string, entries: unknown[]): vo
 export function removeFromList(table: TomlTable, key: string, entries: unknown[]): void {
     const { path, name } = splitKey(key);
     const parent = getValueAt(table, path);
-    if (!isRecord(parent)) return;
+    if (!isTable(parent)) return;
     const written = parent[name];
     const value = getWrittenValue(written);
     if (!Array.isArray(value)) return;
     const existing: unknown[] = value;
     const gone = new Set(
         entries.flatMap((value) =>
-            isRecord(value) && Array.isArray(value['paths'])
+            isTable(value) && Array.isArray(value['paths'])
                 ? value['paths'].map((path) => JSON.stringify(path))
                 : [JSON.stringify(value)],
         ),
     );
     const kept = existing.flatMap((item) => {
-        const identity = JSON.stringify(isRecord(item) && 'name' in item ? item['name'] : item);
+        const identity = JSON.stringify(isTable(item) && 'name' in item ? item['name'] : item);
         if (gone.has(identity) || gone.has(JSON.stringify(item))) return [];
-        if (!isRecord(item) || !Array.isArray(item['paths'])) return [item];
+        if (!isTable(item) || !Array.isArray(item['paths'])) return [item];
         const paths = item['paths'].filter((path) => !gone.has(JSON.stringify(path)));
         return paths.length === 0 ? [] : [{ ...item, paths }];
     });
@@ -137,12 +137,12 @@ export function getScopeTable(table: TomlTable, scope: string | undefined): Toml
     const scopeTable: unknown = Array.isArray(scopes)
         ? scopes.find(
               (entry) =>
-                  isRecord(entry) &&
+                  isTable(entry) &&
                   typeof entry['path'] === 'string' &&
                   trimTrailingSlashes(entry['path']) === trimTrailingSlashes(scope),
           )
         : undefined;
-    if (!isRecord(scopeTable))
+    if (!isTable(scopeTable))
         throw new GspotError(
             'arguments',
             `gspot.toml has no [[scope]] with path = ${JSON.stringify(scope)}. Add one, or leave out --scope.`,

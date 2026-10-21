@@ -1,5 +1,5 @@
-import { listIgnores } from '#cli/settings/scope-view.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
+import { listIgnores } from '#cli/settings/scope-settings.ts';
 import type { Tool, Check } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
@@ -34,8 +34,8 @@ function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repos
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
 function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | undefined {
     const { configuration, git, dependencies, tags } = { ...check.configuration?.when, ...check.check.when };
-    const scope = check.selection.scope.path;
-    if (configuration !== undefined && !check.selection.view.configurations.includes(configuration))
+    const scope = check.scope.folder.path;
+    if (configuration !== undefined && !check.scope.settings.configurations.includes(configuration))
         return {
             cause: 'condition',
             note: `Needs the ${configuration} configuration, which this scope does not select.`,
@@ -51,12 +51,12 @@ function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | 
 }
 
 // Find the skip that an ignore record without a rule or paths causes: the whole check turns off.
-function findIgnoreSkip(selection: Scope, check: Check): SettingsSkip | undefined {
-    const ignored = listIgnores(selection.view, check.name).find(
+function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
+    const ignored = listIgnores(scope.settings, check.id).find(
         (entry) =>
             entry.rule === undefined &&
             entry.names === undefined &&
-            (entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path)),
+            (entry.paths.length === 0 || isScopeCovered(entry.paths, scope.folder.path)),
     );
     if (ignored === undefined) return undefined;
     return { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };
@@ -65,7 +65,7 @@ function findIgnoreSkip(selection: Scope, check: Check): SettingsSkip | undefine
 function findEmptySetting(scope: Scope, check: Check): string | undefined {
     const setting = check.when?.setting;
     if (setting === undefined) return undefined;
-    return isSettingEmpty(scope.view.settings[setting]) ? setting : undefined;
+    return isSettingEmpty(scope.settings.settings[setting]) ? setting : undefined;
 }
 
 /**
@@ -132,7 +132,7 @@ export function findSettingsSkip(settings: Settings, scope: Scope, check: Check)
 export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip | undefined {
     const { session, options, host } = planned;
     const settings = session.settingsFile.settings;
-    const selected = findSettingsSkip(settings, check.selection, check.check);
+    const selected = findSettingsSkip(settings, check.scope, check.check);
     if (selected !== undefined) return selected;
     const condition = findConditionSkip(check, session.repository);
     if (condition !== undefined) return condition;

@@ -16,8 +16,8 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 import { type ListKind, type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 function buildSettingsResult(session: Session): CommandResult {
-    const { settings: rows } = buildSettingRows(session.settingsFile.settings, session.scopes);
-    const displayed = rows.filter(
+    const { settings } = buildSettingRows(session.settingsFile.settings, session.scopes);
+    const displayed = settings.filter(
         (row) => row.scope === '' || (row.origin === 'scope' && row.originScope === row.scope),
     );
     const width = Math.max(...displayed.map((row) => row.key.length)) + KEY_GAP;
@@ -28,26 +28,23 @@ function buildSettingsResult(session: Session): CommandResult {
         return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reason_needed ?? '').padEnd('reason needed when'.length)}  ${row.source}${scope}`;
     });
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} reason needed when  source`);
-    return { text: `${lines.join('\n')}\n`, json: { settings: rows } satisfies SettingsListJson, exitCode: 0 };
+    return { text: `${lines.join('\n')}\n`, json: { settings } satisfies SettingsListJson, exitCode: 0 };
 }
 
 function buildConfigurationsResult(session: Session): CommandResult {
     const configurations = listSelectedConfigurations(session.scopes);
     const names = new Set(configurations.map((configuration) => configuration.name));
     const planned = new Map(
-        planChecks(session, { stage: 'any' }).map((check) => [
-            `${check.selection.scope.path}\0${check.check.name}`,
-            check,
-        ]),
+        planChecks(session, { stage: 'any' }).map((check) => [`${check.scope.folder.path}\0${check.check.id}`, check]),
     );
     const selected = configurations.map((configuration) => ({
         name: configuration.name,
-        checks: session.scopes.flatMap((selection) =>
-            selection.selected.includes(configuration)
+        checks: session.scopes.flatMap((scope) =>
+            scope.configurations.includes(configuration)
                 ? configuration.checks.map((check) => ({
-                      name: check.name,
-                      scope: selection.scope.path,
-                      state: formatCheckState(planned.get(`${selection.scope.path}\0${check.name}`)),
+                      name: check.id,
+                      scope: scope.folder.path,
+                      state: formatCheckState(planned.get(`${scope.folder.path}\0${check.id}`)),
                   }))
                 : [],
         ),
@@ -84,10 +81,10 @@ function buildConfigurationsResult(session: Session): CommandResult {
  * @returns values and their inheritance sources for every selected scope.
  */
 function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson {
-    const rows = scopes.flatMap((selection) => {
-        const scope = selection.scope.path;
-        return listEffectiveSettings(selection.known, settings, scope)
-            .filter((entry) => scope === '' || entry.origin !== 'configuration')
+    const rows = scopes.flatMap((scope) => {
+        const scopePath = scope.folder.path;
+        return listEffectiveSettings(scope.knownSettings, settings, scopePath)
+            .filter((entry) => scopePath === '' || entry.origin !== 'configuration')
             .map((entry) => ({
                 key: entry.key,
                 value: entry.value,
@@ -95,7 +92,7 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
                 origin: entry.origin,
                 ...stripUndefined({ originScope: entry.originScope }),
                 reason_needed: entry.setting.reason_needed,
-                scope,
+                scope: scopePath,
             }));
     });
     return { settings: rows };

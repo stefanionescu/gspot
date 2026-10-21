@@ -2,11 +2,11 @@ import type { RuleDocs } from './types/rules.ts';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { noClientEnv } from './rules/no-client-env.ts';
 import { schemaLocation } from './rules/schema-location.ts';
-import { noAliasExports } from './rules/no-alias-exports.ts';
 import { noIndexImports } from './rules/no-index-imports.ts';
 import { noMagicNumbers } from './rules/no-magic-numbers.ts';
 import { noTrivialFiles } from './rules/no-trivial-files.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
+import { noRenamedExports } from './rules/no-renamed-exports.ts';
 import { requireServerOnly } from './rules/require-server-only.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
 import { name, version } from '../package.json' with { type: 'json' };
@@ -17,7 +17,7 @@ const rules = {
     'no-comments-in-imports': noCommentsInImports,
     'no-client-env': noClientEnv,
     'import-boundaries': importBoundaries,
-    'no-alias-exports': noAliasExports,
+    'no-renamed-exports': noRenamedExports,
     'no-index-imports': noIndexImports,
     'no-magic-numbers': noMagicNumbers,
     'no-trivial-files': noTrivialFiles,

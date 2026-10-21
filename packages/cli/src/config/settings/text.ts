@@ -3,7 +3,6 @@ export const ROOT_KEYS = [
     'level',
     'configurations',
     'removed_configurations',
-    'allowed_words',
     'test_files',
     'tool_timeout_seconds',
 ] as const;

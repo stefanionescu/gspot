@@ -1,5 +1,5 @@
 rules:
-    - id: nextjs.checks-off
+    - id: gspot.nextjs.checks-off
       languages: [typescript, javascript]
       severity: ERROR
       message: $KEY true lets next build pass with errors. Remove it.
@@ -17,7 +17,7 @@ rules:
                 metavariable: $KEY
                 regex: ^["']?(ignoreBuildErrors|ignoreDuringBuilds)["']?$
           - focus-metavariable: $KEY
-    - id: nextjs.env-secret
+    - id: gspot.nextjs.env-secret
       languages: [typescript, javascript]
       severity: ERROR
       message: $KEY under env is written into the client bundle. Read it on the server.

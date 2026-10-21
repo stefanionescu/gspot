@@ -62,10 +62,10 @@ function buildComparison(
 }
 
 // List the files that a path names: the file itself, or every file in a folder.
-function listMatchingFiles(session: Session, cwd: string, path: string, candidates: string[]): string[] {
+function listMatchingFiles(session: Session, cwd: string, path: string, files: string[]): string[] {
     const selector = convertToPosixPath(relative(session.root, resolve(cwd, path)));
     if (!isInside(selector)) throw new GspotError('arguments', `Path ${path} is outside this repository.`);
-    const matches = candidates.filter((file) => isInScope(file, selector));
+    const matches = files.filter((file) => isInScope(file, selector));
     if (matches.length === 0) throw new GspotError('arguments', `Path ${path} matches no repository files.`);
     return matches;
 }
@@ -80,9 +80,9 @@ function listMatchingFiles(session: Session, cwd: string, path: string, candidat
  */
 function selectArgumentPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
     if (options.paths.length === 0) return [];
-    const candidates = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
+    const knownPaths = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
     const selected = new Set(
-        options.paths.flatMap((path) => listMatchingFiles(session, options.cwd, path, candidates)),
+        options.paths.flatMap((path) => listMatchingFiles(session, options.cwd, path, knownPaths)),
     );
     return [...selected];
 }
@@ -96,9 +96,9 @@ function selectArgumentPaths(session: Session, options: CheckOptions, changed: s
 function assertKnownChecks(session: Session, only: string[] | undefined): void {
     const known = new Set([
         ...session.scopes.flatMap((scope) =>
-            scope.selected.flatMap((configuration) => configuration.checks.map((check) => check.name)),
+            scope.configurations.flatMap((configuration) => configuration.checks.map((check) => check.id)),
         ),
-        ...Object.values(session.settingsFile.settings.commandChecks).map((check) => check.name),
+        ...Object.values(session.settingsFile.settings.commandChecks).map((check) => check.id),
     ]);
     const unknown = only?.find((check) => !known.has(check));
     if (unknown !== undefined)
@@ -166,7 +166,7 @@ export async function checkTree(
     const session = await openSession(treeFolder, {
         installedRoot: revision?.installedRoot ?? treeFolder,
         resources,
-        cancelSignal: cancelSignal,
+        cancelSignal,
     });
     assertKnownChecks(session, options.only);
     warnAboutHooks(session, revision);

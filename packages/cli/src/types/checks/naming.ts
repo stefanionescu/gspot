@@ -101,7 +101,7 @@ export type Identifier = {
 export type SqlNamed = { category: NamedCategory; name: string; location?: number; offset?: number };
 
 /** Where an extractor puts what it finds. */
-export type ExtractSink = { file: string; language: string; out: Identifier[] };
+export type FileIdentifiers = { file: string; language: string; out: Identifier[] };
 
 /** Declarations or the located SQL syntax failure that prevented extraction. */
 export type IdentifierRead = { identifiers: Identifier[]; error: SqlFile['error'] };

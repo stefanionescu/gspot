@@ -66,7 +66,7 @@ paths = ["**/*.json"]
 reason = "These files retain generated formatting."
 `;
 
-export const NON_RECORD_JSON = ['null', '[]', '42'];
+export const NON_TABLE_JSON = ['null', '[]', '42'];
 
 /** A staged format check uses the root tool file until a later apply writes the scope tool file. */
 export const STAGED_FORMAT_FILES = {

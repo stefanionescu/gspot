@@ -8,7 +8,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { listNeededTools, listCompanionTools } from '#cli/planning/needed-tools.ts';
+import { listOtherTools, listNeededTools } from '#cli/planning/needed-tools.ts';
 import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/data/runs/plan.ts';
 
 test.each([...NODE_REQUIREMENTS])(
@@ -48,17 +48,15 @@ test.each(ARCHITECTURE_REQUIREMENTS.flatMap((entry) => LEVELS.map((level) => ({ 
             'app/src/source.js': 'export const value = 2;\n',
         });
         const session = await openSession(sandbox.path);
-        expect(session.scopes.map(({ scope }) => scope.path)).toStrictEqual(['', 'app']);
-        expect(session.scopes.every(({ view }) => view.test_files.length > 0)).toBe(true);
+        expect(session.scopes.map(({ folder }) => folder.path)).toStrictEqual(['', 'app']);
+        expect(session.scopes.every(({ settings }) => settings.test_files.length > 0)).toBe(true);
         const names = session.neededToolConfigurations.flatMap((configuration) =>
             configuration.tools.map((tool) => tool.name),
         );
         expect(names.includes('eslint-plugin-boundaries')).toBe(boundary[level]);
         const checks = planChecks(session, { stage: 'all', only: ['javascript/eslint'] });
         for (const check of checks) {
-            expect(listCompanionTools(check.selection, check.check).includes('eslint-plugin-boundaries')).toBe(
-                boundary[level],
-            );
+            expect(listOtherTools(check.scope, check.check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
             expect(listNeededTools(check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
         }
     },
@@ -80,9 +78,9 @@ describe.each(COVERAGE_PROVIDERS.flatMap((entry) => [0, 80].map((lines) => ({ ..
         });
         afterAll(() => resources.disposeAsync());
         test.each(['', 'app'])('scope %s needs the provider and lists it as a companion', (scope) => {
-            const check = checks.find((planned) => planned.selection.scope.path === scope)!;
+            const check = checks.find((planned) => planned.scope.folder.path === scope)!;
             expect(listNeededTools(check).includes(provider)).toBe(lines !== 0);
-            expect(listCompanionTools(check.selection, check.check, check.check.command)).toContain(provider);
+            expect(listOtherTools(check.scope, check.check, check.check.command)).toContain(provider);
         });
     },
 );
@@ -96,24 +94,24 @@ test('omitting coverage keeps unrelated system libraries required by another con
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'push', only: ['vitest/coverage'] })[0]!;
-    const provider = planned.selection.selected
+    const provider = planned.scope.configurations
         .flatMap((configuration) => configuration.tools)
         .find((tool) => tool.name === '@vitest/coverage-v8')!;
     const check = { ...planned.check, tool: 'eslint' };
-    const selection = {
-        ...planned.selection,
-        selected: planned.selection.selected.map((configuration) =>
+    const scope = {
+        ...planned.scope,
+        configurations: planned.scope.configurations.map((configuration) =>
             configuration.name === 'vitest'
                 ? {
                       ...configuration,
                       checks: configuration.checks.map((entry) => (entry === planned.check ? check : entry)),
                       tools: [...configuration.tools, { ...provider, name: 'independent-support' }],
-                      eslint: { ...configuration.eslint, fragment: true, required_tools: ['independent-support'] },
+                      eslint: { ...configuration.eslint, required_tools: ['independent-support'] },
                   }
                 : configuration,
         ),
     };
-    const companions = listCompanionTools(selection, check, ['vitest', 'run']);
+    const companions = listOtherTools(scope, check, ['vitest', 'run']);
     expect(companions).toContain('independent-support');
     expect(companions).not.toContain('@vitest/coverage-v8');
 });

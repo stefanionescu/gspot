@@ -77,12 +77,12 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
             return false;
         });
     }
-    const candidates = new Set([
+    const writtenPaths = new Set([
         ...ownPaths,
         ...session.repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),
         ...blockPaths,
     ]);
-    return [...candidates].filter((path) => {
+    return [...writtenPaths].filter((path) => {
         if (installations.some((folder) => path === folder || path.startsWith(`${folder}/`))) return false;
         if (expected.has(path)) return false;
         if (isOwned(path, disk)) return true;

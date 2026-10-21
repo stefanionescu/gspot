@@ -10,7 +10,7 @@ import {
     WINDOWS_ARGUMENT_OVERHEAD,
 } from '#cli/config/runs/command.ts';
 
-function computeArgumentSize(argument: string, platform: NodeJS.Platform): number {
+function measureArgumentSize(argument: string, platform: NodeJS.Platform): number {
     return platform === 'win32'
         ? argument.length * WINDOWS_ESCAPE_EXPANSION + WINDOWS_ARGUMENT_OVERHEAD
         : Buffer.byteLength(argument) + 1;
@@ -57,12 +57,12 @@ export function buildCommandLines(
 export function splitFileArguments(files: string[], fixed: string[], platform: NodeJS.Platform): string[][] {
     // Reserve space below the 8191-character limit of cmd.exe for the npm wrapper.
     const limit = platform === 'win32' ? WINDOWS_COMMAND_LIMIT : UNIX_COMMAND_LIMIT;
-    const budget = limit - fixed.reduce((size, argument) => size + computeArgumentSize(argument, platform), 0);
+    const budget = limit - fixed.reduce((size, argument) => size + measureArgumentSize(argument, platform), 0);
     if (budget < 0) throw new Error('Tool arguments exceed the command limit. Shorten the tool arguments.');
     const batches: string[][] = [[]];
     let used = 0;
     for (const file of files) {
-        const size = computeArgumentSize(file, platform);
+        const size = measureArgumentSize(file, platform);
         if (size > budget) throw new Error(`${file} is too long for one command line. Shorten its path.`);
         const current = batches.at(-1) as string[];
         if (used + size > budget) {

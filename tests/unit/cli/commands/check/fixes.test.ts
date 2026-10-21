@@ -15,7 +15,7 @@ test.each([...FIXER_FEEDBACK_CASES])(
             tables: stringify({
                 command_check: [
                     {
-                        name: 'sandbox/feedback',
+                        id: 'sandbox/feedback',
                         command: [process.execPath, '-e', 'process.exitCode = 0'],
                         fix: [
                             process.execPath,

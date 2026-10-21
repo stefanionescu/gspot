@@ -19,9 +19,9 @@ import {
 } from '#cli/schemas/install/python/settings.ts';
 
 // Preserve absolute URLs and paths; resolve an authored local index against its repository.
-function normalizeIndexLocation(root: string, value: string): string {
-    if (URL_SCHEME.test(value)) return value;
-    return resolve(root, value);
+function normalizeIndexLocation(root: string, location: string): string {
+    if (URL_SCHEME.test(location)) return location;
+    return resolve(root, location);
 }
 
 /**

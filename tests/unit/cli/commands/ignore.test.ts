@@ -163,7 +163,7 @@ test('an ignore without paths stops a command check and its fixer until unignore
     const fix = [process.execPath, '-e', "await Bun.write('corrected.txt', 'corrected');"];
     const settings = buildSandboxSettings([], {
         tables: `[[command_check]]
-name = "project/quality"
+id = "project/quality"
 output = { format = "none" }
 command = ${JSON.stringify(command)}
 fix = ${JSON.stringify(fix)}
@@ -278,14 +278,14 @@ test('gspot ignore escapes a route folder in its paths, and a pattern with a bar
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(written['ignore']).toMatchObject([{ paths: [String.raw`app/\(legal\)/**`] }]);
-    expect(await checkFindings(sandbox.path, 'gspot/unmatched-patterns')).toStrictEqual([]);
+    expect(await checkFindings(sandbox.path, 'gspot/unmatched-paths')).toStrictEqual([]);
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['typescript'], {
             tables: '[[ignore]]\ncheck = "structure/lone-files"\npaths = ["app/(missing)/**"]\nreason = "A route group."\n',
         }),
     );
-    const unmatched = await checkFindings(sandbox.path, 'gspot/unmatched-patterns');
+    const unmatched = await checkFindings(sandbox.path, 'gspot/unmatched-paths');
     expect(unmatched.map(({ message }) => message)).toStrictEqual([
         String.raw`app/(missing)/** under [[ignore]] matches no tracked file or folder. If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`,
     ]);

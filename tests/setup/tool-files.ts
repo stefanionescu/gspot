@@ -17,12 +17,12 @@ import { parse as parseToml } from '@decimalturn/toml-patch';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
 import type { LintFinding, ScriptFindingCase, EslintConfiguration } from '#tests/types/tool-output.ts';
 
 /** Lint the files and keep the findings of these rules and fatal errors, sorted. */
-export async function collectLintFindings(
+export async function listLintFindings(
     eslint: ESLint,
     root: string,
     files: readonly string[],
@@ -53,11 +53,11 @@ export async function createEslint(sandboxRoot: string, options?: ESLint.Options
     await linkInstalledModules(join(sandboxRoot, 'node_modules'));
     await runSandboxStep({ root: sandboxRoot, environment: {}, run: runGspot }, ['apply']);
     const session = await openSession(sandboxRoot);
-    const scope = session.scopes.find((selection) =>
-        selection.selected.some((configuration) =>
+    const scope = session.scopes.find((entry) =>
+        entry.configurations.some((configuration) =>
             configuration.toolFiles.some((file) => extractToolFileName(file.file) === 'eslint'),
         ),
-    )?.scope.path;
+    )?.folder.path;
     if (scope === undefined) throw new Error('The sandbox selects no ESLint tool file.');
     return new ESLint({
         ...options,
@@ -94,13 +94,14 @@ export function compareFindings(left: LintFinding, right: LintFinding): number {
     );
 }
 /** Find the generated tool file for a tool and scope. */
-export function toolFileFor(session: Session, tool: string, scope = ''): string {
+export function toolFileFor(session: Session, tool: string, scopePath = ''): string {
     const declaration = session.scopes
-        .find((selection) => selection.scope.path === scope)
-        ?.selected.flatMap((configuration) => configuration.toolFiles)
+        .find((scope) => scope.folder.path === scopePath)
+        ?.configurations.flatMap((configuration) => configuration.toolFiles)
         .find((file) => extractToolFileName(file.file) === tool);
-    if (declaration === undefined) throw new Error(`The sandbox generates no ${tool} file for ${scope || 'the root'}.`);
-    return buildScopeTarget(scope, declaration, getToolFiles(session).targets);
+    if (declaration === undefined)
+        throw new Error(`The sandbox generates no ${tool} file for ${scopePath || 'the root'}.`);
+    return getToolFileTarget(scopePath, declaration, getToolFiles(session).targets);
 }
 
 function parseJson(text: string, path: string): void {

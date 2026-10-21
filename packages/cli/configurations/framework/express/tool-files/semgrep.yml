@@ -52,7 +52,7 @@ rules:
           cwe:
               - CWE-79
           category: security
-    - id: gspot.express.no-stack-trace-in-response
+    - id: gspot.express.stack-trace-in-response
       patterns:
           - pattern-either:
                 - pattern: 'res.send({..., stack: $ERR.stack, ...})'

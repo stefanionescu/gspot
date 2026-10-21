@@ -138,10 +138,10 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const reads = createReadCache(root);
     const configurations = readConfigurations();
     const repository = await readRepository(reads, { generatedPaths: [], scopes: [], configurations });
-    const selection = selectForInit({ repository, configurations, options });
+    const initConfigurations = selectForInit({ repository, configurations, options });
     const existingTools = readExistingTools(reads, repository);
     const answers: InitAnswers = { hooks: true, rules: true, ci: detectCiProvider(root, existingTools) };
-    const draft = buildSettingsDraft(selection, answers, options);
+    const draft = buildSettingsDraft(initConfigurations, answers, options);
     const settingsText = buildInitSettings(draft, repository, configurations);
     const settings = parseSettings(settingsText, root);
     const session = await openSession(root, { settingsFile: { settings, text: settingsText } });
@@ -153,8 +153,8 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     );
     const detection: DetectionSummary = {
         files: repository.files,
-        detected: selection.detected,
-        scopes: selection.scopes,
+        detected: initConfigurations.detected,
+        scopes: initConfigurations.scopes,
         existingTools,
         owned: detectedTools.filter((tool) => tools.has(tool)),
         unowned: detectedTools.filter((tool) => !tools.has(tool)),
@@ -168,7 +168,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
         repository: session.repository,
         options,
         existingTools,
-        selection,
+        configurations: initConfigurations,
         everySelected,
         answers,
         replaced,

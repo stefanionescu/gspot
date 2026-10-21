@@ -53,7 +53,7 @@ function assertDependencyReady(copyRoot: string, folder: string): void {
         )
     )
         throw new GspotError(
-            'files',
+            'copy',
             `${folder} has no lockfile, so gspot cannot tell whether its installed dependencies match this revision. Commit a lockfile.`,
         );
 }
@@ -67,7 +67,7 @@ async function assertDependencyFilesUnchanged(
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const mismatch = new GspotError(
-        'files',
+        'copy',
         'Installed dependencies do not match the dependency files and lockfiles of the revision or its compiler configurations. Check this commit in its own clone after installing its project dependencies and running gspot install there.',
     );
     if (entries.some((entry) => statSync(join(root, entry.path), { throwIfNoEntry: false }) === undefined))
@@ -103,12 +103,12 @@ async function selectRevisionDependencies(
     cancelSignal?: AbortSignal,
 ): Promise<DependencyCopy[]> {
     using installed = openFiles(repositoryRoot);
-    const inputs = entries.filter((entry) => {
+    const dependencyEntries = entries.filter((entry) => {
         const name = basename(entry.path);
         const lockfile = LOCKFILES.find((entry) => entry.file === posix.basename(name));
         return DEPENDENCY_FILES.has(name) || name === PACKAGE_SWIFT || (lockfile !== undefined && 'copied' in lockfile);
     });
-    const projects = inputs.map((entry) => entry.path).filter((path) => DEPENDENCY_FILES.has(basename(path)));
+    const projects = dependencyEntries.map(({ path }) => path).filter((path) => DEPENDENCY_FILES.has(basename(path)));
     const folders = listDependencyFolders(installed, projects);
     const environments = projects
         .filter(
@@ -133,7 +133,12 @@ async function selectRevisionDependencies(
     await assertDependencyFilesUnchanged(
         repositoryRoot,
         installed,
-        [...new Set([...inputs, ...entries.filter(({ path }) => declarations.configurationPaths.has(path))])],
+        [
+            ...new Set([
+                ...dependencyEntries,
+                ...entries.filter(({ path }) => declarations.configurationPaths.has(path)),
+            ]),
+        ],
         cancelSignal,
     );
     return [
@@ -143,7 +148,7 @@ async function selectRevisionDependencies(
             const path = posix.join(folder, NODE_MODULES);
             if (lstatSync(join(copyRoot, path), { throwIfNoEntry: false }) !== undefined)
                 throw new GspotError(
-                    'files',
+                    'copy',
                     'Installed dependencies are tracked in the selected revision. Untrack them before checking again.',
                 );
             return { path, operation: basename(folder) === DOT_GSPOT ? 'link' : 'clone' };
@@ -172,7 +177,7 @@ async function writeRevisionFiles(
     const upper = copyRoot.toUpperCase();
     if (collision !== undefined && upper !== copyRoot && statSync(upper, { throwIfNoEntry: false }) !== undefined)
         throw new GspotError(
-            'files',
+            'copy',
             `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
         );
     for (const entry of entries.filter((file) => file.mode === GITLINK_MODE)) {

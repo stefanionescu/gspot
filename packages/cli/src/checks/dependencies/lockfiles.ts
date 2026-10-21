@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD } from '#cli/config/checks/dependencies.ts';
@@ -65,7 +65,7 @@ function checkForeignLockfiles(planned: PlannedCheck): Finding[] {
  * @returns the findings.
  */
 export function checkDependenciesLockfiles(session: Session, planned: PlannedCheck): Finding[] {
-    const hosts = new Set(getTable(planned.selection.view, 'dependencies')['allowed_registries']);
+    const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
     const lockfiles = new Set<string>(JAVASCRIPT_LOCKFILES);
     const paths = planned.files.map((file) => file.path).filter((path) => lockfiles.has(posix.basename(path)));
     return [

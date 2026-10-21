@@ -116,7 +116,7 @@ test('a neutral format setting stays settable without a reason', async () => {
     const root = 'space';
     const child = 'tab';
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['files'], { level: level, rules: true, scopes: [{ path: 'app' }] }),
+        'gspot.toml': buildSandboxSettings(['data-files'], { level, rules: true, scopes: [{ path: 'app' }] }),
         'app/project.toml': 'name = "Project"\n',
     });
 

@@ -8,9 +8,9 @@ import type { SourcePosition } from '#cli/types/text.ts';
 import { listSqlTokens } from '#cli/parsers/sql/tokens.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
+import { getPosition, findQuotedEnd } from '#cli/system/text.ts';
 import type { GrammarName } from '#cli/types/parsers/grammars.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { findQuotedEnd, computePosition } from '#cli/system/text.ts';
 import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/syntax.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/grammars.ts';
 import type { CommentParser, SourceComment } from '#cli/types/parsers/comments.ts';
@@ -108,7 +108,7 @@ function parseSqlComments(text: string): SourceComment[] {
     const comments: SourceComment[] = [];
     for (const { start, end, kind } of listSqlTokens(text)) {
         if (kind !== 'line-comment' && kind !== 'block-comment') continue;
-        comments.push(buildComment(text, start, end, computePosition(text, start).line));
+        comments.push(buildComment(text, start, end, getPosition(text, start).line));
     }
     return comments;
 }

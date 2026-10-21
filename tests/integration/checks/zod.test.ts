@@ -25,7 +25,7 @@ test('adding the zod configuration adds its ESLint finding, and removing it drop
     await using sandbox = await testdir();
     const environment = await prepareLooseSchemaProject(sandbox.path);
     await installSandbox(
-        { root: sandbox.path, environment: environment, run: spawnGspot },
+        { root: sandbox.path, environment, run: spawnGspot },
         { configurations: ['typescript'], level: 'all' },
     );
     const before = await spawnGspot(sandbox.path, ['check', '--only', 'javascript/eslint', '--json'], environment);

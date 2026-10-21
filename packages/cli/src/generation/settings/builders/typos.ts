@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
-import { getTable } from '#cli/settings/scope-view.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { TOOL_FILE_TOML_FORMAT } from '#cli/config/generation/generate.ts';
 import type { IgnoreSection, PlannedToolFile } from '#cli/types/generation/files.ts';
@@ -26,7 +26,7 @@ function buildTyposSections(planned: PlannedToolFile): IgnoreSection[] {
     const excludedFormats = TYPOS_IGNORED_GLOBS.filter((path) => !excludedLockfiles.includes(path));
     const sections = [
         ...buildIgnoreSections(planned.session),
-        ...listCheckIgnoreSections(planned.selection.view, 'spelling/typos'),
+        ...listCheckIgnoreSections(planned.scope.settings, 'spelling/typos'),
     ].map((section) => {
         if (section.key === 'lockfiles')
             return {
@@ -70,12 +70,12 @@ export function buildTyposFile(planned: PlannedToolFile): string {
     const grouped = buildTyposSections(planned);
     const ignoredGlobs = grouped.flatMap((section) => section.patterns);
     const allowed = Object.fromEntries<string>(
-        Object.keys(planned.session.settingsFile.settings.allowed_words).map((word) => [word, word]),
+        Object.keys(getTable(planned.scope.settings, 'spelling').allowed_words).map((word) => [word, word]),
     );
     const text = stringify(
         {
             default: {
-                locale: getTable(planned.selection.view, 'spelling').locale,
+                locale: getTable(planned.scope.settings, 'spelling').locale,
                 'extend-ignore-re': TYPOS_IGNORE_PATTERNS,
                 'extend-words': allowed,
             },

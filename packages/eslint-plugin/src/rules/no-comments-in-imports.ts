@@ -4,12 +4,12 @@ import { type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@
 
 import {
     BLANK,
-    TS_COMMENT,
     LEADING_STAR,
     LINE_BREAK_GAP,
     LEADING_LINE_BREAK,
-    BLANK_LINE_DISTANCE,
-    TOOL_COMMENT_PREFIXES,
+    TYPESCRIPT_DIRECTIVE,
+    TOOL_DIRECTIVE_PREFIXES,
+    LEADING_COMMENT_LINE_BREAKS,
 } from '../config/comments.ts';
 
 /**
@@ -18,10 +18,10 @@ import {
  * @param value the comment text without its markers
  * @returns whether a tool reads the comment
  */
-function isToolComment(value: string): boolean {
+function isToolDirective(value: string): boolean {
     const text = value.replace(LEADING_STAR, '').trim();
-    if (TS_COMMENT.test(text)) return true;
-    return TOOL_COMMENT_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
+    if (TYPESCRIPT_DIRECTIVE.test(text)) return true;
+    return TOOL_DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
 }
 
 /**
@@ -56,23 +56,23 @@ function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
         node.arguments.length === 1
     );
 }
-function groupStatementRuns(
+function groupImportBlocks(
     body: TSESTree.Statement[],
     sourceType: RuleContext['languageOptions']['sourceType'],
 ): [TSESTree.Statement, ...TSESTree.Statement[]][] {
-    const runs: [TSESTree.Statement, ...TSESTree.Statement[]][] = [];
-    let open: [TSESTree.Statement, ...TSESTree.Statement[]] | undefined;
+    const blocks: [TSESTree.Statement, ...TSESTree.Statement[]][] = [];
+    let block: [TSESTree.Statement, ...TSESTree.Statement[]] | undefined;
     for (const statement of body) {
         if (!isImportLike(statement, sourceType)) {
-            open = undefined;
+            block = undefined;
             continue;
         }
-        if (open === undefined) {
-            open = [statement];
-            runs.push(open);
-        } else open.push(statement);
+        if (block === undefined) {
+            block = [statement];
+            blocks.push(block);
+        } else block.push(statement);
     }
-    return runs;
+    return blocks;
 }
 // Adjacent prose lines form one comment so fixes preserve their attachment and order.
 function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
@@ -82,7 +82,7 @@ function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
     for (const comment of source.getAllComments()) {
         if (
             comment.type !== AST_TOKEN_TYPES.Line ||
-            isToolComment(comment.value) ||
+            isToolDirective(comment.value) ||
             !BLANK.test(
                 source
                     .getText()
@@ -142,18 +142,18 @@ function isLeading(
     let between = source.getText().slice(comment.range[1], start);
     const directives = comments.filter(
         (directive) =>
-            directive.range[0] >= comment.range[1] && directive.range[1] <= start && isToolComment(directive.value),
+            directive.range[0] >= comment.range[1] && directive.range[1] <= start && isToolDirective(directive.value),
     );
     for (const directive of directives.toReversed()) {
         const from = directive.range[0] - comment.range[1];
         const to = directive.range[1] - comment.range[1];
         between = between.slice(0, from) + between.slice(to).replace(LEADING_LINE_BREAK, '');
     }
-    return BLANK.test(between) && between.split('\n').length - 1 <= BLANK_LINE_DISTANCE;
+    return BLANK.test(between) && between.split('\n').length - 1 <= LEADING_COMMENT_LINE_BREAKS;
 }
 
 // Remove the whole line for a comment that stands alone; otherwise remove only the comment and the spaces before it.
-function computeRemovalRange(source: TSESLint.SourceCode, comment: TSESTree.Comment): [number, number] {
+function buildRemovalRange(source: TSESLint.SourceCode, comment: TSESTree.Comment): [number, number] {
     const text = source.getText();
     const lineStart = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });
     const newline = text.indexOf('\n', comment.range[1]);
@@ -172,7 +172,7 @@ function computeRemovalRange(source: TSESLint.SourceCode, comment: TSESTree.Comm
     return [start, comment.range[1]];
 }
 
-export const noCommentsInImports = createRule<[], 'noCommentsInImports'>({
+export const noCommentsInImports = createRule<[], 'comment'>({
     name: 'no-comments-in-imports',
     meta: {
         defaultOptions: [],
@@ -181,14 +181,14 @@ export const noCommentsInImports = createRule<[], 'noCommentsInImports'>({
         docs: {
             level: 'all',
             example:
-                'A file header after an import reports `noCommentsInImports`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration remains in place. A tool directive is allowed only after the last import; a directive between imports is reported without a fix. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
+                'A file header after an import reports `comment`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration remains in place. A tool directive is allowed only after the last import; a directive between imports is reported without a fix. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
             description:
                 'Reports comments within or immediately after an import block. Exempts tool directives after the last import and comments that lead the next declaration.',
             why: 'An import block lists dependencies. A file header belongs before it, and a behavior comment belongs with the code it explains.',
             fix: 'Move the comment above the first import or beside its declaration. eslint --fix moves it above the block.',
         },
         schema: [],
-        messages: { noCommentsInImports: 'Put the comment above the imports or beside the code it explains.' },
+        messages: { comment: 'Put the comment above the imports or beside the code it explains.' },
     },
     create(context) {
         const source = context.sourceCode;
@@ -196,26 +196,26 @@ export const noCommentsInImports = createRule<[], 'noCommentsInImports'>({
         const comments = mergeCommentLines(source);
         return {
             Program(node) {
-                for (const run of groupStatementRuns(node.body, context.languageOptions.sourceType)) {
-                    const [first] = run;
-                    const last = run.at(-1) ?? first;
+                for (const block of groupImportBlocks(node.body, context.languageOptions.sourceType)) {
+                    const [first] = block;
+                    const last = block.at(-1) ?? first;
                     const other = node.body[node.body.indexOf(last) + 1];
                     const end = other === undefined ? text.length : getStatementOffset(other);
                     const violating = comments.find(
                         (comment) =>
                             comment.range[0] > first.range[0] &&
                             comment.range[1] <= end &&
-                            !(isToolComment(comment.value) && comment.range[0] > last.range[1]) &&
+                            !(isToolDirective(comment.value) && comment.range[0] > last.range[1]) &&
                             !(other !== undefined && isLeading(source, comment, other, comments)),
                     );
                     if (violating === undefined) continue;
                     const followsImports = violating.loc.start.line > last.loc.end.line;
                     context.report({
                         loc: violating.loc,
-                        messageId: 'noCommentsInImports',
+                        messageId: 'comment',
                         fix(fixer) {
-                            if (isToolComment(violating.value)) return null;
-                            const removal = computeRemovalRange(source, violating);
+                            if (isToolDirective(violating.value)) return null;
+                            const removal = buildRemovalRange(source, violating);
                             if (followsImports) {
                                 const rest = text.slice(removal[1]);
                                 removal[1] += rest.length - rest.trimStart().length;

@@ -3,7 +3,7 @@ import { NOT_LINE_BREAK } from '#cli/config/text.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import type { ParseCache } from '#cli/types/parsers/grammars.ts';
-import type { TrapCleanup, ScriptSyntax, TemporaryPath, TemporaryTargets } from '#cli/types/parsers/bash.ts';
+import type { TrapCleanup, ScriptSyntax, TemporaryPath, ScriptTemporaryPaths } from '#cli/types/parsers/bash.ts';
 
 import {
     TRAP_COMMAND,
@@ -125,7 +125,7 @@ function isTemporaryValue(assignment: Node): boolean {
     if (!TEMPORARY_VALUE_NODES.has(value.type)) return false;
     if (value.namedChildCount !== 1) return false;
     const substitution = [value, ...value.namedChildren].find(
-        (candidate) => candidate.type === 'command_substitution' && candidate.namedChildCount === 1,
+        (child) => child.type === 'command_substitution' && child.namedChildCount === 1,
     );
     return substitution?.namedChild(0)?.childForFieldName('name')?.text === TEMPORARY_FILE_COMMAND;
 }
@@ -154,7 +154,7 @@ function listLocalNames(root: Node): Set<string> {
 }
 
 // Reassigning the same variable in its function makes a deferred cleanup target ambiguous.
-function buildScriptTemporaryPaths(root: Node): TemporaryTargets {
+function buildScriptTemporaryPaths(root: Node): ScriptTemporaryPaths {
     const assignments = root.descendantsOfType('variable_assignment');
     const locals = listLocalNames(root);
     const counts = new Map<string, number>();
@@ -176,14 +176,14 @@ function buildScriptTemporaryPaths(root: Node): TemporaryTargets {
         if (isUnique) targets.set(key, path);
         return [path];
     });
-    return { paths, targets, declared: new Set([...counts.keys(), ...locals]) };
+    return { paths, variables: targets, declared: new Set([...counts.keys(), ...locals]) };
 }
 
 // A cleanup argument must contain only the temporary variable.
-function findTemporaryTarget(
+function findTemporaryPath(
     argument: Node,
     owner: number | undefined,
-    registry: TemporaryTargets,
+    temporaryPaths: ScriptTemporaryPaths,
 ): TemporaryPath | undefined {
     const references = argument.type === 'string' ? argument.namedChildren : [argument];
     if (references.length !== 1) return undefined;
@@ -193,23 +193,23 @@ function findTemporaryTarget(
     if (name === undefined) return undefined;
     if (![`$${name}`, `\${${name}}`].includes(reference.text)) return undefined;
     const key = JSON.stringify([owner, name]);
-    const target = registry.declared.has(key) ? key : JSON.stringify([undefined, name]);
-    return registry.targets.get(target);
+    const target = temporaryPaths.declared.has(key) ? key : JSON.stringify([undefined, name]);
+    return temporaryPaths.variables.get(target);
 }
 
 // All removals on a source line must target known temporaries before that line receives an exemption.
-function recordRemovals(removals: Node[], cleanup: TrapCleanup): void {
+function addRemovals(removals: Node[], cleanup: TrapCleanup): void {
     const { lineOffset, owner, registry, lines } = cleanup;
     for (const removal of removals) {
-        const targets = listRemovalTargets(removal);
+        const targets = listRemovedPaths(removal);
         const line = lineOffset + removal.startPosition.row;
-        const paths = targets.map((argument) => findTemporaryTarget(argument, owner, registry));
+        const paths = targets.map((argument) => findTemporaryPath(argument, owner, registry));
         lines.set(line, [...(lines.get(line) ?? []), ...(paths.length === 0 ? [undefined] : paths)]);
     }
 }
 
 // After --, arguments beginning with a dash also name removal targets.
-function listRemovalTargets(command: Node): Node[] {
+function listRemovedPaths(command: Node): Node[] {
     const targets: Node[] = [];
     let isOptions = true;
     for (const argument of command.childrenForFieldName('argument')) {
@@ -247,12 +247,12 @@ async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCac
             const removals = tree.rootNode
                 .descendantsOfType('command')
                 .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND);
-            recordRemovals(removals, {
+            addRemovals(removals, {
                 lineOffset: body.startPosition.row + 1,
                 owner: findFunctionNode(trap)?.id,
                 registry: {
                     ...registry,
-                    targets: new Map([...registry.targets].filter(([, path]) => !assigned.has(path.name))),
+                    variables: new Map([...registry.variables].filter(([, path]) => !assigned.has(path.name))),
                 },
                 lines,
             });

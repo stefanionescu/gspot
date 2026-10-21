@@ -18,9 +18,9 @@ import {
  * @returns the imports and ESLint blocks for this configuration.
  */
 export function buildNextjsBlocks(
-    scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'scope' | 'sourceFiles'>,
+    scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'scopePath' | 'sourceFiles'>,
 ): ConfigurationBlocks {
-    const { presets, eslintFiles, scope: scopePath, sourceFiles } = scope;
+    const { presets, eslintFiles, scopePath, sourceFiles } = scope;
     const recommended = getPreset(presets, 'recommended');
     const refresh = getPreset(presets, 'refresh');
     const blocks: ConfigurationBlocks['blocks'] = [];

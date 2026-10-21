@@ -6,15 +6,15 @@ description: What gspot writes for coding agents, and how to change it.
 gspot writes rules: Markdown files for your configurations and level, in the `rules/` folder of each configuration
 under `.gspot/configurations/`. The rules guide agents; the checks still block failing code.
 
-## The `AGENTS.md` section
+## The `AGENTS.md` managed block
 
-gspot writes one section between gspot markers and keeps your own text outside it. The section lists the rules and
-names `gspot check --staged`, the command to run before a commit.
+gspot writes one managed block, the part between the gspot markers, and keeps your own text outside it. The block
+lists the rules and names `gspot check --staged`, the command to run before a commit.
 
 It also names the commands that change settings, and
 the generated files that agents must not edit, with the keys gspot sets in your own files.
 
-When `AGENTS.md` already has its own top heading, gspot writes its section one heading level lower.
+When `AGENTS.md` already has its own top heading, gspot writes its managed block one heading level lower.
 
 An agent that reads another file needs a pointer. For Claude Code, this `CLAUDE.md` passes the gspot checks:
 
@@ -31,7 +31,7 @@ as `.gspot/configurations/language/bash`, leaves out every rule in it.
 
 ## Turn rules off
 
-Run `gspot set rules.enabled false`. gspot deletes the rules and its section. If `AGENTS.md` holds nothing else,
+Run `gspot set rules.enabled false`. gspot deletes the rules and its managed block. If `AGENTS.md` holds nothing else,
 gspot deletes the file.
 
 ## These docs for agents

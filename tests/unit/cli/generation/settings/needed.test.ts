@@ -12,7 +12,7 @@ import { listNeededTools } from '#cli/planning/needed-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, parseToolFile } from '#tests/setup/tool-files.ts';
 import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
@@ -76,11 +76,11 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
     const files = generate(session).files;
     const paths = files.map((file) => file.path);
     expect(paths).toContain('.editorconfig');
-    expect(paths).toContain('.gspot/configurations/general/files/taplo.toml');
+    expect(paths).toContain('.gspot/configurations/general/data-files/taplo.toml');
     for (const path of ['.gspot/configurations/general/format/prettier.json', '.prettierignore'])
         expect(paths).not.toContain(path);
     const packages = listToolProjectPins(session.neededToolConfigurations).npm;
-    const expected = listToolProjectPins([session.configurations.get('files')!]).npm;
+    const expected = listToolProjectPins([session.configurations.get('data-files')!]).npm;
     expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(
         Object.keys(expected).toSorted((first, second) => first.localeCompare(second)),
     );
@@ -104,22 +104,22 @@ test.each([...LEVELS])("every configuration's tool files parse at level %s", asy
     );
     const selected = new Set(
         session.scopes
-            .flatMap((scope) => scope.selected)
+            .flatMap((scope) => scope.configurations)
             .filter((configuration) => configurations.includes(configuration.name))
             .map((configuration) => configuration.name),
     );
     expect(selected).toStrictEqual(new Set(configurations));
     const paths = new Set(generated.map((file) => file.path));
     const checks = session.configuredChecks;
-    const checkNames = new Set(checks.map((entry) => entry.check.name));
+    const checkIds = new Set(checks.map((entry) => entry.check.id));
     const tools = new Set(checks.flatMap((entry) => listNeededTools(entry)));
-    for (const { scope, selected: configurations } of session.scopes) {
+    for (const { folder, configurations } of session.scopes) {
         const targets = configurations
             .flatMap((configuration) => configuration.toolFiles)
             .filter((file) => file.level !== 'all' || level === 'all')
             .filter((file) => file.tool.length === 0 || file.tool.some((name) => tools.has(name)))
-            .filter((file) => file.check.length === 0 || file.check.some((name) => checkNames.has(name)))
-            .map((file) => buildScopeTarget(scope.path, file, getToolFiles(session).targets));
+            .filter((file) => file.check.length === 0 || file.check.some((name) => checkIds.has(name)))
+            .map((file) => getToolFileTarget(folder.path, file, getToolFiles(session).targets));
         expect(targets.length).toBeGreaterThan(0);
         expect(new Set(targets).difference(paths)).toStrictEqual(new Set<string>());
     }

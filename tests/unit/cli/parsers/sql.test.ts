@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { computePosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text.ts';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -24,7 +24,7 @@ test('SQL statement positions skip nested comments and count Unicode correctly',
     const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
     expect(parsed.error).toBeUndefined();
     expect(parsed.statements.map((statement) => statement.kind)).toStrictEqual(['DropStmt', 'SelectStmt']);
-    expect(parsed.statements.map((statement) => computePosition(text, statement.start))).toStrictEqual([
+    expect(parsed.statements.map((statement) => getPosition(text, statement.start))).toStrictEqual([
         { line: 5, column: 1 },
         { line: 8, column: 2 },
     ]);
@@ -41,7 +41,7 @@ test('psql commands and variables keep error positions and PostgreSQL casts', as
     expect(broken.error).toStrictEqual({ text: `syntax error at or near "${TYPO.select}"`, line: 4, column: 1 });
     const corrected = await parseSqlFile(text.replace(`${TYPO.select} 2`, 'SELECT 2'), createReadCache(process.cwd()));
     expect(corrected.error).toBeUndefined();
-    expect(corrected.statements.map((statement) => computePosition(text, statement.start))).toStrictEqual([
+    expect(corrected.statements.map((statement) => getPosition(text, statement.start))).toStrictEqual([
         { line: 2, column: 1 },
         { line: 3, column: 1 },
         { line: 4, column: 1 },

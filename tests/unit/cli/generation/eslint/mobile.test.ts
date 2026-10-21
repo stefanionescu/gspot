@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { MOBILE_FILES } from '#tests/data/generation/eslint/framework.ts';
-import { createEslint, readEslintRules, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, readEslintRules, listLintFindings } from '#tests/setup/tool-files.ts';
 
 describe('expo', () => {
     test('Expo rules apply in the Expo scope and not in its React Native sibling', async () => {
@@ -15,7 +15,7 @@ describe('expo', () => {
         expect(bare.rules['expo/no-env-var-destructuring']).toBeUndefined();
         expect(expo.rules['expo/no-env-var-destructuring']![0]).toBe(2);
         expect(
-            await collectLintFindings(
+            await listLintFindings(
                 eslint,
                 sandbox.path,
                 ['bare/source.js', 'expo-app/source.js'],

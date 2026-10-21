@@ -4,9 +4,9 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { SOURCE_FILE_GROUPS } from '#cli/config/configurations.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
-import { type Configuration, type SelectionWalk, type WrittenConfiguration } from '#cli/types/configurations.ts';
+import { type Configuration, type RequirementWalk, type WrittenConfiguration } from '#cli/types/configurations.ts';
 
-function visit(walk: SelectionWalk, configurationName: string): void {
+function visit(walk: RequirementWalk, configurationName: string): void {
     if (walk.seen.has(configurationName)) return;
     walk.seen.add(configurationName);
     const configuration = walk.configurations.get(configurationName);
@@ -30,7 +30,7 @@ export function selectConfigurations(
     configurationNames: string[],
     configurations: Map<string, Configuration>,
 ): Configuration[] {
-    const walk: SelectionWalk = { configurations, errors: [], order: [], seen: new Set() };
+    const walk: RequirementWalk = { configurations, errors: [], order: [], seen: new Set() };
     for (const configurationName of configurationNames) visit(walk, configurationName);
     if (walk.errors.length > 0) throw new GspotError('arguments', walk.errors.join('\n'));
     return walk.order;
@@ -39,12 +39,12 @@ export function selectConfigurations(
 /**
  * Keep the language and framework configurations that add source files to shared checks.
  *
- * @param selected the manifests in use.
+ * @param configurations the manifests in use.
  * @returns the configurations that own source settings.
  */
-export function filterSourceConfigurations(selected: Configuration[]): Configuration[] {
+export function filterSourceConfigurations(configurations: Configuration[]): Configuration[] {
     const groups: readonly string[] = SOURCE_FILE_GROUPS;
-    return selected.filter((configuration) => groups.includes(configuration.group));
+    return configurations.filter((configuration) => groups.includes(configuration.group));
 }
 
 /**
@@ -53,10 +53,10 @@ export function filterSourceConfigurations(selected: Configuration[]): Configura
  * @param scopes scope selections that can share configurations.
  * @returns one manifest per configuration name.
  */
-export function listSelectedConfigurations(scopes: Pick<Scope, 'selected'>[]): Configuration[] {
+export function listSelectedConfigurations(scopes: Pick<Scope, 'configurations'>[]): Configuration[] {
     const seen = new Map<string, Configuration>();
     for (const scope of scopes)
-        for (const configuration of scope.selected)
+        for (const configuration of scope.configurations)
             if (!seen.has(configuration.name)) seen.set(configuration.name, configuration);
     return seen.values().toArray();
 }
@@ -68,8 +68,8 @@ export function listSelectedConfigurations(scopes: Pick<Scope, 'selected'>[]): C
  * @param name the configuration to find.
  * @returns whether any scope includes the configuration.
  */
-export function isConfigurationSelected(scopes: Pick<Scope, 'selected'>[], name: string): boolean {
-    return scopes.some((selection) => selection.selected.some((configuration) => configuration.name === name));
+export function isConfigurationSelected(scopes: Pick<Scope, 'configurations'>[], name: string): boolean {
+    return scopes.some((scope) => scope.configurations.some((configuration) => configuration.name === name));
 }
 
 // Name an unknown configuration, and say where to find the available ones.

@@ -28,7 +28,7 @@ type ToolFilePointer = {
     inherit?: boolean | undefined;
 };
 
-export type SelectionWalk = {
+export type RequirementWalk = {
     configurations: Map<string, Configuration>;
     errors: string[];
     order: Configuration[];
@@ -42,7 +42,7 @@ export type ParsedManifest = {
     eslint: {
         all_level_rules: Set<string>;
         /** A syntax selector, for every source file or for the files that a setting lists. */
-        selectors: { selector: string; message: string; files_setting?: string | undefined }[];
+        selectors: { selector: string; message: string; paths_setting?: string | undefined }[];
         rules_off: { rules: string[]; reason: string; files?: string[] | undefined }[];
         /** The packages ESLint loads for that block. */
         required_tools: string[];
@@ -104,7 +104,7 @@ export type ToolFile = {
     /** Rule ID prefixes of a Semgrep pack that stay only when the scope depends on one of the packages. */
     rule_dependencies?: Record<string, string[]> | undefined;
     /** The setting that names the folder each rule of a Semgrep pack covers, in every scope with this configuration. */
-    rule_paths_setting?: string | undefined;
+    paths_setting?: string | undefined;
 } & (
     | { source: string }
     | {
@@ -113,12 +113,13 @@ export type ToolFile = {
       }
 );
 
-/** A validated check declaration. Repository commands need no reference example. */
-export type Check = Omit<ParsedCheck, 'example'> & {
+/** A validated check declaration with its check ID, such as python/ruff. Repository commands need no reference example. */
+export type Check = Omit<ParsedCheck, 'example' | 'name'> & {
+    id: string;
     example?: string;
 };
 
-/** One [[check]] record as written. */
+/** One [[check]] record as written. Its name follows the configuration name in the check ID. */
 export type ParsedCheck = {
     name: string;
     level: Level;
@@ -192,7 +193,7 @@ export type InstallerPin = {
 export type Tool = {
     installers: Record<string, InstallerPin>;
     name: string;
-    install_hint?: string;
+    install_help?: string;
     kind: (typeof TOOL_KINDS)[number];
     version?: string;
     min_version?: string;

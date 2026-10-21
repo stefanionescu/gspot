@@ -41,7 +41,7 @@ example = "The line `invalid_directive on;` fails `nginx -t`. Remove it, or repl
 files = { filenames = ["nginx.conf"] }
 help = "Fix the line nginx names. Set `tools.nginx.image` to the one your deployment runs."
 level = "recommended"
-name = "config-test"
+name = "syntax"
 needs = ["docker"]
 runs = "scope"
 stage = "push"

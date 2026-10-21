@@ -14,7 +14,7 @@ test('a command check runs its command and reports file and line through its out
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: String.raw`[[command_check]]
-name = "notes/no-pending"
+id = "notes/no-pending"
 command = ${JSON.stringify([process.execPath, '-e', PENDING_NOTES_SCRIPT, '{files}'])}
 paths = ["notes/**"]
 stage = "commit"
@@ -52,12 +52,12 @@ test('a Python check of a scratch copy reads the environment that the working tr
     await createFileTree(scratch.path, files);
     const session = await openSession(scratch.path, { installedRoot: working.path });
     const planned = planChecks(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
-        ({ check }) => check.name === 'python/basedpyright',
+        ({ check }) => check.id === 'python/basedpyright',
     )!;
     expect(buildCommandSetup(session, planned, {}).env['UV_PROJECT_ENVIRONMENT']).toBe(join(working.path, '.venv'));
     const inPlace = await openSession(working.path);
     const local = planChecks(inPlace, buildRunOptions({ only: ['python/basedpyright'] })).find(
-        ({ check }) => check.name === 'python/basedpyright',
+        ({ check }) => check.id === 'python/basedpyright',
     )!;
     expect(buildCommandSetup(inPlace, local, {}).env).not.toHaveProperty('UV_PROJECT_ENVIRONMENT');
 });

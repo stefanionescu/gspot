@@ -6,10 +6,10 @@ import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { licensesSchema } from '#cli/schemas/settings/licenses.ts';
-import { REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
 import { pythonSchema, javascriptSchema } from '#cli/schemas/settings/languages.ts';
 import { commandSchema, nonemptyString } from '#cli/schemas/configurations/parts.ts';
 import { ciFields, hooksSchema, rulesSchema } from '#cli/schemas/settings/integrations.ts';
+import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
 
 import {
     type TableValues,
@@ -176,6 +176,13 @@ export const configurationTableSchemas = {
                 .enum(SPELLING_LOCALES)
                 .default(SETTING_FACTS['spelling.locale'].default)
                 .meta(SETTING_FACTS['spelling.locale']),
+            allowed_words: z
+                .record(
+                    z.string().regex(ALLOWED_WORD, 'Use a plain word, without a regular expression pattern.'),
+                    z.string(),
+                )
+                .default(SETTING_FACTS['spelling.allowed_words'].default)
+                .meta(SETTING_FACTS['spelling.allowed_words']),
         } satisfies SchemaShape<TableSettings<'spelling'>, NonNullable<WrittenSettings['spelling']>>)
         .optional(),
     supabase: z

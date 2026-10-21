@@ -23,7 +23,7 @@ import {
  * @param id - the collection ID
  * @returns the address, or undefined for the not-found page
  */
-export function findMarkdownCopy(id: string): string | undefined {
+export function buildMarkdownCopyPath(id: string): string | undefined {
     if (id === NOT_FOUND_PAGE) return undefined;
     const path = id.endsWith('/index') ? id.slice(0, -'/index'.length) : id;
     return path === '' ? `/${MARKDOWN_COPY_FILE}` : `/${path}/${MARKDOWN_COPY_FILE}`;
@@ -33,11 +33,11 @@ export function findMarkdownCopy(id: string): string | undefined {
  * Write the files for agents into the built site: the Markdown copy of the home page, and the Agent Skills index with
  * the gspot skill.
  *
- * @param dir - the build output folder
+ * @param siteFolder - the build output folder
  */
-export async function writeAgentFiles(dir: URL): Promise<void> {
-    await copyFile(new URL(LLMS_FILE, dir), new URL(MARKDOWN_COPY_FILE, dir));
-    const folder = new URL(`${SKILLS_FOLDER}${SETUP_SKILL.name}/`, dir);
+export async function writeAgentFiles(siteFolder: URL): Promise<void> {
+    await copyFile(new URL(LLMS_FILE, siteFolder), new URL(MARKDOWN_COPY_FILE, siteFolder));
+    const folder = new URL(`${SKILLS_FOLDER}${SETUP_SKILL.name}/`, siteFolder);
     await mkdir(folder, { recursive: true });
     const frontmatter = `---\nname: ${SETUP_SKILL.name}\ndescription: ${SETUP_SKILL.description}\n---`;
     const skill = `${frontmatter}\n\n# gspot\n\n${DESCRIPTION}\n\n${AGENT_STEPS}`;
@@ -53,5 +53,5 @@ export async function writeAgentFiles(dir: URL): Promise<void> {
             },
         ],
     };
-    await writeFile(new URL(`${SKILLS_FOLDER}${SKILLS_INDEX_FILE}`, dir), `${JSON.stringify(index)}\n`);
+    await writeFile(new URL(`${SKILLS_FOLDER}${SKILLS_INDEX_FILE}`, siteFolder), `${JSON.stringify(index)}\n`);
 }

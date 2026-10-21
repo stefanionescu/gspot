@@ -62,7 +62,7 @@ function isSpdxExpression(license: string): boolean {
 function assertInstalled(planned: PlannedCheck, name: string, start: string): void {
     if (statSync(join(start, name), { throwIfNoEntry: false })?.isDirectory() !== true)
         throw new Error(
-            `Install the project dependencies first: ${name} is missing in ${planned.selection.scope.path === '' ? 'the root' : planned.selection.scope.path}.`,
+            `Install the project dependencies first: ${name} is missing in ${planned.scope.folder.path === '' ? 'the root' : planned.scope.folder.path}.`,
         );
 }
 
@@ -146,7 +146,7 @@ function normalizeIdentity(identity: string): string {
 // The scan keeps the packages that the lockfile holds, so a package left behind in node_modules or a host
 // environment stays out.
 async function scanProject(session: Session, planned: PlannedCheck, project: LicenseProject): Promise<ProjectLicenses> {
-    const { dependencyFile, selection } = project;
+    const { dependencyFile, scope } = project;
     // The hook checks a pushed revision in a copy without a Python environment, so the scan reads the working tree's. The
     // node_modules folders reach the copy through links.
     const folder = dirname(dependencyFile);
@@ -165,7 +165,7 @@ async function scanProject(session: Session, planned: PlannedCheck, project: Lic
                   ecosystem: 'python' as const,
               };
     const settings = project.settings;
-    const scanned = await scan(session, { ...planned, selection }, start);
+    const scanned = await scan(session, { ...planned, scope }, start);
     if (scanned.length === 0)
         throw new Error(
             'The license scan found no packages. Install the selected project dependencies before scanning.',

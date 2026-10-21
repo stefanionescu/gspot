@@ -3,4 +3,4 @@ export const ENVIRONMENT_GLOBALS = { process: 'readonly', Bun: 'readonly', Deno:
 
 export const IMPORT_ALIASES = { '@/': 'src/', '@config/': 'config/' } as const;
 
-export const IMPORT_BOUNDARY_FOLDERS = ['api', 'supabase'];
+export const PROJECT_FOLDERS = ['api', 'supabase'];

@@ -2,17 +2,17 @@
 import { randomUUID } from 'node:crypto';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system/modes.ts';
-import type { FilesState, FileContents } from '#cli/types/system/files.ts';
+import type { FileBounds, FileContents } from '#cli/types/system/files.ts';
 import { linkSync, mkdirSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { readEntry, preparePath, buildContainedPath } from '#cli/system/files/entries.ts';
 import { LOCK_TOKEN_SEPARATOR, LOCK_RECOVERY_SUFFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
 
 // Creates the lock file with the token, or returns false when another holder already owns the file.
-function writeLockFile(target: string, token: string): boolean {
-    const temporary = `${target}.${randomUUID()}${TEMPORARY_FILE_SUFFIX}`;
+function writeLockFile(absolutePath: string, token: string): boolean {
+    const temporary = `${absolutePath}.${randomUUID()}${TEMPORARY_FILE_SUFFIX}`;
     writeFileSync(temporary, token, { flag: 'wx', mode: PRIVATE_FILE });
     try {
-        linkSync(temporary, target);
+        linkSync(temporary, absolutePath);
         return true;
     } catch (error) {
         if (!hasErrorCode(error, 'EEXIST')) throw error;
@@ -43,8 +43,8 @@ function assertAbandonedLock(current: FileContents, path: string): void {
 }
 
 // A separate lease stops two reclaimers from deleting the lock of a new writer.
-function removeStaleLock(state: FilesState, path: string, target: string): void {
-    const reclaim = `${target}${LOCK_RECOVERY_SUFFIX}`;
+function removeStaleLock(bounds: FileBounds, path: string, absolutePath: string): void {
+    const reclaim = `${absolutePath}${LOCK_RECOVERY_SUFFIX}`;
     try {
         mkdirSync(reclaim, { mode: PRIVATE_FOLDER });
     } catch (error) {
@@ -56,10 +56,10 @@ function removeStaleLock(state: FilesState, path: string, target: string): void 
         );
     }
     try {
-        const stale = readEntry(state, path);
+        const stale = readEntry(bounds, path);
         if (stale !== undefined) {
             assertAbandonedLock(stale, path);
-            unlinkSync(target);
+            unlinkSync(absolutePath);
         }
     } finally {
         rmdirSync(reclaim);
@@ -69,34 +69,34 @@ function removeStaleLock(state: FilesState, path: string, target: string): void 
 /**
  * Release every lock claimed through this safe folder.
  *
- * @param state the root and its held locks.
+ * @param bounds the root and its held locks.
  * @returns the paths of released locks for parent-folder cleanup.
  */
-export function releaseLocks(state: FilesState): string[] {
+export function releaseLocks(bounds: FileBounds): string[] {
     const released: string[] = [];
-    for (const [path, holder] of state.locks) {
-        if (readEntry(state, path)?.bytes.toString('utf8') !== holder) continue;
-        unlinkSync(buildContainedPath(state, path));
+    for (const [path, holder] of bounds.locks) {
+        if (readEntry(bounds, path)?.bytes.toString('utf8') !== holder) continue;
+        unlinkSync(buildContainedPath(bounds, path));
         released.push(path);
     }
-    state.locks.clear();
+    bounds.locks.clear();
     return released;
 }
 
 /**
  * Take the writer lock at a path. Clear a lock whose holder has exited, and refuse one whose holder still runs.
  *
- * @param state the root, which records the lock it now holds.
+ * @param bounds the root, which records the lock it now holds.
  * @param path the root-relative lock file.
  */
-export function createLock(state: FilesState, path: string): void {
-    const target = preparePath(state, path);
+export function createLock(bounds: FileBounds, path: string): void {
+    const target = preparePath(bounds, path);
     const token = `${String(process.pid)}${LOCK_TOKEN_SEPARATOR}${randomUUID()}`;
     while (!writeLockFile(target, token)) {
-        const current = readEntry(state, path);
+        const current = readEntry(bounds, path);
         if (current === undefined) continue;
         assertAbandonedLock(current, path);
-        removeStaleLock(state, path, target);
+        removeStaleLock(bounds, path, target);
     }
-    state.locks.set(path, token);
+    bounds.locks.set(path, token);
 }

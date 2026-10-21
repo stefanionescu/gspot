@@ -32,7 +32,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
         expect(findings).toStrictEqual([...SENSITIVE_FINDINGS]);
         const jwt = report.checks
             .flatMap((check) => check.findings)
-            .find((finding) => finding.rule === 'gspot.javascript.jwt-no-algorithm-none');
+            .find((finding) => finding.rule === 'gspot.javascript.jwt-verify-without-algorithms');
         expect(jwt?.message).toBe(
             'Require the expected JWT signing algorithms when verifying a token. Pass an algorithms option that matches the signing contract.',
         );

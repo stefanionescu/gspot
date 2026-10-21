@@ -7,7 +7,7 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildFileMatcher, listCoveredFiles } from '#cli/repository/covered-files.ts';
-import { DECLARATION_FILES, GENERATED_SELECTIONS } from '#tests/data/repository/file-classification.ts';
+import { DECLARATION_FILES, GENERATED_PATH_CASES } from '#tests/data/repository/file-classification.ts';
 import { JEST_CASES, JEST_PATHS, MIGRATION_CASES, MIGRATION_PATHS } from '#tests/data/configurations/detection.ts';
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
@@ -32,9 +32,9 @@ test('a configuration that covers the language files gets them', () => {
     const selected = selectConfigurations(['bash'], configurations);
     const structure = configurations.get('structure')!;
     const owned = listCoveredFiles(structure.files, [buildTrackedFile('a.sh'), buildTrackedFile('README.md')], {
-        selected,
-        scope: '',
-        view: { test_files: [], settings: {} },
+        configurations: selected,
+        scopePath: '',
+        settings: { test_files: [], settings: {} },
     });
     expect(owned.map((entry) => entry.path)).toStrictEqual(['a.sh']);
 });
@@ -59,9 +59,9 @@ test.each([
     ];
     expect(
         listCoveredFiles(configurations.get('format')!.files, files, {
-            selected: selectConfigurations(configurationNames, configurations),
-            scope: '',
-            view: { test_files: [], settings: {} },
+            configurations: selectConfigurations(configurationNames, configurations),
+            scopePath: '',
+            settings: { test_files: [], settings: {} },
         }).map((entry) => entry.path),
     ).toStrictEqual([...expected]);
 });
@@ -71,10 +71,13 @@ test.each(MIGRATION_CASES)(
     (scope, expected) => {
         const configurations = readConfigurations();
 
-        const selected = selectConfigurations(['postgres'], configurations);
         const files = MIGRATION_PATHS.map((path) => buildTrackedFile(path));
         const table = configurations.get('postgres')!.files;
-        const options = { selected, scope, view: { test_files: [], settings: {} } };
+        const options = {
+            configurations: selectConfigurations(['postgres'], configurations),
+            scopePath: scope,
+            settings: { test_files: [], settings: {} },
+        };
         const owned = listCoveredFiles(table, files, options);
         expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
         expect(listCoveredFiles({ ...table, kinds: ['binary'] }, files, options)).toStrictEqual([]);
@@ -89,15 +92,15 @@ test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope"', ({ sc
     const selected = selectConfigurations(['jest'], configurations);
     const files = JEST_PATHS.map((path) => buildTrackedFile(path));
     const owned = listCoveredFiles(configurations.get('jest')!.files, files, {
-        selected,
-        scope,
-        view: { test_files: [...tests], settings: {} },
+        configurations: selected,
+        scopePath: scope,
+        settings: { test_files: [...tests], settings: {} },
     });
     expect(owned.map(({ path }) => path)).toStrictEqual([...expected]);
     expect(files.map(({ path }) => path)).toStrictEqual([...JEST_PATHS]);
 });
 
-test.each([...GENERATED_SELECTIONS])(
+test.each([...GENERATED_PATH_CASES])(
     'the configurations each scope selects mark their generated files: $configurations $tables',
     async ({ configurations, tables, generated }) => {
         await using sandbox = await testdir({

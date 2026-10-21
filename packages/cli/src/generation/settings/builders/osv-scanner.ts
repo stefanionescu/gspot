@@ -1,4 +1,4 @@
-import { listIgnores } from '#cli/settings/scope-view.ts';
+import { listIgnores } from '#cli/settings/scope-settings.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 import { TOOL_FILE_TOML_FORMAT } from '#cli/config/generation/generate.ts';
@@ -11,7 +11,7 @@ import { OSV_SCANNER_NOTES } from '#cli/config/generation/settings/builders/osv-
  * @returns a note on why the file exists, and the package ignores, reasons, and expiration dates.
  */
 export function buildOsvScannerFile(planned: PlannedToolFile): string {
-    const entries = listIgnores(planned.selection.view, 'dependencies/osv-scanner').filter(
+    const entries = listIgnores(planned.scope.settings, 'dependencies/osv-scanner').filter(
         (entry) => entry.rule !== undefined && entry.paths.length === 0,
     );
     const vulnerabilities = entries.map((entry) => ({

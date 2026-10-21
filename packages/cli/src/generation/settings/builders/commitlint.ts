@@ -1,6 +1,6 @@
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scope-view.ts';
+import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/settings/builders/commitlint.ts';
 
 /**
@@ -12,12 +12,12 @@ import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generat
 export function buildCommitlintFile(planned: PlannedToolFile): string {
     const { scopes } = planned.session;
 
-    const types = getTable(planned.selection.view, 'tools.commitlint').types;
-    const named = getTable(planned.selection.view, 'tools.commitlint').scopes;
+    const types = getTable(planned.scope.settings, 'tools.commitlint').types;
+    const named = getTable(planned.scope.settings, 'tools.commitlint').scopes;
     const allowed =
         named.length > 0
             ? named
-            : scopes.filter(({ scope }) => scope.path !== '').map(({ scope }) => scope.path.split('/').at(-1));
+            : scopes.filter(({ folder }) => folder.path !== '').map(({ folder }) => folder.path.split('/').at(-1));
     const rules: Record<string, readonly unknown[]> = {
         'type-enum': [COMMITLINT_ERROR_SEVERITY, 'always', types],
         ...COMMITLINT_RULES,
@@ -26,8 +26,8 @@ export function buildCommitlintFile(planned: PlannedToolFile): string {
         rules['scope-enum'] = [COMMITLINT_ERROR_SEVERITY, 'always', allowed];
         rules['scope-case'] = [0];
     }
-    for (const [name, value] of Object.entries(getTable(planned.selection.view, 'tools.commitlint').rules))
+    for (const [name, value] of Object.entries(getTable(planned.scope.settings, 'tools.commitlint').rules))
         if (rules[name]?.[0] !== 0) rules[name] = [COMMITLINT_ERROR_SEVERITY, ...value];
-    for (const name of listIgnoredRules(planned.selection, 'commits/commitlint')) rules[name] = [0];
+    for (const name of listIgnoredRules(planned.scope, 'commits/commitlint')) rules[name] = [0];
     return JSON.stringify({ rules }, null, JSON_INDENT);
 }

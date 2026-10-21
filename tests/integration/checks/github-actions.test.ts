@@ -18,7 +18,7 @@ test('the generated GitHub workflow passes actionlint', async () => {
     const environment = {};
     // The sandbox needs no tool project, because mise pins actionlint.
     await installSandbox(
-        { root: sandbox.path, environment: environment, run: spawnGspot },
+        { root: sandbox.path, environment, run: spawnGspot },
         { configurations: ['github-actions'], install: false },
     );
     const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);

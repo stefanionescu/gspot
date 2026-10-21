@@ -26,34 +26,38 @@ function selectFrameworkRuntime(configurations: string[]): string | undefined {
  */
 export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
     const blocks: EslintRuntime[] = [];
-    for (const selection of scopes.toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path))) {
-        const scope = selection.scope.path;
-        const escaped = scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
+    for (const scope of scopes.toSorted((left, right) => compareScopeDepth(left.folder.path, right.folder.path))) {
+        const scopePath = scope.folder.path;
+        const escaped = scopePath.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
         const children = listNestedScopeGlobs(
-            scopes.map((entry) => entry.scope.path),
-            scope,
+            scopes.map((entry) => entry.folder.path),
+            scopePath,
         ).map((path) => `!${path}`);
         blocks.push(
-            { scope, runtime: 'node', ...splitGlobs([joinScope(escaped, '**/*'), ...children]) },
-            { scope, runtime: 'commonjs', ...splitGlobs([joinScope(escaped, COMMONJS_FILES), ...children]) },
+            { scope: scopePath, runtime: 'node', ...splitGlobs([joinScope(escaped, '**/*'), ...children]) },
+            { scope: scopePath, runtime: 'commonjs', ...splitGlobs([joinScope(escaped, COMMONJS_FILES), ...children]) },
         );
-        const framework = buildFrameworkRuntime(selection, escaped, children);
+        const framework = buildFrameworkRuntime(scope, escaped, children);
         if (framework !== undefined) blocks.push(framework);
-        for (const override of selection.view.values[ESLINT_SETTINGS_TABLE]?.override ?? []) {
+        for (const override of scope.settings.values[ESLINT_SETTINGS_TABLE]?.override ?? []) {
             if (override.runtime === undefined) continue;
-            blocks.push({ scope, runtime: override.runtime, ...splitGlobs([...override.paths, ...children]) });
+            blocks.push({
+                scope: scopePath,
+                runtime: override.runtime,
+                ...splitGlobs([...override.paths, ...children]),
+            });
         }
     }
     return blocks;
 }
 
 // The runtime of the framework of a scope covers its code files, apart from CommonJS files, scripts, and child scopes.
-function buildFrameworkRuntime(selection: Scope, escaped: string, children: string[]): EslintRuntime | undefined {
-    const runtime = selectFrameworkRuntime(selection.view.configurations);
+function buildFrameworkRuntime(scope: Scope, escaped: string, children: string[]): EslintRuntime | undefined {
+    const runtime = selectFrameworkRuntime(scope.settings.configurations);
     if (runtime === undefined) return undefined;
-    const scripts = [...(selection.view.values.javascript?.script_files ?? []), joinScope(escaped, MISE_SCRIPT_PATH)];
+    const scripts = [...(scope.settings.values.javascript?.script_files ?? []), joinScope(escaped, MISE_SCRIPT_PATH)];
     return {
-        scope: selection.scope.path,
+        scope: scope.folder.path,
         runtime,
         ...splitGlobs([
             joinScope(escaped, '**/*'),

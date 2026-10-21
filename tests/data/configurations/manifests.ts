@@ -1,7 +1,7 @@
-export const VERSION_FLOORS = [
-    { floor: '4', expected: '4.0.0' },
-    { floor: '4.4', expected: '4.4.0' },
-    { floor: 'future', expected: undefined },
+export const MINIMUM_VERSION_CASES = [
+    { minimum: '4', expected: '4.0.0' },
+    { minimum: '4.4', expected: '4.4.0' },
+    { minimum: 'future', expected: undefined },
 ] as const;
 
 export const SEMGREP_ASSETS = [

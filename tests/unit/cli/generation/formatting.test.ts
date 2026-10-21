@@ -38,7 +38,7 @@ test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
 test('format.indent_width reaches EditorConfig, Prettier and each tool file', async () => {
     const width = 6;
     await using folder = await testdir({
-        'gspot.toml': buildSandboxSettings(['format', 'files', 'python', 'swift', 'sql', 'markdown', 'bash'], {
+        'gspot.toml': buildSandboxSettings(['format', 'data-files', 'python', 'swift', 'sql', 'markdown', 'bash'], {
             level: 'all',
             rules: true,
             tables: stringify({ format: { indent_width: width } }),
@@ -63,14 +63,14 @@ test('format.indent_width reaches EditorConfig, Prettier and each tool file', as
     expect(parseJsonc(generated.get('.gspot/configurations/language/markdown/markdownlint.jsonc')!)).toMatchObject({
         MD007: { indent: width },
     });
-    expect(parseYaml(generated.get('.gspot/configurations/general/files/yamllint.yml')!)).toMatchObject({
+    expect(parseYaml(generated.get('.gspot/configurations/general/data-files/yamllint.yml')!)).toMatchObject({
         rules: { indentation: { spaces: 'consistent' } },
     });
     expect(parseToml(generated.get('.gspot/configurations/language/python/ruff.toml')!)).toHaveProperty(
         'indent-width',
         width,
     );
-    expect(parseToml(generated.get('.gspot/configurations/general/files/taplo.toml')!)).toMatchObject({
+    expect(parseToml(generated.get('.gspot/configurations/general/data-files/taplo.toml')!)).toMatchObject({
         formatting: { indent_string: ' '.repeat(width) },
     });
     expect(generated.get('.gspot/configurations/language/sql/sqlfluff.cfg')).toContain(

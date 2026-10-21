@@ -16,12 +16,12 @@ import { listAutomaticConfigurations } from '#cli/configurations/select.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import type { PackageManagerPin } from '#cli/types/repository/package-manager.ts';
 import { buildKnownSettings, applyDetectedDefaults } from '#cli/settings/known.ts';
-import { buildScopeView, selectForScope, findRootSelection } from '#cli/settings/scope-view.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { classifyFile, listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { findRootScope, selectForScope, buildScopeSettings } from '#cli/settings/scope-settings.ts';
 
-// Resolve every scope: its configurations, known settings, and merged view.
-async function buildScopeSelections(
+// Resolve every scope: its folder, configurations, known settings, and merged settings.
+async function buildScopes(
     settings: Settings,
     repository: Repository,
     configurations: Map<string, Configuration>,
@@ -39,8 +39,8 @@ async function buildScopeSelections(
                 packageManagerName: packageManager?.name,
                 dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
             });
-            const view = buildScopeView(known, effective, selected, scope.path);
-            return { scope, selected, known, view };
+            const view = buildScopeSettings(known, effective, selected, scope.path);
+            return { folder: scope, configurations: selected, knownSettings: known, settings: view };
         }),
     );
 }
@@ -137,8 +137,8 @@ export async function openSession(
             root,
             repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
         ));
-    const scopes = await buildScopeSelections(settings, repository, configurations, readPackageManager);
-    const timeoutSeconds = Number(findRootSelection(scopes).view.settings['tool_timeout_seconds']);
+    const scopes = await buildScopes(settings, repository, configurations, readPackageManager);
+    const timeoutSeconds = Number(findRootScope(scopes).settings.settings['tool_timeout_seconds']);
     const session: Session = {
         neededToolConfigurations: [],
         configuredChecks: [],

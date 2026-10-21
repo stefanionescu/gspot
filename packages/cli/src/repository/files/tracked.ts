@@ -84,8 +84,8 @@ function walkPaths(root: string): string[] {
         const retained = entries.filter((entry) => {
             if (entry.name === GIT_FOLDER) return false;
             const path = `${folder}${entry.name}`;
-            const candidate = entry.isDirectory() ? `${path}/` : path;
-            return !isIgnored(candidate, ignores) && !STATE_FOLDER_PATTERN.test(path.normalize('NFC'));
+            const entryPath = entry.isDirectory() ? `${path}/` : path;
+            return !isIgnored(entryPath, ignores) && !STATE_FOLDER_PATTERN.test(path.normalize('NFC'));
         });
         for (const entry of retained) {
             const path = `${folder}${entry.name}`;

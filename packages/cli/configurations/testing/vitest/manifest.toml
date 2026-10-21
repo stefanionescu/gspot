@@ -1,7 +1,7 @@
 allowed_words = ["Vitest"]
 
 [configuration]
-description = "Vitest suites: test lint rules and coverage floors before every push."
+description = "Vitest suites: test lint rules and minimum coverage before every push."
 requires = ["javascript"]
 title = "Vitest"
 
@@ -15,7 +15,7 @@ paths = ["**/vitest.config.*", "**/vitest.workspace.*"]
 prefixes = ["vitest"]
 
 [[tool]]
-install_hint = "Run: npm install --save-dev vitest"
+install_help = "Run: npm install --save-dev vitest"
 min_version = "2.0.0"
 name = "vitest"
 npm = "vitest"
@@ -29,7 +29,7 @@ rule_prefix = "vitest"
 version = "1.3.4"
 
 [[tool]]
-install_hint = "Run: npm install --save-dev @vitest/coverage-v8"
+install_help = "Run: npm install --save-dev @vitest/coverage-v8"
 kind = "library"
 name = "@vitest/coverage-v8"
 npm = "@vitest/coverage-v8"
@@ -44,14 +44,14 @@ command = ["vitest", "run", "--coverage", "--coverage.reporter=text-summary", "-
 coverage_arguments = ["--coverage", "--coverage.reporter", "--coverage.thresholds.lines", "--coverage.thresholds.branches", "--coverage.thresholds.functions", "--coverage.thresholds.statements"]
 cwd = "scope"
 example = "Vitest reports `ERROR: Coverage for lines (85%) does not meet global threshold (90%)`. Add tests for the uncovered lines."
-help = "Add tests for the lines the report marks, or lower one floor under `coverage` with a reason."
+help = "Add tests for the lines the report marks, or lower one minimum under `coverage` with a reason."
 level = "recommended"
 name = "coverage"
 runs = "scope"
 stage = "push"
-summary = "Runs the test suite with coverage, and fails when lines, branches, functions, or statements fall under their floors."
+summary = "Runs the test suite with coverage, and fails when lines, branches, functions, or statements fall under their minimums."
 tool = ["vitest", "@vitest/coverage-v8"]
-why = "A floor makes new code arrive with tests, when its behavior costs least to check."
+why = "A coverage minimum makes new code arrive with tests, when its behavior costs least to check."
 
 [check.files]
 extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]

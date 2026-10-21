@@ -23,8 +23,10 @@ import {
  * @param scope the selected presets and configurations.
  * @returns imported bindings and unscoped block data.
  */
-export function buildAstroBlocks(scope: Pick<EslintScope, 'presets' | 'eslintPresets' | 'view'>): ConfigurationBlocks {
-    const { presets, eslintPresets, view } = scope;
+export function buildAstroBlocks(
+    scope: Pick<EslintScope, 'presets' | 'eslintPresets' | 'settings'>,
+): ConfigurationBlocks {
+    const { presets, eslintPresets, settings } = scope;
     const blocks: ConfigurationBlocks['blocks'] = ['recommended', 'accessibility'].flatMap((name) =>
         buildArrayPresetBlocks(getPreset(presets, name), 'astroPlugin', ({ parser: _parser, ...fields }) => ({
             ...fields,
@@ -38,7 +40,7 @@ export function buildAstroBlocks(scope: Pick<EslintScope, 'presets' | 'eslintPre
         data: { files: ASTRO_FILES, rules: ASTRO_RULES },
         properties: 'languageOptions: { parserOptions: { tsconfigRootDir: root } }',
     });
-    if (view.configurations.includes(TYPESCRIPT_CONFIGURATION)) {
+    if (settings.configurations.includes(TYPESCRIPT_CONFIGURATION)) {
         const preset = getPreset(eslintPresets.get(TYPESCRIPT_CONFIGURATION), 'untyped');
         const { parser: _parser, ...untyped } = preset.blocks[0];
         const source = serializePresetAccess('tseslint', preset.source);

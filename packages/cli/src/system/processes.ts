@@ -26,9 +26,9 @@ import {
     PATH_SEPARATORS,
     TASKKILL_OPTIONS,
     TASKKILL_PROGRAM,
-    REAP_MILLISECONDS,
-    DRAIN_MILLISECONDS,
     TASKKILL_GONE_CODE,
+    EXIT_CLEANUP_MILLISECONDS,
+    OUTPUT_CLOSE_MILLISECONDS,
 } from '#cli/config/system/processes.ts';
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
@@ -68,7 +68,7 @@ function isExecutableAbsent(executable: string, cwd: string): boolean {
     const extensions =
         process.platform === 'win32' ? (readEnvironmentVariable('PATHEXT') ?? PATHEXT_DEFAULT).split(';') : [];
     return [path, ...extensions.map((extension) => path + extension.toLowerCase())].every(
-        (candidate) => statSync(candidate, { throwIfNoEntry: false }) === undefined,
+        (executablePath) => statSync(executablePath, { throwIfNoEntry: false }) === undefined,
     );
 }
 
@@ -110,29 +110,29 @@ function isGroupGone(error: Error, child: ChildProcess): boolean {
     return error.code === 'EPERM' && process.platform === 'darwin' && hasExited;
 }
 
-function stopProcessTree(child: ChildProcess, state: ProcessTermination): void {
-    if (state.stopped || child.pid === undefined) return;
-    state.stopped = true;
+function stopProcessTree(child: ChildProcess, termination: ProcessTermination): void {
+    if (termination.stopped || child.pid === undefined) return;
+    termination.stopped = true;
     try {
         if (process.platform === 'win32') {
             const result = execaSync(TASKKILL_PROGRAM, ['/pid', String(child.pid), ...TASKKILL_OPTIONS], {
                 reject: false,
-                timeout: DRAIN_MILLISECONDS,
+                timeout: OUTPUT_CLOSE_MILLISECONDS,
             });
             const code = result.exitCode ?? FAILED_CODE;
             if (![0, TASKKILL_GONE_CODE].includes(code))
                 throw new GspotError('tool', `Cannot terminate the tool process tree: ${result.stderr}`);
         } else process.kill(-child.pid, 'SIGKILL');
     } catch (error) {
-        if (!isGroupGone(error as Error, child)) state.failure = error as Error;
+        if (!isGroupGone(error as Error, child)) termination.failure = error as Error;
     }
     child.kill('SIGKILL');
-    state.drainTimer = setTimeout(() => {
+    termination.drainTimer = setTimeout(() => {
         const error = new Error(
-            `Tool output did not close within ${String(DRAIN_MILLISECONDS / MILLISECONDS_PER_SECOND)} seconds after termination.`,
+            `Tool output did not close within ${String(OUTPUT_CLOSE_MILLISECONDS / MILLISECONDS_PER_SECOND)} seconds after termination.`,
         );
         for (const stream of child.stdio) stream?.destroy(error);
-    }, DRAIN_MILLISECONDS);
+    }, OUTPUT_CLOSE_MILLISECONDS);
 }
 
 /**
@@ -163,7 +163,7 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
     let exitCleanup: Promise<void> | undefined;
     const startExitCleanup = () => {
         clearTimeout(timer);
-        exitCleanup = delay(REAP_MILLISECONDS).then(() => {
+        exitCleanup = delay(EXIT_CLEANUP_MILLISECONDS).then(() => {
             if (process.platform !== 'win32') stopTree();
             termination.stopped = true;
         });

@@ -14,7 +14,7 @@ import {
     type Comparison,
     type PushSearch,
     type PushRevision,
-    type PushSelection,
+    type PushedRevisions,
 } from '#cli/types/repository/revisions.ts';
 import {
     ABSENT_HASH,
@@ -117,15 +117,15 @@ async function buildRevision(search: PushSearch, line: PushLine, hash: string): 
 }
 
 // Share a check only for matching commits, comparison bases, and changed paths.
-function addRevision(result: PushSelection, revision: PushRevision): void {
-    const duplicate = result.revisions.find(
+function addRevision(pushed: PushedRevisions, revision: PushRevision): void {
+    const duplicate = pushed.revisions.find(
         (entry) =>
             entry.hash === revision.hash &&
             entry.base === revision.base &&
             isDeepStrictEqual(entry.paths, revision.paths),
     );
     if (duplicate === undefined) {
-        result.revisions.push(revision);
+        pushed.revisions.push(revision);
         return;
     }
     duplicate.refs.push(...revision.refs);
@@ -134,19 +134,19 @@ function addRevision(result: PushSelection, revision: PushRevision): void {
 }
 
 // Records what one pre-push line pushes: a deleted ref, a non-commit object, or a revision.
-async function selectLine(search: PushSearch, result: PushSelection, line: PushLine): Promise<void> {
+async function selectLine(search: PushSearch, pushed: PushedRevisions, line: PushLine): Promise<void> {
     if (ABSENT_HASH.test(line.localHash)) {
-        result.skipped.push({ ref: line.remoteRef, hash: line.localHash, reason: 'deleted ref' });
+        pushed.skipped.push({ ref: line.remoteRef, hash: line.localHash, reason: 'deleted ref' });
         return;
     }
     if (!search.commits.has(line.localHash))
         throw new GspotError('git', MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', line.localHash));
     const commit = search.commits.get(line.localHash);
     if (commit === undefined) {
-        result.skipped.push({ ref: line.localRef, hash: line.localHash, reason: 'non-commit object' });
+        pushed.skipped.push({ ref: line.localRef, hash: line.localHash, reason: 'non-commit object' });
         return;
     }
-    addRevision(result, await buildRevision(search, line, commit));
+    addRevision(pushed, await buildRevision(search, line, commit));
 }
 
 /**
@@ -177,7 +177,7 @@ export async function selectPush(
     input: string,
     remote?: string,
     cancelSignal?: AbortSignal,
-): Promise<PushSelection> {
+): Promise<PushedRevisions> {
     const lines = input
         .split('\n')
         .filter((row) => row.trim() !== '')
@@ -193,7 +193,7 @@ export async function selectPush(
         remote: remotes.find((name) => name === remote),
         boundaries: shallow ? await readShallowBoundaries(repositoryRoot, cancelSignal) : new Set<string>(),
     };
-    const result: PushSelection = { revisions: [], skipped: [] };
+    const result: PushedRevisions = { revisions: [], skipped: [] };
     for (const line of lines) await selectLine(context, result, line);
     return result;
 }

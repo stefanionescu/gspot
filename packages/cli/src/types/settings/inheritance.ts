@@ -6,7 +6,7 @@ import type { PATH_ROLES, SETTING_TYPES } from '#cli/config/settings/schema.ts';
 import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/file.ts';
 
 /** Configuration choices declared at the root and in project scopes. */
-export type ConfigurationSelection = {
+export type SelectedConfigurations = {
     configurations: string[];
     scopes: Record<string, { configurations: string[]; removed_configurations: string[] }>;
     removed_configurations: string[];
@@ -27,20 +27,20 @@ export type Setting = {
 };
 
 export type Scope = {
-    scope: ScopeFolder;
-    selected: Configuration[];
-    known: KnownSettings;
-    view: ScopeView;
+    folder: ScopeFolder;
+    configurations: Configuration[];
+    knownSettings: KnownSettings;
+    settings: ScopeSettings;
 };
 
 /** Values validated once for one scope, then read by checks and generators. */
-export type ScopeSettings = {
+export type ScopeValues = {
     settings: Record<string, unknown>;
     values: TableValues;
     test_files: Settings['test_files'];
 };
 
-export type ScopeView = {
+export type ScopeSettings = {
     configurations: string[];
     test_files: Settings['test_files'];
     settings: Record<string, unknown>;
@@ -60,7 +60,7 @@ export type EffectiveSetting = {
 };
 
 /** Where a resolved value stands after the reader applies some tables. */
-export type SettingState = Pick<EffectiveSetting, 'value' | 'source' | 'origin' | 'originScope'> & {
+export type EffectiveValue = Pick<EffectiveSetting, 'value' | 'source' | 'origin' | 'originScope'> & {
     reason: string | undefined;
 };
 

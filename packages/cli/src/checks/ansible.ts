@@ -65,7 +65,7 @@ export async function checkAnsibleLint(session: Session, planned: PlannedCheck):
     const folders = listSourcePaths(planned.files, [ANSIBLE_CONFIG_FILE])
         .map((path) => findProjectFolder(path, ANSIBLE_CONFIG_FILE))
         .filter((folder) => folder !== undefined);
-    const projects = folders.length > 0 ? folders : [planned.selection.scope.path];
+    const projects = folders.length > 0 ? folders : [planned.scope.folder.path];
     const findings: Finding[] = [];
     for (const folder of projects) findings.push(...(await lintProject(session, planned, folder, projects)));
     return findings;

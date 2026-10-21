@@ -3,8 +3,8 @@ import { ZOD_MODULES, ZOD_SCHEMA_FACTORIES, ZOD_SCHEMA_NAMESPACES } from './conf
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    FUNCTIONS,
     TYPE_ONLY,
+    FUNCTION_TYPES,
     EXPORT_REFERENCES,
     UNWRAPPABLE_NODES,
     COMPARISON_OPERATORS,
@@ -97,7 +97,7 @@ export function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Recor
     if (TYPE_ONLY.has(node.type)) return 0;
     if ('declare' in node && node.declare) return 0;
     const isExpressionBody =
-        FUNCTIONS.has(node.type) && (node as ImplementedFunction).body.type !== AST_NODE_TYPES.BlockStatement;
+        FUNCTION_TYPES.has(node.type) && (node as ImplementedFunction).body.type !== AST_NODE_TYPES.BlockStatement;
     const isStatement = node.type.endsWith('Statement') && !NON_EXECUTABLE_STATEMENTS.has(node.type);
     const own = Number(isExpressionBody || isStatement || EXECUTABLE_DECLARATIONS.has(node.type));
     return listChildNodes(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);

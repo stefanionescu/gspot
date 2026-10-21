@@ -4,7 +4,7 @@ import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
-import type { GitLookup, GitRepository, GitEnvironment, GitTargetEnvironment } from '#cli/types/system/git.ts';
+import type { GitLookup, GitRepository, GitEnvironment, GitVariableGroups } from '#cli/types/system/git.ts';
 
 import {
     type SpawnResult,
@@ -68,11 +68,7 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
 }
 
 // The metadata of the target decides whether inherited repository-local variables stay valid.
-function readTargetGitEnvironment(
-    root: string,
-    source: GitRepository,
-    environment: GitTargetEnvironment,
-): GitEnvironment {
+function readFolderGitEnvironment(root: string, source: GitRepository, environment: GitVariableGroups): GitEnvironment {
     const { isolated, overrides, explicit } = environment;
     const target = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_FOLDER_ARGUMENTS], {
         cwd: root,
@@ -133,7 +129,7 @@ export function readGitEnvironment(
     );
     const repository = (inheritedGit.repository ??= readInheritedGitEnvironment(origin));
     if ('failure' in repository) return repository;
-    return readTargetGitEnvironment(workingFolder, repository, { isolated, overrides, explicit });
+    return readFolderGitEnvironment(workingFolder, repository, { isolated, overrides, explicit });
 }
 
 /**

@@ -99,14 +99,14 @@ export async function installToolProjects(install: ToolInstall): Promise<string[
     const configurations = session.neededToolConfigurations;
     const notes: string[] = [];
     const uvPath = mise !== null || which.sync(UV_TOOL, { nothrow: true }) !== null ? getUvPath(session) : undefined;
-    const lockfileInputs =
+    const toolProjectFiles =
         uvPath === undefined
             ? generated.files.filter((file) => file.path !== PYTHON_TOOL_PROJECT_FILE)
             : generated.files;
-    await prepareLockfiles(install, lockfileInputs);
+    await prepareLockfiles(install, toolProjectFiles);
     writePlans(
         writer,
-        lockfileInputs
+        toolProjectFiles
             .filter((file) => file.kind === 'lock')
             .map((file) =>
                 planReplacement(writer, {

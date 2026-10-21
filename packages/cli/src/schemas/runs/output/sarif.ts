@@ -8,7 +8,7 @@ import type {
     SarifResult,
     SarifMessage,
     SarifArtifact,
-    SarifInvocation,
+    SarifAnalysis,
     SarifNotification,
     SarifResultLocation,
     SarifArtifactLocation,
@@ -54,16 +54,16 @@ const notificationSchema = z.object({
     message: messageSchema.optional(),
 } satisfies SchemaShape<SarifNotification>) satisfies z.ZodType<SarifNotification>;
 
-const invocationSchema = z.object({
+const analysisSchema = z.object({
     executionSuccessful: z.boolean().optional(),
     toolExecutionNotifications: z.array(notificationSchema).optional(),
-} satisfies SchemaShape<SarifInvocation>) satisfies z.ZodType<SarifInvocation>;
+} satisfies SchemaShape<SarifAnalysis>) satisfies z.ZodType<SarifAnalysis>;
 
 const runSchema = z.object({
     results: z.array(sarifResultSchema),
     artifacts: z.array(artifactSchema).optional(),
     originalUriBaseIds: z.record(z.string(), locationSchema).optional(),
-    invocations: z.array(invocationSchema).optional(),
+    invocations: z.array(analysisSchema).optional(),
 } satisfies SchemaShape<SarifRun>) satisfies z.ZodType<SarifRun>;
 
 export const sarifLogSchema = z.object({

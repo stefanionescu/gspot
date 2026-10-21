@@ -49,28 +49,29 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
 /**
  * Generate the npm tools as a tool project, and add no dependencies to the repository.
  *
- * @param inputs what the tool project holds.
- * @param inputs.root the repository folder.
- * @param inputs.scopes the source projects.
- * @param inputs.configurations the configurations with npm tools.
- * @param inputs.isYarnBerry true for Yarn 2 or later as the repository package manager.
+ * @param project what the tool project holds.
+ * @param project.root the repository folder.
+ * @param project.scopes the source projects.
+ * @param project.configurations the configurations with npm tools.
+ * @param project.isYarnBerry true for Yarn 2 or later as the repository package manager.
  *
  * @returns the tool project files.
  */
 export function buildNpmProject({ root, scopes, configurations, isYarnBerry }: PlannedNpmProject): GeneratedFile[] {
     const pins = listToolProjectPins(configurations).npm;
     const nextVersions = scopes
-        .filter(({ selected }) => selected.some((configuration) => configuration.name === NEXTJS_CONFIGURATION))
-        .flatMap(({ scope }) => {
-            const version = findInstalledDependency(root, join(scope.path, 'package.json'), NEXT_PACKAGE)?.version;
-            return version === undefined ? [] : [{ scope: scope.path, major: semver.major(version) }];
+        .filter(({ configurations: selected }) =>
+            selected.some((configuration) => configuration.name === NEXTJS_CONFIGURATION),
+        )
+        .flatMap(({ folder }) => {
+            const version = findInstalledDependency(root, join(folder.path, 'package.json'), NEXT_PACKAGE)?.version;
+            return version === undefined ? [] : [{ scope: folder.path, major: semver.major(version) }];
         });
     const majors = new Set(nextVersions.map(({ major }) => major));
     const requirements = nextVersions
         .map(({ scope, major }) => `${scope === '' ? 'the root' : scope} requires ^${String(major)}`)
         .join('; ');
-    if (majors.size > 1)
-        throw new GspotError('installation', `Tool pin ${NEXT_ESLINT_PLUGIN} conflicts: ${requirements}.`);
+    if (majors.size > 1) throw new GspotError('install', `Tool pin ${NEXT_ESLINT_PLUGIN} conflicts: ${requirements}.`);
     const major = majors.values().next().value;
     if (major !== undefined) pins[NEXT_ESLINT_PLUGIN] = `^${String(major)}`;
     const files: GeneratedFile[] = [

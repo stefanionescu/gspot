@@ -1,6 +1,6 @@
 import picomatch from 'picomatch';
 import { posix, extname } from 'node:path';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { hasIniSection } from '#cli/parsers/ini.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
@@ -37,18 +37,16 @@ function findReplacedFiles(
     const depth = replacement.path.split('/').length;
     const isDotfile = posix.basename(replacement.path).startsWith('.');
     const matches = buildPathMatcher([replacement.path, `**/${replacement.path}`]);
-    const candidates = new Set(inventory);
+    const paths = new Set(inventory);
     if (
         !picomatch.scan(replacement.path).isGlob &&
-        !candidates.has(replacement.path) &&
+        !paths.has(replacement.path) &&
         findText(root, replacement.path) !== undefined
     )
-        candidates.add(replacement.path);
-    return [...candidates]
+        paths.add(replacement.path);
+    return [...paths]
         .filter(
-            (candidate) =>
-                matches(candidate) &&
-                (isDotfile || projectFolders.has(candidate.split('/').slice(0, -depth).join('/'))),
+            (path) => matches(path) && (isDotfile || projectFolders.has(path.split('/').slice(0, -depth).join('/'))),
         )
         .filter((path) => {
             const source = findText(root, path);
@@ -80,7 +78,7 @@ function hasToolSection(text: string, path: string, selector: Pick<ReplacedFile,
     const parts = selector.key === undefined ? (selector.table as string).split('.') : [selector.key];
     let value = parseSharedFile(text, extension, path);
     for (const part of parts) {
-        if (!isRecord(value) || !Object.hasOwn(value, part)) return false;
+        if (!isTable(value) || !Object.hasOwn(value, part)) return false;
         value = value[part];
     }
     return true;

@@ -3,7 +3,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { type Session } from '#cli/types/session.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
@@ -89,14 +89,14 @@ export async function checkSecretsGitleaksPushed(session: Session, planned: Plan
  */
 export async function checkSecretsEnvExamples(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const { env_examples: names, environment_functions: environmentFunctions } = getTable(
-        planned.selection.view,
+        planned.scope.settings,
         'secrets',
     );
     const examples = planned.files.filter((file) => names.includes(posix.basename(file.path)));
     if (examples.length === 0)
         throw new GspotError(
             'skip',
-            `No example environment file exists in ${planned.selection.scope.path === '' ? 'the repository root' : planned.selection.scope.path}. Declare the example environment files under secrets.env_examples.`,
+            `No example environment file exists in ${planned.scope.folder.path === '' ? 'the repository root' : planned.scope.folder.path}. Declare the example environment files under secrets.env_examples.`,
         );
     const known = new Set(
         examples.flatMap((file) => {
@@ -108,11 +108,11 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
         }),
     );
     const extensions = listTaggedExtensions(...ENV_READ_LANGUAGES);
-    const candidates = planned.files.filter(
+    const sourceFiles = planned.files.filter(
         (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),
     );
     const findings: Finding[] = [];
-    for (const file of candidates) {
+    for (const file of sourceFiles) {
         const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
         findings.push(...findMissingEnvironmentKeys(planned, file.path, reads, known));
     }

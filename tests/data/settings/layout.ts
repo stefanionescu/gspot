@@ -87,7 +87,7 @@ level="all"
 `,
         target: `level="all"
 [[command_check]]
-name = "team/check"
+id = "team/check"
 command=["bun","check.ts"]
 paths=["src/**"]
 stage="commit"
@@ -97,7 +97,7 @@ summary="Team check"
 level = "all"
 
 [[command_check]]
-name = "team/check"
+id = "team/check"
 command = ["bun", "check.ts"]
 paths = ["src/**"]
 stage = "commit"

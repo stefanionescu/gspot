@@ -3,7 +3,7 @@ import type { ClientEnvOptions } from '../types/rules.ts';
 import { PUBLIC_PREFIXES, CLIENT_DIRECTIVE } from '../config/nextjs.ts';
 import { clientEnvOptionsSchema } from '../schemas/rules/no/client-env.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { ENVIRONMENT_HOSTS, ENVIRONMENT_ALLOWED, ENVIRONMENT_PROPERTY } from '../config/environment.ts';
+import { ENVIRONMENT_HOSTS, ENVIRONMENT_PROPERTY, ALLOWED_ENVIRONMENT_NAMES } from '../config/environment.ts';
 
 // Undeclared hosts have no local binding; direct member reads and destructuring use the same property test.
 function listDirectEnvironmentReads(identifier: TSESTree.Identifier): TSESTree.Node[] {
@@ -59,14 +59,14 @@ function listEnvironmentNames(node: TSESTree.Node): (string | null)[] {
 export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
     name: 'no-client-env',
     meta: {
-        defaultOptions: [{ isClient: false, publicPrefixes: PUBLIC_PREFIXES, allowed: ENVIRONMENT_ALLOWED }],
+        defaultOptions: [{ client: false, publicPrefixes: PUBLIC_PREFIXES, allowedNames: ALLOWED_ENVIRONMENT_NAMES }],
         type: 'problem',
         docs: {
             example:
                 'In a module beginning with `"use client"`, `const key = process.env.SECRET;` reports `private`. Move the secret read and the work that needs it to a server module. A genuinely public URL can use `process.env.NEXT_PUBLIC_URL` in the client. Never rename a secret to make it public. See [Next.js environment variables](https://nextjs.org/docs/app/guides/environment-variables).',
             level: 'recommended',
             description:
-                'Finds private environment reads in client modules, including process.env, Bun.env, Deno.env, and import.meta.env. The publicPrefixes and allowed options name public values.',
+                'Finds private environment reads in client modules, including process.env, Bun.env, Deno.env, and import.meta.env. The publicPrefixes and allowedNames options name public values.',
             why: 'Client code needs public configuration. Private environment values are unavailable in the browser by default, and exposing a secret to satisfy the read is unsafe.',
             fix: 'Keep private configuration and the work that needs it in a server-only module. Pass only public results to client code, or use NEXT_PUBLIC_ variables for values intended for the browser.',
         },
@@ -78,22 +78,22 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
     },
     create(context, [options]) {
         const isClient =
-            options.isClient ||
+            options.client ||
             context.sourceCode.ast.body.some(
                 (statement) =>
                     statement.type === AST_NODE_TYPES.ExpressionStatement && statement.directive === CLIENT_DIRECTIVE,
             );
         if (!isClient) return {};
         const prefixes = options.publicPrefixes;
-        const allowed = new Set(options.allowed);
-        const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowed].join(', ');
+        const allowedNames = new Set(options.allowedNames);
+        const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowedNames].join(', ');
         const report = (node: TSESTree.Node): void => {
             const names = listEnvironmentNames(node);
             if (
                 names.length > 0 &&
                 names.every(
                     (name) =>
-                        name !== null && (allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix))),
+                        name !== null && (allowedNames.has(name) || prefixes.some((prefix) => name.startsWith(prefix))),
                 )
             )
                 return;

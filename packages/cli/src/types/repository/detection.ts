@@ -1,10 +1,10 @@
-import type { ScopeView } from '#cli/types/settings/inheritance.ts';
+import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import type { Group, Configuration } from '#cli/types/configurations.ts';
 import type { FileKind, TrackedFile } from '#cli/types/repository/inventory.ts';
 
 /** What detection reads once from the tree of a scope, for every manifest to look at. */
 export type ScopeContents = {
-    candidates: TrackedFile[];
+    files: TrackedFile[];
     extensionCounts: Map<string, number>;
     shebangs: Set<string>;
     runtimes: Map<string, string>;
@@ -35,7 +35,7 @@ export type DetectionEvidence = { evidence: string; count?: number };
 
 /** Configuration selection and scope values for repository file coverage. */
 export type CoveredFilesOptions = {
-    selected: Configuration[];
-    scope: string;
-    view: Pick<ScopeView, 'test_files' | 'settings'>;
+    configurations: Configuration[];
+    scopePath: string;
+    settings: Pick<ScopeSettings, 'test_files' | 'settings'>;
 };

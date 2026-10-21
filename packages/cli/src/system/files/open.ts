@@ -1,7 +1,7 @@
 // Read and write contained files through verified folder paths.
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import type { Files, FilesState } from '#cli/types/system/files.ts';
+import type { Files, FileBounds } from '#cli/types/system/files.ts';
 import { createLock, releaseLocks } from '#cli/system/files/lock.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
@@ -22,7 +22,7 @@ import {
  * @returns the disposable file handle.
  */
 export function openFiles(root: string): Files {
-    const state: FilesState = { root: realpathSync(root), locks: new Map() };
+    const state: FileBounds = { root: realpathSync(root), locks: new Map() };
     const files: Files = {
         deleteFolder(path) {
             rmdirSync(buildContainedPath(state, path));

@@ -1,5 +1,5 @@
 [configuration]
-description = "Jest suites: test lint rules and coverage floors."
+description = "Jest suites: test lint rules and minimum coverage."
 requires = ["javascript"]
 title = "Jest"
 
@@ -37,9 +37,9 @@ level = "recommended"
 name = "coverage"
 runs = "scope"
 stage = "push"
-summary = "Runs Jest and checks all four coverage floors."
+summary = "Runs Jest and checks the four coverage minimums."
 tool = "jest"
-why = "A coverage floor keeps new code from arriving untested."
+why = "A coverage minimum keeps new code from arriving untested."
 
 [check.files]
 extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]

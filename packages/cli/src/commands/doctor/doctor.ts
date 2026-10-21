@@ -38,7 +38,7 @@ function isToolAvailable(inspection: ToolInspection): inspection is ToolInspecti
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';
     const want = tool.want ?? '';
-    if (tool.state === 'outdated') return `${tool.name} ${found} (below ${tool.floor ?? want})`;
+    if (tool.state === 'outdated') return `${tool.name} ${found} (below ${tool.minimumVersion ?? want})`;
     if (tool.state === 'newer') return `${tool.name} ${found} (pinned ${want})`;
     return `${tool.name} ${want === '' ? found : want}`.trim();
 }
@@ -47,7 +47,7 @@ function formatTools(tools: ToolInspection[]): string[] {
     const width = Math.max(...tools.map((tool) => formatToolVersion(tool).length)) + VERSION_GAP;
     return tools.map((tool) => {
         const isBroken = !isToolAvailable(tool);
-        const tail = isBroken ? [tool.note, tool.hint].filter((part) => part !== undefined).join(' ') : tool.path;
+        const tail = isBroken ? [tool.note, tool.help].filter((part) => part !== undefined).join(' ') : tool.path;
         const label = getColors()[TOOL_STATE_COLORS[tool.state]](tool.state.padEnd(COLUMN_WIDTHS.label));
         return `  ${label} ${formatToolVersion(tool).padEnd(width)} ${tail}`.trimEnd();
     });
@@ -84,16 +84,18 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
     // The session leaves out a tool with no build for this system, so its checks skip here.
     const inspections = new Map<string, ToolInspection>();
     const pins = listDistinctTools(session.neededToolConfigurations).filter(
-        (tool) => findMissingBuild(tool, { platform: platform, arch: process.arch }) === undefined,
+        (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
     );
-    for (const { scope, selected } of session.scopes) {
-        const declared = new Set(selected.flatMap((configuration) => configuration.tools).map((tool) => tool.name));
+    for (const { folder, configurations } of session.scopes) {
+        const declared = new Set(
+            configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),
+        );
         for (const tool of pins.filter((pin) => declared.has(pin.name))) {
             const inspection = inspectTool(
-                { ...session, cwd: join(session.root, scope.path), miseBinPaths: getMiseBinPaths(session) },
+                { ...session, cwd: join(session.root, folder.path), miseBinPaths: getMiseBinPaths(session) },
                 tool,
             );
-            inspections.set(`${tool.name}\0${scope.path}`, inspection);
+            inspections.set(`${tool.name}\0${folder.path}`, inspection);
         }
     }
     const tools = [...inspections.values()].toSorted((left, right) => left.name.localeCompare(right.name));

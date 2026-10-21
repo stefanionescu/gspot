@@ -1,4 +1,4 @@
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
@@ -105,14 +105,14 @@ export function validateRuleExcludes(exclude: string[], configurations: Map<stri
             ];
         if (paths.some((path) => isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${path}`, trimTrailingSlashes(entry))))
             return [];
-        const hint = formatSimilarNames(
+        const suggestion = formatSimilarNames(
             entry,
             paths.map((path) => `${GSPOT_CONFIGURATIONS_PATH}/${path}`),
         );
         return [
             {
                 path: ['rules', 'exclude', index],
-                message: `[rules] exclude names ${formatCodeList([entry])}, which matches no rule.${hint}`,
+                message: `[rules] exclude names ${formatCodeList([entry])}, which matches no rule.${suggestion}`,
             },
         ];
     });
@@ -145,7 +145,7 @@ export function validateSettingRules(settings: Settings): SettingsError[] {
             },
             ...(Array.isArray(overrides)
                 ? overrides.flatMap((override: unknown, index) =>
-                      isRecord(override)
+                      isTable(override)
                           ? [
                                 {
                                     tool: 'eslint',
@@ -158,7 +158,7 @@ export function validateSettingRules(settings: Settings): SettingsError[] {
                 : []),
         ];
         return tables.flatMap(({ tool, rules, path }) => {
-            if (!isRecord(rules)) return [];
+            if (!isTable(rules)) return [];
             return Object.keys(rules).flatMap((rule) => {
                 const setting = owned.get(tool)?.get(rule);
                 if (setting === undefined) return [];

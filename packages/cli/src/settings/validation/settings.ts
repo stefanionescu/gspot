@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import { selectForScope } from '#cli/settings/scope-view.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
+import { selectForScope } from '#cli/settings/scope-settings.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { LimitLanguage } from '#cli/types/settings/tables.ts';
@@ -122,17 +122,17 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
             return [scope, known];
         }),
     );
-    const known = scopes.get('') as KnownSettings;
+    const rootKeys = scopes.get('') as KnownSettings;
     scopes.delete('');
     const errors: SettingsError[] = [
         ...validateSettingReasons(settings),
         ...validateSettingRules(settings),
         ...Object.values(settings.commandChecks).flatMap((entry, index) =>
-            bundledChecks.includes(entry.name)
+            bundledChecks.includes(entry.id)
                 ? [
                       {
-                          path: ['command_check', index, 'name'],
-                          message: `The command check ${entry.name} has the same name as a configuration check. Give it another name.`,
+                          path: ['command_check', index, 'id'],
+                          message: `The command check ${entry.id} has the same ID as a configuration check. Give it another ID.`,
                       },
                   ]
                 : [],
@@ -150,7 +150,7 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
         ...validateRuleExcludes(settings.rules.exclude, configurations),
         ...(repositoryRoot === undefined ? [] : validateScopePaths(repositoryRoot, settings)),
         ...(repositoryRoot === undefined ? [] : validateRuleFilePaths(repositoryRoot, settings)),
-        ...validateKeys(known, settings, scopes, buildKnownSettings([...configurations.values()], settings.level)),
+        ...validateKeys(rootKeys, settings, scopes, buildKnownSettings([...configurations.values()], settings.level)),
     ];
     if (errors.length > 0) throwErrors(errors);
 }

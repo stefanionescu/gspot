@@ -29,7 +29,7 @@ Add the check to `gspot.toml` as a `[[command_check]]` record:
 
 ```toml
 [[command_check]]
-name = "notes"
+id = "notes"
 command = ["node", "scripts/check-notes.mjs", "{files}"]
 paths = ["notes/**"]
 stage = "commit"

@@ -49,7 +49,7 @@ test.each(START_COMMANDS)(
             await writeFile(
                 join(root, 'package.json'),
                 JSON.stringify({
-                    packageManager: packageManager,
+                    packageManager,
                     devDependencies: { '@gspothq/cli': '1.2.3' },
                 }),
             );

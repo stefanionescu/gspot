@@ -1,6 +1,5 @@
 import { checkExpoDoctor } from '#cli/checks/expo.ts';
 import { checkProseVale } from '#cli/checks/prose.ts';
-import { checkHtmlScripts } from '#cli/checks/html.ts';
 import { checkNextjsTsc } from '#cli/checks/nextjs.ts';
 import { checkNginxSyntax } from '#cli/checks/nginx.ts';
 import { checkSvelteCheck } from '#cli/checks/svelte.ts';
@@ -10,6 +9,7 @@ import type { Check } from '#cli/types/configurations.ts';
 import type { CheckCode } from '#cli/types/runs/check.ts';
 import { checkSiteBuild } from '#cli/checks/site/build.ts';
 import { checkBashSafety } from '#cli/checks/bash/safety.ts';
+import { checkHtmlInlineScripts } from '#cli/checks/html.ts';
 import { checkMarkdownFences } from '#cli/checks/markdown.ts';
 import { checkJavascriptTsc } from '#cli/checks/javascript.ts';
 import { checkLicensesAllowed } from '#cli/checks/licenses.ts';
@@ -49,11 +49,11 @@ import { checkBashUnreadArguments } from '#cli/checks/bash/unread-arguments.ts';
 import { checkBashUnusedFunctions } from '#cli/checks/bash/unused-functions.ts';
 import { checkReactVersions } from '#cli/checks/dependencies/react-versions.ts';
 import { checkGspotGeneratedFiles } from '#cli/checks/gspot/generated-files.ts';
+import { checkGspotUnmatchedPaths } from '#cli/checks/gspot/unmatched-paths.ts';
 import { checkStructureImportRules } from '#cli/checks/structure/import-rules.ts';
 import { checkDependenciesLockfiles } from '#cli/checks/dependencies/lockfiles.ts';
 import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/docs.ts';
 import { checkForeignKeyIndexes } from '#cli/checks/postgres/foreign-key-indexes.ts';
-import { checkGspotUnmatchedPatterns } from '#cli/checks/gspot/unmatched-patterns.ts';
 import { checkFileFolderClashes } from '#cli/checks/structure/file-folder-clashes.ts';
 import { checkStructureSharedPrefixes } from '#cli/checks/structure/shared-prefixes.ts';
 import { checkPackageManagerPin } from '#cli/checks/dependencies/package-manager-pin.ts';
@@ -118,8 +118,8 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'gspot/generated-files': { run: checkGspotGeneratedFiles },
     'gspot/replaced-files': { run: checkGspotReplacedFiles },
     'gspot/suppressions': { check: checkGspotSuppressions },
-    'gspot/unmatched-patterns': { check: checkGspotUnmatchedPatterns },
-    'html/scripts': { check: checkHtmlScripts },
+    'gspot/unmatched-paths': { check: checkGspotUnmatchedPaths },
+    'html/inline-scripts': { check: checkHtmlInlineScripts },
     'javascript/tsc': { run: checkJavascriptTsc },
     'licenses/allowed': { check: checkLicensesAllowed },
     'markdown/fences': { check: checkMarkdownFences },
@@ -131,7 +131,7 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'naming/identifiers': { check: checkNamingIdentifiers },
     'naming/paths': { check: checkNamingPaths },
     'nextjs/tsc': { run: checkNextjsTsc },
-    'nginx/config-test': { check: checkNginxSyntax },
+    'nginx/syntax': { check: checkNginxSyntax },
     'postgres/definer-search-path': { check: checkDefinerSearchPath },
     'postgres/edited-migrations': { check: checkPostgresEditedMigrations },
     'postgres/foreign-key-indexes': { check: checkForeignKeyIndexes },
@@ -193,7 +193,7 @@ const CHECK_CODE: Record<string, CheckCode> = {
  * @param check the check to run.
  * @returns the implementation, or undefined for a tool check that runs only its command.
  */
-export function findCheckCode(check: Pick<Check, 'name' | 'generator_outputs'>): CheckCode | undefined {
+export function findCheckCode(check: Pick<Check, 'id' | 'generator_outputs'>): CheckCode | undefined {
     if (check.generator_outputs !== undefined) return { check: checkGeneratorOutputs };
-    return CHECK_CODE[check.name];
+    return CHECK_CODE[check.id];
 }

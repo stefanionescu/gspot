@@ -1,8 +1,8 @@
 import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
-import { isRecord, stripUndefined } from '#cli/system/tables.ts';
 import { DEFAULT_QUOTES } from '#cli/config/settings/defaults.ts';
 import { listPrettierPlugins } from '#cli/planning/needed-tools.ts';
 import { includeFolderContents } from '#cli/repository/matchers.ts';
@@ -24,7 +24,7 @@ export function listScopeFormats(settings: Settings): ScopeFormat[] {
         .toSorted((first, second) => compareScopeDepth(first.scope ?? '', second.scope ?? ''))
         .flatMap(({ scope = '', table }) => {
             const authored = table.written['format'];
-            if (table.format === undefined || !isRecord(authored)) return [];
+            if (table.format === undefined || !isTable(authored)) return [];
             const format = Object.fromEntries(
                 Object.entries(table.format).filter(([key]) => Object.hasOwn(authored, key)),
             ) as WrittenFormat;
@@ -86,8 +86,10 @@ function convertFormatSettings(format: Partial<FormatSettings>): Record<string, 
  */
 export function buildPrettierFile(planned: PlannedToolFile): string {
     const settings = planned.session.settingsFile.settings;
-    const format = planned.selection.view.values.format;
-    const plugins = [...listPrettierPlugins(planned.session.scopes.flatMap(({ selected }) => selected)).values()];
+    const format = planned.scope.settings.values.format;
+    const plugins = [
+        ...listPrettierPlugins(planned.session.scopes.flatMap(({ configurations }) => configurations)).values(),
+    ];
     const overrides = [...plugins.flatMap((plugin) => plugin.overrides), ...listFormatOverrides(settings)];
     const value = {
         ...convertFormatSettings({ ...format, quotes: format.quotes ?? DEFAULT_QUOTES.prettier }),

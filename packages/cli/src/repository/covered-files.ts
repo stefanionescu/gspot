@@ -8,13 +8,13 @@ import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
-import type { FileMatch, CoveredFilesOptions } from '#cli/types/repository/selection.ts';
+import type { FileMatch, CoveredFilesOptions } from '#cli/types/repository/detection.ts';
 import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/placeholders.ts';
 
 // Add the file types of the Prettier or ESLint plugins in use to the owners, when the table takes them.
-function addPluginExtensions(owners: FileMatch, selected: Configuration[]): FileMatch {
+function addPluginExtensions(owners: FileMatch, configurations: Configuration[]): FileMatch {
     if (!owners.prettier_plugins && !owners.eslint_plugins) return owners;
-    const extensions = selected
+    const extensions = configurations
         .flatMap((configuration) => configuration.tools)
         .flatMap((tool) => [
             ...(owners.prettier_plugins ? (tool.prettier?.extensions ?? []) : []),
@@ -45,24 +45,24 @@ export function buildFileMatcher(table: FileMatch): (file: TrackedFile) => boole
  * @param table the file patterns.
  * @param files the tracked inventory.
  * @param options the scope to match in.
- * @param options.selected manifests that declare languages and Prettier plugins.
- * @param options.scope the folder to match in.
- * @param options.view settings and repository-relative test paths for the scope.
+ * @param options.configurations the configurations that declare languages and Prettier plugins.
+ * @param options.scopePath the folder to match in.
+ * @param options.settings settings and repository-relative test paths for the scope.
  * @returns the matching files.
  */
 export function listCoveredFiles(
     table: FileMatch,
     files: TrackedFile[],
-    { selected, scope, view }: CoveredFilesOptions,
+    { configurations, scopePath: scope, settings }: CoveredFilesOptions,
 ): TrackedFile[] {
     const ownsTests = table.paths.includes(TEST_FILES_PLACEHOLDER);
-    const tests = buildPathMatcher(view.test_files);
+    const tests = buildPathMatcher(settings.test_files);
     const defaults: FileMatch[] = [];
     const settingPatterns = table.paths.flatMap((path) => {
         if (path === TEST_FILES_PLACEHOLDER) return [];
         const name = [...path.matchAll(SETTING_PLACEHOLDER)][0]?.groups?.['name'];
         if (name === undefined) return [];
-        const value = view.settings[name];
+        const value = settings.settings[name];
         if (typeof value === 'string')
             return [
                 path.replace(SETTING_PLACEHOLDER, () =>
@@ -70,7 +70,7 @@ export function listCoveredFiles(
                 ),
             ];
         defaults.push(
-            ...selected
+            ...configurations
                 .filter((configuration) => configuration.name === name.split('.', 1)[0])
                 .map((configuration) => configuration.files),
         );
@@ -84,15 +84,15 @@ export function listCoveredFiles(
                 (path) => path !== TEST_FILES_PLACEHOLDER && [...path.matchAll(SETTING_PLACEHOLDER)].length === 0,
             ),
         },
-        selected,
+        configurations,
     );
-    const candidates = files.filter((file) => isInScope(file.path, scope) && owners.kinds.includes(file.kind));
+    const scopeFiles = files.filter((file) => isInScope(file.path, scope) && owners.kinds.includes(file.kind));
     const matches = [
         owners,
         ...defaults,
-        ...(owners.languages ? filterSourceConfigurations(selected).map(({ files }) => files) : []),
+        ...(owners.languages ? filterSourceConfigurations(configurations).map(({ files }) => files) : []),
     ].map((table) => buildFileMatcher(table));
-    return candidates.filter((file) => {
+    return scopeFiles.filter((file) => {
         const scopeFile = { ...file, path: posix.relative(scope, file.path) };
         return (
             (ownsTests && tests(file.path)) || settingMatches(file.path) || matches.some((match) => match(scopeFile))
@@ -129,14 +129,14 @@ export function listSourcePaths(files: TrackedFile[], endings: readonly string[]
  * @returns the matching tracked files.
  */
 export function listCheckFiles(planned: PlannedCheck, checkId: string): TrackedFile[] {
-    return planned.selection.selected.flatMap((configuration) =>
+    return planned.scope.configurations.flatMap((configuration) =>
         configuration.checks
-            .filter((check) => check.name === checkId)
+            .filter((check) => check.id === checkId)
             .flatMap((check) =>
                 listCoveredFiles(check.files ?? configuration.files, planned.files, {
-                    selected: planned.selection.selected,
-                    scope: planned.selection.scope.path,
-                    view: planned.selection.view,
+                    configurations: planned.scope.configurations,
+                    scopePath: planned.scope.folder.path,
+                    settings: planned.scope.settings,
                 }),
             ),
     );

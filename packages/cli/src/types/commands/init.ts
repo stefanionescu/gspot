@@ -4,7 +4,7 @@ import type { GenerationResult } from '#cli/types/generation/files.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import type { ExistingTools } from '#cli/types/repository/existing-tools.ts';
 import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
-import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
+import type { ConfigurationEvidence } from '#cli/types/repository/detection.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/inventory.ts';
 
 export type InitScan = {
@@ -12,7 +12,7 @@ export type InitScan = {
     repository: Repository;
     options: InitOptions;
     existingTools: ExistingTools;
-    selection: InitConfigurations;
+    configurations: InitConfigurations;
     everySelected: Configuration[];
     answers: InitAnswers;
     replaced: ReplacedFiles;

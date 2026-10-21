@@ -16,7 +16,7 @@ export type SarifArtifact = { location?: SarifArtifactLocation | undefined };
 
 export type SarifNotification = { level?: string | undefined; message?: SarifMessage | undefined };
 
-export type SarifInvocation = {
+export type SarifAnalysis = {
     executionSuccessful?: boolean | undefined;
     toolExecutionNotifications?: SarifNotification[] | undefined;
 };
@@ -61,7 +61,7 @@ export type SarifRun = {
     results: SarifResult[];
     artifacts?: SarifArtifact[] | undefined;
     originalUriBaseIds?: Record<string, SarifArtifactLocation> | undefined;
-    invocations?: SarifInvocation[] | undefined;
+    invocations?: SarifAnalysis[] | undefined;
 };
 
 /** The rule matches and scanner errors that Semgrep reports. */

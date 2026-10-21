@@ -1,8 +1,8 @@
 import { createRule } from '../schemas/rules/options.ts';
 import type { ImplementedFunction } from '../types/syntax.ts';
 import type { TrivialFunctionsOptions } from '../types/rules.ts';
-import { FUNCTION_SELECTOR, TRIVIAL_STATEMENTS } from '../config/syntax.ts';
 import { trivialFunctionsOptionsSchema } from '../schemas/rules/no/trivial.ts';
+import { FUNCTION_SELECTOR, TRIVIAL_FUNCTION_STATEMENTS } from '../config/syntax.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { getTypeServices, countStatements, findOutermostValue, listCallableVariables } from '../syntax.ts';
 
@@ -107,7 +107,7 @@ function isRequiredFunction(node: ImplementedFunction, source: TSESLint.SourceCo
 export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>({
     name: 'no-trivial-functions',
     meta: {
-        defaultOptions: [{ trivialStatements: TRIVIAL_STATEMENTS }],
+        defaultOptions: [{ trivialFunctionStatements: TRIVIAL_FUNCTION_STATEMENTS }],
         type: 'suggestion',
         docs: {
             example:
@@ -124,11 +124,11 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
         },
     },
     create(context, [options]) {
-        const max = options.trivialStatements;
+        const limit = options.trivialFunctionStatements;
         return {
             [`${FUNCTION_SELECTOR}:exit`](node: ImplementedFunction) {
                 const count = countStatements(node, context.sourceCode.visitorKeys);
-                if (count > max || isRequiredFunction(node, context.sourceCode)) return;
+                if (count > limit || isRequiredFunction(node, context.sourceCode)) return;
                 context.report({
                     node,
                     messageId: 'trivial',

@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { createRuleTester } from '#tests/setup/rule-tester.ts';
 import type { ImportBoundariesOptions } from '#eslint-plugin/types/rules.ts';
-import { IMPORT_ALIASES, IMPORT_BOUNDARY_FOLDERS } from '#tests/data/eslint-plugin.ts';
+import { IMPORT_ALIASES, PROJECT_FOLDERS } from '#tests/data/eslint-plugin.ts';
 
 createRuleTester().run<
     keyof (typeof plugin.rules)['import-boundaries']['meta']['messages'],
@@ -61,17 +61,17 @@ createRuleTester().run<
         {
             code: "import { a } from './a.js';",
             filename: '/repo/api/src/b.ts',
-            options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
+            options: [{ folders: PROJECT_FOLDERS }],
         },
         {
             code: "import { a } from '../types/a.js';",
             filename: '/repo/api/src/b.ts',
-            options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
+            options: [{ folders: PROJECT_FOLDERS }],
         },
         {
             code: "import { a } from '../../supabase/a.js';",
             filename: '/repo/root/src/b.ts',
-            options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
+            options: [{ folders: PROJECT_FOLDERS }],
         },
         {
             code: "import { a } from './a.js';",
@@ -134,7 +134,7 @@ createRuleTester().run<
         ...['import(`../../supabase/src/a.js`);', "import { a } from '../../supabase/src/a.js';"].map((code) => ({
             code,
             filename: '/repo/api/src/b.ts',
-            options: [{ folders: IMPORT_BOUNDARY_FOLDERS }] satisfies [Partial<ImportBoundariesOptions[0]>],
+            options: [{ folders: PROJECT_FOLDERS }] satisfies [Partial<ImportBoundariesOptions[0]>],
             errors: [
                 {
                     messageId: 'escape' as const,
@@ -152,7 +152,7 @@ createRuleTester().run<
         {
             code: "export { a } from '../../supabase/src/a.js';",
             filename: '/repo/api/src/b.ts',
-            options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
+            options: [{ folders: PROJECT_FOLDERS }],
             errors: [{ messageId: 'escape' }],
         },
         {
@@ -169,7 +169,7 @@ createRuleTester().run<
         {
             code: "import { a } from '../../quality/a.js';",
             filename: '/repo/api/src/b.ts',
-            options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
+            options: [{ folders: PROJECT_FOLDERS }],
             errors: [
                 {
                     messageId: 'escape',
@@ -192,7 +192,7 @@ createRuleTester().run<
         {
             code: "export * from '../../ios/a.js';",
             filename: '/repo/api/src/b.ts',
-            options: [{ folders: IMPORT_BOUNDARY_FOLDERS }],
+            options: [{ folders: PROJECT_FOLDERS }],
             errors: [{ messageId: 'escape' }],
         },
     ],

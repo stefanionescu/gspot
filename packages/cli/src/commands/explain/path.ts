@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listCoveredFiles } from '#cli/repository/covered-files.ts';
@@ -25,26 +25,26 @@ function formatUncheckedKind(file: TrackedFile): string | undefined {
  */
 function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
-    const scope = findScope(path, session.repository.scopeFolders);
-    const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as Scope;
-    const configurations = selection.selected.filter(
+    const folder = findScopeFolder(path, session.repository.scopeFolders);
+    const scope = session.scopes.find((entry) => entry.folder.path === folder.path) as Scope;
+    const configurations = scope.configurations.filter(
         (configuration) =>
             listCoveredFiles(configuration.files, [file], {
-                selected: selection.selected,
-                scope: selection.scope.path,
-                view: selection.view,
+                configurations: scope.configurations,
+                scopePath: scope.folder.path,
+                settings: scope.settings,
             }).length > 0,
     );
     const report: PathExplanation = {
         path,
-        scope: scope.path === '' ? ROOT_SCOPE_LABEL : scope.path,
+        scope: folder.path === '' ? ROOT_SCOPE_LABEL : folder.path,
         fileKind: file.kind,
         tags: file.tags,
         configurations: configurations.map((configuration) => configuration.name),
         checks: session.configuredChecks
             .filter((check) => listCheckedFiles(session.scopes, check).some((entry) => entry.path === file.path))
             .map((check) => ({
-                check: check.check.name,
+                check: check.check.id,
                 stage: check.check.stage,
                 ...(check.configuration === undefined ? {} : { configuration: check.configuration.name }),
             })),

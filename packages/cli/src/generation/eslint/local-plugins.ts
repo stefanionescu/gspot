@@ -6,19 +6,19 @@ import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
-import { getTable, findParentSelection } from '#cli/settings/scope-view.ts';
+import { getTable, findParentScope } from '#cli/settings/scope-settings.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint/tool-settings.ts';
 import type { EslintPlugins, EslintBlockFields } from '#cli/types/generation/eslint.ts';
 
 function listPluginRecords(scopes: Scope[]) {
     return scopes
-        .filter(({ view }) => view.configurations.includes(JAVASCRIPT_CONFIGURATION))
-        .flatMap((selection) => {
-            const parent = findParentSelection(scopes, selection.scope.path);
-            const inherited = parent?.view.values[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
-            return getTable(selection.view, ESLINT_SETTINGS_TABLE)
+        .filter(({ settings }) => settings.configurations.includes(JAVASCRIPT_CONFIGURATION))
+        .flatMap((scope) => {
+            const parent = findParentScope(scopes, scope.folder.path);
+            const inherited = parent?.settings.values[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
+            return getTable(scope.settings, ESLINT_SETTINGS_TABLE)
                 .plugins.filter((plugin) => !inherited.some((record) => isDeepStrictEqual(record, plugin)))
-                .map((plugin) => ({ ...plugin, scope: selection.scope.path }));
+                .map((plugin) => ({ ...plugin, scope: scope.folder.path }));
         });
 }
 

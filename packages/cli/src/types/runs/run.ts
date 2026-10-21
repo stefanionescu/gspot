@@ -13,7 +13,7 @@ export type RunReportOptions = PlanOptions & {
     unstagedChanges?: number;
 };
 
-export type RunState = {
+export type Run = {
     session: Session;
     options: RunOptions;
 };

@@ -1,7 +1,7 @@
 import type { SettingFacts } from '#cli/types/settings/facts.ts';
 
 export const RECORD_FIELD_FACTS = {
-    'command_check.name': {
+    'command_check.id': {
         description: 'The check ID that `--only` and `[[ignore]] check` use, which may not match a shipped check.',
     },
     'command_check.outputs': {
@@ -117,7 +117,7 @@ export const RECORD_FIELD_FACTS = {
     },
     'coverage.swift_target': {
         configurations: ['swift'],
-        description: 'Line coverage floors for named Swift targets.',
+        description: 'Line coverage minimums for named Swift targets.',
         default: [] as [],
     },
     'site.size_limit': {

@@ -10,9 +10,9 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import type { WholeToolFile } from '#cli/types/generation/files.ts';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { buildPointerFiles } from '#cli/generation/settings/pointers.ts';
-import { MODULE_VALUE, MODULE_TARGETS, MARKDOWNLINT_SCOPE_TABLES } from '#tests/data/generation/settings.ts';
+import { MODULE_VALUE, MODULE_PATHS, MARKDOWNLINT_SCOPE_TABLES } from '#tests/data/generation/settings.ts';
 
 test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
     'XCTest folder pointers keep their SwiftLint overrides in scope "%s"',
@@ -52,7 +52,7 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
         );
         expect(files.find((file) => file.path === `${prefix}.swiftlint.yml`)!.content).toContain('parent_config:');
         expect(files.some((file) => file.path === 'omitted/AppTests/.swiftlint.yml')).toBe(false);
-        const childConfig = buildScopeTarget(
+        const childConfig = getToolFileTarget(
             child,
             session.configurations.get('swift')!.toolFiles.find(({ tool }) => tool.includes('swiftlint'))!,
             getToolFiles(session).targets,
@@ -83,7 +83,7 @@ test.each(['javascript'])(
             .filter((file): file is WholeToolFile => file.source !== undefined)
             .find((file) => file.pointer?.body.includes('{target_module}') === true)!;
         // Windows file names cannot contain a question mark.
-        const components = MODULE_TARGETS.filter((component) => !isWindows || !component.includes('?'));
+        const components = MODULE_PATHS.filter((component) => !isWindows || !component.includes('?'));
         const paths = [];
         for (const [index, component] of components.entries()) {
             const target = `generated/${component}/owner.mjs`;
@@ -91,7 +91,7 @@ test.each(['javascript'])(
                 {
                     session,
                     configuration,
-                    selection: session.scopes[0]!,
+                    scope: session.scopes[0]!,
                 },
                 { ...toolFile, pointer: { ...toolFile.pointer!, path: `entry-${String(index)}.mjs` } },
                 target,

@@ -3,7 +3,7 @@ import { getScopeTable } from '#cli/settings/edit.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { isRecord, stripUndefined } from '#cli/system/tables.ts';
+import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { type ConfigurationsOptions } from '#cli/types/apply.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
@@ -45,7 +45,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const removed = options.configurations.filter((name) => selected.includes(name));
     scopeTable['configurations'] = current.filter((name) => !removed.includes(name));
     const previous = scopeTable['removed_configurations'];
-    if (isRecord(previous) && previous['reason'] !== options.reason)
+    if (isTable(previous) && previous['reason'] !== options.reason)
         throw new GspotError(
             'arguments',
             `removed_configurations already has the reason ${JSON.stringify(previous['reason'])}. Pass --reason with a reason that covers every item.`,
@@ -58,26 +58,26 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const summary = `Removed ${options.configurations.join(' and ')}${where}.`;
     return applySettingsEdit(root, {
         edit: input,
-        summary: summary,
+        summary,
     });
 }
 
 /**
  * Find the chain of requirements from one configuration to another, and visit each one once.
  *
- * @param target the required configuration.
+ * @param required the required configuration.
  * @param from the configuration where the chain starts.
  * @param configurations every configuration manifest.
  * @returns the names along the chain, or undefined when no chain exists.
  */
 function findRequirementChain(
-    target: string,
+    required: string,
     from: string,
     configurations: Map<string, Configuration>,
 ): string[] | undefined {
     const seen = new Set<string>();
     function findChain(current: string): string[] | undefined {
-        if (current === target) return [current];
+        if (current === required) return [current];
         if (seen.has(current)) return undefined;
         seen.add(current);
         for (const required of configurations.get(current)?.requires ?? []) {
@@ -110,7 +110,7 @@ export function registerRemove(program: Command, onResult: CommandCompletion): v
             onResult(
                 await runRemoveCommand({
                     cwd: process.cwd(),
-                    configurations: configurations,
+                    configurations,
                     reason: flags.reason,
                     ...stripUndefined({ scope: flags.scope }),
                 }),

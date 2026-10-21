@@ -167,14 +167,13 @@ export async function runTsc(
     tsbuildinfoFolder: string,
     project: TypeScriptProject | undefined,
 ): Promise<CheckResult> {
-    const required = selectCheckedTsconfigOptions(session.settingsFile.settings.level, planned.selection);
-    const target =
-        project === undefined ? join(session.root, planned.selection.scope.path, TSCONFIG_FILE) : project.path;
+    const required = selectCheckedTsconfigOptions(session.settingsFile.settings.level, planned.scope);
+    const target = project === undefined ? join(session.root, planned.scope.folder.path, TSCONFIG_FILE) : project.path;
     if (
         isProjectChecked(session.reads, {
-            check: planned.check.name,
+            check: planned.check.id,
             path: target,
-            scope: planned.selection.scope.path,
+            scope: planned.scope.folder.path,
             required,
         })
     )
@@ -188,13 +187,8 @@ export async function runTsc(
     if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {
         command.push(...TSC_BUILD_COMMAND, project.path);
     } else {
-        const generatedPath = join(
-            tsbuildinfoFolder,
-            TSCONFIG_COPY_FOLDER,
-            planned.selection.scope.path,
-            TSCONFIG_FILE,
-        );
-        writeScopeTsconfig(session, planned.selection, generatedPath);
+        const generatedPath = join(tsbuildinfoFolder, TSCONFIG_COPY_FOLDER, planned.scope.folder.path, TSCONFIG_FILE);
+        writeScopeTsconfig(session, planned.scope, generatedPath);
         command.push(...TSC_PROJECT_COMMAND, generatedPath);
         appendTsbuildinfoFlag(command, project?.config.options, tsbuildinfoFolder, TSCONFIG_TSBUILDINFO);
     }

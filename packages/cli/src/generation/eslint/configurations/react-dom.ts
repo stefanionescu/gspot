@@ -9,10 +9,10 @@ import { getPreset, allowFocusableRegions, buildPresetRuleExpression } from '#cl
  * @param scope the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildReactDomBlocks(scope: Pick<EslintScope, 'presets' | 'view'>): ConfigurationBlocks {
-    const { presets, view } = scope;
+export function buildReactDomBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {
+    const { presets, settings } = scope;
     const blocks: ConfigurationBlocks['blocks'] = [];
-    if (!view.configurations.includes(REACT_NATIVE_CONFIGURATION)) {
+    if (!settings.configurations.includes(REACT_NATIVE_CONFIGURATION)) {
         const preset = getPreset(presets, 'accessibility');
         blocks.push({
             data: {

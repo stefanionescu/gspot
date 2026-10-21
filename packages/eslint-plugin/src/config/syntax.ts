@@ -6,14 +6,14 @@ const TYPE_ASSERTION_NODES = [
     'TSInstantiationExpression',
 ] as const;
 
-export const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
+export const FUNCTION_TYPES = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
 
 export const TYPE_ONLY = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSDeclareFunction']);
 
 export const UNWRAPPABLE_NODES = ['ChainExpression', ...TYPE_ASSERTION_NODES] as const;
 
 /** The default maximum statement count for a trivial function. */
-export const TRIVIAL_STATEMENTS = 2;
+export const TRIVIAL_FUNCTION_STATEMENTS = 2;
 
 /** Declarations with runtime behavior count as executable statements. */
 export const EXECUTABLE_DECLARATIONS = new Set(['VariableDeclaration', 'TSEnumDeclaration', 'ClassDeclaration']);
@@ -28,7 +28,7 @@ export const STRUCTURED_EXPRESSIONS = new Set<string>(['ObjectExpression', 'Arra
 export const FORWARDED_VALUES = new Set(['Literal', 'Identifier', 'MemberExpression']);
 
 export const FORWARDING_NODES = new Set([
-    ...FUNCTIONS,
+    ...FUNCTION_TYPES,
     'ImportDeclaration',
     'ExportAllDeclaration',
     'EmptyStatement',

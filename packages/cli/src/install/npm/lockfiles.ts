@@ -8,8 +8,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { isTable, getValueAt } from '#cli/system/tables.ts';
 import type { BunPackage } from '#cli/types/install/npm.ts';
-import { isRecord, getValueAt } from '#cli/system/tables.ts';
 import { HTTP_URL } from '#cli/config/install/credentials.ts';
 import type { YarnPackage } from '#cli/types/parsers/lockfiles.ts';
 import { isYarnBerry } from '#cli/repository/npm/package-manager.ts';
@@ -96,7 +96,7 @@ function stripYarnRegistryUrls(content: string, registry: string): string {
     }
     if (!isDeepStrictEqual(yarnLockSchema.parse(parseSyml(edited)), expected))
         throw new GspotError(
-            'installation',
+            'install',
             'Cannot preserve Yarn lockfile entries while removing local registry routing. Existing files were preserved.',
         );
     return edited;
@@ -126,10 +126,10 @@ function parseDevelopmentDependencies(
     name: Exclude<PackageManager['name'], 'yarn'>,
     entry: unknown,
 ): DependencyMap | undefined {
-    if (!isRecord(entry)) return undefined;
+    if (!isTable(entry)) return undefined;
     const dependencies = entry['devDependencies'];
     if (dependencies === undefined) return {};
-    if (!isRecord(dependencies)) return undefined;
+    if (!isTable(dependencies)) return undefined;
     const pins: DependencyMap = {};
     for (const [dependency, value] of Object.entries(dependencies)) {
         const specifier = name === 'pnpm' ? getValueAt(value, ['specifier']) : value;
@@ -151,7 +151,7 @@ function parseWorkspaceEntries(
             ? parseYamlFile<Record<string, unknown>>(path, content, schema)
             : parseJsonFile<Record<string, unknown>>(path, content, schema);
     const entries = document[LOCKFILE_WORKSPACE_KEYS[name]];
-    return isRecord(entries) ? entries : undefined;
+    return isTable(entries) ? entries : undefined;
 }
 
 // Require valid package entries before checking Yarn's requested descriptors.
@@ -239,6 +239,6 @@ export function stripRegistryUrls(
     if (packageManager.name !== 'yarn' || isYarnBerry(packageManager)) return;
     const registry = env[`${NPM_SETTING_PREFIX}registry`];
     if (registry === undefined)
-        throw new GspotError('installation', 'A Yarn 1 lockfile needs npm_config_registry to relocate its URLs.');
+        throw new GspotError('install', 'A Yarn 1 lockfile needs npm_config_registry to relocate its URLs.');
     writeFileSync(lockfilePath, stripYarnRegistryUrls(lockfile, registry));
 }

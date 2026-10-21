@@ -74,7 +74,7 @@ export async function installValePackages(install: ToolInstall): Promise<string>
         const result = await runInstallStep(install, command, { cwd: dirname(config) });
         if (result.code !== 0)
             throw new GspotError(
-                'installation',
+                'install',
                 `Vale sync failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
             );
         files.deleteTree(VALE_PACKAGES_PATH);

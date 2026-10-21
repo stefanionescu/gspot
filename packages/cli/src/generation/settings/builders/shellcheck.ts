@@ -1,4 +1,4 @@
-import { listIgnoredRules } from '#cli/settings/scope-view.ts';
+import { listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 
 import {
@@ -18,7 +18,7 @@ export function buildShellcheckFile(planned: PlannedToolFile): string {
 
     const isAll = level === 'all';
     const enable = [...SHELLCHECK_CHECKS, ...(isAll ? SHELLCHECK_ALL_LEVEL_ON : [])];
-    const disable = listIgnoredRules(planned.selection, 'bash/shellcheck');
+    const disable = listIgnoredRules(planned.scope, 'bash/shellcheck');
     return [
         ...SHELLCHECK_OPTIONS.map(([key, value]) => `${key}=${value}`),
         `enable=${enable.join(',')}`,

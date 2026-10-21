@@ -1,7 +1,7 @@
 import { parseAllDocuments } from 'yaml';
+import { getPosition } from '#cli/system/text.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { computePosition } from '#cli/system/text.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { listCodeFences } from '#cli/parsers/markdown.ts';
@@ -31,7 +31,7 @@ function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxEr
     const error = errors[0];
     if (error === undefined) return undefined;
     const message = printParseErrorCode(error.error).replaceAll(CAMEL_CASE_BOUNDARY, '$<first> $<next>').toLowerCase();
-    return { line: computePosition(body, error.offset).line, message: `JSON syntax error: ${message}.` };
+    return { line: getPosition(body, error.offset).line, message: `JSON syntax error: ${message}.` };
 }
 
 function findTomlSyntaxError(body: string): FenceSyntaxError | undefined {
@@ -47,7 +47,7 @@ function findTomlSyntaxError(body: string): FenceSyntaxError | undefined {
 function findYamlSyntaxError(body: string): FenceSyntaxError | undefined {
     const error = parseAllDocuments(body).flatMap((document) => document.errors)[0];
     if (error === undefined) return undefined;
-    return { line: computePosition(body, error.pos[0]).line, message: error.message.split('\n', 1).join('') };
+    return { line: getPosition(body, error.pos[0]).line, message: error.message.split('\n', 1).join('') };
 }
 
 async function findTreeSyntaxError(

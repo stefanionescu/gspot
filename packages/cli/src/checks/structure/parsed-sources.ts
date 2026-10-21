@@ -36,13 +36,13 @@ function captureSource(source: ParsedSource): void {
  */
 async function readParsedSources(
     session: Pick<Session, 'root' | 'reads' | 'resources'>,
-    planned: Pick<PlannedCheck, 'files' | 'selection'>,
+    planned: Pick<PlannedCheck, 'files' | 'scope'>,
 ): Promise<ParsedSource[]> {
     const sources: ParsedSource[] = [];
     try {
         for (const file of planned.files.filter((entry) => entry.kind === 'source')) {
             const language = detectLanguage(file);
-            if (language === undefined || !planned.selection.view.configurations.includes(language)) continue;
+            if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
             const tree = await parseSource(language, readCachedText(session.reads, file.path), session);
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
             sources.push(source);
@@ -71,9 +71,9 @@ export const PARSED_SOURCES = {
         reads,
         resources,
         files,
-        selection,
-    }: Pick<Session, 'root' | 'reads' | 'resources'> & Pick<PlannedCheck, 'files' | 'selection'>): Promise<
+        scope,
+    }: Pick<Session, 'root' | 'reads' | 'resources'> & Pick<PlannedCheck, 'files' | 'scope'>): Promise<
         ParsedSource[]
-    > => readParsedSources({ root, reads, resources }, { files, selection }),
+    > => readParsedSources({ root, reads, resources }, { files, scope }),
     dispose: releaseParsedSources,
 };

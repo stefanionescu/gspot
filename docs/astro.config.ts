@@ -21,7 +21,7 @@ import {
     APPLE_TOUCH_ICON,
     SOCIAL_IMAGE_ALT,
     SOCIAL_IMAGE_SIZE,
-    FIRST_PAINT_TARGET,
+    FIRST_PAINT_ELEMENT,
 } from './src/config/site.ts';
 
 export default defineConfig({
@@ -100,7 +100,7 @@ export default defineConfig({
                 { tag: 'meta', attrs: { property: 'og:image:alt', content: SOCIAL_IMAGE_ALT } },
                 { tag: 'link', attrs: { rel: 'apple-touch-icon', href: APPLE_TOUCH_ICON } },
                 // Wait for the browser to parse the article before painting a new page.
-                { tag: 'link', attrs: { rel: 'expect', href: FIRST_PAINT_TARGET, blocking: 'render' } },
+                { tag: 'link', attrs: { rel: 'expect', href: FIRST_PAINT_ELEMENT, blocking: 'render' } },
             ],
             components: {
                 Header: './src/components/starlight/Header.astro',

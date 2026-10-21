@@ -236,11 +236,11 @@ export function readExistingTools(
  * Check whether generated field edits cover an existing tool settings section.
  *
  * @param toolFile the existing file or section.
- * @param managedKeys the generated field edits.
+ * @param fileEdits the generated field edits.
  * @returns whether an edit covers that file and key.
  */
-export function isEditedInPlace(toolFile: ReplacedFile, managedKeys: ManagedKeys[]): boolean {
-    return managedKeys.some(
+export function isEditedInPlace(toolFile: ReplacedFile, fileEdits: ManagedKeys[]): boolean {
+    return fileEdits.some(
         (output) => output.path === toolFile.path && output.keys.some((field) => field.key[0] === toolFile.key),
     );
 }

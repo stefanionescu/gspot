@@ -3,9 +3,9 @@ import { join, posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/docker.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseNginxDirectives } from '#cli/parsers/nginx.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
@@ -48,7 +48,7 @@ function listIncludedFiles(planned: PlannedCheck, text: string, base: string): P
         if (name !== 'include' || value === undefined || value.includes(NGINX_VARIABLE_MARK)) continue;
         const target = posix.resolve(NGINX_FOLDER, value);
         const isIncluded = picomatch(posix.normalize(posix.join(base, posix.relative(NGINX_FOLDER, target))));
-        for (const file of planned.files.filter((candidate) => isIncluded(candidate.path)))
+        for (const file of planned.files.filter((entry) => isIncluded(entry.path)))
             included.push({ path: file.path, target: posix.resolve(NGINX_FOLDER, posix.relative(base, file.path)) });
     }
     return included;
@@ -173,7 +173,7 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
  * @returns one finding for each file nginx refuses.
  */
 export async function checkNginxSyntax(session: Session, planned: PlannedCheck): Promise<BuiltInCheckResult> {
-    const image = getTable(planned.selection.view, 'tools.nginx')['image'];
+    const image = getTable(planned.scope.settings, 'tools.nginx')['image'];
     const paths = listSourcePaths(planned.files, [NGINX_CONF]);
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = createTemporaryFolder();

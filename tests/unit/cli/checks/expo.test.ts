@@ -62,7 +62,7 @@ test.each([...DOCTOR_RESULTS])('Expo Doctor runs once in each app folder: $name'
                 line: 1,
                 rule: 'failed-check',
                 help: 'Follow the advice Expo Doctor prints, then run `npx expo install --check`.',
-                message: message,
+                message,
                 fixable: false,
             })),
         );

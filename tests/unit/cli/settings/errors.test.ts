@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { symlink } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { parseSettings } from '#cli/settings/read.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { FIRST_READ } from '#cli/config/generation/rules.ts';
 import { buildSandboxSettings, validateSettingsText, buildRootScopeSettings } from '#tests/setup/settings.ts';
 
@@ -69,8 +69,11 @@ test('a record without a reason is refused at its reason field', () => {
 
 test.each(['', 'because', 'Codex'])('a word with the reason %s is refused', (reason) => {
     expect(() =>
-        parseSettings(`configurations = ["prose"]\nallowed_words = { Codex = ${JSON.stringify(reason)} }\n`, undefined),
-    ).toThrow('allowed_words.Codex needs a reason');
+        parseSettings(
+            `configurations = ["prose"]\n[spelling]\nallowed_words = { Codex = ${JSON.stringify(reason)} }\n`,
+            undefined,
+        ),
+    ).toThrow('spelling.allowed_words.Codex needs a reason');
 });
 
 test.each([...KEY_PATH_CASES])(

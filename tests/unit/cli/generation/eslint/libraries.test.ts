@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { I18N_SOURCE } from '#tests/data/generation/eslint/framework.ts';
-import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
 import { ZUSTAND_FILES, RESTRICTION_TABLES } from '#tests/data/generation/eslint/configurations.ts';
 
 describe('drizzle', () => {
@@ -22,14 +22,14 @@ describe('drizzle', () => {
 
         const eslint = await createEslint(sandbox.path);
         const rules = ['drizzle/enforce-delete-with-where', 'drizzle/enforce-update-with-where'];
-        expect(await collectLintFindings(eslint, sandbox.path, ['source.js', 'app/source.js'], rules)).toStrictEqual([
+        expect(await listLintFindings(eslint, sandbox.path, ['source.js', 'app/source.js'], rules)).toStrictEqual([
             { file: 'app/source.js', rule: 'drizzle/enforce-update-with-where', line: 1 },
             { file: 'source.js', rule: 'drizzle/enforce-delete-with-where', line: 1 },
         ]);
         await createFileTree(sandbox.path, {
             'app/source.js': 'connection.update(table).set({ value: 1 }).where(condition);\n',
         });
-        expect(await collectLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
+        expect(await listLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
     });
 });
 describe('translations', () => {
@@ -48,7 +48,7 @@ describe('translations', () => {
         const eslint = await createEslint(sandbox.path);
         for (const file of [...tested, ...ordinary, 'sibling/source.jsx']) {
             expect(
-                await collectLintFindings(eslint, sandbox.path, [file], ['i18next/no-literal-string']),
+                await listLintFindings(eslint, sandbox.path, [file], ['i18next/no-literal-string']),
                 file,
             ).toStrictEqual(
                 level === 'all' && ordinary.has(file) ? [{ file, rule: 'i18next/no-literal-string', line: 1 }] : [],
@@ -70,7 +70,7 @@ describe('zustand', () => {
 
             const eslint = await createEslint(sandbox.path);
             const files = ['src/widget.js', 'src/store.js'];
-            expect(await collectLintFindings(eslint, sandbox.path, files, ['no-restricted-imports'])).toStrictEqual([
+            expect(await listLintFindings(eslint, sandbox.path, files, ['no-restricted-imports'])).toStrictEqual([
                 { file: 'src/store.js', rule: 'no-restricted-imports', line: 2 },
                 { file: 'src/widget.js', rule: 'no-restricted-imports', line: 1 },
                 { file: 'src/widget.js', rule: 'no-restricted-imports', line: 2 },

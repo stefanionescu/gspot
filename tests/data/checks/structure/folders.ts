@@ -69,7 +69,7 @@ export const FILE_FOLDER_CLASH_CASES = [
         },
         expected: {
             file: 'jobs/turn.sh',
-            rule: 'stem-collision',
+            rule: 'file-folder-clash',
             line: 1,
         },
     },

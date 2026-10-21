@@ -128,14 +128,14 @@ export const VERBOSITY_FILES = {
         tables: stringify({
             command_check: [
                 {
-                    name: 'example/findings',
+                    id: 'example/findings',
                     command: [process.execPath, 'findings.ts'],
                     output: { format: 'lines' },
                     paths: ['source.txt'],
                     stage: 'commit',
                 },
                 {
-                    name: 'example/passing',
+                    id: 'example/passing',
                     command: [process.execPath, '-e', 'process.exitCode=0;'],
                     paths: ['source.txt'],
                     stage: 'commit',

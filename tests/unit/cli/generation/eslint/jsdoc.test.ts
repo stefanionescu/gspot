@@ -6,7 +6,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { createEslint, compareFindings, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, compareFindings, listLintFindings } from '#tests/setup/tool-files.ts';
 
 import {
     FIXED_JSDOC,
@@ -25,15 +25,15 @@ test.each([...LEVELS])(
             '/**\n * Measure the input.\n * @param {string} value The input text.\n * @returns {number} The input length.\n */\n';
         const typescript = 'export function measure(value: string): number { return value.length; }\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings(['typescript'], { level: level }),
+            'gspot.toml': buildSandboxSettings(['typescript'], { level }),
             'package.json': '{"private":true,"type":"module"}\n',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
             'client.ts': description + typescript,
             'client.js': description + 'export function measure(value) { return value.length; }\n',
         });
         const eslint = await createEslint(sandbox.path);
-        expect(await collectLintFindings(eslint, sandbox.path, ['client.js'], ['jsdoc/no-types'])).toStrictEqual([]);
-        expect(await collectLintFindings(eslint, sandbox.path, ['client.ts'], ['jsdoc/no-types'])).toStrictEqual(
+        expect(await listLintFindings(eslint, sandbox.path, ['client.js'], ['jsdoc/no-types'])).toStrictEqual([]);
+        expect(await listLintFindings(eslint, sandbox.path, ['client.ts'], ['jsdoc/no-types'])).toStrictEqual(
             level === 'all'
                 ? [
                       { file: 'client.ts', rule: 'jsdoc/no-types', line: 3 },
@@ -61,7 +61,7 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
         }
         return {
             configurations,
-            files: await collectLintFindings(
+            files: await listLintFindings(
                 eslint,
                 sandbox.path,
                 ['missing.js', 'malformed.js', 'capitalized.js', 'undefined.js', 'typed.ts'],
@@ -105,7 +105,7 @@ test('jsdoc/match-name reports the root0 placeholder and keeps a parameter named
     });
 
     const eslint = await createEslint(sandbox.path);
-    expect(await collectLintFindings(eslint, sandbox.path, ['source.js'], ['jsdoc/match-name'])).toStrictEqual([
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['jsdoc/match-name'])).toStrictEqual([
         { file: 'source.js', rule: 'jsdoc/match-name', line: 11 },
     ]);
 });

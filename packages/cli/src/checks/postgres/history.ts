@@ -1,8 +1,8 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/postgres.ts';
@@ -104,7 +104,7 @@ export async function checkPostgresMigrationOrder(session: Session, planned: Pla
  * @returns the findings.
  */
 export async function checkPostgresEditedMigrations(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const through = getTable(planned.selection.view, 'postgres')['frozen_through'];
+    const through = getTable(planned.scope.settings, 'postgres')['frozen_through'];
     if (through === FROZEN_NONE) return [];
     const migrations = await readParsedMigrations(session, planned);
     const texts = await readCommittedMigrations(

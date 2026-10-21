@@ -8,7 +8,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildFilePatterns } from '#cli/generation/eslint/files.ts';
 import { SELECTOR_FILES } from '#tests/data/generation/eslint/framework.ts';
-import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
 
 import {
     SCOPE_IMPORT_FILES,
@@ -35,7 +35,7 @@ test.each([false, true])(
         });
 
         const eslint = await createEslint(folder.path);
-        expect(await collectLintFindings(eslint, folder.path, ['source.js'], ['no-console'])).toStrictEqual(
+        expect(await listLintFindings(eslint, folder.path, ['source.js'], ['no-console'])).toStrictEqual(
             ignored ? [] : [{ file: 'source.js', rule: 'no-console', line: 1 }],
         );
     },
@@ -64,7 +64,7 @@ test.each([false, true])(
         const eslint = await createEslint(folder.path);
         await writeFile(join(folder.path, 'tests/future.js'), source);
         const files = ['source.js', 'tests', 'apps'];
-        const output = await collectLintFindings(eslint, folder.path, files, ['eqeqeq']);
+        const output = await listLintFindings(eslint, folder.path, files, ['eqeqeq']);
         const results = await eslint.lintFiles(files);
         await unlink(join(folder.path, 'tests/future.js'));
         const expected = [
@@ -92,7 +92,7 @@ test.each([...LEVELS])(
         await using sandbox = await testdir({
             ...SELECTOR_FILES,
             'gspot.toml': buildSandboxSettings(['javascript'], {
-                level: level,
+                level,
                 rules: true,
                 scopes: [
                     { path: 'native', configurations: ['react-native'] },
@@ -103,7 +103,7 @@ test.each([...LEVELS])(
 
         const eslint = await createEslint(sandbox.path);
         expect(
-            await collectLintFindings(
+            await listLintFindings(
                 eslint,
                 sandbox.path,
                 ['native/App.jsx', 'forms/Fields.jsx'],
@@ -163,7 +163,7 @@ test.each([...LEVELS])(
         });
         const eslint = await createEslint(folder.path);
         expect(
-            await collectLintFindings(
+            await listLintFindings(
                 eslint,
                 folder.path,
                 ['source.js', 'sibling', 'app', 'state'],
@@ -190,7 +190,7 @@ test('a JavaScript child applies its import restrictions under a Python root', a
         }),
     });
     const eslint = await createEslint(folder.path);
-    expect(await collectLintFindings(eslint, folder.path, ['app/source.js'], ['no-restricted-imports'])).toStrictEqual([
+    expect(await listLintFindings(eslint, folder.path, ['app/source.js'], ['no-restricted-imports'])).toStrictEqual([
         { file: 'app/source.js', rule: 'no-restricted-imports', line: 1 },
     ]);
 });

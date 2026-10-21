@@ -75,7 +75,6 @@ export type Settings = Omit<
     import_rule: ImportRule[];
     structure: StructureSettings;
     format: WrittenFormat;
-    allowed_words: NonNullable<ParsedSettings['allowed_words']>;
     tools: Record<string, TomlTable>;
     test_files: string[];
     ignore: IgnoreRecord[];
@@ -95,7 +94,7 @@ export type CommandCheck = Check & {
 export type SettingsTable = Settings | Settings['scopes'][string];
 
 type CommandCheckFields = {
-    name: string;
+    id: string;
     command: string[];
     paths: string[];
     outputs?: string[] | undefined;
@@ -160,7 +159,6 @@ type WrittenConfigurationTables = {
 type RootOnlyFields =
     | 'scope'
     | 'level'
-    | 'allowed_words'
     | 'tool_timeout_seconds'
     | 'ignore'
     | 'command_check'
@@ -211,7 +209,6 @@ export type WrittenSettings = Optional<
     Omit<
         ParsedSettings,
         | keyof ConfigurationTables
-        | 'allowed_words'
         | 'removed_configurations'
         | 'scope'
         | 'limits'
@@ -228,7 +225,6 @@ export type WrittenSettings = Optional<
 > &
     WrittenConfigurationTables & {
         removed_configurations?: SettingValue<string[]> | undefined;
-        allowed_words?: Record<string, string> | undefined;
         scope?: WrittenScope[] | undefined;
         limits?: WrittenLimits | undefined;
         naming?: WrittenNaming | undefined;

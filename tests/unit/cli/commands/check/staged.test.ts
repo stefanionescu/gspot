@@ -29,7 +29,7 @@ async function createCaseClashingSandbox(): Promise<TestdirResult> {
         };
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([], {
-                tables: stringify({ rules: { enabled: false }, command_check: [{ name: 'sandbox/report', ...check }] }),
+                tables: stringify({ rules: { enabled: false }, command_check: [{ id: 'sandbox/report', ...check }] }),
             }),
             'docs/guide.md': '# Guide\n',
         });
@@ -72,7 +72,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: `[[command_check]]
-name = "project/index-bytes"
+id = "project/index-bytes"
 command = ${JSON.stringify(command)}
 paths = ["payload.dat", "task.sh"]
 stage = "commit"
@@ -129,7 +129,7 @@ test('a staged check copies the locked dependencies and leaves the working tree 
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: `[[command_check]]
-name = "project/dependencies"
+id = "project/dependencies"
 command = ${JSON.stringify(command)}
 paths = ["source.txt"]
 stage = "commit"
@@ -150,7 +150,7 @@ stage = "commit"
 test('a staged check keeps the matching Python tool environments and refuses unstaged project changes', async () => {
     await using sandbox = await testdir();
     const project = `[project]
-name = "example"
+id = "example"
 version = "0.0.0"
 `;
     await createFileTree(sandbox.path, {
@@ -217,7 +217,7 @@ test.skipIf(!isCaseFolding())(
         );
         expect(result.code, result.stdout + result.stderr).toBe(2);
         const failure = JSON.parse(result.stdout) as CommandFailureJson;
-        expect(failure).toStrictEqual({ error: 'files', message: expect.stringContaining('docs/NOTES.md') as string });
+        expect(failure).toStrictEqual({ error: 'copy', message: expect.stringContaining('docs/NOTES.md') as string });
     },
 );
 

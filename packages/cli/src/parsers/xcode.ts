@@ -33,39 +33,39 @@ function parseProjectString(token: string | undefined): string {
     });
 }
 
-function expectProjectToken(state: ProjectTokens, expected: string): void {
-    if (state.tokens[state.index] !== expected) throw new Error(`The Xcode project requires ${expected}.`);
-    state.index += 1;
+function expectProjectToken(tokens: ProjectTokens, expected: string): void {
+    if (tokens.tokens[tokens.index] !== expected) throw new Error(`The Xcode project requires ${expected}.`);
+    tokens.index += 1;
 }
 
-function parseProjectArray(state: ProjectTokens): unknown[] {
+function parseProjectArray(tokens: ProjectTokens): unknown[] {
     const values: unknown[] = [];
-    while (state.tokens[state.index] !== ')') {
-        values.push(parseProjectValue(state));
-        if (state.tokens[state.index] !== ',') break;
-        state.index += 1;
+    while (tokens.tokens[tokens.index] !== ')') {
+        values.push(parseProjectValue(tokens));
+        if (tokens.tokens[tokens.index] !== ',') break;
+        tokens.index += 1;
     }
-    expectProjectToken(state, ')');
+    expectProjectToken(tokens, ')');
     return values;
 }
 
-function parseProjectDictionary(state: ProjectTokens): Record<string, unknown> {
+function parseProjectDictionary(tokens: ProjectTokens): Record<string, unknown> {
     const entries: [string, unknown][] = [];
-    while (state.tokens[state.index] !== '}') {
-        const key = parseProjectString(state.tokens[state.index++]);
-        expectProjectToken(state, '=');
-        entries.push([key, parseProjectValue(state)]);
-        expectProjectToken(state, ';');
+    while (tokens.tokens[tokens.index] !== '}') {
+        const key = parseProjectString(tokens.tokens[tokens.index++]);
+        expectProjectToken(tokens, '=');
+        entries.push([key, parseProjectValue(tokens)]);
+        expectProjectToken(tokens, ';');
     }
-    expectProjectToken(state, '}');
+    expectProjectToken(tokens, '}');
     return Object.fromEntries(entries);
 }
 
-function parseProjectValue(state: ProjectTokens): unknown {
-    const lexeme = state.tokens[state.index++];
-    if (lexeme === '{') return parseProjectDictionary(state);
-    if (lexeme === '(') return parseProjectArray(state);
-    return parseProjectString(lexeme);
+function parseProjectValue(tokens: ProjectTokens): unknown {
+    const text = tokens.tokens[tokens.index++];
+    if (text === '{') return parseProjectDictionary(tokens);
+    if (text === '(') return parseProjectArray(tokens);
+    return parseProjectString(text);
 }
 
 function parseProjectDocument(text: string): unknown {

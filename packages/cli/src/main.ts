@@ -79,7 +79,7 @@ export function printFailure(error: unknown, programHelp: string): number {
         .trim()
         .replace(/\.$/u, '');
     const message = `gspot stopped because of an internal error: ${detail}. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.`;
-    printError({ error: 'failure', message });
+    printError({ error: 'unexpected', message });
     return EXIT_ERROR;
 }
 

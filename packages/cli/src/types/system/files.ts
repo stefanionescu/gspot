@@ -3,7 +3,7 @@ import type { Stats } from 'node:fs';
 /** File bytes and mode, or the target bytes and mode of a symbolic link. */
 export type FileContents = { bytes: Buffer; mode: number; isLink?: true };
 
-export type FilesState = {
+export type FileBounds = {
     root: string;
     locks: Map<string, string>;
 };

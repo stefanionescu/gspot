@@ -1,5 +1,5 @@
 import { stringify as stringifyYaml } from 'yaml';
-import { getTable } from '#cli/settings/scope-view.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 import { PERIPHERY_RETAIN } from '#cli/config/generation/settings/builders/periphery.ts';
 
@@ -10,8 +10,8 @@ import { PERIPHERY_RETAIN } from '#cli/config/generation/settings/builders/perip
  * @returns the Xcode project, schemes, and retained Periphery declarations as YAML.
  */
 export function buildPeripheryFile(planned: PlannedToolFile): string {
-    const project = getTable(planned.selection.view, 'swift').xcode_project;
-    const scheme = getTable(planned.selection.view, 'swift').xcode_scheme;
+    const project = getTable(planned.scope.settings, 'swift').xcode_project;
+    const scheme = getTable(planned.scope.settings, 'swift').xcode_scheme;
     return stringifyYaml({
         ...(project === undefined ? {} : { project }),
         ...(scheme === undefined ? {} : { schemes: [scheme] }),

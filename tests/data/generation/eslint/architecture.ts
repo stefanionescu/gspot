@@ -86,7 +86,7 @@ configurations = ["typescript"]
 export const ROLE_TSCONFIG =
     '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","baseUrl":".","paths":{"@/*":["./*"]},"types":[]},"include":["**/*.ts"]}';
 
-export const ROLE_TARGETS = {
+export const TEST_IMPORT_PATHS = {
     'src/value.ts': 'export const value = 1;\nexport type Value = number;\n',
     'tests/value.ts': 'export const value = 1;\nexport type Value = number;\n',
     'other/value.test.ts': 'export const value = 1;\n',
@@ -122,7 +122,7 @@ export const ENVIRONMENT_CASES = [
 export const ENVIRONMENT_COMPOSED = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";
 
 // Authored test globs add to the defaults and scope exclusions; production imports stay checked.
-export const QA_MODULE_TABLES = `test_files = ["app/qa/**"]
+export const TEST_IMPORT_RULE_TABLES = `test_files = ["app/qa/**"]
 
 [[import_rule]]
 name = "app"
@@ -146,7 +146,7 @@ configurations = ["javascript"]
 test_files = ["apps/api/app/verification/**", "apps/api/app/qa/**"]
 `;
 
-export const QA_IMPORT_CASES = [
+export const TEST_IMPORT_RULE_CASES = [
     { path: 'app/source.js', importPath: '../storage/value.js', count: 1 },
     { path: 'app/qa/check.js', importPath: '../../storage/value.js', count: 0 },
     { path: 'app/verification/check.js', importPath: '../../storage/value.js', count: 1 },

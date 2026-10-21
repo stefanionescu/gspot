@@ -10,18 +10,16 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { parseToolPackageJson } from '#cli/install/npm/tool-project.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
+import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
 import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
-import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 
 import {
     FIXED_SOURCE,
     MODULE_CASES,
     MODULE_FILES,
-    ROLE_TARGETS,
     MODULE_TABLES,
     ROLE_TSCONFIG,
-    QA_IMPORT_CASES,
-    QA_MODULE_TABLES,
+    TEST_IMPORT_PATHS,
     ENVIRONMENT_CASES,
     ROLE_IMPORT_CASES,
     CAN_IMPORT_TABLES,
@@ -29,6 +27,8 @@ import {
     TEST_IMPORT_TABLES,
     PACKAGE_IMPORT_FILES,
     ENVIRONMENT_COMPOSED,
+    TEST_IMPORT_RULE_CASES,
+    TEST_IMPORT_RULE_TABLES,
 } from '#tests/data/generation/eslint/architecture.ts';
 
 test.each([...MODULE_CASES])(
@@ -60,7 +60,7 @@ test.each([...MODULE_CASES])(
             }
             return {
                 configured,
-                findings: await collectLintFindings(eslint, sandbox.path, files, ['boundaries/dependencies']),
+                findings: await listLintFindings(eslint, sandbox.path, files, ['boundaries/dependencies']),
             };
         }
         const configured = [
@@ -91,12 +91,12 @@ test.each([...MODULE_CASES])(
 
 test('modules > module boundaries skip your test files in each scope and check other files', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: QA_MODULE_TABLES }),
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: TEST_IMPORT_RULE_TABLES }),
         'package.json': '{"name":"boundaries","private":true,"type":"module"}',
         'storage/value.js': 'export const value = 1;\n',
         'apps/api/storage/value.js': 'export const value = 1;\n',
         ...Object.fromEntries(
-            QA_IMPORT_CASES.map(({ path, importPath }) => [
+            TEST_IMPORT_RULE_CASES.map(({ path, importPath }) => [
                 path,
                 `import { value } from '${importPath}';\nconsole.log(value);\n`,
             ]),
@@ -105,14 +105,14 @@ test('modules > module boundaries skip your test files in each scope and check o
 
     const eslint = await createEslint(sandbox.path);
     expect(
-        await collectLintFindings(
+        await listLintFindings(
             eslint,
             sandbox.path,
-            QA_IMPORT_CASES.map(({ path }) => path),
+            TEST_IMPORT_RULE_CASES.map(({ path }) => path),
             ['boundaries/dependencies'],
         ),
     ).toStrictEqual(
-        QA_IMPORT_CASES.flatMap(({ path, count }) =>
+        TEST_IMPORT_RULE_CASES.flatMap(({ path, count }) =>
             Array.from({ length: count }, () => ({ file: path, rule: 'boundaries/dependencies', line: 1 })),
         ).toSorted((left, right) => left.file.localeCompare(right.file)),
     );
@@ -130,7 +130,7 @@ test.each([...LEVELS])(
             'app/tsconfig.json': ROLE_TSCONFIG,
             ...Object.fromEntries(
                 ['', 'app/'].flatMap((prefix) =>
-                    Object.entries(ROLE_TARGETS).map(([path, source]) => [prefix + path, source]),
+                    Object.entries(TEST_IMPORT_PATHS).map(([path, source]) => [prefix + path, source]),
                 ),
             ),
         });
@@ -143,9 +143,7 @@ test.each([...LEVELS])(
         for (const row of files) await writeFile(join(sandbox.path, row.path), row.source);
         const eslint = await createEslint(sandbox.path);
         for (const row of files) {
-            expect(
-                await collectLintFindings(eslint, sandbox.path, [row.path], ['boundaries/dependencies']),
-            ).toStrictEqual(
+            expect(await listLintFindings(eslint, sandbox.path, [row.path], ['boundaries/dependencies'])).toStrictEqual(
                 level === 'all' && row.rejected ? [{ file: row.path, rule: 'boundaries/dependencies', line: 1 }] : [],
             );
         }
@@ -184,13 +182,13 @@ test.each([...LEVELS])(
                 level === 'all' && !['config/env.js', 'app/src/env/source.js', 'literal/config/env.js'].includes(path);
             for (const { source, rule } of ENVIRONMENT_CASES) {
                 await createFileTree(sandbox.path, { [path]: source });
-                expect(await collectLintFindings(eslint, sandbox.path, [path], [rule])).toStrictEqual(
+                expect(await listLintFindings(eslint, sandbox.path, [path], [rule])).toStrictEqual(
                     rejected ? [{ file: path, rule, line: 1 }] : [],
                 );
             }
             await createFileTree(sandbox.path, { [path]: 'const port = "3000";\n' });
             expect(
-                await collectLintFindings(
+                await listLintFindings(
                     eslint,
                     sandbox.path,
                     [path],
@@ -200,7 +198,7 @@ test.each([...LEVELS])(
         }
         await createFileTree(sandbox.path, { 'app/src/source.js': ENVIRONMENT_COMPOSED });
         expect(
-            await collectLintFindings(eslint, sandbox.path, ['app/src/source.js'], ['no-restricted-syntax']),
+            await listLintFindings(eslint, sandbox.path, ['app/src/source.js'], ['no-restricted-syntax']),
         ).toStrictEqual(
             level === 'all'
                 ? [
@@ -223,7 +221,7 @@ test('roles > environment rules stay off when no env role is set, at all', async
     const eslint = await createEslint(sandbox.path);
     for (const { source, rule } of ENVIRONMENT_CASES) {
         await createFileTree(sandbox.path, { 'src/source.js': source });
-        expect(await collectLintFindings(eslint, sandbox.path, ['src/source.js'], [rule])).toStrictEqual([]);
+        expect(await listLintFindings(eslint, sandbox.path, ['src/source.js'], [rule])).toStrictEqual([]);
     }
 });
 
@@ -262,7 +260,7 @@ test('repository import rules refuse imports between CLI and plugin source packa
     });
     const eslint = await createEslint(sandbox.path);
     expect(
-        await collectLintFindings(
+        await listLintFindings(
             eslint,
             sandbox.path,
             ['packages/cli/src/system/paths.ts', 'packages/eslint-plugin/src/rules/imports.ts'],

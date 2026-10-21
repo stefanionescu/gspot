@@ -36,7 +36,7 @@ export async function installTools(
         writer,
         generated,
         tools,
-        misePath: misePath,
+        misePath,
         steps,
     };
     try {
@@ -50,8 +50,8 @@ export async function installTools(
         return { note: notes.filter(Boolean).join('\n'), steps };
     } catch (error) {
         session.cancelSignal?.throwIfAborted();
-        if (!(error instanceof GspotError) || !['tool', 'installation'].includes(error.code)) throw error;
-        throw new GspotError('installation', `${error.message}\nTool installation is incomplete. Run: gspot install`, {
+        if (!(error instanceof GspotError) || !['tool', 'install'].includes(error.code)) throw error;
+        throw new GspotError('install', `${error.message}\nTool installation is incomplete. Run: gspot install`, {
             cause: error,
         });
     }

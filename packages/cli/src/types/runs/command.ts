@@ -51,7 +51,7 @@ export type PreparedCommand = {
     env: Record<string, string>;
 };
 
-export type CommandRun = {
+export type CopyRun = {
     session: Session;
     planned: PlannedCheck;
     tool: Tool;
@@ -63,7 +63,7 @@ export type CommandRun = {
 };
 
 /** The findings and process status across the commands of one check. */
-export type CommandRunState = { root: string; cwd: string; findings: Finding[]; failed: boolean };
+export type CommandRun = { root: string; cwd: string; findings: Finding[]; failed: boolean };
 
 /** Captured output before file and scope attribution. */
 export type CommandLineOutput = { commandLine: CommandLine; result: SpawnResult; findings: Finding[] };

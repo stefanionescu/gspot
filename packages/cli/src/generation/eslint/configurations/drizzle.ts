@@ -7,10 +7,10 @@ import { DRIZZLE_RULES, CONFIGURATION_PLUGINS } from '#cli/config/generation/esl
  * @param scope the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'view'>): ConfigurationBlocks {
-    const { eslintFiles, view } = scope;
+export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
+    const { eslintFiles, settings } = scope;
     const blocks: ConfigurationBlocks['blocks'] = [];
-    const rule = ['error', { drizzleObjectName: view.settings['drizzle.client_names'] }];
+    const rule = ['error', { drizzleObjectName: settings.settings['drizzle.client_names'] }];
     blocks.push({
         data: {
             files: eslintFiles.code,

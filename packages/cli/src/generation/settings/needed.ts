@@ -12,7 +12,7 @@ import type { UsedNames, OwnedToolFile, ToolFileGeneration } from '#cli/types/ge
  * @param targets the generated paths by scope and file stem.
  * @returns the file of the scope, or the root file as a fallback.
  */
-export function buildScopeTarget(scope: string, toolFile: ToolFile, targets: ToolFileGeneration['targets']): string {
+export function getToolFileTarget(scope: string, toolFile: ToolFile, targets: ToolFileGeneration['targets']): string {
     return toolFile.per_scope ? (targets.get(scope)?.get(toolFile.target) ?? toolFile.target) : toolFile.target;
 }
 
@@ -29,22 +29,18 @@ function isToolFileNeeded(session: Session, file: ToolFile, used: UsedNames): bo
 }
 
 // Each scope uses its own checks for scoped declarations and the repository programs for shared declarations.
-function listScopeToolFiles(session: Session, selection: Scope, repositoryNames: UsedNames): OwnedToolFile[] {
-    const checks = listScopeChecks(session, selection);
+function listScopeToolFiles(session: Session, scope: Scope, repositoryNames: UsedNames): OwnedToolFile[] {
+    const checks = listScopeChecks(session, scope);
     const used = {
         tools: new Set(checks.flatMap((planned) => listNeededTools(planned))),
-        checks: new Set(checks.map((planned) => planned.check.name)),
+        checks: new Set(checks.map((planned) => planned.check.id)),
     };
-    return selection.selected.flatMap((configuration) =>
+    return scope.configurations.flatMap((configuration) =>
         configuration.toolFiles
             .filter((file) => isToolFileNeeded(session, file, file.per_scope ? used : repositoryNames))
             .map((toolFile) => ({
                 toolFile,
-                owner: {
-                    session,
-                    selection,
-                    configuration,
-                },
+                owner: { session, scope, configuration },
             })),
     );
 }
@@ -60,7 +56,7 @@ export function listOwnedToolFiles(session: Session): OwnedToolFile[] {
         tools: new Set(
             session.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
         ),
-        checks: new Set(session.configuredChecks.map((planned) => planned.check.name)),
+        checks: new Set(session.configuredChecks.map((planned) => planned.check.id)),
     };
-    return session.scopes.flatMap((selection) => listScopeToolFiles(session, selection, repositoryNames));
+    return session.scopes.flatMap((scope) => listScopeToolFiles(session, scope, repositoryNames));
 }

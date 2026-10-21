@@ -1,7 +1,7 @@
 // Bun installs the pinned linter packages in a disposable folder and rewrites their shipped data copies.
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnProcess } from '#cli/system/processes.ts';
@@ -241,7 +241,7 @@ async function writePackageCopies(): Promise<void> {
         .filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`))
         .map((path) => {
             const document: unknown = JSON.parse(readFileSync(buildAssetPath(path), 'utf8'));
-            if (!isRecord(document)) throw new Error(`${path} must contain a record of preset exports.`);
+            if (!isTable(document)) throw new Error(`${path} must contain a record of preset exports.`);
             const presets: EslintPresets = Object.fromEntries(
                 Object.entries(document).map(([name, value]) => [name, eslintPresetSchema.parse(value)]),
             );

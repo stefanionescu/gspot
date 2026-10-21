@@ -62,7 +62,7 @@ test('located output rejects false paths and empty failures while keeping mixed 
     // Any manifest turns on the real-file check.
     const planned = {
         check: LOCATED_CHECK,
-        configuration: readConfigurations().get('files')!,
+        configuration: readConfigurations().get('data-files')!,
         tool: { name: 'tool', installers: {}, kind: 'program' as const },
     };
     const paths = { cwd: sandbox.path, root: sandbox.path };
@@ -76,8 +76,8 @@ test('located output rejects false paths and empty failures while keeping mixed 
         parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: FALSE_PATH + REAL_PATH }), paths)
             .findings,
     ).toStrictEqual([
-        { check: LOCATED_CHECK.name, file: '2026-09-19T02', message: 'FATAL', help: '', fixable: false },
-        { check: LOCATED_CHECK.name, file: 'source.txt', message: 'located defect', help: '', fixable: false },
+        { check: LOCATED_CHECK.id, file: '2026-09-19T02', message: 'FATAL', help: '', fixable: false },
+        { check: LOCATED_CHECK.id, file: 'source.txt', message: 'located defect', help: '', fixable: false },
     ]);
     expect(parseCommandFindings(planned, buildProcessResult(), paths).findings).toStrictEqual([]);
 });
@@ -86,8 +86,8 @@ test.each([...FILELESS_CHECKS])('$name accepts a fileless result without classif
     await using sandbox = await testdir();
     // Any manifest turns on the real-file check.
     const planned = {
-        check: check,
-        configuration: readConfigurations().get('files')!,
+        check,
+        configuration: readConfigurations().get('data-files')!,
     };
     expect(
         parseCommandFindings(planned, buildProcessResult(FAILED_RUN), { cwd: sandbox.path, root: sandbox.path })
@@ -173,7 +173,7 @@ test.each(['{file}', '{files}'])(
                 tables: stringify({
                     command_check: [
                         {
-                            name: 'project/exit-contract',
+                            id: 'project/exit-contract',
                             command: [process.execPath, 'checker.cjs', placeholder],
                             paths: [source],
                             stage: 'commit',
@@ -210,7 +210,7 @@ test.each(['{file}', '{files}'])(
 test('per-file failures drop only the header lines the tool declares', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
-            tables: `[[command_check]]\nname = "project/native"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', HEADER_FAILURE, '{file}'])}\n`,
+            tables: `[[command_check]]\nid = "project/native"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', HEADER_FAILURE, '{file}'])}\n`,
         }),
         'source.txt': 'source\n',
     });
@@ -234,7 +234,7 @@ test('located output refuses a missing file and reports it once it exists', asyn
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             tables: String.raw`[[command_check]]
-name = "notes/regex"
+id = "notes/regex"
 command = ${JSON.stringify([process.execPath, '-e', ''])}
 paths = ["notes/**"]
 stage = "commit"
@@ -247,7 +247,7 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'all', only: ['notes/regex'] })[0]!;
-    const configured = { ...planned, configuration: readConfigurations().get('files')! };
+    const configured = { ...planned, configuration: readConfigurations().get('data-files')! };
     const result = buildProcessResult({
         code: 1,
         stdout: 'notes/reported.txt:1:A defect.',
@@ -280,7 +280,7 @@ test('a finding in a folder outside the scope keeps its repository path when the
     await using sandbox = await testdir(SCOPE_PATH_CHECK.files);
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] }).find(
-        (check) => check.selection.scope.path === 'app',
+        (check) => check.scope.folder.path === 'app',
     )!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
     planned.check.command = [process.execPath, '-e', SCOPE_PATH_CHECK.program];

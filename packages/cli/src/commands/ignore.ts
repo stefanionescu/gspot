@@ -17,7 +17,7 @@ import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
 
-function assertIgnoreTarget(options: IgnoreOptions, settings: Settings): void {
+function assertIgnoreOptions(options: IgnoreOptions, settings: Settings): void {
     if (options.check !== undefined) {
         assertKnownCheck(options.check, settings);
         return;
@@ -59,7 +59,7 @@ function escapeExistingPaths(root: string, paths: string[] | undefined): string[
  */
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const { root, input, settings } = prepareSettingsEdit(options.cwd);
-    assertIgnoreTarget(options, settings);
+    assertIgnoreOptions(options, settings);
     const paths = escapeExistingPaths(root, options.paths);
     const target = options.check ?? 'every check';
     const message = validateReason(`gspot ignore ${options.check ?? ''}`.trimEnd(), options.reason);

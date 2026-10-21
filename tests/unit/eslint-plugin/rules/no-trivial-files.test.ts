@@ -39,7 +39,7 @@ createRuleTester().run<
         'export class Settings { constructor(enabled: boolean) { this.enabled = enabled; } }',
         {
             code: 'export function schema(enabled) { if (enabled) return { enabled }; return owner; }',
-            options: [{ trivialStatements: 5 }],
+            options: [{ trivialFunctionStatements: 5 }],
         },
         'export function schema(properties) { return { type: "object", properties }; }',
         'export function schema(properties) { return configure({ type: "object", properties }); }',

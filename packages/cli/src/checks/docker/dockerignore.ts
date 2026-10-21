@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
@@ -30,11 +30,11 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Find
             );
         })
         .flatMap(({ path: dockerfile }): Finding[] => {
-            const scope = findScope(dockerfile, session.repository.scopeFolders);
-            const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as Scope;
+            const folder = findScopeFolder(dockerfile, session.repository.scopeFolders);
+            const scope = session.scopes.find((entry) => entry.folder.path === folder.path) as Scope;
             const required = [
                 ...DOCKERIGNORE_ENTRIES,
-                ...selection.selected.flatMap((configuration) => configuration.ignored_paths),
+                ...scope.configurations.flatMap((configuration) => configuration.ignored_paths),
             ];
             const paths = [
                 ...new Set([

@@ -1,11 +1,11 @@
 import ts from 'typescript';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Session } from '#cli/types/session.ts';
-import { findScope } from '#cli/repository/scopes.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { readTsconfigProject } from '#cli/parsers/tsconfig.ts';
-import { listIgnoredRules } from '#cli/settings/scope-view.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import { NESTJS_CONFIGURATION } from '#cli/config/configurations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { PlannedTsconfig } from '#cli/types/checks/typescript.ts';
@@ -36,7 +36,7 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
                 (file) =>
                     (file.tags.includes('typescript') ||
                         DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
-                    findScope(file.path, scopes).path === scope,
+                    findScopeFolder(file.path, scopes).path === scope,
             )
             .map((file) => file.path),
         reads,
@@ -63,11 +63,12 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
         (file) =>
             file.kind === 'source' &&
             (file.tags.includes('typescript') || DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
-            findScope(file.path, scopes).path === scope,
+            findScopeFolder(file.path, scopes).path === scope,
     );
     // Svelte reads these extra extensions through include; tsc ignores them as unsupported sources.
     const components = files.filter(
-        (file) => file.kind === 'source' && file.tags.includes('svelte') && findScope(file.path, scopes).path === scope,
+        (file) =>
+            file.kind === 'source' && file.tags.includes('svelte') && findScopeFolder(file.path, scopes).path === scope,
     );
     return {
         compilerOptions: {
@@ -86,12 +87,12 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
  * Selects the compiler flags that the level and configurations require.
  *
  * @param level recommended or all.
- * @param selected the scope manifests.
+ * @param configurations the scope manifests.
  * @returns the flags, by name.
  */
-export function selectRequiredTsconfigOptions(level: Level, selected: Configuration[]): Record<string, boolean> {
+export function selectRequiredTsconfigOptions(level: Level, configurations: Configuration[]): Record<string, boolean> {
     const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS) };
-    if (selected.some((configuration) => configuration.name === NESTJS_CONFIGURATION))
+    if (configurations.some((configuration) => configuration.name === NESTJS_CONFIGURATION))
         Object.assign(options, NESTJS_COMPILER_OPTIONS);
     return options;
 }
@@ -100,13 +101,13 @@ export function selectRequiredTsconfigOptions(level: Level, selected: Configurat
  * Drops the compiler flags that the scope turns off.
  *
  * @param level recommended or all.
- * @param selection the scope and its settings.
+ * @param scope the scope and its settings.
  * @returns the enabled compiler flags.
  */
-export function selectCheckedTsconfigOptions(level: Level, selection: Scope): Record<string, boolean> {
+export function selectCheckedTsconfigOptions(level: Level, scope: Scope): Record<string, boolean> {
     return Object.fromEntries(
-        Object.entries(selectRequiredTsconfigOptions(level, selection.selected)).filter(
-            ([name]) => !listIgnoredRules(selection, TYPESCRIPT_TSCONFIG_CHECK).includes(name),
+        Object.entries(selectRequiredTsconfigOptions(level, scope.configurations)).filter(
+            ([name]) => !listIgnoredRules(scope, TYPESCRIPT_TSCONFIG_CHECK).includes(name),
         ),
     );
 }
@@ -115,7 +116,7 @@ export function selectCheckedTsconfigOptions(level: Level, selection: Scope): Re
  * Writes the tsconfig for a scope, extending its authored tsconfig.
  *
  * @param session the repository and read cache.
- * @param selection where tsc runs, with its settings.
+ * @param scope where tsc runs, with its settings.
  * @param target where to write the tsconfig.
  * @returns the absolute path.
  */
@@ -123,7 +124,7 @@ export function writeScopeTsconfig(
     session: Pick<Session, 'root' | 'installedRoot' | 'reads' | 'settingsFile'> & {
         repository: Pick<Session['repository'], 'files' | 'scopeFolders'>;
     },
-    selection: Scope,
+    scope: Scope,
     target: string,
 ): string {
     const input: PlannedTsconfig = {
@@ -131,10 +132,10 @@ export function writeScopeTsconfig(
         typeRootsFolder: session.installedRoot,
         reads: session.reads,
         target: convertToPosixPath(relative(session.root, target)),
-        scope: selection.scope.path,
+        scope: scope.folder.path,
         files: session.repository.files,
         scopes: session.repository.scopeFolders,
-        options: selectCheckedTsconfigOptions(session.settingsFile.settings.level, selection),
+        options: selectCheckedTsconfigOptions(session.settingsFile.settings.level, scope),
     };
     const file = join(input.root, input.target);
     mkdirSync(dirname(file), { recursive: true });

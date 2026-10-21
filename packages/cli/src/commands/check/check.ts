@@ -130,11 +130,11 @@ function assertGitSelection(root: string, options: CheckOptions): void {
 function assertMessageSelection(options: CheckOptions, paths: string[]): void {
     const messageCheck = [...readConfigurations().values()]
         .flatMap(({ checks }) => checks)
-        .find((check) => check.stage === 'message' && options.only?.includes(check.name) === true);
+        .find((check) => check.stage === 'message' && options.only?.includes(check.id) === true);
     if (messageCheck !== undefined && options.messageFile === undefined)
         throw new GspotError(
             'arguments',
-            `${messageCheck.name} checks commit messages. Run gspot check --hook commit-msg -- <file>.`,
+            `${messageCheck.id} checks commit messages. Run gspot check --hook commit-msg -- <file>.`,
         );
     if (options.hook === 'commit-msg' && paths.length !== 1)
         throw new GspotError('arguments', '--hook commit-msg needs one commit message file after --.');
@@ -146,7 +146,7 @@ function assertReadableMessageFile(options: CheckOptions): void {
     try {
         accessSync(commitFile, constants.R_OK);
     } catch (error) {
-        throw new GspotError('arguments', `The commit message file ${commitFile} cannot be read.`, { cause: error });
+        throw new GspotError('filesystem', `The commit message file ${commitFile} cannot be read.`, { cause: error });
     }
 }
 
@@ -176,7 +176,7 @@ async function checkStaged(
         content: 'index',
         installedRoot: root,
         reference: copy.tree,
-        staged: staged,
+        staged,
         reportRoot: root,
     });
 }

@@ -1,7 +1,7 @@
 import { buildOptionsSchema } from '../options.ts';
 
 export const clientEnvOptionsSchema = buildOptionsSchema({
-    isClient: {
+    client: {
         description: 'Treat selected files as client code without a use-client directive.',
         type: 'boolean',
     },
@@ -10,7 +10,7 @@ export const clientEnvOptionsSchema = buildOptionsSchema({
         type: 'array',
         items: { type: 'string' },
     },
-    allowed: {
+    allowedNames: {
         description: 'Environment variable names allowed in client code.',
         type: 'array',
         items: { type: 'string' },

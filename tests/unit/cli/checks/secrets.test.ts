@@ -91,9 +91,9 @@ test('a scope with env reads and no example env file is skipped with a note', as
     await using sandbox = await testdir({
         '.env.example': 'KNOWN=value\n',
         'app/source.ts': 'process.env.MISSING;\n',
-        'gspot.toml': buildSandboxSettings(['files'], {
+        'gspot.toml': buildSandboxSettings(['data-files'], {
             level: 'all',
-            scopes: [{ path: 'app', configurations: ['files'] }],
+            scopes: [{ path: 'app', configurations: ['data-files'] }],
         }),
     });
     const checked = await runChecks(
@@ -114,7 +114,7 @@ test('a scope with env reads and no example env file is skipped with a note', as
 });
 
 test('import.meta.env and Deno.env reads in component and module files need example keys', async () => {
-    const settings = buildSandboxSettings(['files'], { level: 'all' });
+    const settings = buildSandboxSettings(['data-files'], { level: 'all' });
     const sources = ENV_ACCESSOR_FILES;
     await using sandbox = await testdir({ 'gspot.toml': settings, '.env.example': 'KNOWN=example\n', ...sources });
     const rejected = await checkFindings(sandbox.path, 'secrets/env-examples');

@@ -4,8 +4,8 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scope-view.ts';
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
+import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 
 import {
@@ -76,7 +76,7 @@ function buildCssModulesOverrides(
     chosen: Record<string, unknown>,
     off: string[],
 ) {
-    const scope = planned.selection.scope.path;
+    const scope = planned.scope.folder.path;
     const hasModules = planned.session.repository.files.some(
         (file) => isInScope(file.path, scope) && file.path.endsWith(CSS_MODULES_OVERRIDE.suffix),
     );
@@ -100,19 +100,19 @@ function buildCssModulesOverrides(
  * @returns the CSS lint presets and rules for this level.
  */
 export function buildStylelintFile(planned: PlannedToolFile): string {
-    const { selection } = planned;
+    const { scope } = planned;
     const { dependencyFiles } = planned.session.repository;
     const level = planned.level;
 
-    const { configurations } = selection.view;
-    const options = getTable(selection.view, 'tools.stylelint');
+    const { configurations } = scope.settings;
+    const options = getTable(scope.settings, 'tools.stylelint');
     const isAll = level === 'all';
-    const scopeDependencies = listProjectDependencyNames(dependencyFiles, selection.scope.path);
+    const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.folder.path);
     const stylelintRuleNames = nameListSchema.parse(
         JSON.parse(readFileSync(buildAssetPath(STYLELINT_RULE_NAMES_FILE), 'utf8')),
     ).names;
 
-    const off = listIgnoredRules(planned.selection, 'css/stylelint');
+    const off = listIgnoredRules(planned.scope, 'css/stylelint');
     const activeRules = new Set(
         [...stylelintRuleNames, 'function-no-unknown'].filter((rule) => isAll || !STYLELINT_RECOMMENDED_OFF.has(rule)),
     );

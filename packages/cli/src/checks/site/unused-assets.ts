@@ -51,7 +51,7 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
             buildFinding(
                 planned,
                 { file: file.path, line: 1 },
-                'dead-asset',
+                'unused-asset',
                 'No page, stylesheet or script names this file.',
             ),
         );

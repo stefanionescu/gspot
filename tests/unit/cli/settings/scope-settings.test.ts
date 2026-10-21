@@ -14,16 +14,16 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { buildSandboxSettings, buildRootScopeSettings } from '#tests/setup/settings.ts';
 import { SITE_BUILD_COMMANDS, SITE_PACKAGE_MANAGER_CASES } from '#tests/data/checks/site/build.ts';
-import { getLimit, getTable, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scope-view.ts';
+import { getLimit, getTable, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 
 import {
     PROJECT_CHOICES,
-    PROJECT_SELECTIONS,
+    PROJECT_SCOPE_CASES,
     IGNORE_EXPIRY_ENTRIES,
     NESTED_SCOPE_SETTINGS,
 } from '#tests/data/settings/scopes.ts';
 
-async function readScopeViews(): Promise<Scope[]> {
+async function readNestedScopes(): Promise<Scope[]> {
     await using sandbox = await testdir({
         'gspot.toml': NESTED_SCOPE_SETTINGS,
         'entry.sh': 'echo root\n',
@@ -56,8 +56,8 @@ test.each(
             ...Object.fromEntries(Object.entries(files).map(([path, text]) => [join(scope, path), text])),
         });
         const session = await openSession(sandbox.path);
-        const selected = session.scopes.find((entry) => entry.scope.path === scope)!;
-        expect(getTable(selected.view, 'site').build_command).toStrictEqual([installer, 'run', 'build']);
+        const selected = session.scopes.find((entry) => entry.folder.path === scope)!;
+        expect(getTable(selected.settings, 'site').build_command).toStrictEqual([installer, 'run', 'build']);
 
         const table = parseToml(settings) as TomlTable;
         setKey(getScopeTable(table, scope || undefined), 'site.build_command', [...commandArguments]);
@@ -65,35 +65,35 @@ test.each(
         await writeFile(join(sandbox.path, 'gspot.toml'), written);
         const manual = await openSession(sandbox.path);
         expect(
-            getTable(manual.scopes.find((entry) => entry.scope.path === scope)!.view, 'site').build_command,
+            getTable(manual.scopes.find((entry) => entry.folder.path === scope)!.settings, 'site').build_command,
         ).toStrictEqual([...commandArguments]);
         const canonical = buildSettingsText(written, parseToml(written) as TomlTable);
         expect(buildSettingsText(canonical, parseToml(canonical) as TomlTable)).toBe(canonical);
         await writeFile(join(sandbox.path, 'gspot.toml'), canonical);
         const reopened = await openSession(sandbox.path);
         expect(
-            getTable(reopened.scopes.find((entry) => entry.scope.path === scope)!.view, 'site').build_command,
+            getTable(reopened.scopes.find((entry) => entry.folder.path === scope)!.settings, 'site').build_command,
         ).toStrictEqual([...commandArguments]);
     },
 );
 
 test('an ignore with a rule and paths turns the rule off in its scope and the scopes below only', async () => {
-    const selections = await readScopeViews();
+    const scopes = await readNestedScopes();
     const off = Object.fromEntries(
-        selections.map((selection) => [selection.scope.path, listIgnoredRules(selection, 'bash/shellcheck')]),
+        scopes.map((scope) => [scope.folder.path, listIgnoredRules(scope, 'bash/shellcheck')]),
     );
     expect(off).toStrictEqual({ '': [], api: ['SC2086'], 'api/v1': ['SC2086'], web: [] });
 });
 
 test('the deepest scope sets a limit and a scalar setting, and a scope list adds to the lists above it', async () => {
-    const selections = await readScopeViews();
-    const byScope = new Map(selections.map((selection) => [selection.scope.path, selection.view]));
+    const scopes = await readNestedScopes();
+    const byScope = new Map(scopes.map((scope) => [scope.folder.path, scope.settings]));
     const read = (path: string): unknown[] => {
-        const view = byScope.get(path)!;
+        const settings = byScope.get(path)!;
         return [
-            getLimit(view, 'file_lines', 'bash'),
-            getTable(view, 'swift').xcode_scheme,
-            getTable(view, 'tools.swiftlint').always_keep_imports,
+            getLimit(settings, 'file_lines', 'bash'),
+            getTable(settings, 'swift').xcode_scheme,
+            getTable(settings, 'tools.swiftlint').always_keep_imports,
         ];
     };
     expect(read('')).toStrictEqual([100, '5.0', ['Foundation']]);
@@ -112,8 +112,8 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
     });
 
     const session = await openSession(sandbox.path);
-    const scope = session.scopes.find((selection) => selection.scope.path === 'api')!;
-    expect(getLimit(scope.view, 'file_lines', 'python')).toBe(100);
+    const scope = session.scopes.find((entry) => entry.folder.path === 'api')!;
+    expect(getLimit(scope.settings, 'file_lines', 'python')).toBe(100);
 });
 
 test('ignore expiry does not change the scope view or gspot.toml', () => {
@@ -123,22 +123,22 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
             buildSettingsText('', { configurations: [], ignore: IGNORE_EXPIRY_ENTRIES }),
             undefined,
         );
-        const view = buildRootScopeSettings(settings);
-        const selected = selectForScope(settings, '', readConfigurations());
-        const known = buildKnownSettings(selected, settings.level);
-        const selection: Scope = {
-            scope: { path: '', configurations: [], origin: 'root' },
-            selected,
-            known,
-            view,
+        const rootSettings = buildRootScopeSettings(settings);
+        const configurations = selectForScope(settings, '', readConfigurations());
+        const knownSettings = buildKnownSettings(configurations, settings.level);
+        const scope: Scope = {
+            folder: { path: '', configurations: [], origin: 'root' },
+            configurations,
+            knownSettings,
+            settings: rootSettings,
         };
-        expect(listIgnores(view, 'dependencies/osv-scanner')).toStrictEqual([
+        expect(listIgnores(rootSettings, 'dependencies/osv-scanner')).toStrictEqual([
             { ...IGNORE_EXPIRY_ENTRIES[3], paths: [] },
             { ...IGNORE_EXPIRY_ENTRIES[1], paths: [] },
             { ...IGNORE_EXPIRY_ENTRIES[0], paths: [] },
             { ...IGNORE_EXPIRY_ENTRIES[2], paths: [] },
         ]);
-        expect(listIgnoredRules(selection, 'dependencies/osv-scanner')).toStrictEqual([
+        expect(listIgnoredRules(scope, 'dependencies/osv-scanner')).toStrictEqual([
             'future',
             'past',
             'permanent',
@@ -152,13 +152,13 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
         ]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
         const next = buildRootScopeSettings(settings);
-        expect(listIgnoredRules({ ...selection, view: next }, 'dependencies/osv-scanner')).toStrictEqual([
+        expect(listIgnoredRules({ ...scope, settings: next }, 'dependencies/osv-scanner')).toStrictEqual([
             'future',
             'past',
             'permanent',
             'today',
         ]);
-        expect(listIgnoredRules(selection, 'dependencies/osv-scanner')).toStrictEqual([
+        expect(listIgnoredRules(scope, 'dependencies/osv-scanner')).toStrictEqual([
             'future',
             'past',
             'permanent',
@@ -181,8 +181,8 @@ test('OpenAPI stays off without a document and in a scope that removes it', asyn
     });
 
     const session = await openSession(sandbox.path);
-    expect(getTable(session.scopes[0]!.view, 'openapi').document).toBeUndefined();
-    expect(session.scopes[1]!.selected.some((configuration) => configuration.name === 'openapi')).toBe(false);
+    expect(getTable(session.scopes[0]!.settings, 'openapi').document).toBeUndefined();
+    expect(session.scopes[1]!.configurations.some((configuration) => configuration.name === 'openapi')).toBe(false);
     expect(
         planChecks(session, { stage: 'all', only: ['openapi/spectral'] }).map(({ skip }) => skip?.cause),
     ).toStrictEqual(['setting']);
@@ -203,7 +203,7 @@ test('Postgres client schemas come from Supabase or from gspot.toml', async () =
 
     const session = await openSession(sandbox.path);
     expect(
-        session.scopes.map(({ scope, view }) => [scope.path, getTable(view, 'postgres').client_schemas]),
+        session.scopes.map(({ folder, settings }) => [folder.path, getTable(settings, 'postgres').client_schemas]),
     ).toStrictEqual([
         ['', []],
         ['api', ['public']],
@@ -211,7 +211,7 @@ test('Postgres client schemas come from Supabase or from gspot.toml', async () =
     ]);
 });
 
-test.each(PROJECT_SELECTIONS)('scope %s selects configuration %s: %s', (scope, name, selected) => {
+test.each(PROJECT_SCOPE_CASES)('scope %s selects configuration %s: %s', (scope, name, selected) => {
     const names = selectForScope(
         {
             configurations: [...PROJECT_CHOICES.configurations],

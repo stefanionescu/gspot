@@ -1,9 +1,9 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import { ISO_DATE_LENGTH } from '#cli/config/units.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getToolName } from '#cli/configurations/declared-tools.ts';
@@ -31,13 +31,13 @@ function findReasonAbove(previous: SourceComment | undefined, comment: SourceCom
 }
 
 // Only tools whose checks claim this source contribute suppression syntax.
-function listSuppressionSyntaxes(selection: Scope): SuppressionSyntax[] {
-    const selected = selection.selected;
-    const checks = selected.flatMap((configuration) =>
+function listSuppressionSyntaxes(scope: Scope): SuppressionSyntax[] {
+    const configurations = scope.configurations;
+    const checks = configurations.flatMap((configuration) =>
         configuration.checks.map((check) => ({ check, files: check.files ?? configuration.files })),
     );
     const definitions = new Map(
-        selected.flatMap((configuration) =>
+        configurations.flatMap((configuration) =>
             configuration.tools.flatMap((tool) =>
                 tool.suppression === undefined ? [] : [[tool.name, tool.suppression] as const],
             ),
@@ -50,8 +50,11 @@ function listSuppressionSyntaxes(selection: Scope): SuppressionSyntax[] {
             covers: (file: TrackedFile) =>
                 readers.some(
                     ({ files }) =>
-                        listCoveredFiles(files, [file], { selected, scope: selection.scope.path, view: selection.view })
-                            .length > 0,
+                        listCoveredFiles(files, [file], {
+                            configurations,
+                            scopePath: scope.folder.path,
+                            settings: scope.settings,
+                        }).length > 0,
                 ),
             marker: new RegExp(definition.marker, 'u'),
             inlineMarker: new RegExp(definition.inline_marker ?? definition.marker, 'u'),
@@ -155,14 +158,16 @@ function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] 
  * @returns the findings.
  */
 export async function checkGspotSuppressions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const scopes = session.scopes.map((selection) => selection.scope);
-    const selections = new Map(session.scopes.map((selection) => [selection.scope.path, selection]));
+    const scopes = session.scopes.map((scope) => scope.folder);
+    const scopesByPath = new Map(session.scopes.map((scope) => [scope.folder.path, scope]));
     const found: Finding[] = listExpiredIgnores(session, planned);
-    for (const [scope, selection] of selections) {
-        const syntaxes = listSuppressionSyntaxes(selection);
+    for (const [scopePath, scope] of scopesByPath) {
+        const syntaxes = listSuppressionSyntaxes(scope);
         for (const file of planned.files.filter(
             (file) =>
-                file.kind === 'source' && file.tags.includes('text') && findScope(file.path, scopes).path === scope,
+                file.kind === 'source' &&
+                file.tags.includes('text') &&
+                findScopeFolder(file.path, scopes).path === scopePath,
         )) {
             const forms = syntaxes.filter((form) => form.covers(file));
             const source = readCachedText(session.reads, file.path);

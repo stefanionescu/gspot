@@ -23,22 +23,22 @@ import { readToolProjectPackage, findInstalledDependency } from '#cli/repository
  *
  * @returns the next install step.
  */
-function buildInstallHint(tool: Tool): string {
+function buildInstallHelp(tool: Tool): string {
     const toolProjectPackage = findToolProjectPackage(tool);
     if (toolProjectPackage !== undefined || tool.system !== true) {
         if (toolProjectPackage !== undefined || which.sync(MISE_TOOL, { nothrow: true }) !== null)
             return 'Run: gspot install';
         return `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`;
     }
-    return tool.install_hint ?? `Install ${tool.name}.`;
+    return tool.install_help ?? `Install ${tool.name}.`;
 }
 
 // Build the inspection of a library whose tool-project package.json declares a version.
 function buildLibraryInspection(inspected: InspectedTool, path: string, found: string): ToolInspection {
-    const { tool, hint, want } = inspected;
-    const floor = tool.min_version ?? tool.version ?? found;
-    const state = tool.system !== true && tool.version === undefined ? 'ok' : classifyToolVersion(found, want, floor);
-    return { name: tool.name, state, path, found, hint, floor, ...stripUndefined({ want }) };
+    const { tool, help, want } = inspected;
+    const minimum = tool.min_version ?? tool.version ?? found;
+    const state = tool.system !== true && tool.version === undefined ? 'ok' : classifyToolVersion(found, want, minimum);
+    return { name: tool.name, state, path, found, help, minimumVersion: minimum, ...stripUndefined({ want }) };
 }
 
 // Query a system library through the declared executable and its complete argument list.
@@ -73,21 +73,29 @@ function inspectLibrary(inspected: InspectedTool): ToolInspection {
 
 // Build the inspection of a tool without an installation in the search folders.
 function buildMissingInspection(inspected: InspectedTool): ToolInspection {
-    const { tool, hint, want } = inspected;
-    return { name: tool.name, state: 'missing', hint, ...stripUndefined({ want }) };
+    const { tool, help, want } = inspected;
+    return { name: tool.name, state: 'missing', help, ...stripUndefined({ want }) };
 }
 
 // Query an executable once, and build its system or pinned-version inspection.
 function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInspection {
-    const { tool, hint, want } = inspected;
+    const { tool, help, want } = inspected;
     if (want === undefined && tool.version_command === undefined && tool.min_version === undefined)
-        return { name: tool.name, state: 'system', path, hint };
+        return { name: tool.name, state: 'system', path, help };
     const read = readToolVersion(inspected, path);
     const expected = stripUndefined({ want });
-    if ('state' in read) return { name: tool.name, path, hint, ...expected, ...read };
-    const floor = tool.min_version ?? want;
-    const state = classifyToolVersion(read.version, want, floor);
-    return { name: tool.name, state, path, hint, found: read.version, ...expected, ...stripUndefined({ floor }) };
+    if ('state' in read) return { name: tool.name, path, help, ...expected, ...read };
+    const minimum = tool.min_version ?? want;
+    const state = classifyToolVersion(read.version, want, minimum);
+    return {
+        name: tool.name,
+        state,
+        path,
+        help,
+        found: read.version,
+        ...expected,
+        ...stripUndefined({ minimumVersion: minimum }),
+    };
 }
 
 // Project compilers keep their ownership; a declared tool-project package supplies the compiler when absent.
@@ -138,11 +146,11 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
  * @returns the install note, with the next step.
  */
 export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): string {
-    const hint = inspection.hint ?? buildInstallHint(tool);
+    const help = inspection.help ?? buildInstallHelp(tool);
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
     return inspection.state === 'outdated'
-        ? `${tool.name} ${inspection.found ?? '?'} is below ${inspection.floor ?? '?'}. ${hint}`
-        : `${tool.name}${version} is not installed. ${hint}`;
+        ? `${tool.name} ${inspection.found ?? '?'} is below ${inspection.minimumVersion ?? '?'}. ${help}`
+        : `${tool.name}${version} is not installed. ${help}`;
 }
 
 /**
@@ -164,7 +172,7 @@ export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
         root: installedRoot,
         cwd: isInside(relative(root, cwd)) ? join(installedRoot, relative(root, cwd)) : cwd,
         tool,
-        hint: buildInstallHint(tool),
+        help: buildInstallHelp(tool),
         timeoutSeconds: search.timeoutSeconds,
         want: tool.system === true ? undefined : tool.version,
         miseBinPaths: search.miseBinPaths,

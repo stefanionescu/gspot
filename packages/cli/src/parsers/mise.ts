@@ -1,5 +1,5 @@
 // Reads mise task names and their aliases.
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { miseTasksSchema, miseTaskAliasSchema } from '#cli/schemas/parsers/mise.ts';
 
@@ -13,7 +13,7 @@ import { miseTasksSchema, miseTaskAliasSchema } from '#cli/schemas/parsers/mise.
 export function parseMiseTasks(text: string, path: string): string[] {
     const { tasks } = parseTomlFile(path, text, miseTasksSchema);
     return Object.entries(tasks).flatMap(([name, task]) => {
-        const alias = isRecord(task) ? miseTaskAliasSchema.parse(task).alias : undefined;
+        const alias = isTable(task) ? miseTaskAliasSchema.parse(task).alias : undefined;
         return [name, ...[alias ?? []].flat()];
     });
 }

@@ -14,7 +14,7 @@ import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm.ts';
 import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
-import { getTable, findRootSelection } from '#cli/settings/scope-view.ts';
+import { getTable, findRootScope } from '#cli/settings/scope-settings.ts';
 import { buildPointerFieldEdits } from '#cli/generation/settings/pointers.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/inventory.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
@@ -203,7 +203,7 @@ export function generate(session: Session): GenerationResult {
               })),
         ...buildPythonProject(
             configurations,
-            getTable(findRootSelection(scopes).view, 'dependencies').min_release_age_days,
+            getTable(findRootScope(scopes).settings, 'dependencies').min_release_age_days,
         ),
         buildMiseProject(configurations),
     );

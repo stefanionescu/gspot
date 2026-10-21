@@ -15,7 +15,7 @@ import { EXPLAIN_SETTINGS, CHECK_TOOL_MINIMUMS, CONFIGURATION_DETECTION_LINES } 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await testdir();
     const tables = `[[command_check]]
-name = "project/syntax"
+id = "project/syntax"
 command = ["bash", "-n", "{files}"]
 paths = ["**/*.sh"]
 stage = "manual"

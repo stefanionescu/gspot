@@ -14,7 +14,7 @@ import { listNamedFiles, parseIdentifiers } from '#cli/checks/naming/declared-na
  * @returns the findings.
  */
 export async function checkNamingIdentifiers(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const settings = readNamingSettings(session.settingsFile.settings, planned.selection);
+    const settings = readNamingSettings(session.settingsFile.settings, planned.scope);
     const findings: Finding[] = [];
     for (const { file, language } of listNamedFiles(planned)) {
         const text = readCachedText(session.reads, file.path);

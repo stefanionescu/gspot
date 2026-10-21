@@ -2,7 +2,7 @@ import picomatch from 'picomatch';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
-import { findParentSelection } from '#cli/settings/scope-view.ts';
+import { findParentScope } from '#cli/settings/scope-settings.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/eslint/files.ts';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/aliases.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint/tool-settings.ts';
@@ -37,15 +37,15 @@ import {
  */
 export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): EslintBlock[] {
     const changed = scopes.filter((entry) => {
-        const parent = findParentSelection(scopes, entry.scope.path);
+        const parent = findParentScope(scopes, entry.folder.path);
         return (
-            entry.view.values[ESLINT_SETTINGS_TABLE]?.import_extension !==
-            parent?.view.values[ESLINT_SETTINGS_TABLE]?.import_extension
+            entry.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension !==
+            parent?.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension
         );
     });
     return changed.flatMap((entry) => {
-        const path = entry.scope.path;
-        const styles = entry.view.values[ESLINT_SETTINGS_TABLE]?.import_extension;
+        const path = entry.folder.path;
+        const styles = entry.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
         return styles === undefined
             ? []
             : [
@@ -57,7 +57,7 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
                           ],
                       ),
                       ignores: listNestedScopeGlobs(
-                          changed.map(({ scope }) => scope.path),
+                          changed.map(({ folder }) => folder.path),
                           path,
                       ),
                       settings: {
@@ -87,9 +87,9 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
  */
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
     const scopePaths = scopes
-        .map((entry) => entry.scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH))
+        .map((entry) => entry.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH))
         .filter((path) => path !== '');
-    const externals = [...new Set(scopes.flatMap(({ view }) => view.values.javascript?.externals ?? []))];
+    const externals = [...new Set(scopes.flatMap(({ settings }) => settings.values.javascript?.externals ?? []))];
     return [
         'error',
         {
@@ -112,9 +112,9 @@ export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session
         nodeFiles,
     } = planned;
     return scopes
-        .filter((entry) => entry.scope.path !== '')
+        .filter((entry) => entry.folder.path !== '')
         .map((entry) => {
-            const path = entry.scope.path;
+            const path = entry.folder.path;
             const aliases = readScopeAliases(root, path, reads);
             return {
                 files: [
@@ -143,9 +143,9 @@ export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session'
         session: { root, scopes },
         nodeFiles,
     } = planned;
-    const paths = scopes.map((entry) => entry.scope.path);
+    const paths = scopes.map((entry) => entry.folder.path);
     return scopes.map((entry) => {
-        const path = entry.scope.path;
+        const path = entry.folder.path;
         return {
             files: [
                 ...NODE_SCRIPT_PATTERNS.map((pattern) =>

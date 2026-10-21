@@ -6,9 +6,9 @@ import { REPORT_PROGRAM } from '#tests/data/test-setup.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { buildScopeView, selectForScope } from '#cli/settings/scope-view.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
-import type { ScopeView, KnownSettings } from '#cli/types/settings/inheritance.ts';
+import { selectForScope, buildScopeSettings } from '#cli/settings/scope-settings.ts';
+import type { ScopeSettings, KnownSettings } from '#cli/types/settings/inheritance.ts';
 
 /**
  * Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
@@ -81,10 +81,10 @@ export function validateSettingsText(text: string, repositoryRoot?: string): str
  * @returns the command check record.
  */
 export function buildReportingCheck(
-    options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'paths' | 'stage'> & { name?: string },
+    options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'paths' | 'stage'> & { id?: string },
 ): NonNullable<WrittenSettings['command_check']>[number] {
     return {
-        name: options.name ?? 'sandbox/report',
+        id: options.id ?? 'sandbox/report',
         command: [process.execPath, '-e', REPORT_PROGRAM, '{files}'],
         ...options,
         output: { format: 'lines' },
@@ -97,7 +97,7 @@ export function buildSelectedKnownSettings(configurations: string[], level: Leve
 }
 
 /** Resolve the settings and configuration defaults that apply in one scope. */
-export function buildRootScopeSettings(settings: Settings, scopePath = ''): ScopeView {
-    const selected = selectForScope(settings, scopePath, readConfigurations());
-    return buildScopeView(buildKnownSettings(selected, 'recommended'), settings, selected, scopePath);
+export function buildRootScopeSettings(settings: Settings, scopePath = ''): ScopeSettings {
+    const configurations = selectForScope(settings, scopePath, readConfigurations());
+    return buildScopeSettings(buildKnownSettings(configurations, 'recommended'), settings, configurations, scopePath);
 }

@@ -14,7 +14,7 @@ export const DECLARATION_FILES = {
     'app/handwritten.d.ts': '/// <reference types="@cloudflare/workers-types" />\n',
 } as const;
 
-export const GENERATED_SELECTIONS = [
+export const GENERATED_PATH_CASES = [
     { configurations: ['nextjs', 'cloudflare'], tables: '', generated: ['next-env.d.ts', 'worker-configuration.d.ts'] },
     {
         configurations: ['javascript'],

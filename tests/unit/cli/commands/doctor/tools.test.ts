@@ -39,11 +39,11 @@ test.each(['ok', 'newer', 'outdated'] as const)(
     async (state) => {
         await using sandbox = await testdir();
         const pin = getTool(readConfigurations().values(), 'eslint-plugin-zod');
-        const floor = semver.parse(pin.min_version ?? pin.version!)!;
-        let earlierVersion = `${String(floor.major - 1)}.0.0`;
-        if (floor.minor > 0) earlierVersion = `${String(floor.major)}.${String(floor.minor - 1)}.0`;
-        if (floor.patch > 0)
-            earlierVersion = `${String(floor.major)}.${String(floor.minor)}.${String(floor.patch - 1)}`;
+        const minimum = semver.parse(pin.min_version ?? pin.version!)!;
+        let earlierVersion = `${String(minimum.major - 1)}.0.0`;
+        if (minimum.minor > 0) earlierVersion = `${String(minimum.major)}.${String(minimum.minor - 1)}.0`;
+        if (minimum.patch > 0)
+            earlierVersion = `${String(minimum.major)}.${String(minimum.minor)}.${String(minimum.patch - 1)}`;
         const versions = { ok: pin.version!, newer: semver.inc(pin.version!, 'minor')!, outdated: earlierVersion };
         const version = versions[state];
         await createFileTree(sandbox.path, {
@@ -149,7 +149,7 @@ test('doctor and gspot check report a missing xmllint with its install command',
         'document.xml': '<root />\n',
         'package.json': '{"private":true,"packageManager":"npm@10.9.0"}\n',
     });
-    const hint = 'Install xmllint.';
+    const help = 'Install xmllint.';
     const environment = {
         PATH: [binaries, ...(isWindows ? [dirname(Bun.which('git')!)] : [])].join(delimiter),
         MISE_DATA_DIR: join(sandbox.path, 'mise'),
@@ -157,13 +157,13 @@ test('doctor and gspot check report a missing xmllint with its install command',
     const doctor = await runGspot(root, ['doctor', '--json'], environment);
     expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);
     expect((JSON.parse(doctor.stdout) as DoctorReport).tools).toContainEqual(
-        matchFields({ name: 'xmllint', state: 'missing', hint }),
+        matchFields({ name: 'xmllint', state: 'missing', help }),
     );
     const checked = parseCheckReport(
-        await runGspot(root, ['check', 'document.xml', '--only', 'files/xmllint', '--json'], environment),
+        await runGspot(root, ['check', 'document.xml', '--only', 'data-files/xmllint', '--json'], environment),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
     expect(checked.report.checks).toMatchObject([
-        { check: 'files/xmllint', status: 'missing', findings: [], note: `xmllint is not installed. ${hint}` },
+        { check: 'data-files/xmllint', status: 'missing', findings: [], note: `xmllint is not installed. ${help}` },
     ]);
 });

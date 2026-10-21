@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { type Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { SEMGREP_TOOL } from '#cli/config/checks/security.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 
 /**
  * List the Semgrep rule files that the configurations and settings of a scope name.
@@ -17,14 +17,14 @@ import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
  * @returns the repository-relative paths.
  */
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
-    const { selected, scope, view } = planned.selection;
-    const declared = selected.flatMap((configuration) =>
+    const { configurations, folder, settings } = planned.scope;
+    const declared = configurations.flatMap((configuration) =>
         configuration.toolFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
             .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
-            .map((file) => buildScopeTarget(scope.path, file, getToolFiles(session).targets)),
+            .map((file) => getToolFileTarget(folder.path, file, getToolFiles(session).targets)),
     );
-    return [...new Set([...declared, ...getTable(view, 'tools.semgrep').rule_files])];
+    return [...new Set([...declared, ...getTable(settings, 'tools.semgrep').rule_files])];
 }
 
 /**

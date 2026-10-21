@@ -21,7 +21,7 @@ leaves a dialect spelling for you to change.
 To accept a word, add it with a reason:
 
 ```shell
-gspot set allowed_words Acmeflow --reason "Acmeflow is our product name."
+gspot set spelling.allowed_words Acmeflow --reason "Acmeflow is our product name."
 ```
 
 Vale accepts the word too.

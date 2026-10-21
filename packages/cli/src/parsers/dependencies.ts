@@ -31,8 +31,8 @@ import {
 } from '#cli/config/parsers/dependencies.ts';
 
 // A requirement names a distribution: letters or digits at both ends, dots, dashes, and underscores between.
-function parseRequirementName(spec: string): string | undefined {
-    const trimmed = spec.trim();
+function parseRequirementName(requirement: string): string | undefined {
+    const trimmed = requirement.trim();
     const end = trimmed.search(REQUIREMENT_NAME_END);
     const name = end === -1 ? trimmed : trimmed.slice(0, end);
     if (!REQUIREMENT_NAME.test(name)) return undefined;

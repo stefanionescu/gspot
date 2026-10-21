@@ -77,7 +77,7 @@ export async function installMiseTools(install: ToolInstall): Promise<string> {
         const result = await runInstallStep(install, command, { cwd });
         if (result.code !== 0)
             throw new GspotError(
-                'installation',
+                'install',
                 `The command ${command.join(' ')} failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
             );
     }

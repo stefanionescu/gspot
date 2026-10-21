@@ -1,13 +1,13 @@
 import type { Node } from 'web-tree-sitter';
 import { isDocstring } from '#cli/parsers/python.ts';
 import type { Session } from '#cli/types/session.ts';
-import { getLimit } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
+import { getLimit } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildFinding, getNodePlace } from '#cli/runs/finding.ts';
 import { PARSED_SOURCES } from '#cli/checks/structure/parsed-sources.ts';
-import type { IsSubstantial, ParsedLanguage } from '#cli/types/checks/structure.ts';
+import type { IsNontrivial, ParsedLanguage } from '#cli/types/checks/structure.ts';
 import { isInterfaceClass, isPythonInterface } from '#cli/checks/structure/interfaces.ts';
 
 import {
@@ -53,10 +53,10 @@ const STATEMENT_COUNTS: Record<ParsedLanguage, (node: Node) => number> = {
     bash: (node) => (isBashStatement(node) ? 1 : 0),
 };
 
-function isSubstantialFunction(node: Node, language: ParsedLanguage, limit: number): boolean {
+function isNontrivialFunction(node: Node, language: ParsedLanguage, limit: number): boolean {
     if (node.type === 'lambda') return false;
     if (node.type === 'computed_property' && !node.namedChildren.some((child) => child.type === 'statements'))
-        return node.namedChildren.some((child) => isSubstantial(child, language, limit));
+        return node.namedChildren.some((child) => isNontrivial(child, language, limit));
     const body = node.childForFieldName('body') ?? node;
     const siblings = body.namedChildren;
     const children = siblings.filter((child) => !(language === 'python' && isDocstring(child, siblings)));
@@ -64,10 +64,10 @@ function isSubstantialFunction(node: Node, language: ParsedLanguage, limit: numb
 }
 
 // Whether an assignment does more than forward a name: it declares a type, or it holds a substantial value.
-function isSubstantialAssignment(node: Node, language: ParsedLanguage, limit: number): boolean {
+function isNontrivialAssignment(node: Node, language: ParsedLanguage, limit: number): boolean {
     if (node.childForFieldName('left')?.text === '__all__') return false;
     const value = node.childForFieldName('right');
-    return node.childForFieldName('type') !== null || (value !== null && isSubstantial(value, language, limit));
+    return node.childForFieldName('type') !== null || (value !== null && isNontrivial(value, language, limit));
 }
 
 // An alias counts as substantial when its value does more than name an existing type.
@@ -77,22 +77,22 @@ function isNonReferenceAlias(node: Node): boolean {
 }
 
 // What each node type must hold to count as substantial.
-const SUBSTANCE: Record<string, IsSubstantial> = {
+const NONTRIVIAL_NODES: Record<string, IsNontrivial> = {
     expression_statement: (node, language, limit) => {
         const child = node.namedChildren[0];
-        return child !== undefined && child.type !== 'string' && isSubstantial(child, language, limit);
+        return child !== undefined && child.type !== 'string' && isNontrivial(child, language, limit);
     },
-    assignment: isSubstantialAssignment,
+    assignment: isNontrivialAssignment,
     property_declaration: (node, language, limit) => {
         const computed = node.childForFieldName('computed_value');
-        return computed === null || isSubstantial(computed, language, limit);
+        return computed === null || isNontrivial(computed, language, limit);
     },
     type_alias_statement: isNonReferenceAlias,
     typealias_declaration: isNonReferenceAlias,
 };
 
 // The node kinds one language reads differently from the others.
-const LANGUAGE_SUBSTANCE: Record<ParsedLanguage, Record<string, IsSubstantial>> = {
+const LANGUAGE_NONTRIVIAL_NODES: Record<ParsedLanguage, Record<string, IsNontrivial>> = {
     bash: {
         command: (node: Node): boolean => {
             const name = node.childForFieldName('name')?.text;
@@ -101,7 +101,7 @@ const LANGUAGE_SUBSTANCE: Record<ParsedLanguage, Record<string, IsSubstantial>> 
     },
     python: {
         class_definition: (node, language, limit) =>
-            isInterfaceClass(node) || isSubstantialContainer(node, language, limit),
+            isInterfaceClass(node) || isNontrivialContainer(node, language, limit),
     },
     swift: {},
 };
@@ -111,21 +111,21 @@ function isInert(node: Node): boolean {
     return node.type === 'hash_bang_line' || BARE_NAME_NODES.has(node.type);
 }
 
-function isSubstantialContainer(node: Node, language: ParsedLanguage, limit: number): boolean {
+function isNontrivialContainer(node: Node, language: ParsedLanguage, limit: number): boolean {
     const body = node.childForFieldName('body');
     return (body?.namedChildren ?? node.namedChildren)
         .filter((child) => !CONTAINER_NOISE.has(child.type))
-        .some((child) => isSubstantial(child, language, limit));
+        .some((child) => isNontrivial(child, language, limit));
 }
 
-function isSubstantial(node: Node, language: ParsedLanguage, limit: number): boolean {
+function isNontrivial(node: Node, language: ParsedLanguage, limit: number): boolean {
     if (isInert(node)) return false;
-    const languageSubstance = LANGUAGE_SUBSTANCE[language][node.type];
-    if (languageSubstance !== undefined) return languageSubstance(node, language, limit);
-    if (COUNTED_FUNCTION_NODES.has(node.type)) return isSubstantialFunction(node, language, limit);
-    if (CONTAINER_NODES.has(node.type)) return isSubstantialContainer(node, language, limit);
-    const substance = SUBSTANCE[node.type];
-    return substance === undefined ? true : substance(node, language, limit);
+    const languageCheck = LANGUAGE_NONTRIVIAL_NODES[language][node.type];
+    if (languageCheck !== undefined) return languageCheck(node, language, limit);
+    if (COUNTED_FUNCTION_NODES.has(node.type)) return isNontrivialFunction(node, language, limit);
+    if (CONTAINER_NODES.has(node.type)) return isNontrivialContainer(node, language, limit);
+    const check = NONTRIVIAL_NODES[node.type];
+    return check === undefined ? true : check(node, language, limit);
 }
 
 /**
@@ -162,7 +162,7 @@ function isTrivialFile(syntaxRoot: Node, language: ParsedLanguage, limit: number
     const statements = siblings.filter(
         (node) => !node.type.includes('comment') && !(language === 'python' && isDocstring(node, siblings)),
     );
-    return statements.length > 0 && !statements.some((child) => isSubstantial(child, language, limit));
+    return statements.length > 0 && !statements.some((child) => isNontrivial(child, language, limit));
 }
 
 function formatAccessorName(node: Node, label: string): string {
@@ -197,13 +197,10 @@ function formatSwiftFunctionName(node: Node): string {
  * @returns the findings.
  */
 export async function checkStructureTrivialFunctions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const parsed = await parseCached(
-        { ...session, files: planned.files, selection: planned.selection },
-        PARSED_SOURCES,
-    );
+    const parsed = await parseCached({ ...session, files: planned.files, scope: planned.scope }, PARSED_SOURCES);
     const files: Finding[] = [];
     const functions = parsed.flatMap((source) => {
-        const limit = getLimit(planned.selection.view, 'trivial_function_statements', source.language);
+        const limit = getLimit(planned.scope.settings, 'trivial_function_statements', source.language);
         const findings = (source.captures.get('function') ?? []).flatMap((node) => {
             const body = extractFunctionBody(node, source.language);
             const count = countExecutableStatements(body, source.language);

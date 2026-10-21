@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import type { NamedCategory } from '#cli/types/settings/tables.ts';
 import { addIdentifier } from '#cli/checks/naming/languages/identifier.ts';
-import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
+import type { Identifier, FileIdentifiers } from '#cli/types/checks/naming.ts';
 
 import {
     COMPONENT_FACTORY,
@@ -13,36 +13,36 @@ import {
     TYPESCRIPT_PARAMETER_NODES,
 } from '#cli/config/checks/naming.ts';
 
-function addPattern(sink: ExtractSink, node: Node | null, category: NamedCategory): void {
+function addPattern(found: FileIdentifiers, node: Node | null, category: NamedCategory): void {
     if (node === null) return;
     const patternFields: Readonly<Record<string, string>> = TYPESCRIPT_PATTERN_FIELDS;
     if (TYPESCRIPT_NAME_NODES.has(node.type))
         addIdentifier(
-            sink,
+            found,
             node,
             category,
             node.type === 'private_property_identifier' ? node.text.slice(1) : node.text,
         );
     else if (patternFields[node.type] !== undefined)
-        addPattern(sink, node.childForFieldName(patternFields[node.type] ?? ''), category);
+        addPattern(found, node.childForFieldName(patternFields[node.type] ?? ''), category);
     else if (TYPESCRIPT_PATTERN_LISTS.has(node.type))
-        for (const child of node.namedChildren) addPattern(sink, child, category);
+        for (const child of node.namedChildren) addPattern(found, child, category);
 }
 
-function addParameter(sink: ExtractSink, parameter: Node): void {
+function addParameter(found: FileIdentifiers, parameter: Node): void {
     const pattern = parameter.childForFieldName('pattern');
-    addPattern(sink, pattern, 'parameters');
+    addPattern(found, pattern, 'parameters');
     if (parameter.namedChildren.some((child) => child.type === 'accessibility_modifier'))
-        addPattern(sink, pattern, 'properties');
+        addPattern(found, pattern, 'properties');
 }
 
-function addParameters(sink: ExtractSink, node: Node): void {
+function addParameters(found: FileIdentifiers, node: Node): void {
     const parameters = node.childForFieldName('parameters')?.namedChildren ?? [];
     for (const parameter of parameters) {
-        if (TYPESCRIPT_PARAMETER_NODES.has(parameter.type)) addParameter(sink, parameter);
-        else addPattern(sink, parameter, 'parameters');
+        if (TYPESCRIPT_PARAMETER_NODES.has(parameter.type)) addParameter(found, parameter);
+        else addPattern(found, parameter, 'parameters');
     }
-    addPattern(sink, node.childForFieldName('parameter'), 'parameters');
+    addPattern(found, node.childForFieldName('parameter'), 'parameters');
 }
 
 // `const { existsSync } = require('node:fs')` and `const { default: X } = await import('x')` bind names another module
@@ -62,14 +62,14 @@ function isComponentFactory(declarator: Node): boolean {
     return COMPONENT_FACTORY.test(value.childForFieldName('function')?.text ?? '');
 }
 
-function addDeclarator(sink: ExtractSink, declarator: Node): void {
-    const start = sink.out.length;
-    addPattern(sink, declarator.childForFieldName('name'), 'variables');
+function addDeclarator(found: FileIdentifiers, declarator: Node): void {
+    const start = found.out.length;
+    addPattern(found, declarator.childForFieldName('name'), 'variables');
     if (isComponentFactory(declarator))
-        for (const identifier of sink.out.slice(start)) identifier.extraCases = ['pascal'];
+        for (const identifier of found.out.slice(start)) identifier.extraCases = ['pascal'];
 }
 
-function addNamed(sink: ExtractSink, root: Node): void {
+function addNamed(found: FileIdentifiers, root: Node): void {
     for (const [types, category] of TYPESCRIPT_DECLARATIONS) {
         const nodes = root
             .descendantsOfType([...types])
@@ -80,14 +80,14 @@ function addNamed(sink: ExtractSink, root: Node): void {
                         (node.childForFieldName('name')?.text === 'constructor' || node.parent?.type === 'object')
                     ),
             );
-        for (const node of nodes) addPattern(sink, node.childForFieldName('name'), category);
+        for (const node of nodes) addPattern(found, node.childForFieldName('name'), category);
     }
 }
 
-function addEnumCases(sink: ExtractSink, root: Node): void {
+function addEnumCases(found: FileIdentifiers, root: Node): void {
     for (const body of root.descendantsOfType('enum_body')) {
         const cases = body.namedChildren.filter((child) => child.type === 'property_identifier');
-        for (const child of cases) addIdentifier(sink, child, 'enum_cases');
+        for (const child of cases) addIdentifier(found, child, 'enum_cases');
     }
 }
 
@@ -100,12 +100,12 @@ function addEnumCases(sink: ExtractSink, root: Node): void {
  * @returns the declared names.
  */
 export function extractTypescriptIdentifiers(syntaxRoot: Node, file: string, language: string): Identifier[] {
-    const sink: ExtractSink = { file, language, out: [] };
-    addNamed(sink, syntaxRoot);
-    addEnumCases(sink, syntaxRoot);
+    const found: FileIdentifiers = { file, language, out: [] };
+    addNamed(found, syntaxRoot);
+    addEnumCases(found, syntaxRoot);
     const declarators = syntaxRoot.descendantsOfType('variable_declarator').filter((node) => !isImportedName(node));
-    for (const node of declarators) addDeclarator(sink, node);
+    for (const node of declarators) addDeclarator(found, node);
     const callables = syntaxRoot.descendantsOfType([...TYPESCRIPT_CALLABLE_NODES]);
-    for (const node of callables) addParameters(sink, node);
-    return sink.out;
+    for (const node of callables) addParameters(found, node);
+    return found.out;
 }

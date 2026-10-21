@@ -93,7 +93,7 @@ export const NESTED_CONDITION = 'if [[ -n "$1" ]]; then';
 
 /** A command check for repository and revision tests. */
 export const BASH_SYNTAX_CHECK = String.raw`[[command_check]]
-name = "project/bash-syntax"
+id = "project/bash-syntax"
 command = ["bash", "-n", "{file}"]
 paths = ["**/*.sh"]
 stage = "commit"

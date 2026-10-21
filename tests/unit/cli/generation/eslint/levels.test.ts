@@ -10,7 +10,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
 
 import {
     COALESCING_FIXED,
@@ -22,7 +22,7 @@ import {
 test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside their scope', async (level) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
-            level: level,
+            level,
             scopes: [{ path: 'app', configurations: ['react', 'drizzle'] }],
         }),
         'package.json': '{"private":true,"type":"module"}',
@@ -39,17 +39,17 @@ test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside the
     expect(inside.rules['import-x/exports-last']).toBeUndefined();
     const raw = 'export const query = sql`select 1`;';
     await createFileTree(sandbox.path, { 'app/client.jsx': raw, 'root.jsx': raw });
-    expect(await collectLintFindings(eslint, sandbox.path, ['app/client.jsx'], ['no-restricted-syntax'])).toStrictEqual(
+    expect(await listLintFindings(eslint, sandbox.path, ['app/client.jsx'], ['no-restricted-syntax'])).toStrictEqual(
         level === 'all' ? [{ file: 'app/client.jsx', rule: 'no-restricted-syntax', line: 1 }] : [],
     );
-    expect(await collectLintFindings(eslint, sandbox.path, ['root.jsx'], ['no-restricted-syntax'])).toStrictEqual([]);
+    expect(await listLintFindings(eslint, sandbox.path, ['root.jsx'], ['no-restricted-syntax'])).toStrictEqual([]);
 });
 test('level all keeps every rule that recommended turns on for a React file', async () => {
     const rules = Object.fromEntries(
         await Promise.all(
             LEVELS.map(async (level) => {
                 await using sandbox = await testdir({
-                    'gspot.toml': buildSandboxSettings(['react'], { level: level }),
+                    'gspot.toml': buildSandboxSettings(['react'], { level }),
                     'package.json': '{"private":true,"type":"module"}',
                     'client.jsx': '',
                 });
@@ -80,7 +80,7 @@ test('all applies your rule options except in script and test files', async () =
     expect(source.rules['n/no-process-exit']![0]).toBe(2);
     expect(script.rules['n/no-process-exit']![0]).toBe(0);
     expect(test.rules['jsdoc/require-description']![0]).toBe(0);
-    expect(source.rules['gspot/no-trivial-functions']).toStrictEqual([2, { trivialStatements: 4 }]);
+    expect(source.rules['gspot/no-trivial-functions']).toStrictEqual([2, { trivialFunctionStatements: 4 }]);
 });
 
 test('recommended refuses options for rules that only level all runs', async () => {
@@ -114,7 +114,7 @@ test.each([...LEVELS])(
             );
             return {
                 layout,
-                findings: await collectLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax']),
+                findings: await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax']),
             };
         }
         const result = await lintFiles();
@@ -138,7 +138,7 @@ test('switching the level and back writes the same files', async () => {
     await writeFile(join(sandbox.path, 'source.js'), 'export const value = 1;\n');
     const outputs: string[] = [];
     for (const level of ['recommended', 'all', 'recommended'] as const) {
-        const settings = buildSandboxSettings(['javascript'], { rules: true, level: level });
+        const settings = buildSandboxSettings(['javascript'], { rules: true, level });
         await writeFile(join(sandbox.path, 'gspot.toml'), settings);
         const session = await openSession(sandbox.path);
         const output = generate(session);
@@ -189,6 +189,6 @@ test('your options for a rule that a configuration adds, such as @typescript-esl
     const configuration = (await eslint.calculateConfigForFile('source.ts')) as EslintConfiguration;
     expect(configuration.rules['@typescript-eslint/no-floating-promises']).toStrictEqual([2, { ignoreVoid: true }]);
     expect(
-        await collectLintFindings(eslint, sandbox.path, ['source.ts'], ['@typescript-eslint/no-floating-promises']),
+        await listLintFindings(eslint, sandbox.path, ['source.ts'], ['@typescript-eslint/no-floating-promises']),
     ).toStrictEqual([{ file: 'source.ts', rule: '@typescript-eslint/no-floating-promises', line: 2 }]);
 });

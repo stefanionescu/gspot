@@ -1,5 +1,5 @@
 rules:
-    - id: gspot.javascript.no-dom-html-sinks
+    - id: gspot.javascript.dom-html-sink
       pattern-either:
           - pattern: $ELEMENT.innerHTML = $VALUE
           - pattern: $ELEMENT.outerHTML = $VALUE
@@ -25,7 +25,7 @@ rules:
           cwe:
               - CWE-918
           category: security
-    - id: gspot.javascript.no-secret-in-log
+    - id: gspot.javascript.secret-in-log
       patterns:
           - pattern-either:
                 - pattern: $LOGGER.$LEVEL(process.env.$VAR)
@@ -45,7 +45,7 @@ rules:
           cwe:
               - CWE-532
           category: security
-    - id: gspot.javascript.jwt-no-algorithm-none
+    - id: gspot.javascript.jwt-verify-without-algorithms
       patterns:
           - pattern: jwt.verify($TOKEN, $SECRET)
           - pattern-not: 'jwt.verify($TOKEN, $SECRET, {algorithms: ...})'
@@ -59,7 +59,7 @@ rules:
           cwe:
               - CWE-327
           category: security
-    - id: gspot.javascript.jwt-no-decode-without-verify
+    - id: gspot.javascript.jwt-decode-without-verify
       pattern: jwt.decode(...)
       message: jwt.decode() does not verify signatures. Use jwt.verify() instead.
       languages:
@@ -70,7 +70,7 @@ rules:
           cwe:
               - CWE-345
           category: security
-    - id: gspot.javascript.no-interpolated-exec
+    - id: gspot.javascript.interpolated-exec
       pattern: execSync(`...${$VAR}...`)
       message: Template literal interpolation in execSync() is a command injection
           vector. Use execFileSync() with an argument array instead.

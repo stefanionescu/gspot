@@ -37,7 +37,7 @@ version_command = ["--version"]
 
 [[tool_file]]
 per_scope = true
-rule_paths_setting = "supabase.functions_folder"
+paths_setting = "supabase.functions_folder"
 target = "semgrep.yml"
 tool = "semgrep"
 

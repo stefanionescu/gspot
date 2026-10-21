@@ -15,8 +15,8 @@ import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
+import type { Run, RunResult, RunOptions, PlanAfterFixes } from '#cli/types/runs/run.ts';
 import { buildRunReport, buildBaseResult, formatReproduceCommand } from '#cli/runs/report.ts';
-import type { RunState, RunResult, RunOptions, PlanAfterFixes } from '#cli/types/runs/run.ts';
 import { RAN_STATUSES, FAILED_STATUSES, DOCKER_MISSING_MESSAGE } from '#cli/config/runs/run.ts';
 import type { Finding, CheckCode, CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
 
@@ -68,17 +68,17 @@ function classifyCheckError(name: string, error: unknown): Pick<CheckResult, 'st
     };
 }
 
-async function runPlannedCheck(runState: RunState, planned: PlannedCheck): Promise<CheckResult> {
-    const { session } = runState;
-    const base = buildBaseResult(planned, session);
-    const early = findUnrunnableResult(session, planned, base);
+async function runPlannedCheck(run: Run, runnable: PlannedCheck): Promise<CheckResult> {
+    const { session } = run;
+    const base = buildBaseResult(runnable, session);
+    const early = findUnrunnableResult(session, runnable, base);
     if (early) return early;
     const started = performance.now();
     // Each thrown failure belongs to this check; the other results of the run survive.
     try {
-        return await runCheckCode(session, planned, findCheckCode(planned.check));
+        return await runCheckCode(session, runnable, findCheckCode(runnable.check));
     } catch (error) {
-        return { ...base, duration: performance.now() - started, ...classifyCheckError(planned.check.name, error) };
+        return { ...base, duration: performance.now() - started, ...classifyCheckError(runnable.check.id, error) };
     }
 }
 
@@ -89,40 +89,40 @@ function removeIgnoredFindings(result: CheckResult, ignores: IgnoreRecord[]): vo
 
 // A project-wide check reads the whole project. Path arguments drop its findings in the other tracked files. Findings
 // without a file stay, and so do findings in an untracked file, such as the build output that a site check reads.
-function removeOutsideFindings(result: CheckResult, runState: RunState): void {
-    const { options, session } = runState;
+function removeOutsideFindings(result: CheckResult, run: Run): void {
+    const { options, session } = run;
     if (options.paths === undefined || options.staged !== undefined) return;
     const paths = new Set(options.paths);
     const tracked = new Set(session.repository.files.map((file) => file.path));
     result.findings = result.findings.filter((finding) => paths.has(finding.file) || !tracked.has(finding.file));
 }
 
-function finishResult(runState: RunState, result: CheckResult): void {
+function finishResult(run: Run, result: CheckResult): void {
     if (RAN_STATUSES.has(result.status)) {
-        removeOutsideFindings(result, runState);
-        removeIgnoredFindings(result, runState.session.settingsFile.settings.ignore);
+        removeOutsideFindings(result, run);
+        removeIgnoredFindings(result, run.session.settingsFile.settings.ignore);
     }
     if (FAILED_STATUSES.has(result.status))
         result.reproduce = formatReproduceCommand(result.check, result.scope, {
-            messageFile: runState.options.messageFile,
-            push: runState.options.push,
-            staged: runState.options.comparison?.content === 'index',
+            messageFile: run.options.messageFile,
+            push: run.options.push,
+            staged: run.options.comparison?.content === 'index',
         });
 }
 
-async function runActiveChecks(runState: RunState, checks: PlannedCheck[]): Promise<CheckResult[]> {
+async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
     const limiter = pLimit(availableParallelism());
     let completed = 0;
     // runPlannedCheck catches check errors; these rejections cover ignore matching and onProgress callbacks before resource disposal.
     const settled = await Promise.allSettled(
         checks.map((planned) =>
             limiter(async () => {
-                const result = await runPlannedCheck(runState, planned);
-                finishResult(runState, result);
-                runState.options.onProgress?.({
+                const result = await runPlannedCheck(run, planned);
+                finishResult(run, result);
+                run.options.onProgress?.({
                     completed: ++completed,
                     total: checks.length,
-                    comparison: runState.options.comparison,
+                    comparison: run.options.comparison,
                 });
                 return result;
             }),
@@ -156,7 +156,7 @@ export async function runChecks(opened: Session, options: RunOptions): Promise<R
     const session = opened;
     const started = new Date();
     const { planned, fixes } = await planAfterFixes(session, options);
-    const runState: RunState = {
+    const runState: Run = {
         session,
         options,
     };
@@ -180,20 +180,20 @@ export async function runChecks(opened: Session, options: RunOptions): Promise<R
  *
  * @param session the repository and its tools.
  * @param planned the check to run.
- * @param implementation the check implementation, or undefined for a tool command.
+ * @param code the check implementation, or undefined for a tool command.
  * @param options the command and temporary folder overrides.
  * @returns the check result.
  */
 export async function runCheckCode(
     session: Session,
     planned: PlannedCheck,
-    implementation: CheckCode | undefined,
+    code: CheckCode | undefined,
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {
-    if (implementation?.check !== undefined) return runBuiltInCheck(implementation.check, session, planned);
-    return (implementation?.run ?? runCheckCommand)(session, planned, {
+    if (code?.check !== undefined) return runBuiltInCheck(code.check, session, planned);
+    return (code?.run ?? runCheckCommand)(session, planned, {
         ...options,
-        listFileArguments: implementation?.listFileArguments,
-        listToolFiles: implementation?.listToolFiles,
+        listFileArguments: code?.listFileArguments,
+        listToolFiles: code?.listToolFiles,
     });
 }

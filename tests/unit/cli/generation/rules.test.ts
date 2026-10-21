@@ -30,7 +30,7 @@ async function generateRuleFiles(level: Level, files: Record<string, string>): P
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([...RULE_CONFIGURATIONS], {
             rules: true,
-            level: level,
+            level,
         }),
         ...files,
     });
@@ -71,13 +71,15 @@ test('level filtering respects fenced examples, nested sections, and the next he
     };
     using _list = spyOn(assets, 'listAssets').mockReturnValue([`${configuration.folder}/rules/GUIDE.md`]);
     using _read = spyOn(assets, 'buildAssetPath').mockImplementation((path) => path);
-    const recommended = selectRulesAt(session, 'recommended', [{ ...session.scopes[0]!, selected: [configuration] }]);
+    const recommended = selectRulesAt(session, 'recommended', [
+        { ...session.scopes[0]!, configurations: [configuration] },
+    ]);
     expect(recommended.map(({ content }) => content)).toStrictEqual([before + after]);
-    const all = selectRulesAt(session, 'all', [{ ...session.scopes[0]!, selected: [configuration] }]);
+    const all = selectRulesAt(session, 'all', [{ ...session.scopes[0]!, configurations: [configuration] }]);
     expect(all.map(({ content }) => content)).toStrictEqual([text]);
     writeFileSync(join(sandbox.path, 'rules/GUIDE.md'), before + after);
     expect(
-        selectRulesAt(session, 'recommended', [{ ...session.scopes[0]!, selected: [configuration] }]).map(
+        selectRulesAt(session, 'recommended', [{ ...session.scopes[0]!, configurations: [configuration] }]).map(
             ({ content }) => content,
         ),
     ).toStrictEqual([before + after]);
@@ -127,7 +129,7 @@ test('an always-selected configuration installs its rule file once', async () =>
     const configurations = listSelectedConfigurations(session.scopes);
     const engineering = configurations.find((configuration) => configuration.name === 'engineering')!;
     for (const selected of [configurations, [...configurations, engineering]]) {
-        const files = selectRulesAt(session, 'all', [{ ...session.scopes[0]!, selected: selected }]);
+        const files = selectRulesAt(session, 'all', [{ ...session.scopes[0]!, configurations: selected }]);
         expect(files.filter((file) => file.path === 'general/engineering/rules/TALKING.md')).toHaveLength(1);
     }
 });

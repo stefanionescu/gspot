@@ -1,15 +1,15 @@
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
-import { listIgnores } from '#cli/settings/scope-view.ts';
 import { LEADING_SLASH } from '#cli/config/system/paths.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
+import { listIgnores } from '#cli/settings/scope-settings.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
-import type { ScopeView } from '#cli/types/settings/inheritance.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
 import { listOwnedToolFiles } from '#cli/generation/settings/needed.ts';
 import { listPointerPaths } from '#cli/generation/settings/pointers.ts';
+import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import type { IgnoreSection, PlannedToolFile } from '#cli/types/generation/files.ts';
 import { PRETTIERIGNORE_PURPOSE } from '#cli/config/generation/settings/builders/prettier.ts';
@@ -34,12 +34,12 @@ function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
 
 // Include generated files and pointers outside .gspot. Keep inherited pointers because their final text determines
 // which scopes write them.
-function collectToolExclusions(session: Session): string[] {
+function listGeneratedPaths(session: Session): string[] {
     const paths = listOwnedToolFiles(session).flatMap(({ toolFile, owner }) => {
         const whole =
             toolFile.source === undefined || toolFile.target.startsWith(`${DOT_GSPOT}/`)
                 ? []
-                : [toolFile.per_scope ? joinScope(owner.selection.scope.path, toolFile.target) : toolFile.target];
+                : [toolFile.per_scope ? joinScope(owner.scope.folder.path, toolFile.target) : toolFile.target];
         return [...whole, ...listPointerPaths(owner, toolFile)];
     });
     return [...new Set(paths)].map((path) => `/${path}`);
@@ -54,14 +54,18 @@ function collectToolExclusions(session: Session): string[] {
 export function buildIgnoreSections(session: Session): IgnoreSection[] {
     const { reads, repository, scopes } = session;
     // The tool files and pointers have their own section. Keep only the files that project generators write.
-    const generatorOutputs = scopes.flatMap(({ scope, selected }) =>
-        selected.flatMap((configuration) => configuration.generated.map((file) => join(scope.path, file))),
+    const generatorOutputs = scopes.flatMap(({ folder, configurations }) =>
+        configurations.flatMap((configuration) => configuration.generated.map((file) => join(folder.path, file))),
     );
     const trackedPaths = (repository.index.length === 0 ? repository.files : repository.index).map(({ path }) => path);
     const folders = [
-        ...new Set(scopes.flatMap(({ selected }) => selected.flatMap((configuration) => configuration.ignored_paths))),
+        ...new Set(
+            scopes.flatMap(({ configurations }) =>
+                configurations.flatMap((configuration) => configuration.ignored_paths),
+            ),
+        ),
     ];
-    const toolFiles = collectToolExclusions(session);
+    const toolFiles = listGeneratedPaths(session);
     return [
         {
             key: 'build',
@@ -109,12 +113,12 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
 /**
  * Keep the reason with each check-wide path ignore.
  *
- * @param view the settings of this scope.
+ * @param scopeSettings the settings of this scope.
  * @param check the ID whose ignores to keep.
  * @returns the check-wide path ignores with their reasons.
  */
-export function listCheckIgnoreSections(view: ScopeView, check: string): IgnoreSection[] {
-    return listIgnores(view, check)
+export function listCheckIgnoreSections(scopeSettings: ScopeSettings, check: string): IgnoreSection[] {
+    return listIgnores(scopeSettings, check)
         .filter((entry) => entry.rule === undefined && entry.names === undefined)
         .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths }));
 }
@@ -215,7 +219,7 @@ export function listPythonIgnoredGlobs(planned: PlannedToolFile, check: string):
     );
     return [
         ...ignoredGlobs,
-        ...listIgnores(planned.selection.view, check)
+        ...listIgnores(planned.scope.settings, check)
             .filter((entry) => entry.rule === undefined && entry.names === undefined)
             .flatMap((entry) => entry.paths),
     ].map((path) => `${base}/${path}`);
@@ -230,6 +234,6 @@ export function listPythonIgnoredGlobs(planned: PlannedToolFile, check: string):
 export function buildPrettierignoreFile(planned: PlannedToolFile): string {
     return formatIgnoreFile([
         ...buildIgnoreSections(planned.session),
-        ...listCheckIgnoreSections(planned.selection.view, 'format/prettier'),
+        ...listCheckIgnoreSections(planned.scope.settings, 'format/prettier'),
     ]);
 }

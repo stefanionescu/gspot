@@ -123,8 +123,8 @@ test("service role keys are allowed in each scope's test files and refused in cl
 
     const report = result.report;
     expect(report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))).toStrictEqual([
-        { file: 'client.ts', rule: 'admin-key' },
-        { file: 'apps/web/client.ts', rule: 'admin-key' },
+        { file: 'client.ts', rule: 'service-role-key' },
+        { file: 'apps/web/client.ts', rule: 'service-role-key' },
     ]);
 });
 
@@ -192,7 +192,7 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
 
     expect(
         failed.report.checks.flatMap((check) => check.findings).map(({ file, line, rule }) => ({ file, line, rule })),
-    ).toStrictEqual(clients.map((file) => ({ file, line: 1, rule: 'admin-key' })));
+    ).toStrictEqual(clients.map((file) => ({ file, line: 1, rule: 'service-role-key' })));
     for (const path of clients)
         await writeFile(join(sandbox.path, path), 'export const key = "sb_publishable_example";\n');
     const corrected = await runChecks(

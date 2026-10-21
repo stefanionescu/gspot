@@ -1,5 +1,5 @@
 rules:
-    - id: gspot.cloudflare.no-wildcard-cors-origin
+    - id: gspot.cloudflare.wildcard-cors-origin
       pattern-either:
           - pattern: '"Access-Control-Allow-Origin": "*"'
           - pattern: "'Access-Control-Allow-Origin': '*'"

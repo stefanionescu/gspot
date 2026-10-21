@@ -1,17 +1,17 @@
+import { getPosition } from '#cli/system/text.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { computePosition } from '#cli/system/text.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildSchema } from '#cli/checks/postgres/schema.ts';
+import type { SqlStatement } from '#cli/types/parsers/sql.ts';
 import type { Migration } from '#cli/types/checks/postgres.ts';
-import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import { readParsedMigrations } from '#cli/checks/postgres/migrations.ts';
 import { getNodeFields, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
-function isLooseDefiner(statement: SqlStatementView): boolean {
+function isLooseDefiner(statement: SqlStatement): boolean {
     if (statement.kind !== 'CreateFunctionStmt') return false;
     const options = listNodeFields(statement.fields.options, 'DefElem');
     const isDefiner = options.some(
@@ -23,7 +23,7 @@ function isLooseDefiner(statement: SqlStatementView): boolean {
     return isDefiner && !hasPath;
 }
 
-function listMigrationStatements(migrations: Migration[]): { migration: Migration; statement: SqlStatementView }[] {
+function listMigrationStatements(migrations: Migration[]): { migration: Migration; statement: SqlStatement }[] {
     return migrations.flatMap((migration) => migration.statements.map((statement) => ({ migration, statement })));
 }
 
@@ -37,14 +37,14 @@ function listMigrationStatements(migrations: Migration[]): { migration: Migratio
 export async function checkRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildSchema(migrations);
-    const schemas = new Set(getTable(planned.selection.view, 'postgres')['client_schemas']);
+    const schemas = new Set(getTable(planned.scope.settings, 'postgres')['client_schemas']);
     return schema.tables
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))) && !schema.secured.has(table))
         .map(([table, at]) =>
             buildFinding(
                 planned,
-                { file: at.path, ...computePosition(at.text, at.offset) },
+                { file: at.path, ...getPosition(at.text, at.offset) },
                 'row-security',
                 `${table} does not have row level security enabled.`,
             ),
@@ -63,7 +63,7 @@ export async function checkPostgresGrants(session: Session, planned: PlannedChec
     const migrations = await readParsedMigrations(session, planned);
     const frozen = selectFrozenMigrations(
         migrations.map(({ path }) => path),
-        getTable(planned.selection.view, 'postgres').frozen_through,
+        getTable(planned.scope.settings, 'postgres').frozen_through,
     );
     return listMigrationStatements(migrations.filter(({ path }) => !frozen.has(path)))
         .filter(
@@ -75,7 +75,7 @@ export async function checkPostgresGrants(session: Session, planned: PlannedChec
         .map(({ migration, statement }) =>
             buildFinding(
                 planned,
-                { file: migration.path, ...computePosition(migration.text, statement.start) },
+                { file: migration.path, ...getPosition(migration.text, statement.start) },
                 'grant-all',
                 'GRANT ALL gives every privilege, present and future; name the privileges.',
             ),
@@ -98,7 +98,7 @@ export async function checkDefinerSearchPath(session: Session, planned: PlannedC
         .map(({ migration, statement }) =>
             buildFinding(
                 planned,
-                { file: migration.path, ...computePosition(migration.text, statement.start) },
+                { file: migration.path, ...getPosition(migration.text, statement.start) },
                 'definer-search-path',
                 message,
             ),

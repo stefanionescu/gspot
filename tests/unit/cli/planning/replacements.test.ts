@@ -18,7 +18,7 @@ test.each([...TSC_REPLACEMENTS])(
         const session = await openSession(sandbox.path);
         const options = { stage: 'all' as const, only: ['typescript/tsc', check] };
         expect(
-            planChecks(session, options).find(({ check: entry }) => entry.name === 'typescript/tsc')?.skip,
+            planChecks(session, options).find(({ check: entry }) => entry.id === 'typescript/tsc')?.skip,
         ).toStrictEqual({
             cause: 'replaced',
             note: `${check} runs it here`,
@@ -34,11 +34,11 @@ reason = "The separate compiler checks this source."
         );
         const ignored = await openSession(sandbox.path);
         expect(
-            planChecks(ignored, options).find(({ check: entry }) => entry.name === 'typescript/tsc')?.skip,
+            planChecks(ignored, options).find(({ check: entry }) => entry.id === 'typescript/tsc')?.skip,
         ).toBeUndefined();
         expect(
             planChecks(session, { ...options, only: ['typescript/tsc'] }).find(
-                ({ check: entry }) => entry.name === 'typescript/tsc',
+                ({ check: entry }) => entry.id === 'typescript/tsc',
             )?.skip,
         ).toBeUndefined();
     },
@@ -54,8 +54,8 @@ test('a nested Next.js check replaces TypeScript only in its own scope', async (
     });
     const session = await openSession(sandbox.path);
     const configured = session.configuredChecks
-        .filter((entry) => ['typescript/tsc', 'nextjs/tsc'].includes(entry.check.name))
-        .map((entry) => [entry.selection.scope.path, entry.check.name]);
+        .filter((entry) => ['typescript/tsc', 'nextjs/tsc'].includes(entry.check.id))
+        .map((entry) => [entry.scope.folder.path, entry.check.id]);
     expect(configured).toStrictEqual([
         ['', 'typescript/tsc'],
         ['app', 'nextjs/tsc'],

@@ -1,7 +1,7 @@
 import { buildOptionsSchema } from '../options.ts';
 
 export const trivialFilesOptionsSchema = buildOptionsSchema({
-    trivialStatements: {
+    trivialFunctionStatements: {
         description: 'Functions with this many statements or fewer are reported.',
         type: 'integer',
         minimum: 1,
@@ -13,7 +13,7 @@ export const trivialFilesOptionsSchema = buildOptionsSchema({
 });
 
 export const trivialFunctionsOptionsSchema = buildOptionsSchema({
-    trivialStatements: {
+    trivialFunctionStatements: {
         description: 'Functions with this many statements or fewer are reported.',
         type: 'integer',
         minimum: 1,

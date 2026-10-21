@@ -5,12 +5,12 @@ import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { FULL_PERCENTAGE } from '#cli/config/units.ts';
 import { parseToolReport } from '#cli/parsers/json.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
@@ -86,7 +86,7 @@ async function measureCoverage(session: Session, planned: PlannedCheck): Promise
     const plan = buildPlan(session, planned, { purpose: 'coverage' });
     const prepared = prepareBuild(session.root, planned.files, plan.folder);
     using files = prepared.files;
-    const cwd = join(prepared.source, planned.selection.scope.path);
+    const cwd = join(prepared.source, planned.scope.folder.path);
     files.deleteTree(COVERAGE_BUNDLE);
     return plan.kind === 'package'
         ? await measurePackageCoverage(session, planned, plan, files, cwd)
@@ -167,15 +167,15 @@ function parseSwiftCoverage(text: string, packageText: string, folder: string): 
  * @returns the findings.
  */
 export async function checkSwiftCoverage(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const settings = getTable(planned.selection.view, 'coverage');
+    const settings = getTable(planned.scope.settings, 'coverage');
     const report = await measureCoverage(session, planned);
     return listCoverageShortfalls(report, settings).map((text) =>
         buildFinding(
             planned,
             {
                 file:
-                    getTable(planned.selection.view, 'swift').xcode_project ??
-                    joinScope(planned.selection.scope.path, PACKAGE_SWIFT),
+                    getTable(planned.scope.settings, 'swift').xcode_project ??
+                    joinScope(planned.scope.folder.path, PACKAGE_SWIFT),
                 line: 1,
             },
             'coverage',

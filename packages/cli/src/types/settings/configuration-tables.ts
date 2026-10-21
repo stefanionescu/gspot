@@ -36,7 +36,7 @@ export type ConfigurationTables = {
         allowed_unlisted_pages: string[];
         size_limit: { paths: string[]; kilobytes: number }[];
     };
-    spelling: { locale: (typeof SPELLING_LOCALES)[number] };
+    spelling: { locale: (typeof SPELLING_LOCALES)[number]; allowed_words: Record<string, string> };
     supabase: { functions_folder: string; schemas: string[]; types_file?: string | undefined };
     swift: {
         xcode_project?: string | undefined;

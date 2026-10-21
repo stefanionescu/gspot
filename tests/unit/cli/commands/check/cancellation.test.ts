@@ -84,7 +84,7 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     async (signal) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([], {
-                tables: `[[command_check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', SLOW_TOOL_PROGRAM])}\n`,
+                tables: `[[command_check]]\nid = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', SLOW_TOOL_PROGRAM])}\n`,
             }),
             'source.txt': 'input\n',
         });
@@ -259,7 +259,7 @@ test('an aborted run stops its command and reports cancellation on every system'
     const program = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); setInterval(() => {}, 1000);`;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
-            tables: `[[command_check]]\nname = "project/cancel"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\n`,
+            tables: `[[command_check]]\nid = "project/cancel"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\n`,
         }),
         'source.txt': 'Input.\n',
     });

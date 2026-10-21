@@ -52,7 +52,7 @@ export const REFERENCE_BUILD_FILES = {
 const TSCONFIG_PROJECT =
     '{"compilerOptions":{"composite":true,"strict":true,"types":[],"target":"ES2020"},"include":["*.ts"]}';
 
-export const YOUR_TSCONFIG = `{
+export const AUTHORED_TSCONFIG = `{
     // The application owns its build and module settings.
     "compilerOptions": {
         "strict": false,

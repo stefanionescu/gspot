@@ -1,7 +1,7 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { getLimit } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { getLimit } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseGrammarComments } from '#cli/parsers/comments.ts';
@@ -21,7 +21,7 @@ export async function checkStructureLongFiles(session: Session, planned: Planned
             : Object.entries(COMMENT_MARKERS).find(([name]) => file.tags.includes(name));
         if (comment === undefined) return [];
         const [language, marker] = comment;
-        return [{ file, language, marker, limit: getLimit(planned.selection.view, 'file_lines', language) }];
+        return [{ file, language, marker, limit: getLimit(planned.scope.settings, 'file_lines', language) }];
     });
     const findings = await Promise.all(
         sources.map(async ({ file, language, marker, limit }) => {

@@ -53,7 +53,7 @@ test('a whole setting preserves empty and multiword command arguments', async ()
         openapi: { document: 'openapi.json', generate_command: commandArguments },
         command_check: [
             {
-                name: 'sandbox/arguments',
+                id: 'sandbox/arguments',
                 command: [...runner, '{setting:openapi.generate_command}'],
                 paths: ['openapi.json'],
                 stage: 'push',
@@ -113,7 +113,7 @@ test('tool file inputs of a nested scope stop at the scope folder and follow a l
 
     const session = await openSession(sandbox.path);
     const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
-    const planned = plans.find((plan) => plan.selection.scope.path === 'app')!;
+    const planned = plans.find((plan) => plan.scope.folder.path === 'app')!;
     expect(listSwiftlintToolFiles(session, planned)).toStrictEqual([
         '.gspot/configurations/language/swift/swiftlint.yml',
         'app/.swiftlint.yml',
@@ -182,7 +182,7 @@ test('a Markdown command run in a scratch copy keeps the tool files its manifest
 
 test('per-file commands keep expanded flags and the arguments after the file', async () => {
     const settings = `configurations = []
-[[command_check]]\nname = "sandbox/arguments"
+[[command_check]]\nid = "sandbox/arguments"
 command = ${JSON.stringify([process.execPath, 'echo.cjs', '{existing:--config:settings.txt}', '{file}', 'config', '--quiet'])}
 paths = ["inputs/**"]
 stage = "commit"

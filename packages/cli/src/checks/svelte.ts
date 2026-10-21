@@ -40,7 +40,7 @@ function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): Findin
             buildFinding(
                 planned,
                 {
-                    file: joinScope(planned.selection.scope.path, convertToPosixPath(reported.filename)),
+                    file: joinScope(planned.scope.folder.path, convertToPosixPath(reported.filename)),
                     line: reported.start.line + 1,
                     column: reported.start.character + 1,
                 },
@@ -60,7 +60,7 @@ function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): Findin
  */
 export async function checkSvelteCheck(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     using runtime = createTemporaryFolder();
-    const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.selection.scope.path, TSCONFIG_FILE);
+    const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.folder.path, TSCONFIG_FILE);
     const tsconfigPath = writeScopeTsconfig(
         {
             root: session.root,
@@ -69,12 +69,12 @@ export async function checkSvelteCheck(session: Session, planned: PlannedCheck):
             repository: { files: session.repository.files, scopeFolders: session.repository.scopeFolders },
             settingsFile: session.settingsFile,
         },
-        planned.selection,
+        planned.scope,
         target,
     );
     const command = [...SVELTE_CHECK_COMMAND, SVELTE_TSCONFIG_FLAG, tsconfigPath];
     const result = await runCheckTool(session, planned, command, {
-        cwd: join(session.root, planned.selection.scope.path),
+        cwd: join(session.root, planned.scope.folder.path),
     });
     const findings = parseSvelteCheckFindings(planned, result.stdout);
     return assertToolFindings(result, findings, 'svelte-check');

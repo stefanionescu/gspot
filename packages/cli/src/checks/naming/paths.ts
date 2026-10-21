@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
-import { extractStem } from '#cli/system/paths.ts';
 import type { Session } from '#cli/types/session.ts';
+import { extractBaseName } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { SQL_EXTENSION } from '#cli/config/parsers/sql.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -49,7 +49,7 @@ function listPathIdentifiers(planned: PlannedCheck): Identifier[] {
  */
 export function buildFileIdentifier(path: string, language: string, containers: PathContainer[]): Identifier {
     const base = posix.basename(path);
-    const name = language === 'sql' && base.endsWith(SQL_EXTENSION) ? base : extractStem(base);
+    const name = language === 'sql' && base.endsWith(SQL_EXTENSION) ? base : extractBaseName(base);
     const named = parseSegmentName(
         name,
         containers.filter((container) => container.category !== 'folders'),
@@ -73,7 +73,7 @@ export function buildFolderIdentifiers(path: string, language: string, container
             : (parseSegmentName(segment, containers) ?? { name: segment, category: 'folders' });
         if (named === undefined || named.name === '') return [];
         const folder = segments.slice(0, index + 1).join('/');
-        return [createIdentifier({ file: path, language }, { line: 1, column: 1, ...named, folder: folder })];
+        return [createIdentifier({ file: path, language }, { line: 1, column: 1, ...named, folder })];
     });
 }
 
@@ -85,6 +85,6 @@ export function buildFolderIdentifiers(path: string, language: string, container
  * @returns the findings.
  */
 export function checkNamingPaths(session: Session, planned: PlannedCheck): Finding[] {
-    const settings = readNamingSettings(session.settingsFile.settings, planned.selection);
+    const settings = readNamingSettings(session.settingsFile.settings, planned.scope);
     return validateIdentifiers(planned, settings, listPathIdentifiers(planned));
 }

@@ -4,7 +4,7 @@ import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { type FilesState, type FileContents } from '#cli/types/system/files.ts';
+import { type FileBounds, type FileContents } from '#cli/types/system/files.ts';
 import { TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
 
 import {
@@ -46,20 +46,20 @@ function prepareParentFolder(folder: string): Stats {
 }
 
 // Read the bytes and mode of a private regular file.
-function readRegularFile(target: string, stat: Stats, path: string): FileContents {
+function readRegularFile(absolutePath: string, stat: Stats, path: string): FileContents {
     if (!stat.isFile() || stat.nlink !== 1)
         throw new GspotError(
             'filesystem',
             `${path} is not a regular file with one link. Use a regular file without extra hard links.`,
         );
-    const bytes = readFileSync(target);
+    const bytes = readFileSync(absolutePath);
     return { bytes, mode: normalizeFileMode({ mode: stat.mode & MODE_BITS }) };
 }
 
 // Check the same parent folders before a read or a prepared write.
-function walkParentFolders(state: FilesState, path: string, statParent: (path: string) => Stats): string {
+function walkParentFolders(bounds: FileBounds, path: string, statParent: (path: string) => Stats): string {
     const parts = splitSystemPath(path);
-    let folder = state.root;
+    let folder = bounds.root;
     for (const part of parts.slice(0, -1)) {
         folder = join(folder, part);
         const stat = statParent(folder);
@@ -69,15 +69,15 @@ function walkParentFolders(state: FilesState, path: string, statParent: (path: s
                 `A parent of ${path} is a link or is not a directory. Choose a directory without links.`,
             );
     }
-    return join(state.root, ...parts);
+    return join(bounds.root, ...parts);
 }
 
 // A synchronous replacement must finish its flush before the caller continues.
-function writeStagedFile(temporary: string, value: FileContents): void {
+function writeStagedFile(temporary: string, contents: FileContents): void {
     const file = openSync(temporary, 'wx', PRIVATE_FILE);
     try {
-        writeFileSync(file, value.bytes);
-        fchmodSync(file, value.mode);
+        writeFileSync(file, contents.bytes);
+        fchmodSync(file, contents.mode);
         fsyncSync(file);
     } catch (error) {
         closeSync(file);
@@ -124,35 +124,35 @@ export function isSameContents(found: FileContents | undefined, expected: FileCo
 /**
  * Build the absolute path of a file after a check that every parent names a real folder, not a link.
  *
- * @param state the root.
+ * @param bounds the root.
  * @param path the root-relative file.
  * @returns the absolute path.
  */
-export function buildContainedPath(state: FilesState, path: string): string {
-    return walkParentFolders(state, path, lstatSync);
+export function buildContainedPath(bounds: FileBounds, path: string): string {
+    return walkParentFolders(bounds, path, lstatSync);
 }
 
 /**
  * Build the absolute path of a file, create missing parents, and refuse parents that link or name no folder.
  *
- * @param state the root.
+ * @param bounds the root.
  * @param path the root-relative file.
  * @returns the absolute path after preparing its parents.
  */
-export function preparePath(state: FilesState, path: string): string {
-    return walkParentFolders(state, path, prepareParentFolder);
+export function preparePath(bounds: FileBounds, path: string): string {
+    return walkParentFolders(bounds, path, prepareParentFolder);
 }
 
 /**
  * Read a regular file with no other hard link, or return undefined when absent.
  *
- * @param state the root.
+ * @param bounds the root.
  * @param path the root-relative file.
  * @returns the file contents.
  */
-export function readEntry(state: FilesState, path: string): FileContents | undefined {
+export function readEntry(bounds: FileBounds, path: string): FileContents | undefined {
     try {
-        const target = buildContainedPath(state, path);
+        const target = buildContainedPath(bounds, path);
         return readRegularFile(target, lstatSync(target), path);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
@@ -163,13 +163,13 @@ export function readEntry(state: FilesState, path: string): FileContents | undef
 /**
  * Read a file or symbolic link without following the link, or return undefined when absent.
  *
- * @param state the root.
+ * @param bounds the root.
  * @param path the root-relative file.
  * @returns the file contents.
  */
-export function readEntryKeepingLinks(state: FilesState, path: string): FileContents | undefined {
+export function readEntryKeepingLinks(bounds: FileBounds, path: string): FileContents | undefined {
     try {
-        const target = buildContainedPath(state, path);
+        const target = buildContainedPath(bounds, path);
         const stat = lstatSync(target);
         // A symbolic link reads as its target text, with its own mode.
         return stat.isSymbolicLink()
@@ -184,24 +184,24 @@ export function readEntryKeepingLinks(state: FilesState, path: string): FileCont
 /**
  * Replace the file at a path with new file contents, through a staged file that moves into place.
  *
- * @param state the root.
+ * @param bounds the root.
  * @param path the root-relative file.
- * @param value the file contents to write.
+ * @param contents the file contents to write.
  * @param expected the file contents that the caller last saw, or undefined for a new file.
  */
 export function replaceEntry(
-    state: FilesState,
+    bounds: FileBounds,
     path: string,
-    value: FileContents,
+    contents: FileContents,
     expected: FileContents | undefined,
 ): void {
-    const target = preparePath(state, path);
+    const target = preparePath(bounds, path);
     const temporary = join(dirname(target), `${TEMPORARY_FILE_PREFIX}${randomUUID()}${TEMPORARY_FILE_SUFFIX}`);
     let staged = false;
     try {
-        writeStagedFile(temporary, value);
+        writeStagedFile(temporary, contents);
         staged = true;
-        if (!isSameContents(readEntry(state, path), expected))
+        if (!isSameContents(readEntry(bounds, path), expected))
             throw new Error(`Destination changed during the operation: ${path}`);
         if (isRenameBlocked(expected)) unlinkSync(target);
         renameSync(temporary, target);

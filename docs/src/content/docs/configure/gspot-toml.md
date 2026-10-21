@@ -85,13 +85,14 @@ gspot set limits.function_lines 80 --reason "The parser is one state machine."
 function_lines = { value = 80, reason = "The parser is one state machine." }
 ```
 
-`allowed_words` holds one reason per word:
+`spelling.allowed_words` holds one reason per word. A scope adds its words to the root words:
 
 ```shell
-gspot set allowed_words Acmeflow --reason "Our product name."
+gspot set spelling.allowed_words Acmeflow --reason "Our product name."
 ```
 
 ```toml title="gspot.toml"
+[spelling]
 allowed_words = { Acmeflow = "Our product name.", AGENTS = "File name of the agent rules." }
 ```
 

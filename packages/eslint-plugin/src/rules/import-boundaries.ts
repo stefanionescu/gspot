@@ -4,18 +4,18 @@ import { PLUGIN_PREFIX } from '../config/plugin.ts';
 import { IMPORT_SELECTOR } from '../config/syntax.ts';
 import type { ImportSource } from '../types/syntax.ts';
 import { createRule } from '../schemas/rules/options.ts';
-import { DEFAULT_FOLDERS, RELATIVE_PREFIXES } from '../config/imports.ts';
 import type { RuleContext, ImportBoundariesOptions } from '../types/rules.ts';
 import { STDIN_NAMES, TRAILING_STAR, TRAILING_SLASH } from '../config/paths.ts';
+import { RELATIVE_PREFIXES, DEFAULT_BOUNDARY_FOLDERS } from '../config/imports.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { importBoundariesOptionsSchema } from '../schemas/rules/import-boundaries.ts';
 
-const globCache = new Map<string, (path: string) => boolean>();
+const matchersByGlob = new Map<string, (path: string) => boolean>();
 function isGlobMatch(path: string, glob: string): boolean {
-    let isMatch = globCache.get(glob);
+    let isMatch = matchersByGlob.get(glob);
     if (isMatch === undefined) {
         isMatch = picomatch(glob, { dot: true });
-        globCache.set(glob, isMatch);
+        matchersByGlob.set(glob, isMatch);
     }
     return isMatch(path);
 }
@@ -30,16 +30,16 @@ function getLintedPath(context: RuleContext): string | undefined {
     return absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : undefined;
 }
 
-function computeImportTarget(importer: string, source: string): string | undefined {
+function getImportedPath(importer: string, source: string): string | undefined {
     if (!RELATIVE_PREFIXES.some((prefix) => source.startsWith(prefix))) return undefined;
     return posix.join(posix.dirname(importer), source.split('?', 1)[0] ?? source);
 }
 
-function findAlias(target: string, aliases: Record<string, string>): string | undefined {
+function findAlias(importedPath: string, aliases: Record<string, string>): string | undefined {
     for (const [prefix, folder] of Object.entries(aliases)) {
         const base = folder.replace(TRAILING_STAR, '').replace(TRAILING_SLASH, '');
-        if (target === base || target.startsWith(`${base}/`))
-            return `${prefix.replace(TRAILING_STAR, '')}${target.slice(base.length + 1)}`;
+        if (importedPath === base || importedPath.startsWith(`${base}/`))
+            return `${prefix.replace(TRAILING_STAR, '')}${importedPath.slice(base.length + 1)}`;
     }
     return undefined;
 }
@@ -61,7 +61,7 @@ function findBoundary(parentFolder: string, folders: readonly string[]): string 
 export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'escape'>({
     name: 'import-boundaries',
     meta: {
-        defaultOptions: [{ folders: DEFAULT_FOLDERS, aliases: {}, externals: [] }],
+        defaultOptions: [{ folders: DEFAULT_BOUNDARY_FOLDERS, aliases: {}, externals: [] }],
         type: 'suggestion',
         fixable: 'code',
         docs: {
@@ -90,7 +90,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
             if (node === null) return;
             const source = ASTUtils.getStringIfConstant(node);
             if (source === null || isExternal(source)) return;
-            const target = computeImportTarget(relative, source);
+            const target = getImportedPath(relative, source);
             if (target === undefined) return;
             if (isWithinFolder(target, folder)) return;
             const alias = findAlias(target, aliases);

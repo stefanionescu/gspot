@@ -62,7 +62,7 @@ const yamlRules = buildRuleTableSchema(
             ),
         )
         .meta({ type: 'object' }),
-    'files/yamllint',
+    'data-files/yamllint',
 );
 
 const eslintTable = z.strictObject({

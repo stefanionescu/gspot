@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
@@ -15,7 +15,7 @@ import { MISE_FILES, NPM_TOOL_PREFIX } from '#cli/config/checks/dependencies.ts'
 function readPinnedVersion(value: unknown): string | undefined {
     const first: unknown = Array.isArray(value) ? value[0] : value;
     if (typeof first === 'string') return first;
-    const version = isRecord(first) ? first['version'] : undefined;
+    const version = isTable(first) ? first['version'] : undefined;
     return typeof version === 'string' ? version : undefined;
 }
 
@@ -49,7 +49,7 @@ function splitPackageManager(field: string | undefined): { tool: string; version
  * @returns a finding when the two versions differ.
  */
 export function checkPackageManagerPin(session: Session, planned: PlannedCheck): Finding[] {
-    const folder = planned.selection.scope.path;
+    const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const declared = splitPackageManager(readCachedPackageJson(session.reads, packageJsonPath)?.packageManager);
     if (declared === undefined) return [];

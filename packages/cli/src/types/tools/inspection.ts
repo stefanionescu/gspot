@@ -6,7 +6,7 @@ export type InspectedTool = {
     root: string;
     cwd: string;
     tool: Tool;
-    hint: string;
+    help: string;
     want: string | undefined;
     miseBinPaths: string[] | undefined;
 };
@@ -16,9 +16,9 @@ export type ToolInspection = {
     want?: string;
     found?: string;
     path?: string;
-    hint?: string;
+    help?: string;
     note?: string;
-    floor?: string;
+    minimumVersion?: string;
 };
 export type ToolSearch = {
     timeoutSeconds: number;

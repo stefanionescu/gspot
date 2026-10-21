@@ -6,9 +6,9 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { getMiseBinPaths } from '#cli/tools/locate.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
+import { listOtherTools } from '#cli/planning/needed-tools.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { listCompanionTools } from '#cli/planning/needed-tools.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import type { ProcessFailure, ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
@@ -86,7 +86,7 @@ export function findTool(session: Session, cwd: string, tool: Tool): ToolAvailab
  * @param env variables for the tool process.
  * @returns the environment with the companion folders on `PATH`.
  */
-export function buildCompanionEnvironment(
+export function buildOtherToolEnvironment(
     session: Session,
     names: string[],
     env: Record<string, string>,
@@ -142,9 +142,9 @@ export async function runCheckTool(
         'tool' in command ? [process.execPath, buildAssetPath(command.entry), path] : [path, ...command.slice(1)];
     const { result, failure } = await runToolProcess(commandArguments, {
         ...options,
-        env: buildCompanionEnvironment(session, listCompanionTools(planned.selection, planned.check), env),
+        env: buildOtherToolEnvironment(session, listOtherTools(planned.scope, planned.check), env),
         cancelSignal: session.cancelSignal,
-        timeoutSeconds: Number(planned.selection.view.settings['tool_timeout_seconds']),
+        timeoutSeconds: Number(planned.scope.settings.settings['tool_timeout_seconds']),
         name,
     });
     if (failure?.status === 'missing') throw new GspotError('tool', failure.note);

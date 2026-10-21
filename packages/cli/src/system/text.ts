@@ -22,22 +22,22 @@ export function findQuotedEnd(line: string, start: number): number {
  * Select up to three names close enough to look like a typo, closest first.
  *
  * @param name the text as typed.
- * @param candidates the names that exist.
+ * @param knownNames the names that exist.
  *
  * @returns the closest names.
  */
-export function selectSimilarNames(name: string, candidates: string[]): string[] {
+export function selectSimilarNames(name: string, knownNames: string[]): string[] {
     const lower = name.toLowerCase();
     const limit = Math.max(TYPO_MIN, Math.floor(name.length / TYPO_FRACTION));
-    return candidates
-        .map((candidate) => ({ candidate, score: distance(lower, candidate.toLowerCase()) }))
+    return knownNames
+        .map((knownName) => ({ knownName, score: distance(lower, knownName.toLowerCase()) }))
         .filter(
-            ({ candidate, score }) =>
-                score <= limit || candidate.toLowerCase().includes(lower) || lower.includes(candidate.toLowerCase()),
+            ({ knownName, score }) =>
+                score <= limit || knownName.toLowerCase().includes(lower) || lower.includes(knownName.toLowerCase()),
         )
         .toSorted((a, b) => a.score - b.score)
         .slice(0, SIMILAR_NAME_LIMIT)
-        .map(({ candidate }) => candidate);
+        .map(({ knownName }) => knownName);
 }
 
 /**
@@ -69,13 +69,13 @@ export function formatSimilarNames(name: string, knownNames: string[]): string {
 /**
  * Quote one argument for a POSIX shell command shown to the reader.
  *
- * @param value the command token to display without shell expansion.
+ * @param argument the command token to display without shell expansion.
  *
  * @returns the argument with any required shell quoting.
  */
-export function quoteArgument(value: string): string {
-    if (PLAIN_ARGUMENT.test(value)) return value;
-    return `'${value.replaceAll("'", "'\"'\"'")}'`;
+export function quoteArgument(argument: string): string {
+    if (PLAIN_ARGUMENT.test(argument)) return argument;
+    return `'${argument.replaceAll("'", "'\"'\"'")}'`;
 }
 
 /**
@@ -86,7 +86,7 @@ export function quoteArgument(value: string): string {
  *
  * @returns the one-based line and column.
  */
-export function computePosition(text: string, offset: number): TextPosition {
+export function getPosition(text: string, offset: number): TextPosition {
     const before = text.slice(0, offset);
     const line = before.split('\n').length;
     return { line, column: offset - before.lastIndexOf('\n') };
@@ -95,10 +95,10 @@ export function computePosition(text: string, offset: number): TextPosition {
 /**
  * Print a count with its singular or plural noun.
  *
- * @param value the quantity that selects the noun ending.
+ * @param count the quantity that selects the noun ending.
  * @param noun the singular word.
  * @returns the count and the noun with the matching ending.
  */
-export function formatCount(value: number, noun: string): string {
-    return `${String(value)} ${noun}${value === 1 ? '' : 's'}`;
+export function formatCount(count: number, noun: string): string {
+    return `${String(count)} ${noun}${count === 1 ? '' : 's'}`;
 }

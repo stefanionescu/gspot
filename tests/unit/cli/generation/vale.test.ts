@@ -65,7 +65,7 @@ test('the Vale vocabulary and heading exceptions hold the products of every scop
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['prose'], {
             level: 'all',
-            tables: '[allowed_words]\nNebulaProduct = "The project uses this reviewed product name."\nPython = "The project uses this reviewed language name."\n',
+            tables: '[spelling.allowed_words]\nNebulaProduct = "The project uses this reviewed product name."\nPython = "The project uses this reviewed language name."\n',
             scopes: [
                 { path: 'app', configurations: ['python'] },
                 { path: 'sibling', configurations: [] },

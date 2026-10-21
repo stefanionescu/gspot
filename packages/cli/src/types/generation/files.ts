@@ -26,7 +26,7 @@ export type GenerationResult = {
 };
 
 /** The declaring configuration and the inputs of its scope. */
-export type ToolFileOwner = { session: Session; selection: Scope; configuration: Configuration };
+export type ToolFileOwner = { session: Session; scope: Scope; configuration: Configuration };
 
 /** Generated tool files and the chosen target for each scope and declaration. */
 export type ToolFileGeneration = {
@@ -56,7 +56,7 @@ export type ToolFileBuilder = (planned: PlannedToolFile) => string;
 
 /** A tool and the generated destinations that can replace its package fields. */
 export type PlannedPointerField = {
-    selection: Scope;
+    scope: Scope;
     configuration: Configuration;
     tool: Tool;
     consumed: boolean;
@@ -75,7 +75,7 @@ export type OwnedToolFile = { toolFile: ToolFile; owner: ToolFileOwner };
 export type BuiltToolFile = OwnedToolFile & { toolFile: WholeToolFile; file: GeneratedFile };
 
 /** The mutable destinations and output files collected during one generation. */
-export type ToolFileGenerationState = { targets: Map<string, Map<string, string>>; files: Map<string, GeneratedFile> };
+export type GeneratedToolFiles = { targets: Map<string, Map<string, string>>; files: Map<string, GeneratedFile> };
 
 /** The check and program names that make a tool-file declaration applicable. */
 export type UsedNames = { tools: Set<string>; checks: Set<string> };

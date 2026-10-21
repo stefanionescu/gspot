@@ -7,7 +7,7 @@ export const SOURCE_QUERIES = {
 (computed_setter) (computed_property (statements)) (willset_clause) (didset_clause)] @function`,
 } as const;
 
-export const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
+export const INDEX_BASE_NAMES = new Set(['index', 'mod', '__init__']);
 
 /** Comment styles for the languages whose code lines gspot counts. */
 export const COMMENT_MARKERS = { bash: '#', python: '#', sql: '--' } as const;

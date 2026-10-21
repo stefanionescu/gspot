@@ -13,7 +13,7 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { type KnipToolFile } from '#tests/types/generated-files.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 
 import {
     KNIP_ARGUMENTS,
@@ -27,7 +27,7 @@ import {
 
 const check = readConfigurations()
     .get('javascript')!
-    .checks.find(({ name }) => name === 'javascript/knip')!;
+    .checks.find(({ id: name }) => name === 'javascript/knip')!;
 
 test('Knip finds unused framework component files and uses the entry points of each scope', async () => {
     await using sandbox = await testdir();
@@ -47,7 +47,7 @@ test('Knip finds unused framework component files and uses the entry points of e
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
     expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
         KNIP_UNUSED_FILES.map((file) => ({
-            check: check.name,
+            check: check.id,
             file,
             rule: 'files',
             message: `Unused file: ${file}`,
@@ -81,7 +81,7 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
     expect(findings.toSorted((left, right) => left.message.localeCompare(right.message))).toStrictEqual([
         {
-            check: check.name,
+            check: check.id,
             file: 'package.json',
             rule: 'dependencies',
             message: 'Unused dependency: fixture-unused-package',
@@ -89,7 +89,7 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
             fixable: false,
         },
         {
-            check: check.name,
+            check: check.id,
             file: 'package.json',
             rule: 'dependencies',
             message: 'Unused dependency: vale',
@@ -121,7 +121,7 @@ test("Knip ignores gspot's pointer files and reports other configuration-like fi
     const markdown = session.configurations
         .get('markdown')!
         .toolFiles.find(({ tool }) => tool.includes('markdownlint-cli2'))!;
-    expect(buildScopeTarget('child', markdown, getToolFiles(session).targets)).toBe(markdown.target);
+    expect(getToolFileTarget('child', markdown, getToolFiles(session).targets)).toBe(markdown.target);
     await createFileTree(
         sandbox.path,
         Object.fromEntries([configuration, ...pointers].map(({ path, content }) => [path, content])),
@@ -161,7 +161,7 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
     expect(workspaces['sibling']!.entry).toContain('sibling-tests/**');
     expect(workspaces['app/deep']!.entry).not.toContain('verification/**');
     expect(workspaces['app/deep']!.entry).toContain('**/*.test.*');
-    for (const { view } of session.scopes) expect(view.test_files).toContain('specifications/**');
+    for (const { settings } of session.scopes) expect(settings.test_files).toContain('specifications/**');
 });
 
 test('Knip workspaces come from package workspaces, your entries and the configuration entry files', async () => {

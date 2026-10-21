@@ -10,16 +10,16 @@ function assertValeMatches(installed: Files, destination: Files, config: string)
     const selected = destination.read(config);
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
         throw new GspotError(
-            'files',
+            'copy',
             'Installed Vale packages do not match the revision configuration. Check this commit in its own clone after running gspot apply and gspot install there.',
         );
 }
 
-function copyPackageFile(installed: Files, destination: Files, path: string): void {
+function copyValePackageFile(installed: Files, destination: Files, path: string): void {
     if (destination.read(path) !== undefined) return;
     const content = installed.read(path);
     if (content === undefined)
-        throw new GspotError('files', `Installed Vale package file ${path} disappeared. Run gspot apply.`);
+        throw new GspotError('copy', `Installed Vale package file ${path} disappeared. Run gspot apply.`);
     destination.write(path, content, undefined);
 }
 
@@ -56,5 +56,5 @@ export function copyValePackages(repositoryRoot: string, copyRoot: string, paths
     const packages = listStyleFiles(installed, VALE_PACKAGES_PATH);
     if (packages.length === 0) return;
     for (const config of configurations) assertValeMatches(installed, destination, config);
-    for (const path of packages) copyPackageFile(installed, destination, path);
+    for (const path of packages) copyValePackageFile(installed, destination, path);
 }

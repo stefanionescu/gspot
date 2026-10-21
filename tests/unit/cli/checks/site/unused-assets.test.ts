@@ -33,7 +33,7 @@ test("an asset in a scope's assets folder counts as used when a file outside the
     });
 
     expect(await checkFindings(root, 'site/unused-assets', { scope: 'docs' })).toMatchObject([
-        { file: 'docs/assets/unused.svg', line: 1, check: 'site/unused-assets', rule: 'dead-asset' },
+        { file: 'docs/assets/unused.svg', line: 1, check: 'site/unused-assets', rule: 'unused-asset' },
     ]);
 });
 
@@ -50,7 +50,7 @@ test('unused-assets reads staged files, not an unstaged README or an untracked f
     });
     using copy = await copyRevision(root, { kind: 'index' });
     const findings = await checkFindings(copy.root, 'site/unused-assets', { scope: 'docs' });
-    expect(findings).toMatchObject([{ file: 'docs/assets/unused.svg', rule: 'dead-asset' }]);
+    expect(findings).toMatchObject([{ file: 'docs/assets/unused.svg', rule: 'unused-asset' }]);
     expect(await readFile(join(root, 'README.md'), 'utf8')).toBe('![Unused](docs/assets/unused.svg)\n');
 });
 
@@ -68,7 +68,7 @@ test.each([
     const input = planSandboxCheck(session, 'site/unused-assets');
     expect(session.repository.index).toStrictEqual([]);
     expect(await findBuiltInCheck('site/unused-assets')(session, input)).toMatchObject([
-        { file: 'assets/unused.svg', rule: 'dead-asset' },
+        { file: 'assets/unused.svg', rule: 'unused-asset' },
     ]);
 });
 
@@ -83,6 +83,6 @@ test('an unstaged deletion removes the reference without failing the asset check
     const input = planSandboxCheck(session, 'site/unused-assets', { scope: 'docs' });
     expect(session.repository.index.map((entry) => entry.path)).toContain('README.md');
     expect(await findBuiltInCheck('site/unused-assets')(session, input)).toMatchObject([
-        { file: 'docs/assets/logo.svg', rule: 'dead-asset' },
+        { file: 'docs/assets/logo.svg', rule: 'unused-asset' },
     ]);
 });

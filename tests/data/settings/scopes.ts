@@ -110,7 +110,7 @@ export const PROJECT_CHOICES = {
 } as const;
 
 /** Inheritance from the root, removal, restoring in a deeper scope, separate siblings, and required dependencies. */
-export const PROJECT_SELECTIONS = [
+export const PROJECT_SCOPE_CASES = [
     ['', 'nextjs', true],
     ['app', 'nextjs', false],
     ['app/child', 'nextjs', false],

@@ -7,13 +7,13 @@ import type { RunOptions } from '#cli/types/runs/run.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import { selectForScope } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { SampleChanges } from '#tests/types/samples.ts';
 import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import type { NamingCase } from '#cli/types/settings/tables.ts';
+import { selectForScope } from '#cli/settings/scope-settings.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import { SOURCE_KIND } from '#cli/config/repository/inventory.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
@@ -155,7 +155,7 @@ export function planFixer(session: Session, script: string): PlannedCheck {
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []
 [[command_check]]
-name = "sandbox/fixer"
+id = "sandbox/fixer"
 command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]
 fix = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 3"]
 paths = ${JSON.stringify(paths)}
@@ -197,14 +197,18 @@ export function buildNamingSettings(): NamingSettings {
 /** Read the naming settings that apply in one scope of this settings text. */
 export function buildScopeNamingSettings(text: string, scope = ''): NamingSettings {
     const settings = parseSettings(text, undefined);
-    const selected = selectForScope(settings, scope, readConfigurations());
-    const known = buildKnownSettings(selected, 'recommended');
-    const view = buildRootScopeSettings(settings, scope);
+    const configurations = selectForScope(settings, scope, readConfigurations());
+    const knownSettings = buildKnownSettings(configurations, 'recommended');
+    const scopeSettings = buildRootScopeSettings(settings, scope);
     return readNamingSettings(settings, {
-        view,
-        known,
-        selected,
-        scope: { path: scope, configurations: view.configurations, origin: scope === '' ? 'root' : SETTINGS_FILE },
+        settings: scopeSettings,
+        knownSettings,
+        configurations,
+        folder: {
+            path: scope,
+            configurations: scopeSettings.configurations,
+            origin: scope === '' ? 'root' : SETTINGS_FILE,
+        },
     });
 }
 

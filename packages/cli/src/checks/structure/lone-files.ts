@@ -19,11 +19,11 @@ import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tre
 export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck): Finding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
-    const extensions = filterSourceConfigurations(planned.selection.selected).flatMap(
+    const extensions = filterSourceConfigurations(planned.scope.configurations).flatMap(
         (configuration) => configuration.files.extensions,
     );
     const isRouteFile = buildPathMatcher(
-        planned.selection.selected.flatMap((configuration) => configuration.route_files),
+        planned.scope.configurations.flatMap((configuration) => configuration.route_files),
     );
     const checked = new Set(files.map((file) => extractParentFolder(file.path)));
     return [...checked]

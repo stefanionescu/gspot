@@ -32,13 +32,11 @@ export async function runOverPushedCommits(
  * Reads the command of another check in the same shipped configuration.
  *
  * @param planned the history check.
- * @param checkName the sibling ID.
+ * @param checkId the check ID of the other check, such as `jest/test`.
  * @returns the executable and its arguments.
  */
-export function getSiblingCommand(planned: PlannedCheck, checkName: string): string[] {
+export function getSiblingCommand(planned: PlannedCheck, checkId: string): string[] {
     const configuration = planned.configuration as NonNullable<PlannedCheck['configuration']>;
-    const sibling = configuration.checks.find(
-        ({ name }) => name === checkName,
-    ) as (typeof configuration.checks)[number];
+    const sibling = configuration.checks.find(({ id }) => id === checkId) as (typeof configuration.checks)[number];
     return sibling.command as string[];
 }

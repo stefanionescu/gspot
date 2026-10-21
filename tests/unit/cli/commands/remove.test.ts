@@ -6,8 +6,8 @@ import { parse } from '@decimalturn/toml-patch';
 import { readTree } from '#tests/setup/files.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { selectForScope } from '#cli/settings/scope-view.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { selectForScope } from '#cli/settings/scope-settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 
 import {

@@ -108,14 +108,14 @@ function formatFileSection(title: string, rows: InitFileRow[]): string[] {
 }
 
 function buildConfigurationRows(
-    { everySelected, selection }: InitScan,
+    { everySelected, configurations }: InitScan,
     { level }: Settings,
 ): InitPlan['configurations'] {
     return everySelected.map((configuration) => {
         const checks = configuration.checks.filter((check) => level === 'all' || check.level === 'recommended').length;
         return {
             configuration: configuration.name,
-            origin: selection.origins.get(configuration.name) ?? 'required',
+            origin: configurations.origins.get(configuration.name) ?? 'required',
             checks,
             checksOff: configuration.checks.length - checks,
         };

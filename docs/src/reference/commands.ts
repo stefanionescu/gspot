@@ -1,6 +1,6 @@
+import { ENVIRONMENT_VARIABLES } from '../config/reference.ts';
 import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
 import { type ReferencePage, type ReferenceFacts } from '../types/reference.ts';
-import { REFERENCE_FOLDERS, ENVIRONMENT_VARIABLES } from '../config/reference.ts';
 import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/commands/help.ts';
 
 type Command = ReferenceFacts['commands'][number];
@@ -37,14 +37,14 @@ function formatCommand(command: Command): string {
 }
 
 /**
- * Build the one Commands page from the CLI help data, with a section per command in program order.
+ * Build the Commands page from the CLI help data, with a section per command in program order.
  *
  * @param data the CLI reference data
  * @param data.commands the help data the CLI registers
- * @returns the page, keyed by its Markdown path
+ * @returns the Commands page, with its title, description, and Markdown body
  */
-export function buildCommandPages({ commands }: Pick<ReferenceFacts, 'commands'>): Map<string, ReferencePage> {
-    const page = buildReferencePage(
+export function buildCommandPage({ commands }: Pick<ReferenceFacts, 'commands'>): ReferencePage {
+    return buildReferencePage(
         'Commands',
         'Every gspot command, its options, and its exit codes.',
         `Run gspot from any folder in the repository; it finds the nearest \`gspot.toml\`. Start each command the way your repository runs gspot, such as \`npx gspot\` or \`mise exec -- gspot\`. See [Install](/start/install/#choose-how-to-install). Commands that change settings write generated files too.\n\n` +
@@ -76,5 +76,4 @@ export function buildCommandPages({ commands }: Pick<ReferenceFacts, 'commands'>
                 ),
             ),
     );
-    return new Map([[`${REFERENCE_FOLDERS.commands}/index.md`, page]]);
 }

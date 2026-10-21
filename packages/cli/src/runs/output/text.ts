@@ -74,7 +74,7 @@ export function parseGroupedFindings(output: ToolOutput): Finding[] {
         const groups = pattern.exec(line)?.groups;
         if (groups) {
             const message = (groups['message'] ?? line).trim();
-            findings.push(setMatchedFields({ check, file, message: message, help, fixable: false }, groups));
+            findings.push(setMatchedFields({ check, file, message, help, fixable: false }, groups));
         }
     }
     return findings;

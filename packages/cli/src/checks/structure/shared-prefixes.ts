@@ -1,21 +1,21 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { HOOK_FOLDERS } from '#cli/config/repository/hooks.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
-import { extractStem, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
-import { SPEC_SUFFIX, INDEX_STEMS, COMPANION_SUFFIX } from '#cli/config/checks/structure.ts';
+import { extractBaseName, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
+import { SPEC_SUFFIX, INDEX_BASE_NAMES, COMPANION_SUFFIX } from '#cli/config/checks/structure.ts';
 
 // A configuration such as NestJS declares <name>.<kind>.<ext> file names, so these do not count as a shared prefix.
 function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);
     if (extension.endsWith('x') || !listTaggedExtensions('javascript', 'typescript').includes(extension)) return false;
-    const parts = extractStem(name).replace(SPEC_SUFFIX, '').split('.');
+    const parts = extractBaseName(name).replace(SPEC_SUFFIX, '').split('.');
     const kind = parts.at(-1);
     return parts.length > 1 && kind !== undefined && kinds.has(kind);
 }
@@ -23,12 +23,12 @@ function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
 /**
  * Extracts the grouping prefix: the stem up to its first dash or dot.
  *
- * @param stem the file name without its extension.
+ * @param baseName the file name without its extension.
  * @returns the part before the first dash or dot, or all of it.
  */
-function extractPrefix(stem: string): string {
-    const cuts = [stem.indexOf('-'), stem.indexOf('.')].filter((index) => index >= 0);
-    return cuts.length === 0 ? stem : stem.slice(0, Math.min(...cuts));
+function extractPrefix(baseName: string): string {
+    const cuts = [baseName.indexOf('-'), baseName.indexOf('.')].filter((index) => index >= 0);
+    return cuts.length === 0 ? baseName : baseName.slice(0, Math.min(...cuts));
 }
 
 /**
@@ -39,27 +39,27 @@ function extractPrefix(stem: string): string {
  * @returns the findings.
  */
 export function checkStructureSharedPrefixes(_session: Session, planned: PlannedCheck): Finding[] {
-    const limit = getTable(planned.selection.view, 'limits').shared_prefix_files;
+    const limit = getTable(planned.scope.settings, 'limits').shared_prefix_files;
     const prefixes = new Set(
-        planned.selection.selected.flatMap((configuration) => configuration.shared_prefixes.prefixes),
+        planned.scope.configurations.flatMap((configuration) => configuration.shared_prefixes.prefixes),
     );
-    const kinds = new Set(planned.selection.selected.flatMap((configuration) => configuration.shared_prefixes.kinds));
+    const kinds = new Set(planned.scope.configurations.flatMap((configuration) => configuration.shared_prefixes.kinds));
     const tree = buildFolderTree(planned.files);
     const seen = new Set<string>();
 
     const files = listCodeFiles(planned).filter((file) => {
         const folder = extractParentFolder(file.path);
         return (
-            !HOOK_FOLDERS.some((hook) => isInScope(folder, joinScope(planned.selection.scope.path, hook))) &&
+            !HOOK_FOLDERS.some((hook) => isInScope(folder, joinScope(planned.scope.folder.path, hook))) &&
             !folder.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
         );
     });
     return files.flatMap((file) => {
         const folder = extractParentFolder(file.path);
-        const stem = extractStem(file.path);
+        const stem = extractBaseName(file.path);
         const prefix = extractPrefix(stem);
         const key = JSON.stringify([folder, prefix]);
-        if (prefix === '' || prefixes.has(prefix) || INDEX_STEMS.has(stem) || seen.has(key)) return [];
+        if (prefix === '' || prefixes.has(prefix) || INDEX_BASE_NAMES.has(stem) || seen.has(key)) return [];
         const peers = (tree.get(folder) ?? []).filter((entry) => {
             if (entry.kind === 'folder')
                 return (
@@ -68,14 +68,16 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
                     extractPrefix(entry.name) === prefix
                 );
             if (hasDeclaredKindSuffix(entry.name, kinds)) return false;
-            const peerStem = extractStem(entry.name);
-            return !INDEX_STEMS.has(peerStem) && extractPrefix(peerStem) === prefix;
+            const peerStem = extractBaseName(entry.name);
+            return !INDEX_BASE_NAMES.has(peerStem) && extractPrefix(peerStem) === prefix;
         });
         // A file and its companions, such as button.tsx, button.module.css, and button.test.tsx, count as one name.
         if (
             new Set(
                 peers.map((entry) =>
-                    entry.kind === 'folder' ? `${entry.name}/` : extractStem(entry.name).replace(COMPANION_SUFFIX, ''),
+                    entry.kind === 'folder'
+                        ? `${entry.name}/`
+                        : extractBaseName(entry.name).replace(COMPANION_SUFFIX, ''),
                 ),
             ).size < limit
         )

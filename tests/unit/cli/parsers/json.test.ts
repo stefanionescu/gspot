@@ -2,9 +2,9 @@ import { test, expect } from 'bun:test';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { NON_RECORD_JSON } from '#tests/data/checks/format.ts';
+import { NON_TABLE_JSON } from '#tests/data/checks/format.ts';
 
-test.each(NON_RECORD_JSON)(
+test.each(NON_TABLE_JSON)(
     'a JSON file whose root is %s, not an object, fails with an error that names the file and the shape',
     (text) => {
         expect(() => parseJsonFile('example.json', text)).toThrow(

@@ -19,7 +19,7 @@ export function stripUndefined<T extends object>(value: T): Defined<T> {
  *
  * @returns whether the value holds keys.
  */
-export function isRecord(value: unknown): value is Record<string, unknown> {
+export function isTable(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date);
 }
 
@@ -49,7 +49,7 @@ export function getValueAt(value: unknown, keys: readonly (string | number)[]): 
  */
 export function normalizeTables(value: unknown): unknown {
     if (Array.isArray(value)) return value.map((entry) => normalizeTables(entry));
-    if (!isRecord(value)) return value;
+    if (!isTable(value)) return value;
     const table = Object.fromEntries<unknown>(
         Object.entries(value).map(([key, entry]) => [key, normalizeTables(entry)]),
     );
@@ -76,7 +76,7 @@ export function createTable(
             next = {};
             current[part] = next;
         }
-        if (!isRecord(next)) return undefined;
+        if (!isTable(next)) return undefined;
         current = next;
     }
     return current;

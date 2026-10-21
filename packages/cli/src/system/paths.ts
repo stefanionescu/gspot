@@ -77,7 +77,7 @@ export function extractParentFolder(path: string): string {
  * @param path the file location with its complete declaration or ordinary extension.
  * @returns the file name after removing its extension and parent folders.
  */
-export function extractStem(path: string): string {
+export function extractBaseName(path: string): string {
     const base = posix.basename(path);
     const extension = extractExtension(base);
     return base.slice(0, base.length - extension.length);

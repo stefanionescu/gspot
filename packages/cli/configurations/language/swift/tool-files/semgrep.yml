@@ -11,7 +11,7 @@ rules:
           cwe:
               - CWE-922
           category: security
-    - id: gspot.swift.no-secrets-in-userdefaults
+    - id: gspot.swift.secret-in-userdefaults
       patterns:
           - pattern-either:
                 - pattern: 'UserDefaults.$INSTANCE.set($VALUE, forKey: $KEY)'
@@ -51,7 +51,7 @@ rules:
           cwe:
               - CWE-312
           category: security
-    - id: gspot.swift.no-secrets-in-plist
+    - id: gspot.swift.secret-in-plist
       patterns:
           - pattern-either:
                 - pattern: Bundle.main.infoDictionary?[$KEY]
@@ -82,7 +82,7 @@ rules:
           cwe:
               - CWE-328
           category: security
-    - id: gspot.swift.log-sensitive-data
+    - id: gspot.swift.secret-in-log
       patterns:
           - pattern-either:
                 - patterns:

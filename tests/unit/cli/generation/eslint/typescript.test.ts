@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/tool-files.ts';
 import { TYPE_EXPORT_FILES, TYPED_RULE_PROJECTS } from '#tests/data/generation/eslint/levels.ts';
-import { createEslint, listFindingRules, collectLintFindings } from '#tests/setup/tool-files.ts';
 
 test.each([...TYPED_RULE_PROJECTS])('$name gets typed lint rules', async ({ configurations, tables, files, file }) => {
     await using sandbox = await testdir({
@@ -15,12 +15,12 @@ test.each([...TYPED_RULE_PROJECTS])('$name gets typed lint rules', async ({ conf
 
     const eslint = await createEslint(sandbox.path);
     const rules = ['@typescript-eslint/no-unnecessary-type-assertion'];
-    expect(await collectLintFindings(eslint, sandbox.path, [file], rules)).toStrictEqual([
+    expect(await listLintFindings(eslint, sandbox.path, [file], rules)).toStrictEqual([
         { file, rule: '@typescript-eslint/no-unnecessary-type-assertion', line: 4 },
     ]);
     const source = await readFile(join(sandbox.path, file), 'utf8');
     await writeFile(join(sandbox.path, file), source.replace(' as number', ''));
-    expect(await collectLintFindings(eslint, sandbox.path, [file], rules)).toStrictEqual([]);
+    expect(await listLintFindings(eslint, sandbox.path, [file], rules)).toStrictEqual([]);
 });
 
 test.each([...LEVELS])('%s type import and export rules apply at their declared level', async (level) => {
@@ -34,7 +34,7 @@ test.each([...LEVELS])('%s type import and export rules apply at their declared 
 
     const eslint = await createEslint(sandbox.path);
     const rules = ['@typescript-eslint/consistent-type-imports', '@typescript-eslint/consistent-type-exports'];
-    const findings = await collectLintFindings(eslint, sandbox.path, ['index.ts'], rules);
+    const findings = await listLintFindings(eslint, sandbox.path, ['index.ts'], rules);
     expect(listFindingRules(findings)).toStrictEqual(
         level === 'all' ? rules.toSorted((left, right) => left.localeCompare(right)) : [],
     );
@@ -69,7 +69,7 @@ test('gspot/no-magic-numbers accepts the numbers of a module-level const and rep
 
     const eslint = await createEslint(sandbox.path);
     expect(
-        await collectLintFindings(
+        await listLintFindings(
             eslint,
             sandbox.path,
             ['source.ts'],

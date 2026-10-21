@@ -10,7 +10,7 @@ import { getToolFile } from '#cli/runs/command/placeholders.ts';
 import type { ImageFinding } from '#cli/types/checks/docker.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { imageReportSchema } from '#cli/schemas/checks/docker/trivy-image.ts';
 import { TRIVY_TOOL_FILE, TRIVY_IMAGE_COMMAND, TRIVY_FINDINGS_EXIT_CODE } from '#cli/config/checks/docker.ts';
 
@@ -23,8 +23,8 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
             ...TRIVY_IMAGE_COMMAND,
             join(
                 session.root,
-                buildScopeTarget(
-                    planned.selection.scope.path,
+                getToolFileTarget(
+                    planned.scope.folder.path,
                     getToolFile(session, planned, TRIVY_TOOL_FILE),
                     getToolFiles(session).targets,
                 ),

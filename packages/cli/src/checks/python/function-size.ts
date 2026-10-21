@@ -1,8 +1,8 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
-import { getLimit } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { getLimit } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { COMMENT_MARKERS } from '#cli/config/checks/structure.ts';
@@ -45,7 +45,7 @@ async function listLongFunctions(
  * @returns one finding per function over the limit.
  */
 export async function checkPythonFunctionSize(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const limit = getLimit(planned.selection.view, 'function_lines', 'python');
+    const limit = getLimit(planned.scope.settings, 'function_lines', 'python');
     const files = planned.files.filter((file) => file.path.endsWith('.py'));
     const findings = await Promise.all(files.map((file) => listLongFunctions(session, planned, file.path, limit)));
     return findings.flat();

@@ -28,7 +28,7 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
     const sandbox = resources.use(
         await testdir({
             'gspot.toml': buildSandboxSettings(['docs'], {
-                tables: '[[command_check]]\nname = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
+                tables: '[[command_check]]\nid = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
             }),
             'README.md': '# Example\n',
             'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
@@ -40,7 +40,7 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
         operatingSystems: [...LINUX_PIPELINE.operatingSystems],
         projectInstall: [...LINUX_PIPELINE.projectInstall],
         manualChecks: session.configuredChecks.filter(({ check }) =>
-            ['docs/lychee-external', 'project/audit'].includes(check.name),
+            ['docs/lychee-external', 'project/audit'].includes(check.id),
         ),
         manualTools: session.configurations.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
     };
@@ -53,7 +53,7 @@ test('the GitHub workflow has a check job and a manual job per operating system,
 
     const file = buildGithubWorkflow({
         ...pipeline,
-        manualChecks: pipeline.manualChecks.filter(({ check }) => check.name === 'docs/lychee-external'),
+        manualChecks: pipeline.manualChecks.filter(({ check }) => check.id === 'docs/lychee-external'),
     });
     const workflow = parse(file.content) as GithubWorkflow;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['check-linux', 'manual-linux']);
@@ -64,7 +64,7 @@ test('the GitHub workflow has a check job and a manual job per operating system,
 test('the manual jobs name every manual check in one comma list', async () => {
     await using resources = new AsyncDisposableStack();
     const pipeline = await buildPipeline(resources);
-    const names = pipeline.manualChecks.map(({ check }) => check.name);
+    const names = pipeline.manualChecks.map(({ check }) => check.id);
     expect(names.length).toBeGreaterThan(1);
     const cli = `npm:@gspothq/cli@${pipeline.version}`;
     const expected = `mise exec ${quoteArgument(CI_NODE)} ${quoteArgument(cli)} -- gspot check --only ${quoteArgument(names.join(','))}`;
@@ -81,7 +81,7 @@ test('only the steps that install tools receive the GitHub token for mise', asyn
     const workflow = parse(
         buildGithubWorkflow({
             ...pipeline,
-            manualChecks: pipeline.manualChecks.filter(({ check }) => check.name === 'docs/lychee-external'),
+            manualChecks: pipeline.manualChecks.filter(({ check }) => check.id === 'docs/lychee-external'),
         }).content,
     ) as GithubWorkflow;
     const tokenSteps = Object.entries(workflow.jobs).flatMap(([job, { steps }]) =>
@@ -158,7 +158,7 @@ test('without a setup command, CI installs the locked dependencies of each proje
         }),
         'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
         'package-lock.json': '{"lockfileVersion":3}',
-        'pyproject.toml': '[project]\nname = "service"\nversion = "1.0.0"\n',
+        'pyproject.toml': '[project]\nid = "service"\nversion = "1.0.0"\n',
         'uv.lock': 'version = 1\n',
         'web/package.json': '{"private":true,"dependencies":{"next":"16.0.0"}}',
         'web/pnpm-lock.yaml': "lockfileVersion: '9.0'\n",

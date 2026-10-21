@@ -15,7 +15,7 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
         'gspot.toml': buildSandboxSettings(['spelling'], {
             rules: true,
             tables: stringify({
-                allowed_words: Object.fromEntries(words.map((word) => [word, reason])),
+                spelling: { allowed_words: Object.fromEntries(words.map((word) => [word, reason])) },
                 ignore: [{ check: 'spelling/typos', paths, reason }],
             }),
         }),

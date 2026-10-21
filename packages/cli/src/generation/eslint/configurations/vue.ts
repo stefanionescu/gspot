@@ -9,12 +9,12 @@ import { VUE_RULES, VUE_FILES, CONFIGURATION_PLUGINS } from '#cli/config/generat
  * @param scope the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
-export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'view'>): ConfigurationBlocks {
-    const { presets, view } = scope;
+export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {
+    const { presets, settings } = scope;
     const recommended = getPreset(presets, 'recommended');
     const accessibility = getPreset(presets, 'accessibility');
     const blocks: ConfigurationBlocks['blocks'] = [];
-    const typed = view.configurations.includes(TYPESCRIPT_CONFIGURATION);
+    const typed = settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
     blocks.push(
         ...buildArrayPresetBlocks(recommended, 'vuePlugin', convertPresetWarnings),
         ...buildArrayPresetBlocks(accessibility, 'vueAccessibility', (block) => {

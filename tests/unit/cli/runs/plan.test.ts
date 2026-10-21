@@ -27,7 +27,7 @@ test('coverage arguments leave other commands, your own checks, and given argume
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: stringify({
-                command_check: [{ name: 'project/tests', command, stage: 'push', paths: ['sample.test.cjs'] }],
+                command_check: [{ id: 'project/tests', command, stage: 'push', paths: ['sample.test.cjs'] }],
             }),
         }),
         'sample.test.cjs': 'const authored = true;\n',
@@ -63,7 +63,7 @@ test('a project check without its own inputs is inactive even when its scope hol
     const result = await runChecks(session, options);
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks).toMatchObject([
-        { check: 'python/ruff', status: 'skipped', cause: 'inputs', findings: [] },
+        { check: 'python/ruff', status: 'skipped', cause: 'no-files', findings: [] },
     ]);
 });
 
@@ -95,9 +95,9 @@ reason = "The API check is provided by its own native build pipeline."
 
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, { stage: 'all', only: ['nextjs/tsc', 'typescript/tsc'] });
-        const scopes = planned.filter((check) => ['api', 'web'].includes(check.selection.scope.path));
+        const scopes = planned.filter((check) => ['api', 'web'].includes(check.scope.folder.path));
         const results = new Map(
-            scopes.map((check) => [`${check.selection.scope.path}:${check.check.name}`, check.skip?.cause]),
+            scopes.map((check) => [`${check.scope.folder.path}:${check.check.id}`, check.skip?.cause]),
         );
         expect(results).toStrictEqual(
             new Map([
@@ -127,7 +127,9 @@ Release on 03/04/2026.
         commitAll(sandbox.path);
         const session = await openSession(sandbox.path);
         expect(session.settingsFile.settings.configurations).toStrictEqual([]);
-        const selected = session.scopes.flatMap((scope) => scope.selected.map((configuration) => configuration.name));
+        const selected = session.scopes.flatMap((scope) =>
+            scope.configurations.map((configuration) => configuration.name),
+        );
         for (const configuration of [...listAlwaysSelected(), 'licenses']) expect(selected).toContain(configuration);
         expect(selected).not.toContain('javascript');
         expect(selected).not.toContain('markdown');
@@ -135,18 +137,18 @@ Release on 03/04/2026.
             stage: 'all',
             only: ['security/semgrep', 'prose/vale', 'duplication/jscpd', 'licenses/allowed'],
         });
-        const security = checks.find((check) => check.check.name === 'security/semgrep');
+        const security = checks.find((check) => check.check.id === 'security/semgrep');
         expect(security).toBeDefined();
         expect(security?.files).toStrictEqual([]);
         expect(await checkSecuritySemgrep(session, security!)).toMatchObject({
             status: 'skipped',
             note: expect.stringContaining('tools.semgrep.rule_files') as string,
         });
-        expect(checks.find((check) => check.check.name === 'prose/vale')?.files.map((file) => file.path)).toContain(
+        expect(checks.find((check) => check.check.id === 'prose/vale')?.files.map((file) => file.path)).toContain(
             'guide.md',
         );
-        expect(checks.some((check) => check.check.name === 'duplication/jscpd')).toBe(level === 'all');
-        expect(checks.find((check) => check.check.name === 'licenses/allowed')?.skip).toBeUndefined();
+        expect(checks.some((check) => check.check.id === 'duplication/jscpd')).toBe(level === 'all');
+        expect(checks.find((check) => check.check.id === 'licenses/allowed')?.skip).toBeUndefined();
     },
 );
 
@@ -162,7 +164,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     const excluded = await openSession(sandbox.path);
     const plans = planChecks(excluded, { stage: 'commit', only: ['format/prettier'] });
     expect(plans[0]?.skip?.cause).toBe('ignore');
-    expect(excluded.configuredChecks.map((check) => check.check.name)).not.toContain('format/prettier');
+    expect(excluded.configuredChecks.map((check) => check.check.id)).not.toContain('format/prettier');
     expect(
         excluded.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     ).not.toContain('prettier');
@@ -174,7 +176,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     expect(removed.removed).toContain('.prettierignore');
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(false);
     const settled = await openSession(sandbox.path);
-    expect(settled.configuredChecks.map((check) => check.check.name)).not.toContain('format/prettier');
+    expect(settled.configuredChecks.map((check) => check.check.id)).not.toContain('format/prettier');
     const repeated = writeGeneratedFiles(settled, generate(settled), log);
     expect(repeated.written).toStrictEqual([]);
     expect(repeated.removed).toStrictEqual([]);
@@ -188,7 +190,7 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
             level,
             tables: `${HISTORY_TABLES}
 [[command_check]]
-name = "sandbox/once"
+id = "sandbox/once"
 command = ["git", "log"]
 paths = ["source.txt", "app/source.txt"]
 stage = "push"
@@ -206,10 +208,10 @@ stage = "push"
         staged: [],
         commits: ['selected'],
     });
-    expect(planned.filter((check) => check.check.runs === 'history').map((check) => check.check.name)).toStrictEqual(
+    expect(planned.filter((check) => check.check.runs === 'history').map((check) => check.check.id)).toStrictEqual(
         names,
     );
-    expect(planned.map((check) => check.selection.scope.path)).toStrictEqual([...names.map(() => ''), '']);
+    expect(planned.map((check) => check.scope.folder.path)).toStrictEqual([...names.map(() => ''), '']);
     expect(planned.map((check) => isActive(check))).toStrictEqual([...names.map(() => true), false]);
     expect(
         planChecks(session, { stage: 'push', only: names, staged: [], commits: [] }).map((check) => isActive(check)),
@@ -236,14 +238,14 @@ test('Xcode plutil and general xmllint checks select their Apple and XML files',
     const session = await openSession(sandbox.path);
     const checks = planChecks(session, {
         stage: 'all',
-        only: ['xcode/plutil', 'files/xmllint'],
+        only: ['xcode/plutil', 'data-files/xmllint'],
     });
     expect(
         checks
             .filter(({ files }) => files.length > 0)
-            .map(({ check, files }) => [check.name, files.map(({ path }) => path)]),
+            .map(({ check, files }) => [check.id, files.map(({ path }) => path)]),
     ).toStrictEqual([
-        ['files/xmllint', ['api/app.storyboard', 'api/data.xml']],
+        ['data-files/xmllint', ['api/app.storyboard', 'api/data.xml']],
         ['xcode/plutil', ['api/app.plist']],
     ]);
 });
@@ -253,6 +255,6 @@ test.each([...TOOL_FILE_PLANNING_CASES])(
     async ({ files, check, selected }) => {
         await using sandbox = await testdir(files);
         const session = await openSession(sandbox.path);
-        expect(session.configuredChecks.some((entry) => entry.check.name === check)).toBe(selected);
+        expect(session.configuredChecks.some((entry) => entry.check.id === check)).toBe(selected);
     },
 );

@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { parseSyml } from '@yarnpkg/parsers';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
 import { LEADING_SLASH } from '#cli/config/system/paths.ts';
@@ -81,7 +81,7 @@ function listSpecifiers(entry: unknown): Map<string, string> {
             if (dependencies === undefined) return [];
             return Object.entries(dependencies).flatMap(([name, value]): [string, string][] => {
                 if (typeof value === 'string') return [[name, value]];
-                const specifier = isRecord(value) ? value['specifier'] : undefined;
+                const specifier = isTable(value) ? value['specifier'] : undefined;
                 return typeof specifier === 'string' ? [[name, specifier]] : [];
             });
         }),

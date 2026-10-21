@@ -26,7 +26,7 @@ replace = ["trivy.yaml", ".trivyignore"]
 version = "0.69.3"
 
 [[tool]]
-install_hint = "install Docker Desktop or the docker engine"
+install_help = "install Docker Desktop or the docker engine"
 name = "docker"
 system = true
 

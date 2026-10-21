@@ -4,7 +4,7 @@ import { createRule } from '../schemas/rules/options.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { trivialFilesOptionsSchema } from '../schemas/rules/no/trivial.ts';
-import type { ContentCheck, ImplementedFunction } from '../types/syntax.ts';
+import type { NontrivialCheck, ImplementedFunction } from '../types/syntax.ts';
 
 import {
     unwrap,
@@ -16,13 +16,13 @@ import {
 } from '../syntax.ts';
 import {
     SHEBANG,
-    FUNCTIONS,
+    FUNCTION_TYPES,
     FORWARDED_VALUES,
     FORWARDING_NODES,
     FUNCTION_SELECTOR,
-    TRIVIAL_STATEMENTS,
     MODULE_CALL_SELECTOR,
     STRUCTURED_EXPRESSIONS,
+    TRIVIAL_FUNCTION_STATEMENTS,
 } from '../config/syntax.ts';
 
 /**
@@ -52,7 +52,7 @@ function hasOwnTypeShape(annotation: TSESTree.TypeNode): boolean {
 }
 
 // A declaration counts as content when its schema, body, or wrapped expression does.
-function hasDeclarationContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
+function isNontrivialDeclaration(node: TSESTree.Node, inspect: NontrivialCheck): boolean | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.ExportNamedDeclaration: {
             return inspect(node.declaration);
@@ -77,13 +77,13 @@ function hasDeclarationContent(node: TSESTree.Node, inspect: ContentCheck): bool
             return hasOwnTypeShape(node.typeAnnotation);
         }
         default: {
-            return hasOperandContent(node, inspect);
+            return isNontrivialOperand(node, inspect);
         }
     }
 }
 
 // A wrapper counts as content when its operand or exported value does.
-function hasOperandContent(node: TSESTree.Node, inspect: ContentCheck): boolean | undefined {
+function isNontrivialOperand(node: TSESTree.Node, inspect: NontrivialCheck): boolean | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.ExportDefaultDeclaration: {
             return inspect(node.declaration);
@@ -105,7 +105,7 @@ function hasOperandContent(node: TSESTree.Node, inspect: ContentCheck): boolean 
 }
 
 // A call counts as content through an inline type or a substantive argument.
-function hasCallContent(node: TSESTree.CallExpression | TSESTree.NewExpression, inspect: ContentCheck): boolean {
+function isNontrivialCall(node: TSESTree.CallExpression | TSESTree.NewExpression, inspect: NontrivialCheck): boolean {
     if (
         node.typeArguments?.params.some(
             (parameter) => parameter.type === AST_NODE_TYPES.TSTypeLiteral && parameter.members.length > 0,
@@ -171,15 +171,15 @@ function hasStructuredValue(expression: TSESTree.Node | null): boolean {
         }
         case AST_NODE_TYPES.CallExpression:
         case AST_NODE_TYPES.NewExpression: {
-            return hasCallContent(node, hasStructuredValue);
+            return isNontrivialCall(node, hasStructuredValue);
         }
         default: {
-            return hasOperandContent(node, hasStructuredValue) === true;
+            return isNontrivialOperand(node, hasStructuredValue) === true;
         }
     }
 }
 
-function hasSignatureContent(node: ImplementedFunction): boolean {
+function isNontrivialSignature(node: ImplementedFunction): boolean {
     if (node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate || hasConstructorState(node))
         return true;
     return node.body.type !== AST_NODE_TYPES.BlockStatement && hasStructuredValue(node.body);
@@ -188,7 +188,7 @@ function hasSignatureContent(node: ImplementedFunction): boolean {
 export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
     name: 'no-trivial-files',
     meta: {
-        defaultOptions: [{ trivialStatements: TRIVIAL_STATEMENTS, allowIndex: false }],
+        defaultOptions: [{ trivialFunctionStatements: TRIVIAL_FUNCTION_STATEMENTS, allowIndex: false }],
         type: 'suggestion',
         docs: {
             example:
@@ -209,28 +209,28 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         if (context.sourceCode.text.startsWith(SHEBANG)) return {};
         if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(context.physicalFilename.replaceAll('\\', '/'))))
             return {};
-        const max = options.trivialStatements;
-        let hasImplementation = findZodSchemaConstructors(context.sourceCode).length > 0;
-        const isSubstantial: ContentCheck = (expression) => {
+        const limit = options.trivialFunctionStatements;
+        let hasCode = findZodSchemaConstructors(context.sourceCode).length > 0;
+        const isNontrivial: NontrivialCheck = (expression) => {
             const node = unwrap(expression);
             if (node === null) return false;
             if (hasCalculation(node, context.sourceCode.visitorKeys)) return true;
             if (FORWARDING_NODES.has(node.type)) return false;
-            const content = hasDeclarationContent(node, isSubstantial);
+            const content = isNontrivialDeclaration(node, isNontrivial);
             if (content !== undefined) return content;
             if (node.type !== AST_NODE_TYPES.CallExpression && node.type !== AST_NODE_TYPES.NewExpression) return true;
-            return hasCallContent(node, isSubstantial);
+            return isNontrivialCall(node, isNontrivial);
         };
         return {
             [MODULE_CALL_SELECTOR](node: TSESTree.CallExpression) {
-                if (node.arguments.some((argument) => FUNCTIONS.has(argument.type))) {
-                    hasImplementation = true;
+                if (node.arguments.some((argument) => FUNCTION_TYPES.has(argument.type))) {
+                    hasCode = true;
                     return;
                 }
                 const services = getTypeServices(context.sourceCode);
                 if (services === undefined) return;
                 const { checker, mapping } = services;
-                hasImplementation ||= node.arguments.some((argument) => {
+                hasCode ||= node.arguments.some((argument) => {
                     if (argument.type === AST_NODE_TYPES.SpreadElement) return false;
                     const type = checker.getTypeAtLocation(mapping.get(argument));
                     return checker.isArrayType(type) || checker.isTupleType(type);
@@ -239,24 +239,24 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
             [FUNCTION_SELECTOR](node: ImplementedFunction) {
                 if (
                     (isExportedFunction(node, context.sourceCode) && !isForwarding(node)) ||
-                    hasSignatureContent(node) ||
+                    isNontrivialSignature(node) ||
                     hasCalculation(node.body, context.sourceCode.visitorKeys) ||
-                    countStatements(node, context.sourceCode.visitorKeys) > max
+                    countStatements(node, context.sourceCode.visitorKeys) > limit
                 )
-                    hasImplementation = true;
+                    hasCode = true;
             },
             ReturnStatement(node) {
                 if (
                     node.argument !== null &&
                     (hasStructuredValue(node.argument) || hasCalculation(node.argument, context.sourceCode.visitorKeys))
                 )
-                    hasImplementation = true;
+                    hasCode = true;
             },
             'Program:exit'(node) {
                 if (
-                    !hasImplementation &&
+                    !hasCode &&
                     node.body.some((statement) => statement.type !== AST_NODE_TYPES.EmptyStatement) &&
-                    !node.body.some((statement) => isSubstantial(statement))
+                    !node.body.some((statement) => isNontrivial(statement))
                 )
                     context.report({ node, messageId: 'trivial' });
             },

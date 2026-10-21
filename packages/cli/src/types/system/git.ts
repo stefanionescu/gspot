@@ -6,7 +6,7 @@ export type GitRepository = { folder: string; env: Record<string, string | undef
 
 export type GitLookup = GitRepository | { failure: SpawnResult };
 
-export type GitTargetEnvironment = {
+export type GitVariableGroups = {
     isolated: Record<string, undefined>;
     overrides: Record<string, string | undefined>;
     explicit: Record<string, string | undefined>;

@@ -16,7 +16,7 @@ import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/dat
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = [process.execPath, '-e', String.raw`require('node:fs').writeFileSync('source.txt', 'fixed\n')`];
     const check = `[[command_check]]
-name = "sandbox/fixable"
+id = "sandbox/fixable"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 fix = ${JSON.stringify(fix)}
 paths = ["source.txt"]
@@ -45,7 +45,7 @@ test.each(['--changed', '--staged', '--hook'])('%s outside Git reports a setup e
     await using sandbox = await testdir();
     const settings = `configurations = []
 [[command_check]]
-name = "sandbox/paths"
+id = "sandbox/paths"
 command = ["node", "-e", "process.exitCode=0"]
 paths = ["api/**"]
 stage = "commit"
@@ -137,7 +137,7 @@ test.each([...ARGUMENT_REFUSALS])(
     },
 );
 
-test('check reports an unreadable message file as an argument error and writes nothing', async () => {
+test('check reports an unreadable message file as a filesystem error and writes nothing', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['commits']) });
     const before = await readTree(sandbox.path);
     const message = `The commit message file ${join(sandbox.path, 'missing-message.txt')} cannot be read.`;
@@ -155,6 +155,6 @@ test('check reports an unreadable message file as an argument error and writes n
     ]);
     expect(structured.code).toBe(2);
     expect(structured.stderr).toBe('');
-    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'arguments', message });
+    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'filesystem', message });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

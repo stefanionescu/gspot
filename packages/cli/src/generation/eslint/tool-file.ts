@@ -33,21 +33,21 @@ import {
 export function buildEslintFile(planned: PlannedToolFile): string {
     const { session } = planned;
 
-    const eslintContext = buildPlannedEslintFile(planned);
-    const { blockInput } = eslintContext;
+    const eslintFile = buildPlannedEslintFile(planned);
+    const { blockWriter } = eslintFile;
     const runtimes = buildRuntimes(session.scopes);
-    const boundaryBlocks = buildBoundaryBlocks(eslintContext);
+    const boundaryBlocks = buildBoundaryBlocks(eslintFile);
     const ignoredGlobs = convertToGlobs([
         ...buildIgnoreSections(session),
-        ...listCheckIgnoreSections(planned.selection.view, ESLINT_CHECK),
+        ...listCheckIgnoreSections(planned.scope.settings, ESLINT_CHECK),
     ]);
     const { configurationBlocks, configurationImports, configurationSelectors } = listConfigurationBlocks(
         session,
-        eslintContext,
+        eslintFile,
     );
-    const shipped = selectPlugins(eslintContext, boundaryBlocks);
+    const shipped = selectPlugins(eslintFile, boundaryBlocks);
     const plugins = { ...shipped, ...listLocalPlugins(session.scopes, planned.targetPath, shipped) };
-    const presets = eslintContext.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
+    const presets = eslintFile.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
     const capturedImports = Object.fromEntries<readonly [string, string]>(
         [...PRESETS_BEFORE_CONFIGURATIONS, ...PRESETS_AFTER_CONFIGURATIONS].map(([name, importName]) => [
             importName,
@@ -64,26 +64,26 @@ export function buildEslintFile(planned: PlannedToolFile): string {
             .map((line) => ESLINT_INDENT + line)
             .join('\n') + ',',
         [
-            ...buildOpeningBlocks(eslintContext, plugins, boundaryBlocks, ignoredGlobs).map((block) => ({
+            ...buildOpeningBlocks(eslintFile, plugins, boundaryBlocks, ignoredGlobs).map((block) => ({
                 ...block,
                 label: ESLINT_BASE_LABEL,
             })),
             ...configurationBlocks,
-            ...buildClosingBlocks(eslintContext, configurationSelectors, runtimes).map((block) => ({
+            ...buildClosingBlocks(eslintFile, configurationSelectors, runtimes).map((block) => ({
                 ...block,
                 label: ESLINT_BASE_LABEL,
             })),
             ...[
-                ...buildSelectedBlocks(eslintContext),
-                ...buildLocalPluginBlocks(session.scopes, eslintContext.eslintFiles.code),
+                ...buildSelectedBlocks(eslintFile),
+                ...buildLocalPluginBlocks(session.scopes, eslintFile.eslintFiles.code),
             ].map((data) => ({ data, label: ESLINT_BASE_LABEL })),
         ]
-            .map((block) => writeEslintBlock(blockInput, block))
+            .map((block) => writeEslintBlock(blockWriter, block))
             .join(',\n') + ',',
         '];',
         '',
     ];
-    assertRulesRun(session, blockInput);
+    assertRulesRun(session, blockWriter);
     return output.join('\n');
 }
 

@@ -46,7 +46,7 @@ createRuleTester().run<
         // Over the limit.
         'function work() { first(); second(); third(); }',
         'function work() { if (ready) { first(); second(); } }',
-        { code: 'function work() { first(); second(); }', options: [{ trivialStatements: 1 }] },
+        { code: 'function work() { first(); second(); }', options: [{ trivialFunctionStatements: 1 }] },
 
         // Declared signatures the language owns.
         'declare function required(): void;',
@@ -156,7 +156,7 @@ createRuleTester().run<
         },
         {
             code: 'function three() { first(); second(); third(); }',
-            options: [{ trivialStatements: 3 }],
+            options: [{ trivialFunctionStatements: 3 }],
             errors: [{ messageId: 'trivial' }],
         },
     ],

@@ -39,17 +39,17 @@ export const PUBLISHED_SCHEMA_CASES = [
     },
     {
         name: 'an empty command',
-        input: { command_check: [{ name: 'project/lint', command: [], paths: ['src/**'], stage: 'commit' }] },
+        input: { command_check: [{ id: 'project/lint', command: [], paths: ['src/**'], stage: 'commit' }] },
         valid: false,
     },
     {
         name: 'an empty program',
-        input: { command_check: [{ name: 'project/lint', command: [''], paths: ['src/**'], stage: 'commit' }] },
+        input: { command_check: [{ id: 'project/lint', command: [''], paths: ['src/**'], stage: 'commit' }] },
         valid: false,
     },
     {
         name: 'an empty argument',
-        input: { command_check: [{ name: 'project/lint', command: ['lint', ''], paths: ['src/**'], stage: 'commit' }] },
+        input: { command_check: [{ id: 'project/lint', command: ['lint', ''], paths: ['src/**'], stage: 'commit' }] },
         valid: true,
     },
     {

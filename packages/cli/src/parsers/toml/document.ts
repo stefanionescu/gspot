@@ -4,7 +4,7 @@ import { PATCH_FORMAT } from '#cli/config/parsers/toml.ts';
 import { patch, parse as parseToml } from '@decimalturn/toml-patch';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { isRecord, getValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { isTable, getValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { TomlSyntax, TomlComments, TomlTextChunk, TomlTableOptions } from '#cli/types/parsers/toml.ts';
 
 import {
@@ -32,7 +32,7 @@ function findTomlTable(
             });
         }
         const child = table[key];
-        if (!isRecord(child))
+        if (!isTable(child))
             throw new GspotError(
                 'filesystem',
                 `${options.filePath} has a TOML field that is not a table: ${String(key)}. Fix the field, then run gspot apply.`,
@@ -58,7 +58,7 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
     const comments: TomlComments = new Map();
     const changed = listAnchoredComments(original)
         .map((source) => {
-            const found = [...unmatched].find((candidate) => candidate.comment.raw === source.comment.raw);
+            const found = [...unmatched].find((entry) => entry.comment.raw === source.comment.raw);
             if (found !== undefined) unmatched.delete(found);
             return { source, found };
         })

@@ -7,8 +7,8 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { findCheckCode } from '#cli/checks/code.ts';
 import * as processes from '#cli/system/processes.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { planSandboxCheck } from '#tests/setup/check-input.ts';
@@ -80,7 +80,7 @@ async function prepareSupabaseCheck(
         }),
         [`${prefix}supabase/config.toml`]: SUPABASE_PROJECT_CONFIG,
     });
-    const collectCheckResult = async () => {
+    const runStaleTypesCheck = async () => {
         const result = await runChecks(await openSession(root), buildRunOptions({ only: ['supabase/stale-types'] }));
         return result.report.checks.find((check) => check.scope === scope)!;
     };
@@ -115,7 +115,7 @@ async function prepareSupabaseCheck(
     const owned = resources.move();
     return {
         prefix,
-        execute: collectCheckResult,
+        execute: runStaleTypesCheck,
         requests,
         [Symbol.dispose]: owned.dispose.bind(owned),
     };
@@ -212,7 +212,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
     resources.use(await mockWrangler(sandbox.path));
     const run = resources.use(spyOnWranglerTypes(source));
     const untracked = await openSession(sandbox.path);
-    expect(getTable(untracked.scopes[0]!.view, 'cloudflare')).toStrictEqual({
+    expect(getTable(untracked.scopes[0]!.settings, 'cloudflare')).toStrictEqual({
         types_file: 'cloudflare-env.d.ts',
         types_interface: 'CloudflareEnv',
     });
@@ -293,7 +293,7 @@ test('a [[command_check]] with outputs reports an output that differs from what 
     ]);
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
-            tables: `[[command_check]]\nname = "project/codegen"\ncommand = ${generator}\npaths = ["schema/**"]\noutputs = ["generated/api.ts"]\nstage = "commit"\n`,
+            tables: `[[command_check]]\nid = "project/codegen"\ncommand = ${generator}\npaths = ["schema/**"]\noutputs = ["generated/api.ts"]\nstage = "commit"\n`,
         }),
         'schema/api.json': '{"version":2}\n',
         'generated/api.ts': 'export const version = 1;\n',

@@ -32,8 +32,8 @@ function parseVultureFinding(planned: PlannedCheck, line: string, selected: Read
  * @returns each unused definition and each line of unreachable code.
  */
 export async function checkPythonVulture(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const scope = planned.selection.scope.path;
-    const children = listChildScopes(session.scopes, planned.selection);
+    const scope = planned.scope.folder.path;
+    const children = listChildScopes(session.scopes, planned.scope);
     const sources = session.repository.files
         .filter((file) => file.kind === 'source' && file.path.endsWith('.py'))
         .filter((file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)))

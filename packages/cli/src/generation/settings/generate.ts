@@ -6,7 +6,7 @@ import type { ToolFile } from '#cli/types/configurations.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { buildToolFile } from '#cli/generation/settings/build.ts';
 import { TOOL_FILE_SCOPES_FOLDER } from '#cli/config/generation/settings/generate.ts';
-import { buildScopeTarget, listOwnedToolFiles } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget, listOwnedToolFiles } from '#cli/generation/settings/needed.ts';
 import { listPointerPaths, buildPointerFiles } from '#cli/generation/settings/pointers.ts';
 
 import type {
@@ -14,7 +14,7 @@ import type {
     BuiltToolFile,
     OwnedToolFile,
     ToolFileGeneration,
-    ToolFileGenerationState,
+    GeneratedToolFiles,
 } from '#cli/types/generation/files.ts';
 
 const toolFilesKey: CacheKey<Map<Session, ToolFileGeneration>> = { create: () => new Map() };
@@ -32,7 +32,7 @@ export function getToolFiles(session: Session): ToolFileGeneration {
 // Root outputs win the shared path; other equal-content groups prefer the most scopes.
 function groupToolOutputs(
     entries: (OwnedToolFile & { toolFile: WholeToolFile })[],
-    state: ToolFileGenerationState,
+    generated: GeneratedToolFiles,
 ): BuiltToolFile[][] {
     const owners = entries[0]?.toolFile.per_scope === true ? entries : entries.slice(0, 1);
     const outputs = owners.map((entry) => ({
@@ -44,20 +44,20 @@ function groupToolOutputs(
                 targetPath: entry.toolFile.target,
                 level: entry.owner.session.settingsFile.settings.level,
             },
-            state.targets,
+            generated.targets,
         ),
     }));
     return [...Map.groupBy(outputs, ({ file }) => file.content).values()].toSorted(
         (left, right) =>
-            Number(right.some(({ owner }) => owner.selection.scope.path === '')) -
-                Number(left.some(({ owner }) => owner.selection.scope.path === '')) || right.length - left.length,
+            Number(right.some(({ owner }) => owner.scope.folder.path === '')) -
+                Number(left.some(({ owner }) => owner.scope.folder.path === '')) || right.length - left.length,
     );
 }
 
 // Record one text group at its chosen path and map every participating scope to it.
-function addToolOutput(declared: string, group: BuiltToolFile[], index: number, state: ToolFileGenerationState): void {
+function addToolOutput(declared: string, group: BuiltToolFile[], index: number, generated: GeneratedToolFiles): void {
     const [first] = group as [BuiltToolFile, ...BuiltToolFile[]];
-    const chosen = index === 0 ? declared : buildPerScopeTarget(first.toolFile, first.owner.selection.scope.path);
+    const chosen = index === 0 ? declared : buildPerScopeTarget(first.toolFile, first.owner.scope.folder.path);
     const file =
         chosen === declared
             ? first.file
@@ -68,25 +68,25 @@ function addToolOutput(declared: string, group: BuiltToolFile[], index: number, 
                       targetPath: chosen,
                       level: first.owner.session.settingsFile.settings.level,
                   },
-                  state.targets,
+                  generated.targets,
               );
-    state.files.set(chosen, file);
+    generated.files.set(chosen, file);
     for (const { owner } of group) {
-        const scope = owner.selection.scope.path;
-        const paths = state.targets.get(scope) ?? new Map<string, string>();
+        const scope = owner.scope.folder.path;
+        const paths = generated.targets.get(scope) ?? new Map<string, string>();
         paths.set(declared, chosen);
-        state.targets.set(scope, paths);
+        generated.targets.set(scope, paths);
     }
 }
 
 // Whole-file outputs establish destinations before pointer fragments resolve against them.
-function buildWholeFiles(toolFiles: OwnedToolFile[], state: ToolFileGenerationState): void {
+function buildWholeFiles(toolFiles: OwnedToolFile[], generated: GeneratedToolFiles): void {
     const whole = toolFiles.filter(
         (entry): entry is OwnedToolFile & { toolFile: WholeToolFile } => entry.toolFile.source !== undefined,
     );
     for (const [declared, entries] of Map.groupBy(whole, ({ toolFile }) => toolFile.target)) {
-        const groups = groupToolOutputs(entries, state);
-        for (const [index, group] of groups.entries()) addToolOutput(declared, group, index, state);
+        const groups = groupToolOutputs(entries, generated);
+        for (const [index, group] of groups.entries()) addToolOutput(declared, group, index, generated);
     }
 }
 
@@ -96,7 +96,7 @@ function listPointerOnlyPaths(toolFiles: OwnedToolFile[], selected: OwnedToolFil
         toolFiles
             .filter(
                 (entry) =>
-                    entry.owner.selection.scope.path === selected.owner.selection.scope.path &&
+                    entry.owner.scope.folder.path === selected.owner.scope.folder.path &&
                     entry.toolFile.source === undefined &&
                     entry.toolFile.target === selected.toolFile.target,
             )
@@ -104,9 +104,9 @@ function listPointerOnlyPaths(toolFiles: OwnedToolFile[], selected: OwnedToolFil
     );
 }
 
-function addPointerFiles(selected: OwnedToolFile, toolFiles: OwnedToolFile[], state: ToolFileGenerationState): void {
+function addPointerFiles(selected: OwnedToolFile, toolFiles: OwnedToolFile[], generated: GeneratedToolFiles): void {
     const { toolFile, owner } = selected;
-    const target = buildScopeTarget(owner.selection.scope.path, toolFile, state.targets);
+    const target = getToolFileTarget(owner.scope.folder.path, toolFile, generated.targets);
     if (isRootPointerShared(selected, toolFiles, target)) return;
     const pointerOnlyPaths = listPointerOnlyPaths(toolFiles, selected);
     for (const pointer of buildPointerFiles(owner, toolFile, target)) {
@@ -115,18 +115,16 @@ function addPointerFiles(selected: OwnedToolFile, toolFiles: OwnedToolFile[], st
             toolFile.pointer?.folders !== undefined ||
             !pointerOnlyPaths.has(pointer.path)
         )
-            state.files.set(pointer.path, pointer);
+            generated.files.set(pointer.path, pointer);
     }
 }
 
 // A scope that uses the same tool file as the root needs no pointer of its own when the pointer inherits.
 function isRootPointerShared(selected: OwnedToolFile, toolFiles: OwnedToolFile[], target: string): boolean {
     const { toolFile, owner } = selected;
-    if (toolFile.pointer?.inherit !== true || owner.selection.scope.path === '' || target !== toolFile.target)
+    if (toolFile.pointer?.inherit !== true || owner.scope.folder.path === '' || target !== toolFile.target)
         return false;
-    return toolFiles.some(
-        (entry) => entry.toolFile.target === toolFile.target && entry.owner.selection.scope.path === '',
-    );
+    return toolFiles.some((entry) => entry.toolFile.target === toolFile.target && entry.owner.scope.folder.path === '');
 }
 
 /**
@@ -137,7 +135,7 @@ function isRootPointerShared(selected: OwnedToolFile, toolFiles: OwnedToolFile[]
  */
 function buildToolFiles(session: Session): ToolFileGeneration {
     const toolFiles = listOwnedToolFiles(session);
-    const state: ToolFileGenerationState = { targets: new Map(), files: new Map() };
+    const state: GeneratedToolFiles = { targets: new Map(), files: new Map() };
     buildWholeFiles(toolFiles, state);
     for (const entry of toolFiles) addPointerFiles(entry, toolFiles, state);
     return { files: [...state.files.values()], targets: state.targets };

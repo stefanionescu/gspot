@@ -6,4 +6,4 @@ export const MODULE_MOCK_METHODS = {
     jest: new Set(['mock', 'doMock', 'requireActual']),
 } as const;
 
-export const DEFAULT_FOLDERS = ['*/*'] as const;
+export const DEFAULT_BOUNDARY_FOLDERS = ['*/*'] as const;

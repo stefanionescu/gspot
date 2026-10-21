@@ -78,9 +78,9 @@ function parsePydoclintOptions(path: string, text: string, convention: unknown):
  */
 export async function checkPythonPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const configured = parsePydoclintOptions(
-        joinScope(planned.selection.scope.path, PYPROJECT_TOML),
-        findCachedText(session.reads, joinScope(planned.selection.scope.path, PYPROJECT_TOML)) ?? '',
-        planned.selection.view.values['tools.ruff']?.docstring_convention,
+        joinScope(planned.scope.folder.path, PYPROJECT_TOML),
+        findCachedText(session.reads, joinScope(planned.scope.folder.path, PYPROJECT_TOML)) ?? '',
+        planned.scope.settings.values['tools.ruff']?.docstring_convention,
     );
     const groups = await groupByDocstringStyle(session, planned.files, configured.style);
     return runCommandGroups(

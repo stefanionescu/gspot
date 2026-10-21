@@ -5,9 +5,9 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { DIGEST_ALGORITHM } from '#cli/config/text.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
@@ -126,19 +126,15 @@ export function buildPlan(
     planned: PlannedCheck,
     { purpose = 'compile' }: { purpose?: Exclude<SwiftBuildPurpose, 'periphery'> } = {},
 ): SwiftBuildPlan {
-    const folder = getScopeBuildFolder(session.installedRoot, planned.selection.scope.path, purpose);
+    const folder = getScopeBuildFolder(session.installedRoot, planned.scope.folder.path, purpose);
     const log = join(folder, BUILD_LOG);
     const {
         xcode_project: project,
         xcode_scheme: scheme,
         xcode_destination: destination,
-    } = getTable(planned.selection.view, 'swift');
+    } = getTable(planned.scope.settings, 'swift');
     if (project === undefined) {
-        if (
-            !session.repository.files.some(
-                ({ path }) => path === joinScope(planned.selection.scope.path, PACKAGE_SWIFT),
-            )
-        )
+        if (!session.repository.files.some(({ path }) => path === joinScope(planned.scope.folder.path, PACKAGE_SWIFT)))
             throw new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.');
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {
@@ -156,7 +152,7 @@ export function buildPlan(
         XCODEBUILD_PROGRAM,
         ...XCODE_COMMANDS[purpose],
         container,
-        posix.relative(planned.selection.scope.path, project),
+        posix.relative(planned.scope.folder.path, project),
         XCODE_SCHEME_FLAG,
         scheme,
         XCODE_DESTINATION_FLAG,

@@ -27,9 +27,9 @@ async function assertLinkFailures(root: string, check: string, failures: readonl
 }
 
 // The link check must reject a missing text fragment and accept one that exists.
-async function assertTextFragments(root: string, check: string, target: string): Promise<void> {
-    for (const { fragment, failures } of LINK_TEXT_CASES) {
-        await writeFile(join(root, 'root.md'), `# Links\n\nRead [the page](${target}#:~:text=${fragment}).\n`);
+async function assertTextLinks(root: string, check: string, target: string): Promise<void> {
+    for (const { text, failures } of LINK_TEXT_CASES) {
+        await writeFile(join(root, 'root.md'), `# Links\n\nRead [the page](${target}#:~:text=${text}).\n`);
         await assertLinkFailures(root, check, failures);
     }
 }
@@ -72,9 +72,9 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
         await assertLinkFailures(sandbox.path, 'docs/lychee-external', []);
         const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        await assertTextFragments(sandbox.path, 'docs/lychee-external', `${url}page`);
+        await assertTextLinks(sandbox.path, 'docs/lychee-external', `${url}page`);
         requests.length = 0;
-        await assertTextFragments(sandbox.path, 'docs/lychee', 'page.html');
+        await assertTextLinks(sandbox.path, 'docs/lychee', 'page.html');
         expect(requests).toStrictEqual([]);
     } finally {
         await server.stop(true);

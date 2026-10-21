@@ -6,7 +6,7 @@ description = "Checks gspot.toml, generated files, and suppression reasons."
 title = "gspot"
 
 [[tool]]
-install_hint = "Install Node.js 24.2.0 or newer. On macOS, run brew install node@24. On Windows, run winget install OpenJS.NodeJS.LTS."
+install_help = "Install Node.js 24.2.0 or newer. On macOS, run brew install node@24. On Windows, run winget install OpenJS.NodeJS.LTS."
 min_version = "24.2.0"
 name = "node"
 system = true
@@ -33,10 +33,10 @@ summary = "Compares generated files with the settings and reports changed, missi
 why = "A generated file that drifts from gspot.toml runs a tool with settings nobody chose."
 
 [[check]]
-example = "An `[[ignore]]` record with `paths = [\"nowhere/**\"]` that matches no file reports `unmatched-pattern`. Remove the record, or correct its path and keep the reason."
+example = "An `[[ignore]]` record with `paths = [\"nowhere/**\"]` that matches no file reports `unmatched-path`. Remove the record, or correct its path and keep the reason."
 help = "Remove the record or correct its path."
 level = "recommended"
-name = "unmatched-patterns"
+name = "unmatched-paths"
 runs = "once"
 stage = "commit"
 summary = "Checks settings path patterns against tracked files."

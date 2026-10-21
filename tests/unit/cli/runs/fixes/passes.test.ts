@@ -45,7 +45,7 @@ test.each([...FIX_LINTER_CASES])(
         await using sandbox = await testdir();
         const check = readConfigurations()
             .get(entry.configuration)!
-            .checks.find((check) => check.name === `${entry.configuration}/${entry.tool}`)!;
+            .checks.find((check) => check.id === `${entry.configuration}/${entry.tool}`)!;
         const executable = join(
             dirname(await Bun.resolve(`${entry.tool}/package.json`, import.meta.dir)),
             'bin',
@@ -58,7 +58,7 @@ test.each([...FIX_LINTER_CASES])(
                 tables: stringify({
                     command_check: [
                         {
-                            name: 'project/native',
+                            id: 'project/native',
                             command: [...command, ...entry.formatter, '{files}'],
                             fix: [...command, '--fix', '{files}'],
                             exit_codes: check.exit_codes!,
@@ -97,7 +97,7 @@ test('after --fix, the checks read the fixed file and other files stay as they w
 configurations = ["sql"]
 [tools.sqlfluff]
 dialect = "postgres"
-[[command_check]]\nname = "project/correct-sql"
+[[command_check]]\nid = "project/correct-sql"
 command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]
 paths = ["query.sql"]
 stage = "commit"
@@ -135,13 +135,13 @@ test('a later pass formats what a fix after the formatter wrote', async () => {
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: `[[command_check]]
-name = "project/format"
+id = "project/format"
 stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, '  ', '{files}'])}
 fix = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, '  ', ' ', '{files}'])}
 [[command_check]]
-name = "project/codemod"
+id = "project/codemod"
 stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, 'var', '{files}'])}
@@ -163,7 +163,7 @@ fix = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ', '{files
 test('a fixer that fails midway leaves the later fixers to run in order and keep their edits', async () => {
     const entries = ['first', 'second', 'third'].map((name, index) => {
         const script = String.raw`const fs = require('node:fs'); fs.appendFileSync('order.log', '${name}\n'); fs.writeFileSync('${name}.txt', 'fixed\n'); process.exitCode = ${index === 0 ? '3' : '0'};`;
-        return `[[command_check]]\nname = "sandbox/${name}"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}\nfix = ${JSON.stringify([process.execPath, '-e', script])}\npaths = ["${name}.txt"]\nstage = "commit"\n`;
+        return `[[command_check]]\nid = "sandbox/${name}"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}\nfix = ${JSON.stringify([process.execPath, '-e', script])}\npaths = ["${name}.txt"]\nstage = "commit"\n`;
     });
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], { rules: true, tables: entries.join('') }),
@@ -195,7 +195,7 @@ test('checks refresh the file inventory after a fixer creates a source', async (
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: `[[command_check]]
-name = "project/inventory"
+id = "project/inventory"
 stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = process.argv.includes("added.txt") ? 0 : 1', '{files}'])}
@@ -216,7 +216,7 @@ fix = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.txt", "c
 test('a fix run keeps the generated-file list', async () => {
     const text = buildSandboxSettings(['nextjs', 'cloudflare'], {
         tables: `[[command_check]]
-name = "project/correct"
+id = "project/correct"
 paths = ["marker.txt"]
 stage = "commit"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
@@ -251,7 +251,7 @@ test('fix verification refreshes the caller facts and preserves child package de
             tables: `[[scope]]
 path = "app"
 configurations = ["javascript"]
-[[command_check]]\nname = "project/update-package"
+[[command_check]]\nid = "project/update-package"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 fix = ${JSON.stringify([process.execPath, '-e', CLEAR_DEPENDENCIES_SCRIPT])}
 paths = ["package.json"]
@@ -282,7 +282,7 @@ test('a fixer that leaves a code file that fails to parse is named in the fix re
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: `[[command_check]]
-name = "project/merge-imports"
+id = "project/merge-imports"
 stage = "commit"
 paths = ["*.ts"]
 command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]

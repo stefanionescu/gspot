@@ -1,9 +1,9 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import type { FileNames } from '#cli/types/checks/naming.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -21,12 +21,12 @@ import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/naming/
 async function readDeclaredNames(session: Session, planned: PlannedCheck): Promise<FileNames[]> {
     const files: FileNames[] = [];
     const containers = readNamingDefaults().path_containers;
-    for (const selection of session.scopes) {
+    for (const scope of session.scopes) {
         const scopeInput = {
             ...planned,
-            selection,
+            scope,
             files: planned.files.filter(
-                (file) => findScope(file.path, session.repository.scopeFolders).path === selection.scope.path,
+                (file) => findScopeFolder(file.path, session.repository.scopeFolders).path === scope.folder.path,
             ),
         };
         const named = listNamedFiles(scopeInput);

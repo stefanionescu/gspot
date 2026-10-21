@@ -1,9 +1,9 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { findFunctionNode } from '#cli/parsers/bash.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { ENV_NAME } from '#cli/config/parsers/environment.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -24,16 +24,13 @@ import {
  * @returns one finding per reading line.
  */
 export async function checkStructureEnvironmentReaders(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const readerPaths = planned.selection.view.values.structure?.environment_readers ?? [];
+    const readerPaths = planned.scope.settings.values.structure?.environment_readers ?? [];
     if (readerPaths.length === 0) return [];
     const isReader = buildPathMatcher(readerPaths);
-    const environmentFunctions = planned.selection.view.configurations.includes('secrets')
-        ? getTable(planned.selection.view, 'secrets').environment_functions
+    const environmentFunctions = planned.scope.settings.configurations.includes('secrets')
+        ? getTable(planned.scope.settings, 'secrets').environment_functions
         : [];
-    const parsed = await parseCached(
-        { ...session, files: planned.files, selection: planned.selection },
-        PARSED_SOURCES,
-    );
+    const parsed = await parseCached({ ...session, files: planned.files, scope: planned.scope }, PARSED_SOURCES);
     const readerVariables = new Set(
         parsed
             .filter((source) => source.language === 'bash' && isReader(source.path))

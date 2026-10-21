@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
@@ -24,21 +24,21 @@ let CONFIGURATIONS: Map<string, Configuration> | undefined;
 function findOnlyToolName(tools: unknown): string | undefined {
     if (!Array.isArray(tools) || tools.length !== 1) return undefined;
     const tool: unknown = tools.at(0);
-    return isRecord(tool) && typeof tool['name'] === 'string' ? tool['name'] : undefined;
+    return isTable(tool) && typeof tool['name'] === 'string' ? tool['name'] : undefined;
 }
 
 // Every tool-files asset has one canonical output; metadata adds consumers and generation settings.
 function readToolFiles(configurationFolder: string, toolFiles: unknown, tools: unknown): unknown {
     if (toolFiles !== undefined && !Array.isArray(toolFiles)) return toolFiles;
     const entries: unknown[] = toolFiles === undefined ? [] : toolFiles;
-    const declaredTargets = new Set(entries.flatMap((entry) => (isRecord(entry) ? [entry['target']] : [])));
+    const declaredTargets = new Set(entries.flatMap((entry) => (isTable(entry) ? [entry['target']] : [])));
     const folder = `${configurationFolder}/${SHIPPED_TOOL_FILES_FOLDER}/`;
     const copied = listAssets(folder)
         .map((path) => ({ target: posix.relative(folder, path) }))
         .filter(({ target }) => !declaredTargets.has(target));
     const tool = findOnlyToolName(tools);
     return [...entries, ...copied].map((entry) =>
-        tool === undefined || !isRecord(entry) || entry['tool'] !== undefined || entry['check'] !== undefined
+        tool === undefined || !isTable(entry) || entry['tool'] !== undefined || entry['check'] !== undefined
             ? entry
             : { ...entry, tool },
     );
@@ -86,7 +86,7 @@ function parseManifest(text: string, configurationFolder: string): ParsedManifes
         tool_file: discoveredToolFiles,
         folder: configurationFolder,
         configuration: {
-            ...(isRecord(parsed['configuration']) ? parsed['configuration'] : {}),
+            ...(isTable(parsed['configuration']) ? parsed['configuration'] : {}),
             name: posix.basename(configurationFolder),
             group: posix.basename(posix.dirname(configurationFolder)),
         },
@@ -123,7 +123,7 @@ function readShippedConfigurations(): Map<string, Configuration> {
  */
 export function buildManifestError(configuration: string, errors: string[]): GspotError {
     return new GspotError(
-        'manifest',
+        'configuration',
         [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
     );
 }
@@ -144,9 +144,9 @@ export function readConfigurations(): Map<string, Configuration> {
  * @param checks the [[command_check]] records.
  * @returns the shipped IDs, then your command check IDs.
  */
-export function listCheckIds(checks: readonly Pick<Check, 'name'>[]): string[] {
+export function listCheckIds(checks: readonly Pick<Check, 'id'>[]): string[] {
     const shipped = [...listChecksById(readConfigurations().values()).keys()];
-    const authored = checks.map((check) => check.name);
+    const authored = checks.map((check) => check.id);
     return [...new Set([...shipped, ...authored])];
 }
 
@@ -176,7 +176,7 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
     const checks = new Map<string, ConfigurationCheck>();
     for (const configuration of configurations) {
         for (const check of configuration.checks) {
-            checks.set(check.name, { check, configuration: configuration });
+            checks.set(check.id, { check, configuration });
         }
     }
     return checks;

@@ -122,7 +122,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
                 hooks: { enabled: true },
                 command_check: [
                     {
-                        ...buildReportingCheck({ name: 'sandbox/defect', paths: ['src/**'], stage: 'commit' }),
+                        ...buildReportingCheck({ id: 'sandbox/defect', paths: ['src/**'], stage: 'commit' }),
                         command: [process.execPath, '-e', SAMPLE_COMMAND, '{files}'],
                     },
                 ],
@@ -139,7 +139,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     const applied = await spawnGspot(main, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await spawnGspot(main, ['install'])).toMatchObject({ code: 0 });
-    const formatted = await spawnGspot(main, ['check', '--only', 'files/taplo-format', '--fix']);
+    const formatted = await spawnGspot(main, ['check', '--only', 'data-files/taplo-format', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     commitAll(main);
     readGitOutput(main, ['worktree', 'add', '-q', '-b', 'topic', linked]);
@@ -166,7 +166,7 @@ enabled = false
 [hooks]
 enabled = true
 [[command_check]]
-name = "project/content"
+id = "project/content"
 stage = "commit"
 paths = ["source.txt"]
 command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
@@ -182,7 +182,7 @@ command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
     const installed = await spawnGspot(project, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe('.gspot/hooks');
-    const formatted = await spawnGspot(project, ['check', '--only', 'files/taplo-format', '--fix']);
+    const formatted = await spawnGspot(project, ['check', '--only', 'data-files/taplo-format', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     expect(runGit(sandbox.path, ['add', '-A']).code).toBe(0);
     await writeFile(join(sandbox.path, 'source.txt'), 'corrected working tree\n');

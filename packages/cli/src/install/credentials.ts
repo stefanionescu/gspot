@@ -17,10 +17,10 @@ import {
  * @param message the failure to report, without credential values.
  */
 export function assertCredentialFreeLockfile(lockfile: string, credentials: string[], message: string): void {
-    if (LOCKFILE_URL_PASSWORD.test(lockfile)) throw new GspotError('installation', message);
+    if (LOCKFILE_URL_PASSWORD.test(lockfile)) throw new GspotError('install', message);
     for (const credential of credentials) {
         if (lockfile.includes(credential) || lockfile.includes(encodeURIComponent(credential)))
-            throw new GspotError('installation', message);
+            throw new GspotError('install', message);
     }
 }
 

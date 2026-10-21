@@ -82,8 +82,8 @@ export function readComposeDocuments(session: Session, planned: PlannedCheck): C
         });
         documents.declarations.push(...declarations);
         const folder = posix.dirname(group.last.path);
-        const candidates = listBuildContexts(declarations, folder);
-        for (const [dockerfile, paths] of candidates)
+        const buildContexts = listBuildContexts(declarations, folder);
+        for (const [dockerfile, paths] of buildContexts)
             documents.contexts.set(dockerfile, [...(documents.contexts.get(dockerfile) ?? []), ...paths]);
     }
     return documents;
@@ -107,7 +107,7 @@ export async function checkDockerCompose(session: Session, planned: PlannedCheck
                 part === FILE_PLACEHOLDER
                     ? [
                           ...before.flatMap(({ path }) => [
-                              posix.relative(planned.selection.scope.path, path),
+                              posix.relative(planned.scope.folder.path, path),
                               COMPOSE_FILE_FLAG,
                           ]),
                           part,

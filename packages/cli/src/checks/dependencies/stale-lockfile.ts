@@ -46,7 +46,7 @@ function compareSpecifiers(declared: Map<string, string>, locked: Map<string, st
  * @returns one finding per dependency out of step with the lockfile.
  */
 export function checkDependenciesStaleLockfile(session: Session, planned: PlannedCheck): Finding[] {
-    const folder = planned.selection.scope.path;
+    const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const declared = readDeclaredSpecifiers(session.reads, packageJsonPath);
     const found = findImporterLockfile(session, folder);

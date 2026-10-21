@@ -62,8 +62,8 @@ export const LEVELS = ['recommended', 'all'] as const;
 
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
 
-/** A version floor may leave out the minor or patch number. */
-export const VERSION_FLOOR = /^(?:\d+|\d+\.\d+|\d+\.\d+\.\d+)$/u;
+/** A minimum version may leave out the minor or patch number. */
+export const MINIMUM_VERSION_PATTERN = /^(?:\d+|\d+\.\d+|\d+\.\d+\.\d+)$/u;
 
 export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;
 

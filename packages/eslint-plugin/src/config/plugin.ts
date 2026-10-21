@@ -1,2 +1,2 @@
-export const RULE_URL = 'https://generativespotting.com/reference/eslint-plugin/{name}/';
+export const RULE_URL = 'https://generativespotting.com/reference/eslint-plugin/{rule}/';
 export const PLUGIN_PREFIX = 'gspot';

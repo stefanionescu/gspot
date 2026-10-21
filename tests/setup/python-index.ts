@@ -172,12 +172,12 @@ export async function createIndexedPythonSandbox(
     const registry = resources.use(await createPythonIndex(work));
     const project = resources.use(await createPythonSandbox(root, { indexFile, indexUrl: registry.url }));
     await installToolProjects(root);
-    const inputs = await readToolProjectFiles(root, 'uv');
+    const projectFiles = await readToolProjectFiles(root, 'uv');
     const owned = resources.move();
     return {
         rootProject: project.rootProject,
         rootConfiguration: project.rootConfiguration,
-        inputs,
+        projectFiles,
         [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
     };
 }

@@ -5,7 +5,7 @@ import { findCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependencies.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scope-view.ts';
+import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 
 import {
     SWIFTFORMAT_COMMAS,
@@ -30,17 +30,13 @@ function readSwiftVersion(reads: ReadCache, scope: string, projectPath: string):
  * @returns the SwiftFormat settings of the repository.
  */
 export function buildSwiftformatFile(planned: PlannedToolFile): string {
-    const { selection } = planned;
+    const { scope } = planned;
     const { reads } = planned.session;
     const level = planned.level;
 
-    const { format } = selection.view.values;
+    const { format } = scope.settings.values;
     const isAll = level === 'all';
-    const version = readSwiftVersion(
-        reads,
-        selection.scope.path,
-        getTable(selection.view, 'swift').xcode_project ?? '',
-    );
+    const version = readSwiftVersion(reads, scope.folder.path, getTable(scope.settings, 'swift').xcode_project ?? '');
     const document = {
         options: {
             ...SWIFTFORMAT_OPTIONS,
@@ -52,13 +48,13 @@ export function buildSwiftformatFile(planned: PlannedToolFile): string {
         },
         enable: isAll
             ? SWIFTFORMAT_ALL_LEVEL_ON.filter(
-                  (rule) => !listIgnoredRules(planned.selection, 'swift/swiftformat').includes(rule),
+                  (rule) => !listIgnoredRules(planned.scope, 'swift/swiftformat').includes(rule),
               )
             : [],
         disable: [
             ...new Set([
                 ...Object.keys(SWIFTFORMAT_ALWAYS_OFF),
-                ...listIgnoredRules(planned.selection, 'swift/swiftformat'),
+                ...listIgnoredRules(planned.scope, 'swift/swiftformat'),
                 ...(isAll ? [] : SWIFTFORMAT_RECOMMENDED_OFF),
             ]),
         ],

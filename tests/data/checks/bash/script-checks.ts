@@ -30,7 +30,7 @@ main() {
 main "$@"
 `,
         },
-        expected: { file: 'scripts/unsafe.sh', rule: 'blanket-success', line: 11 },
+        expected: { file: 'scripts/unsafe.sh', rule: 'ignored-failure', line: 11 },
     },
 ] as const;
 

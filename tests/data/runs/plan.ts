@@ -41,7 +41,7 @@ export const PROJECT_PATH_IGNORES = [
         name: 'another check’s path ignore',
         changed: ['api/ignored.ts'],
         present: true,
-        check: 'files/v8r',
+        check: 'data-files/v8r',
         rule: undefined,
         files: ['api/ignored.ts', 'api/kept.ts'],
     },

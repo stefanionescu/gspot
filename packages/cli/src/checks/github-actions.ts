@@ -76,13 +76,13 @@ function prepareActionlintText(text: string): string {
  */
 export async function checkGithubActionsActionlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
-    const inputs = new Map(
+    const actionFiles = new Map(
         [
             ...planned.files,
             ...session.repository.files.filter((file) => ACTION_FILES.includes(posix.basename(file.path))),
         ].map((file) => [file.path, file]),
     );
-    for (const file of inputs.values()) {
+    for (const file of actionFiles.values()) {
         const source = readCachedText(session.reads, file.path);
         const prepared = prepareActionlintText(source);
         if (prepared !== source) replacements.set(file.path, prepared);

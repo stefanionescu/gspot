@@ -93,7 +93,7 @@ function formatCheckExplanation(
     const { check, configuration } = found;
     const { source, settings, rules, minVersions } = facts;
     const lines = [
-        `${check.name}  (${source}, ${check.stage} stage, ${check.level} level)`,
+        `${check.id}  (${source}, ${check.stage} stage, ${check.level} level)`,
         '',
         `What it looks for: ${check.summary}`,
         `Why it matters: ${check.why}`,
@@ -101,9 +101,9 @@ function formatCheckExplanation(
         ...(check.when?.setting === undefined ? [] : [`Required setting: ${check.when.setting}`]),
         ...Object.entries(minVersions).map(([name, version]) => `Needs ${name} ${version} or newer`),
         '',
-        `Turn it off for some paths: gspot ignore ${quoteArgument(check.name)} --paths "<glob>" --reason "..."`,
+        `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --paths "<glob>" --reason "..."`,
         ...(check.command
-            ? [`Turn one of its rules off: gspot ignore ${quoteArgument(check.name)} --rule <rule> --reason "..."`]
+            ? [`Turn one of its rules off: gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "..."`]
             : []),
         ...(check.run_in_copy === true ? ['Runs on a copy of the selected files in a temporary folder.'] : []),
         ...(settings.length === 0
@@ -119,14 +119,14 @@ function formatCheckExplanation(
  * Explain a shipped check or a command check.
  *
  * @param session the repository, or undefined outside one.
- * @param checkName the check ID to explain.
+ * @param checkId the check ID to explain.
  * @returns the explanation, or undefined when no check has the ID.
  */
-export function explainCheck(session: Session | undefined, checkName: string): Explanation | undefined {
+export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
     const configurations = readConfigurations();
-    const declared = session?.settingsFile.settings.commandChecks[checkName];
+    const declared = session?.settingsFile.settings.commandChecks[checkId];
     const found: KnownCheck | undefined =
-        listChecksById(configurations.values()).get(checkName) ??
+        listChecksById(configurations.values()).get(checkId) ??
         (declared === undefined ? undefined : { check: declared, configuration: undefined });
     if (found === undefined) return undefined;
     const { check, configuration } = found;
@@ -138,10 +138,10 @@ export function explainCheck(session: Session | undefined, checkName: string): E
     );
     return {
         kind: 'check',
-        subject: checkName,
+        subject: checkId,
         text: formatCheckExplanation(session, found, declared, facts),
         data: {
-            check: checkName,
+            check: checkId,
             ...(configuration === undefined
                 ? { command: check.command, paths: check.files?.paths }
                 : { configuration: configuration.name }),
@@ -178,7 +178,7 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
         .values()
         .find(
             ({ check: declaration }) =>
-                getToolName(declaration) === ruleTool || declaration.name.endsWith(`/${ruleTool}`),
+                getToolName(declaration) === ruleTool || declaration.id.endsWith(`/${ruleTool}`),
         );
     if (!found) return undefined;
     const { check, configuration } = found;
@@ -191,18 +191,18 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
     let description = `Read the ${ruleTool} documentation for ${identifier}.`;
     if (page !== undefined) description = `The tool's page: ${page}`;
     const lines = [
-        `${ruleTool}/${identifier}  (run by ${check.name})`,
+        `${ruleTool}/${identifier}  (run by ${check.id})`,
         '',
         description,
         '',
-        `Turn it off everywhere: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(identifier)} --reason "..."`,
-        `Turn it off for some paths: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(identifier)} --paths "<glob>" --reason "..."`,
+        `Turn it off everywhere: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --reason "..."`,
+        `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --paths "<glob>" --reason "..."`,
         ...optionLines,
     ];
     return {
         kind: 'lint-rule',
         subject: `${ruleTool}/${identifier}`,
         text: `${lines.join('\n')}\n`,
-        data: { tool: ruleTool, rule: identifier, check: check.name, page: page ?? null },
+        data: { tool: ruleTool, rule: identifier, check: check.id, page: page ?? null },
     };
 }

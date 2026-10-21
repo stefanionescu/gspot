@@ -34,14 +34,14 @@ export function listCopyPythonArguments(tool: Tool, env: Record<string, string>)
 /**
  * Build the command that runs a pinned Python check with the installed project dependencies of the scope.
  *
- * @param selection the scope and its tool declarations.
+ * @param scope the scope and its tool declarations.
  * @param scopeRoot the project folder.
  * @param command the target executable and its arguments.
  *
  * @returns the uv command, which syncs neither the project nor its lockfile.
  */
-export function buildUvRunCommand(selection: Scope, scopeRoot: string, command: [string, ...string[]]): string[] {
-    const tool = getTool(selection.selected, command[0]);
+export function buildUvRunCommand(scope: Scope, scopeRoot: string, command: [string, ...string[]]): string[] {
+    const tool = getTool(scope.configurations, command[0]);
     const packagePin = tool.installers['pypi'];
     if (packagePin?.version === undefined)
         throw new GspotError('tool', `The ${tool.name} check has no pinned Python package declaration.`);

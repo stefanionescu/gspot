@@ -28,7 +28,7 @@ export function explainConfiguration(session: Session | undefined, configuration
         tools: configuration.tools.map((tool) =>
             tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
         ),
-        checks: configuration.checks.map((check) => ({ check: check.name, stage: check.stage })),
+        checks: configuration.checks.map((check) => ({ check: check.id, stage: check.stage })),
         settings: listSettings(configuration.name).map((setting) => setting.name),
         rules: (session === undefined ? [] : selectRuleFiles(session))
             .filter((file) => listRuleFiles(configuration).some((rule) => rule.path === file.path))

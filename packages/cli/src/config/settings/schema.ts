@@ -53,7 +53,7 @@ export const SETTINGS_EXAMPLES = [
     { configurations: ['javascript'], tools: { eslint: { rules: { 'no-console': [{ allow: ['warn'] }] } } } },
     { format: { indent_width: 4, print_width: 100 } },
     { dependencies: { min_release_age_days: 7 } },
-    { allowed_words: { Acme: 'The project uses this product name.' } },
+    { spelling: { allowed_words: { Acme: 'The project uses this product name.' } } },
     { licenses: { allowed: ['MIT', 'Apache-2.0'] } },
     {
         ignore: [
@@ -68,7 +68,7 @@ export const SETTINGS_EXAMPLES = [
     {
         command_check: [
             {
-                name: 'project/notes',
+                id: 'project/notes',
                 command: ['node', 'scripts/check-notes.mjs', '{files}'],
                 paths: ['notes/**'],
                 stage: 'commit',

@@ -22,13 +22,17 @@ export type ScriptFunction = {
 export type TemporaryPath = { name: string; line: number; cleanupLines: number[] };
 
 /** Created paths remain visible even when reassignment prevents an exact cleanup binding. */
-export type TemporaryTargets = { paths: TemporaryPath[]; targets: Map<string, TemporaryPath>; declared: Set<string> };
+export type ScriptTemporaryPaths = {
+    paths: TemporaryPath[];
+    variables: Map<string, TemporaryPath>;
+    declared: Set<string>;
+};
 
 /** The removals of a deferred trap keep their source offset and variable owner. */
 export type TrapCleanup = {
     lineOffset: number;
     owner: number | undefined;
-    registry: TemporaryTargets;
+    registry: ScriptTemporaryPaths;
     lines: Map<number, Array<TemporaryPath | undefined>>;
 };
 

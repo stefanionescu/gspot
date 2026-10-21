@@ -79,7 +79,7 @@ xcode_scheme = "Example"
         produced: true,
     },
     {
-        failure: 'under-floor',
+        failure: 'under-minimum',
         note: undefined,
         settings: XCTEST_SETTINGS,
         build: '',

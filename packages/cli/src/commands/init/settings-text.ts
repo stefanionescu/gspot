@@ -1,40 +1,40 @@
 import { posix } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { PBXPROJ } from '#cli/config/parsers/xcode.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { parseBuildSettings } from '#cli/parsers/xcode.ts';
 import { PREFACE_BODY } from '#cli/config/commands/init.ts';
-import { selectForScope } from '#cli/settings/scope-view.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
+import { selectForScope } from '#cli/settings/scope-settings.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
-import { buildDraftSelection } from '#cli/commands/init/selection.ts';
 import { XCODE_DESTINATIONS } from '#cli/config/settings/defaults.ts';
 import { readFormatTables } from '#cli/commands/init/formatter-settings.ts';
+import { buildSelectedConfigurations } from '#cli/commands/init/selection.ts';
 import { buildImportExtensionTables } from '#cli/commands/init/import-extension.ts';
 import { SWIFT_CONFIGURATION, OPENAPI_CONFIGURATION } from '#cli/config/configurations.ts';
 import type { InitAnswers, InitOptions, SettingsDraft, InitConfigurations } from '#cli/types/commands/init.ts';
 
 function buildOpenApiTables(
-    selections: { scope: string; selected: Configuration[] }[],
+    scopes: { scope: string; selected: Configuration[] }[],
     draft: SettingsDraft,
     repository: Repository,
 ): Map<string, TomlTable> {
-    const openapiSelections = selections
-        .map(({ scope, selected }) => ({
+    const openapiSelections = scopes
+        .map(({ scope, selected: configurations }) => ({
             scope,
-            openapi: selected.find((entry) => entry.name === OPENAPI_CONFIGURATION),
+            openapi: configurations.find((entry) => entry.name === OPENAPI_CONFIGURATION),
         }))
         .filter((entry): entry is typeof entry & { openapi: Configuration } => entry.openapi !== undefined);
     return new Map(
         openapiSelections.flatMap(({ scope, openapi }) => {
             const isDocument = buildFilenameMatcher(openapi.detect.filenames);
             const document = repository.files.find(
-                (file) => findScope(file.path, draft.scopes).path === scope && isDocument(file.path),
+                (file) => findScopeFolder(file.path, draft.scopes).path === scope && isDocument(file.path),
             )?.path;
             return document === undefined ? [] : [[scope, { openapi: { document } }] as const];
         }),
@@ -43,14 +43,14 @@ function buildOpenApiTables(
 
 // Swift seeds come from the Xcode project owned by each selected scope.
 function buildSwiftTables(
-    selections: { scope: string; selected: Configuration[] }[],
+    scopes: { scope: string; selected: Configuration[] }[],
     draft: SettingsDraft,
     repository: Repository,
 ): Map<string, TomlTable> {
     const projectFiles = repository.files.filter((entry) => entry.path.endsWith(PBXPROJ));
-    const swiftFiles = selections.flatMap(({ scope, selected }) => {
-        if (!selected.some((entry) => entry.name === SWIFT_CONFIGURATION)) return [];
-        const file = projectFiles.find((entry) => findScope(entry.path, draft.scopes).path === scope)?.path;
+    const swiftFiles = scopes.flatMap(({ scope, selected: configurations }) => {
+        if (!configurations.some((entry) => entry.name === SWIFT_CONFIGURATION)) return [];
+        const file = projectFiles.find((entry) => findScopeFolder(entry.path, draft.scopes).path === scope)?.path;
         return file === undefined ? [] : [{ scope, file }];
     });
     return new Map(
@@ -72,17 +72,25 @@ function buildSettingsTable(
     repository: Repository,
     configurations: Map<string, Configuration>,
 ): TomlTable {
-    const selection = buildDraftSelection(draft);
+    const selected = buildSelectedConfigurations(draft);
     const scopes = ['', ...draft.scopes.map((entry) => entry.path)];
-    const selections = scopes.map((scope) => ({ scope, selected: selectForScope(selection, scope, configurations) }));
-    const projects = buildSwiftTables(selections, draft, repository);
+    const scopeConfigurations = scopes.map((scopePath) => ({
+        scope: scopePath,
+        selected: selectForScope(selected, scopePath, configurations),
+    }));
+    const projects = buildSwiftTables(scopeConfigurations, draft, repository);
     const formats = readFormatTables(draft, repository, configurations);
-    const openapiTables = buildOpenApiTables(selections, draft, repository);
-    const importStyles = buildImportExtensionTables(selections, repository);
+    const openapiTables = buildOpenApiTables(scopeConfigurations, draft, repository);
+    const importStyles = buildImportExtensionTables(scopeConfigurations, repository);
     const tables = new Map(
-        scopes.map((scope) => [
-            scope,
-            { ...projects.get(scope), ...openapiTables.get(scope), ...formats.get(scope), ...importStyles.get(scope) },
+        scopes.map((scopePath) => [
+            scopePath,
+            {
+                ...projects.get(scopePath),
+                ...openapiTables.get(scopePath),
+                ...formats.get(scopePath),
+                ...importStyles.get(scopePath),
+            },
         ]),
     );
     const scope = draft.scopes.map(({ path, configurations }) => ({ path, configurations, ...tables.get(path) }));
@@ -123,22 +131,22 @@ export function buildInitSettings(
 /**
  * Draft the settings from the configuration choices and the init answers.
  *
- * @param selection the configurations and scopes.
+ * @param configurations the configurations and scopes.
  * @param answers the integration choices.
  * @param options the authored level, when selected.
  * @returns the root and scope choices: the answers and the inferred commit scopes.
  */
 export function buildSettingsDraft(
-    selection: InitConfigurations,
+    configurations: InitConfigurations,
     answers: InitAnswers,
     options: Pick<InitOptions, 'level'>,
 ): SettingsDraft {
-    const scopes = selection.scopes.filter((scope) => scope.path !== '');
+    const scopes = configurations.scopes.filter((scope) => scope.path !== '');
     return {
-        configurations: selection.rootNames,
+        configurations: configurations.rootNames,
         scopes: scopes.map((scope) => ({
             ...scope,
-            configurations: selection.scopeConfigurations.get(scope.path) ?? [],
+            configurations: configurations.scopeConfigurations.get(scope.path) ?? [],
         })),
         ...answers,
         ...stripUndefined({ level: options.level }),

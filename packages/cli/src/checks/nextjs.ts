@@ -44,7 +44,7 @@ export async function checkNextjsTsc(session: Session, planned: PlannedCheck): P
     const scratchSession = { ...session, root, reads: createReadCache(root) };
     // CI stops package installs; the Next.js generator output stays in the copy.
     const generated = await runCheckTool(scratchSession, planned, NEXT_TYPEGEN_COMMAND, {
-        cwd: join(root, planned.selection.scope.path),
+        cwd: join(root, planned.scope.folder.path),
         env: CI_ENVIRONMENT,
     });
     const output = `${generated.stdout}${generated.stderr}`;
@@ -60,7 +60,7 @@ export async function checkNextjsTsc(session: Session, planned: PlannedCheck): P
         root,
         readTsconfigProject(
             root,
-            planned.selection.scope.path,
+            planned.scope.folder.path,
             planned.files.filter((file) => file.tags.includes(TYPESCRIPT_TAG)).map((file) => file.path),
             scratchSession.reads,
         ),

@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module';
-import { FUNCTIONS } from '../config/syntax.ts';
+import { FUNCTION_TYPES } from '../config/syntax.ts';
 import { createRule } from '../schemas/rules/options.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';
 import { UPSTREAM_RULE, UPSTREAM_PACKAGE } from '../config/magic-numbers.ts';
@@ -21,7 +21,7 @@ function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
 // has a name. A number inside a function of that initializer still counts.
 function isConstantValue(node: TSESTree.Node): boolean {
     for (let current: TSESTree.Node = node; current.type !== AST_NODE_TYPES.Program; current = current.parent) {
-        if (FUNCTIONS.has(current.type)) return false;
+        if (FUNCTION_TYPES.has(current.type)) return false;
         if (current.type === AST_NODE_TYPES.VariableDeclarator) return isModuleConstant(current.parent);
     }
     return false;

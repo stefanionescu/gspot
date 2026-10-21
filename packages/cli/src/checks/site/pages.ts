@@ -3,7 +3,6 @@ import { pathToFileURL } from 'node:url';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { parseToolReport } from '#cli/parsers/json.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { join, relative, isAbsolute } from 'node:path';
 import type { Finding } from '#cli/types/runs/check.ts';
@@ -11,6 +10,7 @@ import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { getToolFile } from '#cli/runs/command/placeholders.ts';
@@ -18,7 +18,7 @@ import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
+import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { purgecssReportSchema } from '#cli/schemas/checks/site/pages.ts';
 import { listBuiltFiles, getSuccessfulBuild, buildRepositoryPath } from '#cli/checks/site/build.ts';
 
@@ -62,7 +62,7 @@ function readSitemapUrls(folder: string, files: ReadonlySet<string>): string[] {
     return [...urls];
 }
 
-function listCandidatePages(pathname: string): [string, ...string[]] {
+function listPossiblePages(pathname: string): [string, ...string[]] {
     const path = decodeURIComponent(pathname.replace(/[?#][\s\S]*/u, '')).replace(/^\//u, '');
     if (path === '' || path.endsWith('/')) return [`${path}${INDEX_PAGE}`];
     return path.endsWith(HTML_EXTENSION) ? [path] : [path, `${path}${HTML_EXTENSION}`, `${path}/${INDEX_PAGE}`];
@@ -89,7 +89,7 @@ export async function checkSiteLychee(session: Session, planned: PlannedCheck): 
         ...(location === undefined
             ? []
             : ['--remap', `^${RegExp.escape(new URL(location).origin)}/ ${pathToFileURL(build.folder).href}/`]),
-        ...getTable(planned.selection.view, 'docs').allowed_urls.flatMap((value) => ['--exclude', value]),
+        ...getTable(planned.scope.settings, 'docs').allowed_urls.flatMap((value) => ['--exclude', value]),
     ];
     const findings: Finding[] = [];
     for (const batch of splitFileArguments(paths, command, process.platform)) {
@@ -119,8 +119,8 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
     if (pages.length === 0) return [];
     const toolFile = join(
         session.root,
-        buildScopeTarget(
-            planned.selection.scope.path,
+        getToolFileTarget(
+            planned.scope.folder.path,
             getToolFile(session, planned, HTML_VALIDATE),
             getToolFiles(session).targets,
         ),
@@ -166,8 +166,8 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
     if (sheets.length === 0) return [];
     const toolFile = join(
         session.root,
-        buildScopeTarget(
-            planned.selection.scope.path,
+        getToolFileTarget(
+            planned.scope.folder.path,
             getToolFile(session, planned, PURGECSS),
             getToolFiles(session).targets,
         ),
@@ -191,7 +191,7 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
                     ),
                     line: 1,
                 },
-                'dead-selector',
+                'unused-selector',
                 `No built page uses the selector ${selector.trim()}.`,
             ),
         ),
@@ -206,7 +206,7 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
  * @returns one finding per exceeded limit.
  */
 export async function checkSiteSize(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const limits = getTable(planned.selection.view, 'site').size_limit.map((limit) => ({
+    const limits = getTable(planned.scope.settings, 'site').size_limit.map((limit) => ({
         ...limit,
         isCounted: buildPathMatcher(limit.paths),
     }));
@@ -246,10 +246,10 @@ export async function checkSiteSitemap(session: Session, planned: PlannedCheck):
     const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));
     if (sitemapFile === undefined) return [];
     const urls = readSitemapUrls(build.folder, files);
-    const listed = new Set(urls.flatMap((url) => listCandidatePages(new URL(url).pathname)));
-    const isLeftOut = buildPathMatcher(getTable(planned.selection.view, 'site').allowed_unlisted_pages);
+    const listed = new Set(urls.flatMap((url) => listPossiblePages(new URL(url).pathname)));
+    const isLeftOut = buildPathMatcher(getTable(planned.scope.settings, 'site').allowed_unlisted_pages);
     const missing = urls
-        .filter((url) => listCandidatePages(new URL(url).pathname).every((page) => !files.has(page)))
+        .filter((url) => listPossiblePages(new URL(url).pathname).every((page) => !files.has(page)))
         .map((url) =>
             buildFinding(
                 planned,

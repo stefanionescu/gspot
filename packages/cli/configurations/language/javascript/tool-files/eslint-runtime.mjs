@@ -39,35 +39,35 @@ export function mergePresetRules(blocks) {
     return Object.assign({}, ...blocks.map((block) => block.rules));
 }
 
-// Framework presets retain compiler and test globals; runtime APIs use their own file selectors.
 /**
- * Remove host runtime globals while retaining framework compiler and test names.
+ * Remove host runtime globals while retaining framework compiler and test names. Runtime APIs use their own file
+ * selectors.
  *
  * @param {FrameworkBlock} block the framework ESLint configuration block.
- * @param {Record<string, object>} library the globals tables keyed by runtime name.
+ * @param {Record<string, object>} globalsByRuntime the globals tables keyed by runtime name.
  * @returns {FrameworkBlock} the same block with runtime names removed from its globals.
  */
-export function stripRuntimeGlobals(block, library) {
-    const names = block.languageOptions?.globals;
-    if (names === undefined) return block;
-    let runtimeNames = runtimeGlobalNames.get(library);
+export function stripRuntimeGlobals(block, globalsByRuntime) {
+    const blockGlobals = block.languageOptions?.globals;
+    if (blockGlobals === undefined) return block;
+    let runtimeNames = runtimeGlobalNames.get(globalsByRuntime);
     if (runtimeNames === undefined) {
         runtimeNames = new Set(
             Object.keys({
-                ...library['node'],
-                ...library['browser'],
-                ...library['worker'],
-                ...library['serviceworker'],
-                ...library['react-native'],
+                ...globalsByRuntime['node'],
+                ...globalsByRuntime['browser'],
+                ...globalsByRuntime['worker'],
+                ...globalsByRuntime['serviceworker'],
+                ...globalsByRuntime['react-native'],
             }),
         );
-        runtimeGlobalNames.set(library, runtimeNames);
+        runtimeGlobalNames.set(globalsByRuntime, runtimeNames);
     }
     return {
         ...block,
         languageOptions: {
             ...block.languageOptions,
-            globals: Object.fromEntries(Object.entries(names).filter(([name]) => !runtimeNames.has(name))),
+            globals: Object.fromEntries(Object.entries(blockGlobals).filter(([name]) => !runtimeNames.has(name))),
         },
     };
 }

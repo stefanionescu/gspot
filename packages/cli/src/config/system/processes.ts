@@ -1,6 +1,6 @@
-export const REAP_MILLISECONDS = 10;
+export const EXIT_CLEANUP_MILLISECONDS = 10;
 
-export const DRAIN_MILLISECONDS = 5000;
+export const OUTPUT_CLOSE_MILLISECONDS = 5000;
 
 export const TASKKILL_GONE_CODE = 128;
 

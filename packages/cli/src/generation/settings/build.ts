@@ -6,12 +6,12 @@ import { join, dirname, relative } from 'node:path/posix';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
 import { buildEslintFile } from '#cli/generation/eslint/tool-file.ts';
 import { buildV8rFile } from '#cli/generation/settings/builders/v8r.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scope-view.ts';
 import { buildGixyFile } from '#cli/generation/settings/builders/gixy.ts';
 import { buildKnipFile } from '#cli/generation/settings/builders/knip.ts';
 import { buildRuffFile } from '#cli/generation/settings/builders/ruff.ts';
 import { buildTaploFile } from '#cli/generation/settings/builders/taplo.ts';
 import { buildTyposFile } from '#cli/generation/settings/builders/typos.ts';
+import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import { buildHtmlSettings } from '#cli/generation/settings/builders/html.ts';
 import { buildLycheeFile } from '#cli/generation/settings/builders/lychee.ts';
 import { buildSquawkFile } from '#cli/generation/settings/builders/squawk.ts';
@@ -68,10 +68,7 @@ const TOOL_FILE_BUILDERS: Readonly<Record<string, ToolFileBuilder | undefined>> 
     'ansible/ansible-lint.yml': (planned) =>
         stringifyYaml({
             skip_list: [
-                ...new Set([
-                    ...ANSIBLE_LINT_ALWAYS_OFF,
-                    ...listIgnoredRules(planned.selection, 'ansible/ansible-lint'),
-                ]),
+                ...new Set([...ANSIBLE_LINT_ALWAYS_OFF, ...listIgnoredRules(planned.scope, 'ansible/ansible-lint')]),
             ],
         }),
     'prose/styles/gspot/acronyms.yml': buildAcronymsStyle,
@@ -80,7 +77,7 @@ const TOOL_FILE_BUILDERS: Readonly<Record<string, ToolFileBuilder | undefined>> 
     'docker/trivy.yml': (planned) =>
         stringifyYaml({
             timeout: `${String(planned.session.settingsFile.settings.tool_timeout_seconds)}s`,
-            severity: getTable(planned.selection.view, 'tools.trivy').severity,
+            severity: getTable(planned.scope.settings, 'tools.trivy').severity,
             scan: { 'skip-dirs': TRIVY_SKIPPED_FOLDERS },
         }),
     'bash/shellcheckrc': buildShellcheckFile,
@@ -90,27 +87,27 @@ const TOOL_FILE_BUILDERS: Readonly<Record<string, ToolFileBuilder | undefined>> 
         JSON.stringify(
             {
                 mode: 'strict',
-                minLines: getTable(planned.selection.view, 'duplication').min_lines,
-                minTokens: getTable(planned.selection.view, 'duplication').min_tokens,
+                minLines: getTable(planned.scope.settings, 'duplication').min_lines,
+                minTokens: getTable(planned.scope.settings, 'duplication').min_tokens,
                 absolute: true,
                 gitignore: true,
                 ignore: [
                     ...JSCPD_IGNORED,
                     ...convertToGlobs([
                         ...buildIgnoreSections(planned.session),
-                        ...listCheckIgnoreSections(planned.selection.view, 'duplication/jscpd'),
+                        ...listCheckIgnoreSections(planned.scope.settings, 'duplication/jscpd'),
                     ]),
                 ],
             },
             null,
             JSON_INDENT,
         ),
-    'files/taplo.toml': buildTaploFile,
+    'data-files/taplo.toml': buildTaploFile,
     'docs/lychee.toml': buildLycheeFile,
     'docker/hadolint.yml': buildHadolintFile,
     'openapi/spectral.yml': buildSpectralFile,
-    'files/v8r.yml': buildV8rFile,
-    'files/yamllint.yml': buildYamllintFile,
+    'data-files/v8r.yml': buildV8rFile,
+    'data-files/yamllint.yml': buildYamllintFile,
     'dependencies/osv-scanner.toml': buildOsvScannerFile,
     'site/purgecss.mjs': buildPurgecssFile,
     'site/html-validate.json': buildHtmlSettings,
@@ -161,7 +158,7 @@ export function buildToolFile(planned: PlannedToolFile, targets: ToolFileGenerat
             : builder(planned)
     ).replaceAll(TOOL_FILE_REFERENCE, (match: string, path: string) => {
         const declared = join(dirname(toolFile.target), path);
-        const chosen = targets.get(planned.selection.scope.path)?.get(declared);
+        const chosen = targets.get(planned.scope.folder.path)?.get(declared);
         return chosen === undefined ? match : match.replace(path, relative(dirname(targetPath), chosen));
     });
     return {

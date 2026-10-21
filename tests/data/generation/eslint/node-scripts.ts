@@ -121,7 +121,7 @@ path = "child"
 configurations = ["javascript"]
 
 [scope.limits.javascript]
-trivial_function_statements = { value = 1, reason = "The child exercises the scoped structural floor." }
+trivial_function_statements = { value = 1, reason = "The child exercises the scoped structural limit." }
 `;
 
 export const EXTENSIONLESS_SCRIPT_CASES = [

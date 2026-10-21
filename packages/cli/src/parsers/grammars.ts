@@ -12,20 +12,20 @@ import type {
     ParseCache,
     SourceTree,
     GrammarName,
-    ParserState,
+    ParserGrammars,
     GrammarSourceFiles,
 } from '#cli/types/parsers/grammars.ts';
 
 const PARSED_TREES = { create: () => new Map<string, Tree>() };
 
-const state: ParserState = {
+const grammars: ParserGrammars = {
     runtime: undefined,
     parsers: new Map(),
 };
 
 async function buildParser(name: GrammarName): Promise<Parser> {
-    state.runtime ??= Parser.init();
-    await state.runtime;
+    grammars.runtime ??= Parser.init();
+    await grammars.runtime;
     const language = await Language.load(readFileSync(findWasmPath(`${name}${GRAMMAR_FILE_EXTENSION}`)));
     const parser = new Parser();
     parser.setLanguage(language);
@@ -39,10 +39,10 @@ async function buildParser(name: GrammarName): Promise<Parser> {
  * @returns the shared promise, which may still load the grammar.
  */
 function getParser(name: GrammarName): Promise<Parser> {
-    let parser = state.parsers.get(name);
+    let parser = grammars.parsers.get(name);
     if (parser === undefined) {
         parser = buildParser(name);
-        state.parsers.set(name, parser);
+        grammars.parsers.set(name, parser);
     }
     return parser;
 }

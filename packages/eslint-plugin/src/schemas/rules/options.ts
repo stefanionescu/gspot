@@ -5,7 +5,7 @@ import type { RuleDocs, DocumentedRuleCreator } from '../../types/rules.ts';
 
 /** Create rule modules with their public documentation URL. */
 export const createRule = ESLintUtils.RuleCreator<RuleDocs>((name) =>
-    RULE_URL.replace('{name}', name),
+    RULE_URL.replace('{rule}', name),
 ) as DocumentedRuleCreator;
 
 /**

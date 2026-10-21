@@ -96,7 +96,7 @@ test.each([
     expect(installationError).toBeInstanceOf(Error);
     expect(installationError).toMatchObject({
         name: 'GspotError',
-        code: 'installation',
+        code: 'install',
         message: `bun ${operation} failed (exit 1). Run: gspot apply, then gspot install.\nDownloading https://[redacted]@registry.example.com/private-check-tool\n[redacted]\n[redacted]\n${refusal} from https://[redacted]@registry.example.com/private-check-tool`,
     });
     expect(await readFile(join(repository.path, '.npmrc'), 'utf8')).toBe(source);

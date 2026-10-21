@@ -35,7 +35,7 @@ function buildSectionPath(pattern: string, scope: string): string {
  * @returns the EditorConfig sections of this repository.
  */
 export function buildEditorconfigFile(planned: PlannedToolFile): string {
-    const { format } = planned.selection.view.values;
+    const { format } = planned.scope.settings.values;
     const settings = planned.session.settingsFile.settings;
     const paths = [
         ...planned.session.repository.files

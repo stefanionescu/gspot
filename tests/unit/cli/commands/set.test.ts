@@ -56,7 +56,7 @@ test.each(['tools.eslint.extra', 'tools.v8r.extra'])(
     'set refuses the unknown or unavailable key %s and writes nothing',
     async (key) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['files']),
+            'gspot.toml': buildSandboxSettings(['data-files']),
             'settings.toml': 'enabled = true\n',
         });
 

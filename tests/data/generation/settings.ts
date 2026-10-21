@@ -2,9 +2,9 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { EDITORCONFIG_SETTINGS } from '#tests/data/checks/format.ts';
 import { SWIFT_FORMAT_SETTINGS } from '#tests/data/checks/swift/projects.ts';
 
-export const ODD_KEY = 'custom"key\\name\ncafé';
+export const SPECIAL_CHARACTER_KEY = 'custom"key\\name\ncafé';
 
-export const ODD_VALUE = 'yes: # quoted "value"';
+export const SPECIAL_CHARACTER_VALUE = 'yes: # quoted "value"';
 
 export const XCODE_PROJECT = 'ios/App # café.xcodeproj';
 
@@ -12,10 +12,10 @@ export const XCODE_SCHEME = 'null';
 
 export const REGISTRIES = ['null', 'registry.example.com:5000'] as const;
 
-export const ODD_VALUE_SETTINGS = {
-    configurations: ['typescript', 'format', 'markdown', 'files', 'docker', 'swift', 'xcode'],
+export const SPECIAL_CHARACTER_SETTINGS = {
+    configurations: ['typescript', 'format', 'markdown', 'data-files', 'docker', 'swift', 'xcode'],
     tools: {
-        markdownlint: { rules: { MD044: { names: [ODD_KEY, ODD_VALUE] } } },
+        markdownlint: { rules: { MD044: { names: [SPECIAL_CHARACTER_KEY, SPECIAL_CHARACTER_VALUE] } } },
         yamllint: { rules: { truthy: { 'allowed-values': ['yes', 'no'] }, indentation: { spaces: 'consistent' } } },
         hadolint: { trusted_registries: REGISTRIES },
     },
@@ -25,7 +25,7 @@ export const ODD_VALUE_SETTINGS = {
     },
 } as const;
 
-export const ODD_VALUE_FILES = {
+export const SPECIAL_CHARACTER_FILES = {
     'package.json': '{"name":"serialization-fixture","private":true,"type":"module"}',
     'sample.ts': 'export const value = 1;',
     'sample.md': '# Sample',
@@ -35,7 +35,7 @@ export const ODD_VALUE_FILES = {
 } as const;
 
 /** Uniform Resource Identifier delimiters and Unicode must remain literal module target names. */
-export const MODULE_TARGETS = ['100%', '#fragment', '?query', "author's", 'café'] as const;
+export const MODULE_PATHS = ['100%', '#fragment', '?query', "author's", 'café'] as const;
 
 export const MODULE_VALUE = { location: 'the requested module' } as const;
 

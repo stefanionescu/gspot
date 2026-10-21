@@ -59,7 +59,7 @@ export const PLATFORM_SOURCES = {
 export const PLATFORM_SOURCE_FINDINGS = [
     { file: 'functions/input.js', rule: 'gspot.javascript.ssrf-web-request-user-input', line: 1 },
     { file: 'Info.plist', rule: 'arbitrary-loads', line: 1 },
-    { file: 'scripts/inject.js', rule: 'gspot.javascript.no-interpolated-exec', line: 1 },
+    { file: 'scripts/inject.js', rule: 'gspot.javascript.interpolated-exec', line: 1 },
     { file: 'src/filter.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
     { file: 'src/list.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
     { file: 'src/search.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
@@ -68,8 +68,8 @@ export const PLATFORM_SOURCE_FINDINGS = [
 
 /** At level all, the Worker cross-origin resource sharing (CORS) rules cover every source in the scope. */
 export const PLATFORM_ALL_SOURCE_FINDINGS = [
-    { file: 'supabase/functions/_shared/cors.ts', rule: 'gspot.cloudflare.no-wildcard-cors-origin', line: 1 },
-    { file: 'supabase/functions/cors/index.ts', rule: 'gspot.cloudflare.no-wildcard-cors-origin', line: 1 },
+    { file: 'supabase/functions/_shared/cors.ts', rule: 'gspot.cloudflare.wildcard-cors-origin', line: 1 },
+    { file: 'supabase/functions/cors/index.ts', rule: 'gspot.cloudflare.wildcard-cors-origin', line: 1 },
 ] as const;
 
 export const PLATFORM_ALL_SOURCE_FIXES = {

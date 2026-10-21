@@ -1,17 +1,17 @@
+import { getPosition } from '#cli/system/text.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
-import { computePosition } from '#cli/system/text.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { Node, RawStmt, ParseResult } from '@pgsql/types';
 import { replacePsqlSyntax } from '#cli/parsers/sql/tokens.ts';
-import type { SqlFile, SqlNodeFields, SqlStatementView, SqlStatementVisitors } from '#cli/types/parsers/sql.ts';
+import type { SqlFile, SqlStatement, SqlNodeFields, SqlStatementVisitors } from '#cli/types/parsers/sql.ts';
 
 const PARSED_SQL_FILES = { create: () => new Map<string, Promise<SqlFile>>() };
 
-function buildStatementViews(bytes: Buffer, statement: RawStmt): SqlStatementView[] {
+function buildStatements(bytes: Buffer, statement: RawStmt): SqlStatement[] {
     if (statement.stmt === undefined) return [];
     const start = bytes.subarray(0, statement.stmt_location ?? 0).toString('utf8').length;
-    return Object.entries(statement.stmt).map(([kind, fields]) => ({ kind, fields, start }) as SqlStatementView);
+    return Object.entries(statement.stmt).map(([kind, fields]) => ({ kind, fields, start }) as SqlStatement);
 }
 
 /**
@@ -37,14 +37,14 @@ async function parseSqlText(text: string): Promise<SqlFile> {
             source,
             variables,
             statements: [],
-            error: { text: parsed.error.text, ...computePosition(text, offset) },
+            error: { text: parsed.error.text, ...getPosition(text, offset) },
         };
     }
     const statements = parsed.value.stmts ?? [];
     return {
         source,
         variables,
-        statements: statements.flatMap((statement) => buildStatementViews(bytes, statement)),
+        statements: statements.flatMap((statement) => buildStatements(bytes, statement)),
         error: undefined,
     };
 }
@@ -83,15 +83,15 @@ export function getNodeFields<Kind extends keyof SqlNodeFields>(
 /**
  * Select the typed payloads of one kind from a node list.
  *
- * @param list the nodes, if any.
+ * @param nodes the nodes, if any.
  * @param kind the payload type to select.
  * @returns the matching payloads in source order.
  */
 export function listNodeFields<Kind extends keyof SqlNodeFields>(
-    list: Node[] | undefined,
+    nodes: Node[] | undefined,
     kind: Kind,
 ): SqlNodeFields[Kind][] {
-    return (list ?? []).flatMap((node) => {
+    return (nodes ?? []).flatMap((node) => {
         const fields = getNodeFields(node, kind);
         return fields === undefined ? [] : [fields];
     });
@@ -106,12 +106,12 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
  * @returns the result, or undefined for a kind without a reader.
  */
 export function visitStatement<Result, Arguments extends unknown[]>(
-    statement: SqlStatementView,
+    statement: SqlStatement,
     readers: SqlStatementVisitors<Result, Arguments>,
     ...readerArguments: Arguments
 ): Result | undefined {
     const read = readers[statement.kind] as
-        | ((statement: SqlStatementView, ...readerArguments: Arguments) => Result)
+        | ((statement: SqlStatement, ...readerArguments: Arguments) => Result)
         | undefined;
     return read?.(statement, ...readerArguments);
 }

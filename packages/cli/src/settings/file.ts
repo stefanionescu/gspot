@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse } from '@decimalturn/toml-patch';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -22,7 +22,7 @@ import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
  * @returns whether the setting has both reasoned-value fields.
  */
 export function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
-    return isRecord(value) && Object.hasOwn(value, 'value') && Object.hasOwn(value, 'reason');
+    return isTable(value) && Object.hasOwn(value, 'value') && Object.hasOwn(value, 'reason');
 }
 
 /**

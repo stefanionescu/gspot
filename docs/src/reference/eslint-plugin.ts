@@ -1,5 +1,5 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import type { PluginRule, ReferencePage } from '../types/reference.ts';
 import { FIRST_SENTENCE, REFERENCE_FOLDERS, SCHEMA_TYPE_LABELS } from '../config/reference.ts';
@@ -9,15 +9,15 @@ function formatRuleOptions(schemas: unknown, defaults: unknown): string {
     const labels: Readonly<Record<string, string>> = SCHEMA_TYPE_LABELS;
     const entries: unknown[] = Array.isArray(schemas) ? schemas : [schemas];
     const rows = entries.flatMap((schema) => {
-        if (!isRecord(schema) || !isRecord(schema['properties'])) return [];
+        if (!isTable(schema) || !isTable(schema['properties'])) return [];
         return Object.entries(schema['properties']).map(([option, shape]) => {
-            const value = isRecord(defaults) ? defaults[option] : undefined;
-            const type = isRecord(shape) && typeof shape['type'] === 'string' ? shape['type'] : 'Value';
+            const value = isTable(defaults) ? defaults[option] : undefined;
+            const type = isTable(shape) && typeof shape['type'] === 'string' ? shape['type'] : 'Value';
             return [
                 `\`${option}\``,
                 labels[type] ?? type,
                 value === undefined ? 'Unset' : `\`${JSON.stringify(value)}\``,
-                isRecord(shape) && typeof shape['description'] === 'string' ? shape['description'] : 'See the example.',
+                isTable(shape) && typeof shape['description'] === 'string' ? shape['description'] : 'See the example.',
             ];
         });
     });

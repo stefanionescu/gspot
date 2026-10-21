@@ -3,11 +3,11 @@ import { spyOn } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { findCheckCode } from '#cli/checks/code.ts';
 import { type Session } from '#cli/types/session.ts';
-import { findScope } from '#cli/repository/scopes.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckCode } from '#cli/commands/check/run.ts';
 import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { simulateOperatingSystem } from '#tests/setup/system.ts';
@@ -44,22 +44,22 @@ export function planSandboxCheck(
     options: { scope?: string; paths?: string[] } = {},
 ): PlannedCheck {
     const path = options.scope ?? '';
-    const scope = session.scopes.find((entry) => entry.scope.path === path);
+    const scope = session.scopes.find((entry) => entry.folder.path === path);
     if (scope === undefined) throw new Error(`The sandbox has no scope at ${path || 'the root'}.`);
-    const entry = scope.selected
+    const entry = scope.configurations
         .flatMap((configuration) => configuration.checks.map((check) => ({ configuration, check })))
-        .find(({ check }) => check.name === checkId);
+        .find(({ check }) => check.id === checkId);
     if (entry === undefined) throw new Error(`The sandbox selects no check called ${checkId}.`);
     const { configuration, check } = entry;
     const paths = options.paths;
     const files = session.repository.files.filter(
         (file) =>
-            (check.runs === 'once' || findScope(file.path, session.repository.scopeFolders).path === path) &&
+            (check.runs === 'once' || findScopeFolder(file.path, session.repository.scopeFolders).path === path) &&
             (paths === undefined || paths.includes(file.path)),
     );
     const tool = getToolName(check);
     return {
-        selection: scope,
+        scope,
         configuration,
         check,
         files,
@@ -127,7 +127,7 @@ export async function openPinnedSession(
  * @returns a function that runs the planned check in its session and resolves to its findings.
  */
 export function findBuiltInCheck(checkId: string): (session: Session, planned: PlannedCheck) => Promise<Finding[]> {
-    const check = findCheckCode({ name: checkId })?.check;
+    const check = findCheckCode({ id: checkId })?.check;
     if (check === undefined) throw new Error(`${checkId} has no built-in check.`);
     return async (session, planned) => {
         const result = await check(session, planned);

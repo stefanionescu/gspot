@@ -1,4 +1,4 @@
-import { getTable } from '#cli/settings/scope-view.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 
 import {
@@ -16,7 +16,7 @@ import {
 export function buildPurgecssFile(planned: PlannedToolFile): string {
     const standard = [
         String(PURGECSS_PSEUDO_CLASS_PATTERN),
-        ...getTable(planned.selection.view, 'tools.purgecss').safelist.map((word) => JSON.stringify(word)),
+        ...getTable(planned.scope.settings, 'tools.purgecss').safelist.map((word) => JSON.stringify(word)),
     ];
     return `export const defaultExtractor = (content) =>
     (content.match(${String(PURGECSS_EXTRACTOR)}) ?? [])

@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
 import type { JsonValue } from '#cli/types/shapes.ts';
-import type { Scope, ScopeView } from '#cli/types/settings/inheritance.ts';
 import type { Settings, WrittenSettings } from '#cli/types/settings/file.ts';
+import type { Scope, ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import type { COMPONENT_CONFIGURATIONS } from '#cli/config/generation/eslint/files.ts';
 import type { Level, Configuration, ParsedManifest } from '#cli/types/configurations.ts';
 
@@ -135,12 +135,12 @@ export type EslintPresets = Record<string, EslintPreset>;
 /** Inputs and printers shared by the ESLint fragment builders. */
 export type PlannedEslintFile = {
     session: Session;
-    selection: Scope;
+    scope: Scope;
     level: Level;
     nodeFiles: string[];
     projects: string[];
     ruleOptions: EslintRuleOptions[];
-    blockInput: BlockWriter;
+    blockWriter: BlockWriter;
     eslintFiles: EslintFiles;
     levelRules: EslintLevelRules;
     settingsBlocks: EslintRuleBlock[];
@@ -183,8 +183,8 @@ export type PlannedEslintBlock = {
 
 /** The data one configuration uses to build its blocks. */
 export type EslintScope = {
-    scope: string;
-    view: ScopeView;
+    scopePath: string;
+    settings: ScopeSettings;
     eslintFiles: EslintFiles;
     presets: EslintPresets | undefined;
     eslintPresets: Map<string, EslintPresets>;

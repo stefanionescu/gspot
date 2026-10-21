@@ -1,14 +1,14 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { LFS_FILTER } from '#cli/config/repository/inventory.ts';
-import { findScope, joinScope } from '#cli/repository/scopes.ts';
+import { joinScope, findScopeFolder } from '#cli/repository/scopes.ts';
 
 /**
  * Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
@@ -18,7 +18,7 @@ import { findScope, joinScope } from '#cli/repository/scopes.ts';
  * @returns the findings.
  */
 export function checkRepositoryLargeFiles(session: Session, planned: PlannedCheck): Finding[] {
-    const limitKilobytes = getTable(planned.selection.view, 'repository').max_file_kilobytes;
+    const limitKilobytes = getTable(planned.scope.settings, 'repository').max_file_kilobytes;
     return session.repository.files
         .filter(
             (file) =>
@@ -45,12 +45,12 @@ export function checkRepositoryLargeFiles(session: Session, planned: PlannedChec
  * @returns the findings.
  */
 export function checkRepositoryLocalFiles(session: Session, planned: PlannedCheck): Finding[] {
-    const scopes = session.scopes.map(({ scope }) => scope);
-    const matchers = session.scopes.map(({ scope, selected, view }) => {
-        const matches = buildPathMatcher(selected.flatMap((configuration) => configuration.ignored_paths));
-        const examples = new Set(getTable(view, 'secrets').env_examples);
+    const scopes = session.scopes.map(({ folder }) => folder);
+    const matchers = session.scopes.map(({ folder, configurations, settings }) => {
+        const matches = buildPathMatcher(configurations.flatMap((configuration) => configuration.ignored_paths));
+        const examples = new Set(getTable(settings, 'secrets').env_examples);
         return {
-            scope,
+            scope: folder,
             matches: (path: string) =>
                 matches(path) &&
                 (!examples.has(posix.basename(path)) || matches(joinScope(extractParentFolder(path), ''))),
@@ -60,7 +60,7 @@ export function checkRepositoryLocalFiles(session: Session, planned: PlannedChec
         .filter((path) =>
             matchers.some(
                 ({ scope, matches }) =>
-                    findScope(path, scopes).path === scope.path && matches(posix.relative(scope.path, path)),
+                    findScopeFolder(path, scopes).path === scope.path && matches(posix.relative(scope.path, path)),
             ),
         )
         .map((path) =>

@@ -1,4 +1,4 @@
-import { listIgnoredRules } from '#cli/settings/scope-view.ts';
+import { listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 
 /**
@@ -8,6 +8,6 @@ import type { PlannedToolFile } from '#cli/types/generation/files.ts';
  * @returns the Gixy rule exclusions, or empty text when every rule stays enabled.
  */
 export function buildGixyFile(planned: PlannedToolFile): string {
-    const off = listIgnoredRules(planned.selection, 'nginx/gixy');
+    const off = listIgnoredRules(planned.scope, 'nginx/gixy');
     return off.length === 0 ? '' : `skips = ${off.join(',')}`;
 }

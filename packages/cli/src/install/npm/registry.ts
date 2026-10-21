@@ -1,7 +1,7 @@
 // Read npm registry settings and write isolated package manager settings.
 import which from 'which';
 import Config from '@npmcli/config';
-import { isRecord } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
@@ -42,21 +42,19 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
     try {
         await config.load();
     } catch (error) {
-        throw new GspotError(
-            'installation',
-            'Cannot read the registry settings. Check the package manager configuration.',
-            { cause: error },
-        );
+        throw new GspotError('install', 'Cannot read the registry settings. Check the package manager configuration.', {
+            cause: error,
+        });
     }
     let valid: boolean;
     try {
         valid = config.validate();
     } catch (error) {
-        if (isRecord(error) && error['code'] === 'ERR_INVALID_URL')
-            throw new GspotError('installation', 'Invalid registry URL in package manager configuration.');
+        if (isTable(error) && error['code'] === 'ERR_INVALID_URL')
+            throw new GspotError('install', 'Invalid registry URL in package manager configuration.');
         throw error;
     }
-    if (!valid) throw new GspotError('installation', 'Invalid package manager configuration.');
+    if (!valid) throw new GspotError('install', 'Invalid package manager configuration.');
     const effective: Record<string, unknown> = {};
     for (const layer of config.list.toReversed()) Object.assign(effective, layer);
     return effective;

@@ -6,7 +6,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { PACKAGE_MANAGER_LEVELS } from '#tests/data/generation/eslint/levels.ts';
-import { createEslint, listScriptFindings, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listLintFindings, listScriptFindings } from '#tests/setup/tool-files.ts';
 
 import {
     ENGINE_PATHS,
@@ -53,7 +53,7 @@ test.each([...ENGINE_PHASES])('engines > Node checks follow package engines (%j)
         );
     }
     const eslint = await createEslint(sandbox.path);
-    const findings = await collectLintFindings(
+    const findings = await listLintFindings(
         eslint,
         sandbox.path,
         ENGINE_PATHS,
@@ -89,7 +89,7 @@ test.each([...LEVELS])(
                 })),
             );
             const findings = {
-                results: await collectLintFindings(eslint, sandbox.path, paths, NODE_SCRIPT_RULES),
+                results: await listLintFindings(eslint, sandbox.path, paths, NODE_SCRIPT_RULES),
                 configurations,
             };
             expect(findings).toStrictEqual({
@@ -116,7 +116,7 @@ test.each([...LEVELS])(
                 for (const contract of EXTENSIONLESS_SCRIPT_CASES)
                     await writeFile(join(sandbox.path, contract.file), contract.corrected);
             const paths = EXTENSIONLESS_SCRIPT_CASES.map(({ file }) => file);
-            const findings = await collectLintFindings(eslint, sandbox.path, paths, EXTENSIONLESS_SCRIPT_RULES);
+            const findings = await listLintFindings(eslint, sandbox.path, paths, EXTENSIONLESS_SCRIPT_RULES);
             expect(findings).toStrictEqual(corrected ? [] : listScriptFindings(EXTENSIONLESS_SCRIPT_CASES, level));
         }
     },
@@ -140,7 +140,7 @@ test('package-json > every package.json gets the package-json rules and no code 
         files.map(async (file) => (await eslint.calculateConfigForFile(file)) as EslintConfiguration),
     );
     const rules = [...new Set(configuration.flatMap((config) => Object.keys(config.rules)))];
-    const findings = await collectLintFindings(eslint, sandbox.path, files, rules);
+    const findings = await listLintFindings(eslint, sandbox.path, files, rules);
     expect(findings.filter(({ rule }) => rule === 'package-json/sort-collections')).toStrictEqual([
         { file: 'package.json', rule: 'package-json/sort-collections', line: 1 },
         { file: 'tests/package.json', rule: 'package-json/sort-collections', line: 1 },
@@ -165,7 +165,7 @@ test('package-json > an ignore of a package-json rule for one file keeps the fin
     });
     const eslint = await createEslint(sandbox.path);
     expect(
-        await collectLintFindings(
+        await listLintFindings(
             eslint,
             sandbox.path,
             ['cli/package.json', 'library/package.json'],

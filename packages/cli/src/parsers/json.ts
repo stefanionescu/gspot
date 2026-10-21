@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { JSONC_OPTIONS } from '#cli/config/parsers/json.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { isRecord, getValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { isTable, getValueAt, normalizeTables } from '#cli/system/tables.ts';
 import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser';
 
 export function parseJsonFile(path: string, text: string): Record<string, unknown>;
@@ -33,7 +33,7 @@ export function parseJsonFile(path: string, text: string, schema?: z.ZodType): u
         const detail = error.message.split('\n', 1).join('').replace(/\.$/u, '');
         throw new GspotError('filesystem', `${path} is not valid JSON: ${detail}. Fix the file.`, { cause: error });
     }
-    if (!isRecord(value)) throw new GspotError('filesystem', `${path} must contain a JSON object. Fix the file.`);
+    if (!isTable(value)) throw new GspotError('filesystem', `${path} must contain a JSON object. Fix the file.`);
     return schema === undefined ? value : parseFileFields(path, value, schema);
 }
 

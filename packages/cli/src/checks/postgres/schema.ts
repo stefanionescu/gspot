@@ -7,7 +7,7 @@ import type {
     Schema,
     Location,
     Migration,
-    SchemaState,
+    DatabaseSchema,
     StatementReader,
     SchemaAlterations,
 } from '#cli/types/checks/postgres.ts';
@@ -17,11 +17,11 @@ function buildRelationName(relation: RangeVar | undefined): string {
     return `${schema === '' ? PUBLIC_SCHEMA : schema}.${relation?.relname ?? ''}`;
 }
 
-function removeTable(state: SchemaState, table: string): void {
-    state.tables.delete(table);
-    state.secured.delete(table);
-    state.constraints.delete(table);
-    state.indexes = state.indexes.filter((index) => index.table !== table);
+function removeTable(schema: DatabaseSchema, table: string): void {
+    schema.tables.delete(table);
+    schema.secured.delete(table);
+    schema.constraints.delete(table);
+    schema.indexes = schema.indexes.filter((index) => index.table !== table);
 }
 
 // The name Postgres gives an unnamed constraint: the table, the key columns except for a primary key, and a suffix.
@@ -33,8 +33,8 @@ function buildConstraintName(node: Constraint, table: string, kind: string, keys
     return [tableName, ...(kind === 'CONSTR_PRIMARY' ? [] : keys), suffix].join('_');
 }
 
-function addForeignKey(state: SchemaState, at: Location, name: string, columns: string[]): void {
-    const constraints = state.constraints.get(at.table) ?? new Map<string, Schema['foreignKeys']>();
+function addForeignKey(schema: DatabaseSchema, at: Location, name: string, columns: string[]): void {
+    const constraints = schema.constraints.get(at.table) ?? new Map<string, Schema['foreignKeys']>();
     const keys = columns.map((column) => ({
         table: at.table,
         column,
@@ -43,11 +43,11 @@ function addForeignKey(state: SchemaState, at: Location, name: string, columns: 
         text: at.migration.text,
     }));
     constraints.set(name, keys);
-    state.constraints.set(at.table, constraints);
+    schema.constraints.set(at.table, constraints);
 }
 
 // A primary or unique key counts as an index on its first column.
-function addConstraint(state: SchemaState, at: Location, node: Constraint, column?: string): void {
+function addConstraint(schema: DatabaseSchema, at: Location, node: Constraint, column?: string): void {
     const kind = node.contype ?? '';
     if (!(kind in CONSTRAINT_SUFFIXES)) return;
     const { keys, columns } =
@@ -61,23 +61,23 @@ function addConstraint(state: SchemaState, at: Location, node: Constraint, colum
     const name = buildConstraintName(node, at.table, kind, isForeign ? columns : keys);
     const [first] = keys;
     if (!isForeign && first !== undefined)
-        state.indexes.push({ table: at.table, name, column: first, constraint: name });
-    if (isForeign) addForeignKey(state, at, name, columns);
+        schema.indexes.push({ table: at.table, name, column: first, constraint: name });
+    if (isForeign) addForeignKey(schema, at, name, columns);
 }
 
-const readCreateTable: StatementReader<'CreateStmt'> = (statement, state, migration) => {
+const readCreateTable: StatementReader<'CreateStmt'> = (statement, schema, migration) => {
     const table = buildRelationName(statement.fields.relation);
-    if (state.tables.has(table) && statement.fields.if_not_exists === true) return;
-    removeTable(state, table);
+    if (schema.tables.has(table) && statement.fields.if_not_exists === true) return;
+    removeTable(schema, table);
     const at = { migration, statement, table };
-    state.tables.set(table, { path: migration.path, offset: statement.start, text: migration.text });
+    schema.tables.set(table, { path: migration.path, offset: statement.start, text: migration.text });
     const columns = listNodeFields(statement.fields.tableElts, 'ColumnDef');
     const inColumns = columns.flatMap((column) =>
         listNodeFields(column.constraints, 'Constraint').map((node) => ({ node, column: column.colname ?? '' })),
     );
-    for (const entry of inColumns) addConstraint(state, at, entry.node, entry.column);
+    for (const entry of inColumns) addConstraint(schema, at, entry.node, entry.column);
     const inTable = listNodeFields(statement.fields.tableElts, 'Constraint');
-    for (const node of inTable) addConstraint(state, at, node);
+    for (const node of inTable) addConstraint(schema, at, node);
 };
 
 const ALTERATIONS: SchemaAlterations = {
@@ -94,24 +94,24 @@ const ALTERATIONS: SchemaAlterations = {
     },
 };
 
-const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, migration) => {
+const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, schema, migration) => {
     const at: Location = { migration, statement, table: buildRelationName(statement.fields.relation) };
     for (const command of listNodeFields(statement.fields.cmds, 'AlterTableCmd'))
-        if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(state, at, command);
+        if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(schema, at, command);
 };
 
 // A dropped table leaves the state, so no check reports it.
-const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
+const readDrop: StatementReader<'DropStmt'> = (statement, schema) => {
     for (const item of listNodeFields(statement.fields.objects, 'List')) {
         const parts = listNodeFields(item.items, 'String').map((part) => part.sval ?? '');
         switch (statement.fields.removeType) {
             case 'OBJECT_TABLE': {
-                removeTable(state, `${parts.at(SCHEMA_PART_INDEX) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}`);
+                removeTable(schema, `${parts.at(SCHEMA_PART_INDEX) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}`);
                 break;
             }
             case 'OBJECT_INDEX': {
                 const name = `${parts.at(SCHEMA_PART_INDEX) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}`;
-                state.indexes = state.indexes.filter(
+                schema.indexes = schema.indexes.filter(
                     (index) => `${index.table.slice(0, index.table.indexOf('.'))}.${index.name}` !== name,
                 );
                 break;
@@ -123,7 +123,7 @@ const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
     }
 };
 
-const READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = {
+const TOKEN_MATCHERS: SqlStatementVisitors<void, [DatabaseSchema, Migration]> = {
     DropStmt: readDrop,
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
@@ -136,15 +136,15 @@ const READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = {
     },
 };
 
-function buildDatabaseSchema(state: SchemaState): Schema {
-    const foreignKeys = [...state.constraints.values()].flatMap((constraints) => [...constraints.values()].flat());
+function buildDatabaseSchema(schema: DatabaseSchema): Schema {
+    const foreignKeys = [...schema.constraints.values()].flatMap((constraints) => [...constraints.values()].flat());
     const indexed = new Map<string, Set<string>>();
-    for (const index of state.indexes) {
+    for (const index of schema.indexes) {
         const columns = indexed.get(index.table) ?? new Set<string>();
         columns.add(index.column);
         indexed.set(index.table, columns);
     }
-    return { tables: state.tables, secured: state.secured, foreignKeys, indexed };
+    return { tables: schema.tables, secured: schema.secured, foreignKeys, indexed };
 }
 
 /**
@@ -154,13 +154,13 @@ function buildDatabaseSchema(state: SchemaState): Schema {
  * @returns the schema summary.
  */
 export function buildSchema(migrations: Migration[]): Schema {
-    const state: SchemaState = {
+    const state: DatabaseSchema = {
         indexes: [],
         constraints: new Map(),
         tables: new Map(),
         secured: new Set(),
     };
     for (const migration of migrations)
-        for (const statement of migration.statements) visitStatement(statement, READERS, state, migration);
+        for (const statement of migration.statements) visitStatement(statement, TOKEN_MATCHERS, state, migration);
     return buildDatabaseSchema(state);
 }

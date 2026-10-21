@@ -18,9 +18,9 @@ import {
  * @returns the imports and ESLint blocks for this configuration.
  */
 export function buildNestjsBlocks(
-    scope: Pick<EslintScope, 'eslintFiles' | 'presets' | 'scope' | 'scopeDependencies'>,
+    scope: Pick<EslintScope, 'eslintFiles' | 'presets' | 'scopePath' | 'scopeDependencies'>,
 ): ConfigurationBlocks {
-    const { eslintFiles, presets, scope: scopePath, scopeDependencies } = scope;
+    const { eslintFiles, presets, scopePath, scopeDependencies } = scope;
     const recommended = getPreset(presets, 'recommended');
     const noSwagger = getPreset(presets, 'noSwagger');
     const blocks: ConfigurationBlocks['blocks'] = [

@@ -25,11 +25,6 @@ export const ROOT_SETTING_FACTS = {
             'Level `all` adds checks and rules for word choice, architecture, naming, doc comments, declaration order, API style, and complexity. No level turns on experimental or preview lint rules.',
         default: 'recommended',
     },
-    allowed_words: {
-        reason_values: true,
-        description: 'Words accepted beyond the shipped spelling list, each with the reason it is a real word.',
-        default: {},
-    },
     tool_timeout_seconds: {
         description:
             'The time limit in seconds for every tool command, including installation and version reads. Root only.',

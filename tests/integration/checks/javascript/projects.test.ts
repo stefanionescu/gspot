@@ -12,9 +12,9 @@ import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 import {
     JSCONFIG_CHOICES,
-    YOUR_JSCONFIG_FILES,
     SCOPE_JSCONFIG_PATHS,
     IMPORTED_AMBIENT_FILES,
+    AUTHORED_JSCONFIG_FILES,
 } from '#tests/data/checks/javascript/tsc.ts';
 
 /** Write compiler inputs for each scope. Include inherited options and a broken child scope. */
@@ -70,7 +70,7 @@ test.each([...JSCONFIG_CHOICES])(
     "javascript/tsc keeps the project's module resolution and ignores gspot's own @types, $name",
     async ({ authored }) => {
         await using sandbox = await testdir();
-        const authoredFiles: Record<string, string> = authored ? YOUR_JSCONFIG_FILES : {};
+        const authoredFiles: Record<string, string> = authored ? AUTHORED_JSCONFIG_FILES : {};
         const source = `import { format } from '${authored ? '@shape/value' : './value.js'}';
 export const text = format(42);
 export const total = accepted;

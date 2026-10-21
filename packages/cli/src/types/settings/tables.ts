@@ -131,7 +131,6 @@ export type ParsedFormat = {
 
 export type ParsedRoot = {
     level: (typeof LEVELS)[number];
-    allowed_words: Record<string, string>;
     removed_configurations: string[];
     tool_timeout_seconds: number;
     test_files: string[];

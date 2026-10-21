@@ -3,17 +3,15 @@ title: Installation
 description: Choose an installation method for your repository and prepare its checks.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
-import { SETUP_COMMANDS } from '../../../config/setup.ts';
+import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import { SETUP_COMMANDS, RUNTIME_MINIMUMS, RELEASE_AGE_EXCLUSIONS } from '../../../config/setup.ts';
 
 ## What you need
 
-Git and Node.js 24.15 or newer. When Bun runs gspot, it needs Bun 1.4.2 or newer. An older runtime stops gspot
-with exit code 2 and names the version it found:
+Git and {`Node.js ${RUNTIME_MINIMUMS.node} or newer`}. When Bun runs gspot, it needs {`Bun ${RUNTIME_MINIMUMS.bun} or newer`}.
+An older runtime stops gspot with exit code 2 and names the version it found:
 
-```text
-gspot needs Node.js 24.15.0 or newer (found 22.11.0).
-```
+<Code code={`gspot needs Node.js ${RUNTIME_MINIMUMS.node} or newer (found 22.11.0).`} lang="text" />
 
 The tools that your checks run need these:
 
@@ -131,12 +129,24 @@ If it changes a lockfile under `.gspot/`, commit that file.
 A package manager can hold back versions younger than a set age; pnpm 11 holds each version for one day by default. To
 install a gspot release on the day it ships, exempt its packages:
 
-| Package manager | Setting                                              |
-| --------------- | ---------------------------------------------------- |
-| pnpm            | `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`  |
-| Bun             | `install.minimumReleaseAgeExcludes` in `bunfig.toml` |
-| npm             | `min-release-age-exclude` in `.npmrc`                |
-| Yarn            | `npmPreapprovedPackages` in `.yarnrc.yml`            |
+<table>
+    <thead>
+        <tr>
+            <th>Package manager</th>
+            <th>Setting</th>
+        </tr>
+    </thead>
+    <tbody>
+        {RELEASE_AGE_EXCLUSIONS.map(({ label, key, file }) => (
+            <tr>
+                <td>{label}</td>
+                <td>
+                    <code>{key}</code> in <code>{file}</code>
+                </td>
+            </tr>
+        ))}
+    </tbody>
+</table>
 
 ```yaml title="pnpm-workspace.yaml"
 minimumReleaseAgeExclude:
@@ -157,13 +167,13 @@ To stop checking one language or framework instead, see [gspot.toml](/configure/
 
 Commit first, so you can go back.
 
-1. Copy the list under "Generated files" in the gspot section of `AGENTS.md`. It names every file gspot writes outside
+1. Copy the list under "Generated files" in the managed block of `AGENTS.md`, the part between the gspot markers. It names every file gspot writes outside
    `.gspot/` and each key it sets in your files.
 2. Run `gspot set rules.enabled false`, `gspot set ci.enabled false`, and `gspot set hooks.enabled false`, then
-   `gspot install`. gspot deletes the rules, its `AGENTS.md` section, the CI workflow, and the hook scripts, and
+   `gspot install`. gspot deletes the rules, its `AGENTS.md` managed block, the CI workflow, and the hook scripts, and
    `gspot install` removes `core.hooksPath`. If Husky, Lefthook, or your own hooks run gspot, delete those lines.
 3. Restore your earlier tool files from Git, such as `git show <commit>:.eslintrc.json`, or set up the tools you want.
-4. Delete the files and keys from step 1, the gspot sections in `.gitignore` and `.gitattributes`, `gspot.toml`, and
+4. Delete the files and keys from step 1, the managed blocks in `.gitignore` and `.gitattributes`, `gspot.toml`, and
    `.gspot/`.
 5. Remove the package: `npm uninstall @gspothq/cli`, the remove command of your package manager, or
    `mise unuse npm:@gspothq/cli`.

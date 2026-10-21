@@ -20,7 +20,7 @@ export function buildFinding(
     options: Partial<Pick<Finding, 'help' | 'fixable'>> = {},
 ): Finding {
     return {
-        check: planned.check.name,
+        check: planned.check.id,
         ...at,
         rule,
         message,

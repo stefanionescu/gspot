@@ -31,21 +31,21 @@ test("a built-in check sees its scope's files, and a once-per-repository check a
         only: ['jest/coverage', 'docs/missing-paths'],
     });
     const project = planned.find(
-        (entry) => entry.check.name === 'jest/coverage' && entry.selection.scope.path === 'apps/web',
+        (entry) => entry.check.id === 'jest/coverage' && entry.scope.folder.path === 'apps/web',
     )!;
-    const rootCheck = planned.find((entry) => entry.check.name === 'docs/missing-paths')!;
-    const inputs: { session: Session; planned: PlannedCheck }[] = [];
-    const implementation: CheckCode = {
+    const rootCheck = planned.find((entry) => entry.check.id === 'docs/missing-paths')!;
+    const calls: { session: Session; planned: PlannedCheck }[] = [];
+    const code: CheckCode = {
         check: (opened, check) => {
-            inputs.push({ session: opened, planned: check });
+            calls.push({ session: opened, planned: check });
             return [];
         },
     };
-    await runCheckCode(session, project, implementation);
-    await runCheckCode(session, rootCheck, implementation);
-    const [scopeInput, repositoryInput] = inputs;
+    await runCheckCode(session, project, code);
+    await runCheckCode(session, rootCheck, code);
+    const [scopeInput, repositoryInput] = calls;
     expect(repositoryInput!.session.repository.files).toStrictEqual(session.repository.files);
-    for (const input of inputs) expect(input.session.scopes).toStrictEqual(session.scopes);
+    for (const input of calls) expect(input.session.scopes).toStrictEqual(session.scopes);
     expect(repositoryInput!.session.repository.files.map((file) => file.path)).toContain('unrelated/private.txt');
     expect(listCheckedFiles(session.scopes, project).map((file) => file.path)).toStrictEqual([
         'apps/web/value.test.js',

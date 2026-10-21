@@ -48,7 +48,7 @@ test.each([...LEVELS])(
         if (level === 'recommended') expect(worker).toBeUndefined();
         else {
             expect(parseDocument(worker!.content).toJS()).toMatchObject({
-                rules: [{ id: 'gspot.cloudflare.no-wildcard-cors-origin' }],
+                rules: [{ id: 'gspot.cloudflare.wildcard-cors-origin' }],
             });
             expect(parseDocument(worker!.content).getIn(['rules', 0, 'paths'])).toBeUndefined();
         }
@@ -93,11 +93,11 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
         const parsed: unknown = parseDocument(text).toJS();
         if (scope.startsWith('jwt')) {
             const jwtRules: unknown = expect.arrayContaining([
-                expect.objectContaining({ id: 'gspot.javascript.jwt-no-algorithm-none' }),
-                expect.objectContaining({ id: 'gspot.javascript.jwt-no-decode-without-verify' }),
+                expect.objectContaining({ id: 'gspot.javascript.jwt-verify-without-algorithms' }),
+                expect.objectContaining({ id: 'gspot.javascript.jwt-decode-without-verify' }),
             ]);
             expect(parsed).toMatchObject({ rules: jwtRules });
         } else expect(text).not.toContain('gspot.javascript.jwt-');
-        expect(text).not.toContain('no-stack-trace-in-response');
+        expect(text).not.toContain('stack-trace-in-response');
     }
 });

@@ -4,7 +4,7 @@ import { readGitOutput } from '#tests/setup/git.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
 import { SORT_CASES, SORT_RULES } from '#tests/data/generation/eslint/sorting.ts';
 
 test('a bundler scope uses extensionless imports while the Node.js parent keeps .js suffixes', async () => {
@@ -23,10 +23,10 @@ test('a bundler scope uses extensionless imports while the Node.js parent keeps 
     const source = 'import { value } from "./value";\n';
     await createFileTree(sandbox.path, { 'source.js': source, 'app/source.js': source });
     const rules = ['n/file-extension-in-import'];
-    expect(await collectLintFindings(eslint, sandbox.path, ['source.js'], rules)).toStrictEqual([
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], rules)).toStrictEqual([
         { file: 'source.js', rule: 'n/file-extension-in-import', line: 1 },
     ]);
-    expect(await collectLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
+    expect(await listLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
 });
 
 test.each([...LEVELS])(
@@ -87,7 +87,7 @@ test('a bundler scope drops only code suffixes, and its Node scripts keep every 
         'import "./styles.css";\nimport data from "./data.json" with { type: "json" };\nimport { value } from "./value";\nexport { data, value };\n';
     const script = 'import { lib } from "./lib.mjs";\nexport { lib };\n';
     await createFileTree(sandbox.path, { 'app/source.js': bundled, 'app/tool.mjs': script });
-    expect(await collectLintFindings(eslint, sandbox.path, ['app/source.js', 'app/tool.mjs'], rules)).toStrictEqual([]);
+    expect(await listLintFindings(eslint, sandbox.path, ['app/source.js', 'app/tool.mjs'], rules)).toStrictEqual([]);
     const [fixed] = await eslint.lintText('import { value } from "./value.js";\nexport { value };\n', {
         filePath: 'app/source.js',
     });

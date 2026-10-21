@@ -1,11 +1,11 @@
 import { splitByCase } from 'scule';
-import { getTable } from '#cli/settings/scope-view.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { type Settings } from '#cli/types/settings/file.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
-import { type Scope, type ScopeView } from '#cli/types/settings/inheritance.ts';
+import { type Scope, type ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/tables.ts';
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY, CATEGORY_PARENTS } from '#cli/config/checks/naming.ts';
@@ -30,8 +30,8 @@ function compileOverride(rule: NamingOverride): CompiledOverride {
     };
 }
 
-function getNamingLimits(view: ScopeView, language: string, category: string) {
-    const root = getTable(view, 'naming');
+function getNamingLimits(scopeSettings: ScopeSettings, language: string, category: string) {
+    const root = getTable(scopeSettings, 'naming');
     const languageKey = SETTING_LANGUAGES.find((name) => name === language);
     // Every category of every language, so a category that a language lacks reads as unset.
     const languageTable: ParsedNamingLanguageFields | undefined =
@@ -45,15 +45,16 @@ function getNamingLimits(view: ScopeView, language: string, category: string) {
     };
 }
 
-function buildLimitsFor(view: ScopeView): NamingSettings['limitsFor'] {
+function buildLimitsFor(scopeSettings: ScopeSettings): NamingSettings['limitsFor'] {
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
 
     return (language, category) => {
         const parent = parents[category] ?? category;
-        const limits = getNamingLimits(view, language, parent);
+        const limits = getNamingLimits(scopeSettings, language, parent);
         return {
             caseNames:
-                (view.settings[`naming.${language}.${category}.cases`] as NamingCase[] | undefined) ?? limits.cases,
+                (scopeSettings.settings[`naming.${language}.${category}.cases`] as NamingCase[] | undefined) ??
+                limits.cases,
             maxChars: limits.max_characters,
             maxWords: limits.max_words,
         };
@@ -80,17 +81,17 @@ function compileBannedWords(
  * Reads the naming settings of a scope: the shipped lists plus the repository additions, exemptions, and limits.
  *
  * @param settings the authored repository settings.
- * @param selection the scope, selected configurations, and merged settings.
+ * @param scope the scope, selected configurations, and merged settings.
  * @returns the word lists, exemptions, and limits.
  */
-export function readNamingSettings(settings: Settings, selection: Scope): NamingSettings {
+export function readNamingSettings(settings: Settings, scope: Scope): NamingSettings {
     const {
-        view,
-        selected: configurations,
-        scope: { path: scope },
-    } = selection;
+        settings: scopeSettings,
+        configurations,
+        folder: { path: scopePath },
+    } = scope;
     const shipped = readNamingDefaults();
-    const tables = listApplicableTables(settings, scope).map(({ table }) => table.naming);
+    const tables = listApplicableTables(settings, scopePath).map(({ table }) => table.naming);
     const bannedWords = [...new Set(tables.flatMap((table) => table?.banned_words ?? []))];
     const terms = [
         ...Object.entries(shipped.groups).flatMap(([group, { terms }]) =>
@@ -117,7 +118,7 @@ export function readNamingSettings(settings: Settings, selection: Scope): Naming
             Object.entries(shipped.reserved).map(([term, categories]) => [term.toLowerCase(), categories]),
         ),
         overrides,
-        limitsFor: buildLimitsFor(view),
+        limitsFor: buildLimitsFor(scopeSettings),
         isDigitsAllowed: shipped.allow_digits,
         isRepeatAllowed: shipped.allow_repeated_words,
     };

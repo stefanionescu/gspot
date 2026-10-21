@@ -1,7 +1,7 @@
 import { stringify } from 'yaml';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
-import { getTable } from '#cli/settings/scope-view.ts';
+import { getTable } from '#cli/settings/scope-settings.ts';
 import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 import { VALE_STYLES_PATH, VALE_PACKAGES_PATH } from '#cli/config/gspot-paths.ts';
@@ -150,7 +150,7 @@ export function buildAltTextStyle(planned: PlannedToolFile): string {
  * @returns the Vale rule for the banned headings.
  */
 export function buildBannedHeadingsStyle(planned: PlannedToolFile): string {
-    const headings = [...new Set([...BANNED_HEADINGS, ...getTable(planned.selection.view, 'docs').banned_headings])];
+    const headings = [...new Set([...BANNED_HEADINGS, ...getTable(planned.scope.settings, 'docs').banned_headings])];
     return stringify({
         extends: 'existence',
         message: "Heading '%s' inventories the tree. Document behavior and ownership instead.",
@@ -171,7 +171,7 @@ export function buildBannedHeadingsStyle(planned: PlannedToolFile): string {
  * @returns the Vale list-item punctuation rule.
  */
 export function buildListItemStyle(planned: PlannedToolFile): string {
-    const max = getTable(planned.selection.view, 'prose').max_list_item_words;
+    const max = getTable(planned.scope.settings, 'prose').max_list_item_words;
     return stringify({
         ...LENGTH_STYLES.item,
         message: `A list item longer than ${String(max)} words. Split it or make it a paragraph.`,
@@ -187,7 +187,7 @@ export function buildListItemStyle(planned: PlannedToolFile): string {
  * @returns the Vale paragraph length rule with the configured ceiling.
  */
 export function buildParagraphLengthStyle(planned: PlannedToolFile): string {
-    const max = getTable(planned.selection.view, 'prose').max_paragraph_sentences;
+    const max = getTable(planned.scope.settings, 'prose').max_paragraph_sentences;
     return stringify({
         ...LENGTH_STYLES.paragraph,
         message: `A paragraph longer than ${String(max)} sentences. Split it.`,
@@ -203,7 +203,7 @@ export function buildParagraphLengthStyle(planned: PlannedToolFile): string {
  * @returns the Vale sentence length rule with the configured ceiling.
  */
 export function buildSentenceLengthStyle(planned: PlannedToolFile): string {
-    const max = getTable(planned.selection.view, 'prose').max_sentence_words;
+    const max = getTable(planned.scope.settings, 'prose').max_sentence_words;
     return stringify({
         ...LENGTH_STYLES.sentence,
         message: `A sentence longer than ${String(max)} words. Split it.`,
@@ -251,7 +251,7 @@ export function buildAcceptedWordsFile(planned: PlannedToolFile): string {
  * @returns each allowed product name or word once.
  */
 function listAllowedWords(session: Session): string[] {
-    const words = Object.keys(session.settingsFile.settings.allowed_words);
+    const words = session.scopes.flatMap((scope) => Object.keys(getTable(scope.settings, 'spelling').allowed_words));
     return [...new Set([...listProductNames(session), ...words])];
 }
 
@@ -264,8 +264,8 @@ function listAllowedWords(session: Session): string[] {
 function listProductNames(session: Session): string[] {
     return [
         ...new Set(
-            session.scopes.flatMap(({ selected }) =>
-                selected.flatMap((configuration) => [
+            session.scopes.flatMap(({ configurations }) =>
+                configurations.flatMap((configuration) => [
                     ...configuration.tools.map((tool) => tool.name),
                     ...configuration.allowed_words,
                 ]),

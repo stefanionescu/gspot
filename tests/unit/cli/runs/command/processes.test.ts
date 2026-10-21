@@ -23,7 +23,7 @@ test('a check command accepts a configuration input linked inside the repository
             tables: stringify({
                 command_check: [
                     {
-                        name: 'project/linked-config',
+                        id: 'project/linked-config',
                         paths: ['*.swift'],
                         stage: 'commit',
                         command: [process.execPath, '-e', 'process.exitCode = 0', '{existing:--config:.swiftlint.yml}'],
@@ -54,10 +54,10 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
-    expect(planned.map((check) => check.selection.scope.path)).toStrictEqual(['', scope]);
+    expect(planned.map((check) => check.scope.folder.path)).toStrictEqual(['', scope]);
     for (const check of planned) {
         const setup = buildCommandSetup(session, check, {});
-        expect(setup.cwd).toBe(join(sandbox.path, check.selection.scope.path));
+        expect(setup.cwd).toBe(join(sandbox.path, check.scope.folder.path));
         expect(setup.files).toStrictEqual(['Sources/Main.swift']);
         expect(setup.substitutions.files).toStrictEqual(['Sources/Main.swift']);
     }
@@ -73,7 +73,7 @@ test.skipIf(isWindows)('a session that runs again uses a replaced program and re
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             tables: `[[command_check]]
-name = "project/checker"\noutput = { format = "none" }\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
+id = "project/checker"\noutput = { format = "none" }\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
         }),
         'source.txt': 'input\n',
     });
@@ -104,7 +104,7 @@ test('per-file failures name the selected file when expanded arguments follow it
             tables: stringify({
                 command_check: [
                     {
-                        name: 'project/file-result',
+                        id: 'project/file-result',
                         command: [
                             process.execPath,
                             'validate.cjs',
@@ -141,7 +141,7 @@ test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a
             tables: stringify({
                 command_check: [
                     {
-                        name: 'project/termination',
+                        id: 'project/termination',
                         command: [process.execPath, '-e', 'process.kill(process.pid, "SIGTERM")', '{file}'],
                         paths: ['source.txt'],
                         stage: 'commit',
@@ -168,7 +168,7 @@ test("a command run in a copy finds its chosen program's companion before an ina
             tables: stringify({
                 command_check: [
                     {
-                        name: 'project/companion',
+                        id: 'project/companion',
                         stage: 'commit',
                         paths: ['source.txt'],
                         command: [join(sandbox.path, 'native/checker')],
@@ -222,7 +222,7 @@ test('a command check at the root checks a changed file of a child scope once', 
                 { path: 'api', configurations: [] },
                 { path: 'web', configurations: [] },
             ],
-            tables: '\n[[command_check]]\nname = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\noutput.format = "none"\npaths = ["**/*.sh"]\nstage = "push"\n',
+            tables: '\n[[command_check]]\nid = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\noutput.format = "none"\npaths = ["**/*.sh"]\nstage = "push"\n',
         }),
         'api/source.sh': 'if then\n',
         'web/source.sh': 'echo sibling\n',

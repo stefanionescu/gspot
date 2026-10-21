@@ -5,12 +5,12 @@ import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
-import { isRecord, getValueAt } from '#cli/system/tables.ts';
+import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { type PathVisitor } from '#cli/types/settings/inheritance.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
-import { GROUP_HINT, NEGATED_PATTERN, UNESCAPED_GROUP } from '#cli/config/checks/gspot.ts';
+import { GROUP_HELP, NEGATED_PATTERN, UNESCAPED_GROUP } from '#cli/config/checks/gspot.ts';
 
 /**
  * Reports setting paths that match no tracked file or folder.
@@ -19,27 +19,27 @@ import { GROUP_HINT, NEGATED_PATTERN, UNESCAPED_GROUP } from '#cli/config/checks
  * @param planned the settings and tracked files.
  * @returns the findings.
  */
-export function checkGspotUnmatchedPatterns(session: Session, planned: PlannedCheck): Finding[] {
+export function checkGspotUnmatchedPaths(session: Session, planned: PlannedCheck): Finding[] {
     const files = session.repository.files;
-    const candidates = [...includeParentFolders(files.map((file) => file.path))];
+    const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
     return listSettingsTables(session.settingsFile.settings).flatMap(({ table, scope = '', path }) => {
         const findings: Finding[] = [];
         const schema = scope === '' ? settingsSchema : scopeSchema;
         const visit: PathVisitor = (pattern, keys, role) => {
             const matches = buildPathMatcher([pattern.replace(NEGATED_PATTERN, '')]);
-            if (role === 'source' && !candidates.some((candidate) => matches(candidate))) {
+            if (role === 'source' && !repositoryPaths.some((repositoryPath) => matches(repositoryPath))) {
                 const names = keys
                     .filter((part): part is string => typeof part === 'string')
                     .filter((part, index, fields) => part !== 'paths' || index !== fields.length - 1);
                 const key = [...path, ...names].join('.');
                 const written = getValueAt(table.written, names);
-                const where = Array.isArray(written) && written.some((entry) => isRecord(entry)) ? `[[${key}]]` : key;
+                const where = Array.isArray(written) && written.some((entry) => isTable(entry)) ? `[[${key}]]` : key;
                 findings.push(
                     buildFinding(
                         planned,
                         { file: SETTINGS_FILE, line: 1 },
-                        'unused-record',
-                        `${pattern} under ${where} matches no tracked file or folder.${UNESCAPED_GROUP.test(pattern) ? GROUP_HINT : ''}`,
+                        'unmatched-path',
+                        `${pattern} under ${where} matches no tracked file or folder.${UNESCAPED_GROUP.test(pattern) ? GROUP_HELP : ''}`,
                     ),
                 );
             }

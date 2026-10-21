@@ -1,6 +1,8 @@
 import { SIDEBAR } from './navigation.ts';
 import { SITE_URL, DOCS_PATH } from './site.ts';
 import { REFERENCE_PATH, REFERENCE_FOLDERS } from './reference.ts';
+import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
+import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { SKILLS_FOLDER, SKILLS_INDEX_FILE, MARKDOWN_COPY_FILE } from './agents.ts';
 
 // Two ways to start with gspot: the commands for each package manager, or a prompt that sends a coding agent to the
@@ -33,6 +35,31 @@ export const SETUP_COMMANDS = [
     },
 ] as const;
 
+/** The comparison operators in front of a version in a package range, such as `>=` in `>=24.15.0`. */
+const RANGE_OPERATOR = /^[<>=^~]+/u;
+
+/** The oldest runtimes that run gspot, from the engines of the CLI package. */
+export const RUNTIME_MINIMUMS = {
+    node: cliPackage.engines.node.replace(RANGE_OPERATOR, ''),
+    bun: cliPackage.engines.bun.replace(RANGE_OPERATOR, ''),
+} as const;
+
+/** The versions that the ESLint plugin needs. Its engines and peer dependencies give them. */
+export const PLUGIN_REQUIREMENTS = {
+    node: pluginPackage.engines.node.replace(RANGE_OPERATOR, ''),
+    eslint: pluginPackage.peerDependencies.eslint.replace(RANGE_OPERATOR, ''),
+    typescriptEslint: pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin'].replace(RANGE_OPERATOR, ''),
+    typescript: pluginPackage.peerDependencies.typescript.split(' ').map((bound) => bound.replace(RANGE_OPERATOR, '')),
+} as const;
+
+/** The package managers that hold back new releases, and the setting that exempts the gspot packages. */
+export const RELEASE_AGE_EXCLUSIONS = [
+    { label: 'pnpm', key: 'minimumReleaseAgeExclude', file: 'pnpm-workspace.yaml' },
+    { label: 'Bun', key: 'install.minimumReleaseAgeExcludes', file: 'bunfig.toml' },
+    { label: 'npm', key: 'min-release-age-exclude', file: '.npmrc' },
+    { label: 'Yarn', key: 'npmPreapprovedPackages', file: '.yarnrc.yml' },
+] as const;
+
 /** The llms.txt address, and the command that prints it. */
 export const LLMS_URL = `${SITE_URL}/llms.txt`;
 export const LLMS_COMMAND = `curl -fsSL ${LLMS_URL}`;
@@ -42,19 +69,19 @@ export const AGENT_PROMPT = `Set up gspot in a repository. Run ${LLMS_COMMAND} a
 export const AGENT_STEPS = `## Steps for coding agents
 
 Set up gspot in the repository of the user. Run each command at the root of the repository. gspot needs Git and
-Node.js 24.15 or newer, or Bun 1.4.2 or newer when Bun runs it. A package manager that holds new releases, such as
-pnpm 11, needs @gspothq/cli and @gspothq/eslint-plugin in its exclusions: minimumReleaseAgeExclude for pnpm,
-install.minimumReleaseAgeExcludes for Bun, min-release-age-exclude for npm, and npmPreapprovedPackages for Yarn.
+Node.js ${RUNTIME_MINIMUMS.node} or newer, or Bun ${RUNTIME_MINIMUMS.bun} or newer when Bun runs it. A package manager that holds new
+releases, such as pnpm 11, needs @gspothq/cli and @gspothq/eslint-plugin in its exclusions: ${new Intl.ListFormat(
+    'en',
+    { type: 'conjunction' },
+).format(RELEASE_AGE_EXCLUSIONS.map(({ label, key }) => `${key} for ${label}`))}.
 
-1. Add gspot, pinned to one version, with the package manager of the repository:
-   - npm: \`npm i -D -E @gspothq/cli\`
-   - pnpm: \`pnpm add -D -E @gspothq/cli\`
-   - Yarn: \`yarn add -D -E @gspothq/cli\`
-   - Bun: \`bun add -d -E @gspothq/cli\`
-   - No \`package.json\`: \`mise use --pin node@24 --tool-option allow_low_downloads=true npm:@gspothq/cli\`
+1. Add gspot, pinned to one version, with the package manager of the repository, or with mise when the repository
+   has no \`package.json\`:
+${SETUP_COMMANDS.map(({ label, lines }) => `   - ${label}: \`${lines[0]}\``).join('\n')}
 
-   Start the next commands with \`npx gspot\`, \`pnpm exec gspot\`, \`yarn exec gspot\`, \`bunx gspot\`, or
-   \`mise exec -- gspot\`.
+   Start the next commands with ${new Intl.ListFormat('en', { type: 'disjunction' }).format(
+       SETUP_COMMANDS.map(({ start }) => `\`${start}\``),
+   )}.
 2. Run \`gspot init --dry-run\`. Show the user the plan: the configurations, the scopes, the tool files that gspot
    replaces, the Git hooks, and the CI workflow.
 3. Ask the user two questions, and wait for the answers:
