@@ -70,7 +70,7 @@ tokens:
 export const PACKAGE_STYLE_CASES = [
     {
         rule: 'gspot.ampm',
-        sample: 'Meet at 1 pmsuffix.',
+        sample: 'Meet at 1 pm.',
     },
     {
         rule: 'gspot.date-ordinals',
