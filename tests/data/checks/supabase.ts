@@ -131,6 +131,8 @@ const SUPABASE_VERSION_OUTPUT = '2.75.0\n';
 
 const SUPABASE_PROJECT_CONFIG = 'project_id = "types-sample"\n';
 
+const INVALID_BUCKETS_CONFIG = '[storage]\nbuckets = "avatars"\n';
+
 export {
     SUPABASE_CASES,
     DATABASE_SCHEMAS,
@@ -140,6 +142,7 @@ export {
     SERVICE_KEY_READERS,
     SERVICE_KEY_SETTINGS,
     DOCKER_VERSION_OUTPUT,
+    INVALID_BUCKETS_CONFIG,
     SUPABASE_PROJECT_CONFIG,
     SUPABASE_VERSION_OUTPUT,
 };

@@ -5,7 +5,6 @@ import { parse } from '@decimalturn/toml-patch';
 import { isRecord } from '#cli/system/values.ts';
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Parsed } from '#cli/types/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { SchemaShape } from '#cli/types/shapes.ts';
@@ -61,17 +60,27 @@ function parseDenoCheckError(input: CheckInput, folder: string, stderr: string):
  * Parses the Supabase config.toml of a scope.
  *
  * @param input the scope to read.
- * @returns the parsed file, its parse error, or undefined without a file.
+ * @returns the parsed file, or undefined when no file exists or the TOML has a syntax error.
  */
-function readProjectFile(input: CheckInput): Parsed<SupabaseConfiguration> | undefined {
+function readProjectFile(input: CheckInput): SupabaseConfiguration | undefined {
     const local = posix.join(input.selection.scope.path, SUPABASE_CONFIG_TOML);
     const text = readCachedText(input.reads, local);
     if (text === undefined) return undefined;
+    let value: unknown;
     try {
-        return { value: supabaseProjectSchema.parse(parse(text)) };
+        value = parse(text);
     } catch (error) {
-        return { error: error instanceof Error ? error.message : 'The file does not parse.' };
+        if (
+            error instanceof Error &&
+            'line' in error &&
+            typeof error.line === 'number' &&
+            'column' in error &&
+            typeof error.column === 'number'
+        )
+            return undefined;
+        throw error;
     }
+    return supabaseProjectSchema.parse(value);
 }
 
 const supabaseProjectSchema = z.object({
@@ -133,10 +142,9 @@ function listFunctionEntries(input: CheckInput): string[] {
  * @returns the findings.
  */
 export async function checkSupabaseStoragePolicies(input: CheckInput): Promise<Finding[]> {
-    const read = readProjectFile(input);
+    const config = readProjectFile(input);
     const at = { file: posix.join(input.selection.scope.path, SUPABASE_CONFIG_TOML), line: 1 };
-    if (read === undefined || 'error' in read) return []; // files/taplo-format reports project syntax errors.
-    const { value: config } = read;
+    if (config === undefined) return [];
     const { migrations, findings: syntax } = await readMigrations(input);
     if (syntax.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
     const policed = new Set<string>();
