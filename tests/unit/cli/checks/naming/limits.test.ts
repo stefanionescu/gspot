@@ -10,9 +10,9 @@ import {
     NAME_WORDS,
     SCOPE_LIMITS,
     NAMING_LANGUAGES,
+    LINTER_LIMIT_CASES,
     SWIFT_NAMING_LIMITS,
     UPPER_SNAKE_OVERRIDE,
-    LINTER_CHECKED_CATEGORIES,
 } from '#tests/data/checks/naming/settings.ts';
 
 test('category limits inherit root and scope language settings while explicit categories take precedence', () => {
@@ -67,9 +67,9 @@ test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the ne
     ).toStrictEqual(['words']);
 });
 
-test.each([...LINTER_CHECKED_CATEGORIES])(
-    "$language $category: the language's own linter owns case and length; word limits still apply",
-    ({ language, category, native }) => {
+test.each([...LINTER_LIMIT_CASES])(
+    '$language $category with a 41-letter name reports $expected, and too many words are still reported',
+    ({ language, category, expected }) => {
         const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
             'naming/identifiers',
         )!.check;
@@ -91,9 +91,7 @@ test.each([...LINTER_CHECKED_CATEGORIES])(
             line: 1,
             column: 1,
         };
-        expect(checkIdentifier(identifier, context).map(({ rule }) => rule)).toStrictEqual(
-            native ? [] : ['case', 'length'],
-        );
+        expect(checkIdentifier(identifier, context).map(({ rule }) => rule)).toStrictEqual([...expected]);
         expect(
             checkIdentifier({ ...identifier, name: NAME_WORDS.join('_') }, context).map(({ rule }) => rule),
         ).toContain('words');

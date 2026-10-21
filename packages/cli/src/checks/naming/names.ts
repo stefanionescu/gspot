@@ -260,12 +260,10 @@ function deriveLimits(settings: NamingSettings, identifier: Identifier, override
     const base = settings.limitsFor(identifier.language, identifier.category);
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
     const parent = parents[identifier.category] ?? identifier.category;
-    // Ruff checks Python class and exception names and SwiftLint checks Swift type and variable names,
-    // so gspot checks neither their case nor their length.
-    if (
-        (identifier.language === 'swift' && SWIFTLINT_PARENTS.has(parent)) ||
-        (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category))
-    )
+    // Ruff checks the case of these Python names, and SwiftLint checks the case and length
+    // of these Swift names.
+    if (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category)) return { ...base, caseNames: [] };
+    if (identifier.language === 'swift' && SWIFTLINT_PARENTS.has(parent))
         return { ...base, caseNames: [], maxChars: 0 };
     return { ...base, caseNames: listCaseNames(base, identifier, overrides) };
 }

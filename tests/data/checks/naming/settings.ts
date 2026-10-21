@@ -139,10 +139,12 @@ export const SCOPE_LIMITS = [
 
 export const NAMING_LANGUAGES = ['typescript', 'javascript', 'python', 'swift', 'bash', 'sql'] as const;
 
-/** Categories where the linter checks case and length itself; the other naming rules stay active. */
-export const LINTER_CHECKED_CATEGORIES = [
-    { language: 'swift', category: 'types', native: true },
-    { language: 'swift', category: 'functions', native: false },
+/** Expected naming findings where the language linter owns some of the naming rules. */
+export const LINTER_LIMIT_CASES = [
+    { language: 'swift', category: 'types', expected: [] },
+    { language: 'swift', category: 'functions', expected: ['case', 'length'] },
+    { language: 'python', category: 'classes', expected: ['length'] },
+    { language: 'python', category: 'exceptions', expected: ['length'] },
 ] as const;
 
 // Names that frameworks require, written out here so the test does not read them from the shipped files.
