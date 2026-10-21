@@ -50,4 +50,23 @@ const ACTIONLINT_EXITS = [
     { code: 3, status: 'error', findings: [], note: 'exit 3' },
 ] as const;
 
-export { CALLED_WORKFLOW, ACTIONLINT_EXITS, COMPOSITE_ACTION, CHECKOUT_WORKFLOW, CALLED_WORKFLOW_REFERENCES };
+const WORKFLOW_TEXT_CASES = [
+    ...CALLED_WORKFLOW_REFERENCES.map(([reference, expected]) => ({
+        path: '.github/workflows/caller.yml',
+        before: `on: workflow_dispatch\njobs:\n  caller:\n    uses: ${reference}\n`,
+        expected: `on: workflow_dispatch\njobs:\n  caller:\n    uses: ${expected}\n`,
+    })),
+    {
+        path: '.github/workflows/caller.yml',
+        before: `on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow $/${CALLED_WORKFLOW}\njobs:\n  caller:\n    uses: *workflow\n`,
+        expected: `on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow ./${CALLED_WORKFLOW}\njobs:\n  caller:\n    uses: *workflow\n`,
+    },
+    { path: '.github/workflows/caller.yml', before: 'uses: [$/unclosed\n', expected: 'uses: [$/unclosed\n' },
+    ...['action.yml', 'action.yaml'].map((filename) => ({
+        path: `.github/actions/setup/${filename}`,
+        before: 'name: Setup\nruns:\n  using: composite\n  steps:\n    - uses: $/.github/actions/cache\n',
+        expected: 'name: Setup\nruns:\n  using: composite\n  steps:\n    - uses: ./.github/actions/cache\n',
+    })),
+];
+
+export { ACTIONLINT_EXITS, COMPOSITE_ACTION, CHECKOUT_WORKFLOW, WORKFLOW_TEXT_CASES };

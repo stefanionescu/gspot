@@ -12,43 +12,35 @@ import { buildProcessResult } from '#tests/setup/builders.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { CALLED_WORKFLOW, ACTIONLINT_EXITS, CALLED_WORKFLOW_REFERENCES } from '#tests/data/checks/github-actions.ts';
+import { ACTIONLINT_EXITS, WORKFLOW_TEXT_CASES } from '#tests/data/checks/github-actions.ts';
 
-// The workflow text actionlint reads: each self-repository marker of a reference becomes a local path at the same
-// offsets, and everything else stays as written.
-
-test.each([
-    ...CALLED_WORKFLOW_REFERENCES.map(([reference, expected]) => [
-        `on: workflow_dispatch\njobs:\n  caller:\n    uses: ${reference}\n`,
-        `on: workflow_dispatch\njobs:\n  caller:\n    uses: ${expected}\n`,
-    ]),
-    [
-        `on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow $/${CALLED_WORKFLOW}\njobs:\n  caller:\n    uses: *workflow\n`,
-        `on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow ./${CALLED_WORKFLOW}\njobs:\n  caller:\n    uses: *workflow\n`,
-    ],
-    ['uses: [$/unclosed\n', 'uses: [$/unclosed\n'],
-])('actionlint reads references without changing their offsets: %s', async (before, expected) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['github-actions']),
-        '.github/workflows/caller.yml': before,
-    });
-    const session = await openSession(sandbox.path);
-    using _pins = fakePinnedExecutables([
-        getToolDeclaration(session.manifests.values(), 'actionlint'),
-        getToolDeclaration(session.manifests.values(), 'shellcheck'),
-    ]);
-    using run = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
-        const prepared = await readFile(join(options.cwd, '.github/workflows/caller.yml'), 'utf8');
-        expect(prepared).toBe(expected);
-        expect(prepared).toHaveLength(before.length);
-        return buildProcessResult();
-    });
-    const [planned] = planRun(session, { stage: 'commit', only: ['github-actions/actionlint'] });
-    const result = await findCheckRun('github-actions/actionlint')(session, planned!);
-    expect(result.status, JSON.stringify(result)).toBe('passed');
-    expect(run).toHaveBeenCalledTimes(1);
-    expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(before);
-});
+test.each([...WORKFLOW_TEXT_CASES])(
+    'actionlint prepares $path references without changing their offsets',
+    async ({ path, before, expected }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSettingsText(['github-actions']),
+            '.github/workflows/caller.yml':
+                'on: workflow_dispatch\njobs:\n  caller:\n    uses: ./.github/actions/setup\n',
+            [path]: before,
+        });
+        const session = await openSession(sandbox.path);
+        using _pins = fakePinnedExecutables([
+            getToolDeclaration(session.manifests.values(), 'actionlint'),
+            getToolDeclaration(session.manifests.values(), 'shellcheck'),
+        ]);
+        using run = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
+            const prepared = await readFile(join(options.cwd, path), 'utf8');
+            expect(prepared).toBe(expected);
+            expect(prepared).toHaveLength(before.length);
+            return buildProcessResult();
+        });
+        const [planned] = planRun(session, { stage: 'commit', only: ['github-actions/actionlint'] });
+        const result = await findCheckRun('github-actions/actionlint')(session, planned!);
+        expect(result.status, JSON.stringify(result)).toBe('passed');
+        expect(run).toHaveBeenCalledTimes(1);
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(before);
+    },
+);
 
 test.each([...ACTIONLINT_EXITS])(
     'actionlint runs in a scratch copy that is removed after exit $code, and the workflow is unchanged',

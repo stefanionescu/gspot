@@ -7,7 +7,7 @@ import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { GIT_FOLDER } from '#cli/config/repository/tracked.ts';
 import { copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { ACTION_FILE, SELF_REPOSITORY_MARKER } from '#cli/config/checks/github-actions.ts';
+import { ACTION_FILES, SELF_REPOSITORY_MARKER } from '#cli/config/checks/github-actions.ts';
 import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
 
 function listStepReferences(steps: unknown): unknown[] {
@@ -76,9 +76,10 @@ function prepareActionlintText(text: string): string {
 export async function checkActionlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
     const inputs = new Map(
-        [...planned.files, ...session.repository.files.filter((file) => posix.basename(file.path) === ACTION_FILE)].map(
-            (file) => [file.path, file],
-        ),
+        [
+            ...planned.files,
+            ...session.repository.files.filter((file) => ACTION_FILES.includes(posix.basename(file.path))),
+        ].map((file) => [file.path, file]),
     );
     for (const file of inputs.values()) {
         const source = readCachedBytes(session.reads, file.path).toString('utf8');
