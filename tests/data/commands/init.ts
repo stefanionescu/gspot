@@ -158,6 +158,11 @@ max_line_length = 96
         expected: { indent_width: 3, print_width: 96 },
     },
     {
+        name: 'EditorConfig project settings and section overrides',
+        files: { '.editorconfig': '[*]\nindent_size = 4\n[*.json]\nindent_size = 2\n' },
+        expected: { indent_width: 4, override: [{ paths: ['**/*.json'], indent_width: 2 }] },
+    },
+    {
         name: 'Prettier precedence over EditorConfig',
         files: {
             '.prettierrc.json': '{"singleQuote":true}',

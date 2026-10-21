@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
-import picomatch from 'picomatch';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
@@ -107,50 +106,55 @@ function buildFormatOverrides(
     );
 }
 
-function parseFormattingWidth(value: string | undefined): number | undefined {
-    return value === undefined || !EDITORCONFIG_NUMBER.test(value) ? undefined : Number(value);
-}
-
-/**
- * Read the matching EditorConfig options, and run no project code.
- *
- * @param file the path of the project package.json.
- * @returns the formatting options, or null when the project has no EditorConfig.
- */
-function readFormattingFields(file: string): InitFormatOptions | null {
-    const root = posix.dirname(file);
-    const text = readText(root, EDITORCONFIG_FILE);
-    if (text === undefined) return null;
-    let applies = false;
-    const matching: string[] = [];
-    for (const line of text.split(/\r?\n/u).filter((line) => !EDITORCONFIG_COMMENT.test(line))) {
-        const section = EDITORCONFIG_SECTION.exec(line);
-        if (section !== null) {
-            applies = picomatch(section[1] as string, { dot: true, matchBase: true })(posix.basename(file));
-            continue;
-        }
-        if (applies) matching.push(line);
-    }
-    const fields = Object.fromEntries(
-        matching.flatMap((line) => {
-            const equal = line.indexOf('=');
-            return equal === -1 ? [] : [[line.slice(0, equal).trim(), line.slice(equal + 1).trim()]];
-        }),
-    );
+// Resolve tab indentation and numeric widths from the selected EditorConfig fields.
+function parseEditorWidths(fields: Record<string, string>): InitFormatOptions {
     const width = fields['indent_size'] === 'tab' ? fields['tab_width'] : fields['indent_size'];
-    const tabWidth = parseFormattingWidth(width);
+    const tabWidth = width === undefined || !EDITORCONFIG_NUMBER.test(width) ? undefined : Number(width);
     const lineWidth = fields['max_line_length'];
-    const printWidth = parseFormattingWidth(lineWidth);
+    const printWidth = lineWidth === undefined || !EDITORCONFIG_NUMBER.test(lineWidth) ? undefined : Number(lineWidth);
     return stripUndefined({ tabWidth, printWidth, singleQuote: undefined });
 }
 
 /**
- * Read JSON Prettier settings or the matching EditorConfig section, and run no authored code.
+ * Read the project-wide EditorConfig options and the sections that override them, without running project code.
+ *
+ * @param folder the project folder.
+ * @returns the formatting options, or null when the project has no EditorConfig.
+ */
+function readFormattingFields(folder: string): InitFormatOptions | null {
+    const text = readText(folder, EDITORCONFIG_FILE);
+    if (text === undefined) return null;
+    const sections: { files: string; fields: Record<string, string> }[] = [];
+    let fields: Record<string, string> | undefined;
+    for (const line of text.split(/\r?\n/u).filter((line) => !EDITORCONFIG_COMMENT.test(line))) {
+        const section = EDITORCONFIG_SECTION.exec(line);
+        if (section !== null) {
+            const files = section[1] as string;
+            fields = {};
+            sections.push({ files, fields });
+            continue;
+        }
+        const equal = line.indexOf('=');
+        if (fields !== undefined && equal !== -1) fields[line.slice(0, equal).trim()] = line.slice(equal + 1).trim();
+    }
+    const project = Object.fromEntries(
+        sections.filter(({ files }) => files === '*').flatMap(({ fields }) => Object.entries(fields)),
+    );
+    return {
+        ...parseEditorWidths(project),
+        overrides: sections
+            .filter(({ files }) => files !== '*')
+            .map(({ files, fields }) => ({ files, options: parseEditorWidths(fields) })),
+    };
+}
+
+/**
+ * Read JSON Prettier settings or EditorConfig sections, and run no authored code.
  *
  * @param file the path of the project package.json.
  * @param dependencies what the project package.json declares.
  * @param prettierFiles the Prettier settings that init found.
- * @returns the three formatting options, or null when neither formatter has settings.
+ * @returns the formatting options and overrides, or null when neither formatter has settings.
  */
 function readFormatOptions(
     file: string,
@@ -171,7 +175,7 @@ function readFormatOptions(
             options = parseJsonFile(posix.join(root, prettierFile.path), prettierFile.text);
         return { ...PRETTIER_DEFAULTS, ...stripUndefined(formatOptionsSchema.parse(options)) };
     }
-    return readFormattingFields(file);
+    return readFormattingFields(root);
 }
 
 function readScopeFormat(
