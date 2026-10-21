@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { openSession } from '#cli/session.ts';
+import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
@@ -16,7 +17,13 @@ import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, parseToolFile } from '#tests/setup/tool-files.ts';
 import { NESTED_PYTHON_SETTINGS } from '#tests/data/checks/python/project.ts';
-import { PLAIN_TOOL_FILES, TOOL_FILE_PROJECT, IGNORED_CHECK_FILES } from '#tests/data/generation/tool-files.ts';
+
+import {
+    PLAIN_TOOL_FILES,
+    TOOL_FILE_PROJECT,
+    IGNORED_CHECK_FILES,
+    JSCONFIG_TITLE_IGNORE_PROJECT,
+} from '#tests/data/generation/tool-files.ts';
 
 test('a Ruff-only Python scope gets no type checker file or pointer', async () => {
     await using sandbox = await testdir();
@@ -172,4 +179,14 @@ test('a jsconfig beside a tsconfig excludes build output and lists only tracked 
     expect(jsconfig.exclude).toStrictEqual(
         matchItems(['../../../../**/.open-next/**', '../../../../**/node_modules/**', '../../../../vendor']),
     );
+});
+
+test('an ignore whose reason equals a built-in section title keeps its paths in the jsconfig exclude', async () => {
+    await using sandbox = await testdir(JSCONFIG_TITLE_IGNORE_PROJECT);
+    const files = generate(await openSession(sandbox.path)).files;
+    const content = files.find(
+        ({ path }) => path === '.gspot/configurations/language/javascript/jsconfig.json',
+    )!.content;
+    const jsconfig: unknown = JSON.parse(content);
+    expect(getValueAt(jsconfig, ['exclude'])).toContain('../../../../legacy/**');
 });

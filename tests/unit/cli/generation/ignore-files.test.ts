@@ -13,7 +13,6 @@ import { generateFile } from '#tests/setup/tool-files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildIgnoreSections } from '#cli/generation/ignore-files.ts';
-import { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
 
 import {
     LANGUAGE_IGNORES,
@@ -116,7 +115,7 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     const files = generate(session).files;
     const written = files.map(({ path }) => path).filter((path) => !path.startsWith('.gspot/'));
     const listed = buildIgnoreSections(session)
-        .find(({ title }) => title === IGNORE_SECTION_TITLES.gspot)!
+        .find(({ key }) => key === 'gspot')!
         .patterns.filter((pattern) => !pattern.startsWith('.gspot/'));
     expect(listed.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         written.toSorted((left, right) => left.localeCompare(right)),
@@ -168,7 +167,7 @@ test('tool files leave out what the tracked .gitignore files ignore, apart from 
         'entry.js',
     ]);
     const session = await openSession(sandbox.path);
-    const section = buildIgnoreSections(session).find(({ title }) => title === IGNORE_SECTION_TITLES.git)!;
+    const section = buildIgnoreSections(session).find(({ key }) => key === 'git')!;
     expect(section.patterns).toStrictEqual(['.open-next/', '/app/**/other/', '/app/generated/types']);
     const pyright = generate(session).files.find(({ path }) => path.endsWith('basedpyright.json'))!;
     const excluded = (JSON.parse(pyright.content) as { exclude: string[] }).exclude;

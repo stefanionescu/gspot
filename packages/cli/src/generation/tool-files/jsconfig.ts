@@ -7,7 +7,6 @@ import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
-import { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
 import { buildGlobSections, buildIgnoreSections } from '#cli/generation/ignore-files.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE, SOURCE_SELECTION_FIELDS } from '#cli/config/parsers/tsconfig.ts';
 
@@ -73,8 +72,7 @@ function buildJsconfig(context: ToolFileContext): string {
     const importStyle = context.selection.view.options('tools.eslint').import_extension;
     const declarationPaths = buildGlobSections(
         buildIgnoreSections(context.session).filter(
-            (section) =>
-                context.session.settingsFile.settings.level !== 'all' || section.title !== IGNORE_SECTION_TITLES.build,
+            (section) => context.session.settingsFile.settings.level !== 'all' || section.key !== 'build',
         ),
     );
     const jsconfigOwner = readTsconfig(root, join(root, scope, JSCONFIG_FILE), reads);

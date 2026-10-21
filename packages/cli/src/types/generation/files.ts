@@ -3,6 +3,7 @@ import type { FileEdit } from '#cli/types/ownership.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
 import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
+import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
 import type { RUNNERS, LFS_HOOKS, CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { Level, Manifest, ToolDeclaration, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
@@ -104,7 +105,7 @@ export type PointerFieldInputs = {
 };
 
 /** One ignore group and the reason shown above its paths. */
-export type IgnoreSection = { title: string; patterns: string[] };
+export type IgnoreSection = { key: keyof typeof IGNORE_SECTION_TITLES | 'settings'; title: string; patterns: string[] };
 
 /** A declaration paired with the repository and scope that own it. */
 export type ToolFileSelection = { toolFile: ToolFileDeclaration; owner: ToolFileInputs };

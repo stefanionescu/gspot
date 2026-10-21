@@ -28,7 +28,7 @@ import {
 function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
     return listGitignorePatterns(session.reads, tracked).filter((pattern) => {
         if (isInGspotFolder(pattern.replace(LEADING_SLASH, ''))) return false;
-        const matches = buildPathMatcher(buildGlobSections([{ title: '', patterns: [pattern] }]));
+        const matches = buildPathMatcher(buildGlobSections([{ key: 'git', title: '', patterns: [pattern] }]));
         return !tracked.some((path) => matches(path));
     });
 }
@@ -57,18 +57,19 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
     const generatorOutputs = scopes.flatMap(({ scope, selected }) =>
         selected.flatMap((manifest) => manifest.generated.map((file) => join(scope.path, file))),
     );
-    const tracked = repository.index.length === 0 ? repository.files : repository.index;
+    const trackedPaths = (repository.index.length === 0 ? repository.files : repository.index).map(({ path }) => path);
     const folders = [
         ...new Set(scopes.flatMap(({ selected }) => selected.flatMap((manifest) => manifest.ignored_folders))),
     ];
     const toolFiles = collectToolExclusions(session);
     return [
         {
+            key: 'build',
             title: IGNORE_SECTION_TITLES.build,
             patterns: [
                 ...BUILD_OUTPUT_PATTERNS.filter((pattern) => {
                     const matches = buildPathMatcher(
-                        buildGlobSections([{ title: IGNORE_SECTION_TITLES.build, patterns: [pattern] }]),
+                        buildGlobSections([{ key: 'build', title: IGNORE_SECTION_TITLES.build, patterns: [pattern] }]),
                     );
                     return repository.files.some((file) => matches(file.path));
                 }),
@@ -76,37 +77,32 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
             ],
         },
         {
+            key: 'git',
             title: IGNORE_SECTION_TITLES.git,
-            patterns: listGitIgnoredPatterns(
-                session,
-                tracked.map(({ path }) => path),
-            ),
+            patterns: listGitIgnoredPatterns(session, trackedPaths),
         },
-        { title: IGNORE_SECTION_TITLES.gspot, patterns: [...GSPOT_FOLDER_PATTERNS, ...toolFiles] },
+        { key: 'gspot', title: IGNORE_SECTION_TITLES.gspot, patterns: [...GSPOT_FOLDER_PATTERNS, ...toolFiles] },
         {
+            key: 'generators',
             title: IGNORE_SECTION_TITLES.generators,
-            patterns: [
-                ...readLinguistPatterns(
-                    reads,
-                    tracked.map(({ path }) => path),
-                ),
-                ...generatorOutputs,
-            ],
+            patterns: [...readLinguistPatterns(reads, trackedPaths), ...generatorOutputs],
         },
         {
+            key: 'dependencies',
             title: IGNORE_SECTION_TITLES.dependencies,
             patterns: folders.filter((folder) => !BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
         },
         {
+            key: 'lockfiles',
             title: IGNORE_SECTION_TITLES.lockfiles,
             patterns: LOCKFILES.filter((lockfile) =>
                 repository.files.some(({ path }) => !isInGspotFolder(path) && basename(path) === lockfile.file),
             ).map(({ file }) => file),
         },
-        { title: IGNORE_SECTION_TITLES.environment, patterns: [...LOCAL_ENVIRONMENT_PATTERNS] },
+        { key: 'environment', title: IGNORE_SECTION_TITLES.environment, patterns: [...LOCAL_ENVIRONMENT_PATTERNS] },
         ...listActiveIgnores(session.settingsFile.settings)
             .filter((entry) => entry.check === undefined)
-            .map((entry) => ({ title: entry.reason, patterns: entry.paths ?? [] })),
+            .map((entry): IgnoreSection => ({ key: 'settings', title: entry.reason, patterns: entry.paths ?? [] })),
     ];
 }
 
@@ -121,7 +117,7 @@ function buildSettingsSections(view: ScopeView, check: string): IgnoreSection[] 
     return view
         .ignoresFor(check)
         .filter((entry) => isFileIgnore(entry))
-        .map(({ reason, paths }) => ({ title: reason, patterns: paths }));
+        .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths }));
 }
 
 /**

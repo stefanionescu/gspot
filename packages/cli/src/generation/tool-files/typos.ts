@@ -3,7 +3,6 @@ import { findLockfile } from '#cli/repository/classify.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
 import { buildGlobSections, buildIgnoreSections, buildSettingsSections } from '#cli/generation/ignore-files.ts';
 
 import {
@@ -53,14 +52,14 @@ function buildTyposSections(context: ToolFileContext): IgnoreSection[] {
         ...buildIgnoreSections(context.session),
         ...buildSettingsSections(context.selection.view, 'spelling/typos'),
     ].map((section) => {
-        if (section.title === IGNORE_SECTION_TITLES.lockfiles)
+        if (section.key === 'lockfiles')
             return {
                 ...section,
                 patterns: [...section.patterns, ...excludedLockfiles].filter(
                     (path) => path === '*.lock' || !path.endsWith('.lock'),
                 ),
             };
-        return section.title === IGNORE_SECTION_TITLES.generators
+        return section.key === 'generators'
             ? { ...section, patterns: [...section.patterns, ...excludedFormats] }
             : section;
     });

@@ -124,3 +124,15 @@ export const PINNED_PACKAGES = [
     'https://github.com/vale-cli/alex/releases/download/v0.2.3/alex.zip',
     'https://github.com/vale-cli/Harper/releases/download/v0.1.0/Harper.zip',
 ].join(', ');
+
+export const JSCONFIG_TITLE_IGNORE_PROJECT = {
+    'gspot.toml': `level = "all"
+configurations = ["javascript"]
+
+[[ignore]]
+paths = ["legacy/**"]
+reason = "Build output"
+`,
+    'source.js': 'export const value = 1;\n',
+    'legacy/source.js': 'export const legacy = 1;\n',
+} as const;
