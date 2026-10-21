@@ -137,3 +137,18 @@ stage = "manual"
     expect(text).toContain('command = ["./verify.sh"]');
     expect(text).toContain('command = ["git", "status"]');
 });
+
+test('export reports a missing destination folder as an argument error and writes nothing', async () => {
+    await using folder = await testdir({ 'gspot.toml': buildSettingsText([]) });
+    const before = await readTree(folder.path);
+    const message = `The folder ${join(folder.path, 'missing-folder')} does not exist.`;
+    const human = await runGspot(folder.path, ['export', 'missing-folder/shared.template.toml']);
+    expect(human.code).toBe(2);
+    expect(human.stdout).toBe('');
+    expect(human.stderr).toBe(`${message}\n`);
+    const structured = await runGspot(folder.path, ['export', 'missing-folder/shared.template.toml', '--json']);
+    expect(structured.code).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'arguments', message });
+    expect(await readTree(folder.path)).toStrictEqual(before);
+});

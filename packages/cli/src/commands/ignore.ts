@@ -26,12 +26,12 @@ function assertIgnoreTarget(options: IgnoreOptions, settings: Settings, reads: R
     }
     if (options.paths === undefined)
         throw new GspotError(
-            'settings',
+            'arguments',
             'An ignore without a check needs --paths. Name the paths to keep out of every check.',
         );
     if (options.rule !== undefined)
         throw new GspotError(
-            'settings',
+            'arguments',
             'An ignore without a check cannot take --rule. Name the check that owns the rule.',
         );
 }
@@ -129,7 +129,7 @@ function registerIgnore(program: Command, onResult: CommandCompletion): void {
  */
 function parseExpiryDate(text: string): LocalDate {
     const result = calendarDateSchema.safeParse(text);
-    if (!result.success) throw new GspotError('settings', 'until must be a valid calendar date in YYYY-MM-DD form.');
+    if (!result.success) throw new GspotError('arguments', '--until must be a valid calendar date in YYYY-MM-DD form.');
     return new LocalDate(result.data);
 }
 

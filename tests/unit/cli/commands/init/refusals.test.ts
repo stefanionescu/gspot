@@ -64,7 +64,7 @@ test('init --json without --yes names --yes before reading the repository', asyn
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'prompt', message: matchSubstring('--yes') });
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: matchSubstring('--yes') });
     expect(result.stdout).not.toContain('package.json');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

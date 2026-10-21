@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
+import { GspotError } from '#cli/system/errors.ts';
 import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
-import { runGspot } from '#tests/setup/run-gspot.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -12,6 +12,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
+import { runGspot, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { commitAll, readGitOutput, prepareAppliedBashRepository } from '#tests/setup/git.ts';
 
 import {
@@ -62,7 +63,7 @@ test.each([
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);
     expect(structured.stderr).toBe('');
     const failure = JSON.parse(structured.stdout) as CommandFailureJson;
-    expect(failure.error).toBe(commandArguments[1] === 'tools.markdownlint.rules' ? 'settings' : 'arguments');
+    expect(failure.error).toBe('arguments');
     expect(failure.message).toContain(expected);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -252,4 +253,29 @@ test.each([
     expect(result.code).toBe(2);
     expect(result.stderr).toContain(message);
     expect(await Bun.file(path).text()).toBe(before);
+});
+
+test('set keeps the TOML parser failure as the argument error cause', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([]) });
+    const before = await readTree(sandbox.path);
+    const failure = await runRegisteredCommand(sandbox.path, ['set', 'ci.setup_command', '[']).then(
+        () => undefined,
+        (error: unknown) => error,
+    );
+    expect(failure).toBeInstanceOf(GspotError);
+    if (!(failure instanceof GspotError)) throw new Error('Expected a command argument error.');
+    expect(failure.code).toBe('arguments');
+    expect(failure.cause).toBeInstanceOf(GspotError);
+    expect(failure.cause).toMatchObject({ code: 'settings' });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('set leaves existing malformed settings classified as settings errors', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': 'configurations = [' });
+    const before = await readTree(sandbox.path);
+    const failure = await runGspot(sandbox.path, ['set', 'level', 'all', '--json']);
+    expect(failure.code).toBe(2);
+    expect(failure.stderr).toBe('');
+    expect(JSON.parse(failure.stdout)).toMatchObject({ error: 'settings' });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

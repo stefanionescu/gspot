@@ -1,6 +1,7 @@
 import * as os from 'node:os';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
@@ -135,3 +136,25 @@ test.each([...ARGUMENT_REFUSALS])(
         expect(refused.stdout + refused.stderr).toContain(expected);
     },
 );
+
+test('check reports an unreadable message file as an argument error and writes nothing', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText(['commits']) });
+    const before = await readTree(sandbox.path);
+    const message = `The commit message file ${join(sandbox.path, 'missing-message.txt')} cannot be read.`;
+    const human = await runGspot(sandbox.path, ['check', '--hook', 'commit-msg', '--', 'missing-message.txt']);
+    expect(human.code).toBe(2);
+    expect(human.stdout).toBe('');
+    expect(human.stderr).toBe(`${message}\n`);
+    const structured = await runGspot(sandbox.path, [
+        'check',
+        '--json',
+        '--hook',
+        'commit-msg',
+        '--',
+        'missing-message.txt',
+    ]);
+    expect(structured.code).toBe(2);
+    expect(structured.stderr).toBe('');
+    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'arguments', message });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});

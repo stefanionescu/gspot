@@ -6,7 +6,7 @@ import * as processes from '#cli/system/processes.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { ARGUMENT_ERRORS } from '#tests/data/commands/errors.ts';
+import { ARGUMENT_ERRORS, COMMAND_VALUE_ERRORS, COMMAND_VALUE_SETTINGS } from '#tests/data/commands/errors.ts';
 
 test.each([...ARGUMENT_ERRORS])(
     'text output for $name exits 2 and names the argument problem',
@@ -87,3 +87,24 @@ test('apply starts no npm, and install reports a failed npm version lookup in te
     expect(boundary).toHaveBeenCalledWith(['npm', '--version'], expect.objectContaining({ cwd: folder.path }));
     expect(await readTree(folder.path)).toStrictEqual(before);
 });
+
+test.each([...COMMAND_VALUE_ERRORS])(
+    '$name reports arguments in text and JSON without writing',
+    async ({ arguments: commandArguments, message }) => {
+        await using folder = await testdir({
+            'gspot.toml': COMMAND_VALUE_SETTINGS,
+            'control.txt': 'preserve this source\n',
+        });
+        const before = await readTree(folder.path);
+        const human = await runGspot(folder.path, commandArguments);
+        expect(human.code).toBe(2);
+        expect(human.stdout).toBe('');
+        expect(human.stderr).toBe(`${message}\n`);
+        expect(await readTree(folder.path)).toStrictEqual(before);
+        const structured = await runGspot(folder.path, [...commandArguments, '--json']);
+        expect(structured.code).toBe(2);
+        expect(structured.stderr).toBe('');
+        expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'arguments', message });
+        expect(await readTree(folder.path)).toStrictEqual(before);
+    },
+);

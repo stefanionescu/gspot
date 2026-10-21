@@ -123,7 +123,7 @@ test('ignore merges entries with the same --until date, keeps other dates apart,
     ]);
 });
 
-test('ignore rejects an invalid expiry without changing authored settings', async () => {
+test('ignore refuses an invalid --until date and leaves gspot.toml unchanged', async () => {
     await using folder = await testdir();
     await createFileTree(folder.path, {
         'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
@@ -139,9 +139,14 @@ test('ignore rejects an invalid expiry without changing authored settings', asyn
         'The sandbox preserves word splitting.',
         '--until',
         '2099-02-30',
+        '--json',
     ]);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
-    expect(invalid.stdout + invalid.stderr).toContain('until');
+    expect(invalid.stderr).toBe('');
+    expect(JSON.parse(invalid.stdout)).toStrictEqual({
+        error: 'arguments',
+        message: '--until must be a valid calendar date in YYYY-MM-DD form.',
+    });
     expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(before);
 });
 

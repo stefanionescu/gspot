@@ -142,7 +142,7 @@ function readCommitMessageFile(options: CheckOptions): void {
     try {
         accessSync(commitFile, constants.R_OK);
     } catch (error) {
-        throw new GspotError('files', `The commit message file ${commitFile} cannot be read.`, { cause: error });
+        throw new GspotError('arguments', `The commit message file ${commitFile} cannot be read.`, { cause: error });
     }
 }
 

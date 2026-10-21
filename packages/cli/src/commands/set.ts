@@ -24,10 +24,11 @@ import type { Settings, KnownSettings, DeclarationMatch, EffectiveSetting } from
 function parseStructured(text: string): unknown {
     try {
         return parseTomlText(`value = ${text}`, 'value', 'settings')['value'];
-    } catch {
+    } catch (error) {
         throw new GspotError(
-            'settings',
+            'arguments',
             `The value ${text} is not a TOML inline value. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.`,
+            { cause: error },
         );
     }
 }
@@ -97,7 +98,7 @@ function refuseIncompleteReason(
         isLoosening(declaration, change.value, shippedDefault)
     )
         throw new GspotError(
-            'settings',
+            'arguments',
             `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
         );
 }
@@ -112,7 +113,7 @@ function refuseUnneededReason(
     if (options.reason === undefined || declaration.reason_values === true) return;
     if (isLoosening(declaration, change.value, shippedDefault)) return;
     throw new GspotError(
-        'settings',
+        'arguments',
         `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,
     );
 }
@@ -170,7 +171,13 @@ async function writeSetting({
         shown,
         ...(previous === undefined ? {} : { previous }),
     });
-    return await saveSettings(root, { input, change: buildSettingEdit(change, declaration, options), summary });
+    try {
+        return await saveSettings(root, { input, change: buildSettingEdit(change, declaration, options), summary });
+    } catch (error) {
+        if (error instanceof GspotError && error.code === 'settings')
+            throw new GspotError('arguments', error.message, { cause: error });
+        throw error;
+    }
 }
 
 /**

@@ -35,7 +35,7 @@ async function runExportCommand(options: ExportOptions): Promise<CommandResult<E
     try {
         parent = realpathSync(parentPath);
     } catch (error) {
-        if (isMissingFileError(error)) throw new GspotError('files', `The folder ${parentPath} does not exist.`);
+        if (isMissingFileError(error)) throw new GspotError('arguments', `The folder ${parentPath} does not exist.`);
         throw error;
     }
     using destination = openFiles(parent);

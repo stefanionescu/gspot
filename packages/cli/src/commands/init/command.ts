@@ -115,7 +115,7 @@ function registerInit(program: Command, onResult: CommandCompletion): void {
         .action(async (flags, command) => {
             if (command.getOptionValue('json') === true && flags.yes !== true && flags.dryRun !== true)
                 throw new GspotError(
-                    'prompt',
+                    'arguments',
                     '--json needs --yes or --dry-run, because gspot cannot ask while it prints JSON.',
                 );
             onResult(
