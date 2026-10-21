@@ -6,10 +6,10 @@ import type { RunReport } from '#cli/types/runs/check.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { commitAll, markExecutable } from '#tests/setup/git.ts';
-import { BASH_HEADER } from '#tests/data/checks/bash/samples.ts';
 import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { NESTED_CONDITION } from '#tests/data/checks/bash/tool-checks.ts';
+import { BASH_HEADER, CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { BASH_TRIVIAL_FUNCTION_CASES } from '#tests/data/checks/structure/trivial-functions.ts';
 import { runBashSample, expectedSummary, summarizeSample, registerBashSandbox } from '#tests/setup/sample-checks.ts';
 
@@ -263,4 +263,15 @@ test('a function that only a trap runs is not reported', async () => {
         'source.sh': TRAP_FUNCTION_SOURCE,
     });
     expect(await checkFindings(sandbox.path, 'bash/unused-functions')).toStrictEqual([]);
+});
+
+test('main "$@" with a main that reads no argument is not reported', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['bash'], { level: 'all' }),
+        'source.sh': CLEAN_BASH_SCRIPT,
+    });
+    commitAll(sandbox.path);
+    await markExecutable(sandbox.path, 'source.sh');
+    expect(await checkFindings(sandbox.path, 'bash/script-layout')).toStrictEqual([]);
+    expect(await checkFindings(sandbox.path, 'bash/unread-arguments')).toStrictEqual([]);
 });

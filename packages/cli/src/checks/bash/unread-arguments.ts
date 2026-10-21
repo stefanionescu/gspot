@@ -14,7 +14,8 @@ export async function checkBashUnreadArguments(input: CheckInput): Promise<Findi
     const widest = new Map<string, number>();
     for (const file of scripts)
         for (const call of file.calls) {
-            if (names.has(call.name)) widest.set(call.name, Math.max(widest.get(call.name) ?? 0, call.count));
+            if (!call.forwards && names.has(call.name))
+                widest.set(call.name, Math.max(widest.get(call.name) ?? 0, call.count));
         }
     return scripts.flatMap((file) =>
         file.functions.flatMap((entry) => {

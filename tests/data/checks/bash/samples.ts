@@ -10,7 +10,7 @@ shopt -s inherit_errexit
 /** Every sandbox starts from this Bash script. Its main contains several statements. */
 export const CLEAN_BASH_SCRIPT = `${BASH_HEADER}# main: runs the script.
 main() {
-    local name="$1"
+    local name="world"
     local greeting="hello \${name}"
     echo "\${greeting}"
 }
@@ -29,7 +29,7 @@ export const BASH_SANDBOX = {
 
 export const BASH_MAIN = `# main: runs the script.
 main() {
-    echo "hello $1"
+    echo "hello"
 }
 
 main "$@"

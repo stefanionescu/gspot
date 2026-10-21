@@ -15,6 +15,7 @@ import {
     EXPANSION_NODES,
     BASH_BRANCH_NODES,
     FOR_HEADER_FIELDS,
+    FORWARDED_ARGUMENTS,
     BASH_COMPOUND_NODES,
     POSITIONAL_PARAMETER,
     TEMPORARY_VALUE_NODES,
@@ -288,9 +289,14 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
             const commandArguments = node.childrenForFieldName('argument');
             const trapFunction = name === TRAP_COMMAND ? commandArguments[0] : undefined;
             return [
-                { name, count: commandArguments.length, line: node.startPosition.row + 1 },
+                {
+                    name,
+                    count: commandArguments.length,
+                    line: node.startPosition.row + 1,
+                    forwards: commandArguments.some((argument) => FORWARDED_ARGUMENTS.has(argument.text)),
+                },
                 ...(trapFunction?.type === 'word'
-                    ? [{ name: trapFunction.text, count: 0, line: trapFunction.startPosition.row + 1 }]
+                    ? [{ name: trapFunction.text, count: 0, line: trapFunction.startPosition.row + 1, forwards: false }]
                     : []),
             ];
         });

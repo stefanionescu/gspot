@@ -35,7 +35,7 @@ export const BASH_SAFETY_CASES = [
         files: {
             'scripts/unsafe.sh': `${BASH_HEADER}# main: runs the script.
 main() {
-    cd "$1"
+    cd "\${HOME}"
     rm -rf "\${HOME}/x" || true
 }
 
@@ -52,7 +52,7 @@ export const INLINE_SCRIPT_CASES = [
         files: {
             'scripts/node.sh': `${BASH_HEADER}# main: runs the script.
 main() {
-    node -e 'console.log(1)' "$1"
+    node -e 'console.log(1)'
 }
 
 main "$@"
@@ -80,7 +80,7 @@ main "$@"
         files: {
             'scripts/print.sh': `${BASH_HEADER}# main: runs the script.
 main() {
-    node -p '1 + 1' "$1"
+    node -p '1 + 1'
 }
 
 main "$@"
@@ -108,7 +108,7 @@ main "$@"
         files: {
             'scripts/bun.sh': `${BASH_HEADER}# main: runs the script.
 main() {
-    bun --eval 'console.log(1)' "$1"
+    bun --eval 'console.log(1)'
 }
 
 main "$@"
@@ -134,7 +134,7 @@ main "$@"
         files: {
             'scripts/perl.sh': `${BASH_HEADER}# main: runs the script.
 main() {
-    perl -pi -e 's/old/new/' "$1"
+    perl -pi -e 's/old/new/' sample.txt
 }
 
 main "$@"

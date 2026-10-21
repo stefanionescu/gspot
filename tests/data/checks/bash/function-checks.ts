@@ -72,7 +72,7 @@ export const UNUSED_FUNCTION_CASES = [
 _orphan() {
     echo a
     echo b
-    echo "$1"
+    echo orphan
 }
 
 ${BASH_MAIN}`,
@@ -94,8 +94,8 @@ _deaf() {
 
 # main: runs the script.
 main() {
-    _deaf "$1" two
-    _deaf "$1" four
+    _deaf one two
+    _deaf one four
 }
 
 main "$@"
@@ -115,8 +115,8 @@ _half() {
 
 # main: runs the script.
 main() {
-    _half "$1" two
-    _half "$1" four
+    _half one two
+    _half one four
 }
 
 main "$@"

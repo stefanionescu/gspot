@@ -1,8 +1,9 @@
-/** The name, argument count, and one-based line of a shell command. */
+/** A shell command, its line and argument count, and whether it forwards positional parameters. */
 type FunctionCall = {
     name: string;
     count: number;
     line: number;
+    forwards: boolean;
 };
 
 /** A shell function, its one-based range, executable statements, and positional-argument reads. */

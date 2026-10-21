@@ -84,3 +84,14 @@ second() { local tmp=$(mktemp); trap 'rm -rf "$tmp"' RETURN; }
         ],
     },
 ] as const;
+
+export const FORWARDING_CALL_CASES = [
+    { source: 'consume "$@"\n', count: 1, forwards: true },
+    { source: 'consume "$*"\n', count: 1, forwards: true },
+    { source: 'consume one "$@"\n', count: 2, forwards: true },
+    { source: "consume '$@'\n", count: 1, forwards: false },
+    { source: String.raw`consume "\$@"` + '\n', count: 1, forwards: false },
+    { source: 'consume "$#"\n', count: 1, forwards: false },
+    { source: 'consume "$1"\n', count: 1, forwards: false },
+    { source: 'consume\n', count: 0, forwards: false },
+] as const;

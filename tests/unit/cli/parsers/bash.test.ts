@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { listCodeLines, parseBashScript } from '#cli/parsers/bash.ts';
-import { BASH_COMMENT_CASES, MKTEMP_CLEANUP_CASES } from '#tests/data/parsers/bash.ts';
+import { BASH_COMMENT_CASES, MKTEMP_CLEANUP_CASES, FORWARDING_CALL_CASES } from '#tests/data/parsers/bash.ts';
 
 test.each(BASH_COMMENT_CASES)(
     'Bash comments keep quoted and parameter hashes as code: %s',
@@ -52,8 +52,8 @@ test('Bash functions report their lines, bodies and the highest positional param
         },
     ]);
     expect(parsed.calls).toStrictEqual([
-        { name: 'echo', count: 1, line: 3 },
-        { name: '_one', count: 1, line: 7 },
+        { name: 'echo', count: 1, line: 3, forwards: false },
+        { name: '_one', count: 1, line: 7, forwards: true },
     ]);
 });
 
@@ -66,15 +66,23 @@ test('one-line Bash functions count only their own parameters, not those of nest
         { name: 'inner', highestRead: 9 },
         { name: 'main', highestRead: 0 },
     ]);
-    expect(parsed.calls).toContainEqual({ name: 'outer', count: 2, line: 2 });
+    expect(parsed.calls).toContainEqual({ name: 'outer', count: 2, line: 2, forwards: false });
 });
 
 test('plain trap handlers count as zero-argument calls while quoted and expanded trap bodies stay uninterpreted', async () => {
     const parsed = await parseBashScript('trap _cleanup EXIT\ntrap "_quoted" EXIT\ntrap $handler EXIT\n');
     expect(parsed.calls).toStrictEqual([
-        { name: 'trap', count: 2, line: 1 },
-        { name: '_cleanup', count: 0, line: 1 },
-        { name: 'trap', count: 2, line: 2 },
-        { name: 'trap', count: 2, line: 3 },
+        { name: 'trap', count: 2, line: 1, forwards: false },
+        { name: '_cleanup', count: 0, line: 1, forwards: false },
+        { name: 'trap', count: 2, line: 2, forwards: false },
+        { name: 'trap', count: 2, line: 3, forwards: false },
     ]);
 });
+
+test.each([...FORWARDING_CALL_CASES])(
+    'Bash calls mark positional argument forwarding: $source',
+    async ({ source, count, forwards }) => {
+        const parsed = await parseBashScript(source);
+        expect(parsed.calls).toStrictEqual([{ name: 'consume', count, line: 1, forwards }]);
+    },
+);
