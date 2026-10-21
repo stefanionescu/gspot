@@ -1,10 +1,12 @@
-import { escapeGlob } from '#cli/repository/matchers.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { getPreset } from '#cli/generation/eslint/presets.ts';
 import { readScopeAliases } from '#cli/repository/aliases.ts';
-import { getTable, getLimit } from '#cli/settings/scope-view.ts';
+import { getLimit, getTable } from '#cli/settings/scope-view.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import type { ScopeView } from '#cli/types/settings/inheritance.ts';
-import { listScriptPaths } from '#cli/generation/eslint/runtimes.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
+import { MISE_SCRIPT_PATH } from '#cli/config/repository/inventory.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { IMPORT_BOUNDARIES_RULE } from '#cli/config/generation/eslint/imports.ts';
@@ -31,12 +33,12 @@ import {
 import {
     type EslintBlock,
     type EslintPlugins,
-    type SelectorGroup,
     type EslintPresets,
     type EslintRuntime,
+    type SelectorGroup,
     type EslintLevelRules,
-    type PlannedEslintFile,
     type EslintBlockFields,
+    type PlannedEslintFile,
     type ConfigurationBlocks,
 } from '#cli/types/generation/eslint.ts';
 import {
@@ -77,6 +79,7 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
         };
     });
 }
+
 /**
  * Build the blocks before the fragment blocks: default lint rules, pinned presets, and project settings.
  *
@@ -138,6 +141,7 @@ export function buildOpeningBlocks(
         })),
     ];
 }
+
 /**
  * Build the blocks after the fragment blocks: runtime, selector, test, script, and final pinned rules.
  *
@@ -176,7 +180,9 @@ export function buildClosingBlocks(
             data: {
                 files: buildScopeFiles(eslintFiles.code, group.scope ?? '', group.files ?? ['**/*']),
                 ignores: [
-                    ...(group.ignoredScopes ?? []).map((scope) => `${escapeGlob(scope)}/**`),
+                    ...(group.ignoredScopes ?? []).map(
+                        (scope) => `${scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH)}/**`,
+                    ),
                     ...(group.ignores ?? []),
                 ],
                 rules: { 'no-restricted-syntax': ['error', ...(isAll ? BASE_SELECTORS : []), ...group.selectors] },
@@ -185,12 +191,8 @@ export function buildClosingBlocks(
         ...buildConsoleBlocks(planned, rules.console).map((block): ConfigurationBlocks['blocks'][number] => ({
             data: block,
         })),
-        {
-            data: { files: eslintFiles.scripts, rules: SCRIPT_RULES },
-        },
-        {
-            data: { files: eslintFiles.tests, rules: TEST_RULES },
-        },
+        { data: { files: eslintFiles.scripts, rules: SCRIPT_RULES } },
+        { data: { files: eslintFiles.tests, rules: TEST_RULES } },
         ...buildBasePresetBlocks(presets, PRESETS_AFTER_CONFIGURATIONS, eslintFiles.code),
         {
             data: {
@@ -207,6 +209,7 @@ export function buildClosingBlocks(
         },
     ];
 }
+
 /**
  * Keep test and script console exemptions inside their project scope.
  *
@@ -227,11 +230,17 @@ function buildConsoleBlocks(
                 selection.scope.path,
             ),
             ...selection.view.test_files,
-            ...listScriptPaths(selection),
+
+            ...(selection.view.values.javascript?.script_files ?? []),
+            joinScope(
+                selection.scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
+                MISE_SCRIPT_PATH,
+            ),
         ],
         rules,
     }));
 }
+
 /**
  * Choose the plugin imports and names for the module header and the lint blocks.
  *
@@ -252,6 +261,7 @@ export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: Eslint
         ...(boundaryBlocks.length > 0 ? BOUNDARIES_PLUGIN_IMPORT : {}),
     };
 }
+
 // A language block uses its own index-export limit whenever the repository permits barrels.
 function buildBarrelRule(planned: PlannedEslintFile, language: 'typescript' | 'javascript'): Record<string, unknown> {
     return planned.session.settingsFile.settings.structure.reexports === 'index-only'
@@ -269,6 +279,7 @@ function buildBarrelRule(planned: PlannedEslintFile, language: 'typescript' | 'j
           }
         : {};
 }
+
 // Base presets use their first block as an object; framework presets preserve their complete block arrays.
 function buildBasePresetBlocks(
     presets: EslintPresets | undefined,
@@ -286,6 +297,7 @@ function buildBasePresetBlocks(
         };
     });
 }
+
 // The size and complexity rules with the limits of one language.
 function buildLimitRules(view: ScopeView, language: 'typescript' | 'javascript'): Record<string, unknown> {
     return Object.fromEntries(
@@ -295,6 +307,7 @@ function buildLimitRules(view: ScopeView, language: 'typescript' | 'javascript')
         }),
     );
 }
+
 /**
  * Calculate the ESLint limit options from the settings. JavaScript files get the JavaScript limits in their own
  * block, which comes after the block for every code file.

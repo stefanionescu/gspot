@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
 import { findScope } from '#cli/repository/scopes.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
@@ -8,8 +9,6 @@ import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { listCoveredFiles } from '#cli/repository/covered-files.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PRETTIER_TOOL, STYLELINT_TOOL } from '#cli/config/planning.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
-import type { StylelintComponent } from '#cli/types/generation/files.ts';
 import { isSettingEmpty, findSettingsSkip } from '#cli/planning/skips.ts';
 import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
@@ -67,7 +66,9 @@ export function listCompanionTools(scope: Scope, check: Check, command?: string[
         : [];
     const syntax =
         check.tool === STYLELINT_TOOL
-            ? selectStylelintComponents(scope.view.configurations).map((dialect) => dialect.customSyntax)
+            ? scope.view.configurations
+                  .flatMap((name) => STYLELINT_COMPONENTS[name] ?? [])
+                  .map((dialect) => dialect.customSyntax)
             : [];
     return [...new Set([...otherTools, ...plugins, ...syntax])].filter((name) => {
         const pin = getTool(scope.selected, name);
@@ -168,7 +169,9 @@ export function listLicenseProjects(
     return scopes.flatMap((selection) =>
         files
             .filter(
-                (file) => !isInGspotFolder(file.path) && findScope(file.path, entries).path === selection.scope.path,
+                (file) =>
+                    !file.path.startsWith(`${DOT_GSPOT}/`) &&
+                    findScope(file.path, entries).path === selection.scope.path,
             )
             .flatMap((file) => {
                 if (
@@ -217,15 +220,4 @@ export function listPrettierPlugins(configurations: Iterable<Configuration>): Ma
             }),
         ),
     );
-}
-
-/**
- * List the component dialects that Stylelint reads, and the parser that each needs.
- *
- * @param configurations the configuration names in use.
- *
- * @returns the dialects and their parser declarations.
- */
-export function selectStylelintComponents(configurations: string[]): StylelintComponent[] {
-    return configurations.flatMap((name) => STYLELINT_COMPONENTS[name] ?? []);
 }

@@ -1,5 +1,4 @@
 import { resolve } from 'node:path';
-import { normalizePath } from '../paths.ts';
 import { createRule } from '../schemas/rules/options.ts';
 import { findZodSchemaConstructors } from '../syntax.ts';
 import { DEFAULT_SCHEMA_FOLDERS } from '../config/schemas.ts';
@@ -22,8 +21,12 @@ export const schemaLocation = createRule<SchemaLocationOptions, 'location'>({
         messages: { location: 'Declare this Zod schema in a configured schema folder: {{folders}}.' },
     },
     create(context, [options]) {
-        const path = normalizePath(context.physicalFilename);
-        const folders = options.folders.map((folder) => normalizePath(resolve(context.cwd, folder)));
+        const path = context.physicalFilename.replaceAll('\\', '/').replace(/^[a-z]:/u, (drive) => drive.toUpperCase());
+        const folders = options.folders.map((folder) =>
+            resolve(context.cwd, folder)
+                .replaceAll('\\', '/')
+                .replace(/^[a-z]:/u, (drive) => drive.toUpperCase()),
+        );
         if (folders.some((folder) => path === folder || path.startsWith(`${folder}/`))) return {};
         return {
             Program() {

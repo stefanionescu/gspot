@@ -12,8 +12,8 @@ import { PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/dependencies.ts';
 
 import {
     uvLockSchema,
-    npmLockSchema,
     bunLockSchema,
+    npmLockSchema,
     pnpmLockSchema,
     yarnLockSchema,
     yarnPackageSchema,
@@ -36,12 +36,6 @@ function parseNpmPackages(path: string, text: string): string[] {
     });
 }
 
-function parseBunPackages(path: string, text: string): string[] {
-    return Object.values(parseJsonFile(path, text, bunLockSchema).packages).flatMap(([identity]) =>
-        typeof identity === 'string' && splitIdentity(identity) !== undefined ? [identity] : [],
-    );
-}
-
 function parsePnpmPackages(path: string, text: string): string[] {
     return Object.keys(parseYamlFile(path, text, pnpmLockSchema).packages).map((key) => {
         const name = key.replace(LEADING_SLASH, '');
@@ -60,21 +54,21 @@ function parseYarnPackages(_path: string, text: string): string[] {
     });
 }
 
-function parseUvPackages(path: string, text: string): string[] {
-    return parseTomlFile(path, text, uvLockSchema).package.flatMap(({ name, version }) =>
-        version === undefined ? [] : [`${name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${version}`],
-    );
-}
-
 const PACKAGE_PARSERS: Readonly<
     Record<(typeof LOCKED_PACKAGE_LOCKFILES)[number], (path: string, text: string) => string[]>
 > = {
     'package-lock.json': parseNpmPackages,
     'npm-shrinkwrap.json': parseNpmPackages,
-    'bun.lock': parseBunPackages,
+    'bun.lock': (path, text) =>
+        Object.values(parseJsonFile(path, text, bunLockSchema).packages).flatMap(([identity]) =>
+            typeof identity === 'string' && splitIdentity(identity) !== undefined ? [identity] : [],
+        ),
     'pnpm-lock.yaml': parsePnpmPackages,
     'yarn.lock': parseYarnPackages,
-    'uv.lock': parseUvPackages,
+    'uv.lock': (path, text) =>
+        parseTomlFile(path, text, uvLockSchema).package.flatMap(({ name, version }) =>
+            version === undefined ? [] : [`${name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${version}`],
+        ),
 };
 
 // The specifier of each dependency in one workspace entry. pnpm records { specifier, version } for each.

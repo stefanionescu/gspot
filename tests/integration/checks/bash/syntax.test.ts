@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { isWindows } from '#tests/setup/system.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { SYNTAX_CASES, SYNTAX_FILES } from '#tests/data/checks/bash/tool-checks.ts';
 
@@ -41,7 +41,7 @@ test.skipIf(isWindows).each([...SYNTAX_CASES])(
                 matchFields({
                     file: entry.path,
                     line: entry.line,
-                    message: matchSubstring(entry.message),
+                    message: expect.stringContaining(entry.message) as string,
                 }),
             );
         } finally {

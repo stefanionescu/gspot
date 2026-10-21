@@ -5,12 +5,12 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/system/git.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
+import { matchItems } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { HOOKS_SETTINGS } from '#tests/data/test-setup.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandbox.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { installHooks, readHookStatus } from '#cli/install/hooks.ts';
-import { matchItems, matchSubstring } from '#tests/setup/matchers.ts';
 import { readGitOutput, createLfsRepository } from '#tests/setup/git.ts';
 import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/data/hooks.ts';
 
@@ -39,12 +39,15 @@ test.each([...HOOK_REPOSITORIES])(
         const steps: (readonly string[])[] = [];
         const session = await openSession(sandbox.path);
         const text = installHooks(session, steps);
-        expect({ steps, text }).toStrictEqual({ steps: [], text: matchSubstring('add these gspot lines to them') });
+        expect({ steps, text }).toStrictEqual({
+            steps: [],
+            text: expect.stringContaining('add these gspot lines to them') as string,
+        });
         const command = startProgram === 'mise' ? 'mise exec -- gspot' : 'npm exec --no -- gspot';
         expect(text.split('\n')).toStrictEqual(
             matchItems([
-                matchSubstring(`pre-commit: ${command} check --hook pre-commit`),
-                matchSubstring(`pre-push: ${command} check --hook pre-push -- "$@"`),
+                expect.stringContaining(`pre-commit: ${command} check --hook pre-commit`) as string,
+                expect.stringContaining(`pre-push: ${command} check --hook pre-push -- "$@"`) as string,
             ]),
         );
         expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(before);
@@ -118,7 +121,7 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     });
     expect(await readFile(hook, 'utf8')).toBe(installed);
     const removed = await runGspot(root, ['apply']);
-    expect(removed).toMatchObject({ code: 0, stdout: matchSubstring('Run: gspot install') });
+    expect(removed).toMatchObject({ code: 0, stdout: expect.stringContaining('Run: gspot install') as string });
     expect(await isOnDisk(hook)).toBe(false);
     expect(readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
     const removedSteps: (readonly string[])[] = [];

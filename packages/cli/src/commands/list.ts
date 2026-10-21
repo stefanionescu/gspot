@@ -2,7 +2,7 @@ import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { type Session } from '#cli/types/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { formatScopeLabel } from '#cli/system/terminal.ts';
+import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type Settings } from '#cli/types/settings/file.ts';
@@ -15,10 +15,6 @@ import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type ListKind, type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
-function formatScopeTag(scope: string): string {
-    return scope === '' ? '' : `  [scope ${scope}]`;
-}
-
 function buildSettingsResult(session: Session): CommandResult {
     const { settings: rows } = buildSettingRows(session.settingsFile.settings, session.scopes);
     const displayed = rows.filter(
@@ -28,7 +24,8 @@ function buildSettingsResult(session: Session): CommandResult {
     const lines = displayed.map((row) => {
         const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
         const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
-        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reason_needed ?? '').padEnd('reason needed when'.length)}  ${row.source}${formatScopeTag(row.scope)}`;
+        const scope = row.scope === '' ? '' : `  [scope ${row.scope}]`;
+        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reason_needed ?? '').padEnd('reason needed when'.length)}  ${row.source}${scope}`;
     });
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} reason needed when  source`);
     return { text: `${lines.join('\n')}\n`, json: { settings: rows } satisfies SettingsListJson, exitCode: 0 };
@@ -64,7 +61,9 @@ function buildConfigurationsResult(session: Session): CommandResult {
     for (const configuration of selected) {
         lines.push(`  ${configuration.name}`);
         for (const [name, checks] of Map.groupBy(configuration.checks, (check) => check.name)) {
-            const states = checks.map((check) => `${formatScopeLabel(check.scope)}: ${check.state}`);
+            const states = checks.map(
+                (check) => `${check.scope === '' ? ROOT_SCOPE_LABEL : check.scope}: ${check.state}`,
+            );
             lines.push(`    ${name}  ${states.join(', ')}`);
         }
     }

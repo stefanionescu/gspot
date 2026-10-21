@@ -37,9 +37,6 @@ export const FORWARDING_NODES = new Set([
     'TSDeclareFunction',
 ]);
 
-/** Two reads in one module count as reuse. */
-export const MIN_SHARED_READS = 2;
-
 export const EXPORT_REFERENCES = new Set(['ExportSpecifier', 'ExportDefaultDeclaration', 'TSExportAssignment']);
 
 export const TRANSPARENT_EXPRESSIONS = ['ConditionalExpression', 'LogicalExpression', ...TYPE_ASSERTION_NODES] as const;

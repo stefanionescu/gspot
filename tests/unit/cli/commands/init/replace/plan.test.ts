@@ -4,7 +4,6 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { SQL_CHECK } from '#tests/data/checks/sql.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
@@ -22,7 +21,10 @@ import {
 } from '#tests/data/commands/init.ts';
 
 async function assertRetainedFile(root: string, path: string, original: string, initialized: InitJson): Promise<void> {
-    expect(initialized.plan.retained).toContainEqual({ path, note: matchSubstring('Delete the section when ready') });
+    expect(initialized.plan.retained).toContainEqual({
+        path,
+        note: expect.stringContaining('Delete the section when ready') as string,
+    });
     expect(await readFile(join(root, path), 'utf8')).toBe(original);
     const attributes = await stat(join(root, path));
     expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
@@ -62,13 +64,19 @@ test('the init plan deletes the replaced tool files and lists the lint folder', 
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
     for (const path of Object.keys(REPLACED_TOOL_FILES).filter((path) => path !== '.markdownlint.jsonc'))
-        expect(plan.delete).toContainEqual({ path, note: matchSubstring('replaced by the generated') });
+        expect(plan.delete).toContainEqual({
+            path,
+            note: expect.stringContaining('replaced by the generated') as string,
+        });
     expect(plan.delete.map(({ path }) => path)).not.toContain('.markdownlint.jsonc');
     expect(plan.write).toContainEqual({
         path: '.markdownlint.jsonc',
         note: 'replaces your file; read the old one with git show HEAD:.markdownlint.jsonc',
     });
-    expect(plan.noLongerRuns).toContainEqual({ path: 'quality/', note: matchSubstring('lint scripts') });
+    expect(plan.noLongerRuns).toContainEqual({
+        path: 'quality/',
+        note: expect.stringContaining('lint scripts') as string,
+    });
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
     const initialized = await runGspot(sandbox.path, [
         ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown']),
@@ -157,7 +165,7 @@ exclude_rules = LT01
         const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
         expect(plan.retained).toContainEqual({
             path: 'setup.cfg',
-            note: matchSubstring('Delete the section when ready'),
+            note: expect.stringContaining('Delete the section when ready') as string,
         });
         expect(plan.delete.some((entry) => entry.path === 'setup.cfg')).toBe(false);
         expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
@@ -191,7 +199,7 @@ keep = true
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect((JSON.parse(preview.stdout) as InitJson).plan.retained).toContainEqual({
             path,
-            note: matchSubstring(table),
+            note: expect.stringContaining(table) as string,
         });
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
         const initialized = await runGspot(sandbox.path, [...commandArguments, '--json']);

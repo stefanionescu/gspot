@@ -3,13 +3,13 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
-import { checkFindings, planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
+import { checkFindings, findBuiltInCheck, planSandboxCheck } from '#tests/setup/check-input.ts';
 
 import {
     README,
@@ -57,9 +57,9 @@ test('missing-paths: wildcard examples are skipped; bold, italic and code paths 
         { paths: ['a.md'] },
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 2, rule: 'missing-path', message: matchSubstring('src/missing.ts') },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: matchSubstring('src/absent.ts') },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: matchSubstring('src/gone.ts') },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/missing.ts') as string },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/absent.ts') as string },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/gone.ts') as string },
     ]);
 });
 
@@ -74,8 +74,8 @@ test('missing-paths: gitignored paths and paths inside ignored folders count as 
         { paths: ['a.md'] },
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 2, rule: 'missing-path', message: matchSubstring('app/private.ts') },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: matchSubstring('src/gone.ts') },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('app/private.ts') as string },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/gone.ts') as string },
     ]);
 });
 
@@ -102,7 +102,9 @@ test('missing-paths: command check names count as present; unknown ones are repo
             rule,
             message,
         })),
-    ).toStrictEqual([{ file: 'a.md', line: 1, rule: 'missing-path', message: matchSubstring('tests/missing') }]);
+    ).toStrictEqual([
+        { file: 'a.md', line: 1, rule: 'missing-path', message: expect.stringContaining('tests/missing') as string },
+    ]);
 });
 
 test.each([...MISE_TASK_SOURCES])(
@@ -164,7 +166,9 @@ test('missing-paths: documented tasks are checked against their task tool and th
     });
     expect(found).toHaveLength(DOC_TASK_FINDINGS.length);
     for (const { command, ...place } of DOC_TASK_FINDINGS)
-        expect(found).toContainEqual(matchFields({ ...place, rule: 'missing-task', message: matchSubstring(command) }));
+        expect(found).toContainEqual(
+            matchFields({ ...place, rule: 'missing-task', message: expect.stringContaining(command) as string }),
+        );
 });
 
 test('missing-paths: a document in a child scope does not read unrelated or shadowed package scripts', async () => {

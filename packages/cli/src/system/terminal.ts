@@ -1,14 +1,9 @@
 import pc from 'picocolors';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { EXIT_ERROR, ROOT_SCOPE_LABEL, SIGNAL_EXIT_CODES, RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
+import { EXIT_ERROR, SIGNAL_EXIT_CODES, RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJson } from '#cli/types/terminal.ts';
 
 let options: OutputOptions = { json: false, color: false };
-
-// Both result and failure records use the same JSON serialization and stream.
-function printJson(record: unknown): void {
-    process.stdout.write(`${JSON.stringify(record, null, RESULT_JSON_INDENT)}\n`);
-}
 
 /**
  * Read the palette for the configured command output.
@@ -40,22 +35,13 @@ export function setOutputOptions(next: OutputOptions): void {
 }
 
 /**
- * Print a warning about the run to stderr.
- *
- * @param text the warning to print.
- */
-export function warn(text: string): void {
-    process.stderr.write(`${getColors().yellow('[warn]')} ${text}\n`);
-}
-
-/**
  * Print an error message to stderr, or a structured failure to stdout under --json.
  *
  * @param failure the message, or the structured error.
  */
 export function printError(failure: string | CommandFailureJson): void {
     if (typeof failure !== 'string' && options.json) {
-        printJson(failure);
+        process.stdout.write(`${JSON.stringify(failure, null, RESULT_JSON_INDENT)}\n`);
         return;
     }
     const text = typeof failure === 'string' ? failure : failure.message;
@@ -68,7 +54,7 @@ export function printError(failure: string | CommandFailureJson): void {
  * @param result the command output.
  */
 export function printResult(result: CommandResult): void {
-    if (options.json) printJson(result.json);
+    if (options.json) process.stdout.write(`${JSON.stringify(result.json, null, RESULT_JSON_INDENT)}\n`);
     else if (result.text !== '') print(result.text);
 }
 
@@ -80,26 +66,6 @@ export function printResult(result: CommandResult): void {
 export function print(text: string): void {
     if (options.json) return;
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
-}
-
-/**
- * Format the command notes in order, each with its line prefix.
- *
- * @param notes the messages of the command result.
- * @returns the note lines, or empty text without notes.
- */
-export function formatNotes(notes: string[]): string {
-    return notes.map((note) => `note     ${note}\n`).join('');
-}
-
-/**
- * Name the root scope, or return the path of a child scope, for command output.
- *
- * @param path the repository-relative scope.
- * @returns the root label or the child path.
- */
-export function formatScopeLabel(path: string): string {
-    return path === '' ? ROOT_SCOPE_LABEL : path;
 }
 
 /**
@@ -115,14 +81,14 @@ export async function runCancelableCommand<Json extends object>(
 ): Promise<CommandResult<Json | CanceledCommandJson>> {
     const controller = new AbortController();
     let canceledCode: number | undefined;
-    const cancellations = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => {
-        const onSignal = (): void => {
+    const cancellations = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => ({
+        signal,
+        onSignal: (): void => {
             canceledCode = code;
             controller.abort();
-        };
-        process.on(signal, onSignal);
-        return { signal, onSignal };
-    });
+        },
+    }));
+    for (const { signal, onSignal } of cancellations) process.on(signal, onSignal);
     let result: CommandResult<Json | CanceledCommandJson>;
     try {
         result = await run(controller.signal);

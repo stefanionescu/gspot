@@ -5,13 +5,13 @@ import { isRecord } from '#cli/system/tables.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
+import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
-import { readAsset, listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint/presets.ts';
 import { eslintPresetSchema } from '#cli/schemas/configurations/eslint-presets.ts';
 import type { EslintPreset, EslintPresets } from '#cli/types/generation/eslint.ts';
@@ -21,9 +21,9 @@ import {
     PRESET_BLOCK_KEYS,
     PACKAGE_COPY_FILES,
     PACKAGE_COPY_SAMPLE,
+    PACKAGE_COPY_INSTALL,
     PACKAGE_COPY_MODULES,
     PACKAGE_COPY_SOURCES,
-    PACKAGE_COPY_INSTALL,
     PACKAGE_COPY_DOCUMENT,
     PACKAGE_COPY_TESTS_FILE,
 } from '#cli/config/package-copies.ts';
@@ -240,7 +240,7 @@ async function writePackageCopies(): Promise<void> {
     const recipes = listAssets('configurations/')
         .filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`))
         .map((path) => {
-            const document: unknown = JSON.parse(readAsset(path));
+            const document: unknown = JSON.parse(readFileSync(buildAssetPath(path), 'utf8'));
             if (!isRecord(document)) throw new Error(`${path} must contain a record of preset exports.`);
             const presets: EslintPresets = Object.fromEntries(
                 Object.entries(document).map(([name, value]) => [name, eslintPresetSchema.parse(value)]),

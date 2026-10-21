@@ -36,13 +36,3 @@ export function matchFields<T>(shape: NoInfer<Partial<T>>): T {
 export function matchItems<T>(items: NoInfer<T[]>): T[] {
     return expect.arrayContaining(items) as T[];
 }
-
-/**
- * Text that must hold this part, typed as a string.
- *
- * @param part the text the compared string must hold.
- * @returns the matcher.
- */
-export function matchSubstring(part: string): string {
-    return expect.stringContaining(part) as string;
-}

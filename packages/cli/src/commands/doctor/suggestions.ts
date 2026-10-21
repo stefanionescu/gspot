@@ -2,24 +2,18 @@ import { quoteArgument } from '#cli/system/text.ts';
 import { type Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { formatScopeLabel } from '#cli/system/terminal.ts';
+import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { readCachedPrefix } from '#cli/system/files/reads.ts';
+import { detectConfigurations } from '#cli/repository/detect.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
 import { BANNER_BYTES } from '#cli/config/repository/inventory.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { type GenerationResult } from '#cli/types/generation/files.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
-import { hasDetectionRules, detectConfigurations } from '#cli/repository/detect.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { type ReplacedFile, type ExistingTools } from '#cli/types/repository/existing-tools.ts';
-
-import {
-    readLintJobs,
-    isEditedInPlace,
-    readExistingTools,
-    getToolFileSection,
-} from '#cli/repository/existing-tools.ts';
+import { readLintJobs, isEditedInPlace, readExistingTools } from '#cli/repository/existing-tools.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
     const { root, repository, configurations, settingsFile } = session;
@@ -62,13 +56,13 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
                     configuration === undefined ||
                     configuration.group === 'general' ||
                     found.has(name) ||
-                    !hasDetectionRules(configuration)
+                    !Object.values(configuration.detect).some((patterns) => Object.keys(patterns).length > 0)
                 )
                     return [];
                 return [
                     {
                         configuration: name,
-                        evidence: `no detection evidence in ${formatScopeLabel(path)}`,
+                        evidence: `no detection evidence in ${path === '' ? ROOT_SCOPE_LABEL : path}`,
                         command: `gspot remove ${name}${scopeArgument} (if you no longer need it)`,
                     },
                 ];
@@ -121,7 +115,7 @@ function buildFileRow(
             path: toolFile.path,
             note: `beside the generated ${toolFile.tool} tool file`,
             command: toolFile.shared
-                ? `move any ${getToolFileSection(toolFile)} setting you still need into gspot.toml, then delete the section`
+                ? `move any ${toolFile.table ?? toolFile.key ?? toolFile.tool} setting you still need into gspot.toml, then delete the section`
                 : 'move any setting you still need into gspot.toml, then delete the file',
         };
     if (configuration.group === 'general') return buildInactiveFileRow(session, toolFile, configuration);

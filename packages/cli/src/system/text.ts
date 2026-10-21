@@ -1,16 +1,6 @@
-import { createHash } from 'node:crypto';
 import { distance } from 'fastest-levenshtein';
 import type { TextPosition } from '#cli/types/text.ts';
-
-import {
-    TYPO_MIN,
-    LIST_LIMIT,
-    TYPO_FRACTION,
-    NOT_LINE_BREAK,
-    PLAIN_ARGUMENT,
-    DIGEST_ALGORITHM,
-    SIMILAR_NAME_LIMIT,
-} from '#cli/config/text.ts';
+import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, PLAIN_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/text.ts';
 
 /**
  * Skip a quoted span before looking for comment openers outside it.
@@ -77,29 +67,6 @@ export function formatSimilarNames(name: string, knownNames: string[]): string {
 }
 
 /**
- * Name an unknown check or configuration, and suggest close names.
- *
- * @param noun what the name stands for.
- * @param name the requested name.
- * @param known the declared names.
- * @returns the sentence, with the close names it suggests.
- */
-export function formatUnknownName(noun: 'check' | 'configuration', name: string, known: string[]): string {
-    return `There is no ${noun} called \`${name}\`.${formatSimilarNames(name, known)}`;
-}
-
-/**
- * Hash text or bytes with SHA-256, in lowercase hex.
- *
- * @param content the text or bytes.
- *
- * @returns the digest.
- */
-export function hashContent(content: string | Uint8Array): string {
-    return createHash(DIGEST_ALGORITHM).update(content).digest('hex');
-}
-
-/**
  * Quote one argument for a POSIX shell command shown to the reader.
  *
  * @param value the command token to display without shell expansion.
@@ -123,17 +90,6 @@ export function computePosition(text: string, offset: number): TextPosition {
     const before = text.slice(0, offset);
     const line = before.split('\n').length;
     return { line, column: offset - before.lastIndexOf('\n') };
-}
-
-/**
- * Replace text with spaces, and keep code-unit positions and line breaks.
- *
- * @param text the source.
- *
- * @returns spaces at the original text positions.
- */
-export function convertToSpaces(text: string): string {
-    return text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
 }
 
 /**

@@ -2,14 +2,13 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 import {
-    READER_PROJECT,
     READER_EXAMPLE,
+    READER_PROJECT,
     READER_FINDINGS,
     NESTED_ENV_FILES,
     ENV_ACCESSOR_FILES,
@@ -28,7 +27,7 @@ test('a nested scope uses the default example environment file names', async () 
         }),
     });
     expect(await checkFindings(sandbox.path, 'secrets/env-examples', { scope: 'app' })).toMatchObject([
-        { file: 'app/source.ts', rule: 'missing-key', message: matchSubstring('MISSING') },
+        { file: 'app/source.ts', rule: 'missing-key', message: expect.stringContaining('MISSING') as string },
     ]);
     await createFileTree(sandbox.path, { 'app/.env.example': 'KNOWN=example\nMISSING=example\n' });
     expect(await checkFindings(sandbox.path, 'secrets/env-examples', { scope: 'app' })).toStrictEqual([]);
@@ -109,7 +108,7 @@ test('a scope with env reads and no example env file is skipped with a note', as
             scope: 'app',
             status: 'skipped',
             findings: [],
-            note: matchSubstring('secrets.env_examples'),
+            note: expect.stringContaining('secrets.env_examples') as string,
         },
     ]);
 });

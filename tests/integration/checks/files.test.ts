@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGit } from '#tests/setup/git.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
@@ -77,7 +77,7 @@ url = "${server.url.toString()}schema.json"
             findings: [
                 matchFields({
                     file: 'settings/café.json',
-                    message: matchSubstring('must be integer'),
+                    message: expect.stringContaining('must be integer') as string,
                 }),
             ],
         },

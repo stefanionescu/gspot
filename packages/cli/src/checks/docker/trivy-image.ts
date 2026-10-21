@@ -6,9 +6,11 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
+import { getToolFile } from '#cli/runs/command/placeholders.ts';
 import type { ImageFinding } from '#cli/types/checks/docker.ts';
+import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
-import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
 import { imageReportSchema } from '#cli/schemas/checks/docker/trivy-image.ts';
 import { TRIVY_TOOL_FILE, TRIVY_IMAGE_COMMAND, TRIVY_FINDINGS_EXIT_CODE } from '#cli/config/checks/docker.ts';
 
@@ -17,7 +19,18 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
     const result = await runCheckTool(
         session,
         planned,
-        [...TRIVY_IMAGE_COMMAND, join(session.root, selectToolFilePath(session, planned, TRIVY_TOOL_FILE)), image],
+        [
+            ...TRIVY_IMAGE_COMMAND,
+            join(
+                session.root,
+                buildScopeTarget(
+                    planned.selection.scope.path,
+                    getToolFile(session, planned, TRIVY_TOOL_FILE),
+                    getToolFiles(session).targets,
+                ),
+            ),
+            image,
+        ],
         { cwd: session.root },
     );
     if (result.code !== 0 && result.code !== TRIVY_FINDINGS_EXIT_CODE) {

@@ -1,19 +1,20 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { parseTomlText } from '#cli/settings/file.ts';
+import { parseSettings } from '#cli/settings/read.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { PREFACE_BODY } from '#cli/config/commands/init.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { DEFAULT_CASES } from '#tests/data/settings/defaults.ts';
+import { buildRootScopeSettings } from '#tests/setup/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildInitSettings } from '#cli/commands/init/settings-text.ts';
 import { ARRAY_COMMENT_CASES } from '#tests/data/settings/comments/arrays.ts';
 import { FIELD_COMMENT_CASES } from '#tests/data/settings/comments/fields.ts';
 import { IGNORE_COMMENT_CASES } from '#tests/data/settings/comments/ignores.ts';
 import { LAYOUT_CASES, INLINE_FIELD_COMMENT } from '#tests/data/settings/layout.ts';
-import { parseSettingsText, buildRootScopeSettings } from '#tests/setup/settings.ts';
 import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 
 test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CASES, ...DEFAULT_CASES, ...LAYOUT_CASES])(
@@ -51,9 +52,9 @@ describe('drop-defaults', () => {
         'configurations = ["supabase"]\n[supabase]\nfunctions_folder = "supabase/functions"\n[[scope]]\npath = "apps/api"\n',
         'configurations = ["supabase"]\n[[scope]]\npath = "app"\nsupabase.functions_folder = "supabase/functions"\n[[scope]]\npath = "app/child"\n',
     ])("dropping defaults keeps every scope's paths the same (%j)", (source) => {
-        const before = parseSettingsText(source);
+        const before = parseSettings(source, undefined);
         const written = buildSettingsText(source, parseTomlText(source, 'gspot.toml'));
-        const after = parseSettingsText(written);
+        const after = parseSettings(written, undefined);
         for (const path of ['', ...Object.keys(before.scopes)]) {
             expect(getTable(buildRootScopeSettings(after, path), 'supabase')).toStrictEqual(
                 getTable(buildRootScopeSettings(before, path), 'supabase'),

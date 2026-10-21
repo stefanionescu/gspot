@@ -9,10 +9,10 @@ import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
+import { getToolFile } from '#cli/runs/command/placeholders.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
-import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/checks/swift.ts';
 import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
@@ -26,9 +26,9 @@ import {
     COMPILER_LOG_FLAG,
     PERIPHERY_COMMAND,
     MACOS_PRIVATE_PATH,
+    BUILD_SOURCE_FOLDER,
     PERIPHERY_TOOL_FILE,
     SWIFTLINT_TOOL_FILE,
-    BUILD_SOURCE_FOLDER,
     SWIFTLINT_CONFIG_FILE,
     SWIFTLINT_CONFIG_FLAG,
     MACOS_PRIVATE_REPLACEMENT,
@@ -43,7 +43,7 @@ function parseOutputFindings(
     output: string,
     { levels, defaultRule }: { levels: ReadonlySet<string>; defaultRule: string },
 ): Finding[] {
-    const root = convertToPosixPath(stripMacosPrivatePrefix(session.root));
+    const root = convertToPosixPath(session.root.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT));
     return [...new Set(output.split('\n'))]
         .flatMap((line) => {
             const groups = MESSAGE_LINE.exec(line)?.groups;
@@ -56,7 +56,7 @@ function parseOutputFindings(
             const suffix = RULE_SUFFIX.exec(text)?.groups;
             const { rule = defaultRule, text: message = text } = suffix === undefined ? {} : suffix;
             const file = groups['file'] ?? '';
-            const normalized = convertToPosixPath(stripMacosPrivatePrefix(file));
+            const normalized = convertToPosixPath(file.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT));
             return buildFinding(
                 planned,
                 {
@@ -76,7 +76,12 @@ function expandResponseFiles(line: string, folder: string, files: Files): string
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
         const content = files.read(
-            convertToPosixPath(relative(stripMacosPrivatePrefix(folder), stripMacosPrivatePrefix(path))),
+            convertToPosixPath(
+                relative(
+                    folder.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT),
+                    path.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT),
+                ),
+            ),
         );
         return content === undefined ? token : content.bytes.toString('utf8').trim().replaceAll('\n', ' ');
     });
@@ -99,17 +104,14 @@ async function runSwiftBuild(
         // Match SwiftLint paths and expose response-file sources in the compiler log.
         const output = `${result.stdout}\n${result.stderr}`
             .split('\n')
-            .map((line) => stripMacosPrivatePrefix(expandResponseFiles(line, plan.folder, files)))
+            .map((line) =>
+                expandResponseFiles(line, plan.folder, files).replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT),
+            )
             .join('\n');
         const log = convertToPosixPath(relative(plan.folder, plan.log));
         files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE }, files.read(log));
         return { output, code: result.code, source };
     });
-}
-
-// Normalize both macOS cache paths and compiler-log arguments with the same spelling.
-function stripMacosPrivatePrefix(path: string): string {
-    return path.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT);
 }
 
 /**
@@ -122,7 +124,10 @@ function stripMacosPrivatePrefix(path: string): string {
 export async function checkSwiftBuild(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const plan = buildPlan(session, planned);
     const { output, code, source } = await runSwiftBuild(session, planned, plan, 'compile');
-    const originalPaths = output.replaceAll(stripMacosPrivatePrefix(source), session.root);
+    const originalPaths = output.replaceAll(
+        source.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT),
+        session.root,
+    );
     const found = parseOutputFindings(session, planned, originalPaths, {
         levels: BUILD_LEVELS,
         defaultRule: 'compiler',
@@ -141,7 +146,14 @@ export async function checkSwiftSwiftlintAnalyze(session: Session, planned: Plan
     const plan = buildPlan(session, planned, { purpose: 'analyze' });
     const build = await runSwiftBuild(session, planned, plan, 'analyze');
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const toolFile = join(session.root, selectToolFilePath(session, planned, SWIFTLINT_TOOL_FILE));
+    const toolFile = join(
+        session.root,
+        buildScopeTarget(
+            planned.selection.scope.path,
+            getToolFile(session, planned, SWIFTLINT_TOOL_FILE),
+            getToolFiles(session).targets,
+        ),
+    );
     const commandArguments = [
         ...SWIFTLINT_ANALYZE_COMMAND,
         SWIFTLINT_CONFIG_FLAG,
@@ -167,7 +179,14 @@ export async function checkSwiftSwiftlintAnalyze(session: Session, planned: Plan
  */
 export async function checkSwiftPeriphery(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const folder = getScopeBuildFolder(session.installedRoot, planned.selection.scope.path, 'periphery');
-    const toolFile = join(session.root, selectToolFilePath(session, planned, PERIPHERY_TOOL_FILE));
+    const toolFile = join(
+        session.root,
+        buildScopeTarget(
+            planned.selection.scope.path,
+            getToolFile(session, planned, PERIPHERY_TOOL_FILE),
+            getToolFiles(session).targets,
+        ),
+    );
     const commandArguments = [...PERIPHERY_COMMAND, toolFile];
     const prepared = prepareBuild(session.root, planned.files, folder);
     using files = prepared.files;

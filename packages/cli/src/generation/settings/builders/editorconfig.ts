@@ -1,9 +1,11 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { AGENTS_FILE } from '#cli/config/generation/rules.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import { listScopeFormats } from '#cli/generation/settings/builders/prettier.ts';
-import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
+import { buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
 
 import {
     UNREPRESENTABLE_SELECTOR,
@@ -23,7 +25,7 @@ function buildSectionPath(pattern: string, scope: string): string {
             'settings',
             `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scope}. Use a root-relative selector within that scope.`,
         );
-    return `${escapeGlob(scope)}/${pattern}`;
+    return `${scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH)}/${pattern}`;
 }
 
 /**
@@ -37,7 +39,11 @@ export function buildEditorconfigFile(planned: PlannedToolFile): string {
     const settings = planned.session.settingsFile.settings;
     const paths = [
         ...planned.session.repository.files
-            .filter((file) => !isInGspotFolder(file.path) && (file.kind !== 'generated' || file.kindOrigin !== 'gspot'))
+            .filter(
+                (file) =>
+                    !file.path.startsWith(`${DOT_GSPOT}/`) &&
+                    (file.kind !== 'generated' || file.kindOrigin !== 'gspot'),
+            )
             .map((file) => file.path),
         ...(settings.rules.enabled ? [AGENTS_FILE] : []),
     ];

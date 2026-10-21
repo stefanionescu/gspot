@@ -1,10 +1,10 @@
 // Reports the system and its tool builds, and fakes the system for tests.
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { getShippedTool } from '#tests/setup/builders.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import { findMissingBuild } from '#cli/configurations/declared-tools.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { getTool, findMissingBuild } from '#cli/configurations/declared-tools.ts';
 
 /** Whether the tests run on Windows. */
 export const isWindows = process.platform === 'win32';
@@ -24,7 +24,7 @@ export const isMacos = process.platform === 'darwin';
  */
 export function hasToolBuild(name: string): boolean {
     const operatingSystem = getOperatingSystem();
-    const pin = getShippedTool(name);
+    const pin = getTool(readConfigurations().values(), name);
     return findMissingBuild(pin, { platform: operatingSystem, arch: process.arch }) === undefined;
 }
 
@@ -44,6 +44,7 @@ export function simulateOperatingSystem(name: NodeJS.Platform): Disposable {
         },
     };
 }
+
 /** Check whether this system treats differently cased path names as the same file. */
 export function isCaseFolding(): boolean {
     const root = mkdtempSync(join(tmpdir(), 'gspot-case-'));

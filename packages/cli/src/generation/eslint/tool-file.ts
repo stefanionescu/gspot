@@ -3,18 +3,20 @@ import { GspotError } from '#cli/system/errors.ts';
 import { getPreset } from '#cli/generation/eslint/presets.ts';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
 import { buildRuntimes } from '#cli/generation/eslint/runtimes.ts';
+import type { BlockWriter } from '#cli/types/generation/eslint.ts';
 import { type PlannedToolFile } from '#cli/types/generation/files.ts';
+import { ESLINT_INDENT } from '#cli/config/generation/eslint/print.ts';
 import { buildPlannedEslintFile } from '#cli/generation/eslint/plan.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { buildBoundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
-import { listIgnoredGlobs } from '#cli/generation/settings/ignore-files.ts';
 import { ESLINT_CHECK } from '#cli/config/generation/eslint/settings-blocks.ts';
 import { buildSelectedBlocks } from '#cli/generation/eslint/settings-blocks.ts';
+import { serializeBlock, serializeImports } from '#cli/generation/eslint/print.ts';
 import { listConfigurationBlocks } from '#cli/generation/eslint/configurations/build.ts';
-import { serializeBlocks, listUnappliedRules } from '#cli/generation/eslint/block-writer.ts';
+import { writeEslintBlock, listUnappliedRules } from '#cli/generation/eslint/block-writer.ts';
 import { listLocalPlugins, buildLocalPluginBlocks } from '#cli/generation/eslint/local-plugins.ts';
-import { serializeBlock, serializeImports, indentEslintBlock } from '#cli/generation/eslint/print.ts';
 import { selectPlugins, buildClosingBlocks, buildOpeningBlocks } from '#cli/generation/eslint/base.ts';
+import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/settings/ignore-files.ts';
 
 import {
     ESLINT_BASE_LABEL,
@@ -35,7 +37,10 @@ export function buildEslintFile(planned: PlannedToolFile): string {
     const { blockInput } = eslintContext;
     const runtimes = buildRuntimes(session.scopes);
     const boundaryBlocks = buildBoundaryBlocks(eslintContext);
-    const ignoredGlobs = listIgnoredGlobs(session, planned.selection.view, ESLINT_CHECK);
+    const ignoredGlobs = convertToGlobs([
+        ...buildIgnoreSections(session),
+        ...listCheckIgnoreSections(planned.selection.view, ESLINT_CHECK),
+    ]);
     const { configurationBlocks, configurationImports, configurationSelectors } = listConfigurationBlocks(
         session,
         eslintContext,
@@ -54,8 +59,11 @@ export function buildEslintFile(planned: PlannedToolFile): string {
         `const runtimeDeclarations = ${JSON.stringify(runtimes, null, JSON_INDENT)};\n`,
         'export default [',
         '    // Shared ignore sections.',
-        indentEslintBlock(serializeBlock({ ignores: ignoredGlobs })) + ',',
-        serializeBlocks(blockInput, [
+        serializeBlock({ ignores: ignoredGlobs })
+            .split('\n')
+            .map((line) => ESLINT_INDENT + line)
+            .join('\n') + ',',
+        [
             ...buildOpeningBlocks(eslintContext, plugins, boundaryBlocks, ignoredGlobs).map((block) => ({
                 ...block,
                 label: ESLINT_BASE_LABEL,
@@ -69,22 +77,28 @@ export function buildEslintFile(planned: PlannedToolFile): string {
                 ...buildSelectedBlocks(eslintContext),
                 ...buildLocalPluginBlocks(session.scopes, eslintContext.eslintFiles.code),
             ].map((data) => ({ data, label: ESLINT_BASE_LABEL })),
-        ]) + ',',
+        ]
+            .map((block) => writeEslintBlock(blockInput, block))
+            .join(',\n') + ',',
         '];',
         '',
     ];
-    const unapplied = listUnappliedRules(blockInput);
-    if (unapplied.length > 0) {
-        const level = session.settingsFile.settings.level;
-        throw new GspotError(
-            'settings',
-            unapplied
-                .map(
-                    (rule) =>
-                        `${rule} does not run at level ${level}; gspot sets options only for rules it runs. Use tools.eslint.plugins for your own rules.`,
-                )
-                .join('\n'),
-        );
-    }
+    assertRulesRun(session, blockInput);
     return output.join('\n');
+}
+
+// gspot writes rule options only for the rules that run at the level of the repository.
+function assertRulesRun(session: PlannedToolFile['session'], writer: BlockWriter): void {
+    const unapplied = listUnappliedRules(writer);
+    if (unapplied.length === 0) return;
+    const level = session.settingsFile.settings.level;
+    throw new GspotError(
+        'settings',
+        unapplied
+            .map(
+                (rule) =>
+                    `${rule} does not run at level ${level}; gspot sets options only for rules it runs. Use tools.eslint.plugins for your own rules.`,
+            )
+            .join('\n'),
+    );
 }

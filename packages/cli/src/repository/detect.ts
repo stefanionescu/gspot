@@ -1,8 +1,8 @@
 // Proposes configurations from repository files and dependencies; it never selects them.
 import { findText } from '#cli/system/files/reads.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependencies.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
@@ -18,7 +18,7 @@ import {
 
 function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scope: string): ScopeContents {
     const candidates = files.filter(
-        (file) => file.kind === 'source' && !isInGspotFolder(file.path) && isInScope(file.path, scope),
+        (file) => file.kind === 'source' && !file.path.startsWith(`${DOT_GSPOT}/`) && isInScope(file.path, scope),
     );
     const extensionCounts = new Map<string, number>();
     const shebangs = new Set(
@@ -205,14 +205,4 @@ export function detectConditions(
                 EVIDENCE_FINDERS.some((source) => source(condition, contents) !== undefined),
         ),
     );
-}
-
-/**
- * Check whether a configuration declares any source detection patterns.
- *
- * @param configuration the configuration to inspect.
- * @returns whether at least one detection dimension has patterns.
- */
-export function hasDetectionRules(configuration: Configuration): boolean {
-    return Object.values(configuration.detect).some((patterns) => Object.keys(patterns).length > 0);
 }

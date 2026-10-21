@@ -1,24 +1,26 @@
 import { basename } from 'node:path/posix';
 import { listAssets } from '#cli/system/assets.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { buildLevelRules } from '#cli/generation/eslint/base.ts';
-import { listScriptPaths } from '#cli/generation/eslint/runtimes.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { NODE_SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/eslint/files.ts';
 import { BASE_SELECTORS } from '#cli/config/generation/eslint/rules.ts';
 import type { ToolFile, Configuration } from '#cli/types/configurations.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint/presets.ts';
-import { buildFilePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
-import type { EslintPresets, PlannedEslintFile } from '#cli/types/generation/eslint.ts';
+import { ESLINT_CHECK } from '#cli/config/generation/eslint/settings-blocks.ts';
+import { NODE_SHEBANG_TAG, MISE_SCRIPT_PATH } from '#cli/config/repository/inventory.ts';
+import { splitGlobs, buildFilePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
+import { type EslintPresets, type EslintRuleBlock, type PlannedEslintFile } from '#cli/types/generation/eslint.ts';
 
 import {
     buildRuleOptions,
-    buildIgnoreBlocks,
     buildRulesOffBlocks,
     buildTrivialRuleBlocks,
     buildEnvironmentRuleBlocks,
@@ -59,6 +61,28 @@ function readEslintPresets(session: PlannedToolFile['session']): Map<string, Esl
     );
 }
 
+// The blocks that gspot.toml writes: runtime environments, trivial-code limits, rules turned off, and ignored rules.
+function buildSettingsBlocks(context: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
+    const { session } = context;
+    const ignored = session.settingsFile.settings.ignore.flatMap((entry): EslintRuleBlock[] =>
+        entry.rule === undefined || entry.check !== ESLINT_CHECK
+            ? []
+            : [
+                  {
+                      scope: '',
+                      ...splitGlobs(entry.paths === undefined || entry.paths.length === 0 ? ['**/*'] : entry.paths),
+                      rules: { [entry.rule]: 'off' },
+                  },
+              ],
+    );
+    return [
+        ...buildEnvironmentRuleBlocks(context),
+        ...buildTrivialRuleBlocks(context),
+        ...buildRulesOffBlocks(session.scopes),
+        ...ignored,
+    ];
+}
+
 /**
  * Build the ESLint context of one scope.
  *
@@ -87,7 +111,13 @@ export function buildPlannedEslintFile(planned: PlannedToolFile): PlannedEslintF
         scopes: scopes.map((selection) => ({
             scope: selection.scope.path,
             tests: selection.view.test_files,
-            scripts: listScriptPaths(selection),
+            scripts: [
+                ...(selection.view.values.javascript?.script_files ?? []),
+                joinScope(
+                    selection.scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
+                    MISE_SCRIPT_PATH,
+                ),
+            ],
         })),
     });
     return {
@@ -99,12 +129,7 @@ export function buildPlannedEslintFile(planned: PlannedToolFile): PlannedEslintF
             .map((file) => file.path),
         ruleOptions: options,
         levelRules: buildLevelRules(view, level === 'all' ? BASE_SELECTORS : []),
-        settingsBlocks: [
-            ...buildEnvironmentRuleBlocks(context),
-            ...buildTrivialRuleBlocks(context),
-            ...buildRulesOffBlocks(scopes),
-            ...buildIgnoreBlocks(repositorySettings),
-        ],
+        settingsBlocks: buildSettingsBlocks(context),
         allLevelRules: allLevelRules,
         blockInput: {
             applied: new Set(),

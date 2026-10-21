@@ -95,7 +95,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
  * @param options the parsed compiler settings.
  * @returns a compiler host that reads through the cache.
  */
-export function buildCompilerHost(
+function buildCompilerHost(
     repositoryRoot: string,
     scope: string,
     reads: ReadCache,

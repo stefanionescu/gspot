@@ -6,10 +6,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { EXPLAIN_SETTINGS, CHECK_TOOL_MINIMUMS, CONFIGURATION_DETECTION_LINES } from '#tests/data/commands/explain.ts';
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
@@ -115,7 +115,10 @@ test.each([
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: matchSubstring(message) });
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining(message) as string,
+    });
 });
 test.each([
     ['bash', 'configuration'],

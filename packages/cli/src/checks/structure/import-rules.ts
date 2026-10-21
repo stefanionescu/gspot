@@ -7,22 +7,24 @@ import { parseSource } from '#cli/parsers/grammars.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { getImportedModule } from '#cli/repository/swift-tags.ts';
-import { getNodePlace, buildFinding } from '#cli/runs/finding.ts';
+import { buildFinding, getNodePlace } from '#cli/runs/finding.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 import { listSwiftModules } from '#cli/checks/structure/swift-modules.ts';
-import { escapeGlob, buildPathMatcher } from '#cli/repository/matchers.ts';
 import { listPythonImports } from '#cli/checks/structure/python-imports.ts';
 import { IMPORT_RULE_CATEGORY } from '#cli/config/settings/import-rules.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { SWIFT_CONFIGURATION, PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
-import type { RuleLookup, SwiftModule, PythonSearch, ImportOwners } from '#cli/types/checks/structure.ts';
+import type { RuleLookup, SwiftModule, ImportOwners, PythonSearch } from '#cli/types/checks/structure.ts';
 
 import {
     SWIFT_EXTENSION,
-    NODE_SHEBANG_TAG,
     MISE_SCRIPT_PATH,
+    NODE_SHEBANG_TAG,
     SWIFT_IMPORT_NODE,
 } from '#cli/config/repository/inventory.ts';
 import {
@@ -52,7 +54,7 @@ function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
         ...view.test_files,
         ...CONFIG_FILE_PATTERNS,
         ...(view.values.javascript?.script_files ?? []),
-        joinScope(escapeGlob(scope.path), MISE_SCRIPT_PATH),
+        joinScope(scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), MISE_SCRIPT_PATH),
     ]);
     return (file) => matches(file.path) || file.tags.includes(NODE_SHEBANG_TAG);
 }

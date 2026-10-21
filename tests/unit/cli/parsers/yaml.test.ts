@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
 
 test('YAML files resolve merge keys before returning the document', () => {
@@ -16,7 +16,7 @@ test('YAML syntax errors name the file and keep the parser failure', () => {
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'filesystem',
-            message: matchSubstring('apps/api/compose.yaml is not valid YAML:'),
+            message: expect.stringContaining('apps/api/compose.yaml is not valid YAML:') as string,
             cause: expect.any(Error),
         }),
     );
@@ -24,7 +24,10 @@ test('YAML syntax errors name the file and keep the parser failure', () => {
 
 test('YAML schema failures name the source file and the field', () => {
     expect(() => parseYamlFile('package.yaml', 'name: 42', packageJsonSchema)).toThrow(
-        matchFields<GspotError>({ code: 'filesystem', message: matchSubstring('package.yaml: name:') }),
+        matchFields<GspotError>({
+            code: 'filesystem',
+            message: expect.stringContaining('package.yaml: name:') as string,
+        }),
     );
     expect(parseYamlFile('package.yaml', 'name: example', packageJsonSchema)).toStrictEqual({ name: 'example' });
 });

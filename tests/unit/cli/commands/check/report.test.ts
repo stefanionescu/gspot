@@ -8,8 +8,8 @@ import { type RunReport } from '#cli/types/runs/run.ts';
 import { setOutputOptions } from '#cli/system/terminal.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { PROGRESS_CLEAR, FINDINGS_SHOWN } from '#cli/config/commands/check.ts';
-import { clearProgress, printProgress, formatRunReport } from '#cli/commands/check/report.ts';
+import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
+import { FINDINGS_SHOWN, PROGRESS_CLEAR } from '#cli/config/commands/check.ts';
 
 import {
     VERBOSITY_FILES,
@@ -197,7 +197,7 @@ test('terminal progress rewrites one status line and log output stays empty', ()
         };
         for (let index = 0; index < 5; index++)
             printProgress({ completed: index + 1, total: 5, comparison: undefined });
-        clearProgress();
+        if (process.stderr.isTTY) process.stderr.write(PROGRESS_CLEAR);
     }
     expect(terminal).toStrictEqual([
         ...Array.from(

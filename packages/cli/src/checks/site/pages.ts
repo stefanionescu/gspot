@@ -13,10 +13,12 @@ import { parseOutput } from '#cli/runs/output/formats.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { getToolFile } from '#cli/runs/command/placeholders.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
+import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
 import { purgecssReportSchema } from '#cli/schemas/checks/site/pages.ts';
 import { listBuiltFiles, getSuccessfulBuild, buildRepositoryPath } from '#cli/checks/site/build.ts';
 
@@ -25,14 +27,14 @@ import {
     PURGECSS,
     INDEX_PAGE,
     SITEMAP_FILE,
-    HTML_VALIDATE,
     CSS_EXTENSION,
+    HTML_VALIDATE,
     HTML_EXTENSION,
-    LYCHEE_ARGUMENTS,
     HTML_REPORT_FILE,
+    LYCHEE_ARGUMENTS,
     PURGECSS_CONTENT,
-    SITEMAP_LOCATION,
     PURGECSS_PROCESS,
+    SITEMAP_LOCATION,
     SITEMAP_EXTENSION,
     HTML_VALIDATE_CONFIG_FLAG,
     HTML_VALIDATE_FORMATTER_FLAG,
@@ -115,7 +117,14 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
         .filter((path) => path.endsWith(HTML_EXTENSION))
         .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
-    const toolFile = join(session.root, selectToolFilePath(session, planned, HTML_VALIDATE));
+    const toolFile = join(
+        session.root,
+        buildScopeTarget(
+            planned.selection.scope.path,
+            getToolFile(session, planned, HTML_VALIDATE),
+            getToolFiles(session).targets,
+        ),
+    );
     using reports = createTemporaryFolder();
     const command = [
         HTML_VALIDATE,
@@ -155,7 +164,14 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
     const build = await getSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
-    const toolFile = join(session.root, selectToolFilePath(session, planned, PURGECSS));
+    const toolFile = join(
+        session.root,
+        buildScopeTarget(
+            planned.selection.scope.path,
+            getToolFile(session, planned, PURGECSS),
+            getToolFiles(session).targets,
+        ),
+    );
     const result = await runCheckTool(
         session,
         planned,

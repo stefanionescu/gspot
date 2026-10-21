@@ -12,16 +12,10 @@ import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import type { BlockStyle } from '#cli/types/parsers/managed-blocks.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import type { Writer, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-paths.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/managed-blocks.ts';
-
-// Markdown comments keep block markers out of the displayed document.
-function selectBlockStyle(path: string): BlockStyle {
-    return path.endsWith('.md') ? 'markdown' : 'hash';
-}
 
 /**
  * Remove only the marked block and its separating blank line.
@@ -32,7 +26,7 @@ function selectBlockStyle(path: string): BlockStyle {
  */
 function removeBlock(path: string, current: FileContents): FileContents | undefined {
     const text = decodeUtf8Text(path, current.bytes);
-    const span = findBlockSpan(text, { path, style: selectBlockStyle(path) });
+    const span = findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' });
     if (span === undefined) return current;
     const before = text.slice(0, span.start).replace(/(\r?\n)\r?\n$/u, '$1');
     const after = text.slice(span.end);
@@ -50,7 +44,7 @@ function removeBlock(path: string, current: FileContents): FileContents | undefi
  */
 function isOwned(path: string, disk: Files): boolean {
     if (!isInside(path)) return false;
-    if (isInGspotFolder(path)) return true;
+    if (path.startsWith(`${DOT_GSPOT}/`)) return true;
     const file = disk.readKeepingLinks(path);
     if (file !== undefined && file.isLink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;
     const attributesFile = disk.read(GITATTRIBUTES_FILE);
@@ -94,7 +88,10 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
         if (isOwned(path, disk)) return true;
         if (!blockPaths.has(path)) return false;
         const text = disk.read(path)?.bytes.toString('utf8');
-        return text !== undefined && findBlockSpan(text, { path, style: selectBlockStyle(path) }) !== undefined;
+        return (
+            text !== undefined &&
+            findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' }) !== undefined
+        );
     });
 }
 

@@ -1,5 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { listIgnores } from '#cli/settings/scope-view.ts';
 import { LEADING_SLASH } from '#cli/config/system/paths.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -8,17 +10,15 @@ import type { ScopeView } from '#cli/types/settings/inheritance.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
 import { listOwnedToolFiles } from '#cli/generation/settings/needed.ts';
 import { listPointerPaths } from '#cli/generation/settings/pointers.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
-import { listIgnores, isFileIgnore } from '#cli/settings/scope-view.ts';
 import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import type { IgnoreSection, PlannedToolFile } from '#cli/types/generation/files.ts';
 import { PRETTIERIGNORE_PURPOSE } from '#cli/config/generation/settings/builders/prettier.ts';
 
 import {
     BUILD_OUTPUT_FOLDERS,
+    BUILD_OUTPUT_PATTERNS,
     GSPOT_FOLDER_PATTERNS,
     IGNORE_SECTION_TITLES,
-    BUILD_OUTPUT_PATTERNS,
     LOCAL_ENVIRONMENT_PATTERNS,
 } from '#cli/config/generation/settings/ignore-files.ts';
 
@@ -26,7 +26,7 @@ import {
 // managed block names .gspot/ paths, which the section of generated files already holds.
 function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
     return listGitignorePatterns(session.reads, tracked).filter((pattern) => {
-        if (isInGspotFolder(pattern.replace(LEADING_SLASH, ''))) return false;
+        if (pattern.replace(LEADING_SLASH, '').startsWith(`${DOT_GSPOT}/`)) return false;
         const matches = buildPathMatcher([convertToGlob(pattern)]);
         return !tracked.some((path) => matches(path));
     });
@@ -37,7 +37,7 @@ function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
 function collectToolExclusions(session: Session): string[] {
     const paths = listOwnedToolFiles(session).flatMap(({ toolFile, owner }) => {
         const whole =
-            toolFile.source === undefined || isInGspotFolder(toolFile.target)
+            toolFile.source === undefined || toolFile.target.startsWith(`${DOT_GSPOT}/`)
                 ? []
                 : [toolFile.per_scope ? joinScope(owner.selection.scope.path, toolFile.target) : toolFile.target];
         return [...whole, ...listPointerPaths(owner, toolFile)];
@@ -94,7 +94,9 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
             key: 'lockfiles',
             title: IGNORE_SECTION_TITLES.lockfiles,
             patterns: LOCKFILES.filter((lockfile) =>
-                repository.files.some(({ path }) => !isInGspotFolder(path) && basename(path) === lockfile.file),
+                repository.files.some(
+                    ({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && basename(path) === lockfile.file,
+                ),
             ).map(({ file }) => file),
         },
         { key: 'environment', title: IGNORE_SECTION_TITLES.environment, patterns: [...LOCAL_ENVIRONMENT_PATTERNS] },
@@ -113,7 +115,7 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
  */
 export function listCheckIgnoreSections(view: ScopeView, check: string): IgnoreSection[] {
     return listIgnores(view, check)
-        .filter((entry) => isFileIgnore(entry))
+        .filter((entry) => entry.rule === undefined && entry.names === undefined)
         .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths }));
 }
 
@@ -198,18 +200,6 @@ export function convertToGlobs(sections: IgnoreSection[]): string[] {
 }
 
 /**
- * List the globs that a tool leaves out: the shared ignore sections, then the path ignores of one check.
- *
- * @param session the repository to read.
- * @param view the settings of the scope.
- * @param check the ID whose path ignores to add.
- * @returns the globs, each once.
- */
-export function listIgnoredGlobs(session: Session, view: ScopeView, check: string): string[] {
-    return convertToGlobs([...buildIgnoreSections(session), ...listCheckIgnoreSections(view, check)]);
-}
-
-/**
  * List the shared and check-specific globs that a Python tool leaves out.
  *
  * @param planned the tool file and its scope.
@@ -226,7 +216,7 @@ export function listPythonIgnoredGlobs(planned: PlannedToolFile, check: string):
     return [
         ...ignoredGlobs,
         ...listIgnores(planned.selection.view, check)
-            .filter((entry) => isFileIgnore(entry))
+            .filter((entry) => entry.rule === undefined && entry.names === undefined)
             .flatMap((entry) => entry.paths),
     ].map((path) => `${base}/${path}`);
 }

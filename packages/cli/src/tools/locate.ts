@@ -10,7 +10,6 @@ import type { Files } from '#cli/types/system/files.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { listMisePins } from '#cli/configurations/declared-tools.ts';
 import type { ExecutableSearch } from '#cli/types/tools/inspection.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/repository/tracked.ts';
@@ -40,7 +39,7 @@ function listSearchFolders(root: string, options: ExecutableSearch): string[] {
 // Check whether a candidate exists. A managed path must resolve inside the root; read other candidates from disk.
 function isExecutablePresent(files: Files, root: string, path: string): boolean {
     const local = convertToPosixPath(relative(root, path));
-    if (!isInGspotFolder(local)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
+    if (!local.startsWith(`${DOT_GSPOT}/`)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
         files.readRealPath(local);
         return true;

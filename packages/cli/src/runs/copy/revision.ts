@@ -4,25 +4,24 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { writeCopyFiles } from '#cli/runs/copy/files.ts';
+import { runGit, readGitText } from '#cli/system/git.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
-import { findLockfile } from '#cli/repository/files/classify.ts';
 import { copyValePackages } from '#cli/runs/copy/vale-packages.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
-import { GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 import { OWNER_WRITABLE_FOLDER } from '#cli/config/system/modes.ts';
 import { listPackageFiles } from '#cli/repository/npm/workspaces.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { join, posix, dirname, basename, relative } from 'node:path';
-import { runGit, readGitText, trimGitLine } from '#cli/system/git.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/parsers/git.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
+import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 import type { CopyFile, RevisionCopy, DependencyCopy } from '#cli/types/runs/copy.ts';
 import { visitGitBlobs, listRevisionEntries } from '#cli/repository/revisions/files.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/repository/tracked.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
-import { readIgnoredPaths, copyDependencies, readDeclarationDependencies } from '#cli/runs/copy/dependencies.ts';
+import { copyDependencies, readIgnoredPaths, readDeclarationDependencies } from '#cli/runs/copy/dependencies.ts';
 
 import {
     DEPENDENCY_FILES,
@@ -106,7 +105,7 @@ async function selectRevisionDependencies(
     using installed = openFiles(repositoryRoot);
     const inputs = entries.filter((entry) => {
         const name = basename(entry.path);
-        const lockfile = findLockfile(name);
+        const lockfile = LOCKFILES.find((entry) => entry.file === posix.basename(name));
         return DEPENDENCY_FILES.has(name) || name === PACKAGE_SWIFT || (lockfile !== undefined && 'copied' in lockfile);
     });
     const projects = inputs.map((entry) => entry.path).filter((path) => DEPENDENCY_FILES.has(basename(path)));
@@ -226,7 +225,8 @@ export async function copyRevision(
     source: Revision,
     cancelSignal?: AbortSignal,
 ): Promise<RevisionCopy> {
-    const toplevel = trimGitLine(await readGitText(repositoryRoot, GIT_TOP_LEVEL_ARGUMENTS, { cancelSignal }));
+    const toplevelLine = await readGitText(repositoryRoot, GIT_TOP_LEVEL_ARGUMENTS, { cancelSignal });
+    const toplevel = toplevelLine.replace(TRAILING_NEWLINE, '');
     const folder = relative(realpathSync(toplevel), realpathSync(repositoryRoot));
     const entries = await listRevisionEntries(toplevel, source, cancelSignal);
     const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');
@@ -240,7 +240,8 @@ export async function copyRevision(
             await readGitText(copy.path, [...GIT_SET_HEAD_ARGUMENTS, source.hash], { cancelSignal });
         await readGitText(copy.path, GIT_EMPTY_INDEX_ARGUMENTS, { cancelSignal });
         await readGitText(copy.path, GIT_UPDATE_INDEX_ARGUMENTS, { cancelSignal, stdin: index });
-        const tree = trimGitLine(await readGitText(copy.path, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal }));
+        const treeLine = await readGitText(copy.path, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
+        const tree = treeLine.replace(TRAILING_NEWLINE, '');
         await writeRevisionFiles(toplevel, copy.path, entries, cancelSignal);
         copyValePackages(
             toplevel,

@@ -3,6 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
+import { parseSettings } from '#cli/settings/read.ts';
 import { test, expect, setSystemTime } from 'bun:test';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
@@ -11,15 +12,15 @@ import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
+import { buildSandboxSettings, buildRootScopeSettings } from '#tests/setup/settings.ts';
 import { SITE_BUILD_COMMANDS, SITE_PACKAGE_MANAGER_CASES } from '#tests/data/checks/site/build.ts';
-import { parseSettingsText, buildSandboxSettings, buildRootScopeSettings } from '#tests/setup/settings.ts';
-import { getTable, getLimit, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scope-view.ts';
+import { getLimit, getTable, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scope-view.ts';
 
 import {
     PROJECT_CHOICES,
     PROJECT_SELECTIONS,
-    NESTED_SCOPE_SETTINGS,
     IGNORE_EXPIRY_ENTRIES,
+    NESTED_SCOPE_SETTINGS,
 } from '#tests/data/settings/scopes.ts';
 
 async function readScopeViews(): Promise<Scope[]> {
@@ -118,8 +119,9 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
 test('ignore expiry does not change the scope view or gspot.toml', () => {
     setSystemTime(new Date('2030-05-20T23:59:59.000Z'));
     try {
-        const settings = parseSettingsText(
+        const settings = parseSettings(
             buildSettingsText('', { configurations: [], ignore: IGNORE_EXPIRY_ENTRIES }),
+            undefined,
         );
         const view = buildRootScopeSettings(settings);
         const selected = selectForScope(settings, '', readConfigurations());

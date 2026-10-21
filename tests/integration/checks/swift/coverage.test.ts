@@ -5,14 +5,13 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPlan } from '#cli/checks/swift/cache.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { buildCheckArguments } from '#tests/setup/builders.ts';
 import { planSandboxCheck } from '#tests/setup/check-input.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { TEST_TARGET_PBXPROJ } from '#tests/data/checks/xcode.ts';
+import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 
 import {
     PARSER_SOURCE,
@@ -82,7 +81,13 @@ xcode_destination = "platform=macOS"
                 {
                     check: 'swift/coverage',
                     status: 'failed',
-                    findings: [{ rule: 'coverage', line: 1, message: matchSubstring('under the limit of 100') }],
+                    findings: [
+                        {
+                            rule: 'coverage',
+                            line: 1,
+                            message: expect.stringContaining('under the limit of 100') as string,
+                        },
+                    ],
                 },
             ]);
             await writeFile(
@@ -116,7 +121,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         await using sandbox = await prepareSwiftScope(scope);
         const { root, prefix } = sandbox;
         await writeFile(join(root, `${prefix}Sources/Value.swift`), PARSER_SOURCE);
-        const broken = parseCheckReport(await spawnGspot(root, buildCheckArguments('swift/swiftlint')));
+        const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']));
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const findings = broken.report.checks.flatMap((check) => check.findings);
         expect(findings).toStrictEqual(
@@ -128,7 +133,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         );
         expect(findings.every((finding) => finding.file === `${prefix}Sources/Value.swift`)).toBe(true);
         await writeFile(join(root, `${prefix}Sources/Value.swift`), FIXED_PARSER_SOURCE);
-        const corrected = await spawnGspot(root, buildCheckArguments('swift/swiftlint'));
+        const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );
@@ -141,7 +146,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
             join(root, `${prefix}Sources/Value.swift`),
             FIXED_PARSER_SOURCE.replace('value: String', 'value:String'),
         );
-        const fixed = await spawnGspot(root, [...buildCheckArguments('swift/swiftlint'), '--fix']);
+        const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json', '--fix']);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await readFile(join(root, `${prefix}Sources/Value.swift`), 'utf8')).toBe(FIXED_PARSER_SOURCE);
     },
@@ -153,7 +158,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
         const { root, prefix } = sandbox;
         const path = join(root, `${prefix}.swiftlint.yml`);
         await unlink(path);
-        const missing = await spawnGspot(root, buildCheckArguments('swift/swiftlint'));
+        const missing = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']);
         expect(missing.code, missing.stdout + missing.stderr).toBe(2);
         expect(missing.stdout).toContain(`${prefix}.swiftlint.yml`);
     },

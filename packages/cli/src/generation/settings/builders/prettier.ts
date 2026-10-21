@@ -1,12 +1,14 @@
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
 import { isRecord, stripUndefined } from '#cli/system/tables.ts';
 import { DEFAULT_QUOTES } from '#cli/config/settings/defaults.ts';
 import { listPrettierPlugins } from '#cli/planning/needed-tools.ts';
+import { includeFolderContents } from '#cli/repository/matchers.ts';
 import { GSPOT_NODE_MODULES_PATH } from '#cli/config/gspot-paths.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { escapeGlob, includeFolderContents } from '#cli/repository/matchers.ts';
 import type { Settings, WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';
 import { PRETTIER_FIXED_OPTIONS } from '#cli/config/generation/settings/builders/prettier.ts';
 import type { ScopeFormat, FormatOverride, PrettierPlugin } from '#cli/types/generation/formatting.ts';
@@ -45,7 +47,7 @@ function listFormatOverrides(settings: Settings): FormatOverride[] {
         const expanded = includeFolderContents(paths);
         const files = expanded.filter((path) => !path.startsWith('!'));
         const excludeFiles = expanded.filter((path) => path.startsWith('!')).map((path) => path.slice(1));
-        if (scope !== '') excludeFiles.push(`!${escapeGlob(scope)}/**`);
+        if (scope !== '') excludeFiles.push(`!${scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH)}/**`);
         return { files, excludeFiles, options: convertFormatSettings(format) };
     });
 }

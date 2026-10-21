@@ -2,33 +2,32 @@ import { stringify } from 'yaml';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 import { VALE_STYLES_PATH, VALE_PACKAGES_PATH } from '#cli/config/gspot-paths.ts';
 
 import {
     ACRONYMS,
-    VALE_PACKAGES,
-    PROSE_FORMATS,
-    LENGTH_STYLES,
     BLOCK_IGNORES,
+    LENGTH_STYLES,
+    PROSE_FORMATS,
     TOKEN_IGNORES,
+    VALE_PACKAGES,
     VALE_OFF_RULES,
     ALT_TEXT_TOKENS,
     BANNED_HEADINGS,
-    VALE_MARKUP_RULES,
     VALE_MARKUP_FILES,
+    VALE_MARKUP_RULES,
     VALE_REGEX_SYMBOLS,
     VALE_SKIPPED_SCOPES,
     VALE_PACKAGE_RELEASES,
     VALE_PACKAGE_REPOSITORY,
 } from '#cli/config/generation/settings/builders/vale.ts';
 
-function escapeWord(word: string): string {
-    return word.replaceAll(VALE_REGEX_SYMBOLS, String.raw`\$&`);
-}
-
 function listExceptions(words: string[]): string[] {
-    return [...new Set([...words, ...ACRONYMS])].map((word) => escapeWord(word));
+    return [...new Set([...words, ...ACRONYMS])].map((word) =>
+        word.replaceAll(VALE_REGEX_SYMBOLS, BACKSLASH_BEFORE_MATCH),
+    );
 }
 
 /**
@@ -86,17 +85,6 @@ export function buildAcronymsStyle(planned: PlannedToolFile): string {
 }
 
 /**
- * Name the release archive of one upstream style, so Vale installs that release and not the latest.
- *
- * @param name the style.
- * @returns the archive address.
- */
-function buildPackageUrl(name: (typeof VALE_PACKAGES)[number]): string {
-    const release = VALE_PACKAGE_RELEASES[name];
-    return `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${release}/${name}.zip`;
-}
-
-/**
  * Build the Vale INI file from the settings.
  *
  * @param planned the tool file to build.
@@ -106,15 +94,16 @@ export function buildValeIniFile(planned: PlannedToolFile): string {
     const isAll = planned.level === 'all';
     const folders = isAll ? [VALE_STYLES_PATH, VALE_PACKAGES_PATH] : [VALE_STYLES_PATH];
     const styles = folders.map((path) => relative(dirname(planned.targetPath), path));
+    const packages = VALE_PACKAGES.map(
+        (name) => `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name]}/${name}.zip`,
+    );
     // The gspot style holds only the files of this level, so no line turns a gspot rule off.
     const lines = [
         ...(isAll ? ['# Vale reads both StylesPath lines in order and installs packages in the last folder.'] : []),
         ...styles.map((path) => `StylesPath = ${path}`),
         'MinAlertLevel = suggestion',
         `SkippedScopes = ${VALE_SKIPPED_SCOPES}`,
-        ...(isAll
-            ? [`Packages = ${VALE_PACKAGES.map((name) => buildPackageUrl(name)).join(', ')}`, 'Vocab = words']
-            : []),
+        ...(isAll ? [`Packages = ${packages.join(', ')}`, 'Vocab = words'] : []),
         '',
         '[formats]',
         ...PROSE_FORMATS.map(([extension, format]) => `${extension} = ${format}`),
@@ -169,7 +158,9 @@ export function buildBannedHeadingsStyle(planned: PlannedToolFile): string {
         ignorecase: true,
         scope: 'heading',
         nonword: true,
-        tokens: headings.map((heading) => String.raw`(?:\b|^)${escapeWord(heading)}(?:\b|$)`),
+        tokens: headings.map(
+            (heading) => String.raw`(?:\b|^)${heading.replaceAll(VALE_REGEX_SYMBOLS, BACKSLASH_BEFORE_MATCH)}(?:\b|$)`,
+        ),
     });
 }
 
@@ -235,7 +226,9 @@ export function buildPossessivesStyle(planned: PlannedToolFile): string {
         message: "Possessive on a product or code name: '%s'. Rephrase with 'of' or 'the'.",
         level: 'error',
         nonword: true,
-        tokens: [String.raw`\b(?:${names.map((name) => escapeWord(name)).join('|')})'s\b`],
+        tokens: [
+            String.raw`\b(?:${names.map((name) => name.replaceAll(VALE_REGEX_SYMBOLS, BACKSLASH_BEFORE_MATCH)).join('|')})'s\b`,
+        ],
     });
 }
 

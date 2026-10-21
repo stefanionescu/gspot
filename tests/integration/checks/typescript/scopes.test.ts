@@ -29,21 +29,17 @@ const installedSandbox = registerSharedSandbox({
 });
 
 /** The standalone sources for one level; .gitignore keeps tool declarations out of the source changes. */
-function buildStandaloneSources(level: (typeof LEVELS)[number]): Record<string, string> {
-    return {
-        ...STANDALONE_TYPESCRIPT_FILES,
-        '.gitignore': '.gspot/\nnode_modules/\n',
-        'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: STANDALONE_TYPESCRIPT_SETTINGS }),
-    };
-}
-
 test.each([...LEVELS])(
     "typescript/tsc at level %s checks each scope alone and keeps your declarations, without gspot's own @types",
     async (level) => {
         const { root } = installedSandbox();
         await using _sourceChange = await updateSandbox(installedSandbox(), {
             check: '',
-            files: buildStandaloneSources(level),
+            files: {
+                ...STANDALONE_TYPESCRIPT_FILES,
+                '.gitignore': '.gspot/\nnode_modules/\n',
+                'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: STANDALONE_TYPESCRIPT_SETTINGS }),
+            },
         });
         const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);

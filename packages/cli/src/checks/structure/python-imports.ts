@@ -22,17 +22,15 @@ function findAbsoluteModule(dotted: string, search: PythonSearch): string | unde
     return undefined;
 }
 
-function getImportedName(node: Node): string {
-    return node.type === 'aliased_import' ? (node.childForFieldName('name')?.text ?? '') : node.text;
-}
-
 function findFirstModule(candidates: { module: string; target: string | undefined }[]): ImportTarget[] {
     const found = candidates.find((candidate) => candidate.target !== undefined);
     return found?.target === undefined ? [] : [{ module: found.module, target: found.target }];
 }
 
 function listImportedNames(node: Node): (string | undefined)[] {
-    const names = node.childrenForFieldName('name').map((item) => getImportedName(item));
+    const names = node
+        .childrenForFieldName('name')
+        .map((item) => (item.type === 'aliased_import' ? (item.childForFieldName('name')?.text ?? '') : item.text));
     return names.length === 0 ? [undefined] : names;
 }
 
@@ -87,7 +85,8 @@ export function listPythonImports(root: Node, file: string, search: PythonSearch
     return root.descendantsOfType([PYTHON_IMPORT_STATEMENT, PYTHON_FROM_STATEMENT]).flatMap((node) => {
         if (node.type === PYTHON_IMPORT_STATEMENT)
             return node.childrenForFieldName('name').flatMap((item) => {
-                const module = getImportedName(item);
+                const module =
+                    item.type === 'aliased_import' ? (item.childForFieldName('name')?.text ?? '') : item.text;
                 const target = search.externals.has(module.split('.', 1)[0] ?? '')
                     ? undefined
                     : findAbsoluteModule(module, search);

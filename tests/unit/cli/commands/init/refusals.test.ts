@@ -5,7 +5,6 @@ import { readFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
 import { GIT_PLAN_CASES } from '#tests/data/commands/init.ts';
@@ -56,7 +55,7 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'settings',
-        message: matchSubstring('gspot doctor'),
+        message: expect.stringContaining('gspot doctor') as string,
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -67,7 +66,10 @@ test('init --json without --yes names --yes before reading the repository', asyn
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message: matchSubstring('--yes') });
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining('--yes') as string,
+    });
     expect(result.stdout).not.toContain('package.json');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

@@ -1,11 +1,11 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { listChildScopes } from '#cli/planning/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { isInScope, isOutsideChildren } from '#cli/repository/scopes.ts';
 import { VULTURE_COMMAND, VULTURE_FINDING, VULTURE_DEAD_CODE } from '#cli/config/checks/python.ts';
 
 function parseVultureFinding(planned: PlannedCheck, line: string, selected: ReadonlySet<string>): Finding[] {
@@ -36,7 +36,7 @@ export async function checkPythonVulture(session: Session, planned: PlannedCheck
     const children = listChildScopes(session.scopes, planned.selection);
     const sources = session.repository.files
         .filter((file) => file.kind === 'source' && file.path.endsWith('.py'))
-        .filter((file) => isInScope(file.path, scope) && isOutsideChildren(file.path, children))
+        .filter((file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)))
         .map((file) => file.path);
     if (sources.length === 0) return [];
     const result = await runCheckTool(session, planned, [...VULTURE_COMMAND, ...sources], { cwd: session.root });

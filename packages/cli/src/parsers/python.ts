@@ -108,13 +108,3 @@ function deletePythonTrees(parsed: PythonFiles): void {
 
 /** Each run shares Python source trees through this reader identity. */
 export const PYTHON_SOURCES = { read: readPython, dispose: deletePythonTrees };
-
-/**
- * Get the final name of a dotted Python expression.
- *
- * @param text the expression as written.
- * @returns its final component, empty for an empty expression.
- */
-export function getLastName(text: string): string {
-    return text.split('.').at(-1) ?? '';
-}

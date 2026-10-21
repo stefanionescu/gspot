@@ -2,12 +2,14 @@ import { posix } from 'node:path';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
+import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import type { FileMatch, CoveredFilesOptions } from '#cli/types/repository/selection.ts';
 import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import { escapeGlob, buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 
 // Add the file types of the Prettier or ESLint plugins in use to the owners, when the table takes them.
 function addPluginExtensions(owners: FileMatch, selected: Configuration[]): FileMatch {
@@ -61,7 +63,12 @@ export function listCoveredFiles(
         const name = [...path.matchAll(SETTING_PLACEHOLDER)][0]?.groups?.['name'];
         if (name === undefined) return [];
         const value = view.settings[name];
-        if (typeof value === 'string') return [path.replace(SETTING_PLACEHOLDER, () => escapeGlob(value))];
+        if (typeof value === 'string')
+            return [
+                path.replace(SETTING_PLACEHOLDER, () =>
+                    value.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
+                ),
+            ];
         defaults.push(
             ...selected
                 .filter((configuration) => configuration.name === name.split('.', 1)[0])

@@ -2,25 +2,18 @@ import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
 import { SCHEMA_FILE } from '#cli/config/settings/schema.ts';
 import type { ReferencePage, ReferenceFacts } from '../types/reference.ts';
+import { formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 
-import {
-    formatCode,
-    escapeCell,
-    formatTable,
-    formatSection,
-    buildReferencePage,
-    formatReferencePath,
-} from './markdown.ts';
 import {
     MAP_KEY_NAME,
     ANGLE_BRACKETS,
     REFERENCE_FOLDERS,
     HEADING_ID_DROPPED,
     SCHEMA_TYPE_LABELS,
-    TABLE_HEADING_LEVEL,
     LISTED_VALUES_LIMIT,
-    LANGUAGE_PLACEHOLDER,
+    TABLE_HEADING_LEVEL,
     CATEGORY_PLACEHOLDER,
+    LANGUAGE_PLACEHOLDER,
     REASONED_VALUE_LABEL,
 } from '../config/reference.ts';
 
@@ -53,22 +46,18 @@ function formatAcceptedValue(schema: JSONSchema.JSONSchema, value: JSONSchema.JS
     const node = getSchemaNode(schema, value);
     if (isReasonedValue(node)) return REASONED_VALUE_LABEL;
     if (node.const !== undefined)
-        return [formatCode(JSON.stringify(node.const)), node.description]
+        return [`\`${JSON.stringify(node.const)}\``, node.description]
             .filter((entry) => entry !== undefined)
-            .map((entry) => escapeCell(entry))
             .join(': ');
     if (node.enum !== undefined)
         return node.enum.length > LISTED_VALUES_LIMIT
             ? `One of ${String(node.enum.length)} names`
-            : node.enum.map((value) => formatCode(JSON.stringify(value))).join(', ');
+            : node.enum.map((value) => `\`${JSON.stringify(value)}\``).join(', ');
     if (node.anyOf !== undefined) {
         const branches = node.anyOf.map((entry) => getSchemaNode(schema, entry));
         // Values that each carry their own meaning read better as a table than as one long sentence.
         if (branches.every((branch) => branch.const !== undefined && branch.description !== undefined)) {
-            const rows = branches.map((branch) => [
-                formatCode(JSON.stringify(branch.const)),
-                escapeCell(branch.description ?? ''),
-            ]);
+            const rows = branches.map((branch) => [`\`${JSON.stringify(branch.const)}\``, branch.description ?? '']);
             return `One of these values:\n\n${formatTable(['Value', 'Meaning'], rows)}\n\n`;
         }
         return [...new Set(node.anyOf.map((entry) => formatAcceptedValue(schema, entry)))].join(' or ');
@@ -107,10 +96,10 @@ function formatDefaults(variants: ReferenceFacts['settings']): string {
         .map(({ setting, owners }) => {
             const recommended = setting.default;
             const all = setting.default_all ?? recommended;
-            const shown = recommended === undefined ? 'unset' : formatCode(JSON.stringify(recommended));
+            const shown = recommended === undefined ? 'unset' : `\`${JSON.stringify(recommended)}\``;
             const display = isDeepStrictEqual(recommended, all)
                 ? shown
-                : `recommended: ${shown}; all: ${formatCode(JSON.stringify(all))}`;
+                : `recommended: ${shown}; all: \`${JSON.stringify(all)}\``;
             return display + (variants.length > 1 ? ' (' + owners.join(', ') + ')' : '');
         })
         .join('; ');
@@ -121,7 +110,7 @@ function formatLanguageDefaults(variants: ReferenceFacts['settings']): string {
     const defaults = variants.flatMap(({ setting }) =>
         setting.language_defaults === undefined ? [] : Object.entries(setting.language_defaults),
     );
-    const entries = defaults.map(([language, value]) => language + ' ' + formatCode(JSON.stringify(value)));
+    const entries = defaults.map(([language, value]) => language + ' ' + `\`${JSON.stringify(value)}\``);
     return entries.length === 0 ? '' : ` Language defaults: ${entries.join(', ')}.`;
 }
 
@@ -139,7 +128,7 @@ function formatSetting(
     const accepted = formatAcceptedValue(facts.schema, node);
     const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (/[.\n]$/u.test(accepted) ? '' : '.');
     // A record field without a declared default takes the default of its schema.
-    const schemaDefault = node.default === undefined ? 'unset' : formatCode(JSON.stringify(node.default));
+    const schemaDefault = node.default === undefined ? 'unset' : `\`${JSON.stringify(node.default)}\``;
     const presence = required ? 'Required.' : `Default: ${formatDefaults(variants) || schemaDefault}.`;
     return (
         `${sentence} ${presence}` +
@@ -154,16 +143,6 @@ function isSettingValue(schema: JSONSchema.JSONSchema, node: JSONSchema.JSONSche
     return isReasonedValue(node) || listSchemaProperties(schema, node).length === 0;
 }
 
-// The header of a table or a record, as the reader writes it in gspot.toml.
-function formatTableHeader(key: string, node: JSONSchema.JSONSchema): string {
-    return node.type === 'array' ? `[[${key}]]` : `[${key}]`;
-}
-
-// The anchor of a key row: the full key without the angle brackets of a map placeholder, because HTML reads them as a tag.
-function formatRowId(key: string): string {
-    return key.replaceAll(ANGLE_BRACKETS, '');
-}
-
 // Each key of a table or a record under its own heading, one level below the table, with the full key as its anchor.
 function formatSettingKeys(
     facts: ReferenceFacts,
@@ -174,7 +153,7 @@ function formatSettingKeys(
     return keys
         .map(({ name, node, required }) => {
             const key = prefix === '' ? name : `${prefix}.${name}`;
-            const heading = `<h${String(level)} id="${formatRowId(key)}"><code>${key}</code></h${String(level)}>`;
+            const heading = `<h${String(level)} id="${key.replaceAll(ANGLE_BRACKETS, '')}"><code>${key}</code></h${String(level)}>`;
             return `${heading}\n\n${formatSetting(facts, key, { node, required })}\n`;
         })
         .join('\n');
@@ -200,20 +179,18 @@ function formatVariantSection(schema: JSONSchema.JSONSchema, key: string, node: 
     const pattern = `${key}.${LANGUAGE_PLACEHOLDER}`;
     const categories = languages.map(({ name, node: table }) => [name, listVariantTables(schema, table)] as const);
     const named = categories.filter(([, tables]) => tables.length > 0);
+    const languageNames = languages.map(({ name }) => `\`${name}\``).join(', ');
     return (
-        `\n${'#'.repeat(level)} ${formatCode(pattern)}\n\n` +
-        `The keys of ${formatCode('[' + key + ']')} for one language: ${languages.map(({ name }) => formatCode(name)).join(', ')}. ` +
-        `A key you leave out takes the value of ${formatCode('[' + key + ']')}.\n` +
+        `\n${'#'.repeat(level)} \`${pattern}\`\n\n` +
+        `The keys of \`[${key}]\` for one language: ${languageNames}. ` +
+        `A key you leave out takes the value of \`[${key}]\`.\n` +
         (named.length === 0
             ? ''
-            : `\n${formatCode(pattern + '.' + CATEGORY_PLACEHOLDER)} sets the same keys for one category of names, and a key you ` +
-              `leave out takes the value of ${formatCode(pattern)}. The categories of each language:\n\n` +
+            : `\n\`${pattern}.${CATEGORY_PLACEHOLDER}\` sets the same keys for one category of names, and a key you ` +
+              `leave out takes the value of \`${pattern}\`. The categories of each language:\n\n` +
               formatTable(
                   ['Language', 'Categories'],
-                  named.map(([name, tables]) => [
-                      formatCode(name),
-                      tables.map((table) => formatCode(table.name)).join(', '),
-                  ]),
+                  named.map(([name, tables]) => [`\`${name}\``, tables.map((table) => `\`${table.name}\``).join(', ')]),
               ) +
               '\n')
     );
@@ -231,8 +208,9 @@ function formatSettingTable(
     const children = listSchemaProperties(schema, node);
     const keys = children.filter((child) => isSettingValue(schema, child.node));
     const variants = new Set(listVariantTables(schema, node).map(({ name }) => name));
+    const header = node.type === 'array' ? `[[${key}]]` : `[${key}]`;
     return (
-        `\n${'#'.repeat(level)} ${formatTableHeader(key, node)}\n\n` +
+        `\n${'#'.repeat(level)} ${header}\n\n` +
         (node.description === undefined ? '' : `${node.description}\n\n`) +
         (key === 'naming'
             ? 'See [Accept a banned name](/configure/gspot-toml/#accept-a-banned-name) for an exact-name override.\n\n'
@@ -255,8 +233,9 @@ function formatScopeSection(facts: ReferenceFacts, value: JSONSchema.JSONSchema 
     const rootOnly = listSchemaProperties(schema, schema)
         .map(({ name }) => name)
         .filter((name) => name !== 'scope' && !accepted.has(name));
+    const rootOnlyNames = rootOnly.map((name) => `\`${name}\``).join(', ');
     return (
-        `\n## ${formatTableHeader('scope', node)}\n\n` +
+        `\n## ${node.type === 'array' ? '[[scope]]' : '[scope]'}\n\n` +
         (node.description === undefined ? '' : `${node.description}\n\n`) +
         'See [Monorepos and scopes](/configure/monorepos/) for how a scope inherits settings.\n\n' +
         formatSettingKeys(
@@ -265,7 +244,7 @@ function formatScopeSection(facts: ReferenceFacts, value: JSONSchema.JSONSchema 
             children.filter((child) => isSettingValue(schema, child.node)),
             TABLE_HEADING_LEVEL + 1,
         ) +
-        `\n\nOnly the root takes these keys: ${rootOnly.map((name) => formatCode(name)).join(', ')}.\n`
+        `\n\nOnly the root takes these keys: ${rootOnlyNames}.\n`
     );
 }
 
@@ -284,14 +263,6 @@ function findSettingPath(schema: JSONSchema.JSONSchema, key: string): { path: st
     return { path, node };
 }
 
-// A key anchors its row; a table or a record anchors its heading, by the ID that Starlight gives the heading.
-function formatSettingAnchor(schema: JSONSchema.JSONSchema, path: string[], node: JSONSchema.JSONSchema): string {
-    const key = path.join('.');
-    return isSettingValue(schema, node)
-        ? formatRowId(key)
-        : formatTableHeader(key, node).toLowerCase().replaceAll(HEADING_ID_DROPPED, '');
-}
-
 /**
  * Link a setting to its row, or a table or record to its heading, on the gspot.toml pages.
  *
@@ -301,7 +272,13 @@ function formatSettingAnchor(schema: JSONSchema.JSONSchema, path: string[], node
  */
 export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string {
     const { path, node } = findSettingPath(schema, key);
-    return `[${formatCode(key)}](${formatReferencePath('settings', '')}#${formatSettingAnchor(schema, path, node)})`;
+    const name = path.join('.');
+    // A key anchors its row; a table or a record anchors its heading, by the ID that Starlight gives the heading.
+    const header = node.type === 'array' ? `[[${name}]]` : `[${name}]`;
+    const anchor = isSettingValue(schema, node)
+        ? name.replaceAll(ANGLE_BRACKETS, '')
+        : header.toLowerCase().replaceAll(HEADING_ID_DROPPED, '');
+    return `[\`${key}\`](${formatReferencePath('settings', '')}#${anchor})`;
 }
 
 /**

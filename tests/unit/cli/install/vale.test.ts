@@ -9,11 +9,11 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { buildToolInstall } from '#tests/setup/install.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/install/vale.ts';
 import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
-import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, FIXED_VALE_INSTALL_SCRIPT } from '#tests/data/checks/prose.ts';
 
 test.each([...VALE_INSTALL_FAILURES])(
@@ -35,7 +35,9 @@ test.each([...VALE_INSTALL_FAILURES])(
         const request = buildToolInstall(session, writer);
         expect(await captureRejection(installValePackages(request))).toContain(message);
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('previous bytes\n');
-        expect(request.steps).toStrictEqual([[executable, '--config', matchSubstring('vale-'), 'sync']]);
+        expect(request.steps).toStrictEqual([
+            [executable, '--config', expect.stringContaining('vale-') as string, 'sync'],
+        ]);
         expect(await readFile(join(sandbox.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
         await writeFile(
             join(sandbox.path, 'node_modules/.bin/vale.js'),
@@ -44,7 +46,9 @@ test.each([...VALE_INSTALL_FAILURES])(
         await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
         const fixed = buildToolInstall(await openSession(sandbox.path), writer);
         expect(await installValePackages(fixed)).toBe('installed Vale packages in .gspot/vale');
-        expect(fixed.steps).toStrictEqual([[executable, '--config', matchSubstring('vale-'), 'sync']]);
+        expect(fixed.steps).toStrictEqual([
+            [executable, '--config', expect.stringContaining('vale-') as string, 'sync'],
+        ]);
         expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('corrected bytes\n');
         expect(hasValePackages(sandbox.path, 'all')).toBe(true);
     },

@@ -143,30 +143,27 @@ function normalizeIdentity(identity: string): string {
         : `${parts[0].toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${parts[1]}`;
 }
 
-// The hook checks a pushed revision in a copy without a Python environment, so the scan reads the working tree's. The
-// node_modules folders reach the copy through links.
-function selectScanner(session: Session, dependencyFile: string) {
-    const folder = dirname(dependencyFile);
-    return basename(dependencyFile) === PACKAGE_JSON
-        ? {
-              scan: scanJavascriptLicenses,
-              start: join(session.root, folder),
-              lockfiles: JAVASCRIPT_LOCKFILES,
-              ecosystem: 'npm' as const,
-          }
-        : {
-              scan: scanPythonLicenses,
-              start: join(session.installedRoot, folder),
-              lockfiles: PYTHON_LOCKFILES,
-              ecosystem: 'python' as const,
-          };
-}
-
 // The scan keeps the packages that the lockfile holds, so a package left behind in node_modules or a host
 // environment stays out.
 async function scanProject(session: Session, planned: PlannedCheck, project: LicenseProject): Promise<ProjectLicenses> {
     const { dependencyFile, selection } = project;
-    const { scan, start, lockfiles, ecosystem } = selectScanner(session, dependencyFile);
+    // The hook checks a pushed revision in a copy without a Python environment, so the scan reads the working tree's. The
+    // node_modules folders reach the copy through links.
+    const folder = dirname(dependencyFile);
+    const { scan, start, lockfiles, ecosystem } =
+        basename(dependencyFile) === PACKAGE_JSON
+            ? {
+                  scan: scanJavascriptLicenses,
+                  start: join(session.root, folder),
+                  lockfiles: JAVASCRIPT_LOCKFILES,
+                  ecosystem: 'npm' as const,
+              }
+            : {
+                  scan: scanPythonLicenses,
+                  start: join(session.installedRoot, folder),
+                  lockfiles: PYTHON_LOCKFILES,
+                  ecosystem: 'python' as const,
+              };
     const settings = project.settings;
     const scanned = await scan(session, { ...planned, selection }, start);
     if (scanned.length === 0)

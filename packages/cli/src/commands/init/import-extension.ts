@@ -14,17 +14,6 @@ import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands/init.ts';
 
-function importsTypeScriptFiles(options: ts.CompilerOptions): boolean {
-    return options.allowImportingTsExtensions === true || options.rewriteRelativeImportExtensions === true;
-}
-
-function isBundled(options: ts.CompilerOptions | undefined, repository: Repository, scope: string): boolean {
-    return (
-        options?.moduleResolution === ts.ModuleResolutionKind.Bundler ||
-        listProjectDependencyNames(repository.dependencyFiles, scope).some((name) => BUNDLER_PACKAGES.has(name))
-    );
-}
-
 function detectImportExtension(
     repository: Repository,
     scope: string,
@@ -32,8 +21,15 @@ function detectImportExtension(
 ): (typeof IMPORT_EXTENSION_STYLES)[number] | undefined {
     const path = join(repository.root, joinScope(scope, TSCONFIG_FILE));
     const options = readTsconfig(repository.root, path, reads)?.options;
-    if (options !== undefined && importsTypeScriptFiles(options)) return 'ts';
-    return isBundled(options, repository, scope) ? 'extensionless' : undefined;
+    if (
+        options !== undefined &&
+        (options.allowImportingTsExtensions === true || options.rewriteRelativeImportExtensions === true)
+    )
+        return 'ts';
+    return options?.moduleResolution === ts.ModuleResolutionKind.Bundler ||
+        listProjectDependencyNames(repository.dependencyFiles, scope).some((name) => BUNDLER_PACKAGES.has(name))
+        ? 'extensionless'
+        : undefined;
 }
 
 /**

@@ -5,10 +5,9 @@ import { getLimit } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { getNodePlace, buildFinding } from '#cli/runs/finding.ts';
+import { buildFinding, getNodePlace } from '#cli/runs/finding.ts';
 import { PARSED_SOURCES } from '#cli/checks/structure/parsed-sources.ts';
 import type { IsSubstantial, ParsedLanguage } from '#cli/types/checks/structure.ts';
-import { checkExportedFunctions } from '#cli/checks/structure/exported-functions.ts';
 import { isInterfaceClass, isPythonInterface } from '#cli/checks/structure/interfaces.ts';
 
 import {
@@ -17,11 +16,11 @@ import {
     CONTAINER_NOISE,
     TYPE_ALIAS_NODES,
     BASH_COMMAND_NODES,
-    SWIFT_ACCESSOR_NODES,
     BASH_SOURCE_COMMANDS,
+    SWIFT_ACCESSOR_NODES,
     TYPE_REFERENCE_NODES,
-    SWIFT_FUNCTION_LABELS,
     SWIFT_ACCESSOR_OWNERS,
+    SWIFT_FUNCTION_LABELS,
     COUNTED_FUNCTION_NODES,
 } from '#cli/config/checks/structure.ts';
 
@@ -191,19 +190,6 @@ function formatSwiftFunctionName(node: Node): string {
 }
 
 /**
- * Formats the message for a function at or under the statement limit.
- *
- * @param name what to call the function.
- * @param count the executable statements it holds.
- * @param limit the most statements that still count as trivial.
- * @returns the message.
- */
-function formatTrivialFunction(name: string, count: number, limit: number): string {
-    const statements = count === 1 ? '1 statement' : `${String(count)} statements`;
-    return `${name} has ${statements}. Functions with ${String(limit)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;
-}
-
-/**
  * Reports trivial functions and files, and leaves anonymous functions alone.
  *
  * @param session the repository and its tools.
@@ -226,7 +212,8 @@ export async function checkStructureTrivialFunctions(session: Session, planned: 
                 source.language === 'swift'
                     ? formatSwiftFunctionName(node)
                     : (node.childForFieldName('name')?.text ?? 'function');
-            const message = formatTrivialFunction(name, count, limit);
+            const statements = count === 1 ? '1 statement' : `${String(count)} statements`;
+            const message = `${name} has ${statements}. Functions with ${String(limit)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;
             return [{ ...buildFinding(planned, getNodePlace(source.path, node), 'trivial-function', message), name }];
         });
         if (isTrivialFile(source.tree.rootNode, source.language, limit)) {
@@ -246,5 +233,5 @@ export async function checkStructureTrivialFunctions(session: Session, planned: 
         }
         return findings;
     });
-    return [...checkExportedFunctions(session, planned), ...functions, ...files];
+    return [...functions, ...files];
 }

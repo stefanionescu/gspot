@@ -1,5 +1,9 @@
-import { buildScopeGlob, buildScopeFiles } from '#cli/generation/eslint/files.ts';
-import { serializeBlock, indentEslintBlock } from '#cli/generation/eslint/print.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
+import { serializeBlock } from '#cli/generation/eslint/print.ts';
+import { buildScopeFiles } from '#cli/generation/eslint/files.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
+import { ESLINT_INDENT } from '#cli/config/generation/eslint/print.ts';
 
 import type {
     BlockWriter,
@@ -50,7 +54,10 @@ function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, 
                 level: planned.scope === undefined ? level : undefined,
             });
             const value = planned.scope === undefined ? source : `stripRuntimeGlobals(${source}, globals)`;
-            return indentEslintBlock(`// ${note}\n${value}`);
+            return `// ${note}\n${value}`
+                .split('\n')
+                .map((line) => ESLINT_INDENT + line)
+                .join('\n');
         })
         .join(',\n');
 }
@@ -62,7 +69,7 @@ function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, 
  * @param block the block, its scope, and its label.
  * @returns the serialized block and any applicable option blocks.
  */
-function writeEslintBlock(writer: BlockWriter, block: PlannedEslintBlock): string {
+export function writeEslintBlock(writer: BlockWriter, block: PlannedEslintBlock): string {
     const { allLevelRules, level, codeFiles } = writer;
     const { data: payload, scope } = block;
     const rules: Record<string, unknown> = Object.fromEntries(
@@ -77,7 +84,7 @@ function writeEslintBlock(writer: BlockWriter, block: PlannedEslintBlock): strin
             : {
                   files: (payload.files ?? codeFiles).map((entry) => [
                       ...(Array.isArray(entry) ? entry : [entry]),
-                      buildScopeGlob(scope.path, '**/*'),
+                      joinScope(scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
                   ]),
                   ignores: [...(payload.ignores ?? []), ...scope.excluded],
               };
@@ -99,16 +106,4 @@ export function listUnappliedRules(writer: BlockWriter): string[] {
                 .filter((rule) => !writer.applied.has(rule)),
         ),
     ];
-}
-
-/**
- * Serialize the blocks in order with the block writer of the scope.
- *
- * @param writer the shared rule options and applied set.
- * @param blocks the block arguments, in order.
- *
- * @returns the serialized ESLint blocks.
- */
-export function serializeBlocks(writer: BlockWriter, blocks: PlannedEslintBlock[]): string {
-    return blocks.map((block) => writeEslintBlock(writer, block)).join(',\n');
 }

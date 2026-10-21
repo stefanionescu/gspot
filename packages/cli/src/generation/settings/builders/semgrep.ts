@@ -1,8 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { parse, stringify } from 'yaml';
-import { readAsset } from '#cli/system/assets.ts';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
-import type { SemgrepDocument, PlannedToolFile } from '#cli/types/generation/files.ts';
+import type { PlannedToolFile, SemgrepDocument } from '#cli/types/generation/files.ts';
 
 /**
  * Build the Semgrep pack with its dependency and scope paths.
@@ -14,7 +15,9 @@ export function buildSemgrepFile(planned: PlannedToolFile): string {
     const { selection, toolFile } = planned;
     const { scopes } = planned.session;
     const { dependencyFiles } = planned.session.repository;
-    const document = parse(readAsset(`${planned.configuration.folder}/${toolFile.source}`)) as SemgrepDocument;
+    const document = parse(
+        readFileSync(buildAssetPath(`${planned.configuration.folder}/${toolFile.source}`), 'utf8'),
+    ) as SemgrepDocument;
     const scopeDependencies = new Set(listProjectDependencyNames(dependencyFiles, selection.scope.path));
     const conditions = toolFile.rule_dependencies;
     const dropped =

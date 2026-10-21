@@ -6,10 +6,10 @@ import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { COPY_FAILURES } from '#tests/data/runs/copies.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { waitForExit, waitForFile } from '#tests/setup/processes.ts';
 import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
 import { planFixer, buildFixerSettings } from '#tests/setup/builders.ts';
-import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 
 test("a fixer's {root} environment paths point into the scratch copy during a dry run", async () => {
     await using sandbox = await testdir({
@@ -29,7 +29,7 @@ test("a fixer's {root} environment paths point into the scratch copy during a dr
         isDryRun: true,
     });
     expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
-    expect(result.diffs).toStrictEqual([matchSubstring('+scratch corrected')]);
+    expect(result.diffs).toStrictEqual([expect.stringContaining('+scratch corrected') as string]);
     const executionRoot = await readFile(trace, 'utf8');
     expect(executionRoot).not.toBe(sandbox.path);
     expect(await isOnDisk(executionRoot)).toBe(false);
@@ -67,7 +67,7 @@ test.each([false, true])(
         expect(await readFile(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
         expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
         // A preview shows the correction as a diff instead of writing it.
-        const expectedDiff = matchSubstring('+corrected');
+        const expectedDiff = expect.stringContaining('+corrected') as string;
         expect(result.diffs).toStrictEqual(preview ? [expectedDiff] : []);
     },
 );
@@ -182,7 +182,7 @@ test.each([false, true])(
             await waitForExit(pid);
             expect(result).toMatchObject({
                 status: 'failed',
-                note: matchSubstring('was canceled'),
+                note: expect.stringContaining('was canceled') as string,
                 changed: ['source.txt'],
             });
             expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('partial');

@@ -1,17 +1,14 @@
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { isInToolFolder } from '#cli/repository/files/tool-folders.ts';
 import { LINT_FOLDERS } from '#cli/config/repository/existing-tools.ts';
 import type { DependencyFile } from '#cli/types/parsers/dependencies.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
-import { escapeGlob, buildPathMatcher } from '#cli/repository/matchers.ts';
+import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository/inventory.ts';
-import { GLOB_EXCLUDE, FOLDER_CONTENTS, WHOLE_TREE_GLOBS } from '#cli/config/system/paths.ts';
-
-// An old lint setup in its own folder, such as quality/, holds a package.json, and gspot replaces it.
-function isLintFolder(path: string): boolean {
-    return LINT_FOLDERS.some((folder) => path.startsWith(`${folder}/`));
-}
+import { GLOB_EXCLUDE, FOLDER_CONTENTS, WHOLE_TREE_GLOBS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 
 /**
  * Test scope containment. The empty root path matches every file.
@@ -61,20 +58,12 @@ export function isScopeCovered(paths: string[], scope: string): boolean {
     if (scope === '') return false;
     const segments = scope.split('/');
     return segments.some((_, index) => {
-        const literal = escapeGlob(segments.slice(0, index + 1).join('/'));
+        const literal = segments
+            .slice(0, index + 1)
+            .join('/')
+            .replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
         return paths.includes(literal) || paths.includes(`${literal}${FOLDER_CONTENTS}`);
     });
-}
-
-/**
- * Check whether a path sits outside every nested project scope.
- *
- * @param path the repository-relative source file or deleted trigger.
- * @param children the nested project scope paths.
- * @returns whether the parent scope owns this path.
- */
-export function isOutsideChildren(path: string, children: string[]): boolean {
-    return children.every((child) => !isInScope(path, child));
 }
 
 /**
@@ -109,8 +98,11 @@ export function findScopes(
         (file) =>
             file.kind === 'source' &&
             !toolOnlyPackages.has(file.path) &&
-            !isInToolFolder(file.path) &&
-            !isLintFolder(file.path),
+            !(
+                file.path.startsWith(`${DOT_GSPOT}/`) ||
+                file.path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
+            ) &&
+            !LINT_FOLDERS.some((folder) => file.path.startsWith(`${folder}/`)),
     );
     for (const file of sources) {
         for (const pattern of patterns) {

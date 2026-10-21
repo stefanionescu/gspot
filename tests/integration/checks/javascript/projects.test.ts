@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readGeneratedFiles } from '#tests/setup/tool-files.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 import {
@@ -149,7 +149,7 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
     // The scope with the unreadable jsconfig.json errors alone; the other scopes keep their results.
     expect(invalid.report.checks).toMatchObject([
         { scope: '', status: 'passed' },
-        { scope: 'app', status: 'error', note: matchSubstring(join('app', 'jsconfig.json')) },
+        { scope: 'app', status: 'error', note: expect.stringContaining(join('app', 'jsconfig.json')) as string },
         { scope: 'app/child', status: 'passed' },
         { scope: 'sibling', status: 'passed' },
     ]);

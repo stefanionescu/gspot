@@ -14,11 +14,6 @@ function stageRevision(root: string): void {
     readGitOutput(root, ['add', '.']);
 }
 
-/** Reads the error from a revision that must refuse its dependency state. */
-async function captureRevisionFailure(root: string): Promise<string> {
-    return await captureRejection(copyRevision(root, { kind: 'index' }));
-}
-
 test('staged copies copy every workspace dependency tree before checking links between them', async () => {
     await using sandbox = await testdir({
         'package.json': '{"workspaces":["packages/*"]}',
@@ -42,7 +37,7 @@ test('staged copies copy every workspace dependency tree before checking links b
     );
     await unlink(join(sandbox.path, 'node_modules/owned'));
     await symlink(sandbox.path, join(sandbox.path, 'node_modules/owned'), 'dir');
-    expect(await captureRevisionFailure(sandbox.path)).toContain(
+    expect(await captureRejection(copyRevision(sandbox.path, { kind: 'index' }))).toContain(
         `Installed dependency link ${join('node_modules', 'owned')} points to this repository or a parent folder.`,
     );
 });
@@ -134,7 +129,9 @@ test.each(['', 'nested/'])('revision copies reuse the installed Vale packages un
     expect(source).toBe('extends: existence\n');
     expect(await readFile(join(sandbox.path, packagePath), 'utf8')).toBe('extends: existence\n');
     await writeFile(join(sandbox.path, config), 'Packages = Different\n');
-    expect(await captureRevisionFailure(sandbox.path)).toContain('do not match the revision configuration');
+    expect(await captureRejection(copyRevision(sandbox.path, { kind: 'index' }))).toContain(
+        'do not match the revision configuration',
+    );
 });
 
 test('a copy leaves the virtual environment in the working tree and still checks its lockfile', async () => {
@@ -157,7 +154,9 @@ test('a copy leaves the virtual environment in the working tree and still checks
     expect(copied).toStrictEqual({ environment: false, source: 'selected = True\n' });
     expect(await readFile(join(root, '.venv/bin/python'), 'utf8')).toBe('interpreter');
     await writeFile(join(root, 'uv.lock'), 'version = 2\n');
-    expect(await captureRevisionFailure(root)).toContain('do not match the dependency files');
+    expect(await captureRejection(copyRevision(root, { kind: 'index' }))).toContain(
+        'do not match the dependency files',
+    );
 });
 
 test('cancellation drains dependency copies before removing the copy and keeps installed files', async () => {
@@ -213,5 +212,7 @@ test('a manifest checked out with CRLF matches its LF blob when Git converts lin
     const source = await readFile(join(copy.root, 'node_modules/example/index.js'), 'utf8');
     expect(source).toContain('value = 1');
     await writeFile(join(sandbox.path, 'package.json'), '{\r\n    "name": "changed"\r\n}\r\n');
-    expect(await captureRevisionFailure(sandbox.path)).toContain('do not match the dependency files');
+    expect(await captureRejection(copyRevision(sandbox.path, { kind: 'index' }))).toContain(
+        'do not match the dependency files',
+    );
 });

@@ -3,12 +3,13 @@ import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { parseTomlText } from '#cli/settings/file.ts';
+import { parseSettings } from '#cli/settings/read.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { listAllowedRules } from '#cli/settings/import-rules.ts';
 import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { publishedSettingsValidator } from '#tests/schemas/settings.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/settings.ts';
 import { REVIEWED_REASON, REFUSED_RULE_OPTIONS } from '#tests/data/settings/errors.ts';
-import { parseSettingsText, buildSandboxSettings, validateSettingsText } from '#tests/setup/settings.ts';
 
 import {
     UNSAFE_FOLDERS,
@@ -31,7 +32,7 @@ paths = ["app/**"]
 name = "entry"
 paths = ["entry/**"]
 `;
-        const settings = parseSettingsText(text);
+        const settings = parseSettings(text, undefined);
         expect(settings.import_rule).toStrictEqual([
             { name: 'storage', paths: ['storage/**'] },
             { name: 'app', paths: ['app/**'] },
@@ -39,7 +40,7 @@ paths = ["entry/**"]
         ]);
         expect(listAllowedRules(settings.import_rule, 1)).toStrictEqual(['app', 'storage']);
         expect(settings.written).not.toHaveProperty('import_rule.1.can_import');
-        expect(() => parseSettingsText(text.replace('paths = ["app/**"]', 'paths = [3]'))).toThrow(
+        expect(() => parseSettings(text.replace('paths = ["app/**"]', 'paths = [3]'), undefined)).toThrow(
             'import_rule.1.paths.0',
         );
     });
@@ -54,28 +55,28 @@ name = "app"
 paths = ["app/**"]
 can_import = ["storage"]
 `;
-        const settings = parseSettingsText(text);
+        const settings = parseSettings(text, undefined);
         expect(settings.import_rule[1]).toStrictEqual({
             name: 'app',
             paths: ['app/**'],
             can_import: ['storage'],
         });
-        expect(() => parseSettingsText(text.replace('can_import = ["storage"]', 'can_import = ["missing"]'))).toThrow(
-            'import_rule.1.can_import.0: There is no import rule named missing.',
-        );
+        expect(() =>
+            parseSettings(text.replace('can_import = ["storage"]', 'can_import = ["missing"]'), undefined),
+        ).toThrow('import_rule.1.can_import.0: There is no import rule named missing.');
     });
 });
 
 describe('global ignores', () => {
     test('an ignore without check needs paths and takes no rule', () => {
         const reason = 'Product photos and facts are data, not code.';
-        const settings = parseSettingsText(`[[ignore]]\npaths = ["assets/products/**"]\nreason = "${reason}"\n`);
+        const settings = parseSettings(`[[ignore]]\npaths = ["assets/products/**"]\nreason = "${reason}"\n`, undefined);
         expect(settings.ignore).toStrictEqual([{ paths: ['assets/products/**'], reason }]);
-        expect(() => parseSettingsText(`[[ignore]]\nreason = "${reason}"\n`)).toThrow(
+        expect(() => parseSettings(`[[ignore]]\nreason = "${reason}"\n`, undefined)).toThrow(
             'An ignore without check needs paths.',
         );
         expect(() =>
-            parseSettingsText(`[[ignore]]\nrule = "no-console"\npaths = ["a/**"]\nreason = "${reason}"\n`),
+            parseSettings(`[[ignore]]\nrule = "no-console"\npaths = ["a/**"]\nreason = "${reason}"\n`, undefined),
         ).toThrow('An ignore without check cannot name a rule.');
     });
 });
@@ -85,7 +86,7 @@ describe('parts', () => {
         const written = parseTomlText(source, 'dates.toml');
         expect(settingsSchema.safeParse(written).success).toBe(row.valid);
         if (!row.valid) return;
-        const settings = parseSettingsText(source);
+        const settings = parseSettings(source, undefined);
         expect(settings.ignore[0]?.until?.toISOString()).toBe(row.date);
         const output = buildSettingsText(source, written);
         expect(output).toContain(`until = ${row.date}`);
@@ -93,7 +94,7 @@ describe('parts', () => {
     });
 
     test.each([...UNSAFE_FOLDERS])('scope refuses the path %s', (path) => {
-        expect(() => parseSettingsText(stringify({ scope: [{ path }] }))).toThrow(
+        expect(() => parseSettings(stringify({ scope: [{ path }] }), undefined)).toThrow(
             'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
         );
     });
@@ -102,18 +103,17 @@ describe('parts', () => {
         const path = 'apps/café 100%';
         await using sandbox = await testdir({ [`${path}/source.ts`]: 'export const count = 1;\n' });
 
-        expect(Object.keys(parseSettingsText(stringify({ scope: [{ path }] }), sandbox.path).scopes)).toStrictEqual([
-            path,
-        ]);
+        expect(Object.keys(parseSettings(stringify({ scope: [{ path }] }), sandbox.path).scopes)).toStrictEqual([path]);
     });
 });
 describe('tools', () => {
     test('zero and false tool options are kept as values', () => {
-        const settings = parseSettingsText(
+        const settings = parseSettings(
             stringify({
                 configurations: ['javascript'],
                 tools: { eslint: { rules: { 'id-length': [{ min: 0, properties: false }] } } },
             }),
+            undefined,
         );
         expect(settings.tools).toMatchObject({ eslint: { rules: { 'id-length': [{ min: 0, properties: false }] } } });
     });
@@ -122,7 +122,10 @@ describe('tools', () => {
         'rule keys named like object properties are checked like any other key (%j)',
         (key) => {
             expect(() =>
-                parseSettingsText(`configurations = ["commits"]\n[tools.commitlint.rules]\n"${key}" = ["invalid"]\n`),
+                parseSettings(
+                    `configurations = ["commits"]\n[tools.commitlint.rules]\n"${key}" = ["invalid"]\n`,
+                    undefined,
+                ),
             ).toThrow(`tools.commitlint.rules.${key}: Unknown commitlint rule. Accepted rules:`);
         },
     );
@@ -146,7 +149,7 @@ test('the published schema accepts an until date read by a TOML parser', () => {
 
 test('options for a rule that a setting writes are refused with that setting: complexity, max-lines in an override, MD007', () => {
     for (const { tables, path, rule, setting } of SETTING_RULE_OPTIONS) {
-        expect(() => parseSettingsText('configurations = ["javascript", "markdown"]\n' + tables)).toThrow(
+        expect(() => parseSettings('configurations = ["javascript", "markdown"]\n' + tables, undefined)).toThrow(
             `gspot.toml: ${path}: gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`,
         );
     }
@@ -154,7 +157,10 @@ test('options for a rule that a setting writes are refused with that setting: co
 
 test('options for import boundaries direct the reader to import_rule records', () => {
     expect(() =>
-        parseSettingsText('configurations = ["javascript"]\n[tools.eslint.rules]\n"gspot/import-boundaries" = [{}]\n'),
+        parseSettings(
+            'configurations = ["javascript"]\n[tools.eslint.rules]\n"gspot/import-boundaries" = [{}]\n',
+            undefined,
+        ),
     ).toThrow(
         'gspot.toml: tools.eslint.rules.gspot/import-boundaries: gspot writes the options of gspot/import-boundaries from the [[import_rule]] records. Change those records instead.',
     );
@@ -164,7 +170,7 @@ test.each(['constructor', 'toString', 'prototype'])(
     'a rule named %s is not mistaken for a setting-owned rule',
     (rule) => {
         expect(() =>
-            parseSettingsText(`configurations = ["javascript"]\n[tools.eslint.rules]\n"${rule}" = [{}]\n`),
+            parseSettings(`configurations = ["javascript"]\n[tools.eslint.rules]\n"${rule}" = [{}]\n`, undefined),
         ).not.toThrow();
     },
 );

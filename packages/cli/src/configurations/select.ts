@@ -1,5 +1,5 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { formatUnknownName } from '#cli/system/text.ts';
+import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { SOURCE_FILE_GROUPS } from '#cli/config/configurations.ts';
@@ -74,7 +74,7 @@ export function isConfigurationSelected(scopes: Pick<Scope, 'selected'>[], name:
 
 // Name an unknown configuration, and say where to find the available ones.
 function formatUnknownConfiguration(name: string, known: string[]): string {
-    return `${formatUnknownName('configuration', name, known)} Run \`gspot list configurations\` to see the available configurations.`;
+    return `There is no configuration called \`${name}\`.${formatSimilarNames(name, known)} Run \`gspot list configurations\` to see the available configurations.`;
 }
 
 /**

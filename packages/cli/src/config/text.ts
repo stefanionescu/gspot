@@ -17,3 +17,6 @@ export const PLAIN_ARGUMENT = /^[\w@:./-]+$/u;
 export const NOT_LINE_BREAK = /[^\r\n]/gu;
 
 export const DIGITS_ONLY = /^\d+$/u;
+
+/** The replacement text that puts a backslash before each match of a pattern. */
+export const BACKSLASH_BEFORE_MATCH = String.raw`\$&`;

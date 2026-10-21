@@ -5,7 +5,6 @@ import { openSession } from '#cli/session.ts';
 import { test, expect, describe } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
@@ -31,7 +30,7 @@ describe('results', () => {
             {
                 check: 'sandbox/broken',
                 status: 'error',
-                note: matchSubstring('JSON returned no structured findings.'),
+                note: expect.stringContaining('JSON returned no structured findings.') as string,
             },
             { check: 'sandbox/kept', status: 'failed', findings: [{ message: 'source.txt' }] },
         ]);

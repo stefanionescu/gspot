@@ -60,7 +60,7 @@ why = "A long file hides independent responsibilities from the reader."
 
 [[check]]
 example = "A Bash function that only calls another reports a finding. Inline the call at each caller, and delete the wrapper."
-files = { extensions = [".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", ".swift"], tags = ["shell"], kinds = ["source"] }
+files = { extensions = [".py", ".swift"], tags = ["shell"], kinds = ["source"] }
 help = "Inline a forwarding function at its calls and delete it. Split independent statements into the files that use them."
 level = "all"
 name = "trivial-functions"

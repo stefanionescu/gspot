@@ -63,10 +63,11 @@ permissions, and external services. Trust an internal invariant once the public 
 Keep one implementation of each concept, and one copy of each table of values, in the module that uses it.
 Extract shared code only when two or more callers need the same behavior now.
 
-- Delete a function whose body only calls another or returns a single expression. Call the other function
-  directly. Keep a callback that an API needs.
-- Keep a helper with one caller when it names a step and holds real logic. Do not split code into helpers only
-  to pass a size or complexity limit. Split it by the steps it performs.
+- Delete each function of `limits.trivial_function_statements` statements or fewer, two by default, exported or
+  not, and inline its body at each call site. Keep a callback that an API needs, a recursive function, and a
+  method that the language or a type requires.
+- Keep a function with one caller when it names a step and holds more statements than that limit. Do not split
+  code into functions only to pass a size or complexity limit. Split it by the steps it performs.
 - An abstraction that gains flags, modes, or caller-specific branches needs a different design. Do not combine
   loosely related behaviors in a function behind a parameter that picks one.
 - A function takes no positional boolean. Pass more than a few values as named fields: an options object,

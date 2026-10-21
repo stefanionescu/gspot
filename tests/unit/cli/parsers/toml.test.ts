@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { openTomlFile, parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
 
@@ -74,6 +74,9 @@ test('TOML edits keep dates, array order and keys named like object properties',
 
 test('TOML schema failures name the source file and the field', () => {
     expect(() => parseTomlFile('package.toml', 'name = 42', packageJsonSchema)).toThrow(
-        matchFields<GspotError>({ code: 'filesystem', message: matchSubstring('package.toml: name:') }),
+        matchFields<GspotError>({
+            code: 'filesystem',
+            message: expect.stringContaining('package.toml: name:') as string,
+        }),
     );
 });

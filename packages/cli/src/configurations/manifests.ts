@@ -1,10 +1,11 @@
 import { posix } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { isRecord } from '#cli/system/tables.ts';
-import { formatUnknownName } from '#cli/system/text.ts';
+import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import { readAsset, listAssets } from '#cli/system/assets.ts';
 import type { ShippedRule } from '#cli/types/generation/rules.ts';
+import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
 import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/configurations.ts';
@@ -103,7 +104,7 @@ function readShippedConfigurations(): Map<string, Configuration> {
     const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));
     for (const path of paths) {
         const folder = path.slice(0, -`/${MANIFEST_FILE}`.length);
-        const manifest = parseManifest(readAsset(path), folder);
+        const manifest = parseManifest(readFileSync(buildAssetPath(path), 'utf8'), folder);
         manifests.set(manifest.configuration.name, manifest);
     }
     return buildConfigurations(
@@ -207,5 +208,6 @@ function listDeclaredTools(manifests: Iterable<ParsedManifest>): Map<string, Too
  */
 export function assertKnownCheck(name: string, settings: Pick<Settings, 'commandChecks'>): void {
     const known = listCheckIds(Object.values(settings.commandChecks));
-    if (!known.includes(name)) throw new GspotError('arguments', formatUnknownName('check', name, known));
+    if (!known.includes(name))
+        throw new GspotError('arguments', `There is no check called \`${name}\`.${formatSimilarNames(name, known)}`);
 }

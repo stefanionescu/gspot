@@ -6,9 +6,8 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
-import { EXPORTED_FUNCTION_FILES } from '#tests/data/checks/structure/exported-functions.ts';
 
 import {
     TRIVIAL_FILES,
@@ -109,7 +108,7 @@ test.each([...STATEMENT_COUNT_CASES])(
         const extension = ({ python: 'py', bash: 'sh', swift: 'swift' } as const)[language];
         const findings = await checkTrivialFile(language, `example.${extension}`, source);
         expect(findings).toMatchObject([
-            { rule: 'trivial-function', message: matchSubstring('has 2 statements.') },
+            { rule: 'trivial-function', message: expect.stringContaining('has 2 statements.') as string },
             { rule: 'trivial-file' },
         ]);
     },
@@ -118,22 +117,4 @@ test.each([...STATEMENT_COUNT_CASES])(
 test.each([...TRIVIAL_FILES])('$name is trivial: $expected', async ({ language, file, source, expected }) => {
     const findings = await checkTrivialFile(language, file, source);
     expect(findings.some(({ rule }) => rule === 'trivial-file')).toBe(expected);
-});
-
-test('exported JavaScript and TypeScript expressions with one importing file are reported, while shared functions and command definitions stay', async () => {
-    await using sandbox = await testdir({
-        ...EXPORTED_FUNCTION_FILES,
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-    });
-    const findings = await checkFindings(sandbox.path, 'structure/trivial-functions');
-    expect(
-        findings
-            .map(({ file, line, rule }) => ({ file, line, rule }))
-            .toSorted((left, right) => left.file.localeCompare(right.file) || (left.line ?? 0) - (right.line ?? 0)),
-    ).toStrictEqual([
-        { file: 'default.cjs', line: 1, rule: 'trivial-function' },
-        { file: 'forward.ts', line: 1, rule: 'trivial-function' },
-        { file: 'forward.ts', line: 2, rule: 'trivial-function' },
-        { file: 'namespace.mjs', line: 1, rule: 'trivial-function' },
-    ]);
 });

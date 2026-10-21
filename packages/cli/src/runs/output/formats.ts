@@ -55,10 +55,6 @@ function listRootPrefixes(root: string): string[] {
     return [...prefixes].toSorted((first, second) => second.length - first.length);
 }
 
-function hasFilePaths(output: CheckOutput): boolean {
-    return (output.pattern ?? '').includes(FILE_GROUP);
-}
-
 /** The reader and process-result rules for every supported output format. */
 export const outputFormats = {
     none: { parse: () => [], namesFiles: () => false },
@@ -72,8 +68,8 @@ export const outputFormats = {
     knip: { parse: parseKnipFindings, namesFiles: () => true },
     semgrep: { parse: parseSemgrepFindings, namesFiles: () => true },
     lines: { parse: parseLineFindings, namesFiles: () => false },
-    regex: { parse: parseRegexFindings, namesFiles: hasFilePaths },
-    grouped: { parse: parseGroupedFindings, namesFiles: hasFilePaths },
+    regex: { parse: parseRegexFindings, namesFiles: (output) => (output.pattern ?? '').includes(FILE_GROUP) },
+    grouped: { parse: parseGroupedFindings, namesFiles: (output) => (output.pattern ?? '').includes(FILE_GROUP) },
 } satisfies Record<CheckOutput['format'], OutputDescriptor>;
 
 /**

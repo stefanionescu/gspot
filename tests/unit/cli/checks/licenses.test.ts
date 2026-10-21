@@ -10,13 +10,13 @@ import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { prepareLicenseSandbox } from '#tests/setup/licenses.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { matchFields, matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 
 import {
     LICENSE_SETTINGS,
-    SCANNER_FAILURES,
     SAMPLE_PYPROJECT,
+    SCANNER_FAILURES,
     NPM_LICENSE_REPORT,
     LICENSE_PACKAGE_JSON,
     ALLOWED_PACKAGE_CASES,
@@ -53,7 +53,9 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])('allowed-packages: allowed packages:
         );
     });
     expect(await checkFindings(sandbox.path, 'licenses/allowed')).toStrictEqual(
-        findings.map(({ file, rule, message }) => matchFields({ file, rule, message: matchSubstring(message) })),
+        findings.map(({ file, rule, message }) =>
+            matchFields({ file, rule, message: expect.stringContaining(message) as string }),
+        ),
     );
     const expected = scopes
         .filter((scope) => scope !== ('ignore' in scenario ? scenario.ignore : undefined))
@@ -85,7 +87,7 @@ test.each([...ALLOWED_PACKAGE_CASES])('allowed-packages: an allowed package: $na
                 file: rule === 'unused-record' ? 'gspot.toml' : 'pyproject.toml',
                 line: 1,
                 rule,
-                message: matchSubstring(message),
+                message: expect.stringContaining(message) as string,
             }),
         ),
     );
@@ -174,7 +176,7 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
             file,
             line: 1,
             rule: 'disallowed-license',
-            message: matchSubstring(message),
+            message: expect.stringContaining(message) as string,
         })),
     );
     expect(output).toHaveBeenCalledTimes(2);

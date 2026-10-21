@@ -7,10 +7,12 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Tool } from '#cli/types/configurations.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { fakeTool, fakeNpmPackage } from '#tests/setup/fakes.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { VERSION_OUTPUTS } from '#tests/data/install/installation.ts';
-import { getShippedTool, buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
+import { buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
 
 // One release below the declared floor, computed so the test does not copy its value.
 function computeVersionBelow(floor: string): string {
@@ -118,7 +120,7 @@ test.each([
 test.each(['gitleaks', 'next'])('the %s pin is outdated below its floor and accepted at it', async (name) => {
     await using sandbox = await testdir();
     using _which = useExecutable(process.execPath);
-    const pin = getShippedTool(name);
+    const pin = getTool(readConfigurations().values(), name);
     const floor = pin.min_version!;
     const available = pin.system === true ? 'system' : 'ok';
     for (const version of [computeVersionBelow(floor), floor]) {

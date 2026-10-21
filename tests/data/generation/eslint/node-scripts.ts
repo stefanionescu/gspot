@@ -173,8 +173,9 @@ console.log(value());
     },
     {
         file: 'scripts/parameters',
-        source: '#!/usr/bin/env node\nexport function sum(first, second, third) { return first + second + third; }\n',
-        corrected: '#!/usr/bin/env node\nexport function sum(first, second) { return first + second; }\n',
+        source: '#!/usr/bin/env node\nexport function sum(first, second, third) { const partial = first + second; const total = partial + third; console.log(total); return total; }\n',
+        corrected:
+            '#!/usr/bin/env node\nexport function sum(first, second) { const partial = first + second; const total = partial * 2; console.log(total); return total; }\n',
         recommended: [],
         all: [{ ruleId: 'max-params', line: 2 }],
     },

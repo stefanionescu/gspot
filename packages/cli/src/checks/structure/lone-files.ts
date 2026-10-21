@@ -6,7 +6,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
-import { isInDependencyFolder } from '#cli/repository/files/tool-folders.ts';
+import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
 
 /**
@@ -27,7 +27,7 @@ export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck
     );
     const checked = new Set(files.map((file) => extractParentFolder(file.path)));
     return [...checked]
-        .filter((folder) => folder !== '' && !isInDependencyFolder(folder))
+        .filter((folder) => folder !== '' && !folder.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part)))
         .flatMap((folder) => {
             const entries = tree.get(folder) ?? [];
             if (entries.some((entry) => entry.kind === 'folder')) return [];

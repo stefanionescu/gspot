@@ -1,6 +1,7 @@
+import { posix } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import { getTable } from '#cli/settings/scope-view.ts';
-import { findLockfile } from '#cli/repository/files/classify.ts';
+import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { TOOL_FILE_TOML_FORMAT } from '#cli/config/generation/generate.ts';
 import type { IgnoreSection, PlannedToolFile } from '#cli/types/generation/files.ts';
 
@@ -11,8 +12,8 @@ import {
 } from '#cli/config/generation/settings/builders/typos.ts';
 import {
     convertToGlobs,
-    keepFirstPatterns,
     formatReasonLines,
+    keepFirstPatterns,
     buildIgnoreSections,
     listCheckIgnoreSections,
 } from '#cli/generation/settings/ignore-files.ts';
@@ -20,7 +21,7 @@ import {
 // Convert each shared ignore section once, and keep the first reason for a repeated path.
 function buildTyposSections(planned: PlannedToolFile): IgnoreSection[] {
     const excludedLockfiles = TYPOS_IGNORED_GLOBS.filter(
-        (path) => path === '*.lock' || findLockfile(path) !== undefined,
+        (path) => path === '*.lock' || LOCKFILES.some((entry) => entry.file === posix.basename(path)),
     );
     const excludedFormats = TYPOS_IGNORED_GLOBS.filter((path) => !excludedLockfiles.includes(path));
     const sections = [

@@ -19,9 +19,9 @@ import type { ValeAlert, ProseRoute, ProseRouteGroup } from '#cli/types/checks/p
 
 import {
     VALE_TOOL,
-    VALE_ARGUMENTS,
     PROSE_GRAMMARS,
     SCRIPT_GRAMMAR,
+    VALE_ARGUMENTS,
     VALE_ERROR_LINE,
 } from '#cli/config/checks/prose.ts';
 
@@ -51,17 +51,13 @@ function assertValeRan(result: SpawnResult): void {
     throw new Error(`Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
 }
 
-function buildValeCommand(session: Session): string[] {
-    return [VALE_TOOL, '--config', join(session.root, VALE_TOOL_FILE_PATH), ...VALE_ARGUMENTS];
-}
-
 async function runValeOnPaths(
     session: Session,
     planned: PlannedCheck,
     routes: ProseRoute[],
     folder: string,
 ): Promise<ValeAlert[]> {
-    const base = buildValeCommand(session);
+    const base = [VALE_TOOL, '--config', join(session.root, VALE_TOOL_FILE_PATH), ...VALE_ARGUMENTS];
     const alerts: ValeAlert[] = [];
     for (const batch of splitFileArguments(
         routes.map((route) => join(session.root, route.path)),
@@ -93,7 +89,10 @@ async function runValeOnStdin(
         session,
         planned,
         [
-            ...buildValeCommand(session),
+            VALE_TOOL,
+            '--config',
+            join(session.root, VALE_TOOL_FILE_PATH),
+            ...VALE_ARGUMENTS,
             `--ext=${route.extension}`,
             `--path=${join(session.root, route.path)}${route.extension}`,
         ],

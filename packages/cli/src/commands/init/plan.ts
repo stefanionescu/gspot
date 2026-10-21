@@ -10,7 +10,6 @@ import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 
 import {
@@ -162,7 +161,7 @@ export function planInitFiles(
         { path: SETTINGS_FILE, note: `your settings, ${String(settingsText.split('\n').length)} lines` },
         { path: `${DOT_GSPOT}/`, note: 'generated files and version pin' },
         ...[...generated.files, ...generated.blocks]
-            .filter(({ path }) => !isInGspotFolder(path) && !change.some((row) => row.path === path))
+            .filter(({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && !change.some((row) => row.path === path))
             .map(({ path }) => {
                 if (replaced.deleted.some((row) => row.path === path))
                     return { path, note: `replaces your file; read the old one with git show HEAD:${path}` };

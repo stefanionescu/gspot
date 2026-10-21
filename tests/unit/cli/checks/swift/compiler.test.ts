@@ -9,14 +9,14 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/swift/cache.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { SWIFT_LANGUAGE_PACKAGE } from '#tests/data/checks/swift/projects.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { matchFields, matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 
 import {
     checkFindings,
-    planSandboxCheck,
     findBuiltInCheck,
+    planSandboxCheck,
     prepareSwiftCheck,
     createCompilerCache,
 } from '#tests/setup/check-input.ts';
@@ -102,7 +102,7 @@ test('compiler: a failed Swift build without source diagnostics returns executio
             check: 'swift/build',
             status: 'error',
             findings: [],
-            note: matchSubstring('Permission denied'),
+            note: expect.stringContaining('Permission denied') as string,
         }),
     );
     run.mockResolvedValue(buildProcessResult());

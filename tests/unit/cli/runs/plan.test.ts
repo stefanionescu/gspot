@@ -11,7 +11,6 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { checkSecuritySemgrep } from '#cli/checks/security.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
@@ -19,7 +18,7 @@ import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { HISTORY_TABLES, TOOL_FILE_PLANNING_CASES } from '#tests/data/runs/plan.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/data/checks/format.ts';
 import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
-import { buildRunOptions, listAlwaysSelected, buildProcessResult } from '#tests/setup/builders.ts';
+import { buildRunOptions, buildProcessResult, listAlwaysSelected } from '#tests/setup/builders.ts';
 
 test('coverage arguments leave other commands, your own checks, and given arguments unchanged', async () => {
     await using sandbox = await testdir();
@@ -141,7 +140,7 @@ Release on 03/04/2026.
         expect(security?.files).toStrictEqual([]);
         expect(await checkSecuritySemgrep(session, security!)).toMatchObject({
             status: 'skipped',
-            note: matchSubstring('tools.semgrep.rule_files'),
+            note: expect.stringContaining('tools.semgrep.rule_files') as string,
         });
         expect(checks.find((check) => check.check.name === 'prose/vale')?.files.map((file) => file.path)).toContain(
             'guide.md',

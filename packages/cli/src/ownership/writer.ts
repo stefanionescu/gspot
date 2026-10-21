@@ -5,19 +5,6 @@ import { isSameContents } from '#cli/system/files/entries.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { openFiles, removeEmptyFolders } from '#cli/system/files/open.ts';
 
-/**
- * Explain which files need review before gspot replaces them.
- *
- * @param paths the files with content that gspot did not write.
- * @returns the refusal.
- */
-function buildPreservedFilesError(paths: string[]): GspotError {
-    return new GspotError(
-        'writing',
-        `These files were not overwritten by gspot: ${paths.join(', ')}. Move them aside, then run the command again.`,
-    );
-}
-
 function writeBatch(writer: Writer, plans: WritePlan[]): void {
     for (const { path, before, after } of plans) {
         if (after === undefined) {
@@ -51,7 +38,11 @@ export function openWriter(repositoryRoot: string): Writer {
  */
 export function writePlans(writer: Writer, plans: WritePlan[]): void {
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
-    if (conflicts.length > 0) throw buildPreservedFilesError(conflicts);
+    if (conflicts.length > 0)
+        throw new GspotError(
+            'writing',
+            `These files were not overwritten by gspot: ${conflicts.join(', ')}. Move them aside, then run the command again.`,
+        );
     writeBatch(
         writer,
         plans.filter((plan) => plan.status === 'changed'),

@@ -9,12 +9,11 @@ import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/data/test-setup.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { readGitOutput, createLfsRepository } from '#tests/setup/git.ts';
 import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
-import { chmod, mkdir, realpath, readFile, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
 
 import {
     HOOK_CASES,
@@ -24,11 +23,6 @@ import {
     LOGGING_PROGRAM,
     HOOK_LEVEL_CASES,
 } from '#tests/data/hooks.ts';
-
-/** Build new settings with hooks on, for each script run. */
-function buildHookSettings(): Settings {
-    return parseSettings(buildSandboxSettings([], { rules: true, tables: HOOKS_SETTINGS }), undefined);
-}
 
 test.each([...HOOK_LEVEL_CASES])(
     'at level $level, gspot writes a hook only for a stage with a check',
@@ -59,7 +53,7 @@ test.each(START_COMMANDS)(
                     devDependencies: { '@gspothq/cli': '1.2.3' },
                 }),
             );
-        const settings = buildHookSettings();
+        const settings = parseSettings(buildSandboxSettings([], { rules: true, tables: HOOKS_SETTINGS }), undefined);
         const files = buildHookFiles(settings, await selectStartRunner(root), {
             names: HOOK_CASES.map(([name]) => name),
             usesLfs: false,
@@ -97,7 +91,7 @@ test.each(START_COMMANDS)(
 test('a hook says how to install mise when mise is missing', async () => {
     await using sandbox = await testdir();
     readGitOutput(sandbox.path, ['init', '-q']);
-    const settings = buildHookSettings();
+    const settings = parseSettings(buildSandboxSettings([], { rules: true, tables: HOOKS_SETTINGS }), undefined);
     const hook = buildHookFiles(settings, await selectStartRunner(sandbox.path), {
         names: HOOK_CASES.map(([name]) => name),
         usesLfs: false,

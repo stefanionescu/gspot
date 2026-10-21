@@ -1,7 +1,6 @@
 import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
-import { formatNotes } from '#cli/system/terminal.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { listExpectedPaths } from '#cli/apply/stale.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
@@ -44,7 +43,8 @@ export function formatApplyReport(report: ApplyReport): string {
         ...report.removed.map((path) => `removed  ${path}`),
     ];
     if (lines.length === 0 && report.notes.length === 0) lines.push(formatUpToDate(report.unchanged.length));
-    return `${lines.length === 0 ? '' : lines.join('\n') + '\n'}${formatNotes(report.notes)}`;
+    lines.push(...report.notes.map((note) => `note     ${note}`));
+    return `${lines.join('\n')}\n`;
 }
 
 function removeUnusedToolFolders(writer: Writer, paths: ReadonlySet<string>): void {

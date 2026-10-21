@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import jestPackage from 'jest/package.json' with { type: 'json' };
 import { COVERAGE_ZERO_LIMITS } from '#tests/data/checks/coverage.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 import {
@@ -91,7 +91,7 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
     const failed = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks.flatMap((check) => check.findings)).toStrictEqual([
-        matchFields({ message: matchSubstring('toBe(7)') }),
+        matchFields({ message: expect.stringContaining('toBe(7)') as string }),
     ]);
     await assertJestFilesKept(sandbox.path);
 });

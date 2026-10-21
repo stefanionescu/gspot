@@ -1,14 +1,16 @@
+import { readFileSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
-import { readNameList } from '#cli/configurations/name-lists.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scope-view.ts';
-import { selectStylelintComponents } from '#cli/planning/needed-tools.ts';
+import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 
 import {
     TAILWIND_AT_RULES,
+    STYLELINT_COMPONENTS,
     CSS_MODULES_OVERRIDE,
     STYLELINT_BASE_RULES,
     STYLELINT_RECOMMENDED_OFF,
@@ -41,28 +43,30 @@ function buildComponentOverrides(
     chosen: Record<string, unknown>,
     off: string[],
 ) {
-    return selectStylelintComponents(configurations).map((override) => {
-        const { files, ignorePseudoClasses } = override;
-        const functions = override.functions === undefined ? [] : [...override.functions, ...tailwindFunctions];
-        const rules: Record<string, unknown> = {
-            'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses }],
-            ...(functions.length === 0
-                ? {}
-                : {
-                      'function-no-unknown': [true, { ignoreFunctions: functions }],
-                      'value-keyword-case': ['lower', { ignoreFunctions: override.functions }],
-                      'declaration-property-value-no-unknown': [
-                          true,
-                          { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
-                      ],
-                  }),
-        };
-        return {
-            files,
-            customSyntax: override.customSyntax,
-            rules: dropChosenRules(rules, chosen, off),
-        };
-    });
+    return configurations
+        .flatMap((name) => STYLELINT_COMPONENTS[name] ?? [])
+        .map((override) => {
+            const { files, ignorePseudoClasses } = override;
+            const functions = override.functions === undefined ? [] : [...override.functions, ...tailwindFunctions];
+            const rules: Record<string, unknown> = {
+                'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses }],
+                ...(functions.length === 0
+                    ? {}
+                    : {
+                          'function-no-unknown': [true, { ignoreFunctions: functions }],
+                          'value-keyword-case': ['lower', { ignoreFunctions: override.functions }],
+                          'declaration-property-value-no-unknown': [
+                              true,
+                              { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
+                          ],
+                      }),
+            };
+            return {
+                files,
+                customSyntax: override.customSyntax,
+                rules: dropChosenRules(rules, chosen, off),
+            };
+        });
 }
 
 // A scope with CSS Modules files accepts their syntax in those files. The override keeps the Tailwind at-rules.
@@ -104,7 +108,9 @@ export function buildStylelintFile(planned: PlannedToolFile): string {
     const options = getTable(selection.view, 'tools.stylelint');
     const isAll = level === 'all';
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, selection.scope.path);
-    const stylelintRuleNames = readNameList(STYLELINT_RULE_NAMES_FILE).names;
+    const stylelintRuleNames = nameListSchema.parse(
+        JSON.parse(readFileSync(buildAssetPath(STYLELINT_RULE_NAMES_FILE), 'utf8')),
+    ).names;
 
     const off = listIgnoredRules(planned.selection, 'css/stylelint');
     const activeRules = new Set(

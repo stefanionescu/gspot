@@ -2,8 +2,8 @@ import type { Session } from '#cli/types/session.ts';
 import type { ManagedKeys } from '#cli/types/ownership.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { BlockStyle } from '#cli/types/parsers/managed-blocks.ts';
-import type { LFS_HOOKS, CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { Tool, Level, ToolFile, Configuration } from '#cli/types/configurations.ts';
 import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/settings/ignore-files.ts';
 
@@ -37,8 +37,6 @@ export type ToolFileGeneration = {
 export type SemgrepDocument = { rules: SemgrepRule[] };
 
 export type HookName = (typeof CHECK_HOOKS)[number];
-
-export type LfsHookName = (typeof LFS_HOOKS)[number];
 
 export type PlannedNpmProject = {
     root: string;

@@ -43,14 +43,6 @@ function checkMainFunction(file: ScriptFile, code: NumberedLine[]): LayoutIssue[
     return issues;
 }
 
-function isDeclarativeLine(text: string): boolean {
-    return (
-        SOURCE_STATEMENT.test(text) ||
-        text.startsWith(READONLY_WORD) ||
-        TOP_LEVEL_ASSIGNMENT.test(stripDeclaration(text))
-    );
-}
-
 /**
  * Finds the innermost function that holds a line.
  *
@@ -76,9 +68,23 @@ function checkLibraryLine(
     if (line.text === MAIN_CALL)
         return [{ line: line.number, rule: 'library-main', text: 'A sourced library does not call main.' }];
     if (findFunctionAtLine(file.functions, line.number) !== undefined) return [];
+    return checkTopLevelLine(line, { isEnvironmentReader });
+}
+
+// A top-level line of a sourced library may only declare: source a file, mark a value readonly, or assign a value.
+function checkTopLevelLine(
+    line: NumberedLine,
+    { isEnvironmentReader }: { isEnvironmentReader: boolean },
+): LayoutIssue[] {
     if (EXIT_CALL.test(line.text))
         return [{ line: line.number, rule: 'library-exit', text: 'A sourced library does not exit.' }];
-    if (isEnvironmentReader || isDeclarativeLine(line.text)) return [];
+    if (
+        isEnvironmentReader ||
+        SOURCE_STATEMENT.test(line.text) ||
+        line.text.startsWith(READONLY_WORD) ||
+        TOP_LEVEL_ASSIGNMENT.test(stripDeclaration(line.text))
+    )
+        return [];
     return [
         {
             line: line.number,

@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { CST, Lexer } from 'yaml';
 import { visit } from 'unist-util-visit';
+import { NOT_LINE_BREAK } from '#cli/config/text.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
@@ -9,15 +10,15 @@ import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
 import type { GrammarName } from '#cli/types/parsers/grammars.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+import { findQuotedEnd, computePosition } from '#cli/system/text.ts';
 import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/syntax.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/grammars.ts';
 import type { CommentParser, SourceComment } from '#cli/types/parsers/comments.ts';
-import { findQuotedEnd, convertToSpaces, computePosition } from '#cli/system/text.ts';
 
 import {
     COMMENT_NODES,
-    QUOTE_CHARACTERS,
     HTML_COMMENT_END,
+    QUOTE_CHARACTERS,
     BLOCK_COMMENT_END,
     YAML_SCALAR_TOKENS,
     SCSS_COMMENT_OPENERS,
@@ -114,7 +115,7 @@ function parseSqlComments(text: string): SourceComment[] {
 
 // Only Markdown HTML nodes can contain HTML comments. Keep offsets while hiding code examples and prose.
 function extractMarkdownHtml(text: string): string {
-    const masked = convertToSpaces(text);
+    const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
     const pieces: string[] = [];
     let offset = 0;
     visit(fromMarkdown(text), 'html', (node) => {

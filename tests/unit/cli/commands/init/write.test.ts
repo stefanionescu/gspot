@@ -6,7 +6,6 @@ import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
@@ -130,7 +129,7 @@ test('init keeps a shared file that was edited after the plan', async () => {
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
     expect(plan.retained).toContainEqual({
         path: 'setup.cfg',
-        note: matchSubstring('Delete the section when ready'),
+        note: expect.stringContaining('Delete the section when ready') as string,
     });
     const edited = `[sqlfluff]
 exclude_rules = LT01, RF01

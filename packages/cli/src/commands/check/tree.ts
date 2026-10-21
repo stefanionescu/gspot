@@ -1,14 +1,14 @@
 import { openSession } from '#cli/session.ts';
 import { resolve, relative } from 'node:path';
-import { warn } from '#cli/system/terminal.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { getColors } from '#cli/system/terminal.ts';
 import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { DRY_RUN_NOTE } from '#cli/config/terminal.ts';
 import { readHookStatus } from '#cli/install/hooks.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { formatUnknownName } from '#cli/system/text.ts';
+import { formatSimilarNames } from '#cli/system/text.ts';
 import type { StageFilter } from '#cli/types/planning.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
@@ -101,7 +101,11 @@ function assertKnownChecks(session: Session, only: string[] | undefined): void {
         ...Object.values(session.settingsFile.settings.commandChecks).map((check) => check.name),
     ]);
     const unknown = only?.find((check) => !known.has(check));
-    if (unknown !== undefined) throw new GspotError('arguments', formatUnknownName('check', unknown, [...known]));
+    if (unknown !== undefined)
+        throw new GspotError(
+            'arguments',
+            `There is no check called \`${unknown}\`.${formatSimilarNames(unknown, [...known])}`,
+        );
 }
 
 // Warns when the clone receiving the report lacks the configured hooks.
@@ -111,7 +115,10 @@ function warnAboutHooks(session: Session, revision: RevisionSource | undefined):
         root: revision?.reportRoot ?? session.root,
         hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
     });
-    if (!hooks.ready) warn('The Git hooks are not installed in this clone. Run: gspot install');
+    if (!hooks.ready)
+        process.stderr.write(
+            `${getColors().yellow('[warn]')} The Git hooks are not installed in this clone. Run: gspot install\n`,
+        );
 }
 
 // Read the changed paths: from the revision, from the --changed ref, or none for a whole push.

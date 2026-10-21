@@ -2,16 +2,17 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { escapeGlob } from '#cli/repository/matchers.ts';
 import { mergeIgnore } from '#cli/settings/text/build.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { stringify, LocalDate } from '@decimalturn/toml-patch';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
+import { LocalDate, stringify } from '@decimalturn/toml-patch';
 import { GLOB_BRACKETS } from '#cli/config/commands/ignore.ts';
 import { type IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import { calendarDateSchema } from '#cli/schemas/settings/parts.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
@@ -42,7 +43,9 @@ function escapeExistingPaths(root: string, paths: string[] | undefined): string[
             const prefix = parts.slice(0, index).join('/');
             if (!GLOB_BRACKETS.test(prefix)) return path;
             if (statSync(join(root, prefix), { throwIfNoEntry: false }) !== undefined)
-                return [escapeGlob(prefix), ...parts.slice(index)].join('/');
+                return [prefix.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), ...parts.slice(index)].join(
+                    '/',
+                );
         }
         return path;
     });

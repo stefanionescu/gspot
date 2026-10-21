@@ -34,12 +34,12 @@ import {
     LINT_PAIRS,
     LINT_WORDS,
     AGENT_FILES,
-    RUNNER_NAMES,
     LINT_FOLDERS,
     RULE_FOLDERS,
+    RUNNER_NAMES,
     KEPT_DOT_FILE,
-    TASK_AFTER_RUN,
     GITLAB_CI_FILE,
+    TASK_AFTER_RUN,
     YAML_EXTENSIONS,
     FOREIGN_CI_FILES,
     GITLAB_CI_FOLDER,
@@ -243,14 +243,4 @@ export function isEditedInPlace(toolFile: ReplacedFile, managedKeys: ManagedKeys
     return managedKeys.some(
         (output) => output.path === toolFile.path && output.keys.some((field) => field.key[0] === toolFile.key),
     );
-}
-
-/**
- * Name the section of an existing tool settings file.
- *
- * @param toolFile the existing file or section.
- * @returns the table, key, or owning tool name.
- */
-export function getToolFileSection(toolFile: ReplacedFile): string {
-    return toolFile.table ?? toolFile.key ?? toolFile.tool;
 }

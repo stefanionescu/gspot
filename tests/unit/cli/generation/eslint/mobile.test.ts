@@ -1,13 +1,13 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { buildMobileFiles } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
+import { MOBILE_FILES } from '#tests/data/generation/eslint/framework.ts';
 import { createEslint, readEslintRules, collectLintFindings } from '#tests/setup/tool-files.ts';
 
 describe('expo', () => {
     test('Expo rules apply in the Expo scope and not in its React Native sibling', async () => {
-        await using sandbox = await testdir(buildMobileFiles());
+        await using sandbox = await testdir(MOBILE_FILES);
 
         const eslint = await createEslint(sandbox.path);
         const bare = (await eslint.calculateConfigForFile('bare/source.js')) as EslintConfiguration;

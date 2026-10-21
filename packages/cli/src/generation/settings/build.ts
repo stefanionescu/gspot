@@ -1,19 +1,22 @@
-import { readAsset } from '#cli/system/assets.ts';
+import { readFileSync } from 'node:fs';
+import { stringify as stringifyYaml } from 'yaml';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
+import { JSON_INDENT } from '#cli/config/generation/generate.ts';
 import { buildEslintFile } from '#cli/generation/eslint/tool-file.ts';
 import { buildV8rFile } from '#cli/generation/settings/builders/v8r.ts';
+import { getTable, listIgnoredRules } from '#cli/settings/scope-view.ts';
 import { buildGixyFile } from '#cli/generation/settings/builders/gixy.ts';
 import { buildKnipFile } from '#cli/generation/settings/builders/knip.ts';
 import { buildRuffFile } from '#cli/generation/settings/builders/ruff.ts';
-import { buildJscpdFile } from '#cli/generation/settings/builders/jscpd.ts';
 import { buildTaploFile } from '#cli/generation/settings/builders/taplo.ts';
-import { buildTrivyFile } from '#cli/generation/settings/builders/trivy.ts';
 import { buildTyposFile } from '#cli/generation/settings/builders/typos.ts';
 import { buildHtmlSettings } from '#cli/generation/settings/builders/html.ts';
 import { buildLycheeFile } from '#cli/generation/settings/builders/lychee.ts';
 import { buildSquawkFile } from '#cli/generation/settings/builders/squawk.ts';
 import { buildSemgrepFile } from '#cli/generation/settings/builders/semgrep.ts';
+import { JSCPD_IGNORED } from '#cli/config/generation/settings/builders/jscpd.ts';
 import { buildHadolintFile } from '#cli/generation/settings/builders/hadolint.ts';
 import { buildJsconfigFile } from '#cli/generation/settings/builders/jsconfig.ts';
 import { buildPrettierFile } from '#cli/generation/settings/builders/prettier.ts';
@@ -21,7 +24,6 @@ import { buildPurgecssFile } from '#cli/generation/settings/builders/purgecss.ts
 import { buildSpectralFile } from '#cli/generation/settings/builders/spectral.ts';
 import { buildSqlfluffFile } from '#cli/generation/settings/builders/sqlfluff.ts';
 import { buildYamllintFile } from '#cli/generation/settings/builders/yamllint.ts';
-import { buildPrettierignoreFile } from '#cli/generation/settings/ignore-files.ts';
 import { buildPeripheryFile } from '#cli/generation/settings/builders/periphery.ts';
 import { buildStylelintFile } from '#cli/generation/settings/builders/stylelint.ts';
 import { buildSwiftlintFile } from '#cli/generation/settings/builders/swiftlint.ts';
@@ -29,26 +31,33 @@ import { buildCommitlintFile } from '#cli/generation/settings/builders/commitlin
 import { buildShellcheckFile } from '#cli/generation/settings/builders/shellcheck.ts';
 import { buildOsvScannerFile } from '#cli/generation/settings/builders/osv-scanner.ts';
 import { buildSwiftformatFile } from '#cli/generation/settings/builders/swiftformat.ts';
-import { buildAnsibleLintFile } from '#cli/generation/settings/builders/ansible-lint.ts';
+import { TRIVY_SKIPPED_FOLDERS } from '#cli/config/generation/settings/builders/trivy.ts';
 import { buildBasedpyrightFile } from '#cli/generation/settings/builders/basedpyright.ts';
 import { buildEditorconfigFile } from '#cli/generation/settings/builders/editorconfig.ts';
 import { buildMarkdownlintFile } from '#cli/generation/settings/builders/markdownlint.ts';
+import { ANSIBLE_LINT_ALWAYS_OFF } from '#cli/config/generation/settings/builders/ansible-lint.ts';
 import { TOOL_FILE_REFERENCE, SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/settings/build.ts';
 
 import {
     type GeneratedFile,
-    type ToolFileBuilder,
     type PlannedToolFile,
+    type ToolFileBuilder,
     type ToolFileGeneration,
 } from '#cli/types/generation/files.ts';
+import {
+    convertToGlobs,
+    buildIgnoreSections,
+    buildPrettierignoreFile,
+    listCheckIgnoreSections,
+} from '#cli/generation/settings/ignore-files.ts';
 import {
     buildValeIniFile,
     buildAltTextStyle,
     buildAcronymsStyle,
     buildListItemStyle,
     buildTitleCaseStyle,
-    buildPossessivesStyle,
     buildHeadingCaseStyle,
+    buildPossessivesStyle,
     buildAcceptedWordsFile,
     buildBannedHeadingsStyle,
     buildSentenceLengthStyle,
@@ -56,15 +65,46 @@ import {
 } from '#cli/generation/settings/builders/vale.ts';
 
 const TOOL_FILE_BUILDERS: Readonly<Record<string, ToolFileBuilder | undefined>> = {
-    'ansible/ansible-lint.yml': buildAnsibleLintFile,
+    'ansible/ansible-lint.yml': (planned) =>
+        stringifyYaml({
+            skip_list: [
+                ...new Set([
+                    ...ANSIBLE_LINT_ALWAYS_OFF,
+                    ...listIgnoredRules(planned.selection, 'ansible/ansible-lint'),
+                ]),
+            ],
+        }),
     'prose/styles/gspot/acronyms.yml': buildAcronymsStyle,
     'nginx/gixy.cfg': buildGixyFile,
     'postgres/squawk.toml': buildSquawkFile,
-    'docker/trivy.yml': buildTrivyFile,
+    'docker/trivy.yml': (planned) =>
+        stringifyYaml({
+            timeout: `${String(planned.session.settingsFile.settings.tool_timeout_seconds)}s`,
+            severity: getTable(planned.selection.view, 'tools.trivy').severity,
+            scan: { 'skip-dirs': TRIVY_SKIPPED_FOLDERS },
+        }),
     'bash/shellcheckrc': buildShellcheckFile,
     'commits/commitlint.json': buildCommitlintFile,
     'markdown/markdownlint.jsonc': buildMarkdownlintFile,
-    'duplication/jscpd.json': buildJscpdFile,
+    'duplication/jscpd.json': (planned) =>
+        JSON.stringify(
+            {
+                mode: 'strict',
+                minLines: getTable(planned.selection.view, 'duplication').min_lines,
+                minTokens: getTable(planned.selection.view, 'duplication').min_tokens,
+                absolute: true,
+                gitignore: true,
+                ignore: [
+                    ...JSCPD_IGNORED,
+                    ...convertToGlobs([
+                        ...buildIgnoreSections(planned.session),
+                        ...listCheckIgnoreSections(planned.selection.view, 'duplication/jscpd'),
+                    ]),
+                ],
+            },
+            null,
+            JSON_INDENT,
+        ),
     'files/taplo.toml': buildTaploFile,
     'docs/lychee.toml': buildLycheeFile,
     'docker/hadolint.yml': buildHadolintFile,
@@ -100,6 +140,7 @@ const TOOL_FILE_BUILDERS: Readonly<Record<string, ToolFileBuilder | undefined>> 
     'javascript/jsconfig.json': buildJsconfigFile,
     'format/prettier.json': buildPrettierFile,
 };
+
 /**
  * Build one tool file and its pointers.
  *
@@ -115,7 +156,9 @@ export function buildToolFile(planned: PlannedToolFile, targets: ToolFileGenerat
             ? buildSemgrepFile
             : TOOL_FILE_BUILDERS[`${planned.configuration.name}/${toolFile.file}`];
     const source = (
-        builder === undefined ? readAsset(`${planned.configuration.folder}/${toolFile.source}`) : builder(planned)
+        builder === undefined
+            ? readFileSync(buildAssetPath(`${planned.configuration.folder}/${toolFile.source}`), 'utf8')
+            : builder(planned)
     ).replaceAll(TOOL_FILE_REFERENCE, (match: string, path: string) => {
         const declared = join(dirname(toolFile.target), path);
         const chosen = targets.get(planned.selection.scope.path)?.get(declared);

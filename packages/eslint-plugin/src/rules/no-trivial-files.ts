@@ -1,5 +1,4 @@
 import { posix } from 'node:path';
-import { normalizePath } from '../paths.ts';
 import { INDEX_BASENAMES } from '../config/paths.ts';
 import { createRule } from '../schemas/rules/options.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
@@ -10,9 +9,8 @@ import type { ContentCheck, ImplementedFunction } from '../types/syntax.ts';
 import {
     unwrap,
     hasCalculation,
-    getTypeServices,
     countStatements,
-    isTypePredicate,
+    getTypeServices,
     isExportedFunction,
     findZodSchemaConstructors,
 } from '../syntax.ts';
@@ -182,7 +180,8 @@ function hasStructuredValue(expression: TSESTree.Node | null): boolean {
 }
 
 function hasSignatureContent(node: ImplementedFunction): boolean {
-    if (isTypePredicate(node) || hasConstructorState(node)) return true;
+    if (node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate || hasConstructorState(node))
+        return true;
     return node.body.type !== AST_NODE_TYPES.BlockStatement && hasStructuredValue(node.body);
 }
 
@@ -208,7 +207,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
     },
     create(context, [options]) {
         if (context.sourceCode.text.startsWith(SHEBANG)) return {};
-        if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(normalizePath(context.physicalFilename))))
+        if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(context.physicalFilename.replaceAll('\\', '/'))))
             return {};
         const max = options.trivialStatements;
         let hasImplementation = findZodSchemaConstructors(context.sourceCode).length > 0;

@@ -9,12 +9,6 @@ createRuleTester().run<
 >('no-trivial-functions', plugin.rules['no-trivial-functions'], {
     valid: [
         'export function sort(items, compare = (a, b) => a - b) { items.sort(compare); return items; }',
-        'export const handler = ready ? () => first() : () => second();',
-        'export class Settings { isEnabled() { return this.enabled; } }',
-        'export class Panel { onClick = () => this.open(); }',
-        'export default class Settings { isEnabled() { return this.enabled; } }',
-        'class Settings { isEnabled() { return this.enabled; } } export { Settings };',
-        'export const Panel = class { onClick = (() => this.open()) as () => void; };',
         "export class NotFound extends Error { constructor() { super('Not found'); } }",
         'class A { constructor() { setup(); } } new A(); new A();',
         // A consumer that takes a function value needs the function declaration.
@@ -37,18 +31,6 @@ createRuleTester().run<
         'function factory() { setup(); configure(); return () => release(); }',
         'const element = <Button onClick={() => submit()} />;',
 
-        // Exported functions can have callers in other modules. Local functions need two read references.
-        'export function local() { return 1; }',
-        'function local() { return 1; } export { local };',
-        'export const local = () => 1;',
-        'export default function local() { return 1; }',
-        'function manyCallers() { return 1; } manyCallers(); manyCallers();',
-        'const base = "root"; const path = file => join(base, file); path("first"); path("second");',
-        'function callback() { update(); } on(callback); off(callback);',
-
-        'function subscribe(listener) { return store.subscribe(listener); } export function useValue() { return useSyncExternalStore(subscribe, getSnapshot); }',
-        'function noop() {} export function build() { setup(); configure(); return noop; }',
-
         // A function includes its callback statements.
         'function process(items) { return items.map(item => { inspect(item); validate(item); return item; }); }',
         'function process(groups) { return groups.map(items => items.map(item => { inspect(item); validate(item); return item; })); }',
@@ -68,8 +50,6 @@ createRuleTester().run<
 
         // Declared signatures the language owns.
         'declare function required(): void;',
-        'function isText(value: unknown): value is string { return typeof value === "string"; }',
-        'function assertText(value: unknown): asserts value is string { if (typeof value !== "string") throw new Error(); }',
         'class A { constructor(public value: number) {} }',
         'class A { constructor(value: number) { this.value = value; } }',
         'class Failure extends Error { constructor(message: string) { super(message); this.name = "Failure"; } }',
@@ -114,8 +94,33 @@ createRuleTester().run<
         },
         {
             code: 'function isText(value: unknown): value is string { return typeof value === "string"; } function local() { return 1; }',
-            errors: [{ messageId: 'trivial', column: 88 }],
+            errors: [
+                { messageId: 'trivial', column: 1 },
+                { messageId: 'trivial', column: 88 },
+            ],
         },
+        // An export, a second caller, a passed value, or a type predicate does not exempt a function.
+        ...[
+            'export class Settings { isEnabled() { return this.enabled; } }',
+            'export class Panel { onClick = () => this.open(); }',
+            'export default class Settings { isEnabled() { return this.enabled; } }',
+            'class Settings { isEnabled() { return this.enabled; } } export { Settings };',
+            'export const Panel = class { onClick = (() => this.open()) as () => void; };',
+            'export function local() { return 1; }',
+            'function local() { return 1; } export { local };',
+            'export const local = () => 1;',
+            'export default function local() { return 1; }',
+            'function manyCallers() { return 1; } manyCallers(); manyCallers();',
+            'const base = "root"; const path = file => join(base, file); path("first"); path("second");',
+            'function callback() { update(); } on(callback); off(callback);',
+            'function noop() {} export function build() { setup(); configure(); return noop; }',
+            'function isText(value: unknown): value is string { return typeof value === "string"; }',
+            'function assertText(value: unknown): asserts value is string { if (typeof value !== "string") throw new Error(); }',
+        ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }] })),
+        ...[
+            'export const handler = ready ? () => first() : () => second();',
+            'function subscribe(listener) { return store.subscribe(listener); } export function useValue() { return useSyncExternalStore(subscribe, getSnapshot); }',
+        ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }, { messageId: 'trivial' as const }] })),
         ...[
             'function empty() {}',
             'function identity(value) { return value; } identity(1);',

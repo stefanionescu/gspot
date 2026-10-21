@@ -2,22 +2,22 @@ import { GspotError } from '#cli/system/errors.ts';
 import { join, resolve, relative } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
 import { HOOKS_PATH } from '#cli/config/gspot-paths.ts';
+import { listHookNames } from '#cli/generation/hooks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { readHooks } from '#cli/repository/existing-tools.ts';
 import { statSync, readdirSync, readFileSync } from 'node:fs';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/hooks.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
-import { listHookNames, isLfsHookName } from '#cli/generation/hooks.ts';
 import type { HookPlan, HookStatus } from '#cli/types/install/hooks.ts';
 import { type ExistingTools } from '#cli/types/repository/existing-tools.ts';
 import { readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
-import { HOOK_SHEBANG, HOOK_ARGUMENTS, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
+import { LFS_HOOKS, HOOK_SHEBANG, HOOK_ARGUMENTS, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
 import { LFS_PUSH_CALLS, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install/hooks.ts';
 
 // Check whether git lfs install wrote a hook: a shebang, an optional git-lfs guard, and the git lfs call.
 // The hooks of gspot run Git Large File Storage (LFS) themselves.
 function isLfsHookScript(folder: string, name: string): boolean {
-    if (!isLfsHookName(name)) return false;
+    if (!(LFS_HOOKS as readonly string[]).includes(name)) return false;
     const lines = readFileSync(join(folder, name), 'utf8').trim().split(/\r?\n/u);
     const call = lines.at(-1) ?? '';
     const isCall = call === `git lfs ${name} "$@"` || (name === 'pre-push' && LFS_PUSH_CALLS.has(call));

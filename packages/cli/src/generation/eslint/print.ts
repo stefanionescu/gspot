@@ -2,12 +2,12 @@
 import ts from 'typescript';
 import { isDeepStrictEqual } from 'node:util';
 import type { Level } from '#cli/types/configurations.ts';
-import { ESLINT_INDENT, COMPONENT_MATCHERS, ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint/print.ts';
+import { COMPONENT_MATCHERS, ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint/print.ts';
 
 import type {
     EslintPlugins,
-    EslintFileMatcher,
     EslintBlockFields,
+    EslintFileMatcher,
     EslintRuleExpression,
 } from '#cli/types/generation/eslint.ts';
 
@@ -169,17 +169,4 @@ export function serializeImports(plugins: EslintPlugins, configurationPlugins: E
             .map(([importName, source]) => `import ${importName} from ${JSON.stringify(source)};`)
             .join('\n') + '\n'
     );
-}
-
-/**
- * Indent every line of a generated ESLint block inside the export array.
- *
- * @param source a serialized block or comment.
- * @returns the indented text.
- */
-export function indentEslintBlock(source: string): string {
-    return source
-        .split('\n')
-        .map((line) => ESLINT_INDENT + line)
-        .join('\n');
 }

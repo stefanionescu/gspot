@@ -78,19 +78,6 @@ function editSetting(table: TomlTable, change: ParsedSettingValue, setting: Sett
     }
 }
 
-function assertCompleteReason({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
-    if (
-        change.type === 'list' &&
-        options.reason === undefined &&
-        previous?.reason !== undefined &&
-        isLoosening(setting, change.value, shippedDefault)
-    )
-        throw new GspotError(
-            'arguments',
-            `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
-        );
-}
-
 // gspot keeps reasons for values that loosen a check, so set refuses a reason on any other value before it writes.
 function assertReasonNeeded({
     options,
@@ -121,6 +108,20 @@ function formatSettingChange(
     const items = change.value.map((item) => (typeof item === 'string' ? item : JSON.stringify(item))).join(' and ');
     const description = change.type === 'list' ? `Added ${items} to ${displayKey}.` : `Set ${displayKey} to ${items}.`;
     return `${description}${reason}${was}`;
+}
+
+// A list change that drops the reason keeps the old reason only when the new reason covers every item.
+function assertCompleteReason({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
+    if (
+        change.type === 'list' &&
+        options.reason === undefined &&
+        previous?.reason !== undefined &&
+        isLoosening(setting, change.value, shippedDefault)
+    )
+        throw new GspotError(
+            'arguments',
+            `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
+        );
 }
 
 /**

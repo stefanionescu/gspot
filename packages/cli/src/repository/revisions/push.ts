@@ -5,8 +5,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
+import { GIT_SHALLOW_ARGUMENTS } from '#cli/config/system/git.ts';
 import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
-import { runGit, isShallow, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
+import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
 
 import {
     type PushLine,
@@ -181,7 +182,8 @@ export async function selectPush(
         .split('\n')
         .filter((row) => row.trim() !== '')
         .map((line) => parseLine(line));
-    const shallow = await isShallow(repositoryRoot, { cancelSignal });
+    const shallowAnswer = await readGitText(repositoryRoot, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
+    const shallow = shallowAnswer.trim() === 'true';
     const remotes =
         remote === undefined ? [] : await readGitLines(repositoryRoot, GIT_REMOTE_ARGUMENTS, { cancelSignal });
     const context: PushSearch = {

@@ -16,7 +16,7 @@ import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/dependencies.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/swift/cache.ts';
-import type { SwiftBuildPlan, CoverageReport } from '#cli/types/checks/swift.ts';
+import type { CoverageReport, SwiftBuildPlan } from '#cli/types/checks/swift.ts';
 import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/checks/swift.ts';
 
 import {
@@ -93,10 +93,6 @@ async function measureCoverage(session: Session, planned: PlannedCheck): Promise
         : await measureXcodeCoverage(session, planned, plan, cwd);
 }
 
-function isTargetNamed(target: { name: string }, name: string): boolean {
-    return target.name === name || target.name === `${name}${APP_TARGET_SUFFIX}`;
-}
-
 /**
  * Lists the targets under their coverage limit.
  *
@@ -111,11 +107,18 @@ function listCoverageShortfalls(
     const limits = [
         ...settings.swift_target,
         ...report.targets
-            .filter((target) => !settings.swift_target.some((limit) => isTargetNamed(target, limit.name)))
+            .filter(
+                (target) =>
+                    !settings.swift_target.some(
+                        (limit) => target.name === limit.name || target.name === `${limit.name}${APP_TARGET_SUFFIX}`,
+                    ),
+            )
             .map((target) => ({ name: target.name, lines: settings.lines })),
     ];
     return limits.flatMap((limit) => {
-        const target = report.targets.find((entry) => isTargetNamed(entry, limit.name));
+        const target = report.targets.find(
+            (entry) => entry.name === limit.name || entry.name === `${limit.name}${APP_TARGET_SUFFIX}`,
+        );
         if (target === undefined) return [`The coverage report has no target named ${limit.name}.`];
         const covered = Math.floor(target.lineCoverage * FULL_PERCENTAGE);
         return covered >= limit.lines

@@ -23,7 +23,8 @@ async function parseMigrations(session: Session, paths: Pick<Migration, 'path' |
     const migrations: Migration[] = [];
     for (const { path, version } of paths) {
         const original = readCachedText(session.reads, path);
-        const text = stripDownSection(original);
+        // Checks read the forward SQL, without the down section.
+        const text = original.split(MIGRATION_DOWN, 1)[0] ?? '';
         const name = posix.basename(path);
         const parsed = await parseSqlFile(text, session.reads);
         migrations.push({
@@ -100,14 +101,4 @@ export async function readParsedMigrations(session: Session, planned: PlannedChe
     const { migrations, findings } = await readMigrations(session, planned);
     if (findings.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
     return migrations;
-}
-
-/**
- * Strip the down section before migration checks inspect the forward SQL.
- *
- * @param text the full migration source.
- * @returns the forward section.
- */
-export function stripDownSection(text: string): string {
-    return text.split(MIGRATION_DOWN, 1)[0] ?? '';
 }

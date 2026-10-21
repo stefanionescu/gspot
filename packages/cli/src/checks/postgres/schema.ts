@@ -1,6 +1,6 @@
 import type { RangeVar, Constraint } from '@pgsql/types';
 import type { SqlStatementVisitors } from '#cli/types/parsers/sql.ts';
-import { getNodeFields, visitStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
+import { getNodeFields, listNodeFields, visitStatement } from '#cli/parsers/sql/postgres.ts';
 import { PUBLIC_SCHEMA, SCHEMA_PART_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/postgres.ts';
 
 import type {
@@ -22,10 +22,6 @@ function removeTable(state: SchemaState, table: string): void {
     state.secured.delete(table);
     state.constraints.delete(table);
     state.indexes = state.indexes.filter((index) => index.table !== table);
-}
-
-function joinNameParts(parts: string[]): string {
-    return `${parts.at(SCHEMA_PART_INDEX) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}`;
 }
 
 // The name Postgres gives an unnamed constraint: the table, the key columns except for a primary key, and a suffix.
@@ -110,11 +106,11 @@ const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
         const parts = listNodeFields(item.items, 'String').map((part) => part.sval ?? '');
         switch (statement.fields.removeType) {
             case 'OBJECT_TABLE': {
-                removeTable(state, joinNameParts(parts));
+                removeTable(state, `${parts.at(SCHEMA_PART_INDEX) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}`);
                 break;
             }
             case 'OBJECT_INDEX': {
-                const name = joinNameParts(parts);
+                const name = `${parts.at(SCHEMA_PART_INDEX) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}`;
                 state.indexes = state.indexes.filter(
                     (index) => `${index.table.slice(0, index.table.indexOf('.'))}.${index.name}` !== name,
                 );

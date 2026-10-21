@@ -1,9 +1,10 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { escapeGlob } from '#cli/repository/matchers.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { REEXPORT_SELECTORS } from '#cli/config/generation/eslint/rules.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint/tool-settings.ts';
@@ -100,7 +101,7 @@ export function buildSelectorGroups(
 ): SelectorGroup[] {
     const scopePaths = scopes.map((entry) => entry.scope.path);
     return scopes.flatMap((selection) => {
-        const prefix = escapeGlob(selection.scope.path);
+        const prefix = selection.scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
         const declarations = selection.selected.flatMap((configuration) =>
             level === 'all' ? configuration.eslint.selectors : [],
         );

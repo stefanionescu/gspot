@@ -5,12 +5,12 @@ import { commitAll } from '#tests/setup/git.ts';
 import { isLinux } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { randomUUID, generateKeyPair } from 'node:crypto';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
 
@@ -150,13 +150,18 @@ test.skipIf(!isLinux)(
             const findings = failed.report.checks.flatMap(({ findings }) => findings);
             expect(findings[0]!.message).not.toContain('BEGIN RSA PRIVATE KEY');
             expect(findings).toMatchObject([
-                { file: 'compose.yaml', line: 1, rule: 'secret', message: matchSubstring('private-key') },
+                {
+                    file: 'compose.yaml',
+                    line: 1,
+                    rule: 'secret',
+                    message: expect.stringContaining('private-key') as string,
+                },
             ]);
             await writeFile(configPath, 'severity: [');
             const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
             expect(broken.code, broken.stdout + broken.stderr).toBe(2);
             expect(broken.report.checks).toMatchObject([
-                { status: 'error', note: matchSubstring('Trivy could not scan') },
+                { status: 'error', note: expect.stringContaining('Trivy could not scan') as string },
             ]);
             await writeFile(configPath, configuration);
             await writeFile(join(sandbox.path, 'compose.yaml'), `services: {app: {image: "${tags[1]}"}}\n`);
@@ -174,7 +179,7 @@ const installedSandbox = registerSharedSandbox(DOCKER_SANDBOX);
 test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
     const expected =
         'message' in entry.expected
-            ? { ...entry.expected, message: matchSubstring(entry.expected.message) }
+            ? { ...entry.expected, message: expect.stringContaining(entry.expected.message) as string }
             : entry.expected;
     const result = await runCheckSample(installedSandbox(), { ...entry, expected }, DOCKER_SANDBOX);
     expect(buildSampleSummary(result)).toStrictEqual(expectedSummary({ ...entry, expected }));

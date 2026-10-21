@@ -1,6 +1,5 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { normalizePath } from '../paths.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
 import { IMPORT_SELECTOR } from '../config/syntax.ts';
 import type { ImportSource } from '../types/syntax.ts';
@@ -20,14 +19,17 @@ function isGlobMatch(path: string, glob: string): boolean {
     }
     return isMatch(path);
 }
+
 function getLintedPath(context: RuleContext): string | undefined {
-    const absolute = normalizePath(context.physicalFilename);
+    const absolute = context.physicalFilename.replaceAll('\\', '/').replace(/^[a-z]:/u, (drive) => drive.toUpperCase());
     if (STDIN_NAMES.has(absolute)) return undefined;
-    const root = normalizePath(
-        (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd,
-    ).replace(TRAILING_SLASH, '');
+    const root = ((context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd)
+        .replaceAll('\\', '/')
+        .replace(/^[a-z]:/u, (drive) => drive.toUpperCase())
+        .replace(TRAILING_SLASH, '');
     return absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : undefined;
 }
+
 function computeImportTarget(importer: string, source: string): string | undefined {
     if (!RELATIVE_PREFIXES.some((prefix) => source.startsWith(prefix))) return undefined;
     return posix.join(posix.dirname(importer), source.split('?', 1)[0] ?? source);

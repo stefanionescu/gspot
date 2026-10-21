@@ -1,7 +1,9 @@
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
 import { CODE_LANGUAGES, COMPONENT_CONFIGURATIONS } from '#cli/config/generation/eslint/files.ts';
-import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
 
 import {
     type EslintFiles,
@@ -53,10 +55,20 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
         ],
         javascript: [javascript, ...node],
         tests: scopes.flatMap(({ scope, tests }) =>
-            buildTestFiles(tests, code).map(([test, pattern]) => [test, buildScopeGlob(scope, '**/*'), pattern]),
+            buildTestFiles(tests, code).map(([test, pattern]) => [
+                test,
+                joinScope(scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
+                pattern,
+            ]),
         ),
         scripts: scopes.flatMap(({ scope, scripts }) =>
-            scripts.flatMap((script) => code.map((pattern) => [script, buildScopeGlob(scope, '**/*'), pattern])),
+            scripts.flatMap((script) =>
+                code.map((pattern) => [
+                    script,
+                    joinScope(scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
+                    pattern,
+                ]),
+            ),
         ),
     };
 }
@@ -83,7 +95,9 @@ export function buildSourcePattern(...languages: string[]): string {
  * @returns literal file patterns that cannot select neighboring filenames.
  */
 export function buildNodePatterns(paths: string[], scope: string): string[] {
-    return paths.filter((path) => isInScope(path, scope)).map((path) => escapeGlob(path));
+    return paths
+        .filter((path) => isInScope(path, scope))
+        .map((path) => path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH));
 }
 
 /**
@@ -118,21 +132,10 @@ export function buildScopeFiles(
     return files.flatMap((file) =>
         paths.map((path) => [
             ...(Array.isArray(file) ? file : [file]),
-            buildScopeGlob(scope, '**/*'),
+            joinScope(scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
             ...(Array.isArray(path) ? path : [path]),
         ]),
     );
-}
-
-/**
- * Build a glob inside one literal repository scope.
- *
- * @param scope the project folder.
- * @param pattern the relative selector.
- * @returns the selector with a literal scope prefix.
- */
-export function buildScopeGlob(scope: string, pattern: string): string {
-    return joinScope(escapeGlob(scope), pattern);
 }
 
 /**
@@ -143,7 +146,9 @@ export function buildScopeGlob(scope: string, pattern: string): string {
  * @returns the child scope globs.
  */
 export function listNestedScopeGlobs(paths: string[], scope: string): string[] {
-    return listNestedScopes(paths, scope).map((path) => buildScopeGlob(path, '**'));
+    return listNestedScopes(paths, scope).map((path) =>
+        joinScope(path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**'),
+    );
 }
 
 /**

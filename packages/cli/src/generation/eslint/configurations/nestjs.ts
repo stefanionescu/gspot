@@ -1,5 +1,7 @@
+import { joinScope } from '#cli/repository/scopes.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { getPreset } from '#cli/generation/eslint/presets.ts';
-import { buildScopeGlob } from '#cli/generation/eslint/files.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 
@@ -44,7 +46,9 @@ export function buildNestjsBlocks(
                 '@darraghor/nestjs-typed/injectable-should-be-provided': [
                     'error',
                     {
-                        src: [buildScopeGlob(scopePath, '**/*.ts')],
+                        src: [
+                            joinScope(scopePath.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*.ts'),
+                        ],
                         filterFromPaths: NESTJS_INJECTABLE_FILTER_PATHS,
                     },
                 ],

@@ -8,7 +8,7 @@ import { runGspot } from '#tests/setup/run-gspot.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { readTree, isOnDisk } from '#tests/setup/files.ts';
+import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { type ToolPackageJson } from '#cli/types/install/npm.ts';

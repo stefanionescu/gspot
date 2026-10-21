@@ -9,14 +9,7 @@ import type { Check, KnownCheck } from '#cli/types/configurations.ts';
 import { getTable, findRootSelection } from '#cli/settings/scope-view.ts';
 import { getTool, getToolName } from '#cli/configurations/declared-tools.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/planning.ts';
-
-import {
-    isRootOnlyCheck,
-    listChildScopes,
-    selectCheckFiles,
-    isRepositoryCheck,
-    stripToolIgnoredFiles,
-} from '#cli/planning/files.ts';
+import { isRootOnlyCheck, listChildScopes, selectCheckFiles, stripToolIgnoredFiles } from '#cli/planning/files.ts';
 
 function listCheckCandidates(session: Session, selection: Scope): KnownCheck[] {
     const isRoot = selection.scope.path === '';
@@ -42,7 +35,7 @@ function isWanted(check: Check, options: PlanOptions): boolean {
 function planCheck(planned: PlannedScope, entry: KnownCheck): PlannedCheck {
     const { session, selection: scope, options } = planned;
     const { check, configuration } = entry;
-    const isRootCheck = isRepositoryCheck(check);
+    const isRootCheck = check.runs === 'once' || check.runs === 'history';
     const rootScope = findRootSelection(session.scopes);
     const name = getToolName(check);
     const tool = name === undefined ? undefined : getTool(session.configurations.values(), name);
@@ -92,7 +85,7 @@ function planScope(planned: PlannedScope, plannedRepositoryChecks: Set<string>):
         isWanted(entry.check, planned.options),
     );
     for (const entry of entries) {
-        const isRootCheck = isRepositoryCheck(entry.check);
+        const isRootCheck = entry.check.runs === 'once' || entry.check.runs === 'history';
         if (isRootCheck && plannedRepositoryChecks.has(entry.check.name)) continue;
         const check = planCheck(planned, entry);
         if (check.skip?.cause === 'level') continue;

@@ -8,15 +8,16 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
+import { buildProcessResult } from '#tests/setup/builders.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
-import { getShippedTool, buildProcessResult } from '#tests/setup/builders.ts';
-import { listDistinctTools, findToolProjectPackage } from '#cli/configurations/declared-tools.ts';
 import { GSPOT_NODE_MODULES_PATH, GSPOT_PYTHON_ENVIRONMENT_PATH } from '#cli/config/gspot-paths.ts';
+import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configurations/declared-tools.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
@@ -37,7 +38,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
     'doctor exit code follows the library state %s: an outdated tool exits 1',
     async (state) => {
         await using sandbox = await testdir();
-        const pin = getShippedTool('eslint-plugin-zod');
+        const pin = getTool(readConfigurations().values(), 'eslint-plugin-zod');
         const floor = semver.parse(pin.min_version ?? pin.version!)!;
         let earlierVersion = `${String(floor.major - 1)}.0.0`;
         if (floor.minor > 0) earlierVersion = `${String(floor.major)}.${String(floor.minor - 1)}.0`;
@@ -78,6 +79,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
         expect(result.code).toBe(state === 'outdated' ? 1 : 0);
     },
 );
+
 test('doctor names a missing coverage plugin and leaves it out when every coverage limit is zero', async () => {
     const level = 'all';
     await using sandbox = await testdir({

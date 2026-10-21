@@ -138,11 +138,7 @@ test.each([
         }
         using read = fakeNextjsCommands(fakeNextjsBuild);
         const { folders } = read;
-        const collectFindings = async () => {
-            const result = await runCheckCode(session, planned, findCheckCode(planned.check));
-            return result.findings;
-        };
-        const found = await collectFindings();
+        const { findings: found } = await runCheckCode(session, planned, findCheckCode(planned.check));
         expect(found).toHaveLength(1);
         expect(found[0]).toMatchObject({
             check: 'nextjs/tsc',
@@ -151,7 +147,7 @@ test.each([
         });
         expect(found[0]!.message).toContain('Type mismatch');
         await writeFile(join(folder.path, join(scope, 'src/app/page.ts')), 'corrected input\n');
-        expect(await collectFindings()).toStrictEqual([]);
+        expect(await runCheckCode(session, planned, findCheckCode(planned.check))).toMatchObject({ findings: [] });
         expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
         expect(folders).not.toContain(join(folder.path, scope));
         expect(await Promise.all(folders.map((cwd) => isOnDisk(cwd)))).toStrictEqual(folders.map(() => false));

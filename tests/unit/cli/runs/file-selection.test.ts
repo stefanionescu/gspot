@@ -20,15 +20,6 @@ import {
 } from '#tests/data/runs/plan.ts';
 
 /** Prepare a local TypeScript compiler that reports one project finding. */
-async function prepareCompiler(root: string): Promise<void> {
-    const declaration = await fakeNpmTool(root, 'tsc');
-    await fakeTool(
-        root,
-        '.gspot/node_modules/.bin/tsc',
-        `if (process.argv.includes('--version')) console.log(${JSON.stringify(declaration.version)}); else { console.log('source.ts(1,1): error TS2304: Project finding'); process.exitCode = 1; }`,
-    );
-}
-
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
     await using sandbox = await testdir({
         'gspot.toml': TYPESCRIPT_SCOPES_SETTINGS,
@@ -39,7 +30,12 @@ test("a file named on the command line runs its scope's project check on every f
         'web/source.ts': 'export {};\n',
     });
 
-    await prepareCompiler(sandbox.path);
+    const declaration = await fakeNpmTool(sandbox.path, 'tsc');
+    await fakeTool(
+        sandbox.path,
+        '.gspot/node_modules/.bin/tsc',
+        `if (process.argv.includes('--version')) console.log(${JSON.stringify(declaration.version)}); else { console.log('source.ts(1,1): error TS2304: Project finding'); process.exitCode = 1; }`,
+    );
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { ...PROJECT_OPTIONS, paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);

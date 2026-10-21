@@ -1,15 +1,16 @@
 // Reads repository dependency files and selects project dependencies.
 import { posix } from 'node:path';
 import { parseJsonFile } from '#cli/parsers/json.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DEPENDENCY_SECTIONS } from '#cli/config/parsers/lockfiles.ts';
-import { isInToolFolder } from '#cli/repository/files/tool-folders.ts';
 import { listNpmToolNames } from '#cli/configurations/declared-tools.ts';
 import { PARSERS, parseRequirements } from '#cli/parsers/dependencies.ts';
+import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { PACKAGE_JSON, REQUIREMENTS_FILE } from '#cli/config/parsers/dependencies.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
 import { findText, findCachedText, readCachedText } from '#cli/system/files/reads.ts';
@@ -32,7 +33,14 @@ async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<
  */
 export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];
-    for (const file of files.filter((file) => file.kind === 'source' && !isInToolFolder(file.path))) {
+    for (const file of files.filter(
+        (file) =>
+            file.kind === 'source' &&
+            !(
+                file.path.startsWith(`${DOT_GSPOT}/`) ||
+                file.path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
+            ),
+    )) {
         const dependencyFile = await readDependencyFile(reads, file);
         if (dependencyFile !== undefined) dependencies.push(dependencyFile);
     }

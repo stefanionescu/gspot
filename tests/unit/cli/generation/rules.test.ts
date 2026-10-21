@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { format } from 'prettier';
 import { testdir } from 'testdirs';
+import { writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import * as assets from '#cli/system/assets.ts';
 import { type Session } from '#cli/types/session.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { generate } from '#cli/generation/generate.ts';
 import { type Level } from '#cli/types/configurations.ts';
 import { type RuleFile } from '#cli/types/generation/rules.ts';
@@ -70,7 +70,7 @@ test('level filtering respects fenced examples, nested sections, and the next he
         rules: {},
     };
     using _list = spyOn(assets, 'listAssets').mockReturnValue([`${configuration.folder}/rules/GUIDE.md`]);
-    using _read = spyOn(assets, 'readAsset').mockImplementation((path) => readFileSync(path, 'utf8'));
+    using _read = spyOn(assets, 'buildAssetPath').mockImplementation((path) => path);
     const recommended = selectRulesAt(session, 'recommended', [{ ...session.scopes[0]!, selected: [configuration] }]);
     expect(recommended.map(({ content }) => content)).toStrictEqual([before + after]);
     const all = selectRulesAt(session, 'all', [{ ...session.scopes[0]!, selected: [configuration] }]);

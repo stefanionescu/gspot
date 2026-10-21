@@ -9,8 +9,8 @@ import {
     UNWRAPPABLE_NODES,
     COMPARISON_OPERATORS,
     IMPORT_SPECIFIER_NODES,
-    TRANSPARENT_EXPRESSIONS,
     EXECUTABLE_DECLARATIONS,
+    TRANSPARENT_EXPRESSIONS,
     NON_EXECUTABLE_STATEMENTS,
 } from './config/syntax.ts';
 
@@ -56,16 +56,6 @@ function isDynamicValue(node: TSESTree.Node): boolean {
             return false;
         }
     }
-}
-
-// A composition transforms an earlier result instead of forwarding one call unchanged.
-function isComposedCall(node: TSESTree.CallExpression): boolean {
-    return (
-        (node.callee.type === AST_NODE_TYPES.MemberExpression &&
-            node.callee.object.type === AST_NODE_TYPES.CallExpression &&
-            node.callee.object.callee.type === AST_NODE_TYPES.MemberExpression) ||
-        node.arguments.some((argument) => unwrap(argument)?.type === AST_NODE_TYPES.CallExpression)
-    );
 }
 
 function isTypeImportReference(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
@@ -135,7 +125,14 @@ export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
  */
 export function hasCalculation(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): boolean {
     if (isDynamicValue(node)) return true;
-    if (node.type === AST_NODE_TYPES.CallExpression && isComposedCall(node)) return true;
+    if (
+        node.type === AST_NODE_TYPES.CallExpression &&
+        ((node.callee.type === AST_NODE_TYPES.MemberExpression &&
+            node.callee.object.type === AST_NODE_TYPES.CallExpression &&
+            node.callee.object.callee.type === AST_NODE_TYPES.MemberExpression) ||
+            node.arguments.some((argument) => unwrap(argument)?.type === AST_NODE_TYPES.CallExpression))
+    )
+        return true;
     return listChildNodes(node, visitorKeys).some((child) => hasCalculation(child, visitorKeys));
 }
 
@@ -193,16 +190,6 @@ export function isExportedFunction(node: ImplementedFunction, source: TSESLint.S
             (reference) => reference.isRead() && EXPORT_REFERENCES.has(reference.identifier.parent.type),
         ),
     );
-}
-
-/**
- * Check whether a function declares a type predicate as its return type, such as `value is string`.
- *
- * @param node the function implementation
- * @returns whether the function narrows the type of an argument
- */
-export function isTypePredicate(node: ImplementedFunction): boolean {
-    return node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate;
 }
 
 /**

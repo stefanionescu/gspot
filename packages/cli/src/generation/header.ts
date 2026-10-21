@@ -1,14 +1,14 @@
 // Formats the ownership notice for generated files.
 
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 
 import {
     JSON_EXTENSIONS,
     GENERATED_EDIT_LINE,
     GENERATED_HEADER_TEXT,
-    HTML_COMMENT_EXTENSIONS,
     DASH_COMMENT_EXTENSIONS,
+    HTML_COMMENT_EXTENSIONS,
     SLASH_COMMENT_EXTENSIONS,
 } from '#cli/config/generation/header.ts';
 
@@ -25,7 +25,7 @@ function formatCommentBlock(lines: string[], mark: string): string {
  * @returns the comment block with a final newline, or '' for JSON.
  */
 export function formatHeader(path: string, notes: string[] = []): string {
-    if (isInGspotFolder(path)) return '';
+    if (path.startsWith(`${DOT_GSPOT}/`)) return '';
     const extension = extractExtension(path);
     const lines = [GENERATED_HEADER_TEXT, GENERATED_EDIT_LINE, ...(notes.length === 0 ? [] : ['', ...notes])];
     if (JSON_EXTENSIONS.has(extension)) return '';

@@ -1,7 +1,7 @@
 // Compiles repository path and filename selectors.
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { GLOB_EXCLUDE, TRAILING_SLASH, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
+import { GLOB_EXCLUDE, TRAILING_SLASH, FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
@@ -56,14 +56,4 @@ export function buildFilenameMatcher(names: string[]): (path: string) => boolean
         const base = posix.basename(path);
         return literals.has(base) || literals.has(path) || globs(base) || globs(path);
     };
-}
-
-/**
- * Escape a repository path so glob selectors match that literal path.
- *
- * @param path the literal repository file.
- * @returns a glob with every special character escaped.
- */
-export function escapeGlob(path: string): string {
-    return path.replaceAll(GLOB_SPECIAL_CHARACTERS, String.raw`\$&`);
 }

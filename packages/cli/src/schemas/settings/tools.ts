@@ -1,11 +1,13 @@
 import { z } from 'zod';
+import { readFileSync } from 'node:fs';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
-import { readNameList } from '#cli/configurations/name-lists.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
 import { stylelintRules } from '#cli/schemas/settings/stylelint.ts';
 import { nonemptyString } from '#cli/schemas/configurations/parts.ts';
 import { ESLINT_RUNTIME_NAMES_FILE } from '#cli/config/configurations.ts';
+import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { buildRuleTableSchema } from '#cli/schemas/settings/rule-options.ts';
 import { eslintRules, eslintPluginsSchema } from '#cli/schemas/settings/eslint.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
@@ -21,7 +23,9 @@ import {
     IMPORT_EXTENSION_STYLES,
 } from '#cli/config/settings/schema.ts';
 
-const ESLINT_RUNTIMES = readNameList(ESLINT_RUNTIME_NAMES_FILE).names;
+const ESLINT_RUNTIMES = nameListSchema.parse(
+    JSON.parse(readFileSync(buildAssetPath(ESLINT_RUNTIME_NAMES_FILE), 'utf8')),
+).names;
 
 const commitlintRuleNames = [...Object.keys(COMMITLINT_RULES), 'type-enum', 'scope-enum'];
 const commitlintRules = buildRuleTableSchema(

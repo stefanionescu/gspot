@@ -5,10 +5,11 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
+import { MIGRATION_DOWN } from '#cli/config/checks/postgres.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/parsers/git.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
 import { readBlobs, listHeadEntries } from '#cli/repository/revisions/files.ts';
-import { readMigrations, stripDownSection, readParsedMigrations } from '#cli/checks/postgres/migrations.ts';
+import { readMigrations, readParsedMigrations } from '#cli/checks/postgres/migrations.ts';
 
 const COMMITTED_MIGRATIONS = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
@@ -118,7 +119,7 @@ export async function checkPostgresEditedMigrations(session: Session, planned: P
         .filter((migration) => frozen.has(migration.path))
         .flatMap((migration): Finding[] => {
             const committed = texts.get(migration.path);
-            if (committed === undefined || stripDownSection(committed) === migration.text) return [];
+            if (committed === undefined || (committed.split(MIGRATION_DOWN, 1)[0] ?? '') === migration.text) return [];
             return [
                 buildFinding(
                     planned,

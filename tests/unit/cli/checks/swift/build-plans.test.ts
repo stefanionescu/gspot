@@ -6,13 +6,13 @@ import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { simulateOperatingSystem } from '#tests/setup/system.ts';
 import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { planSandboxCheck, createCompilerCache } from '#tests/setup/check-input.ts';
@@ -85,7 +85,12 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         const executed = await runChecks(session, buildRunOptions({ only: [check] }));
 
         expect(executed.report.checks).toContainEqual(
-            matchFields({ check, status: 'skipped', findings: [], note: matchSubstring('swift.xcode_project') }),
+            matchFields({
+                check,
+                status: 'skipped',
+                findings: [],
+                note: expect.stringContaining('swift.xcode_project') as string,
+            }),
         );
         expect(await isOnDisk(getScopeBuildFolder(session.installedRoot, input.selection.scope.path, purpose))).toBe(
             false,

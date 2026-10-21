@@ -6,66 +6,44 @@ import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import type { ReferencePage, ReferenceFacts } from '../types/reference.ts';
 import { isInstalledByGspot } from '#cli/configurations/declared-tools.ts';
 import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../config/reference.ts';
-
-import {
-    formatCode,
-    formatList,
-    escapeCell,
-    formatTable,
-    formatSection,
-    buildReferencePage,
-    formatReferenceLink,
-} from './markdown.ts';
+import { formatList, formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 
 const DETECTION_LIST_FORMAT = new Intl.ListFormat('en', { type: 'disjunction' });
-
-function formatCodeNames(names: string[]): string {
-    return DETECTION_LIST_FORMAT.format(names.map((name) => formatCode(name)));
-}
-
-function linkConfigurations(names: string[]): string {
-    return names.map((name) => formatReferenceLink('configurations', name)).join(', ');
-}
 
 // The conditions that select: every kind with patterns, apart from the dependencies that rule a selection out.
 function formatDetectionConditions(detect: Configuration['detect']): string[] {
     return Object.entries(detect).flatMap(([kind, patterns]) => {
         if (kind === 'absent_dependencies') return [];
-        if (Array.isArray(patterns))
-            return patterns.length === 0
-                ? []
-                : [`${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]} ${formatCodeNames(patterns)}`];
-        return Object.entries(patterns).map(
-            ([path, pattern]) => `file ${formatCode(path)} matches ${formatCode(pattern)}`,
-        );
+        if (Array.isArray(patterns)) {
+            const names = patterns.map((name) => `\`${name}\``);
+            const label = DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS];
+            return names.length === 0 ? [] : [`${label} ${DETECTION_LIST_FORMAT.format(names)}`];
+        }
+        return Object.entries(patterns).map(([path, pattern]) => `file \`${path}\` matches \`${pattern}\``);
     });
 }
 
 function formatAbsentDependencies(detect: Configuration['detect']): string {
-    return detect.absent_dependencies.length === 0
-        ? ''
-        : `, unless the repository depends on ${formatCodeNames(detect.absent_dependencies)}`;
+    const names = detect.absent_dependencies.map((name) => `\`${name}\``);
+    return names.length === 0 ? '' : `, unless the repository depends on ${DETECTION_LIST_FORMAT.format(names)}`;
 }
 
 // Rule files of a configuration, with the conditions that install each one.
 function formatRules(configuration: Configuration, paths: string[]): string {
     const rows = paths.map((path) => {
         const condition = configuration.rules[posix.basename(path)];
-        if (condition === undefined) return [formatCode(path), 'Always'];
+        if (condition === undefined) return [`\`${path}\``, 'Always'];
         const conditions = formatDetectionConditions(condition).join(' or ');
-        return [
-            formatCode(path),
-            escapeCell(`The repository has ${conditions}${formatAbsentDependencies(condition)}.`),
-        ];
+        return [`\`${path}\``, `The repository has ${conditions}${formatAbsentDependencies(condition)}.`];
     });
     return formatTable(['Rule file', 'Installed when'], rows);
 }
 
 function formatLintRulesOff(configuration: Configuration): string {
     const rows = configuration.eslint.rules_off.map((exclusion) => [
-        exclusion.rules.map((rule) => formatCode(rule)).join(', '),
-        exclusion.files?.map((path) => formatCode(path)).join(', ') ?? 'All files in the scope',
-        escapeCell(exclusion.reason),
+        exclusion.rules.map((rule) => `\`${rule}\``).join(', '),
+        exclusion.files?.map((path) => `\`${path}\``).join(', ') ?? 'All files in the scope',
+        exclusion.reason,
     ]);
     return formatTable(['Lint rules', 'Files', 'Why'], rows);
 }
@@ -79,13 +57,14 @@ function formatSelection(configuration: Configuration, facts: ReferenceFacts): s
         conditions.length === 0
             ? ''
             : `gspot selects it in a scope with ${conditions.join(', or ')}${formatAbsentDependencies(configuration.detect)}.`;
-    const requiredBy = linkConfigurations(
-        facts.configurations.filter((owner) => owner.requires.includes(configuration.name)).map((owner) => owner.name),
-    );
+    const requiredBy = facts.configurations
+        .filter((owner) => owner.requires.includes(configuration.name))
+        .map((owner) => `[\`${owner.name}\`](${formatReferencePath('configurations', owner.name)})`)
+        .join(', ');
     return (
         [selected, requiredBy === '' ? '' : `A configuration that requires it selects it too: ${requiredBy}.`]
             .filter(Boolean)
-            .join(' ') || `Select explicitly with ${formatCode('gspot add ' + configuration.name)}.`
+            .join(' ') || `Select explicitly with \`gspot add ${configuration.name}\`.`
     );
 }
 
@@ -93,12 +72,12 @@ function formatSelection(configuration: Configuration, facts: ReferenceFacts): s
 function listInstalledSections(configuration: Configuration): [string, string][] {
     const tools = configuration.tools.map((tool) => [
         tool.name,
-        (tool.version === undefined ? 'Any' : formatCode(tool.version)) +
+        (tool.version === undefined ? 'Any' : `\`${tool.version}\``) +
             (isInstalledByGspot(tool) ? '' : ', install it yourself'),
     ]);
     // Two pointers can share one target, so each file appears once.
-    const targets = [...new Set(configuration.toolFiles.map((toolFile) => formatCode(toolFile.target)))];
-    const ignored = configuration.ignored_paths.map((path) => formatCode(path));
+    const targets = [...new Set(configuration.toolFiles.map((toolFile) => `\`${toolFile.target}\``))];
+    const ignored = configuration.ignored_paths.map((path) => `\`${path}\``);
     return [
         ['Tools and versions', formatTable(['Tool', 'Version'], tools)],
         ['Files gspot writes', targets.length === 0 ? '' : `gspot writes ${formatList(targets)}.`],
@@ -130,12 +109,12 @@ function buildConfigurationPage(
 ): ReferencePage {
     const selection = formatSelection(configuration, facts);
     const defaults = Object.entries(configuration.defaults).map(([name, value]) => [
-        formatCode(name),
-        formatCode(JSON.stringify(value)),
+        `\`${name}\``,
+        `\`${JSON.stringify(value)}\``,
     ]);
     const settings = (facts.configurationSettings[configuration.name] ?? []).map((setting) => [
         linkSetting(facts.schema, setting.name),
-        escapeCell(setting.description),
+        setting.description,
     ]);
     const sections: [string, string][] = [
         ['Checks', formatCheckTable(configuration.checks)],
@@ -146,7 +125,9 @@ function buildConfigurationPage(
         ['Rules for coding agents', formatRules(configuration, facts.ruleFiles[configuration.name] ?? [])],
         ...listInstalledSections(configuration),
     ];
-    const required = linkConfigurations(configuration.requires);
+    const required = configuration.requires
+        .map((name) => `[\`${name}\`](${formatReferencePath('configurations', name)})`)
+        .join(', ');
     const opening = [
         configuration.description,
         required === '' ? '' : `It requires ${required}.`,
@@ -182,8 +163,8 @@ export function buildConfigurationPages(
                             const rows = facts.configurations
                                 .filter((configuration) => configuration.group === group)
                                 .map((configuration) => [
-                                    formatReferenceLink('configurations', configuration.name),
-                                    escapeCell(configuration.description),
+                                    `[\`${configuration.name}\`](${formatReferencePath('configurations', configuration.name)})`,
+                                    configuration.description,
                                 ]);
                             return formatSection(title, formatTable(['Configuration', 'What it checks'], rows));
                         })

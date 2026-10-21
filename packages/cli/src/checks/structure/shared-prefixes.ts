@@ -6,7 +6,6 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { HOOK_FOLDERS } from '#cli/config/repository/hooks.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { isInDependencyFolder } from '#cli/repository/files/tool-folders.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
 import { extractStem, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
@@ -52,7 +51,7 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
         const folder = extractParentFolder(file.path);
         return (
             !HOOK_FOLDERS.some((hook) => isInScope(folder, joinScope(planned.selection.scope.path, hook))) &&
-            !isInDependencyFolder(folder)
+            !folder.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
         );
     });
     return files.flatMap((file) => {

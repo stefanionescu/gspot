@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { isWindows } from '#tests/setup/system.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { PARTIAL_FIX_CASES } from '#tests/data/runs/fixes.ts';
 import { installToolProjects } from '#tests/setup/install.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 // Root ignores the read-only permission bits that provoke the write failure.
@@ -29,7 +29,12 @@ test.skipIf(isWindows || process.getuid?.() === 0)(
             const failed = failedCommand.report;
             expect(failed.exitCode).toBe(2);
             expect(failed.fixes?.results).toMatchObject([
-                { check: 'sql/sqlfluff', status: 'failed', changed: [], note: matchSubstring('PermissionError') },
+                {
+                    check: 'sql/sqlfluff',
+                    status: 'failed',
+                    changed: [],
+                    note: expect.stringContaining('PermissionError') as string,
+                },
             ]);
             expect(await readFile(join(sandbox.path, 'source/sample.sql'), 'utf8')).toBe('select  * from foo;\n');
         } finally {

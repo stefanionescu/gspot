@@ -8,11 +8,13 @@ import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
+import { getToolFile } from '#cli/runs/command/placeholders.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { listCoveredFiles } from '#cli/repository/covered-files.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
 import { parseJsonFile, parseToolReport } from '#cli/parsers/json.ts';
-import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
 import { cloneReportSchema } from '#cli/schemas/checks/duplication.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
@@ -42,7 +44,11 @@ export async function checkDuplicationJscpd(session: Session, planned: PlannedCh
         ),
     ];
     using files = openFiles(session.root);
-    const generatedPath = selectToolFilePath(session, planned, JSCPD);
+    const generatedPath = buildScopeTarget(
+        planned.selection.scope.path,
+        getToolFile(session, planned, JSCPD),
+        getToolFiles(session).targets,
+    );
     const generated = files.read(generatedPath);
     if (generated === undefined) throw new GspotError('check', `Missing ${generatedPath}. Run gspot apply.`);
     const shipped = parseJsonFile(generatedPath, generated.bytes.toString('utf8'));

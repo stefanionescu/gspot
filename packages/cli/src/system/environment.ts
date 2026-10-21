@@ -15,7 +15,8 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
     const entries = Object.entries(process.env);
     if (overrides !== undefined) entries.push(...Object.entries(overrides));
     for (const [key, value] of entries) {
-        const name = normalizeEnvironmentKey(key);
+        // Windows matches environment names in any case.
+        const name = process.platform === 'win32' ? key.toUpperCase() : key;
         if (value === undefined) variables.delete(name);
         else variables.set(name, [key, value]);
     }
@@ -30,26 +31,6 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
  */
 export function readEnvironmentVariable(name: string): string | undefined {
     return process.env[name];
-}
-
-/**
- * Build the comparison key of an environment variable name for this system.
- *
- * @param name the environment variable to key.
- * @returns its comparison key.
- */
-export function normalizeEnvironmentKey(name: string): string {
-    return process.platform === 'win32' ? name.toUpperCase() : name;
-}
-
-/**
- * Find how an environment spells the key of the executable search path. Windows matches names in any case.
- *
- * @param env the environment variables.
- * @returns the key, or undefined when the environment has none.
- */
-export function findPathKey(env: Readonly<Record<string, unknown>>): string | undefined {
-    return Object.keys(env).find((name) => normalizeEnvironmentKey(name) === 'PATH');
 }
 
 /**

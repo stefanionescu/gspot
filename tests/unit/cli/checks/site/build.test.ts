@@ -5,16 +5,16 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { runCheckSample } from '#tests/setup/sample-checks.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { SITE_SANDBOX } from '#tests/data/checks/site/project.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/site/build.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
+import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/check-input.ts';
 import { SITE_SETTINGS, BUILT_PAGE_CASES } from '#tests/data/checks/site/built-pages.ts';
 import { SITE_BUILD_SCRIPT, BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/data/checks/site/build.ts';
 
@@ -47,7 +47,7 @@ ${SITE_BUILD_SCRIPT}`,
     const session = await openSession(sandbox.path, { resources: resources });
     const request = planSandboxCheck(session, 'site/build', { paths: ['build.js'] });
     expect(await findBuiltInCheck('site/build')(session, request)).toStrictEqual([
-        matchFields({ rule: 'build', message: matchSubstring('local-input.txt') }),
+        matchFields({ rule: 'build', message: expect.stringContaining('local-input.txt') as string }),
     ]);
     const checkedSession = await openSession(sandbox.path, { resources: resources });
     const corrected = await getSuccessfulBuild(
@@ -155,8 +155,12 @@ test('build: a failed site build skips every check that reads the build, and a n
             .toSorted((left, right) => left.check.localeCompare(right.check)),
     ).toMatchObject(
         [
-            { check: 'site/build', status: 'failed', message: matchSubstring('Test build failure') },
-            ...[...consumers].map((check) => ({ check, status: 'skipped', note: matchSubstring('did not build') })),
+            { check: 'site/build', status: 'failed', message: expect.stringContaining('Test build failure') as string },
+            ...[...consumers].map((check) => ({
+                check,
+                status: 'skipped',
+                note: expect.stringContaining('did not build') as string,
+            })),
         ].toSorted((left, right) => left.check.localeCompare(right.check)),
     );
     await writeFile(

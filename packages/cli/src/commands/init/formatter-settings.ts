@@ -48,11 +48,6 @@ function readPythonQuotes(root: string): string | undefined {
     return undefined;
 }
 
-function buildPythonOverride(root: string, quotes: string | undefined): TomlTable[] {
-    const python = readPythonQuotes(root) ?? DEFAULT_QUOTES.ruff;
-    return python === (quotes ?? DEFAULT_QUOTES.ruff) ? [] : [{ paths: [...PYTHON_FILES], quotes: python }];
-}
-
 function buildFormatOverrides(
     options: PrettierOptions | null,
     scope: { root: string; quotes: string | undefined; hasPython: boolean },
@@ -67,9 +62,13 @@ function buildFormatOverrides(
             quotes: convertQuotes(entry.options.singleQuote),
         }),
     );
-    return [...prettier, ...(scope.hasPython ? buildPythonOverride(scope.root, scope.quotes) : [])].filter(
-        (entry) => Object.keys(entry).length > 1,
-    );
+    // Python files get their own quotes when Ruff reads quotes that differ from the rest.
+    const python = scope.hasPython ? (readPythonQuotes(scope.root) ?? DEFAULT_QUOTES.ruff) : undefined;
+    const pythonOverride =
+        python === undefined || python === (scope.quotes ?? DEFAULT_QUOTES.ruff)
+            ? []
+            : [{ paths: [...PYTHON_FILES], quotes: python }];
+    return [...prettier, ...pythonOverride].filter((entry) => Object.keys(entry).length > 1);
 }
 
 // Resolve tab indentation and numeric widths from the selected EditorConfig fields.

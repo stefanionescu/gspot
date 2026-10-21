@@ -1,7 +1,8 @@
 import { PurgeCSS } from 'purgecss';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { hashContent } from '#cli/system/text.ts';
+import { DIGEST_ALGORITHM } from '#cli/config/text.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { glob, rename, readFile, writeFile } from 'node:fs/promises';
 
@@ -53,7 +54,7 @@ export async function pruneUnusedStyles(siteFolder: URL): Promise<void> {
     const replacements = new Map<string, string>();
     await Promise.all(styles.map(({ file, css }) => writeFile(file, css)));
     for (const { file, css } of styles.filter(({ file }) => dirname(relative(folder, file)) === STYLE_ASSET_FOLDER)) {
-        const hash = hashContent(css).slice(0, STYLE_HASH_LENGTH);
+        const hash = createHash(DIGEST_ALGORITHM).update(css).digest('hex').slice(0, STYLE_HASH_LENGTH);
         const next = basename(file).replace(STYLE_FILE_HASH, `.${hash}.css`);
         await rename(file, join(dirname(file), next));
         replacements.set(basename(file), next);

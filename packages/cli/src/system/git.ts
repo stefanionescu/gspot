@@ -2,34 +2,33 @@
 import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
+import { buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { GitLookup, GitRepository, GitEnvironment, GitTargetEnvironment } from '#cli/types/system/git.ts';
-import { buildSpawnEnvironment, normalizeEnvironmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import {
     type SpawnResult,
-    type StdoutReader,
     type SpawnOptions,
+    type StdoutReader,
     type AsyncSpawnOptions,
 } from '#cli/types/system/processes.ts';
 import {
     GIT_LOCALE,
     GIT_EXECUTABLE,
-    TRAILING_NEWLINE,
     GIT_DIR_VARIABLE,
+    TRAILING_NEWLINE,
     GIT_CLONE_COMMAND,
     GIT_PATH_VARIABLES,
     GIT_HOOKS_ARGUMENTS,
     GIT_VARIABLE_PREFIX,
     NOT_REPOSITORY_CODE,
-    GIT_SOURCE_ARGUMENTS,
     GIT_FOLDER_ARGUMENTS,
+    GIT_SOURCE_ARGUMENTS,
     GIT_SETTING_ARGUMENTS,
-    GIT_SHALLOW_ARGUMENTS,
     GIT_WORK_TREE_VARIABLE,
     NOT_REPOSITORY_MESSAGE,
-    GIT_WORK_TREE_ARGUMENTS,
     GIT_TOP_LEVEL_ARGUMENTS,
+    GIT_WORK_TREE_ARGUMENTS,
     GIT_COMMAND_CONFIGURATION,
     GIT_LOCAL_VARIABLES_ARGUMENTS,
     GIT_NONLOCAL_ENVIRONMENT_NAME,
@@ -52,7 +51,7 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
     if (source.code !== 0) return { failure: source };
     const line = source.stdout.indexOf('\n');
     const isBare = source.stdout.slice(0, line) === 'true';
-    const folder = trimGitLine(source.stdout.slice(line + 1));
+    const folder = source.stdout.slice(line + 1).replace(TRAILING_NEWLINE, '');
     if (
         !isBare &&
         readEnvironmentVariable(GIT_DIR_VARIABLE) !== undefined &&
@@ -63,7 +62,7 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
             env,
         });
         if (worktree.code !== 0) return { failure: worktree };
-        env[GIT_WORK_TREE_VARIABLE] = trimGitLine(worktree.stdout);
+        env[GIT_WORK_TREE_VARIABLE] = worktree.stdout.replace(TRAILING_NEWLINE, '');
     }
     return { folder, env };
 }
@@ -79,9 +78,11 @@ function readTargetGitEnvironment(
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
-    if (isOutsideGit(target)) return { env: { ...isolated, ...explicit } };
+    // Git reports that no repository holds the folder.
+    if (target.code === NOT_REPOSITORY_CODE && target.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
+        return { env: { ...isolated, ...explicit } };
     if (target.code !== 0) return { failure: target };
-    const isSameRepository = realpathSync(source.folder) === realpathSync(trimGitLine(target.stdout));
+    const isSameRepository = realpathSync(source.folder) === realpathSync(target.stdout.replace(TRAILING_NEWLINE, ''));
     return { env: { ...(isSameRepository ? source.env : isolated), ...explicit } };
 }
 
@@ -101,7 +102,7 @@ export function readGitEnvironment(
 ): GitEnvironment {
     if (
         !Object.keys(buildSpawnEnvironment()).some((key) => {
-            const name = normalizeEnvironmentKey(key);
+            const name = process.platform === 'win32' ? key.toUpperCase() : key;
             return name.startsWith(GIT_VARIABLE_PREFIX) && !GIT_NONLOCAL_ENVIRONMENT_NAME.test(name);
         })
     )
@@ -114,7 +115,8 @@ export function readGitEnvironment(
         });
         if (declared.code !== 0) return { failure: declared };
         // The installed Git version lists its own local variable names.
-        const localVariables = trimGitLine(declared.stdout)
+        const localVariables = declared.stdout
+            .replace(TRAILING_NEWLINE, '')
             .split('\n')
             .filter((name) => !GIT_COMMAND_CONFIGURATION.has(name));
         inheritedGit = { localVariables };
@@ -125,7 +127,9 @@ export function readGitEnvironment(
     if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((part, index) => commandArguments[index] === part))
         return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
-        Object.entries(explicit).filter(([name]) => !localVariables.includes(normalizeEnvironmentKey(name))),
+        Object.entries(explicit).filter(
+            ([name]) => !localVariables.includes(process.platform === 'win32' ? name.toUpperCase() : name),
+        ),
     );
     const repository = (inheritedGit.repository ??= readInheritedGitEnvironment(origin));
     if ('failure' in repository) return repository;
@@ -248,7 +252,7 @@ export function readHooksFolder(workingFolder: string): string {
             'git',
             `Git ${GIT_HOOKS_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
         );
-    return resolve(workingFolder, trimGitLine(result.stdout));
+    return resolve(workingFolder, result.stdout.replace(TRAILING_NEWLINE, ''));
 }
 
 /**
@@ -308,31 +312,6 @@ export async function readGitPaths(
 }
 
 /**
- * Check whether a shallow clone cuts the repository history.
- *
- * @param workingFolder the repository root.
- * @param options cancellation and input.
- * @returns true for a shallow repository.
- */
-export async function isShallow(
-    workingFolder: string,
-    options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
-): Promise<boolean> {
-    const answer = await readGitText(workingFolder, GIT_SHALLOW_ARGUMENTS, options);
-    return answer.trim() === 'true';
-}
-
-/**
- * Remove the final newline from a Git result, and keep the other bytes.
- *
- * @param text the value that Git printed.
- * @returns the value without its final newline.
- */
-export function trimGitLine(text: string): string {
-    return text.replace(TRAILING_NEWLINE, '');
-}
-
-/**
  * Check whether a Git work tree contains the folder.
  *
  * @param workingFolder the folder to test.
@@ -342,19 +321,9 @@ export function trimGitLine(text: string): string {
 export function isGitRepository(workingFolder: string): boolean {
     const inspection = runGitBlocking(workingFolder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
-    if (isOutsideGit(inspection)) return false;
+    if (inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE)) return false;
     throw new GspotError(
         'git',
         `Git ${GIT_WORK_TREE_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
     );
-}
-
-/**
- * Tell an absent work tree from broken Git metadata after a failed command.
- *
- * @param inspection the work-tree probe result.
- * @returns true when Git reports that no repository exists.
- */
-export function isOutsideGit(inspection: SpawnResult): boolean {
-    return inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
 }

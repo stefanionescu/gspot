@@ -1,12 +1,12 @@
+import { listIgnores } from '#cli/settings/scope-view.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { Tool, Check } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
-import { listIgnores, isFileIgnore } from '#cli/settings/scope-view.ts';
 import { findMissingBuild } from '#cli/configurations/declared-tools.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
-import type { Skip, Host, PlannedScope, PlannedCheck, SettingsSkip } from '#cli/types/planning.ts';
+import type { Host, Skip, PlannedCheck, PlannedScope, SettingsSkip } from '#cli/types/planning.ts';
 
 // A check that needs a dependency skips a scope whose projects declare none of them.
 function findDependencySkip(
@@ -54,7 +54,9 @@ function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | 
 function findIgnoreSkip(selection: Scope, check: Check): SettingsSkip | undefined {
     const ignored = listIgnores(selection.view, check.name).find(
         (entry) =>
-            isFileIgnore(entry) && (entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path)),
+            entry.rule === undefined &&
+            entry.names === undefined &&
+            (entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path)),
     );
     if (ignored === undefined) return undefined;
     return { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };

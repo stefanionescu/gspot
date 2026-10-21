@@ -2,6 +2,7 @@ import semver from 'semver';
 import * as nypm from 'nypm';
 import { join, dirname } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
@@ -10,7 +11,6 @@ import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import type { CacheKey, ReadCache } from '#cli/types/system/files.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/install/npm.ts';
 import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/package-manager.ts';
 
@@ -118,7 +118,7 @@ export async function detectPackageManager(repositoryRoot: string, trackedPaths:
     const candidates = [
         PACKAGE_JSON,
         ...trackedPaths
-            .filter((path) => path.endsWith(`/${PACKAGE_JSON}`) && !isInGspotFolder(path))
+            .filter((path) => path.endsWith(`/${PACKAGE_JSON}`) && !path.startsWith(`${DOT_GSPOT}/`))
             .toSorted((left, right) => left.localeCompare(right))
             .slice(0, 1),
     ];

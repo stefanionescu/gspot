@@ -1,5 +1,4 @@
 import type { Node } from 'web-tree-sitter';
-import { getLastName } from '#cli/parsers/python.ts';
 import type { NamedCategory } from '#cli/types/settings/tables.ts';
 import { addIdentifier } from '#cli/checks/naming/languages/identifier.ts';
 import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
@@ -70,7 +69,7 @@ function isTypeOperand(operand: Node | null): boolean {
     if (operand === null) return false;
     if (operand.type === 'none') return true;
     if (operand.type === 'identifier' || operand.type === 'attribute')
-        return PYTHON_TYPE_NAME.test(getLastName(operand.text));
+        return PYTHON_TYPE_NAME.test(operand.text.slice(operand.text.lastIndexOf('.') + 1));
     return isTypeForm(operand);
 }
 
@@ -78,7 +77,7 @@ function isTypeForm(node: Node | null): boolean {
     if (node === null) return false;
     if (node.type === 'subscript') {
         const value = node.childForFieldName('value');
-        return value !== null && PYTHON_TYPE_FORMS.has(getLastName(value.text));
+        return value !== null && PYTHON_TYPE_FORMS.has(value.text.slice(value.text.lastIndexOf('.') + 1));
     }
     if (node.type !== 'binary_operator' || node.childForFieldName('operator')?.text !== '|') return false;
     return isTypeOperand(node.childForFieldName('left')) && isTypeOperand(node.childForFieldName('right'));

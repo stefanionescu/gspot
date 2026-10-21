@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { installSandbox } from '#tests/setup/install.ts';
 import { checkChanges } from '#tests/setup/sample-checks.ts';
 import { isLinux, hasToolBuild } from '#tests/setup/system.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 import {
@@ -37,7 +37,7 @@ test.skipIf(!isLinux)(
                 file: 'proxy/conf.d/server.conf',
                 line: 2,
                 rule: 'syntax',
-                message: matchSubstring('invalid_directive'),
+                message: expect.stringContaining('invalid_directive') as string,
             },
         ]);
         await writeFile(join(sandbox.path, 'proxy/conf.d/server.conf'), NGINX_SERVER);

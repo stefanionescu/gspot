@@ -20,14 +20,13 @@ const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
  * @returns the page data and its escaped Markdown
  */
 export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
-    return {
-        data: { title, description, editUrl: false },
-        // A flag outside code goes into a code span, so Markdown does not turn its two hyphens into a dash.
-        body: `\n${body
-            .replaceAll(MARKDOWN_ESCAPES, (text) => HTML_BRACKET_ENTITIES[text] ?? text)
-            .replaceAll(FLAGS_OUTSIDE_CODE, (text) => (text.startsWith('`') ? text : formatCode(text)))}`,
-    };
+    // A flag outside code goes into a code span, so Markdown does not turn its two hyphens into a dash.
+    const escaped = body
+        .replaceAll(MARKDOWN_ESCAPES, (text) => HTML_BRACKET_ENTITIES[text] ?? text)
+        .replaceAll(FLAGS_OUTSIDE_CODE, (text) => (text.startsWith('`') ? text : `\`${text}\``));
+    return { data: { title, description, editUrl: false }, body: `\n${escaped}` };
 }
+
 /**
  * Format a level-two section, or nothing for empty text.
  *
@@ -43,22 +42,14 @@ export function formatSection(title: string, body: string): string {
  * Format a Markdown table.
  *
  * @param header the column titles
- * @param rows the cells, as one list per table line
+ * @param rows the cells of each line, in Markdown; the table escapes them
  * @returns the table, with a separator line under the header, or nothing without rows
  */
 export function formatTable(header: string[], rows: string[][]): string {
     if (rows.length === 0) return '';
-    return [header, header.map(() => '---'), ...rows].map((cells) => `| ${cells.join(' | ')} |`).join('\n');
-}
-
-/**
- * Escape pipes and flatten line breaks so the content fits in one table cell.
- *
- * @param text the cell content
- * @returns the escaped text
- */
-export function escapeCell(text: string): string {
-    return text.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
+    // A cell keeps a pipe as text and holds one line.
+    const cells = rows.map((row) => row.map((cell) => cell.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ')));
+    return [header, header.map(() => '---'), ...cells].map((line) => `| ${line.join(' | ')} |`).join('\n');
 }
 
 /**
@@ -72,16 +63,6 @@ export function formatList(names: string[]): string {
 }
 
 /**
- * Format one code span in generated reference text.
- *
- * @param text the literal code text.
- * @returns the Markdown code span.
- */
-export function formatCode(text: string): string {
-    return '`' + text + '`';
-}
-
-/**
  * Build the canonical route of a reference index or named page.
  *
  * @param folder the reference section.
@@ -90,15 +71,4 @@ export function formatCode(text: string): string {
  */
 export function formatReferencePath(folder: keyof typeof REFERENCE_FOLDERS, name: string): string {
     return `${REFERENCE_PATH}${REFERENCE_FOLDERS[folder]}/${name === '' ? '' : name + '/'}`;
-}
-
-/**
- * Link a reference page with its exact name as code.
- *
- * @param folder the reference section.
- * @param name the page and its link text.
- * @returns the Markdown link.
- */
-export function formatReferenceLink(folder: keyof typeof REFERENCE_FOLDERS, name: string): string {
-    return `[${formatCode(name)}](${formatReferencePath(folder, name)})`;
 }

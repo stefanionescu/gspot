@@ -1,32 +1,20 @@
+/** List every version pin of a tool by installer and package name. */
+
 import { posix } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { listAssets } from '#cli/system/assets.ts';
+import type { Check } from '#cli/types/configurations.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { classifyToolVersion } from '#cli/tools/versions.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
-import type { Tool, Check } from '#cli/types/configurations.ts';
-import { readNameList } from '#cli/configurations/name-lists.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
+import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint/presets.ts';
 import { EACH_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
-
-/** List every version pin of a tool by installer and package name. */
-function listToolPins(tool: Tool): (readonly [string, string])[] {
-    return [
-        ...(tool.version === undefined ? [] : [[`tool:${tool.name}`, tool.version] as const]),
-        ...Object.entries(tool.installers).flatMap(([installer, pin]) =>
-            pin.version === undefined ? [] : [[`${installer}:${pin.name}`, pin.version] as const],
-        ),
-    ];
-}
-
-/** Whether the pin of a tool sits below its minimum version. */
-function hasOutdatedPin(tool: Tool): boolean {
-    return tool.version !== undefined && classifyToolVersion(tool.version, undefined, tool.min_version) === 'outdated';
-}
 
 /** Find settings expanded by normal and repeated command placeholders. */
 function commandSettings(check: Check): string[] {
@@ -65,7 +53,7 @@ test('each lint-rule list names the pinned package version', () => {
     const pins = listToolProjectPins(configurations).npm;
     expect(pins[pluginPackage.name]).toBe(pluginPackage.version);
     for (const path of listAssets('configurations/').filter((asset) => asset.endsWith('-names.json'))) {
-        const names = readNameList(path);
+        const names = nameListSchema.parse(JSON.parse(readFileSync(buildAssetPath(path), 'utf8')));
         expect(pins[names.package], path).toBe(names.version);
     }
     const presetFiles = new Set(
@@ -82,7 +70,14 @@ test('configurations agree on every tool and installer pin', () => {
     const versions = new Map<string, string>();
     const mismatches: string[] = [];
     const configurations = [...readConfigurations().values()];
-    const pins = configurations.flatMap(({ tools }) => tools).flatMap((tool) => listToolPins(tool));
+    const pins = configurations
+        .flatMap(({ tools }) => tools)
+        .flatMap((tool) => [
+            ...(tool.version === undefined ? [] : [[`tool:${tool.name}`, tool.version] as const]),
+            ...Object.entries(tool.installers).flatMap(([installer, pin]) =>
+                pin.version === undefined ? [] : [[`${installer}:${pin.name}`, pin.version] as const],
+            ),
+        ]);
     for (const [name, version] of pins) {
         const previous = versions.get(name);
         if (previous !== undefined && previous !== version) mismatches.push(`${name}: ${previous}, ${version}`);
@@ -92,17 +87,23 @@ test('configurations agree on every tool and installer pin', () => {
 });
 
 test('each tool has a pin or a floor at or above it', () => {
-    const mismatches: string[] = [];
-    for (const configuration of readConfigurations().values())
-        for (const tool of configuration.tools) {
-            const unpinned =
-                tool.system !== true &&
-                tool.version === undefined &&
-                Object.values(tool.installers).some((pin) => pin.version === undefined);
-            if ((unpinned && tool.min_version === undefined) || hasOutdatedPin(tool))
-                mismatches.push(`${configuration.name}: ${tool.name}`);
-        }
-    expect(mismatches).toStrictEqual([]);
+    const tools = [...readConfigurations().values()].flatMap((configuration) =>
+        configuration.tools.map((tool) => ({ configuration: configuration.name, tool })),
+    );
+    const unpinned = tools.filter(
+        ({ tool }) =>
+            tool.system !== true &&
+            tool.version === undefined &&
+            tool.min_version === undefined &&
+            Object.values(tool.installers).some((pin) => pin.version === undefined),
+    );
+    const outdated = tools.filter(
+        ({ tool }) =>
+            tool.version !== undefined && classifyToolVersion(tool.version, undefined, tool.min_version) === 'outdated',
+    );
+    expect([...unpinned, ...outdated].map(({ configuration, tool }) => `${configuration}: ${tool.name}`)).toStrictEqual(
+        [],
+    );
 });
 
 test('a check waits for each setting with an empty default', () => {

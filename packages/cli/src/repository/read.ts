@@ -9,16 +9,23 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { detectSwiftTags } from '#cli/repository/swift-tags.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
+import { runGitBlocking, isGitRepository } from '#cli/system/git.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedText, readCachedPrefix } from '#cli/system/files/reads.ts';
-import { readIndexEntries, listTrackedFiles } from '#cli/repository/files/tracked.ts';
+import { listTrackedFiles, readIndexEntries } from '#cli/repository/files/tracked.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/inventory.ts';
-import { trimGitLine, isOutsideGit, runGitBlocking, isGitRepository } from '#cli/system/git.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
-import { GIT_LOCALE, GIT_WORK_TREE_ARGUMENTS, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 
+import {
+    GIT_LOCALE,
+    TRAILING_NEWLINE,
+    NOT_REPOSITORY_CODE,
+    NOT_REPOSITORY_MESSAGE,
+    GIT_TOP_LEVEL_ARGUMENTS,
+    GIT_WORK_TREE_ARGUMENTS,
+} from '#cli/config/system/git.ts';
 import {
     SET_VALUES,
     SWIFT_EXTENSION,
@@ -145,10 +152,11 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
 export function findRoot(start: string): string {
     const folder = realpathSync(start);
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS);
-    const gitRoot = top.code === 0 ? resolve(trimGitLine(top.stdout)) : undefined;
+    const gitRoot = top.code === 0 ? resolve(top.stdout.replace(TRAILING_NEWLINE, '')) : undefined;
     if (gitRoot !== undefined) return gitRoot;
     // Broken Git metadata stops the search; a folder outside any repository does not.
-    if (!isOutsideGit(runGitBlocking(folder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
+    const inspection = runGitBlocking(folder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
+    if (inspection.code !== NOT_REPOSITORY_CODE || !inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
         throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);
     let current = folder;
     while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {

@@ -24,7 +24,8 @@ export function prepareCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
 ): { options: AsyncSpawnOptions & { timeoutSeconds: number }; context: string } {
-    const remaining = computeTimeLeft();
+    // The time left of the test, or the shared limit outside a test.
+    const remaining = timeoutAt === undefined ? TEST_TIMEOUT_MILLISECONDS : Math.ceil(timeoutAt - performance.now());
     const context = `Command: ${command.join(' ')}\nWorking directory: ${options.cwd}`;
     if (remaining <= 0)
         throw new Error(`The test timeout has elapsed.\n${context}\nOutput: the command was not started.`);
@@ -44,11 +45,6 @@ export function startTestTimeout(): Disposable {
             timeoutAt = undefined;
         },
     };
-}
-
-/** Return the time left for a test or the shared limit outside a test. */
-function computeTimeLeft(): number {
-    return timeoutAt === undefined ? TEST_TIMEOUT_MILLISECONDS : Math.ceil(timeoutAt - performance.now());
 }
 
 function buildTimeoutError(
@@ -98,7 +94,7 @@ export function runCommandBlocking(command: readonly string[], options: AsyncSpa
  */
 export async function waitForExit(pid: number): Promise<void> {
     if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid child PID: ${String(pid)}.`);
-    const deadline = performance.now() + computeTimeLeft();
+    const deadline = timeoutAt ?? performance.now() + TEST_TIMEOUT_MILLISECONDS;
     while (performance.now() < deadline) {
         try {
             process.kill(pid, 0);
@@ -117,7 +113,7 @@ export async function waitForExit(pid: number): Promise<void> {
  * A child creates the file before it writes the content, so the file counts as ready once it holds bytes.
  */
 export async function waitForFile(path: string): Promise<boolean> {
-    const deadline = performance.now() + computeTimeLeft();
+    const deadline = timeoutAt ?? performance.now() + TEST_TIMEOUT_MILLISECONDS;
     while (performance.now() < deadline) {
         try {
             const file = await stat(path);
@@ -171,11 +167,15 @@ export function startCommand(
  */
 export function stopOnSignals(stop: (code: number) => void): Disposable {
     const subscriptions = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => {
-        const stopForSignal = (): void => {
+        process.once(signal, () => {
             stop(code);
-        };
-        process.once(signal, stopForSignal);
-        return [signal, stopForSignal] as const;
+        });
+        return [
+            signal,
+            () => {
+                stop(code);
+            },
+        ] as const;
     });
     return {
         [Symbol.dispose]() {

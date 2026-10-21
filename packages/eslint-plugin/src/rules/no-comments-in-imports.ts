@@ -25,18 +25,6 @@ function isToolComment(value: string): boolean {
 }
 
 /**
- * Check whether only whitespace comes before a comment on its line.
- *
- * @param source the parsed file, with line locations
- * @param comment the range to check
- * @returns whether the comment stands on its own line
- */
-function isOwnLine(source: TSESLint.SourceCode, comment: TSESTree.Comment): boolean {
-    const start = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });
-    return BLANK.test(source.getText().slice(start, comment.range[0]));
-}
-
-/**
  * Check for an import declaration or a CommonJS `require` statement.
  *
  * @param node the statement
@@ -92,7 +80,15 @@ function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
     const blocks: TSESTree.Comment[] = [];
     let previous: TSESTree.Comment | undefined;
     for (const comment of source.getAllComments()) {
-        if (comment.type !== AST_TOKEN_TYPES.Line || isToolComment(comment.value) || !isOwnLine(source, comment)) {
+        if (
+            comment.type !== AST_TOKEN_TYPES.Line ||
+            isToolComment(comment.value) ||
+            !BLANK.test(
+                source
+                    .getText()
+                    .slice(source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 }), comment.range[0]),
+            )
+        ) {
             blocks.push(comment);
             previous = undefined;
             continue;
@@ -134,7 +130,15 @@ function isLeading(
     comments: TSESTree.Comment[],
 ): boolean {
     const start = getStatementOffset(node);
-    if (comment.range[1] > start || !isOwnLine(source, comment)) return false;
+    if (
+        comment.range[1] > start ||
+        !BLANK.test(
+            source
+                .getText()
+                .slice(source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 }), comment.range[0]),
+        )
+    )
+        return false;
     let between = source.getText().slice(comment.range[1], start);
     const directives = comments.filter(
         (directive) =>
@@ -154,7 +158,14 @@ function computeRemovalRange(source: TSESLint.SourceCode, comment: TSESTree.Comm
     const lineStart = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });
     const newline = text.indexOf('\n', comment.range[1]);
     const end = newline === -1 ? text.length : newline;
-    if (isOwnLine(source, comment) && BLANK.test(text.slice(comment.range[1], end)))
+    if (
+        BLANK.test(
+            source
+                .getText()
+                .slice(source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 }), comment.range[0]),
+        ) &&
+        BLANK.test(text.slice(comment.range[1], end))
+    )
         return [lineStart, newline === -1 ? end : end + 1];
     let start = comment.range[0];
     while (start > 0 && (text[start - 1] === ' ' || text[start - 1] === '\t')) start -= 1;

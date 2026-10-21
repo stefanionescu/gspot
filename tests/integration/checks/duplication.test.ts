@@ -3,9 +3,9 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import { installSandbox } from '#tests/setup/install.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 /** Run the jscpd check, check its exit code, and return its report. */
@@ -53,7 +53,7 @@ test('a block copied between two files is a finding on the file that holds it', 
             file: 'scripts/second.sh',
             line: 4,
             rule: 'clone',
-            message: matchSubstring('lines repeat scripts/first.sh:4.'),
+            message: expect.stringContaining('lines repeat scripts/first.sh:4.') as string,
         }),
     ]);
     await writeFile(join(sandbox.path, 'scripts/second.sh'), '#!/usr/bin/env bash\nprintf "Independent task\\n"\n');

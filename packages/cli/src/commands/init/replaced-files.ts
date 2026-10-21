@@ -1,7 +1,7 @@
 import { openFiles } from '#cli/system/files/open.ts';
 import type { ManagedKeys } from '#cli/types/ownership.ts';
 import type { ReplacedFiles } from '#cli/types/commands/init.ts';
-import { isEditedInPlace, getToolFileSection } from '#cli/repository/existing-tools.ts';
+import { isEditedInPlace } from '#cli/repository/existing-tools.ts';
 import type { ReplacedFile, ExistingTools } from '#cli/types/repository/existing-tools.ts';
 
 // Record what init does with one file: a shared file stays for you, and init deletes an owned one.
@@ -10,7 +10,7 @@ function addReplacedFile(entry: ReplacedFile, replaced: ReplacedFiles): void {
     if (shared)
         replaced.retained.push({
             path,
-            note: `${getToolFileSection(entry)} settings stay here, and the generated ${tool} tool file takes over. Delete the section when ready.`,
+            note: `${entry.table ?? entry.key ?? entry.tool} settings stay here, and the generated ${tool} tool file takes over. Delete the section when ready.`,
         });
     else replaced.deleted.push({ path, note: `replaced by the generated ${tool} tool file` });
 }

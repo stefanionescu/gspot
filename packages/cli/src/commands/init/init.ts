@@ -20,7 +20,7 @@ import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
-import { writePlans, openWriter } from '#cli/ownership/writer.ts';
+import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';

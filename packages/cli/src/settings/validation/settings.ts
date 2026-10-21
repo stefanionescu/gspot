@@ -10,18 +10,18 @@ import type { LimitLanguage } from '#cli/types/settings/tables.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/parts.ts';
 import { SETTINGS_REFERENCE_URL } from '#cli/config/settings/schema.ts';
 import { type KnownSettings } from '#cli/types/settings/inheritance.ts';
+import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import type { WrittenConfiguration } from '#cli/types/configurations.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
-import { formatCodeList, formatUnknownName, formatSimilarNames } from '#cli/system/text.ts';
 import { scopeSchema, settingsSchema, listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
 
 import {
     validateScopePaths,
-    validateSettingRules,
     validateRuleExcludes,
+    validateSettingRules,
     validateRuleFilePaths,
 } from '#cli/settings/validation/values.ts';
 
@@ -140,7 +140,12 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
         ...settings.ignore.flatMap((entry, index) =>
             entry.check === undefined || checks.includes(entry.check)
                 ? []
-                : [{ path: ['ignore', index, 'check'], message: formatUnknownName('check', entry.check, checks) }],
+                : [
+                      {
+                          path: ['ignore', index, 'check'],
+                          message: `There is no check called \`${entry.check}\`.${formatSimilarNames(entry.check, checks)}`,
+                      },
+                  ],
         ),
         ...validateRuleExcludes(settings.rules.exclude, configurations),
         ...(repositoryRoot === undefined ? [] : validateScopePaths(repositoryRoot, settings)),

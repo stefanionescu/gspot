@@ -1,7 +1,8 @@
 // Reads staged paths and compares branches.
 import { GspotError } from '#cli/system/errors.ts';
+import { GIT_SHALLOW_ARGUMENTS } from '#cli/config/system/git.ts';
 import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
-import { runGit, isShallow, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
+import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
 
 import {
     HEAD_SUFFIX,
@@ -61,9 +62,8 @@ export async function readMergeBase(
         cancelSignal,
     });
     if (base.code === 0) return base.stdout.trim();
-    const help = (await isShallow(repositoryRoot, { cancelSignal }))
-        ? ' History is cut; run git fetch --unshallow.'
-        : '';
+    const shallow = await readGitText(repositoryRoot, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
+    const help = shallow.trim() === 'true' ? ' History is cut; run git fetch --unshallow.' : '';
     throw new GspotError('git', `Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`);
 }
 

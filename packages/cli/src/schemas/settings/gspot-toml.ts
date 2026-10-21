@@ -1,21 +1,21 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
-import { buildPathKey, trimTrailingSlashes } from '#cli/system/paths.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/parts.ts';
-import { ciSchema, rulesSchema, hooksSchema } from '#cli/schemas/settings/integrations.ts';
+import { ciSchema, hooksSchema, rulesSchema } from '#cli/schemas/settings/integrations.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
 import {
     formatSchema,
     relativePath,
-    relativePaths,
     nonemptyPaths,
+    relativePaths,
     localDateSchema,
     allowReasonedValue,
     unwrapSettingSchema,
@@ -24,8 +24,8 @@ import {
     SCHEMA_URL,
     ALLOWED_WORD,
     SETTINGS_EXAMPLES,
-    TABLE_DESCRIPTIONS,
     INTERNAL_FACT_KEYS,
+    TABLE_DESCRIPTIONS,
     JSON_SCHEMA_DIALECT,
     NAMED_FINDING_CHECKS,
 } from '#cli/config/settings/schema.ts';
@@ -194,7 +194,9 @@ export const settingsSchema = z
             {
                 key: 'scope',
                 field: 'path',
-                names: (written.scope ?? []).map((entry) => buildPathKey(trimTrailingSlashes(entry.path))),
+                names: (written.scope ?? []).map((entry) =>
+                    trimTrailingSlashes(entry.path).normalize('NFC').toLowerCase(),
+                ),
             },
             {
                 key: 'command_check',

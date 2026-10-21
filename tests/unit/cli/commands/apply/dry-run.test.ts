@@ -4,11 +4,11 @@ import { openSession } from '#cli/session.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { ApplyReport } from '#cli/types/apply.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
 import { type DryRunJson } from '#cli/types/commands/apply.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 
@@ -231,12 +231,12 @@ ${current}=======
         matchFields({
             path: '.gspot/configurations/language/bash/shellcheckrc',
             kind: 'changed',
-            diff: matchSubstring('-# Edited.'),
+            diff: expect.stringContaining('-# Edited.') as string,
         }),
     );
     expect(stale).toContainEqual(matchFields({ path: '.gspot/package.json', kind: 'changed' }));
     expect(stale).toContainEqual(
-        matchFields({ path: 'AGENTS.md', kind: 'changed', diff: matchSubstring('-Edited inside.') }),
+        matchFields({ path: 'AGENTS.md', kind: 'changed', diff: expect.stringContaining('-Edited inside.') as string }),
     );
     expect(stale).toContainEqual(
         matchFields({ path: '.gspot/configurations/language/markdown/markdownlint.jsonc', kind: 'stray' }),

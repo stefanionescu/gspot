@@ -2,7 +2,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
-import { formatScopeLabel } from '#cli/system/terminal.ts';
+import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listCoveredFiles } from '#cli/repository/covered-files.ts';
@@ -37,7 +37,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     );
     const report: PathExplanation = {
         path,
-        scope: formatScopeLabel(scope.path),
+        scope: scope.path === '' ? ROOT_SCOPE_LABEL : scope.path,
         fileKind: file.kind,
         tags: file.tags,
         configurations: configurations.map((configuration) => configuration.name),

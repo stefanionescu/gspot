@@ -1,9 +1,10 @@
 // Select the rules and build their managed block.
 import { posix } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { visit } from 'unist-util-visit';
-import { readAsset } from '#cli/system/assets.ts';
 import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
@@ -16,7 +17,7 @@ import { type Repository } from '#cli/types/repository/inventory.ts';
 import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { type Level, type Configuration } from '#cli/types/configurations.ts';
-import type { RuleFile, ShippedRule, RuleSection, AgentsBlockContent } from '#cli/types/generation/rules.ts';
+import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cli/types/generation/rules.ts';
 
 import {
     FIRST_READ,
@@ -158,7 +159,7 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
                 ),
         )
         .flatMap(({ source, path, group }) => {
-            const text = readAsset(source);
+            const text = readFileSync(buildAssetPath(source), 'utf8');
             const content = stripAllLevelSections(text, level);
             if (content !== text && !parseHeadingSections(content).some((section) => section.depth > 1)) return [];
             const scopes = scopeRules.filter((scope) => scope.rules.has(path)).map((scope) => scope.path);

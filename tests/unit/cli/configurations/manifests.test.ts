@@ -1,18 +1,18 @@
 import type { ZodError } from 'zod';
 import { test, expect } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { buildConfiguration } from '#tests/setup/builders.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 
 import {
     TOOL_TABLE,
     SEMGREP_ASSETS,
     VERSION_FLOORS,
-    SINGLE_TOOL_FILES,
     REPLACE_KEY_TABLE,
+    SINGLE_TOOL_FILES,
     SEMGREP_TOOL_FILES,
     CONFIGURATION_TABLE,
     EXAMPLE_MANIFEST_PATH,
@@ -99,7 +99,7 @@ test('a tool declared by two configurations is refused', async () => {
     );
     const error = await readTestManifests(files).catch((error: unknown) => error);
     expect(error).toBeInstanceOf(Error);
-    expect(error).toMatchObject({ message: matchSubstring('tool probe is already declared.') });
+    expect(error).toMatchObject({ message: expect.stringContaining('tool probe is already declared.') as string });
 });
 
 test.each([false, true])(
@@ -112,7 +112,7 @@ test.each([false, true])(
         const declared = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
         const error = await readTestManifests({ [consumer]: consumed }).catch((error: unknown) => error);
         expect(error).toBeInstanceOf(Error);
-        expect(error).toMatchObject({ message: matchSubstring('tool probe has no declaration.') });
+        expect(error).toMatchObject({ message: expect.stringContaining('tool probe has no declaration.') as string });
         const paths = ownerFirst ? [owner, consumer] : [consumer, owner];
         const files = Object.fromEntries(paths.map((path) => [path, path === consumer ? consumed : declared]));
         const configurations = await readTestManifests(files);

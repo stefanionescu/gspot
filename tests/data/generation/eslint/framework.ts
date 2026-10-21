@@ -1,4 +1,6 @@
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import testsPackage from '#tests/package.json' with { type: 'json' };
+import { EXPO_DEPENDENCIES, REACT_NATIVE_DEPENDENCIES } from '#tests/data/checks/react.ts';
 
 export const SELECTOR_FILES = {
     'native/App.jsx': `const list = <FlatList data={items} />;
@@ -84,8 +86,21 @@ configurations = [ "expo" ]
 enabled = false
 `;
 
-export const MOBILE_SOURCE_FILES = {
+const MOBILE_SOURCE_FILES = {
     'gspot.toml': MOBILE_SETTINGS,
     'bare/source.js': 'const { EXPO_PUBLIC_URL } = process.env;\n',
     'expo-app/source.js': 'const { EXPO_PUBLIC_URL } = process.env;\n',
 } as const;
+
+/** Sibling Expo and bare React Native packages with the installed test React version. */
+export const MOBILE_FILES: Record<string, string> = {
+    ...MOBILE_SOURCE_FILES,
+    'bare/package.json': JSON.stringify({
+        private: true,
+        dependencies: { react: testsPackage.devDependencies.react, ...REACT_NATIVE_DEPENDENCIES },
+    }),
+    'expo-app/package.json': JSON.stringify({
+        private: true,
+        dependencies: { react: testsPackage.devDependencies.react, ...EXPO_DEPENDENCIES },
+    }),
+};

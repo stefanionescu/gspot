@@ -170,11 +170,14 @@ test.each(['../outside', '/outside', 'folder/../outside', 'nul\0suffix'])(
 );
 
 test.each([...PORTABLE_PATHS])('portable paths refuse $path: $refused', ({ path, refused }) => {
-    const write = () => {
-        assertWritablePath(path);
-    };
-    if (refused) expect(write).toThrow('is not a safe repository-relative path');
-    else expect(write).not.toThrow();
+    if (refused)
+        expect(() => {
+            assertWritablePath(path);
+        }).toThrow('is not a safe repository-relative path');
+    else
+        expect(() => {
+            assertWritablePath(path);
+        }).not.toThrow();
 });
 
 test('rmdir refuses linked and outside parents and keeps folders that are not empty', async () => {

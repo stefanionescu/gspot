@@ -47,7 +47,7 @@ src/orders.js
 | `gspot/no-alias-exports`       | all         | Exported constants that only rename another value.                                   |
 | `gspot/no-index-imports`       | all         | Imports that name an index file instead of the module that declares the value.       |
 | `gspot/no-trivial-files`       | all         | Files with only forwarding code, aliases, re-exports, or small unexported functions. |
-| `gspot/no-trivial-functions`   | all         | Unexported named functions of two statements or fewer, called in one place at most.  |
+| `gspot/no-trivial-functions`   | all         | Named functions of two statements or fewer, exported or not.                         |
 | `gspot/no-magic-numbers`       | none        | Numbers without a name, outside the initializers of module-level constants.          |
 | `gspot/require-server-only`    | none        | Selected server modules that do not import `server-only` or declare `use server`.    |
 

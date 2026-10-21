@@ -1,9 +1,9 @@
 import { isInScope } from '#cli/repository/scopes.ts';
+import { detectConfigurations } from '#cli/repository/detect.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { ScopeFolder } from '#cli/types/repository/inventory.ts';
 import { type ConfigurationEvidence } from '#cli/types/repository/selection.ts';
 import { type ConfigurationSelection } from '#cli/types/settings/inheritance.ts';
-import { hasDetectionRules, detectConfigurations } from '#cli/repository/detect.ts';
 import { selectConfigurations, assertKnownConfigurations } from '#cli/configurations/select.ts';
 
 import {
@@ -71,7 +71,9 @@ function expandSuggestions(
             ...suggestions.filter((name) => {
                 const configuration = configurations.get(name);
                 // A suggestion without detection rules needs no source match.
-                const hasDetection = configuration !== undefined && hasDetectionRules(configuration);
+                const hasDetection =
+                    configuration !== undefined &&
+                    Object.values(configuration.detect).some((patterns) => Object.keys(patterns).length > 0);
                 return !hasDetection || detected.has(name);
             }),
         ]),

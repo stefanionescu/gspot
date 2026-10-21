@@ -7,12 +7,12 @@ import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
-import { findPathKey, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import type {
     SpawnResult,
-    StdoutReader,
     SpawnOptions,
+    StdoutReader,
     RunningProcess,
     SpawnCompletion,
     AsyncSpawnOptions,
@@ -24,8 +24,8 @@ import {
     MISSING_CODE,
     PATHEXT_DEFAULT,
     PATH_SEPARATORS,
-    TASKKILL_PROGRAM,
     TASKKILL_OPTIONS,
+    TASKKILL_PROGRAM,
     REAP_MILLISECONDS,
     DRAIN_MILLISECONDS,
     TASKKILL_GONE_CODE,
@@ -34,7 +34,7 @@ import {
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env = buildSpawnEnvironment(options.env);
     // The launcher of a tool must find its sibling runtime and commands before unrelated tools on the executable search path.
-    const path = findPathKey(env);
+    const path = Object.keys(env).find((name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH');
     if (isAbsolute(executable) && path !== undefined)
         env[path] = [dirname(executable), env[path]].filter((value) => value !== '').join(delimiter);
     return {
@@ -70,19 +70,6 @@ function isExecutableAbsent(executable: string, cwd: string): boolean {
     return [path, ...extensions.map((extension) => path + extension.toLowerCase())].every(
         (candidate) => statSync(candidate, { throwIfNoEntry: false }) === undefined,
     );
-}
-
-// The result of a command whose executable file does not exist, decided before any process starts.
-function buildNotFoundCompletion(executable: string): SpawnCompletion {
-    return {
-        code: 'ENOENT',
-        failed: true,
-        shortMessage: `Executable not found: ${executable}`,
-        stdout: '',
-        stderr: '',
-        timedOut: false,
-        isCanceled: false,
-    };
 }
 
 // A process that never ran, or stopped by a launch or stream error, reports an execution error rather than a verdict.
@@ -250,7 +237,19 @@ function splitCommand(command: readonly string[], cwd: string, started: number):
     const [executable, ...commandArguments] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
     return isExecutableAbsent(executable, cwd)
-        ? buildSpawnResult(buildNotFoundCompletion(executable), started)
+        ? // The executable file does not exist, so no process starts.
+          buildSpawnResult(
+              {
+                  code: 'ENOENT',
+                  failed: true,
+                  shortMessage: `Executable not found: ${executable}`,
+                  stdout: '',
+                  stderr: '',
+                  timedOut: false,
+                  isCanceled: false,
+              } satisfies SpawnCompletion,
+              started,
+          )
         : [executable, commandArguments];
 }
 

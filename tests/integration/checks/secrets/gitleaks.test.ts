@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { type RunReport } from '#cli/types/runs/run.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { type GitleaksHistory } from '#tests/types/secrets.ts';
@@ -11,11 +10,6 @@ import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { API_TOKEN, AWS_KEY_ID, SECRET_FILES, FIXED_SECRET_FILES } from '#tests/data/checks/secrets.ts';
-
-async function readSecretChecks(root: string): Promise<RunReport['checks']> {
-    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'secrets/gitleaks-staged', '--json']));
-    return result.report.checks;
-}
 
 async function prepareSecrets(root: string, environment: Record<string, string>): Promise<void> {
     readGitOutput(root, ['init', '-q']);
@@ -64,15 +58,21 @@ test('the staged scan skips a folder without Git and checks staged changes once 
     });
 
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
-    const withoutGit = await readSecretChecks(sandbox.path);
+    const withoutGit = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
+    ).report.checks;
     expect(withoutGit[0]?.status).toBe('skipped');
     commitAll(sandbox.path);
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
-    const committed = await readSecretChecks(sandbox.path);
+    const committed = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
+    ).report.checks;
     expect(committed[0]?.status).toBe('passed');
     await createFileTree(sandbox.path, { 'src/staged.js': `const token = "${API_TOKEN}";\n` });
     readGitOutput(sandbox.path, ['add', 'src/staged.js']);
-    const staged = await readSecretChecks(sandbox.path);
+    const staged = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
+    ).report.checks;
     expect(staged).toContainEqual(
         matchFields({
             check: 'secrets/gitleaks-staged',

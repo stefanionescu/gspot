@@ -2,12 +2,12 @@ import { getValueAt, createTable } from '#cli/system/tables.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/parts.ts';
+import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { findSettingSchema, rootSettingSchemas } from '#cli/schemas/settings/gspot-toml.ts';
 import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { selectConfigurations, listAutomaticConfigurations } from '#cli/configurations/select.ts';
-import { getSettingValue, getSettingTable, listEffectiveSettings } from '#cli/settings/inherit.ts';
-import type { Settings, TableValues, IgnoreRecord, TableSettings } from '#cli/types/settings/file.ts';
+import { getSettingTable, getSettingValue, listEffectiveSettings } from '#cli/settings/inherit.ts';
 
 import type {
     Scope,
@@ -235,14 +235,4 @@ export function findRootSelection(scopes: readonly Scope[]): Scope {
     const root = scopes.find((selection) => selection.scope.path === '');
     if (root === undefined) throw new Error('The scopes hold no repository root.');
     return root;
-}
-
-/**
- * Check whether an ignore covers whole files: it names no lint rule and no function.
- *
- * @param entry the ignore record.
- * @returns whether the ignore keeps its paths out of the check.
- */
-export function isFileIgnore(entry: Pick<IgnoreRecord, 'rule' | 'names'>): boolean {
-    return entry.rule === undefined && entry.names === undefined;
 }

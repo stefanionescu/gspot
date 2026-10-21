@@ -1,6 +1,6 @@
 import { formatCount } from '#cli/system/text.ts';
+import { getColors } from '#cli/system/terminal.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { warn, getColors } from '#cli/system/terminal.ts';
 import type { FixReport } from '#cli/types/runs/fixes.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
@@ -15,15 +15,6 @@ import {
     COMMIT_PREFIX_LENGTH,
 } from '#cli/config/commands/check.ts';
 
-function formatFixerFailure(note: string): string {
-    return (
-        note
-            .split('\n')
-            .find((line) => FIXER_ERROR_MESSAGE.test(line))
-            ?.replace(FIXER_ERROR_MESSAGE, '') ?? note.split('\n').slice(0, 1).join('')
-    );
-}
-
 function formatCheckedContent(comparison: CheckProgress['comparison']): string {
     if (comparison?.content === 'index') return 'the staged files';
     if (comparison?.content === 'commit') return `commit ${comparison.reference.slice(0, COMMIT_PREFIX_LENGTH)}`;
@@ -34,10 +25,6 @@ function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];
     const verb = report.unstagedChanges === 1 ? 'has' : 'have';
     return [`${formatCount(report.unstagedChanges, 'file')} ${verb} unstaged changes that were not checked.`];
-}
-
-function formatSeconds(milliseconds: number): string {
-    return `${(milliseconds / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
 }
 
 function formatLocation(finding: Finding): string {
@@ -60,7 +47,7 @@ function formatFinding(finding: Finding, next?: Finding): string[] {
 function formatCheckTail(check: CheckResult): string {
     if (NOTE_STATUSES.has(check.status)) return check.note ?? '';
     if (check.status === 'failed') return formatCount(check.findings.length, 'finding');
-    return `${formatCount(check.fileCount, 'file')}  ${formatSeconds(check.duration)}`;
+    return `${formatCount(check.fileCount, 'file')}  ${(check.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
 }
 
 function formatCheckFindings(findings: readonly Finding[], { verbose }: { verbose: boolean }): string[] {
@@ -133,9 +120,13 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
     for (const result of fixes.results) {
         if (result.status !== 'failed') continue;
         const note = stripVTControlCharacters(result.note);
-        const detail = formatFixerFailure(note);
-        warn(
-            `The ${result.check} fixer failed: ${detail.endsWith('.') ? detail.slice(0, -1) : detail}. Run gspot check --only ${result.check} --fix --verbose.`,
+        const detail =
+            note
+                .split('\n')
+                .find((line) => FIXER_ERROR_MESSAGE.test(line))
+                ?.replace(FIXER_ERROR_MESSAGE, '') ?? note.split('\n').slice(0, 1).join('');
+        process.stderr.write(
+            `${getColors().yellow('[warn]')} The ${result.check} fixer failed: ${detail.endsWith('.') ? detail.slice(0, -1) : detail}. Run gspot check --only ${result.check} --fix --verbose.\n`,
         );
         if (verbose)
             process.stderr.write(
@@ -165,7 +156,7 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean }
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
         formatSummary(report),
-        `Time: ${formatSeconds(report.duration)}. Exit code ${String(report.exitCode)}.`,
+        `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. Exit code ${String(report.exitCode)}.`,
     );
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;
 }
@@ -181,11 +172,6 @@ export function printProgress(progress: CheckProgress): void {
     process.stderr.write(
         `${PROGRESS_CLEAR}Checking ${subject}: ${String(progress.completed)} of ${String(progress.total)} checks done`,
     );
-}
-
-/** Clear the terminal progress line before the final report prints. */
-export function clearProgress(): void {
-    if (process.stderr.isTTY) process.stderr.write(PROGRESS_CLEAR);
 }
 
 /**

@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import { convertToSpaces } from '#cli/system/text.ts';
+import { NOT_LINE_BREAK } from '#cli/config/text.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import type { ParseCache } from '#cli/types/parsers/grammars.ts';
@@ -13,8 +13,8 @@ import {
     EXPANSION_NODES,
     BASH_BRANCH_NODES,
     FOR_HEADER_FIELDS,
-    FORWARDED_ARGUMENTS,
     BASH_COMPOUND_NODES,
+    FORWARDED_ARGUMENTS,
     POSITIONAL_PARAMETER,
     TEMPORARY_VALUE_NODES,
     TEMPORARY_FILE_COMMAND,
@@ -108,7 +108,9 @@ function stripComments(text: string, comments: Node[]): string {
     for (const comment of comments) {
         pieces.push(
             text.slice(offset, comment.startIndex),
-            convertToSpaces(text.slice(comment.startIndex, comment.endIndex)),
+            text
+                .slice(comment.startIndex, comment.endIndex)
+                .replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length)),
         );
         offset = comment.endIndex;
     }

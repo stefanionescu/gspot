@@ -12,11 +12,13 @@ import { listExecutablePaths } from '#cli/tools/locate.ts';
 import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { fakeTool, fakeNpmPackage } from '#tests/setup/fakes.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { chmod, unlink, symlink, readFile } from 'node:fs/promises';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
-import { getShippedTool, buildProgramPin, buildInspectionContext } from '#tests/setup/builders.ts';
 
 test("inspectTool finds the project compiler, and the original repository's compiler from a scratch copy", async () => {
     await using sandbox = await testdir({
@@ -28,7 +30,7 @@ test("inspectTool finds the project compiler, and the original repository's comp
     const snapshot = join(sandbox.path, 'snapshot');
     await installCompiler(work, join(work, '.gspot/node_modules'));
     await installCompiler(work);
-    const compiler = getShippedTool('tsc');
+    const compiler = getTool(readConfigurations().values(), 'tsc');
     const projectPath = join(work, 'node_modules/typescript/package.json');
     const project = parseJsonFile(projectPath, await readFile(projectPath, 'utf8'), packageJsonSchema);
     expect(inspectTool(buildInspectionContext(work), compiler)).toMatchObject({
@@ -70,7 +72,7 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
     const active = join(sandbox.path, 'active', isWindows ? 'tsc.cmd' : 'tsc');
     using _environment = overrideEnvironment({ MISE_DATA_DIR: join(sandbox.path, 'mise') });
     using _which = useExecutable(active);
-    const inspection = inspectTool(buildInspectionContext(sandbox.path), getShippedTool('tsc'));
+    const inspection = inspectTool(buildInspectionContext(sandbox.path), getTool(readConfigurations().values(), 'tsc'));
     expect(inspection.state).toBe('system');
     expect(inspection.path).toBe(active);
 });

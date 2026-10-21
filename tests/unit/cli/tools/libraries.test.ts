@@ -8,9 +8,11 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { unlink, symlink, writeFile } from 'node:fs/promises';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { SYSTEM_PLUGIN_REPORTS, PACKAGE_METADATA_FAILURES } from '#tests/data/install/installation.ts';
-import { getShippedTool, buildLibraryPin, buildProcessResult, buildInspectionContext } from '#tests/setup/builders.ts';
+import { buildLibraryPin, buildProcessResult, buildInspectionContext } from '#tests/setup/builders.ts';
 
 test('a library is found only in the tool project', async () => {
     await using sandbox = await testdir({
@@ -43,7 +45,7 @@ test('a system library is read from the chosen project, not from the tool projec
         'app/package.json': '{}',
     });
 
-    const tool = getShippedTool('@vitest/coverage-v8');
+    const tool = getTool(readConfigurations().values(), '@vitest/coverage-v8');
     const context = buildInspectionContext(sandbox.path, { cwd: join(sandbox.path, 'app') });
     expect(inspectTool(context, tool)).toMatchObject({ name: tool.name, state: 'missing' });
     await using project = await testdir();
@@ -67,7 +69,7 @@ test('a system library is read from the chosen project, not from the tool projec
 test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report as $state', async (report) => {
     await using sandbox = await testdir();
     const tool = {
-        ...getShippedTool('pytest-cov'),
+        ...getTool(readConfigurations().values(), 'pytest-cov'),
         ...('pattern' in report ? { version_pattern: report.pattern } : {}),
     };
     using _which = useExecutable('/native/pytest');

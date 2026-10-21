@@ -4,8 +4,10 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildProcessResult } from '#tests/setup/builders.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { getShippedTool, buildProcessResult } from '#tests/setup/builders.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 
 import {
     DOCTOR_RESULTS,
@@ -26,7 +28,7 @@ test.each([...DOCTOR_RESULTS])('Expo Doctor runs once in each app folder: $name'
         ),
     });
 
-    const version = getShippedTool('expo-doctor').version;
+    const version = getTool(readConfigurations().values(), 'expo-doctor').version;
     await createFileTree(sandbox.path, {
         '.gspot/node_modules/expo-doctor/package.json': JSON.stringify({ name: 'expo-doctor', version }),
     });

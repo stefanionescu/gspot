@@ -2,30 +2,17 @@ import { join } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import type { Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { VALE_ALERT } from '#tests/data/checks/prose.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { VALE_ALERT, VALE_SANDBOX_FILES } from '#tests/data/checks/prose.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { checkFindings, planSandboxCheck, findBuiltInCheck, openPinnedSession } from '#tests/setup/check-input.ts';
-
-/** Create a Markdown sandbox for the valid and refused Vale output tests. */
-async function prepareValeSession(resources: AsyncDisposableStack): Promise<Session> {
-    const sandbox = resources.use(
-        await testdir({
-            'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
-            '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
-            'example.md': '# Documentation\n',
-        }),
-    );
-    return await openPinnedSession(sandbox.path, ['vale'], resources);
-}
+import { checkFindings, findBuiltInCheck, planSandboxCheck, openPinnedSession } from '#tests/setup/check-input.ts';
 
 test('Vale gets the timeout setting, and its alerts become findings with file, line and column', async () => {
     await using folder = await testdir();
@@ -168,7 +155,8 @@ test.each([
     { name: 'empty reports', stdout: '{}', findings: [] },
 ])('Vale preserves $name through the check', async ({ stdout, findings }) => {
     await using resources = new AsyncDisposableStack();
-    const session = await prepareValeSession(resources);
+    const sandbox = resources.use(await testdir(VALE_SANDBOX_FILES));
+    const session = await openPinnedSession(sandbox.path, ['vale'], resources);
     const absoluteOutput = JSON.stringify(
         Object.fromEntries(
             Object.entries(JSON.parse(stdout) as Record<string, unknown>).map(([path, alerts]) => [
@@ -188,7 +176,8 @@ test.each([
 
 test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malformed output %s', async (stdout) => {
     await using resources = new AsyncDisposableStack();
-    const session = await prepareValeSession(resources);
+    const sandbox = resources.use(await testdir(VALE_SANDBOX_FILES));
+    const session = await openPinnedSession(sandbox.path, ['vale'], resources);
 
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout })));
     expect(await captureRejection(checkFindings(session.root, 'prose/vale'))).toBe(

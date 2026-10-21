@@ -1,8 +1,10 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { buildScopeGlob } from '#cli/generation/eslint/files.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { getTable, findParentSelection } from '#cli/settings/scope-view.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint/tool-settings.ts';
@@ -65,7 +67,13 @@ export function listLocalPlugins(scopes: Scope[], targetPath: string, shipped: E
  */
 export function buildLocalPluginBlocks(scopes: Scope[], codeFiles: string[]): EslintBlockFields[] {
     return listPluginRecords(scopes).map(({ name, rules, scope }) => ({
-        files: scope === '' ? codeFiles : codeFiles.map((pattern) => [pattern, buildScopeGlob(scope, '**/*')]),
+        files:
+            scope === ''
+                ? codeFiles
+                : codeFiles.map((pattern) => [
+                      pattern,
+                      joinScope(scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
+                  ]),
         rules: Object.fromEntries(
             Object.entries(rules).map(([rule, options]) => [`${name}/${rule}`, ['error', ...options]]),
         ),

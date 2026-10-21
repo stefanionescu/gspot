@@ -1,3 +1,8 @@
+import { buildKnownSettings } from '#cli/settings/known.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
+import type { KnownSettings } from '#cli/types/settings/inheritance.ts';
+
 export const DEFAULT_CASES = [
     {
         name: `defaults are omitted`,
@@ -64,3 +69,18 @@ path = "app/worker"
 `,
     },
 ] as const;
+
+const sqlConfiguration = readConfigurations().get('sql') as Configuration;
+
+/** Two configuration defaults that disagree on the SQL dialect. */
+export const CONFLICTING_SETTINGS: KnownSettings = buildKnownSettings(
+    [
+        sqlConfiguration,
+        {
+            ...sqlConfiguration,
+            name: 'alternate-sql',
+            defaults: { 'tools.sqlfluff.dialect': 'postgres' },
+        },
+    ],
+    'recommended',
+);

@@ -27,14 +27,6 @@ function listMigrationStatements(migrations: Migration[]): { migration: Migratio
     return migrations.flatMap((migration) => migration.statements.map((statement) => ({ migration, statement })));
 }
 
-function isGrantAll(statement: SqlStatementView): boolean {
-    return (
-        statement.kind === 'GrantStmt' &&
-        statement.fields.is_grant === true &&
-        statement.fields.privileges === undefined
-    );
-}
-
 /**
  * Reports each table in a client schema with row security off.
  *
@@ -74,7 +66,12 @@ export async function checkPostgresGrants(session: Session, planned: PlannedChec
         getTable(planned.selection.view, 'postgres').frozen_through,
     );
     return listMigrationStatements(migrations.filter(({ path }) => !frozen.has(path)))
-        .filter(({ statement }) => isGrantAll(statement))
+        .filter(
+            ({ statement }) =>
+                statement.kind === 'GrantStmt' &&
+                statement.fields.is_grant === true &&
+                statement.fields.privileges === undefined,
+        )
         .map(({ migration, statement }) =>
             buildFinding(
                 planned,

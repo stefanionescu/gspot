@@ -4,12 +4,10 @@ import { extractExtension } from '#cli/system/paths.ts';
 import { stripBlock } from '#cli/parsers/managed-blocks.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { VALE_PACKAGES_PATH } from '#cli/config/gspot-paths.ts';
 import { MARKERS } from '#cli/config/parsers/managed-blocks.ts';
-import type { Lockfile } from '#cli/types/parsers/lockfiles.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependencies.ts';
+import { DOT_GSPOT, VALE_PACKAGES_PATH } from '#cli/config/gspot-paths.ts';
 import type { ToolFile, Configuration } from '#cli/types/configurations.ts';
 import { HEADER_LINES_CHECKED, GENERATED_HEADER_LINE } from '#cli/config/generation/header.ts';
 
@@ -23,17 +21,17 @@ import type {
 } from '#cli/types/repository/inventory.ts';
 import {
     TEXT_TAG,
+    BINARY_TAG,
+    LFS_FILTER,
     SCRIPT_TAG,
     SET_VALUES,
-    LFS_FILTER,
-    BINARY_TAG,
-    UNSET_VALUE,
     NOTICE_FILE,
-    SOURCE_KIND,
     RUNTIME_TAG,
     SHEBANG_TAG,
-    KIND_ORIGINS,
+    SOURCE_KIND,
+    UNSET_VALUE,
     BANNER_BYTES,
+    KIND_ORIGINS,
     LICENSE_FILE,
     LICENSE_TAGS,
     SHEBANG_TAGS,
@@ -41,18 +39,18 @@ import {
     DOTENV_PREFIX,
     FILENAME_TAGS,
     ENV_SPLIT_FLAG,
+    EXTENSION_TAGS,
     SHEBANG_PREFIX,
     TEXT_ATTRIBUTE,
-    EXTENSION_TAGS,
+    BUILD_LAUNCHERS,
     DEFAULT_DIALECT,
     DOCKERFILE_NAME,
-    BUILD_LAUNCHERS,
     FILTER_ATTRIBUTE,
-    VENDORED_FOLDERS,
     TRAILING_VERSION,
+    VENDORED_FOLDERS,
     BINARY_EXTENSIONS,
-    VENDORED_ATTRIBUTE,
     MARKDOWN_EXTENSION,
+    VENDORED_ATTRIBUTE,
     GENERATED_ATTRIBUTE,
     DOCKERFILE_EXTENSION,
     INTERPRETER_DIALECTS,
@@ -89,7 +87,7 @@ function isLicenseFile(path: string): boolean {
 // Tool paths and banners identify generated files; downloaded Vale styles belong to another party.
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
     if (path.startsWith(`${VALE_PACKAGES_PATH}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
-    if (isInGspotFolder(path)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
+    if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
     if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildWrapper };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     if (hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some((banner) => banner.test(start)))
@@ -209,16 +207,6 @@ function parseShebang(firstLine: string): string | undefined {
 }
 
 /**
- * Read the declared consumers of one repository lockfile.
- *
- * @param path the repository-relative file.
- * @returns its metadata, or undefined for an unsupported filename.
- */
-export function findLockfile(path: string): Lockfile | undefined {
-    return LOCKFILES.find((entry) => entry.file === posix.basename(path));
-}
-
-/**
  * Find the kind of a tracked file and where the kind comes from.
  *
  * @param repositoryRoot the base folder for resolving tracked entries.
@@ -257,7 +245,7 @@ function tagFile(entry: ListedFile, prefix: Buffer): FileTags {
     const base = posix.basename(entry.path);
     const flags: [boolean, string][] = [
         [entry.symlink, 'symlink'],
-        [findLockfile(base) !== undefined, 'lockfile'],
+        [LOCKFILES.some((entry) => entry.file === base), 'lockfile'],
         [base.startsWith(DOCKERFILE_NAME) || extension === DOCKERFILE_EXTENSION, 'dockerfile'],
         [base.startsWith(DOTENV_PREFIX), 'dotenv'],
         [entry.executable, 'executable'],

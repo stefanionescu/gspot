@@ -1,15 +1,13 @@
 import { HOOKS_PATH } from '#cli/config/gspot-paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
-import type { Repository } from '#cli/types/repository/inventory.ts';
 import type { StartRunner } from '#cli/types/repository/package-manager.ts';
-import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/inventory.ts';
-import type { HookName, LfsHookName, GeneratedFile } from '#cli/types/generation/files.ts';
+import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
 
 import {
     LFS_HOOKS,
-    HOOK_STAGES,
     CHECK_HOOKS,
+    HOOK_STAGES,
     HOOK_SHEBANG,
     HOOK_ARGUMENTS,
     PUSH_INPUT_SAVE,
@@ -25,7 +23,7 @@ function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { use
     const program = runner.name;
     const { missing, installCommand } = runner;
     const absolutePath = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
-    const lfs = usesLfs && isLfsHookName(name);
+    const lfs = usesLfs && (LFS_HOOKS as readonly string[]).includes(name);
     const replay = lfs ? PUSH_INPUT_REPLAY : '';
     const body = [
         ...(lfs
@@ -40,31 +38,6 @@ function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { use
         '',
     ].join('\n');
     return `${HOOK_SHEBANG}\n${body}`;
-}
-
-function buildLfsHookScript(name: LfsHookName): string {
-    return `${HOOK_SHEBANG}\n${LFS_GUARD_PREFIX}exit 0\nexec git lfs ${name} "$@"\n`;
-}
-
-/**
- * Check whether a hook name belongs to Git Large File Storage.
- *
- * @param name the hook file name.
- * @returns whether Git LFS uses this hook.
- */
-export function isLfsHookName(name: string): name is LfsHookName {
-    return (LFS_HOOKS as readonly string[]).includes(name);
-}
-
-/**
- * Check whether the tracked files use Git LFS, so that the hooks of gspot run it in place of the Git LFS hooks.
- *
- * @param attributes the Git attributes of each tracked file.
- *
- * @returns whether a tracked file has the LFS filter.
- */
-export function hasLfsFiles(attributes: Repository['attributes']): boolean {
-    return attributes.values().some((values) => values[FILTER_ATTRIBUTE] === LFS_FILTER);
 }
 
 /**
@@ -100,6 +73,9 @@ export function buildHookFiles(
     const lfsOnly = usesLfs ? LFS_HOOKS.filter((name) => !(names as readonly string[]).includes(name)) : [];
     return [
         ...names.map((name) => ({ name, content: buildHookScript(name, runner, { usesLfs }) })),
-        ...lfsOnly.map((name) => ({ name, content: buildLfsHookScript(name) })),
+        ...lfsOnly.map((name) => ({
+            name,
+            content: `${HOOK_SHEBANG}\n${LFS_GUARD_PREFIX}exit 0\nexec git lfs ${name} "$@"\n`,
+        })),
     ].map(({ name, content }) => ({ path: `${HOOKS_PATH}/${name}`, content, executable: true }));
 }

@@ -7,7 +7,7 @@ import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { type LayoutSection, type TomlCommentAnchor } from '#cli/types/settings/text.ts';
 import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
-import { TOML_HEADER_FORMAT, TOML_ASSIGNMENT_FORMAT, IGNORE_IDENTITY_FIELDS } from '#cli/config/settings/text.ts';
+import { TOML_HEADER_FORMAT, IGNORE_IDENTITY_FIELDS, TOML_ASSIGNMENT_FORMAT } from '#cli/config/settings/text.ts';
 
 import {
     isTomlKind,
@@ -158,10 +158,6 @@ export function encodeSettings(target: TomlTable, indent: string, comments: Toml
     return output;
 }
 
-function isSameValue(left: unknown, right: unknown): boolean {
-    return isDeepStrictEqual(normalizeTables(left), normalizeTables(right));
-}
-
 function listMatchingPositions(
     original: readonly unknown[],
     values: readonly unknown[],
@@ -170,23 +166,42 @@ function listMatchingPositions(
 ): number[] {
     const source = original[position];
     if (!isRecord(source)) {
-        const matches = values.flatMap((value, index) => (isSameValue(value, source) ? [index] : []));
-        const occurrence = original.slice(0, position).filter((value) => isSameValue(value, source)).length;
+        const matches = values.flatMap((value, index) =>
+            isDeepStrictEqual(normalizeTables(value), normalizeTables(source)) ? [index] : [],
+        );
+        const occurrence = original
+            .slice(0, position)
+            .filter((value) => isDeepStrictEqual(normalizeTables(value), normalizeTables(source))).length;
         const index = matches[occurrence] ?? matches[0];
         return index === undefined ? [] : [index];
     }
     const matches = values.flatMap((value, index) => {
         if (!isRecord(value)) return [];
         if (path[0] === 'ignore')
-            return IGNORE_IDENTITY_FIELDS.every((key) => isSameValue(source[key], value[key])) ? [index] : [];
-        if (source['name'] !== undefined) return isSameValue(source['name'], value['name']) ? [index] : [];
-        return isSameValue(source, value) ? [index] : [];
+            return IGNORE_IDENTITY_FIELDS.every((key) =>
+                isDeepStrictEqual(normalizeTables(source[key]), normalizeTables(value[key])),
+            )
+                ? [index]
+                : [];
+        if (source['name'] !== undefined)
+            return isDeepStrictEqual(normalizeTables(source['name']), normalizeTables(value['name'])) ? [index] : [];
+        return isDeepStrictEqual(normalizeTables(source), normalizeTables(value)) ? [index] : [];
     });
     if (matches.length === 0) return path[0] === 'ignore' || position >= values.length ? [] : [position];
     return matches.toSorted(
         (left, right) =>
-            Number(!isSameValue(source['until'], getValueAt(values[left], ['until']))) -
-            Number(!isSameValue(source['until'], getValueAt(values[right], ['until']))),
+            Number(
+                !isDeepStrictEqual(
+                    normalizeTables(source['until']),
+                    normalizeTables(getValueAt(values[left], ['until'])),
+                ),
+            ) -
+            Number(
+                !isDeepStrictEqual(
+                    normalizeTables(source['until']),
+                    normalizeTables(getValueAt(values[right], ['until'])),
+                ),
+            ),
     );
 }
 

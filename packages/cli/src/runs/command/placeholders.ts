@@ -10,7 +10,7 @@ import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { buildScopeTarget } from '#cli/generation/settings/needed.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
-import type { CommandPart, CommandLine, Substitutions } from '#cli/types/runs/command.ts';
+import type { CommandLine, CommandPart, Substitutions } from '#cli/types/runs/command.ts';
 
 import {
     EACH_PLACEHOLDER,
@@ -121,19 +121,6 @@ export function getToolFile(session: Session, planned: PlannedCheck, name: strin
 }
 
 /**
- * Resolves the tool file path for the scope of a check.
- *
- * @param session the repository and tool file targets.
- * @param planned the check and its scope.
- * @param name the tool or setting it belongs to.
- * @returns the repository-relative path.
- */
-export function selectToolFilePath(session: Session, planned: PlannedCheck, name: string): string {
-    const target = getToolFile(session, planned, name);
-    return buildScopeTarget(planned.selection.scope.path, target, getToolFiles(session).targets);
-}
-
-/**
  * Lists the tool files that a check command or its environment names.
  *
  * @param session the repository and manifests.
@@ -150,7 +137,13 @@ export function listCommandToolFiles(session: Session, planned: PlannedCheck, co
                 const configured = [...part.matchAll(TOOL_FILE_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => selectToolFilePath(session, planned, name));
+                    .map((name) =>
+                        buildScopeTarget(
+                            planned.selection.scope.path,
+                            getToolFile(session, planned, name),
+                            getToolFiles(session).targets,
+                        ),
+                    );
                 const pointed = [...part.matchAll(POINTER_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
@@ -211,7 +204,16 @@ export function replacePlaceholders(
                 : '';
         })
         .replaceAll(TOOL_FILE_PLACEHOLDER, (_match, name: string) =>
-            convertToSystemPath(join(session.root, selectToolFilePath(session, planned, name))),
+            convertToSystemPath(
+                join(
+                    session.root,
+                    buildScopeTarget(
+                        planned.selection.scope.path,
+                        getToolFile(session, planned, name),
+                        getToolFiles(session).targets,
+                    ),
+                ),
+            ),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
             convertToSystemPath(selectPointerPath(session, substitutions.scope, name)),

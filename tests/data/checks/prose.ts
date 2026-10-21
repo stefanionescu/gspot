@@ -1,4 +1,5 @@
 import { TYPO } from '#tests/data/checks/spelling.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { GUIDE, README, LICENSE } from '#tests/data/checks/docs.ts';
 
 const AMBIGUOUS_WORD_RULE = `extends: existence
@@ -209,3 +210,10 @@ export const VERSION_RANGE_FINDINGS = [
     { file: 'versions.md', line: 5, rule: 'Example.Versions' },
     { file: 'versions.md', line: 6, rule: 'Example.Versions' },
 ] as const;
+
+/** A Markdown sandbox for the tests of valid and refused Vale output. */
+export const VALE_SANDBOX_FILES = {
+    'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
+    '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
+    'example.md': '# Documentation\n',
+};

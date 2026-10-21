@@ -14,16 +14,6 @@ import {
     PACKED_PACKAGES_FILE,
 } from '#tests/data/test-setup.ts';
 
-/**
- * Pick the publish time that the registry reports for a packed package.
- *
- * @param name the package name.
- * @returns now for a gspot package, as on release day, so the hold must let it through; an older time for the rest.
- */
-function selectPublishTime(name: string): string {
-    return name.startsWith(GSPOT_PACKAGE_SCOPE) ? new Date().toISOString() : PACKED_PUBLISH_TIME;
-}
-
 /** Pack the local npm packages once for the current integration run. */
 export async function runNpmPack(work: string, declarations: readonly RegistryPackage[]): Promise<string> {
     const packages: PackedPackage[] = [];
@@ -45,6 +35,50 @@ export async function runNpmPack(work: string, declarations: readonly RegistryPa
     return packagesFile;
 }
 
+/**
+ * Answer one request of the test registry: a packed package, its tarball, or a redirect to the upstream registry.
+ *
+ * @param request what npm or the package manager asked for.
+ * @param registry the packages that the registry serves, and who may read them.
+ * @param registry.packages the packed packages by name.
+ * @param registry.token the token that each request must carry; without one, every request passes.
+ * @returns the package document, the tarball, an error, or the redirect.
+ */
+async function answerRegistryRequest(
+    request: Request,
+    registry: { packages: Map<string, PackedPackage>; token: string | undefined },
+): Promise<Response> {
+    if (registry.token !== undefined && request.headers.get('authorization') !== `Bearer ${registry.token}`)
+        return Response.json({ error: 'Authentication required' }, { status: 401 });
+    const url = new URL(request.url);
+    const pathname = decodeURIComponent(url.pathname.slice(1));
+    const name = pathname.split('/-/', 1).join('');
+    const entry = registry.packages.get(name);
+    if (entry === undefined)
+        return name.startsWith(GSPOT_PACKAGE_SCOPE)
+            ? Response.json({ error: 'Package not found' }, { status: 404 })
+            : Response.redirect(new URL(url.pathname, UPSTREAM_REGISTRY));
+    const tarball = `${name}/-/${name.slice(name.lastIndexOf('/') + 1)}-${entry.version}.tgz`;
+    if (pathname.includes('/-/'))
+        return pathname === tarball
+            ? new Response(await readFile(entry.filename))
+            : Response.json({ error: 'Package not found' }, { status: 404 });
+    return Response.json(buildPackageDocument(entry, `${url.origin}/${tarball}`));
+}
+
+// The registry document of one packed package. The registry dates a gspot package now, as on release day, so the
+// release hold must let it through.
+function buildPackageDocument(entry: PackedPackage, tarball: string): Record<string, unknown> {
+    const { filename: _filename, integrity, ...packageFields } = entry;
+    const publishedAt = entry.name.startsWith(GSPOT_PACKAGE_SCOPE) ? new Date().toISOString() : PACKED_PUBLISH_TIME;
+    return {
+        name: entry.name,
+        'dist-tags': { latest: entry.version },
+        time: { [entry.version]: publishedAt },
+        versions: { [entry.version]: { ...packageFields, dist: { tarball, integrity } } },
+    };
+}
+
 /** Serve the packed npm packages and any extra packages that a credential test asks for. */
 export async function createNpmRegistry(
     work: string,
@@ -62,32 +96,9 @@ export async function createNpmRegistry(
     const server = Bun.serve({
         hostname: REGISTRY_HOST,
         port: 0,
-        async fetch(request) {
+        fetch(request) {
             requests++;
-            if (options.token !== undefined && request.headers.get('authorization') !== `Bearer ${options.token}`)
-                return Response.json({ error: 'Authentication required' }, { status: 401 });
-            const url = new URL(request.url);
-            const pathname = decodeURIComponent(url.pathname.slice(1));
-            const name = pathname.split('/-/', 1).join('');
-            const entry = packages.get(name);
-            if (entry === undefined)
-                return name.startsWith(GSPOT_PACKAGE_SCOPE)
-                    ? Response.json({ error: 'Package not found' }, { status: 404 })
-                    : Response.redirect(new URL(url.pathname, UPSTREAM_REGISTRY));
-            const tarball = `${name}/-/${name.slice(name.lastIndexOf('/') + 1)}-${entry.version}.tgz`;
-            if (pathname.includes('/-/'))
-                return pathname === tarball
-                    ? new Response(await readFile(entry.filename))
-                    : Response.json({ error: 'Package not found' }, { status: 404 });
-            const { filename: _filename, integrity, ...packageFields } = entry;
-            return Response.json({
-                name,
-                'dist-tags': { latest: entry.version },
-                time: { [entry.version]: selectPublishTime(name) },
-                versions: {
-                    [entry.version]: { ...packageFields, dist: { tarball: `${url.origin}/${tarball}`, integrity } },
-                },
-            });
+            return answerRegistryRequest(request, { packages, token: options.token });
         },
     });
     const url = `http://${REGISTRY_HOST}:${String(server.port)}`;

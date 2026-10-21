@@ -13,14 +13,14 @@ import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 
 import {
-    TWO_IGNORE_RECORDS,
     IGNORE_HOOK_TABLES,
-    PATH_IGNORE_ARGUMENTS,
-    MERGED_EXPIRY_IGNORES,
+    TWO_IGNORE_RECORDS,
     FUNCTION_NAME_IGNORES,
+    MERGED_EXPIRY_IGNORES,
+    PATH_IGNORE_ARGUMENTS,
     DATED_IGNORE_ARGUMENTS,
-    UNKNOWN_IGNORE_ARGUMENTS,
     REMAINING_EXPIRY_IGNORES,
+    UNKNOWN_IGNORE_ARGUMENTS,
 } from '#tests/data/commands/ignore.ts';
 
 /** Read saved ignore records with their dates serialized for the assertions. */

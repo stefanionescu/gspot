@@ -1,3 +1,4 @@
+import { runTool } from '#cli/tools/run.ts';
 import { dirname, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
@@ -8,10 +9,9 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { listCompanionTools } from '#cli/planning/needed-tools.ts';
-import { runTool, getToolTimeoutSeconds } from '#cli/tools/run.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { findPathKey, readEnvironmentVariable } from '#cli/system/environment.ts';
-import type { ToolRunOptions, ProcessFailure, ToolAvailability } from '#cli/types/tools/run.ts';
+import type { ProcessFailure, ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/runs/command.ts';
 
 function getCheckTool(session: Session, planned: PlannedCheck, name: string, options: CheckToolOptions): CheckTool {
@@ -104,7 +104,16 @@ export function buildCompanionEnvironment(
     if (folders.length === 0) return env;
     return {
         ...env,
-        PATH: [...folders, env[findPathKey(env) ?? 'PATH'] ?? readEnvironmentVariable('PATH') ?? ''].join(delimiter),
+        PATH: [
+            ...folders,
+            env[
+                Object.keys(env).find(
+                    (name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH',
+                ) ?? 'PATH'
+            ] ??
+                readEnvironmentVariable('PATH') ??
+                '',
+        ].join(delimiter),
     };
 }
 
@@ -135,7 +144,7 @@ export async function runCheckTool(
         ...options,
         env: buildCompanionEnvironment(session, listCompanionTools(planned.selection, planned.check), env),
         cancelSignal: session.cancelSignal,
-        timeoutSeconds: getToolTimeoutSeconds(planned.selection.view),
+        timeoutSeconds: Number(planned.selection.view.settings['tool_timeout_seconds']),
         name,
     });
     if (failure?.status === 'missing') throw new GspotError('tool', failure.note);

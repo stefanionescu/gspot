@@ -7,7 +7,7 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/eslint/files.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { PACKAGE_JSON_PATTERN } from '#cli/config/generation/eslint/base.ts';
-import { getTable, getLimit, findParentSelection } from '#cli/settings/scope-view.ts';
+import { getLimit, getTable, findParentSelection } from '#cli/settings/scope-view.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint/tool-settings.ts';
 
 import {
@@ -19,13 +19,12 @@ import {
 } from '#cli/generation/eslint/files.ts';
 import type {
     EslintRuleBlock,
-    PlannedEslintFile,
-    EslintRuleOptions,
     EslintBlockFields,
+    EslintRuleOptions,
+    PlannedEslintFile,
     ScopeEslintSettings,
 } from '#cli/types/generation/eslint.ts';
 import {
-    ESLINT_CHECK,
     TYPED_LANGUAGES,
     ENVIRONMENT_RULES,
     TRIVIAL_FILES_RULE,
@@ -97,27 +96,6 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
         ),
     );
     return [...context, ...overrides];
-}
-
-/**
- * Build the ignore blocks that follow the generated defaults and options.
- *
- * @param settings the parsed gspot.toml.
- *
- * @returns the lint rule ignores with their path selectors.
- */
-export function buildIgnoreBlocks(settings: Settings): EslintRuleBlock[] {
-    return settings.ignore.flatMap((entry): EslintRuleBlock[] =>
-        entry.rule === undefined || entry.check !== ESLINT_CHECK
-            ? []
-            : [
-                  {
-                      scope: '',
-                      ...splitGlobs(entry.paths === undefined || entry.paths.length === 0 ? ['**/*'] : entry.paths),
-                      rules: { [entry.rule]: 'off' },
-                  },
-              ],
-    );
 }
 
 /**

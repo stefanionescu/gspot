@@ -6,7 +6,7 @@ import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { listCodeFences } from '#cli/parsers/markdown.ts';
-import { formatScopeLabel } from '#cli/system/terminal.ts';
+import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/runs/output.ts';
@@ -28,13 +28,13 @@ import {
     BUN_RUN,
     MISE_RUN,
     PATH_CHARS,
-    RUN_COMMAND,
     README_FILE,
+    RUN_COMMAND,
     LICENSE_PATH,
     COMMAND_FENCES,
     FILE_EXTENSION,
-    TITLE_ATTRIBUTE,
     MISE_CONF_FILES,
+    TITLE_ATTRIBUTE,
     EMPHASIS_MARKERS,
     PATH_TOKEN_SKIPS,
     TOKEN_SEPARATORS,
@@ -243,7 +243,7 @@ export function checkDocsRequiredFiles(session: Session, planned: PlannedCheck):
                 planned,
                 { file: readme },
                 'missing-readme',
-                `The scope ${formatScopeLabel(planned.selection.scope.path)} has no README.md.`,
+                `The scope ${planned.selection.scope.path === '' ? ROOT_SCOPE_LABEL : planned.selection.scope.path} has no README.md.`,
             ),
         );
     if (

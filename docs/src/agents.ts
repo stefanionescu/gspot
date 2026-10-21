@@ -1,6 +1,7 @@
+import { createHash } from 'node:crypto';
 import { DESCRIPTION } from './config/site.ts';
 import { AGENT_STEPS } from './config/setup.ts';
-import { hashContent } from '#cli/system/text.ts';
+import { DIGEST_ALGORITHM } from '#cli/config/text.ts';
 import type { AgentSkillsIndex } from './types/agents.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 
@@ -48,7 +49,7 @@ export async function writeAgentFiles(dir: URL): Promise<void> {
                 ...SETUP_SKILL,
                 type: 'skill-md',
                 url: `/${SKILLS_FOLDER}${SETUP_SKILL.name}/${SKILL_FILE}`,
-                digest: `sha256:${hashContent(skill)}`,
+                digest: `sha256:${createHash(DIGEST_ALGORITHM).update(skill).digest('hex')}`,
             },
         ],
     };

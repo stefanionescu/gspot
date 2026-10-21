@@ -3,8 +3,9 @@ import { createFileTree } from 'testdirs';
 import { join, relative } from 'node:path';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
-import { getShippedTool } from '#tests/setup/builders.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 
 import {
     LICENSE_SETTINGS,
@@ -20,7 +21,7 @@ export async function prepareLicenseSandbox(
     root: string,
     plan: string | (typeof ALLOWED_PACKAGE_SCOPE_CASES)[number] = LICENSE_SETTINGS,
 ): Promise<void> {
-    const version = getShippedTool('pip-licenses').version;
+    const version = getTool(readConfigurations().values(), 'pip-licenses').version;
     if (version === undefined) throw new Error('The pip-licenses test requires a pinned version.');
     let settings = typeof plan === 'string' ? plan : LICENSE_SETTINGS;
     let files: Record<string, string> = {

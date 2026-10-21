@@ -6,15 +6,15 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { visitParsedSources } from '#cli/parsers/grammars.ts';
 import type { MarkupAttribute } from '#cli/types/checks/html.ts';
 import type { SourceTree } from '#cli/types/parsers/grammars.ts';
-import { getNodePlace, buildFinding } from '#cli/runs/finding.ts';
+import { buildFinding, getNodePlace } from '#cli/runs/finding.ts';
 
 import {
     SCRIPT_SCHEMES,
     URL_ATTRIBUTES,
     EVENT_ATTRIBUTE,
     RELATIVE_URL_BASE,
-    SURROUNDING_QUOTES,
     INERT_SCRIPT_TYPES,
+    SURROUNDING_QUOTES,
     ACTIVE_DOCUMENT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
 } from '#cli/config/checks/html.ts';
@@ -56,10 +56,6 @@ function findScriptScheme(attribute: MarkupAttribute, scriptType: string): strin
     return url.protocol === 'data:' && isActiveResource(attribute, url, scriptType) ? url.protocol : undefined;
 }
 
-function readScriptType(attributes: MarkupAttribute[]): string {
-    return attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
-}
-
 function checkInlineScripts(planned: PlannedCheck, source: SourceTree): Finding[] {
     return source.rootNode
         .descendantsOfType('script_element')
@@ -68,7 +64,7 @@ function checkInlineScripts(planned: PlannedCheck, source: SourceTree): Finding[
         )
         .flatMap((element) => {
             const attributes = listElementAttributes(element);
-            const scriptType = readScriptType(attributes);
+            const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
             if (INERT_SCRIPT_TYPES.has(scriptType) || attributes.some((entry) => entry.name === 'src')) return [];
             return [
                 buildFinding(
@@ -84,7 +80,7 @@ function checkInlineScripts(planned: PlannedCheck, source: SourceTree): Finding[
 function checkScriptAttributes(planned: PlannedCheck, source: SourceTree): Finding[] {
     return source.rootNode.descendantsOfType(['element', 'script_element']).flatMap((element) => {
         const attributes = listElementAttributes(element);
-        const scriptType = readScriptType(attributes);
+        const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
         return attributes.flatMap((attribute) => {
             const position = getNodePlace(source.path, attribute.node);
             if (EVENT_ATTRIBUTE.test(attribute.name))

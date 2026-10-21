@@ -5,7 +5,6 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { NEXT_INTL_PROJECTS } from '#tests/data/runs/plan.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
@@ -26,7 +25,7 @@ test('a check whose required setting is missing is skipped with a note naming th
         {
             check: 'xcode/entitlements',
             status: 'skipped',
-            note: matchSubstring('xcode.allowed_entitlements'),
+            note: expect.stringContaining('xcode.allowed_entitlements') as string,
         },
     ]);
 });

@@ -1,12 +1,13 @@
 import picomatch from 'picomatch';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/repository/matchers.ts';
-import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { findParentSelection } from '#cli/settings/scope-view.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/eslint/files.ts';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/aliases.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint/tool-settings.ts';
+import { FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
+import { buildNodePatterns, buildSourcePattern, listNestedScopeGlobs } from '#cli/generation/eslint/files.ts';
 
 import {
     type EslintBlock,
@@ -14,20 +15,14 @@ import {
     type EslintImportBoundaryRule,
 } from '#cli/types/generation/eslint.ts';
 import {
-    buildScopeGlob,
-    buildNodePatterns,
-    buildSourcePattern,
-    listNestedScopeGlobs,
-} from '#cli/generation/eslint/files.ts';
-import {
     REGEX_SYMBOLS,
     ANY_DEPTH_PREFIX,
     IMPORT_EXTENSIONS,
     EXTENSIONLESS_CODE,
     FILE_EXTENSION_RULE,
     NODE_SCRIPT_PATTERNS,
-    PATH_SEPARATOR_PATTERN,
     IMPORT_BOUNDARIES_RULE,
+    PATH_SEPARATOR_PATTERN,
     IMPORT_BOUNDARY_FOLDERS,
     TYPESCRIPT_EXTENSION_MAP,
 } from '#cli/config/generation/eslint/imports.ts';
@@ -56,7 +51,10 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
             : [
                   {
                       files: [buildSourcePattern(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, path)].map(
-                          (pattern) => [buildScopeGlob(path, '**/*'), pattern],
+                          (pattern) => [
+                              joinScope(path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
+                              pattern,
+                          ],
                       ),
                       ignores: listNestedScopeGlobs(
                           changed.map(({ scope }) => scope.path),
@@ -88,7 +86,9 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
  * @returns the relative-import rule setting with its folders and aliases.
  */
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
-    const scopePaths = scopes.map((entry) => escapeGlob(entry.scope.path)).filter((path) => path !== '');
+    const scopePaths = scopes
+        .map((entry) => entry.scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH))
+        .filter((path) => path !== '');
     const externals = [...new Set(scopes.flatMap(({ view }) => view.values.javascript?.externals ?? []))];
     return [
         'error',
@@ -118,7 +118,10 @@ export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session
             const aliases = readScopeAliases(root, path, reads);
             return {
                 files: [
-                    buildScopeGlob(path, buildSourcePattern(...CODE_LANGUAGES)),
+                    joinScope(
+                        path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
+                        buildSourcePattern(...CODE_LANGUAGES),
+                    ),
                     ...buildNodePatterns(nodeFiles, path),
                 ],
                 rules: {
@@ -145,7 +148,9 @@ export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session'
         const path = entry.scope.path;
         return {
             files: [
-                ...NODE_SCRIPT_PATTERNS.map((pattern) => buildScopeGlob(path, pattern)),
+                ...NODE_SCRIPT_PATTERNS.map((pattern) =>
+                    joinScope(path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), pattern),
+                ),
                 ...buildNodePatterns(nodeFiles, path),
             ],
             ignores: listNestedScopeGlobs(paths, path),
@@ -173,7 +178,9 @@ export function buildImportIgnores(globs: string[]): string[] {
         if (glob.startsWith('!') || !glob.endsWith(FOLDER_CONTENTS)) return [];
         const folder = glob.slice(0, -FOLDER_CONTENTS.length).replace(ANY_DEPTH_PREFIX, '');
         if (folder === '' || picomatch.scan(folder).isGlob) return [];
-        const escaped = folder.replaceAll(REGEX_SYMBOLS, String.raw`\$&`).replaceAll('/', PATH_SEPARATOR_PATTERN);
+        const escaped = folder
+            .replaceAll(REGEX_SYMBOLS, BACKSLASH_BEFORE_MATCH)
+            .replaceAll('/', PATH_SEPARATOR_PATTERN);
         return [`${PATH_SEPARATOR_PATTERN}${escaped}${PATH_SEPARATOR_PATTERN}`];
     });
 }

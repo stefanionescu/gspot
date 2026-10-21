@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { createFileTree } from 'testdirs';
 import { join, basename } from 'node:path';
 import { commitAll } from '#tests/setup/git.ts';
-import { hashContent } from '#cli/system/text.ts';
+import { DIGEST_ALGORITHM } from '#cli/config/text.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -107,7 +107,7 @@ async function createPythonIndex(work: string): Promise<AsyncDisposable & { url:
                 ] as const,
         ),
     );
-    const digest = hashContent(archive);
+    const digest = createHash(DIGEST_ALGORITHM).update(archive).digest('hex');
     const { user, password } = PYTHON_INDEX_CREDENTIALS;
     const credentials = `${user}:${password}`;
     const authentication = `Basic ${Buffer.from(credentials).toString('base64')}`;
@@ -161,6 +161,7 @@ Tag: py3-none-any
     entries.push([`${metadata}/RECORD`, Buffer.from(`${record}${metadata}/RECORD,,\r\n`)]);
     return entries;
 }
+
 /** Create a local package index and a Python project, then install its tools and read the tool project files. */
 export async function createIndexedPythonSandbox(
     root: string,

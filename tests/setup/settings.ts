@@ -1,12 +1,12 @@
 // Writes test settings and reads settings errors.
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
+import { type Level } from '#cli/types/configurations.ts';
 import { REPORT_PROGRAM } from '#tests/data/test-setup.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { selectForScope, buildScopeView } from '#cli/settings/scope-view.ts';
-import { type Level, type Configuration } from '#cli/types/configurations.ts';
+import { buildScopeView, selectForScope } from '#cli/settings/scope-view.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
 import type { ScopeView, KnownSettings } from '#cli/types/settings/inheritance.ts';
 
@@ -89,27 +89,6 @@ export function buildReportingCheck(
         ...options,
         output: { format: 'lines' },
     };
-}
-
-/** Build two configuration defaults that disagree on the SQL dialect. */
-export function buildConflictingSettings(): KnownSettings {
-    const sql = readConfigurations().get('sql') as Configuration;
-    return buildKnownSettings(
-        [
-            sql,
-            {
-                ...sql,
-                name: 'alternate-sql',
-                defaults: { 'tools.sqlfluff.dialect': 'postgres' },
-            },
-        ],
-        'recommended',
-    );
-}
-
-/** Parse test settings against the shipped declarations. */
-export function parseSettingsText(text: string, repositoryRoot?: string): Settings {
-    return parseSettings(text, repositoryRoot);
 }
 
 /** Read the defaults and declarations of the selected configurations at one level. */

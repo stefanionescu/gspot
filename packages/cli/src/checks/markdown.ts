@@ -23,7 +23,6 @@ import {
     ELLIPSIS_ARGUMENTS,
     JSON_FENCE_OPTIONS,
     CAMEL_CASE_BOUNDARY,
-    MARKDOWNLINT_PATH_PREFIX,
 } from '#cli/config/checks/markdown.ts';
 
 function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError | undefined {
@@ -130,14 +129,4 @@ export async function checkMarkdownFences(session: Session, planned: PlannedChec
         );
     }
     return findings;
-}
-
-/**
- * Builds markdownlint-cli2 arguments that keep Markdown file names literal.
- *
- * @param planned the scope Markdown files.
- * @returns the file arguments.
- */
-export function buildMarkdownlintArguments(planned: PlannedCheck): string[] {
-    return planned.files.map((file) => `${MARKDOWNLINT_PATH_PREFIX}${file.path}`);
 }

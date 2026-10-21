@@ -10,6 +10,7 @@ import type { Check } from '#cli/types/configurations.ts';
 import type { CheckCode } from '#cli/types/runs/check.ts';
 import { checkSiteBuild } from '#cli/checks/site/build.ts';
 import { checkBashSafety } from '#cli/checks/bash/safety.ts';
+import { checkMarkdownFences } from '#cli/checks/markdown.ts';
 import { checkJavascriptTsc } from '#cli/checks/javascript.ts';
 import { checkLicensesAllowed } from '#cli/checks/licenses.ts';
 import { checkNamingPaths } from '#cli/checks/naming/paths.ts';
@@ -32,6 +33,7 @@ import { checkBashScriptLayout } from '#cli/checks/bash/script-layout.ts';
 import { checkDockerTrivyImage } from '#cli/checks/docker/trivy-image.ts';
 import { checkSiteUnusedAssets } from '#cli/checks/site/unused-assets.ts';
 import { checkSwiftSkipReasons } from '#cli/checks/swift/skip-reasons.ts';
+import { MARKDOWNLINT_PATH_PREFIX } from '#cli/config/checks/markdown.ts';
 import { checkGspotSuppressions } from '#cli/checks/gspot/suppressions.ts';
 import { checkNamingIdentifiers } from '#cli/checks/naming/identifiers.ts';
 import { checkBashInlineScripts } from '#cli/checks/bash/inline-scripts.ts';
@@ -55,7 +57,6 @@ import { checkGspotUnmatchedPatterns } from '#cli/checks/gspot/unmatched-pattern
 import { checkFileFolderClashes } from '#cli/checks/structure/file-folder-clashes.ts';
 import { checkStructureSharedPrefixes } from '#cli/checks/structure/shared-prefixes.ts';
 import { checkPackageManagerPin } from '#cli/checks/dependencies/package-manager-pin.ts';
-import { checkMarkdownFences, buildMarkdownlintArguments } from '#cli/checks/markdown.ts';
 import { checkDependenciesStaleLockfile } from '#cli/checks/dependencies/stale-lockfile.ts';
 import { checkStructureTrivialFunctions } from '#cli/checks/structure/trivial-functions.ts';
 import { checkCloudflareHeaders, checkCloudflareRedirects } from '#cli/checks/cloudflare.ts';
@@ -122,7 +123,10 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'javascript/tsc': { run: checkJavascriptTsc },
     'licenses/allowed': { check: checkLicensesAllowed },
     'markdown/fences': { check: checkMarkdownFences },
-    'markdown/markdownlint': { listFileArguments: (_session, planned) => buildMarkdownlintArguments(planned) },
+    'markdown/markdownlint': {
+        listFileArguments: (_session, planned) =>
+            planned.files.map((file) => `${MARKDOWNLINT_PATH_PREFIX}${file.path}`),
+    },
     'naming/allowed-names': { check: checkNamingAllowedNames },
     'naming/identifiers': { check: checkNamingIdentifiers },
     'naming/paths': { check: checkNamingPaths },

@@ -5,12 +5,12 @@ import { hasIniSection } from '#cli/parsers/ini.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
 import { findText } from '#cli/system/files/reads.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { findProjectFolder } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import type { ReplacedFile } from '#cli/types/repository/existing-tools.ts';
 import { INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/existing-tools.ts';
 
@@ -100,7 +100,9 @@ export function listReplacedFiles(
     configurations: Iterable<Configuration>,
 ): ReplacedFile[] {
     const inventory = new Set(
-        files.filter((file) => file.kind === 'source' && !isInGspotFolder(file.path)).map((file) => file.path),
+        files
+            .filter((file) => file.kind === 'source' && !file.path.startsWith(`${DOT_GSPOT}/`))
+            .map((file) => file.path),
     );
     const selected = [...configurations];
     const located = { inventory, projectFolders: listProjectFolders(inventory, selected) };

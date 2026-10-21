@@ -1,7 +1,6 @@
 import { readSettings } from '#cli/settings/read.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
-import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -17,7 +16,7 @@ import { listAutomaticConfigurations } from '#cli/configurations/select.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import type { PackageManagerPin } from '#cli/types/repository/package-manager.ts';
 import { buildKnownSettings, applyDetectedDefaults } from '#cli/settings/known.ts';
-import { selectForScope, buildScopeView, findRootSelection } from '#cli/settings/scope-view.ts';
+import { buildScopeView, selectForScope, findRootSelection } from '#cli/settings/scope-view.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { classifyFile, listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 
@@ -139,7 +138,7 @@ export async function openSession(
             repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
         ));
     const scopes = await buildScopeSelections(settings, repository, configurations, readPackageManager);
-    const timeoutSeconds = getToolTimeoutSeconds(findRootSelection(scopes).view);
+    const timeoutSeconds = Number(findRootSelection(scopes).view.settings['tool_timeout_seconds']);
     const session: Session = {
         neededToolConfigurations: [],
         configuredChecks: [],

@@ -7,7 +7,6 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { FIXER_RESULTS } from '#tests/data/runs/fixes.ts';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/builders.ts';
@@ -25,7 +24,7 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %s', async (c
     expect(failed).toMatchObject({
         status: 'failed',
         changed: [],
-        note: matchSubstring('Fatal: cannot write'),
+        note: expect.stringContaining('Fatal: cannot write') as string,
     });
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
     corrected.tool!.crash_pattern = planned.tool!.crash_pattern;
@@ -52,7 +51,7 @@ test.each([...FIXER_RESULTS])(
         expect(result).toMatchObject({ status });
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
         expect(result!.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
-        if ('note' in row) expect(result).toMatchObject({ note: matchSubstring(row['note']) });
+        if ('note' in row) expect(result).toMatchObject({ note: expect.stringContaining(row['note']) as string });
     },
 );
 
@@ -99,7 +98,7 @@ test('distinguishes a skipped fix from a missing tool', async () => {
     expect(skipped.status).toBe('skipped');
     expect(failed).toMatchObject({
         status: 'failed',
-        note: matchSubstring(`${join(sandbox.path, 'absent-tool')} is not installed.`),
+        note: expect.stringContaining(`${join(sandbox.path, 'absent-tool')} is not installed.`) as string,
     });
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
 });

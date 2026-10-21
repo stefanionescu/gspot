@@ -10,13 +10,13 @@ import { checkTree } from '#cli/commands/check/tree.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CheckProgress } from '#cli/types/runs/run.ts';
+import { printProgress } from '#cli/commands/check/report.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
-import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
-import { printProgress, clearProgress } from '#cli/commands/check/report.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import { PROGRESS_CLEAR, CHECK_LIST_SEPARATOR } from '#cli/config/commands/check.ts';
 import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/check.ts';
 
@@ -203,7 +203,7 @@ async function runCheck(paths: string[], flags: CheckFlags, cwd: string): Promis
             return await runCheckCommand(root, options, cancelSignal);
         }, 'Check stopped before every check finished.');
     } finally {
-        if (flags.json !== true) clearProgress();
+        if (flags.json !== true && process.stderr.isTTY) process.stderr.write(PROGRESS_CLEAR);
     }
 }
 

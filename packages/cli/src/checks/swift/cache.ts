@@ -1,9 +1,10 @@
+import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
-import { hashContent } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { DIGEST_ALGORITHM } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scope-view.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -22,8 +23,8 @@ import {
     BUILD_LOCK,
     SWIFT_PROGRAM,
     XCODE_COMMANDS,
-    PACKAGE_COMMANDS,
     CODE_SIGNING_OFF,
+    PACKAGE_COMMANDS,
     DERIVED_DATA_FLAG,
     ROOT_BUILD_FOLDER,
     SCRATCH_PATH_FLAG,
@@ -31,13 +32,13 @@ import {
     SWIFT_BUILD_FOLDER,
     XCODEBUILD_PROGRAM,
     XCODE_PROJECT_FLAG,
+    BUILD_SOURCE_FOLDER,
     DERIVED_DATA_FOLDER,
     SCOPE_FOLDER_PREFIX,
-    BUILD_SOURCE_FOLDER,
     XCODE_WORKSPACE_FLAG,
-    XCODE_WORKSPACE_SUFFIX,
     PACKAGE_SCRATCH_FOLDER,
     XCODE_DESTINATION_FLAG,
+    XCODE_WORKSPACE_SUFFIX,
 } from '#cli/config/checks/swift.ts';
 
 // Maps each source to the file contents it needs under source/ in the build folder.
@@ -104,7 +105,7 @@ export function getScopeBuildFolder(root: string, scope: string, purpose: SwiftB
     // The real path of the installed checkout names its private build cache.
     return join(
         readCacheFolder(),
-        hashContent(realpathSync(root)),
+        createHash(DIGEST_ALGORITHM).update(realpathSync(root)).digest('hex'),
         SWIFT_BUILD_FOLDER,
         scope === '' ? ROOT_BUILD_FOLDER : `${SCOPE_FOLDER_PREFIX}${Buffer.from(scope).toString('hex')}`,
         purpose,

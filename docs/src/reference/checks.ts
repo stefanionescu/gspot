@@ -4,18 +4,8 @@ import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import { WHOLE_SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { getTool, getToolName } from '#cli/configurations/declared-tools.ts';
 import type { GuideCheck, ReferencePage, ReferenceFacts } from '../types/reference.ts';
-import { CHECK_RUN_LABELS, SUPPRESSIONS_CHECK, CHECK_NEEDS_LABELS } from '../config/reference.ts';
-
-import {
-    formatCode,
-    formatList,
-    escapeCell,
-    formatTable,
-    formatSection,
-    buildReferencePage,
-    formatReferencePath,
-    formatReferenceLink,
-} from './markdown.ts';
+import { CHECK_RUN_LABELS, CHECK_NEEDS_LABELS, SUPPRESSIONS_CHECK } from '../config/reference.ts';
+import { formatList, formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 
 type Suppression = NonNullable<Tool['suppression']>;
 
@@ -32,19 +22,8 @@ function formatToolNames(check: Check): string | undefined {
     if (program === undefined) return undefined;
     // A command taken from a setting names the setting, not the placeholder.
     const setting = WHOLE_SETTING_PLACEHOLDER.exec(program)?.groups?.['name'];
-    const tool = setting === undefined ? program : `the command in ${formatCode(setting)}`;
+    const tool = setting === undefined ? program : `the command in \`${setting}\``;
     return check.other_tools === undefined ? tool : `${tool}, with ${formatList(check.other_tools)}`;
-}
-
-// Every suppression form, for the check that reads them.
-function formatSuppressionForms(suppressions: Map<string, Suppression>): string {
-    return formatTable(
-        ['Tool', 'Form'],
-        [...suppressions].map(([name, form]) => [
-            name,
-            form.forbidden === true ? 'Refused; use `gspot ignore`' : formatCode(escapeCell(form.example ?? '')),
-        ]),
-    );
 }
 
 // The tool the check runs, and the build, service, or system it needs, each as one sentence when it applies.
@@ -64,13 +43,13 @@ function formatCheckFacts(check: Check, configuration: Configuration): string {
     const configurationName = configuration.name;
     const timing =
         check.stage === 'manual'
-            ? `only when ${formatCode('gspot check --only ' + check.name)} names it`
-            : `at the ${formatCode(check.stage)} [stage](/start/concepts/#stage)`;
+            ? `only when \`gspot check --only ${check.name}\` names it`
+            : `at the \`${check.stage}\` [stage](/start/concepts/#stage)`;
     return [
-        `Part of the ${formatReferenceLink('configurations', configurationName)} configuration, at the ${formatCode(check.level)} [level](/start/concepts/#levels). It runs ${timing}, ${CHECK_RUN_LABELS[check.runs]}.`,
+        `Part of the [\`${configurationName}\`](${formatReferencePath('configurations', configurationName)}) configuration, at the \`${check.level}\` [level](/start/concepts/#levels). It runs ${timing}, ${CHECK_RUN_LABELS[check.runs]}.`,
         ...listCheckRequirements(check),
         check.fix === undefined ? '' : '`gspot check --fix` fixes what it can.',
-        check.when?.setting === undefined ? '' : `It skips until you set ${formatCode(check.when.setting)}.`,
+        check.when?.setting === undefined ? '' : `It skips until you set \`${check.when.setting}\`.`,
     ]
         .filter(Boolean)
         .join(' ');
@@ -115,7 +94,15 @@ export function buildCheckPage(
         formatSection('Turn it off', formatTurnOff(check, suppressions)),
         formatSection(
             'Suppression forms',
-            check.name === SUPPRESSIONS_CHECK ? formatSuppressionForms(suppressions) : '',
+            check.name === SUPPRESSIONS_CHECK
+                ? formatTable(
+                      ['Tool', 'Form'],
+                      [...suppressions].map(([name, form]) => [
+                          name,
+                          form.forbidden === true ? 'Refused; use `gspot ignore`' : `\`${form.example ?? ''}\``,
+                      ]),
+                  )
+                : '',
         ),
     ];
     return buildReferencePage(check.name, check.summary, lines.join(''));
@@ -189,10 +176,10 @@ export function formatCheckTable(checks: Check[]): string {
     return formatTable(
         ['Check', 'Stage', 'Level', 'What it does'],
         checks.map((check) => [
-            formatReferenceLink('checks', check.name),
-            formatCode(check.stage),
-            formatCode(check.level),
-            escapeCell(check.summary),
+            `[\`${check.name}\`](${formatReferencePath('checks', check.name)})`,
+            `\`${check.stage}\``,
+            `\`${check.level}\``,
+            check.summary,
         ]),
     );
 }

@@ -1,8 +1,11 @@
+import { joinScope } from '#cli/repository/scopes.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { TRPC_CONFIGURATION } from '#cli/config/configurations.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/eslint/files.ts';
 import { IMPORT_RULE_CATEGORY } from '#cli/config/settings/import-rules.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
-import { buildScopeGlob, buildNodePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
+import { buildNodePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 
 import type {
     EslintBlock,
@@ -139,7 +142,12 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
     );
     const serverFiles = [...new Set(trpcScopes.flatMap(({ view }) => view.values.trpc?.server_files ?? []))];
     // Other files of a tRPC scope import the server files only as types.
-    const trpcPaths = serverFiles.length === 0 ? [] : trpcScopes.map(({ scope }) => buildScopeGlob(scope.path, '**/*'));
+    const trpcPaths =
+        serverFiles.length === 0
+            ? []
+            : trpcScopes.map(({ scope }) =>
+                  joinScope(scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
+              );
     if (importRules.length === 0 && !enforceTests && trpcPaths.length === 0) return [];
     const tests = [...new Set(javascriptScopes.flatMap(({ view }) => view.test_files))];
     const hasFixedPolicies = trpcPaths.length > 0 || enforceTests;

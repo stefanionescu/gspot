@@ -4,7 +4,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { hasToolBuild } from '#tests/setup/system.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { checkChanges } from '#tests/setup/sample-checks.ts';
-import { buildCheckArguments } from '#tests/setup/builders.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
@@ -21,7 +20,7 @@ import {
 } from '#tests/data/checks/swift/lint.ts';
 
 async function readDocumentationFindings(root: string, code: 0 | 1, scope: string) {
-    const result = parseCheckReport(await spawnGspot(root, buildCheckArguments('swift/swiftformat')));
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(code);
     const report = result.report;
     expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
@@ -80,7 +79,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             ['Value.swift', 9, 1],
         ]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
-        const corrected = await spawnGspot(root, [...buildCheckArguments('swift/swiftformat'), '--fix']);
+        const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json', '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await readDocumentationFindings(root, 0, '')).toStrictEqual([]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toContain('"/** not documentation */"');
@@ -123,7 +122,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             [11, 1],
         ]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_INLINE_DOCS);
-        const corrected = await spawnGspot(root, [...buildCheckArguments('swift/swiftformat'), '--fix']);
+        const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json', '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await readDocumentationFindings(root, 0, '')).toStrictEqual([]);
         const correctedText = await readFile(join(root, 'Value.swift'), 'utf8');

@@ -3,19 +3,13 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
-import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { installSandbox, installToolProjects } from '#tests/setup/install.ts';
 import { COMPOSITE_ACTION, CHECKOUT_WORKFLOW } from '#tests/data/checks/github-actions.ts';
-
-// Runs the actionlint check over the workflows in the repository.
-async function runActionlint(root: string) {
-    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'github-actions/actionlint', '--json']));
-    return result.report.checks[0]!;
-}
 
 test('the generated GitHub workflow passes actionlint', async () => {
     await using sandbox = await testdir({ 'README.md': '# Workflow test\n' });
@@ -84,7 +78,9 @@ jobs:
         '.github/workflows/caller.yml': workflow,
         '.github/workflows/called.yml': called,
     });
-    const failed = await runActionlint(sandbox.path);
+    const failed = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/actionlint', '--json']),
+    ).report.checks[0]!;
     expect(failed.status, JSON.stringify(failed)).toBe('failed');
     expect(failed.findings).toContainEqual(
         matchFields({
@@ -92,7 +88,7 @@ jobs:
             line: 4,
             column: 11,
             rule: 'workflow-call',
-            message: matchSubstring('input "greeting" is required'),
+            message: expect.stringContaining('input "greeting" is required') as string,
         }),
     );
     expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(workflow);
@@ -100,7 +96,9 @@ jobs:
         join(sandbox.path, '.github/workflows/caller.yml'),
         `${workflow}    with:\n      greeting: Hello\n`,
     );
-    const result = await runActionlint(sandbox.path);
+    const result = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/actionlint', '--json']),
+    ).report.checks[0]!;
     expect(result.status).toBe('passed');
     expect(await readFile(join(sandbox.path, '.github/workflows/called.yml'), 'utf8')).toBe(called);
 });

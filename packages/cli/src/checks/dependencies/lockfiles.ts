@@ -5,9 +5,8 @@ import { getTable } from '#cli/settings/scope-view.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { findLockfile } from '#cli/repository/files/classify.ts';
-import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD } from '#cli/config/checks/dependencies.ts';
+import { LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
@@ -17,7 +16,7 @@ function validateUrl(url: URL, hosts: Set<string>): string | undefined {
 function checkFileHosts(session: Session, planned: PlannedCheck, path: string, hosts: Set<string>): Finding[] {
     const lines = readCachedText(session.reads, path).split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
-    const isNpm = findLockfile(path)?.packageManager === 'npm';
+    const isNpm = LOCKFILES.find((entry) => entry.file === posix.basename(path))?.packageManager === 'npm';
     return lines.flatMap((text, index) =>
         (isNpm
             ? text.matchAll(NPM_DOWNLOAD).map((match) => match[1] ?? '')
@@ -35,7 +34,7 @@ function checkFileHosts(session: Session, planned: PlannedCheck, path: string, h
 function checkForeignLockfiles(planned: PlannedCheck): Finding[] {
     const pathsByPackageManager = new Map<string, string>();
     for (const file of planned.files) {
-        const lockfile = findLockfile(file.path);
+        const lockfile = LOCKFILES.find((entry) => entry.file === posix.basename(file.path));
         const kind =
             lockfile !== undefined && 'configuration' in lockfile && lockfile.configuration === 'javascript'
                 ? lockfile.packageManager

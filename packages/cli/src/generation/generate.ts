@@ -1,4 +1,3 @@
-import { buildPathKey } from '#cli/system/paths.ts';
 import type { Session } from '#cli/types/session.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { stripBlock } from '#cli/parsers/managed-blocks.ts';
@@ -13,11 +12,11 @@ import { SWIFT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
+import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import { getTable, findRootSelection } from '#cli/settings/scope-view.ts';
 import { buildPointerFieldEdits } from '#cli/generation/settings/pointers.ts';
-import { hasLfsFiles, listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
+import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/inventory.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
@@ -109,7 +108,7 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
         settingsFile: { settings },
         reads,
     } = session;
-    const outsidePaths = generated.files.map(({ path }) => path).filter((path) => !isInGspotFolder(path));
+    const outsidePaths = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
     const text = findCachedText(reads, GITATTRIBUTES_FILE) ?? '';
     const authored = stripBlock(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
     if (repository.hasGit) {
@@ -144,7 +143,7 @@ function assertDistinctPaths(generated: GenerationResult): void {
     const files = [...generated.files, ...generated.blocks, ...generated.managedKeys];
     for (const file of files) {
         assertWritablePath(file.path);
-        const key = buildPathKey(file.path);
+        const key = file.path.normalize('NFC').toLowerCase();
         const previous = paths.get(key);
         if (previous !== undefined) throw new Error(`Generated destinations collide: ${previous} and ${file.path}`);
         paths.set(key, file.path);
@@ -182,7 +181,7 @@ export function generate(session: Session): GenerationResult {
     generated.files.push(
         ...buildHookFiles(settings, session.startRunner, {
             names: listHookNames(session.configuredChecks),
-            usesLfs: hasLfsFiles(session.repository.attributes),
+            usesLfs: session.repository.attributes.values().some((values) => values[FILTER_ATTRIBUTE] === LFS_FILTER),
         }),
         // Only Yarn needs the version, which an undeclared package manager reads from the program.
         ...(packageManager === undefined

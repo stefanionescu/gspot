@@ -12,7 +12,7 @@ import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
-import { listIgnoredGlobs } from '#cli/generation/settings/ignore-files.ts';
+import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/settings/ignore-files.ts';
 
 import {
     KNIP_SCHEMA_URL,
@@ -127,7 +127,10 @@ export function buildKnipFile(planned: PlannedToolFile): string {
     const { settingsFile, root, startRunner } = planned.session;
     const options = getTable(selection.view, 'tools.knip');
     const scanner = getTable(selection.view, 'dependencies').bun_scanner;
-    const ignoredGlobs = listIgnoredGlobs(planned.session, selection.view, 'javascript/knip');
+    const ignoredGlobs = convertToGlobs([
+        ...buildIgnoreSections(planned.session),
+        ...listCheckIgnoreSections(selection.view, 'javascript/knip'),
+    ]);
     const tools = listDistinctTools(configurations);
     const toolBinaries = [
         ...tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),

@@ -5,7 +5,6 @@ import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';
 import type { CheckRunOptions } from '#cli/types/runs/check.ts';
@@ -17,7 +16,7 @@ import { createCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
 import { FIX_ROUNDS, FIX_DIFF_CONTEXT } from '#cli/config/runs/fixes.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/grammars.ts';
 import type { FixReport, FixResult, FixOptions } from '#cli/types/runs/fixes.ts';
-import { prepareCommand, copyCheckFiles, prepareCommandIn, prepareToolEnvironment } from '#cli/runs/command/check.ts';
+import { copyCheckFiles, prepareCommand, prepareCommandIn, prepareToolEnvironment } from '#cli/runs/command/check.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     // A code the check declares for findings means findings remain after the fix.
@@ -28,25 +27,20 @@ function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | un
     return detail === '' ? `${planned.check.name} exited ${String(result.code)}` : detail;
 }
 
-// The files a fixer may change: its files and the deleted paths that trigger it, each once.
-function listFixPaths(planned: PlannedCheck): string[] {
-    return [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
-}
-
 async function runFixCommands(
     planned: PlannedCheck,
     prepared: PreparedCommand,
     cancelSignal: AbortSignal | undefined,
 ): Promise<FixResult> {
     const check = planned.check.name;
-    const paths = listFixPaths(planned);
+    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const before = readContents(prepared.root, paths);
     let note: string | undefined;
     for (const command of prepared.commandLines) {
         const { result, failure } = await runToolProcess(command.commandArguments, {
             ...prepared,
             cancelSignal,
-            timeoutSeconds: getToolTimeoutSeconds(planned.selection.view),
+            timeoutSeconds: Number(planned.selection.view.settings['tool_timeout_seconds']),
             name: planned.check.name,
         });
         note = failure?.note ?? findFixFailure(planned, result);
@@ -71,7 +65,7 @@ async function runFixInCopy(
     using scratch = await copyCheckFiles(planned, { session: { ...session, root }, command, options });
     const prepared = prepareCommandIn(scratch.path, planned, { session, command, toolPath, options });
     using files = openFiles(root);
-    const paths = listFixPaths(planned);
+    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const originals = new Map(paths.map((path) => [path, files.read(path)]));
     const result = await runFixCommands(planned, prepared, session.cancelSignal);
     using corrected = openFiles(scratch.path);
@@ -233,7 +227,11 @@ async function listBrokenSyntax(
 export async function runFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {
     const { isDryRun } = options;
     const checks = planned.filter((check) => check.check.fix !== undefined);
-    const paths = [...new Set(checks.flatMap((check) => listFixPaths(check)))].toSorted((a, b) => a.localeCompare(b));
+    const paths = [
+        ...new Set(
+            checks.flatMap((check) => [...new Set([...check.files.map((file) => file.path), ...check.triggerPaths])]),
+        ),
+    ].toSorted((a, b) => a.localeCompare(b));
     using scratch = isDryRun
         ? await createCopy(
               selectCopyPaths(

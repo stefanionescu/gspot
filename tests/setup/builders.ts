@@ -1,6 +1,7 @@
 import { parse } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import type { Session } from '#cli/types/session.ts';
+import { parseSettings } from '#cli/settings/read.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import type { RunOptions } from '#cli/types/runs/run.ts';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
@@ -16,16 +17,13 @@ import type { NamingCase } from '#cli/types/settings/tables.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import { SOURCE_KIND } from '#cli/config/repository/inventory.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
+import { buildRootScopeSettings } from '#tests/setup/settings.ts';
 import { readNamingSettings } from '#cli/checks/naming/settings.ts';
-import testsPackage from '#tests/package.json' with { type: 'json' };
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
-import { MOBILE_SOURCE_FILES } from '#tests/data/generation/eslint/framework.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
-import { parseSettingsText, buildRootScopeSettings } from '#tests/setup/settings.ts';
 import { listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
 import { type Tool, type Check, type Configuration } from '#cli/types/configurations.ts';
-import type { Identifier, FileNaming, NamingSettings } from '#cli/types/checks/naming.ts';
-import { EXPO_DEPENDENCIES, REACT_NATIVE_DEPENDENCIES } from '#tests/data/checks/react.ts';
+import type { FileNaming, Identifier, NamingSettings } from '#cli/types/checks/naming.ts';
 import { NAMING_TEST_LIMITS, NAMING_TEST_SETTINGS } from '#tests/data/checks/naming/settings.ts';
 
 /**
@@ -198,7 +196,7 @@ export function buildNamingSettings(): NamingSettings {
 
 /** Read the naming settings that apply in one scope of this settings text. */
 export function buildScopeNamingSettings(text: string, scope = ''): NamingSettings {
-    const settings = parseSettingsText(text);
+    const settings = parseSettings(text, undefined);
     const selected = selectForScope(settings, scope, readConfigurations());
     const known = buildKnownSettings(selected, 'recommended');
     const view = buildRootScopeSettings(settings, scope);
@@ -231,21 +229,6 @@ export function readTestRepository(root: string): Promise<Repository> {
     });
 }
 
-/** Build sibling Expo and bare React Native packages with the installed test React version. */
-export function buildMobileFiles(): Record<string, string> {
-    return {
-        ...MOBILE_SOURCE_FILES,
-        'bare/package.json': JSON.stringify({
-            private: true,
-            dependencies: { react: testsPackage.devDependencies.react, ...REACT_NATIVE_DEPENDENCIES },
-        }),
-        'expo-app/package.json': JSON.stringify({
-            private: true,
-            dependencies: { react: testsPackage.devDependencies.react, ...EXPO_DEPENDENCIES },
-        }),
-    };
-}
-
 /** Read one shipped check by ID, rejecting unknown names. */
 export function getShippedCheck(name: string): Check {
     const declaration = listChecksById(readConfigurations().values()).get(name);
@@ -267,14 +250,4 @@ export function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Ident
 /** A library pin installed from the npm package with the same name. */
 export function buildLibraryPin(name: string, version: string): Tool {
     return { name, kind: 'library', version, installers: { npm: { name, version } } };
-}
-
-/** Read one shipped tool declaration. */
-export function getShippedTool(name: string): Tool {
-    return getTool(readConfigurations().values(), name);
-}
-
-/** Build a JSON check command for one check. */
-export function buildCheckArguments(check: string): string[] {
-    return ['check', '--only', check, '--json'];
 }

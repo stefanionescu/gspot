@@ -4,7 +4,6 @@ import { readGitEnvironment } from '#cli/system/git.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import type { ToolRunOptions } from '#cli/types/tools/run.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import type { ScopeView } from '#cli/types/settings/inheritance.ts';
 
 /**
  * Run a tool command with the shared output environment and the timeout from the settings.
@@ -40,15 +39,4 @@ export async function runTool(command: readonly string[], options: ToolRunOption
         stdout: result.stdout.replaceAll('\r\n', '\n'),
         stderr: result.stderr.replaceAll('\r\n', '\n'),
     };
-}
-
-/**
- * Read the process timeout from the scope settings.
- *
- * @param view the scope settings with the timeout.
- *
- * @returns how long a tool may run, in seconds.
- */
-export function getToolTimeoutSeconds(view: Pick<ScopeView, 'settings'>): number {
-    return Number(view.settings['tool_timeout_seconds']);
 }

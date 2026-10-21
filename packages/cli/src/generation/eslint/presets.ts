@@ -1,4 +1,5 @@
-import { readAsset } from '#cli/system/assets.ts';
+import { readFileSync } from 'node:fs';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import { eslintPresetsSchema } from '#cli/schemas/generation.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
@@ -37,7 +38,9 @@ export function convertWarningsToErrors(rules: Record<string, unknown>): Record<
  * @returns preset blocks without executable plugin or parser objects.
  */
 export function readPresets(configuration: Configuration): EslintPresets {
-    return eslintPresetsSchema.parse(JSON.parse(readAsset(`${configuration.folder}/${ESLINT_PRESETS_FILE}`)));
+    return eslintPresetsSchema.parse(
+        JSON.parse(readFileSync(buildAssetPath(`${configuration.folder}/${ESLINT_PRESETS_FILE}`), 'utf8')),
+    );
 }
 
 /**

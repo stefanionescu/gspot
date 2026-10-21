@@ -1,6 +1,6 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { formatScopeLabel } from '#cli/system/terminal.ts';
+import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import { listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
@@ -9,26 +9,31 @@ import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/
 
 // Describe one scope: the default, the value and where it comes from, and how to change it.
 function formatSettingScope(key: string, setting: Setting, entry: SettingScope): string[] {
-    const recordList = Object.hasOwn(listRecordFields(), key);
     const { scope, shipped, effective } = entry;
-    const { value, source, reason } = effective ?? { value: undefined, source: 'unset', reason: undefined };
-    const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
-    const head = [
+    const { value, source } = effective ?? { value: undefined, source: 'unset' };
+    return [
         '',
-        `Scope: ${formatScopeLabel(scope)}`,
+        `Scope: ${scope === '' ? ROOT_SCOPE_LABEL : scope}`,
         `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
         `Current value: ${JSON.stringify(value)} (from ${source})`,
+        ...formatChangeLines(key, setting, entry),
     ];
-    if (recordList)
-        return [...head, `Change it: write [[${key}]] records by hand in gspot.toml, then run gspot apply.`];
+}
+
+// How to change the value of one scope: records by hand for a record list, or gspot set and unset.
+function formatChangeLines(key: string, setting: Setting, entry: SettingScope): string[] {
+    if (Object.hasOwn(listRecordFields(), key))
+        return [`Change it: write [[${key}]] records by hand in gspot.toml, then run gspot apply.`];
+    const { scope, shipped, effective } = entry;
+    const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
+    const value = effective?.value;
     return [
-        ...head,
         ...(value !== undefined && isLoosening(setting, value, shipped)
             ? [
                   'If you set this value, give a reason: write it as { value = ..., reason = "..." }, or run gspot set with --reason.',
               ]
             : []),
-        ...(reason === undefined ? [] : [`Reason on record: ${reason}`]),
+        ...(effective?.reason === undefined ? [] : [`Reason on record: ${effective.reason}`]),
         `Change it: gspot set ${quoteArgument(key)} <value>${target} [--reason "..."]`,
         `Back to the default: gspot unset ${quoteArgument(key)}${target}`,
     ];

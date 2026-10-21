@@ -1,10 +1,11 @@
 // Installs sandbox tools and runtimes and prepares locked tool projects.
 import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
 import { join, delimiter } from 'node:path';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { hashContent } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Writer } from '#cli/types/ownership.ts';
+import { DIGEST_ALGORITHM } from '#cli/config/text.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
@@ -23,7 +24,7 @@ import { runtimeSettingsSchema } from '#tests/schemas/preparation.ts';
 import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import type { PackageManager } from '#cli/types/repository/package-manager.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
-import { MISE_TRUST, PINNED_TOOLS_FILE, TEST_RUN_HASH_LENGTH, TEST_RUN_FOLDER_NAME } from '#tests/data/test-setup.ts';
+import { MISE_TRUST, PINNED_TOOLS_FILE, TEST_RUN_FOLDER_NAME, TEST_RUN_HASH_LENGTH } from '#tests/data/test-setup.ts';
 
 /**
  * Read this checkout's validated Bun and Node pins.
@@ -50,7 +51,7 @@ const repositoryRoot = join(import.meta.dir, '../..');
 /** The packages and tool paths of the test run for this checkout. */
 export const TEST_RUN_FOLDER = join(
     tmpdir(),
-    `${TEST_RUN_FOLDER_NAME}-${hashContent(repositoryRoot).slice(0, TEST_RUN_HASH_LENGTH)}`,
+    `${TEST_RUN_FOLDER_NAME}-${createHash(DIGEST_ALGORITHM).update(repositoryRoot).digest('hex').slice(0, TEST_RUN_HASH_LENGTH)}`,
 );
 
 /** Run init in a sandbox, set its level and configurations, and install its tools. */

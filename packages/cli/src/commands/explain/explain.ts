@@ -1,17 +1,19 @@
+import { readFileSync } from 'node:fs';
 import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { findText } from '#cli/system/files/reads.ts';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { readNameList } from '#cli/configurations/name-lists.ts';
 import { listEffectiveSettings } from '#cli/settings/inherit.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
+import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
@@ -48,7 +50,12 @@ function explainSlashed(
 function explainNamed(session: Session | undefined, subject: string): Explanation | undefined {
     const named = explainSetting(session, subject) ?? explainConfiguration(session, subject);
     if (named !== undefined) return named;
-    if (!readNameList(ESLINT_RULE_NAMES_FILE).names.includes(subject)) return undefined;
+    if (
+        !nameListSchema
+            .parse(JSON.parse(readFileSync(buildAssetPath(ESLINT_RULE_NAMES_FILE), 'utf8')))
+            .names.includes(subject)
+    )
+        return undefined;
     return explainLintRule(ESLINT_TOOL, subject);
 }
 

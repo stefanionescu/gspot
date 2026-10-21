@@ -1,7 +1,6 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { matchSubstring } from '#tests/setup/matchers.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { UNUSED_NAME_CASES } from '#tests/data/checks/naming/settings.ts';
 
@@ -17,7 +16,7 @@ test.each([...UNUSED_NAME_CASES])(
             expect(findings[index]).toMatchObject({
                 file: 'gspot.toml',
                 rule: 'unused-record',
-                message: matchSubstring(`"${name}"`),
+                message: expect.stringContaining(`"${name}"`) as string,
             });
         }
     },

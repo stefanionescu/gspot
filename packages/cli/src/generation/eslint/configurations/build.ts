@@ -1,10 +1,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { Session } from '#cli/types/session.ts';
+import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { buildTestFiles } from '#cli/generation/eslint/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import { buildSelectorGroups } from '#cli/generation/eslint/selectors.ts';
 import { buildVueBlocks } from '#cli/generation/eslint/configurations/vue.ts';
-import { buildTestFiles, buildScopeGlob } from '#cli/generation/eslint/files.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { buildAstroBlocks } from '#cli/generation/eslint/configurations/astro.ts';
 import { buildReactBlocks } from '#cli/generation/eslint/configurations/react.ts';
@@ -16,11 +18,11 @@ import { PLUGIN_RULE_BLOCKS } from '#cli/config/generation/eslint/configurations
 import { buildDrizzleBlocks } from '#cli/generation/eslint/configurations/drizzle.ts';
 import { buildZustandBlocks } from '#cli/generation/eslint/configurations/zustand.ts';
 import { buildReactDomBlocks } from '#cli/generation/eslint/configurations/react-dom.ts';
-import { isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildTypescriptBlocks } from '#cli/generation/eslint/configurations/typescript.ts';
 import { buildPluginRuleBlocks } from '#cli/generation/eslint/configurations/plugin-rules.ts';
 import { buildTanstackQueryBlocks } from '#cli/generation/eslint/configurations/tanstack-query.ts';
 import { buildTestingLibraryBlocks } from '#cli/generation/eslint/configurations/testing-library.ts';
+import { joinScope, isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 
 import type {
     EslintScope,
@@ -106,7 +108,7 @@ function buildScopeConfigurationBlocks(
                 path,
             )
                 .filter((child) => !matching.has(child))
-                .map((child) => buildScopeGlob(child, '**'));
+                .map((child) => joinScope(child.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**'));
             result.push({
                 imports: blocks.imports,
                 blocks: blocks.blocks.map((block) => ({

@@ -101,8 +101,6 @@ export const BASH_SOURCE_COMMANDS: ReadonlySet<string> = new Set(['source', '.']
 
 export const SWIFT_ACCESSOR_OWNERS: ReadonlySet<string> = new Set(['property_declaration', 'subscript_declaration']);
 
-export const EXPORTED_FUNCTION_EXTENSIONS = ['.ts', '.tsx', '.js', '.mjs', '.cjs'] as const;
-
 export const IMPORT_RULE_EXTENSIONS = [
     '.ts',
     '.tsx',

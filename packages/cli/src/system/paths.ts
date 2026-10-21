@@ -61,16 +61,6 @@ export function trimTrailingSlashes(path: string): string {
 }
 
 /**
- * Build the Unicode-normalized, case-insensitive key of a repository path.
- *
- * @param path the repository-relative input.
- * @returns its comparison key.
- */
-export function buildPathKey(path: string): string {
-    return path.normalize('NFC').toLowerCase();
-}
-
-/**
  * Extract the parent folder of a path, '' at the root.
  *
  * @param path the slash-separated location to split at the last separator.

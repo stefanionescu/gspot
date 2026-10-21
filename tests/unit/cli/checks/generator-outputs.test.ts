@@ -12,11 +12,13 @@ import { useExecutable } from '#tests/setup/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
 import { planSandboxCheck } from '#tests/setup/check-input.ts';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
-import { mkdir, chmod, readFile, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { fakeTool, fakePinnedExecutables } from '#tests/setup/fakes.ts';
-import { getShippedTool, buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
+import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { GENERATOR_CASES, GENERATOR_SCRIPT, SUPABASE_TYPES_OUTPUT } from '#tests/data/checks/generator-outputs.ts';
 
 import {
@@ -45,7 +47,7 @@ async function prepareGeneratorCheck(root: string, row: (typeof GENERATOR_CASES)
 }
 
 async function mockWrangler(root: string): Promise<DisposableStack> {
-    const pin = getShippedTool('wrangler');
+    const pin = getTool(readConfigurations().values(), 'wrangler');
     const path = join(root, 'node_modules', '.bin', pin.name);
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, '');

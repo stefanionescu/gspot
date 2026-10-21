@@ -45,12 +45,6 @@ function prepareParentFolder(folder: string): Stats {
     return lstatSync(folder);
 }
 
-// Read the file contents of a symbolic link: its target text and its own mode.
-function readSymbolicLink(target: string): FileContents {
-    const bytes = Buffer.from(readlinkSync(target));
-    return { bytes, mode: PERMISSION_BITS, isLink: true };
-}
-
 // Read the bytes and mode of a private regular file.
 function readRegularFile(target: string, stat: Stats, path: string): FileContents {
     if (!stat.isFile() || stat.nlink !== 1)
@@ -177,7 +171,10 @@ export function readEntryKeepingLinks(state: FilesState, path: string): FileCont
     try {
         const target = buildContainedPath(state, path);
         const stat = lstatSync(target);
-        return stat.isSymbolicLink() ? readSymbolicLink(target) : readRegularFile(target, stat, path);
+        // A symbolic link reads as its target text, with its own mode.
+        return stat.isSymbolicLink()
+            ? { bytes: Buffer.from(readlinkSync(target)), mode: PERMISSION_BITS, isLink: true }
+            : readRegularFile(target, stat, path);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
         throw error;

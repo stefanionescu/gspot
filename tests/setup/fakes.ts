@@ -7,10 +7,12 @@ import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { EXECUTABLE_MODE } from '#tests/data/test-setup.ts';
 import type { spawnProcess } from '#cli/system/processes.ts';
+import { buildProcessResult } from '#tests/setup/builders.ts';
 import { join, dirname, basename, delimiter } from 'node:path';
+import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { GSPOT_NODE_MODULES_PATH } from '#cli/config/gspot-paths.ts';
-import { getShippedTool, buildProcessResult } from '#tests/setup/builders.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 
 /**
  * Replace one child command and run the others normally.
@@ -77,7 +79,7 @@ export async function fakeTool(sandboxRoot: string, name: string, script: string
 
 /** Write the package.json and a version program for the pinned npm tool. */
 export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
-    const declaration = getShippedTool(tool);
+    const declaration = getTool(readConfigurations().values(), tool);
     const installer = declaration.installers['npm'];
     if (installer === undefined) throw new Error(`The tool ${tool} has no npm installer.`);
     if (declaration.version === undefined) throw new Error('The npm package fake requires a pinned tool version.');
@@ -89,6 +91,7 @@ export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
     });
     return declaration;
 }
+
 /** Write an installed npm package and the program that the tool package exposes. */
 export async function fakeNpmPackage(
     root: string,
@@ -131,6 +134,7 @@ if (args[0] === ${JSON.stringify(options.operation)}) {
         await Bun.sleep(60_000);
     }
 }
+
 const child = Bun.spawn([${JSON.stringify(executable)}, ...args], {stdin:'inherit', stdout:'inherit', stderr:'inherit'});
 process.exit(await child.exited);
 `;

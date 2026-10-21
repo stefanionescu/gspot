@@ -2,10 +2,10 @@ import { join, relative } from 'node:path';
 import { createCopy } from '#cli/runs/copy/files.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { RAN_STATUSES } from '#cli/config/runs/run.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import type { ProcessFailure } from '#cli/types/tools/run.ts';
@@ -16,7 +16,6 @@ import { buildCommandLines } from '#cli/runs/command/batches.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
 import { listCompanionTools } from '#cli/planning/needed-tools.ts';
 import { PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
-import { isInGspotFolder } from '#cli/repository/files/tool-folders.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/report.ts';
 import type { CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/python.ts';
@@ -56,7 +55,7 @@ async function runCommands(
         const { result, failure } = await runToolProcess(commandLine.commandArguments, {
             ...prepared,
             cancelSignal,
-            timeoutSeconds: getToolTimeoutSeconds(planned.selection.view),
+            timeoutSeconds: Number(planned.selection.view.settings['tool_timeout_seconds']),
             name: tool.name,
         });
         if (failure !== undefined)
@@ -87,7 +86,9 @@ function findMissingToolFile(
     const paths = options.listToolFiles?.(session, planned) ?? [];
     using files = openFiles(session.root);
     const missing = [...paths, ...listCommandToolFiles(session, planned, command)].find((path) =>
-        isInGspotFolder(path) ? files.read(path) === undefined : findCachedText(session.reads, path) === undefined,
+        path.startsWith(`${DOT_GSPOT}/`)
+            ? files.read(path) === undefined
+            : findCachedText(session.reads, path) === undefined,
     );
     if (missing === undefined) return undefined;
     return {
