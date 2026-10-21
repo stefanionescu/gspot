@@ -9,6 +9,7 @@ import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 
 describe('results', () => {
     test('a check with malformed JSON reports an error, and the other checks keep their results', async () => {
@@ -91,5 +92,30 @@ describe('results', () => {
         expect(completed.map((entry) => entry.check)).toStrictEqual(['project/fast', 'project/waiting']);
         expect(completed[0]).toMatchObject({ status: 'passed', findings: [] });
         expect(result.report.ignores[0]?.matched).toBe(1);
+    });
+});
+
+test('an ignore with names keeps them in the run report and in the verbose ignore line', async () => {
+    const reason = 'The public hook serves the script caller.';
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['bash'], {
+            level: 'all',
+            tables: '[[ignore]]\ncheck = "structure/trivial-functions"\nnames = ["useThing"]\nreason = "The public hook serves the script caller."\n',
+        }),
+        'source.sh':
+            'useThing() { printf "%s\\n" ready; }\nuseOther() { printf "%s\\n" ready; }\nprintf "%s\\n" complete\n',
+    });
+    const command = ['check', '--only', 'structure/trivial-functions'];
+    const json = await checkReport(sandbox.path, [...command, '--json']);
+    const verbose = await runGspot(sandbox.path, [...command, '--verbose']);
+    expect({ code: json.code, stderr: json.stderr }).toStrictEqual({ code: 1, stderr: '' });
+    expect({ code: verbose.code, stderr: verbose.stderr }).toStrictEqual({ code: 1, stderr: '' });
+    expect(json.report.checks.flatMap(({ findings }) => findings.map(({ name }) => name))).toStrictEqual(['useOther']);
+    expect({
+        ignores: json.report.ignores,
+        lines: verbose.stdout.split('\n').filter((line) => line.startsWith('ignore     ')),
+    }).toStrictEqual({
+        ignores: [{ check: 'structure/trivial-functions', names: ['useThing'], reason, matched: 1 }],
+        lines: [`ignore     structure/trivial-functions names useThing  ${reason}  (1 matched)`],
     });
 });

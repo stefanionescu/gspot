@@ -112,7 +112,8 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
     return report.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
-        return `ignore     ${ignore.check ?? 'every check'}${rule}${paths}  ${ignore.reason === undefined ? '' : getColors().dim(ignore.reason)}  (${String(ignore.matched)} matched)`;
+        const names = ignore.names === undefined ? '' : ` names ${ignore.names.join(' ')}`;
+        return `ignore     ${ignore.check ?? 'every check'}${rule}${paths}${names}  ${getColors().dim(ignore.reason)}  (${String(ignore.matched)} matched)`;
     });
 }
 

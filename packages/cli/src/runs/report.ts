@@ -68,6 +68,7 @@ export function buildRunReport(input: ReportInput): RunReport {
                 ...(record.check === undefined ? {} : { check: record.check }),
                 ...(record.rule === undefined ? {} : { rule: record.rule }),
                 ...(record.paths === undefined ? {} : { paths: record.paths }),
+                ...(record.names === undefined ? {} : { names: record.names }),
                 reason: record.reason,
                 matched,
             }))
