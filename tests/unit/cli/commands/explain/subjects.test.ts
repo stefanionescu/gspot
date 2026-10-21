@@ -4,10 +4,10 @@ import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { EXPLAIN_SETTINGS } from '#tests/data/commands/explain.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.ts';
+import { EXPLAIN_SETTINGS, CONFIGURATION_DETECTION_LINES } from '#tests/data/commands/explain.ts';
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await testdir();
@@ -124,3 +124,15 @@ test.each([
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({ kind, subject });
 });
+
+test.each([...CONFIGURATION_DETECTION_LINES])(
+    'explain $configuration lists the detection rules and file tags',
+    async ({ configuration, lines }) => {
+        await using sandbox = await testdir({ 'README.md': '# Example\n' });
+        const result = await runGspot(sandbox.path, ['explain', configuration]);
+        expect({ code: result.code, stderr: result.stderr }).toStrictEqual({ code: 0, stderr: '' });
+        expect(
+            result.stdout.split('\n').filter((line) => line.startsWith('Detected by:') || line.startsWith('Files:')),
+        ).toStrictEqual([...lines]);
+    },
+);

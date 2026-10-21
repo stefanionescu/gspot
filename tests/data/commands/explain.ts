@@ -51,3 +51,46 @@ export const REASON_VALUES = [
         owed: [false, false] as const,
     },
 ] as const;
+
+export const CONFIGURATION_DETECTION_LINES = [
+    {
+        configuration: 'docker',
+        lines: [
+            'Detected by: **/Dockerfile, **/Dockerfile.*, **/*.dockerfile, **/docker-compose*.yml, **/docker-compose*.yaml, **/compose*.yml, **/compose*.yaml, !**/*.dockerignore',
+            'Files: **/Dockerfile, **/Dockerfile.*, **/*.dockerfile, **/docker-compose*.yml, **/docker-compose*.yaml, **/compose*.yml, **/compose*.yaml, **/.dockerignore, **/*.dockerignore',
+        ],
+    },
+    {
+        configuration: 'javascript',
+        lines: [
+            'Detected by: .js, .jsx, .mjs, .cjs, project file package.json, shebang node',
+            'Files: .js, .jsx, .mjs, .cjs, shebang:node',
+            'Files: the file types of the selected ESLint plugins',
+        ],
+    },
+    {
+        configuration: 'bash',
+        lines: ['Detected by: .sh, .bash, .zsh, .bats, shebang shell', 'Files: .sh, .bash, .zsh, .bats, shebang:shell'],
+    },
+    {
+        configuration: 'prose',
+        lines: [
+            'Detected by: .md, .mdx, .ts, .tsx, .mts, .cts, .js, .mjs, .cjs, .jsx, .swift, .css, .sh, .bash, .zsh, .py, .sql, .pgsql, .psql, tag shebang:shell',
+            'Files: .md, .mdx, .ts, .tsx, .mts, .cts, .js, .mjs, .cjs, .jsx, .swift, .css, .sh, .bash, .zsh, .py, .sql, .pgsql, .psql, shebang:shell',
+        ],
+    },
+    {
+        configuration: 'postgres',
+        lines: [
+            String.raw`Detected by: pg in dependencies, postgres in dependencies, psycopg in dependencies, asyncpg in dependencies, @neondatabase/serverless in dependencies, prisma/schema.prisma matching (?:^|\n)[\t ]*provider[\t ]*=[\t ]*"postgresql"`,
+            'Files: db/migrations/*.sql, migrations/*.sql, **/supabase/migrations/*.sql',
+        ],
+    },
+    {
+        configuration: 'xcode',
+        lines: [
+            'Detected by: **/*.xcodeproj/project.pbxproj, project file *.xcodeproj',
+            'Files: .plist, .entitlements, .xcconfig, .xcstrings, .storyboard, .xib, **/project.pbxproj, **/*.xcscheme, **/*.xctestplan, **/*.xcassets/**/Contents.json',
+        ],
+    },
+] as const;
