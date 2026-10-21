@@ -113,7 +113,10 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     readGitOutput(sandbox.path, ['init', '-q']);
     const session = await openSession(sandbox.path);
     const files = generate(session).files;
-    const written = files.map(({ path }) => path).filter((path) => !path.startsWith('.gspot/'));
+    const written = files
+        .map(({ path }) => path)
+        .filter((path) => !path.startsWith('.gspot/'))
+        .map((path) => `/${path}`);
     const listed = buildIgnoreSections(session)
         .find(({ key }) => key === 'gspot')!
         .patterns.filter((pattern) => !pattern.startsWith('.gspot/'));
@@ -177,4 +180,31 @@ test('tool files leave out what the tracked .gitignore files ignore, apart from 
             expect.stringMatching(/\/\*\*\/\.open-next\/\*\*$/u),
         ]),
     );
+});
+
+test('root paths in the generated-files section are anchored, so an authored tools/eslint.config.mjs stays checked', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['format', 'javascript', 'duplication'], { level: 'all' }),
+        'source.js': 'export const value = 1;\n',
+        'tools/eslint.config.mjs': 'export default [];\n',
+    });
+    const output = generate(await openSession(sandbox.path));
+    const ignoreFile = output.files.find(({ path }) => path === '.prettierignore')!;
+    expect(ignoreFile.content.split('\n')).toContain('/eslint.config.mjs');
+    expect(ignoreFile.content.split('\n')).not.toContain('eslint.config.mjs');
+    const ignorePath = join(sandbox.path, ignoreFile.path);
+    await Bun.write(ignorePath, ignoreFile.content);
+    const root = await prettier.getFileInfo(join(sandbox.path, 'eslint.config.mjs'), {
+        ignorePath,
+        resolveConfig: false,
+    });
+    const authored = await prettier.getFileInfo(join(sandbox.path, 'tools/eslint.config.mjs'), {
+        ignorePath,
+        resolveConfig: false,
+    });
+    expect({ root: root.ignored, authored: authored.ignored }).toStrictEqual({ root: true, authored: false });
+    const duplication = output.files.find(({ path }) => path.endsWith('/jscpd.json'))!;
+    const ignored = getValueAt(JSON.parse(duplication.content), ['ignore']);
+    expect(ignored).toContain('eslint.config.mjs');
+    expect(ignored).not.toContain('**/eslint.config.mjs');
 });

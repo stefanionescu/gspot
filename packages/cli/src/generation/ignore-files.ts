@@ -33,7 +33,8 @@ function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
     });
 }
 
-// Collect the generated files and pointers outside .gspot that this run writes, so that scanners leave them alone.
+// Include generated files and pointers outside .gspot. Keep inherited pointers because their final text determines
+// which scopes write them.
 function collectToolExclusions(session: Session): string[] {
     const paths = listToolFileDeclarations(session).flatMap(({ toolFile, owner }) => {
         const whole =
@@ -42,7 +43,7 @@ function collectToolExclusions(session: Session): string[] {
                 : [toolFile.per_scope ? joinScope(owner.selection.scope.path, toolFile.target) : toolFile.target];
         return [...whole, ...listPointerPaths(owner, toolFile)];
     });
-    return [...new Set(paths)];
+    return [...new Set(paths)].map((path) => `/${path}`);
 }
 
 /**
