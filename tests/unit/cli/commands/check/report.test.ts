@@ -231,3 +231,23 @@ test('NO_COLOR prints findings without color on terminal streams', async () => {
     const stderr = result.stderr.replaceAll(PROGRESS_CLEAR, '');
     expect(stderr).toBe(stripVTControlCharacters(stderr));
 });
+
+test.each([
+    { count: 1, notice: '1 file has unstaged changes that were not checked.' },
+    { count: 2, notice: '2 files have unstaged changes that were not checked.' },
+])('a staged report names its comparison once: $notice', ({ count, notice }) => {
+    const report: RunReport = {
+        ...FAILED_CHECK_REPORT,
+        comparison: { content: 'index', reference: 'staged' },
+        checks: [],
+        ignores: [],
+        skips: [],
+        failed: [],
+        unstagedChanges: count,
+        duration: 0,
+        exitCode: 0,
+    };
+    expect(formatRunReport(report, { verbose: false })).toBe(
+        `Checked the staged files.\n${notice}\nPassed: 0 checks. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\n`,
+    );
+});

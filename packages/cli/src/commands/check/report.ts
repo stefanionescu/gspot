@@ -50,10 +50,7 @@ function formatProgressSubject(comparison: CheckProgress['comparison']): string 
 function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];
     const verb = report.unstagedChanges === 1 ? 'has' : 'have';
-    const subject = report.comparison?.content === 'index' ? 'staged files' : 'working tree';
-    return [
-        `Checked the ${subject}. ${formatCount(report.unstagedChanges, 'file')} ${verb} unstaged changes that were not checked.`,
-    ];
+    return [`${formatCount(report.unstagedChanges, 'file')} ${verb} unstaged changes that were not checked.`];
 }
 
 function formatSeconds(milliseconds: number): string {
