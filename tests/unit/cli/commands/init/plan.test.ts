@@ -149,3 +149,28 @@ test('init names disable comments for rules that the new setup does not load', a
         note: 'local-rules/no-legacy: gspot does not load these rules; delete the comments',
     });
 });
+
+test('init lists your .editorconfig under write and not under delete when the generated one replaces it', async () => {
+    const authored = 'root = true\n[*]\nindent_style = space\nindent_size = 2\n';
+    await using sandbox = await testdir({ '.editorconfig': authored });
+    commitAll(sandbox.path);
+    const before = await readTree(sandbox.path);
+    const commandArguments = buildInitArguments(['format'], { json: true });
+
+    const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run']);
+
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    const { plan } = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan'>>;
+    expect(plan.delete.map(({ path }) => path)).not.toContain('.editorconfig');
+    expect(plan.write.filter(({ path }) => path === '.editorconfig')).toStrictEqual([
+        {
+            path: '.editorconfig',
+            note: 'replaces your file; read the old one with git show HEAD:.editorconfig',
+        },
+    ]);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const initialized = await runGspot(sandbox.path, commandArguments);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).not.toBe(authored);
+    expect(readGitOutput(sandbox.path, ['show', 'HEAD:.editorconfig'])).toBe(authored.trimEnd());
+});

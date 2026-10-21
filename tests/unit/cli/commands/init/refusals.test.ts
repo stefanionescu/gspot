@@ -79,10 +79,10 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stderr).toBe('');
     const report = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
-    const changes = report.plan.change.map((entry) => entry.path);
-    expect(changes.includes('.gitignore')).toBe(hasGit);
-    expect(changes.includes('.gspot/hooks')).toBe(hasGit);
-    expect(changes).toContain('.gitattributes');
+    const changes = new Set(report.plan.change.map((entry) => entry.path));
+    expect(changes.has('.gitignore')).toBe(hasGit);
+    expect(changes.has('.gspot/hooks')).toBe(hasGit);
+    expect(changes.has('.gitattributes')).toBe(hasGit);
     expect(parseSettings(report.settings, undefined, createReadCache(process.cwd())).hooks).toBeDefined();
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const initialized = await runGspot(sandbox.path, commandArguments);

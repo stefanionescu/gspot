@@ -166,28 +166,33 @@ function buildInitPlan(
             .map((evidence) => evidence.configuration)
             .filter((id) => !selection.selectedIds.has(id)),
     };
-    const change = [ATTRIBUTES_ROW, ...buildToolProjectRows(requirements, planning.reads)];
+    const change = buildToolProjectRows(requirements, planning.reads);
     if (hasGit) {
-        change.unshift({ path: GITIGNORE_FILE, note: 'one managed block' });
+        change.unshift({ path: GITIGNORE_FILE, note: 'one managed block' }, ATTRIBUTES_ROW);
         if (answers.hooks) change.push(HOOKS_ROW);
     }
-    return {
-        ...stripUndefined({ template }),
-        level: settings.level,
-        configurations: buildConfigurationRows(planning, settings),
-        write: [
-            { path: SETTINGS_FILE, note: `your settings, ${String(settingsText.split('\n').length)} lines` },
-            { path: `${DOT_GSPOT}/`, note: 'generated files and version pin' },
-            ...[...generated.files, ...generated.blocks]
-                .filter(({ path }) => !isInGspotFolder(path) && !change.some((row) => row.path === path))
-                .map(({ path }) => ({
+    const write: InitPlan['write'] = [
+        { path: SETTINGS_FILE, note: `your settings, ${String(settingsText.split('\n').length)} lines` },
+        { path: `${DOT_GSPOT}/`, note: 'generated files and version pin' },
+        ...[...generated.files, ...generated.blocks]
+            .filter(({ path }) => !isInGspotFolder(path) && !change.some((row) => row.path === path))
+            .map(({ path }) => {
+                if (replaced.deleted.some((row) => row.path === path))
+                    return { path, note: `replaces your file; read the old one with git show HEAD:${path}` };
+                return {
                     path,
                     note: Object.hasOwn(CI_FILE_NOTES, path)
                         ? CI_FILE_NOTES[path as keyof typeof CI_FILE_NOTES]
                         : 'generated file',
-                })),
-        ],
-        delete: replaced.deleted,
+                };
+            }),
+    ];
+    return {
+        ...stripUndefined({ template }),
+        level: settings.level,
+        configurations: buildConfigurationRows(planning, settings),
+        write,
+        delete: replaced.deleted.filter(({ path }) => !write.some((row) => row.path === path)),
         retained: [
             ...replaced.retained,
             ...listSubmodulePaths(planning.index).map((path) => ({ path, note: 'submodule; contents are not read' })),

@@ -8,7 +8,6 @@ import { readText } from '#cli/system/files/reads.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import { listExpectedPaths } from '#cli/apply/stale.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { readTemplate } from '#cli/settings/templates.ts';
 import { print, getColors } from '#cli/system/terminal.ts';
@@ -188,13 +187,14 @@ async function planInit(repositoryRoot: string, options: InitOptions): Promise<I
         replaced,
         foreignDisableComments: listForeignDisableComments(session),
     };
+    const plan = buildInitPlan(planning, { settings, settingsText, requirements: applicable, generated });
     return {
         detection,
         session,
         generated,
-        plan: buildInitPlan(planning, { settings, settingsText, requirements: applicable, generated }),
+        plan,
         settingsText,
-        deleted: replaced.deleted,
+        deleted: plan.delete,
         read: replaced.read,
     };
 }
@@ -238,13 +238,8 @@ function writeInitFiles(repositoryRoot: string, prepared: InitPrepared): string[
     using writer = openWriter(repositoryRoot);
     const { session, generated } = prepared;
     writeSettings(writer, prepared.settingsText, prepared.read.get(SETTINGS_FILE));
-    const destinations = listExpectedPaths(session, generated);
     const applied = writeGeneratedFiles(session, generated, writer, { reviewedOriginals: prepared.read });
-    const kept = deleteReplacedFiles(
-        writer,
-        prepared.deleted.filter((entry) => !destinations.has(entry.path)),
-        prepared.read,
-    );
+    const kept = deleteReplacedFiles(writer, prepared.deleted, prepared.read);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
     const version = getColors().dim(`gspot ${session.version}`);
     return [

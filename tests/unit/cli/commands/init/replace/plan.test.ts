@@ -56,8 +56,13 @@ test('the init plan deletes the replaced tool files and lists the lint folder', 
     ]);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan!;
-    for (const path of Object.keys(REPLACED_TOOL_FILES))
+    for (const path of Object.keys(REPLACED_TOOL_FILES).filter((path) => path !== '.markdownlint.jsonc'))
         expect(plan.delete).toContainEqual({ path, note: matchSubstring('replaced by the generated') });
+    expect(plan.delete.map(({ path }) => path)).not.toContain('.markdownlint.jsonc');
+    expect(plan.write).toContainEqual({
+        path: '.markdownlint.jsonc',
+        note: 'replaces your file; read the old one with git show HEAD:.markdownlint.jsonc',
+    });
     expect(plan.noLongerRuns).toContainEqual({ path: 'quality/', note: matchSubstring('lint scripts') });
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
     const initialized = await runGspot(sandbox.path, [
