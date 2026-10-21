@@ -4,10 +4,13 @@ import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
+import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.ts';
-import { EXPLAIN_SETTINGS, CONFIGURATION_DETECTION_LINES } from '#tests/data/commands/explain.ts';
+import { EXPLAIN_SETTINGS, CHECK_TOOL_MINIMUMS, CONFIGURATION_DETECTION_LINES } from '#tests/data/commands/explain.ts';
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await testdir();
@@ -134,5 +137,20 @@ test.each([...CONFIGURATION_DETECTION_LINES])(
         expect(
             result.stdout.split('\n').filter((line) => line.startsWith('Detected by:') || line.startsWith('Files:')),
         ).toStrictEqual([...lines]);
+    },
+);
+
+test.each([...CHECK_TOOL_MINIMUMS])(
+    'explain <check> lists the minimum versions of the tools that the check runs, not of every tool of its configuration: $check',
+    async ({ check, tools }) => {
+        await using sandbox = await testdir();
+        const manifests = readManifests(createReadCache(process.cwd()));
+        const expected = tools.map((name) => {
+            const minimum = getToolDeclaration(manifests.values(), name).min_version;
+            return `Needs ${name} ${String(minimum)} or newer`;
+        });
+        const result = await runGspot(sandbox.path, ['explain', check]);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        expect(result.stdout.split('\n').filter((line) => line.startsWith('Needs '))).toStrictEqual(expected);
     },
 );

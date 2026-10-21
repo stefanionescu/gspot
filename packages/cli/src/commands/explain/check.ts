@@ -68,9 +68,10 @@ function buildCheckFacts(
         rules,
         crashPattern,
         minVersions: Object.fromEntries(
-            (configuration?.tools ?? []).flatMap((tool) =>
-                tool.min_version === undefined ? [] : [[tool.name, tool.min_version]],
-            ),
+            [tool, ...(check.other_tools ?? [])]
+                .filter((name) => name !== undefined)
+                .map((name) => getToolDeclaration(manifests.values(), name))
+                .flatMap((tool) => (tool.min_version === undefined ? [] : [[tool.name, tool.min_version]])),
         ),
     };
 }
