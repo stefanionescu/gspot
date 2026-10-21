@@ -284,9 +284,15 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
         const functions = parseBashFunctions(tree.rootNode, codeText);
         const calls = commands.flatMap((node) => {
             const name = node.childForFieldName('name')?.text;
-            return name === undefined
-                ? []
-                : [{ name, count: node.childrenForFieldName('argument').length, line: node.startPosition.row + 1 }];
+            if (name === undefined) return [];
+            const commandArguments = node.childrenForFieldName('argument');
+            const trapFunction = name === TRAP_COMMAND ? commandArguments[0] : undefined;
+            return [
+                { name, count: commandArguments.length, line: node.startPosition.row + 1 },
+                ...(trapFunction?.type === 'word'
+                    ? [{ name: trapFunction.text, count: 0, line: trapFunction.startPosition.row + 1 }]
+                    : []),
+            ];
         });
         return {
             code: codeText.split('\n'),

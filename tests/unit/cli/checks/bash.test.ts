@@ -19,6 +19,7 @@ import {
     COUNTED_LOOPS,
     DOC_COMMENT_CASES,
     BASH_SIZE_LOCATIONS,
+    TRAP_FUNCTION_SOURCE,
     UNREAD_ARGUMENT_CASES,
     UNUSED_FUNCTION_CASES,
 } from '#tests/data/checks/bash/function-checks.ts';
@@ -254,4 +255,12 @@ test('inline-scripts: a heredoc that writes a data file is not reported', async 
     });
     const result = await checkReport(sandbox.path, ['check', '--only', 'bash/inline-scripts', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
+});
+
+test('a function that only a trap runs is not reported', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['bash']),
+        'source.sh': TRAP_FUNCTION_SOURCE,
+    });
+    expect(await checkFindings(sandbox.path, 'bash/unused-functions')).toStrictEqual([]);
 });

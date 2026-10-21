@@ -125,3 +125,16 @@ main "$@"
         expected: { file: 'scripts/half.sh', rule: 'unread-arguments', line: 9 },
     },
 ] as const;
+
+export const TRAP_FUNCTION_SOURCE = String.raw`${BASH_HEADER}_cleanup() {
+    rm -f -- "$work"
+}
+
+main() {
+    work=$(mktemp)
+    trap _cleanup EXIT
+    printf '%s\n' "$work"
+}
+
+main "$@"
+`;

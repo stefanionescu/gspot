@@ -68,3 +68,13 @@ test('one-line Bash functions count only their own parameters, not those of nest
     ]);
     expect(parsed.calls).toContainEqual({ name: 'outer', count: 2, line: 2 });
 });
+
+test('plain trap handlers count as zero-argument calls while quoted and expanded trap bodies stay uninterpreted', async () => {
+    const parsed = await parseBashScript('trap _cleanup EXIT\ntrap "_quoted" EXIT\ntrap $handler EXIT\n');
+    expect(parsed.calls).toStrictEqual([
+        { name: 'trap', count: 2, line: 1 },
+        { name: '_cleanup', count: 0, line: 1 },
+        { name: 'trap', count: 2, line: 2 },
+        { name: 'trap', count: 2, line: 3 },
+    ]);
+});
