@@ -78,7 +78,7 @@ function normalizeScopeTables(
             ? undefined
             : stripUndefined({
                   ...tools,
-                  eslint: tools.eslint === undefined ? undefined : { ...tools.eslint, override: [], plugins: [] },
+                  eslint: tools.eslint === undefined ? undefined : { ...tools.eslint, override: [] },
               });
     return stripUndefined({
         ...table,
