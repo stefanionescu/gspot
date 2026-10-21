@@ -142,3 +142,18 @@ test('build state lives in the gspot cache, stable for one repository and distin
     expect(folder).not.toBe(buildPlan(secondInput).folder);
     expect(folder.startsWith(readCacheFolder() + sep)).toBe(true);
 });
+
+test('two copies of one repository with the same installed root share one build folder', async () => {
+    const files = { 'gspot.toml': buildSettingsText(['swift']), 'Package.swift': SWIFT_PACKAGE };
+    await using installed = await testdir(files);
+    await using first = await testdir(files);
+    await using second = await testdir(files);
+    await using _cache = await createCompilerCache();
+    const installedInput = buildCheckInput(await openSession(installed.path), 'swift/build');
+    const firstInput = buildCheckInput(await openSession(first.path), 'swift/build');
+    const secondInput = buildCheckInput(await openSession(second.path), 'swift/build');
+    const firstFolder = buildPlan({ ...firstInput, installedRoot: installed.path }).folder;
+    const secondFolder = buildPlan({ ...secondInput, installedRoot: installed.path }).folder;
+    expect(firstFolder).toBe(secondFolder);
+    expect(firstFolder).toBe(buildPlan(installedInput).folder);
+});

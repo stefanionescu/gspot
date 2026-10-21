@@ -91,15 +91,18 @@ function openBuildCache(folder: string): Files {
 /**
  * Computes the build folder for a scope and tool.
  *
- * @param input the repository root and scope.
+ * @param input the installed checkout and scope.
  * @param purpose the tool whose outputs stay separate.
  * @returns the cache folder path.
  */
-export function getScopeBuildFolder(input: Pick<CheckInput, 'root' | 'selection'>, purpose: SwiftBuildPurpose): string {
-    // The real path of the repository names its private build cache.
+export function getScopeBuildFolder(
+    input: Pick<CheckInput, 'installedRoot' | 'selection'>,
+    purpose: SwiftBuildPurpose,
+): string {
+    // The real path of the installed checkout names its private build cache.
     return join(
         readCacheFolder(),
-        hashContent(realpathSync(input.root)),
+        hashContent(realpathSync(input.installedRoot)),
         SWIFT_BUILD_FOLDER,
         input.selection.scope.path === ''
             ? ROOT_BUILD_FOLDER
