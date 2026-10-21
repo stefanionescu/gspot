@@ -239,6 +239,36 @@ function findParentSelection(scopes: ScopeSelection[], path: string): ScopeSelec
 }
 
 /**
+ * Build import restrictions where a scope changes the list inherited from its parent.
+ *
+ * @param input every scope and the code selectors of the generated file.
+ * @returns one block per changed list, excluding scopes with their own lists.
+ */
+function buildRestrictedImportBlocks(input: Pick<EslintContext, 'scopes' | 'eslintFiles'>): EslintSettingsBlock[] {
+    const scopes = input.scopes.filter(({ view }) => view.configurations.includes('javascript'));
+    const restrictedScopes = scopes.filter((selection) => {
+        const parent = findParentSelection(scopes, selection.scope.path);
+        return !isDeepStrictEqual(
+            selection.view.options(ESLINT_SETTINGS_TABLE).restricted_imports,
+            parent?.view.options(ESLINT_SETTINGS_TABLE).restricted_imports ?? [],
+        );
+    });
+    return restrictedScopes.map((selection) => ({
+        files: buildScopeFiles(input.eslintFiles.code, selection.scope.path, ['**/*']),
+        ignores: listNestedScopes(
+            restrictedScopes.map(({ scope }) => scope.path),
+            selection.scope.path,
+        ).map((path) => `${escapeGlob(path)}/**`),
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                { paths: selection.view.options(ESLINT_SETTINGS_TABLE).restricted_imports },
+            ],
+        },
+    }));
+}
+
+/**
  * Build the environment-variable rule blocks for each project with its own environment readers.
  *
  * @param input what the lint rules cover.
@@ -339,4 +369,5 @@ export {
     findParentSelection,
     buildTrivialRuleBlocks,
     buildEnvironmentRuleBlocks,
+    buildRestrictedImportBlocks,
 };

@@ -1,3 +1,4 @@
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint.ts';
 import { ZUSTAND_STORE_CREATORS } from '#cli/config/generation/eslint-fragments.ts';
 import { type EslintContext, type EslintFragment } from '#cli/types/generation/eslint.ts';
 
@@ -8,9 +9,9 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildZustandFragment(
-    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'settings' | 'eslint'>,
+    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'settings' | 'selection'>,
 ): EslintFragment {
-    const { blockWriter, eslintFiles, settings, eslint } = context;
+    const { blockWriter, eslintFiles, settings, selection } = context;
 
     const imports: string[] = [];
 
@@ -24,7 +25,7 @@ function buildZustandFragment(
                     'error',
                     {
                         paths: [
-                            ...eslint.restrictedImports,
+                            ...selection.view.options(ESLINT_SETTINGS_TABLE).restricted_imports,
                             {
                                 name: 'zustand',
                                 importNames: ZUSTAND_STORE_CREATORS,

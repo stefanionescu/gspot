@@ -3,8 +3,8 @@ import { escapeGlob } from '#cli/repository/matchers.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
 import { buildScopeFiles } from '#cli/generation/eslint/files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import { buildLevelRules } from '#cli/generation/eslint/lint-rules.ts';
 import { pickPresetFields, buildPresetBlocks } from '#cli/generation/eslint/presets.ts';
+import { buildLevelRules, buildRestrictedImportBlocks } from '#cli/generation/eslint/lint-rules.ts';
 
 import {
     CODE_PRESETS,
@@ -75,16 +75,7 @@ function buildBlocksBeforeFragments(
         ],
         [{ files: eslintFiles.javascript, rules: JAVASCRIPT_RULES }],
         ...projectBlocks,
-        ...(parts.restrictedImports.length === 0
-            ? []
-            : ([
-                  [
-                      {
-                          files: eslintFiles.code,
-                          rules: { 'no-restricted-imports': ['error', { paths: parts.restrictedImports }] },
-                      },
-                  ],
-              ] satisfies Parameters<BlockWriter['block']>[])),
+        ...buildRestrictedImportBlocks(base).map((block): Parameters<BlockWriter['block']> => [block]),
     ];
 }
 

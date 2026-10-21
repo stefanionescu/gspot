@@ -95,6 +95,7 @@ function buildSelectedFragments(session: Session, fragments: Manifest[], inputs:
             const fragment = buildFragment(manifest, {
                 ...inputs,
                 ...selection.view,
+                selection,
                 scope,
                 testFiles: selection.view.test_files,
                 scopeDependencies: listProjectDependencyNames(session.repository.dependencyFiles, scope),

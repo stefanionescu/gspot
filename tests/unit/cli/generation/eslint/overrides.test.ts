@@ -13,7 +13,12 @@ import { SELECTOR_FILES } from '#tests/data/generation/eslint/framework.ts';
 import { groupFragmentSelectors } from '#cli/generation/eslint/selectors.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { SELECTOR_GROUP_CASES } from '#tests/data/generation/eslint/selectors.ts';
-import { ESLINT_OVERRIDES_SETTINGS } from '#tests/data/generation/eslint/overrides.ts';
+
+import {
+    SCOPE_IMPORT_FILES,
+    SCOPE_IMPORT_TABLES,
+    ESLINT_OVERRIDES_SETTINGS,
+} from '#tests/data/generation/eslint/overrides.ts';
 
 test.each([false, true])(
     'blocks > an ignore of an ESLint rule applies after your rule options (%j)',
@@ -170,5 +175,50 @@ rules = { "no-restricted-imports" = [{ paths = [{ name = "moment", message = "Us
         { file: 'app/source.js', rule: 'no-restricted-imports', line: 1 },
         { file: 'app/source.js', rule: 'no-restricted-imports', line: 2 },
         { file: 'other.js', rule: 'no-restricted-imports', line: 1 },
+    ]);
+});
+
+test.each([...LEVELS])(
+    "a scope's tools.eslint.restricted_imports ban reports the import only in that scope (%s)",
+    async (level) => {
+        await using folder = await testdir({
+            ...SCOPE_IMPORT_FILES,
+            'gspot.toml': buildSettingsText(['javascript'], { level, tables: SCOPE_IMPORT_TABLES }),
+        });
+        const eslint = await createEslint(folder.path);
+        expect(
+            await collectLintFindings(
+                eslint,
+                folder.path,
+                ['source.js', 'sibling', 'app', 'state'],
+                ['no-restricted-imports'],
+            ),
+        ).toStrictEqual([
+            { file: 'app/deep/source.js', rule: 'no-restricted-imports', line: 1 },
+            { file: 'app/source.js', rule: 'no-restricted-imports', line: 1 },
+            { file: 'sibling/source.js', rule: 'no-restricted-imports', line: 2 },
+            { file: 'source.js', rule: 'no-restricted-imports', line: 2 },
+            { file: 'state/store.js', rule: 'no-restricted-imports', line: 1 },
+            { file: 'state/widget.js', rule: 'no-restricted-imports', line: 1 },
+            { file: 'state/widget.js', rule: 'no-restricted-imports', line: 3 },
+        ]);
+    },
+);
+
+test('a JavaScript child applies its import restrictions under a Python root', async () => {
+    await using folder = await testdir({
+        'app/source.js': SCOPE_IMPORT_FILES['app/source.js'],
+        'gspot.toml': buildSettingsText(['python'], {
+            tables: `[[scope]]
+path = "app"
+configurations = ["javascript"]
+[scope.tools.eslint]
+restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
+`,
+        }),
+    });
+    const eslint = await createEslint(folder.path);
+    expect(await collectLintFindings(eslint, folder.path, ['app/source.js'], ['no-restricted-imports'])).toStrictEqual([
+        { file: 'app/source.js', rule: 'no-restricted-imports', line: 1 },
     ]);
 });
