@@ -1,14 +1,15 @@
-import * as fs from 'node:fs';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
-import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/builders.ts';
+import { checkFindings } from '#tests/setup/check-input.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { commitAll, readGitOutput } from '#tests/setup/git.ts';
+import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { ASSET_SETTING_CASES, UNREADABLE_RESOURCES, INVALID_RESOURCE_DOCUMENTS } from '#tests/data/checks/xcode.ts';
 
 test.each([...UNREADABLE_RESOURCES])(
@@ -42,42 +43,43 @@ test.each([...UNREADABLE_RESOURCES])(
     },
 );
 
-test('a denied asset existence read is an execution error and a genuinely missing image is a finding', async () => {
-    await using sandbox = await testdir();
-    const assetManifest = 'App/Assets.xcassets/Logo.imageset/Contents.json';
+test('xcode/assets reports an image that the set names and the repository does not hold', async () => {
+    const contentsPath = 'App/Assets.xcassets/Logo.imageset/Contents.json';
     const image = 'App/Assets.xcassets/Logo.imageset/logo.png';
-    const content = '{"images":[{"filename":"logo.png"}]}\n';
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'gspot.toml': buildSettingsText(['xcode']),
-        [assetManifest]: content,
+        [contentsPath]: '{"images":[{"filename":"logo.png"}]}\n',
         [image]: new Uint8Array([0, 1, 2]),
         'App/Home.swift': 'let logo = Image("Logo")\n',
     });
-    const session = await openSession(sandbox.path);
-    const options = buildRunOptions({ stage: 'commit', only: ['xcode/assets'] });
-    const target = join(sandbox.path, image);
-    const original = fs.statSync;
-    {
-        using resources = new DisposableStack();
+    commitAll(sandbox.path);
+    await rm(join(sandbox.path, image));
+    const findings = await checkFindings(sandbox.path, 'xcode/assets');
+    expect(findings).toMatchObject([
+        { file: contentsPath, line: 1, rule: 'missing-image', message: 'The image logo.png is not in the set.' },
+    ]);
+});
 
-        resources.use(
-            spyOn(fs, 'statSync').mockImplementation(((...statArguments: Parameters<typeof fs.statSync>) => {
-                if (statArguments[0] === target)
-                    throw Object.assign(new Error(`EACCES: cannot inspect ${image}`), { code: 'EACCES' });
-                return original(...statArguments);
-            }) as typeof fs.statSync),
-        );
+test('xcode/assets reports an ignored image that is on disk but not in the repository', async () => {
+    const contentsPath = 'App/Assets.xcassets/Logo.imageset/Contents.json';
+    const image = 'App/Assets.xcassets/Logo.imageset/logo.png';
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['xcode']),
+        '.gitignore': `${image}\n`,
+        [contentsPath]: '{"images":[{"filename":"logo.png"}]}\n',
+        [image]: new Uint8Array([0, 1, 2]),
+        'App/Home.swift': 'let logo = Image("Logo")\n',
+    });
+    commitAll(sandbox.path);
+    expect(readGitOutput(sandbox.path, ['check-ignore', image])).toBe(image);
+    expect(await readFile(join(sandbox.path, image))).toStrictEqual(Buffer.from([0, 1, 2]));
+    const findings = await checkFindings(sandbox.path, 'xcode/assets');
+    expect(findings).toMatchObject([
+        { file: contentsPath, line: 1, rule: 'missing-image', message: 'The image logo.png is not in the set.' },
+    ]);
 
-        const failed = await runChecks(session, options);
-        expect(failed.report.exitCode).toBe(2);
-        expect(failed.report.checks[0]?.status).toBe('error');
-        expect(failed.report.checks[0]?.note).toContain(`EACCES: cannot inspect ${image}`);
-        expect(failed.report.checks[0]?.findings).toStrictEqual([]);
-    }
-    await rm(target);
-    const missing = await runChecks(await openSession(session.root), options);
-    expect(missing.report.exitCode).toBe(1);
-    expect(missing.report.checks[0]?.findings).toMatchObject([{ file: assetManifest, line: 1, rule: 'missing-image' }]);
+    await writeFile(join(sandbox.path, '.gitignore'), '');
+    expect(await checkFindings(sandbox.path, 'xcode/assets')).toStrictEqual([]);
 });
 
 test.each(['logo-mark', 'logo_mark', 'Logo Mark', 'Logo MarkImage', 'logo-markColor'])(

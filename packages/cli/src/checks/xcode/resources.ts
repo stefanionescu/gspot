@@ -1,7 +1,6 @@
 import { z } from 'zod';
+import { posix } from 'node:path';
 import { camelCase } from 'scule';
-import { statSync } from 'node:fs';
-import { join, posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { parseJsonResult } from '#cli/parsers/json.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
@@ -61,6 +60,7 @@ const assetContentsSchema = z.object({
  * @returns the findings.
  */
 export function checkXcodeAssets(input: CheckInput): Finding[] {
+    const repositoryPaths = new Set(input.repositoryFiles.map(({ path }) => path));
     return listSourcePaths(input.files, [ASSET_CONTENTS])
         .filter((path) => path.includes(XCASSETS_FOLDER))
         .flatMap((path) => {
@@ -76,7 +76,7 @@ export function checkXcodeAssets(input: CheckInput): Finding[] {
                 return [buildFinding(input, at, 'empty-set', 'This image set names no image file.')];
             const folder = path.slice(0, path.lastIndexOf('/'));
             return names
-                .filter((name) => statSync(join(input.root, folder, name), { throwIfNoEntry: false }) === undefined)
+                .filter((name) => !repositoryPaths.has(posix.join(folder, name)))
                 .map((name) => buildFinding(input, at, 'missing-image', `The image ${name} is not in the set.`));
         });
 }

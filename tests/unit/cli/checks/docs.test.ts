@@ -3,10 +3,12 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { readFile, writeFile } from 'node:fs/promises';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { checkReport } from '#tests/setup/run-gspot.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
+import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { checkFindings, buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
@@ -212,3 +214,26 @@ test.each([...LICENSE_FILE_CASES])(
         expect(found.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...findings]);
     },
 );
+
+test('required-files: ignored README.md and LICENSE files in a Git repository are reported', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText(['docs'], { level: 'all' }),
+        '.gitignore': 'README.md\nLICENSE\n',
+        'README.md': README,
+        LICENSE,
+        'guide.md': 'Project documentation.\n',
+    });
+    commitAll(sandbox.path);
+    expect(readGitOutput(sandbox.path, ['check-ignore', 'README.md', 'LICENSE'])).toBe('README.md\nLICENSE');
+    expect(await readFile(join(sandbox.path, 'README.md'), 'utf8')).toBe(README);
+    expect(await readFile(join(sandbox.path, 'LICENSE'), 'utf8')).toBe(LICENSE);
+
+    const found = await checkFindings(sandbox.path, 'docs/required-files');
+    expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
+        { file: 'README.md', rule: 'missing-readme', message: 'The scope root has no README.md.' },
+        { file: 'LICENSE', rule: 'missing-license', message: 'The root has no LICENSE file.' },
+    ]);
+
+    await writeFile(join(sandbox.path, '.gitignore'), '');
+    expect(await checkFindings(sandbox.path, 'docs/required-files')).toStrictEqual([]);
+});

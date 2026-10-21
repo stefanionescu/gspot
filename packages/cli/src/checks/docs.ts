@@ -245,8 +245,9 @@ export function checkDocsMissingPaths(input: CheckInput): Finding[] {
  */
 export function checkDocsRequiredFiles(input: CheckInput): Finding[] {
     const findings: Finding[] = [];
+    const repositoryPaths = new Set(input.repositoryFiles.map(({ path }) => path));
     const readme = joinScope(input.selection.scope.path, README_FILE);
-    if (statSync(join(input.root, readme), { throwIfNoEntry: false }) === undefined)
+    if (!repositoryPaths.has(readme))
         findings.push(
             buildFinding(
                 input,
@@ -257,7 +258,7 @@ export function checkDocsRequiredFiles(input: CheckInput): Finding[] {
         );
     if (
         input.selection.scope.path === '' &&
-        !readdirSync(input.root).some((name) => LICENSE_FILE.test(name) && statSync(join(input.root, name)).isFile())
+        ![...repositoryPaths].some((path) => !path.includes('/') && LICENSE_FILE.test(path))
     )
         findings.push(buildFinding(input, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'));
     return findings;
