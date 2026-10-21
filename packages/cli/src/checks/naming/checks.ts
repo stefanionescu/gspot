@@ -64,6 +64,7 @@ function listPathIdentifiers(input: CheckInput): Identifier[] {
 async function readDeclaredNames(input: CheckInput): Promise<{ files: FileNames[]; findings: Finding[] }> {
     const files: FileNames[] = [];
     const findings: Finding[] = [];
+    const containers = readNamingDefaults(input.reads).path_containers;
     for (const selection of input.selections) {
         const scopeInput = {
             ...input,
@@ -83,6 +84,7 @@ async function readDeclaredNames(input: CheckInput): Promise<{ files: FileNames[
             const declarations = identifiers.map((identifier) => identifier.name);
             files.push({
                 path: file.path,
+                stem: buildFileIdentifier(file.path, language, containers).name,
                 declarations,
                 names: [
                     ...paths
@@ -129,7 +131,7 @@ export async function checkNamingAllowedNames(input: CheckInput): Promise<Findin
                 .filter((file) => matches(file.path))
                 .flatMap((file) => {
                     if (override.categories === undefined) return file.names;
-                    if (override.categories.includes('files')) return [...file.declarations, file.names[0]];
+                    if (override.categories.includes('files')) return [...file.declarations, file.stem];
                     return file.declarations;
                 }),
         );

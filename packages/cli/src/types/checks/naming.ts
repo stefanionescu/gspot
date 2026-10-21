@@ -51,7 +51,7 @@ export type PathContainer = { open: string; close: string; category: NamedCatego
 export type NamedFile = { file: TrackedFile; language: string };
 
 /** Identifier spellings associated with one file for cross-project comparisons. */
-export type FileNames = { path: string; names: string[]; declarations: string[] };
+export type FileNames = { path: string; stem: string; names: string[]; declarations: string[] };
 
 /** The validated shipped naming settings. */
 export type NamingDefaults = {

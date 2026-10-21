@@ -30,6 +30,27 @@ const ALLOWED_NAME_FILES = {
 
 export const UNUSED_NAME_CASES = [
     {
+        name: 'a files-only allowance names the second file in a folder',
+        files: {
+            'src/first.js': 'export const one = 1;\n',
+            'src/second.js': 'export const two = 2;\n',
+        },
+        settings: {
+            configurations: ['javascript'],
+            naming: {
+                override: [
+                    {
+                        paths: ['src/**'],
+                        categories: ['files'],
+                        allowed_names: ['second'],
+                        reason: 'The external tool fixes this file name.',
+                    },
+                ],
+            },
+        },
+        unusedNames: [],
+    },
+    {
         name: 'allowances name code or files',
         files: { 'phantomName.js': '// commentName\nexport const keptName = true;\n' },
         settings: {
