@@ -18,10 +18,10 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
  * @returns the command result.
  */
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
-    const { root, input, scopeSettings } = startConfigurationEdit(options);
+    const { root, input, scopeSettings, selected } = startConfigurationEdit(options);
     const current = scopeSettings.configurations;
     const removed = scopeSettings.removed_configurations;
-    if (options.configurations.every((name) => current.includes(name) && !removed.includes(name))) {
+    if (options.configurations.every((name) => selected.includes(name))) {
         return {
             text: `No change: ${options.configurations.join(' and ')} ${options.configurations.length === 1 ? 'is' : 'are'} already selected.\n`,
             json: { changed: false },
@@ -31,7 +31,8 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     const addConfigurations: Mutation = (written) => {
         const scopeTable = findScopeTable(written, options.scope);
         const list = [...current];
-        for (const name of options.configurations) if (!list.includes(name)) list.push(name);
+        for (const name of options.configurations)
+            if (!selected.includes(name) && !list.includes(name)) list.push(name);
         scopeTable['configurations'] = list;
         if (scopeTable['removed_configurations'] !== undefined)
             scopeTable['removed_configurations'] = removed.filter((name) => !options.configurations.includes(name));

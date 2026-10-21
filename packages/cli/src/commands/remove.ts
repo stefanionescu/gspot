@@ -19,11 +19,12 @@ function formatUnselectedConfigurations(configurations: string[]): string {
 function buildRemovalEdit(
     scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>,
     options: ConfigurationsOptions,
+    selected: string[],
 ): Mutation {
     const current = scopeSettings.configurations;
     return (written) => {
         const scopeTable = findScopeTable(written, options.scope);
-        const removed = options.configurations.filter((id) => current.includes(id));
+        const removed = options.configurations.filter((id) => selected.includes(id));
         if (removed.length === 0) return;
         scopeTable['configurations'] = current.filter((id) => !removed.includes(id));
         scopeTable['removed_configurations'] = [...new Set([...scopeSettings.removed_configurations, ...removed])];
@@ -50,19 +51,17 @@ function refuseRequirements(configurations: string[], kept: string[], manifests:
  * @returns the command result.
  */
 async function runRemoveCommand(options: ConfigurationsOptions): Promise<CommandResult> {
-    const { root, input, settings, scopeSettings, manifests } = startConfigurationEdit(options);
-    const current = scopeSettings.configurations;
-    const rootConfigurations = settings.configurations;
-    const kept = [...new Set([...rootConfigurations, ...current])].filter((id) => !options.configurations.includes(id));
+    const { root, input, scopeSettings, selected, manifests } = startConfigurationEdit(options);
+    const kept = selected.filter((id) => !options.configurations.includes(id));
     refuseRequirements(options.configurations, kept, manifests);
-    if (!options.configurations.some((name) => current.includes(name))) {
+    if (!options.configurations.some((name) => selected.includes(name))) {
         return {
             text: formatUnselectedConfigurations(options.configurations),
             json: { changed: false },
             exitCode: 0,
         };
     }
-    const removeConfigurations = buildRemovalEdit(scopeSettings, options);
+    const removeConfigurations = buildRemovalEdit(scopeSettings, options, selected);
     const where = options.scope === undefined ? '' : ` from scope ${options.scope}`;
     const description = `Removed ${options.configurations.join(' and ')}${where}.`;
     return saveSettings(root, {

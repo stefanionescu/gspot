@@ -5,6 +5,7 @@ import { quoteArgument } from '#cli/system/text.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { findDeclaration } from '#cli/settings/inherit.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { selectForScope } from '#cli/repository/coverage.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
@@ -44,13 +45,14 @@ export function startSettingsEdit(cwd: string): {
  * Validate the configuration names and the scope for add and remove before either command edits a list.
  *
  * @param options where the command starts, the configurations, and the scope.
- * @returns the validated edit, the lists of that scope, and the shipped manifests.
+ * @returns the validated edit, the scope's own lists and effective selection, and the shipped manifests.
  */
 export function startConfigurationEdit(options: ConfigurationsOptions): {
     root: string;
     input: SettingsEdit;
     settings: Settings;
     scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
+    selected: string[];
     reads: ReadCache;
     manifests: Map<string, Manifest>;
 } {
@@ -67,7 +69,10 @@ export function startConfigurationEdit(options: ConfigurationsOptions): {
         options.scope === undefined
             ? edit.settings
             : (edit.settings.scopes[options.scope] as Settings['scopes'][string]);
-    return { ...edit, scopeSettings, manifests };
+    const selected = selectForScope(edit.settings, options.scope ?? '', manifests).map(
+        (manifest) => manifest.configuration.name,
+    );
+    return { ...edit, scopeSettings, selected, manifests };
 }
 
 /**

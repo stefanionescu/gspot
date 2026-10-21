@@ -11,6 +11,11 @@ import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 
+import {
+    EXCLUDED_CONFIGURATION_SETTINGS,
+    INHERITED_CONFIGURATION_SETTINGS,
+} from '#tests/data/commands/configurations.ts';
+
 test.each(['add', 'remove'])('%s applies gspot.toml and installs no npm tools', async (command) => {
     await using sandbox = await testdir({
         'gspot.toml': `configurations = ["markdown"]
@@ -86,12 +91,6 @@ test.each([
         2,
     ],
     ['a configuration the selection does not list', ['remove', 'bash'], 'No change: bash is not selected.', 0],
-    [
-        'a configuration a scope does not list',
-        ['remove', 'typescript', '--scope', 'api'],
-        'No change: typescript is not selected.',
-        0,
-    ],
 ])(
     'removing %s preserves the settings and reports the prescribed outcome',
     async (_, commandArguments, expected, code) => {
@@ -121,3 +120,33 @@ configurations = ["bash"]
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );
+
+test.each([false, true])(
+    'add reports an inherited configuration as already selected and writes nothing (json: %j)',
+    async (json) => {
+        await using sandbox = await testdir({
+            'gspot.toml': INHERITED_CONFIGURATION_SETTINGS,
+            'api/entry.sh': 'echo api\n',
+        });
+        const before = await readTree(sandbox.path);
+        const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', ...(json ? ['--json'] : [])]);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        expect(result.stderr).toBe('');
+        if (json) expect(JSON.parse(result.stdout)).toStrictEqual({ changed: false });
+        else expect(result.stdout).toBe('No change: bash is already selected.\n');
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+    },
+);
+
+test('remove checks requirements against the effective scope selection', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': EXCLUDED_CONFIGURATION_SETTINGS,
+        'api/entry.sh': 'echo api\n',
+    });
+    const before = await readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, ['remove', 'javascript', '--scope', 'api']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toBe('No change: javascript is not selected.\n');
+    expect(result.stderr).toBe('');
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
