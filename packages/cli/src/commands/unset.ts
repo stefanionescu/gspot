@@ -3,10 +3,10 @@ import { type Command } from '@commander-js/extra-typings';
 import { saveSettings } from '#cli/apply/save-settings.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { UnsetOptions } from '#cli/types/commands/edit-settings.ts';
+import type { UnsetOptions } from '#cli/types/commands/settings.ts';
 import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { startSettingsEdit, findSettingDeclaration } from '#cli/commands/edit-settings.ts';
+import { startSettingsEdit, findSettingDeclaration } from '#cli/commands/settings.ts';
 import { deleteKey, findScopeTable, removeFromList, getWrittenValue } from '#cli/settings/edit.ts';
 
 /**

@@ -13,7 +13,7 @@ import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { readPushBase, readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { type Finding, type CheckInput, type CheckResult } from '#cli/types/runs/check.ts';
-import { getSiblingCommand, buildHistoryResult, runOverPushedCommits } from '#cli/runs/pushed-commits.ts';
+import { getSiblingCommand, buildHistoryResult, runOverPushedCommits } from '#cli/runs/commits.ts';
 
 import {
     ENV_KEY_LINE,

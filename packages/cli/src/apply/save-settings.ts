@@ -10,7 +10,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { updateSettings } from '#cli/settings/edit.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/commands/edit-settings.ts';
+import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/commands/settings.ts';
 
 /**
  * Edit settings, check them, and write them and their generated files. Installs nothing.

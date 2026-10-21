@@ -9,14 +9,14 @@ import { saveSettings } from '#cli/apply/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { type TomlTable } from '#cli/types/settings/file.ts';
+import { startSettingsEdit } from '#cli/commands/settings.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { stringify, LocalDate } from '@decimalturn/toml-patch';
 import { GROUP_CHARACTERS } from '#cli/config/commands/ignore.ts';
-import { startSettingsEdit } from '#cli/commands/edit-settings.ts';
 import { calendarDateSchema } from '#cli/settings/schema/parts.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { type IgnoreOptions } from '#cli/types/commands/edit-settings.ts';
+import { type IgnoreOptions } from '#cli/types/commands/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 function assertIgnoreTarget(options: IgnoreOptions, settings: Settings, reads: ReadCache): void {

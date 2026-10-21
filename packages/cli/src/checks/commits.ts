@@ -7,7 +7,7 @@ import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/pushed-commits.ts';
+import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/commits.ts';
 import { MESSAGE_FILE, COMMITLINT_CHECK, COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/commits.ts';
 
 /**

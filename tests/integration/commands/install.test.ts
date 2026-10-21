@@ -6,7 +6,7 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { INIT_FILES } from '#tests/data/commands/init.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
-import type { DryRunJson } from '#cli/types/commands/edit-settings.ts';
+import type { DryRunJson } from '#cli/types/commands/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { PACKAGE_MANAGER_ROWS } from '#tests/data/install/npm-tool-project.ts';

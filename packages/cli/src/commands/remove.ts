@@ -8,8 +8,8 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
 import type { Mutation } from '#cli/types/settings/edits.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
-import { startConfigurationEdit } from '#cli/commands/edit-settings.ts';
-import { type ConfigurationsOptions } from '#cli/types/commands/edit-settings.ts';
+import { startConfigurationEdit } from '#cli/commands/settings.ts';
+import { type ConfigurationsOptions } from '#cli/types/commands/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 function formatUnselectedConfigurations(configurations: string[]): string {

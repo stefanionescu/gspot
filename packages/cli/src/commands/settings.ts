@@ -11,7 +11,7 @@ import { readManifests } from '#cli/configurations/manifests.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { findScopeTable, readSettingsEdit } from '#cli/settings/edit.ts';
-import type { ConfigurationsOptions } from '#cli/types/commands/edit-settings.ts';
+import type { ConfigurationsOptions } from '#cli/types/commands/settings.ts';
 import { refuseAlwaysSelected, listUnknownConfigurations } from '#cli/configurations/select.ts';
 
 import {

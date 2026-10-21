@@ -14,10 +14,10 @@ import type { Mutation, SettingsEdit } from '#cli/types/settings/edits.ts';
 import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { startSettingsEdit, findSettingDeclaration } from '#cli/commands/edit-settings.ts';
+import { startSettingsEdit, findSettingDeclaration } from '#cli/commands/settings.ts';
 import { setKey, addToList, findScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
+import { type SetOptions, type ParsedSettingValue } from '#cli/types/commands/settings.ts';
 import { DECIMAL, INTEGER, STRUCTURED, DASH_VALUE_HINT } from '#cli/config/commands/set.ts';
-import { type SetOptions, type ParsedSettingValue } from '#cli/types/commands/edit-settings.ts';
 import type { Settings, KnownSettings, DeclarationMatch, EffectiveSetting } from '#cli/types/settings/values.ts';
 
 // Structured values use the inline syntax of gspot.toml.

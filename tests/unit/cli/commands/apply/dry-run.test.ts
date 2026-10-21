@@ -9,7 +9,7 @@ import type { ApplyReport } from '#cli/types/apply.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { buildSettingsText } from '#tests/setup/settings.ts';
 import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
-import { type DryRunJson } from '#cli/types/commands/edit-settings.ts';
+import { type DryRunJson } from '#cli/types/commands/settings.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, checkReport, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
